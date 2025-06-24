@@ -1,0 +1,9 @@
+/* 👉 BẮT BUỘC: Tailwind directives phải đứng đầu tiên */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 👉 Custom base layer sau Tailwind base (optional) */
+@layer base {
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+}
