@@ -1,6 +1,7 @@
 from fastapi import FastAPI
-from routers import auth_router
+from service.ai_image.yolo_test import api_detect
 
-app = FastAPI(title = "Authentication Service")
+app = FastAPI()
 
-app.include_router(auth_router, prefix="/auth", tags=["auth"])
+# Gắn router detect
+app.include_router(api_detect.router)

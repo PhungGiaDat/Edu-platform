@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import Flashcard from './components/Flashcard';
 import './App.css';
 import elephent from "../public/flashcards/elephent.jpg"
