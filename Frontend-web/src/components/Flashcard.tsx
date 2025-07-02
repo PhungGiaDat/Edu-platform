@@ -1,6 +1,6 @@
 import { QRCodeCanvas } from "qrcode.react";
-import html2canvas from "html2canvas";
-import { useEffect } from "react";
+// import html2canvas from "html2canvas";
+// import { useEffect } from "react";
 
 type FlashcardProps = {  
   word: string;  
@@ -13,54 +13,54 @@ type FlashcardProps = {
 
 export default function Flashcard({ word, bgUrl, imgUrl, qrData }: FlashcardProps) {
   
-const handleCapture = async () => {
-  const flashcardElement = document.getElementById("flashcard");
+// const handleCapture = async () => {
+//   const flashcardElement = document.getElementById("flashcard");
 
-  if (!flashcardElement) {
-    console.warn("❌ Không tìm thấy element #flashcard");
-    return;
-  }
+//   if (!flashcardElement) {
+//     console.warn("❌ Không tìm thấy element #flashcard");
+//     return;
+//   }
 
-  console.log("✅ Tìm thấy flashcard, bắt đầu capture...");
+//   console.log("✅ Tìm thấy flashcard, bắt đầu capture...");
 
-  const canvas = await html2canvas(flashcardElement);
-  canvas.toBlob(async (blob) => {
-    if (!blob) {
-      console.warn("❌ Không tạo được blob từ canvas");
-      return;
-    }
+//   const canvas = await html2canvas(flashcardElement);
+//   canvas.toBlob(async (blob) => {
+//     if (!blob) {
+//       console.warn("❌ Không tạo được blob từ canvas");
+//       return;
+//     }
 
-    console.log("✅ Đã tạo blob, chuẩn bị gửi về server...");
+//     console.log("✅ Đã tạo blob, chuẩn bị gửi về server...");
 
-    const formData = new FormData();
-    formData.append("image", blob, "flashcard.png");
+//     const formData = new FormData();
+//     formData.append("image", blob, "flashcard.png");
 
-    try {
-      const res = await fetch("http://127.0.0.1:8000/detect", {
-        method: "POST",
-        body: formData,
-      });
+//     try {
+//       const res = await fetch("http://127.0.0.1:8000/detect", {
+//         method: "POST",
+//         body: formData,
+//       });
 
-      console.log("📡 Đã gửi yêu cầu về server...");
+//       console.log("📡 Đã gửi yêu cầu về server...");
 
-      const result = await res.json();
-      console.log("📥 Kết quả từ server:", result);
+//       const result = await res.json();
+//       console.log("📥 Kết quả từ server:", result);
 
-      alert(`🔍 Kết quả: ${result.message}`);
-    } catch (err) {
-      console.error("🔥 Lỗi khi gọi API:", err);
-    }
-  });
-};
+//       alert(`🔍 Kết quả: ${result.message}`);
+//     } catch (err) {
+//       console.error("🔥 Lỗi khi gọi API:", err);
+//     }
+//   });
+// };
 
 
-  useEffect(() => {
-      const timeout = setTimeout(() => {
-        handleCapture();
-      }, 500); // Delay 0.5 giây
+  // useEffect(() => {
+  //     const timeout = setTimeout(() => {
+  //       handleCapture();
+  //     }, 500); // Delay 0.5 giây
 
-      return () => clearTimeout(timeout);
-    }, []);
+  //     return () => clearTimeout(timeout);
+  //   }, []);
 
   return (
     <div  id ="flashcard" className="w-80 h-96 rounded-2xl shadow-xl overflow-hidden relative border-4 border-green-400 ">
