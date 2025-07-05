@@ -1,0 +1,9 @@
+[
+  {
+    "game_type": "match_word",
+    "question": "Match the image to the word",
+    "choices": ["elephant", "tiger", "table"],
+    "answer": "table",
+    "difficulty": "easy"
+  }
+]
