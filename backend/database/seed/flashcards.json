@@ -1,0 +1,18 @@
+[
+  {
+    "qr_id": "ele123",
+    "word": "elephant",
+    "translation": {
+      "vi": "con voi",
+      "en": "elephant",
+      "fr": "éléphant"
+    },
+    "category": "animal",
+    "image_url": "/images/flashcard_elephant.png",
+    "model_3d_url": "/models/elephant.glb",
+    "audio_url": "/audio/elephant.mp3",
+    "ar_tag": "animal_elephant_01",
+    "difficulty": "medium",
+    "created_at": "2025-07-03T12:00:00Z"
+  }
+]
