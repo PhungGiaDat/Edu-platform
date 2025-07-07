@@ -11,10 +11,8 @@ class MongoDBConnector:
             tlsCAFile=certifi.where()
         )
         self.db = self.client[MONGO_DB]
+        
 
     def get_collection(self, name):
         return self.db[name]
 
-    def get_flashcards_by_id(self,qr_id):
-        collection = self.get_collection("flashcards")
-        
