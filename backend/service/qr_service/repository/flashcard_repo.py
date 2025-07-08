@@ -1,10 +1,7 @@
 from database.mongodb import MongoDBConnector
 import os 
-from dotenv import load_dotenv 
 from database.base_repo import BaseRepository
 
-
-load_dotenv()
 
 class FlashcardRepository(BaseRepository):
     def __init__(self):
@@ -12,9 +9,9 @@ class FlashcardRepository(BaseRepository):
 
 
     async def get_by_qr_id(self, qr_id: str):
-        return await self.db[self.collection_name].find_one({"qr_id": qr_id})
+        return await self.collection.find_one({"qr_id": qr_id})
 
     async def get_by_qr_id_and_ar_tag(self, qr_id: str, ar_tag: str):
-        return await self.db[self.collection_name].find_one({"qr_id": qr_id, "ar_tag": ar_tag})
+        return await self.collection.find_one({"qr_id": qr_id, "ar_tag": ar_tag})
 
     

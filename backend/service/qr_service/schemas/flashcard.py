@@ -18,3 +18,4 @@ class FlashcardSchema(BaseModel):
         json_encoders = {
             ObjectId: str  # nếu có ObjectId thì stringify nó
         }
+        allow_population_by_field_name = True  # Cho phép sử dụng tên trường trong JSON để điền vào mô hình

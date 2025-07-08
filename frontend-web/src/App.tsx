@@ -9,9 +9,9 @@ function App() {
   return (
     <div className="mx-auto flex items-center justify-center bg-gradient-to-br from-yellow-100 to-pink-100">
       <Flashcard
-        word="table"
-        imgUrl={table}
-        qrData="CARD-TABLE-001"
+        word="elephant"
+        imgUrl={elephent}
+        qrData="ele123"
         bgUrl="https://cdn.pixabay.com/photo/2016/11/14/03/22/elephant-1822636_1280.jpg"
       />
     </div>

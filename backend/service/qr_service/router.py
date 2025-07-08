@@ -10,22 +10,19 @@ router = APIRouter()
 flashcard_repo = FlashcardRepository()
 ar_object_repo = Ar_object_repository()
 
-# @router.post("/detect_qr_code")
-# async def detect_qr_code_endpoint(file: UploadFile = File(...)):
-#     if not file.filename.endswith(('.png', '.jpg', '.jpeg')):
-#         raise HTTPException(status_code=400, detail="File phải là ảnh")
-    
-#     image_bytes = await file.read()
-    
-#     try:
-#         flashcard = detect_qr_code(image_bytes)
-        
-#         if not flashcard:
-#             return JSONResponse(status_code=404, content={"message": "Không tìm thấy QR code trong ảnh"})
-#         return flashcard.dict()
-    
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Lỗi khi xử lý ảnh: {str(e)}")
+@router.post("/detect_qr", response_model=FlashcardSchema)
+async def detect_qr_code_endpoint(file: UploadFile = File(...)):
+    if not file.filename.endswith((".jpg", ".png", ".jpeg")):
+        raise HTTPException(status_code=400, detail="Chỉ nhận ảnh PNG/JPG")
+
+    image_bytes = await file.read()
+
+    result = await detect_qr_code(image_bytes)
+    if not result:
+        raise HTTPException(status_code=404, detail="Không tìm thấy flashcard phù hợp")
+
+    return result
+
 
 
 @router.get("/flashcard/{qr_id}", response_model=FlashcardSchema)
