@@ -1,21 +1,20 @@
+import { Routes, Route, Link } from "react-router-dom";
+import FlashcardPage from "./pages/FlashcardPage";
+import CameraScanPage from "./pages/CameraScanPage";
 
-import Flashcard from './components/Flashcard';
-import './App.css';
-import elephent from "../public/flashcards/elephent.jpg"
-import tiger from "../public/flashcards/tiger.jpg"
-import table from "../public/flashcards/table.jpg"
-
-function App() {
+const App = () => {
   return (
-    <div className="mx-auto flex items-center justify-center bg-gradient-to-br from-yellow-100 to-pink-100">
-      <Flashcard
-        word="elephant"
-        imgUrl={elephent}
-        qrData="ele123"
-        bgUrl="https://cdn.pixabay.com/photo/2016/11/14/03/22/elephant-1822636_1280.jpg"
-      />
+    <div>
+      <nav className="p-4 bg-blue-600 text-white flex gap-4">
+        <Link to="/">Flashcard</Link>
+        <Link to="/scan">Scan</Link>
+      </nav>
+      <Routes>
+        <Route path="/" element={<FlashcardPage />} />
+        <Route path="/scan" element={<CameraScanPage />} />
+      </Routes>
     </div>
   );
-}
+};
 
-export default App
+export default App;
