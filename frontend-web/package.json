@@ -12,6 +12,8 @@
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.11",
     "@tailwindcss/vite": "^4.1.11",
+    "aframe": "^1.7.1",
+    "ar.js": "^2.2.2",
     "axios": "^1.10.0",
     "html2canvas": "^1.4.1",
     "ngrok": "^5.0.0-beta.2",
