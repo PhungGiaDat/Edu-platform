@@ -1,182 +1,226 @@
-const BASE_WS_URL = import.meta.env.VITE_BACKEND_WS_URL || "ws://localhost:8000";
+/**
+ * WebSocket service for QR verification with the backend
+ * Handles real-time frame verification against expected flashcards
+ */
 
-export interface MindARTarget {
-  targetId: number;
-  model_url: string;
-  scale: string;
-  position: string;
-  rotation: string;
-  tag: string;
-  description: string;
-}
+export type VerifyResult = {
+  qr_id: string;
+  valid: boolean;
+  confidence?: number;
+  reason?: string;
+};
 
-export interface QRDetectionResult {
-  success: boolean;
-  qr_id?: string;
-  mind_file_url?: string;
-  targets?: MindARTarget[];
-  message?: string;
-  error?: string;
-}
+export type VerifyMessage = {
+  qr_id: string;
+  frame_format: 'image/jpeg' | 'image/png' | 'image/webp';
+  frame_base64: string;
+};
 
-// WebSocket-based QR scanning service for MindAR
-export class RealtimeQRService {
-  private ws: WebSocket | null = null;
-  private videoElement: HTMLVideoElement | null = null;
-  private canvasElement: HTMLCanvasElement | null = null;
-  private intervalId: number | null = null;
-  private onDetection: (result: QRDetectionResult) => void;
-  private onError: (error: Error) => void;
-  private onConnectionChange: (connected: boolean) => void;
-  private scanInterval: number;
-  private isConnected: boolean = false;
+/**
+ * WebSocket client for QR verification
+ */
+export class VerifySocket {
+  private ws?: WebSocket;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 3;
+  private reconnectDelay = 1000;
+  private isConnecting = false;
+  private baseUrl: string;
+  private onMessage: (result: VerifyResult) => void;
+  private onError?: (error: Event) => void;
+  private onConnect?: () => void;
+  private onDisconnect?: () => void;
 
   constructor(
-    onDetection: (result: QRDetectionResult) => void,
-    onError: (error: Error) => void,
-    onConnectionChange: (connected: boolean) => void,
-    scanInterval: number = 10000 // 10 seconds default
+    url: string,
+    onMessage: (result: VerifyResult) => void,
+    onError?: (error: Event) => void,
+    onConnect?: () => void,
+    onDisconnect?: () => void
   ) {
-    this.onDetection = onDetection;
+    this.baseUrl = url;
+    this.onMessage = onMessage;
     this.onError = onError;
-    this.onConnectionChange = onConnectionChange;
-    this.scanInterval = scanInterval;
+    this.onConnect = onConnect;
+    this.onDisconnect = onDisconnect;
   }
 
-  async connect(): Promise<void> {
+  /**
+   * Connect to WebSocket server
+   */
+  connect(): Promise<void> {
+    if (this.isConnecting || (this.ws && this.ws.readyState === WebSocket.OPEN)) {
+      return Promise.resolve();
+    }
+
+    this.isConnecting = true;
+
     return new Promise((resolve, reject) => {
       try {
-        const wsUrl = `${BASE_WS_URL}/api/wss/detect_qr`;
-        console.log("🔌 Connecting to WebSocket:", wsUrl);
+        const wsUrl = this.baseUrl.replace(/\/ws\/verify$/, '') + '/ws/verify';
+        console.log('🔗 Connecting to WebSocket:', wsUrl);
         
         this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
-          console.log("✅ WebSocket connected");
-          this.isConnected = true;
-          this.onConnectionChange(true);
+          console.log('🔗 WebSocket connected for QR verification');
+          this.isConnecting = false;
+          this.reconnectAttempts = 0;
+          this.onConnect?.();
           resolve();
         };
 
         this.ws.onmessage = (event) => {
           try {
-            const result: QRDetectionResult = JSON.parse(event.data);
-            console.log("📨 Received WebSocket message:", result);
-            
-            if (result.success && result.qr_id && result.targets) {
-              this.onDetection(result);
-            } else if (result.error) {
-              console.warn("⚠️ WebSocket error response:", result.error);
-            }
-            // Ignore "No QR code detected" messages - they're normal
+            const result = JSON.parse(event.data) as VerifyResult;
+            this.onMessage(result);
           } catch (error) {
-            console.error("❌ Error parsing WebSocket message:", error);
+            console.warn('Failed to parse verification result:', error);
           }
         };
 
         this.ws.onerror = (error) => {
-          console.error("❌ WebSocket error:", error);
-          this.isConnected = false;
-          this.onConnectionChange(false);
-          this.onError(new Error("WebSocket connection error"));
+          console.error('WebSocket error:', error);
+          this.isConnecting = false;
+          this.onError?.(error);
+          reject(error);
         };
 
         this.ws.onclose = () => {
-          console.log("🔌 WebSocket disconnected");
-          this.isConnected = false;
-          this.onConnectionChange(false);
+          console.log('🔌 WebSocket disconnected');
+          this.isConnecting = false;
+          this.onDisconnect?.();
+          this.attemptReconnect();
         };
-
       } catch (error) {
+        this.isConnecting = false;
         reject(error);
       }
     });
   }
 
-  initialize(videoElement: HTMLVideoElement) {
-    this.videoElement = videoElement;
-    
-    // Create hidden canvas for frame capture
-    this.canvasElement = document.createElement('canvas');
-    this.canvasElement.style.display = 'none';
-    document.body.appendChild(this.canvasElement);
-  }
-
-  startScanning() {
-    if (!this.videoElement || !this.canvasElement || !this.isConnected) {
-      this.onError(new Error("Video, canvas, or WebSocket not ready"));
+  /**
+   * Send frame for verification
+   * @param qrId - Expected QR code ID
+   * @param blob - Image blob to verify
+   * @param format - Image format (default: 'image/jpeg')
+   */
+  sendFrame(
+    qrId: string, 
+    blob: Blob, 
+    format: 'image/jpeg' | 'image/png' | 'image/webp' = 'image/jpeg'
+  ): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.warn('WebSocket not connected, cannot send frame');
       return;
     }
 
-    this.intervalId = window.setInterval(() => {
-      this.captureAndSend();
-    }, this.scanInterval);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      try {
+        const base64Data = (reader.result as string).split(',')[1];
+        const payload = {
+          qr_id: qrId,
+          frame_format: 'image/jpeg',
+          frame_base64: base64Data
+        };
 
-    console.log(`🔍 Started WebSocket QR scanning every ${this.scanInterval}ms`);
+        this.ws!.send(JSON.stringify(payload));
+        console.log(`📤 Frame sent for verification: ${qrId}`);
+      } catch (error) {
+        console.error('❌ Failed to send frame:', error);
+      }
+    };
+
+    reader.readAsDataURL(blob);
   }
 
-  stopScanning() {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
-      console.log("⏹️ Stopped QR scanning");
-    }
-  }
-
-  private async captureAndSend() {
-    if (!this.videoElement || !this.canvasElement || !this.ws || !this.isConnected) {
+  /**
+   * Send frame as base64 string directly
+   * @param qrId - Expected QR code ID
+   * @param base64Data - Base64 encoded image data (without data URL prefix)
+   * @param format - Image format
+   */
+  sendFrameBase64(
+    qrId: string,
+    base64Data: string,
+    format: 'image/jpeg' | 'image/png' | 'image/webp' = 'image/jpeg'
+  ): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.warn('WebSocket not connected, cannot send frame');
       return;
     }
 
-    try {
-      const video = this.videoElement;
-      const canvas = this.canvasElement;
-      const context = canvas.getContext('2d');
+    const message: VerifyMessage = {
+      qr_id: qrId,
+      frame_format: format,
+      frame_base64: base64Data
+    };
 
-      if (!context || video.videoWidth === 0 || video.videoHeight === 0) {
-        return; // Video not ready yet
-      }
-
-      // Set canvas size to match video
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      // Draw current frame to canvas
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      // Convert to base64
-      const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
-
-      // Send via WebSocket
-      const message = {
-        imageBase64: imageBase64
-      };
-
-      if (this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify(message));
-        console.log("📤 Sent frame via WebSocket");
-      }
-
-    } catch (error) {
-      console.error("❌ Error capturing and sending frame:", error);
-      this.onError(error as Error);
-    }
+    this.ws.send(JSON.stringify(message));
   }
 
-  disconnect() {
-    this.stopScanning();
-    
+  /**
+   * Close WebSocket connection
+   */
+  close(): void {
+    this.reconnectAttempts = this.maxReconnectAttempts; // Prevent reconnection
     if (this.ws) {
       this.ws.close();
-      this.ws = null;
+      this.ws = undefined;
     }
-
-    if (this.canvasElement && this.canvasElement.parentNode) {
-      this.canvasElement.parentNode.removeChild(this.canvasElement);
-    }
-
-    this.isConnected = false;
-    this.onConnectionChange(false);
-    console.log("🔌 Disconnected from WebSocket");
   }
+
+  /**
+   * Check if WebSocket is connected
+   */
+  get connected(): boolean {
+    return this.ws?.readyState === WebSocket.OPEN;
+  }
+
+  /**
+   * Attempt to reconnect to WebSocket
+   */
+  private attemptReconnect(): void {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.log('Max reconnection attempts reached');
+      return;
+    }
+
+    this.reconnectAttempts++;
+    console.log(`Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+
+    setTimeout(() => {
+      this.connect().catch(() => {
+        // Reconnection failed, will try again if under max attempts
+      });
+    }, this.reconnectDelay * this.reconnectAttempts);
+  }
+}
+
+/**
+ * Hook-like function to create and manage verification socket
+ * @param url - WebSocket URL
+ * @param onMessage - Message handler
+ * @param onError - Error handler
+ * @returns VerifySocket instance
+ */
+export function createVerifySocket(
+  url: string,
+  onMessage: (result: VerifyResult) => void,
+  onError?: (error: Event) => void,
+  onConnect?: () => void,
+  onDisconnect?: () => void
+): VerifySocket {
+  return new VerifySocket(url, onMessage, onError, onConnect, onDisconnect);
+}
+
+/**
+ * Utility to convert data URL to base64 data only
+ * @param dataUrl - Data URL string
+ * @returns Base64 data without prefix
+ */
+export function extractBase64FromDataUrl(dataUrl: string): string {
+  const commaIndex = dataUrl.indexOf(',');
+  return commaIndex > -1 ? dataUrl.substring(commaIndex + 1) : dataUrl;
 }

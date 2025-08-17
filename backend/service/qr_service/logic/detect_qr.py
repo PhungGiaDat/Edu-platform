@@ -4,12 +4,12 @@ from pyzbar.pyzbar import decode
 from typing import Optional
 
 from ..repository.flashcard_repo import FlashcardRepository
-from service.ar_model.repository.ar_object_repo import Ar_object_repository
-from ..schemas.flashcard import FlashcardSchema
+from service.ar_model.repository.ar_object_repo import ArObjectRepository
+from ..schemas.models import FlashcardSchema
 
 # Khởi tạo repo
 flashcard_repo = FlashcardRepository()
-ar_object_repo = Ar_object_repository()
+ar_object_repo = ArObjectRepository()
 
 async def detect_qr_code(image_bytes: bytes) -> Optional[FlashcardSchema]:
     # B1: Chuyển ảnh bytes ➜ numpy

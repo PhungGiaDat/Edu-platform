@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import FlashcardPage from "./pages/FlashcardPage";
 import CameraScanPage from "./pages/CameraScanPage";
-import ARView from "./components/ARView";
+import LearnAR from "./pages/LearnAR";
 import Navbar from "./components/Navbar";
 
 const App = () => {
@@ -15,7 +15,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<FlashcardPage />} />
           <Route path="/scan" element={<CameraScanPage />} />
-          <Route path="/ar" element={<ARView />} />
+          <Route path="/learn-ar" element={<LearnAR />} />
         </Routes>
       </main>
     </div>

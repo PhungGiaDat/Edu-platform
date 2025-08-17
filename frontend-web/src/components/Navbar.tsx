@@ -35,10 +35,10 @@ const Navbar: React.FC = () => {
                 🔮 AR View
               </Link>
               <Link 
-                to="/test" 
+                to="/learn-ar" 
                 className="text-white hover:bg-blue-700 hover:text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ease-in-out"
               >
-                🧪 MindAR Test
+                🎓 Learn AR
               </Link>
             </div>
           </div>
@@ -74,6 +74,12 @@ const Navbar: React.FC = () => {
             className="text-white hover:bg-blue-800 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
           >
             🔮 AR View
+          </Link>
+          <Link 
+            to="/learn-ar" 
+            className="text-white hover:bg-blue-800 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
+          >
+            🎓 Learn AR
           </Link>
           <Link 
             to="/test" 
