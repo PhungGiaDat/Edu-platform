@@ -10,21 +10,26 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "^9.88.13",
+    "@react-three/fiber": "^8.15.11",
     "@tailwindcss/postcss": "^4.1.11",
     "@tailwindcss/vite": "^4.1.11",
+    "@zxing/library": "^0.20.0",
+    "aframe": "^1.7.1",
     "axios": "^1.10.0",
-    "html2canvas": "^1.4.1",
-    "ngrok": "^5.0.0-beta.2",
+    "mind-ar": "^1.2.5",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-router-dom": "^7.6.3"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.26.0",
+    "three": "^0.158.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@types/three": "^0.158.3",
     "@vitejs/plugin-react": "^4.6.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.30.1",

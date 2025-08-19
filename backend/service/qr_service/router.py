@@ -2,13 +2,13 @@ from fastapi import APIRouter, UploadFile,File , HTTPException
 from fastapi.responses import JSONResponse
 from .logic.detect_qr import detect_qr_code
 from service.qr_service.repository.flashcard_repo import FlashcardRepository
-from service.ar_model.repository.ar_object_repo import Ar_object_repository
-from service.qr_service.schemas.flashcard import FlashcardSchema
+from service.ar_model.repository.ar_object_repo import ArObjectRepository
+from .schemas.models import FlashcardSchema
 from database.mongodb import MongoDBConnector
 
 router = APIRouter()
 flashcard_repo = FlashcardRepository()
-ar_object_repo = Ar_object_repository()
+ar_object_repo = ArObjectRepository()
 
 @router.post("/detect_qr", response_model=FlashcardSchema)
 async def detect_qr_code_endpoint(file: UploadFile = File(...)):
