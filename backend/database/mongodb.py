@@ -3,13 +3,14 @@ import motor.motor_asyncio
 from pymongo import MongoClient
 from .mongo_config import MONGO_URL, MONGO_DB
 import certifi
+import ssl
 
 class MongoDBConnector:
     def __init__(self):
         self.client = motor.motor_asyncio.AsyncIOMotorClient(
             MONGO_URL,
             tls=True,
-            tlsCAFile=certifi.where()
+            tlsCAFile=certifi.where(),
         )
         self.db = self.client[MONGO_DB]
         print(f"[DEBUG] 🗄️ Connected to MongoDB ")
