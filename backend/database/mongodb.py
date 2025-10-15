@@ -13,7 +13,7 @@ class MongoDBConnector:
             tlsCAFile=certifi.where(),
         )
         self.db = self.client[MONGO_DB]
-        print(f"[DEBUG] 🗄️ Connected to MongoDB ")
+        print(f"[DEBUG] [MongoDB] Connected to MongoDB ")
         
 
     def get_collection(self, collection_name):

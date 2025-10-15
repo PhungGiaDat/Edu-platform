@@ -1,8 +1,18 @@
+import sys
+import os
+from pathlib import Path
+
+# Add backend directory to Python path so imports work correctly
+backend_dir = Path(__file__).parent
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
+
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from service.qr_service.router import router as qr_router # 👈 Import router từ module
-from service.qr_service.websocket_router import router as ar_ws_router # 👈 Import WebSocket router
+from service.flashcards.router import router as qr_router # --> Import router từ module
+from service.flashcards.websocket_router import router as ar_ws_router # --> Import WebSocket router
 
 app = FastAPI(title="Eduplatform AR API")
 
