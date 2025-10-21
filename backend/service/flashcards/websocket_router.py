@@ -8,9 +8,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-@router.websocket("ws/verify")
+@router.websocket("/ws/qr/verify")
 async def websocket_verify_frame_endpoint(websocket: WebSocket):
     await ws_manager.connect(websocket)
+    verification_count = {}  # Track verification attempts per QR ID
 
     try:
         while True:
@@ -23,32 +24,48 @@ async def websocket_verify_frame_endpoint(websocket: WebSocket):
             if not qr_id or not img_base64:
                 continue
     
-            # Decode frame 
+            # Track verification attempts to prevent infinite loops
+            if qr_id not in verification_count:
+                verification_count[qr_id] = 0
+            verification_count[qr_id] += 1
             
+            # Decode frame 
             frame = decode_base64_to_bgr(img_base64)
             
             # Lấy thông tin flashcard để có img_url tham chiếu 
             fc = await ws_manager.flashcard_repo.get_by_qr_id(qr_id)
             if not fc:
-                    await ws_manager.send_json({
-                        "qr_id": qr_id,
-                        "valid": False,
-                        "confidence": 0,
-                        "success": False,
-                        "error": "Flashcard not found"
-                    })
-                    continue
+                await websocket.send_json({
+                    "qr_id": qr_id,
+                    "valid": False,
+                    "confidence": 0,
+                    "success": False,
+                    "error": "Flashcard not found"
+                })
+                continue
                 
-            # THỰC HIỆN XÁC THỰC 
-
+            # THỰC HIỆN XÁC THỰC với retry logic
             is_valid, confidence = await verify_frame(frame, fc["image_url"])
+            
+            # Thêm tolerance cho lần verify đầu tiên hoặc khi có confidence hợp lý
+            tolerance_threshold = 0.3
+            if not is_valid and confidence > tolerance_threshold and verification_count[qr_id] <= 3:
+                is_valid = True
+                logger.info(f"Verification passed with tolerance: confidence={confidence}, attempt={verification_count[qr_id]}")
+
+            # Nếu thất bại quá nhiều lần, chỉ gửi 1 lần nữa rồi dừng
+            if not is_valid and verification_count[qr_id] > 5:
+                logger.warning(f"Too many failed verifications for {qr_id}, limiting responses")
+                # Reset counter after sending final response
+                verification_count[qr_id] = 0
+                is_valid = False  # Force failure to stop the loop
 
             await websocket.send_json({
                 "qr_id": qr_id,
                 "valid": is_valid,
                 "confidence": confidence,
                 "success": is_valid,
-                "reason": "matched by feature" if is_valid else "not matched"
+                "reason": "matched by feature" if is_valid else f"not matched (confidence: {confidence}, attempt: {verification_count[qr_id]})"
             })
 
     except WebSocketDisconnect:

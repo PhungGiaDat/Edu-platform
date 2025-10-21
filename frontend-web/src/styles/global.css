@@ -1,0 +1,24 @@
+/* src/styles/global.css */
+
+/* Remove default browser styles */
+/* html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+} */
+/* Ensure navbar always on top */
+nav {
+  position: relative;
+  z-index: 50 !important;
+}
+
+/* Fullscreen button should be visible */
+button[class*="fullscreen"],
+.fullscreen-button {
+  z-index: 100 !important;
+  position: relative;
+}
