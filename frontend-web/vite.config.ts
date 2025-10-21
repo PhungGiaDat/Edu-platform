@@ -2,29 +2,52 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-
-// 👇 defineConfig giúp gợi ý type chính xác trong TS
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
 
   return {
     plugins: [
       react(),
-      tailwindcss() // 👈 Plugin Tailwind CSS cho Vite
+      tailwindcss()
     ],
     server: {
-      host: '0.0.0.0', // 👈 Bắt buộc cho cloudflared / test mobile
-      port: 5173,      // default của Vite
-      cors: true,      // Nếu bạn gọi API từ frontend (để test)
+      host: '0.0.0.0',
+      port: 5173,
+      cors: true,
       hmr: {
-        clientPort: 443, // 👈 Fix HMR khi dùng cloudflared HTTPS
+        clientPort: 443,
       },
       headers: {
-        'Access-Control-Allow-Origin': '*', // optional
+        'Access-Control-Allow-Origin': '*',
       },
       allowedHosts: [
-        env.VITE_PUBLIC_HOST?.replace(/^https?:\/\//, '') || 'localhost'
-      ],
+        'localhost',
+        '.trycloudflare.com',
+        '.ngrok.io',
+        '.ngrok-free.app',
+        env.VITE_PUBLIC_HOST?.replace(/^https?:\/\//, ''),
+      ].filter(Boolean),
+      
+      // ✅ PROXY - Forward to backend
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/api/, ''), // ✅ Remove /api prefix
+        },
+        '/assets': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          secure: false,
+        },
+        '/ws': {
+          target: 'ws://localhost:8000',
+          changeOrigin: true,
+          ws: true,
+          secure: false,
+        },
+      },
     },
   }
 })

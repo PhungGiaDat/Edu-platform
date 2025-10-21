@@ -1,406 +1,440 @@
-import { useEffect, useRef, useState } from 'react';
-import ARSceneMindAR from '../components/ARSceneMindAR';
-import type { ARObjectData } from '../components/ARSceneMindAR';
-import { detectQRService } from '../services/DetectQrService';
-import { captureFrame } from '../services/RealtimeQRServices';
-import { VerifySocket } from '../services/WebSocketQRServices';
-import type { VerifyResult } from '../services/WebSocketQRServices';
+// src/pages/LearnAR.tsx
 
-/**
- * Types for API response
- */
-type FlashcardResponse = {
-  qr_id: string;
-  word: string;
-  image_url: string;
-  audio_url?: string;
-  translation: Record<string, string>;
-  ar_object: {
-    tag: string;
-    mind_file_url: string;
-    model_3d_url: string;
-    position: string;
-    rotation: string;
-    scale: string;
-  };
-};
+import { useState, useRef, useCallback, useEffect } from 'react';
+import ARScene_SOLID from '../components/ARScene_SOLID';
+import ARControlPanel from '../components/panel/ARControlPanel';
+import { QuizOverlay } from '../components/Quiz';
+import { GameOverlay } from '../components/GameOverlay';
+import { useArData } from '../hooks/useArData';
+import { useQuizData } from '../hooks/useQuizData';
+import { useGameData } from '../hooks/useGameData';
+import { useVerificationSocket } from '../hooks/useVerificationSocket';
+import { useArQrScanner } from '../hooks/useArQrScanner';
+import '../styles/ARScene.css';
+import { useDisplayMode } from '../hooks/useDisplayMode';
+import type { GameDifficulty, GameType } from '../types';
 
-/**
- * Environment configuration with proper URL construction
- */
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-const WS_BASE = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
-
-/**
- * Main AR Learning Page Component
- * Implements the new flow: Local QR decode → Fetch metadata → Render immediately → Verify periodically
- */
 export default function LearnAR() {
-  // Refs
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const verifySocketRef = useRef<VerifySocket>();
-  const verifyTimerRef = useRef<number>();
-  const qrScanTimerRef = useRef<number>();
-  const cameraInitialized = useRef(false); // << THÊM DÒNG NÀY để tránh lỗi camera AbortError
-
-  // State
-  const [currentQrId, setCurrentQrId] = useState<string | null>(null);
-  const [flashcardData, setFlashcardData] = useState<FlashcardResponse | null>(null);
-  const [arObjects, setARObjects] = useState<ARObjectData[]>([]);
-  const [isARVisible, setIsARVisible] = useState(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
-  const [wsConnected, setWsConnected] = useState(false);
-  const [lastQrScanTime, setLastQrScanTime] = useState<number>(0);
+  const {
+    displayMode,
+    toggleDisplayMode,
+    appMode,
+    setAppMode
+  } = useDisplayMode('2D', 'LEARNING');
   
-  // State MỚI: để giữ tham chiếu đến video của MindAR cho việc xác thực
-  const [arVideo, setArVideo] = useState<HTMLVideoElement | null>(null);
+  const arVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [detectedQrId, setDetectedQrId] = useState<string | null>(null);
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  
+  // ========== Marker event tracking with ref (NO re-render) ==========
+  const markerEventCountRef = useRef(0);
+  
+  // ========== Game selection states ==========
+  const [selectedDifficulty, setSelectedDifficulty] = useState<GameDifficulty | null>(null);
+  const [selectedGameType, setSelectedGameType] = useState<GameType | null>(null);
+  const [showGameSelector, setShowGameSelector] = useState(false);
+  const [selectorStep, setSelectorStep] = useState<'difficulty' | 'game_type'>('difficulty');
 
-  // Constants
-  const QR_SCAN_INTERVAL = 1000; // 1 second
-  const VERIFY_INTERVAL = 8000; // 8 seconds
-  const MIN_QR_SCAN_COOLDOWN = 2000; // 2 seconds between QR changes
-
-  /**
-   * Initialize camera stream
-   */
-  useEffect(() => {
-    const initCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { 
-            facingMode: 'environment',
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        });
-        
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-          console.log('📷 Camera initialized successfully');
-        }
-      } catch (error) {
-        console.error('❌ Camera initialization failed:', error);
-        setCameraError('Cannot access camera. Please check permissions.');
-      }
-    };
-
-    // THÊM ĐIỀU KIỆN KIỂM TRA NÀY để tránh lỗi camera AbortError
-    if (!cameraInitialized.current) {
-      initCamera();
-      cameraInitialized.current = true;
-    }
-
-    // Cleanup camera on unmount
-    return () => {
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []); // Dependency array rỗng là đúng
-
-  /**
-   * Fetch flashcard data from API
-   */
-  const fetchFlashcardData = async (qrId: string): Promise<FlashcardResponse | null> => {
-    try {
-      console.log(`🔍 Fetching data for QR ID: ${qrId}`);
-      
-      const response = await fetch(`${API_BASE}/api/flashcard/${qrId}`);
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          console.warn(`⚠️ QR ID ${qrId} not found`);
-          return null;
-        }
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      const data: FlashcardResponse = await response.json();
-      console.log('✅ Flashcard data fetched:', data);
-      
-      return data;
-    } catch (error) {
-      console.error('❌ Failed to fetch flashcard data:', error);
-      return null;
-    }
-  };
-
-  /**
-   * Handle new QR code detection - SỬA ĐỔI QUAN TRỌNG
-   */
-  const handleQRDetected = async (qrId: string) => {
-    const now = Date.now();
-    
-    // Prevent rapid QR switching
-    if (qrId === currentQrId || (now - lastQrScanTime) < MIN_QR_SCAN_COOLDOWN) {
-      return;
-    }
-
-    setLastQrScanTime(now);
-    console.log(`🎯 New QR detected: ${qrId}`);
-
-    // Fetch new flashcard data
-    const data = await fetchFlashcardData(qrId);
-    
-    if (data) {
-      // BƯỚC 1: Giải phóng camera mà LearnAR đang giữ
-      console.log('🔄 Releasing camera from QR scanner...');
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => track.stop());
-        videoRef.current.srcObject = null; // Quan trọng
-      }
-
-      setCurrentQrId(qrId);
-      setFlashcardData(data);
-      
-      // Convert to AR object format
-      const arObjectData: ARObjectData = {
-        mind_file_url: `${API_BASE}${data.ar_object.mind_file_url}`,
-        model_3d_url: `${API_BASE}${data.ar_object.model_3d_url}`,
-        position: data.ar_object.position,
-        rotation: data.ar_object.rotation,
-        scale: data.ar_object.scale
-      };
-      
-      setARObjects([arObjectData]);
-
-      // BƯỚC 2: Bật AR Scene. Bây giờ MindAR có thể truy cập camera
-      setIsARVisible(true);
-      
-      console.log('🎨 AR scene updated and will be visible');
-    } else {
-      // Reset if no valid data
-      setCurrentQrId(null);
-      setFlashcardData(null);
-      setARObjects([]);
-      setIsARVisible(false);
-    }
-  };
-
-  /**
-   * Start continuous QR scanning
-   */
-  useEffect(() => {
-    if (!videoRef.current) return;
-
-    const startQRScanning = () => {
-      const scanLoop = async () => {
-        if (!videoRef.current) return;
-
-        try {
-          const qrCode = await detectQRService.decodeFromVideo(videoRef.current);
-          if (qrCode) {
-            await handleQRDetected(qrCode);
-          }
-        } catch (error) {
-          // Silent fail for QR scanning
-        }
-      };
-
-      scanLoop(); // Initial scan
-      qrScanTimerRef.current = window.setInterval(scanLoop, QR_SCAN_INTERVAL);
-    };
-
-    // Start scanning when video is ready
-    if (videoRef.current.readyState >= 2) {
-      startQRScanning();
-    } else {
-      videoRef.current.addEventListener('loadeddata', startQRScanning);
-    }
-
-    return () => {
-      if (qrScanTimerRef.current) {
-        clearInterval(qrScanTimerRef.current);
-      }
-    };
+  const handleArVideoReady = useCallback((video: HTMLVideoElement) => {
+    console.log('📹 AR Video ready:', video);
+    arVideoRef.current = video;
+    setIsVideoReady(true);
   }, []);
 
-  /**
-   * Initialize verification WebSocket - SỬA ĐỔI QUAN TRỌNG
-   */
+  // QR Scanner
+  const { qrId: foundQrId } = useArQrScanner(
+    arVideoRef, 
+    detectedQrId === null && isVideoReady
+  );
+  
+  // Update detected QR
   useEffect(() => {
-    // Chỉ chạy khi có QR ID và video của MindAR đã sẵn sàng
-    if (!currentQrId || !arVideo) return; 
+    if (foundQrId && foundQrId !== detectedQrId) {
+      console.log('🔍 New QR detected:', foundQrId);
+      setDetectedQrId(foundQrId);
+    }
+  }, [foundQrId, detectedQrId]);
 
-    const initVerificationSocket = async () => {
-      try {
-        console.log('🔗 Initializing WebSocket with base URL:', WS_BASE);
-        
-        // Create verification socket with proper URL construction
-        const socket = new VerifySocket(
-          WS_BASE, // Just pass the base URL, service will append /ws/verify
-          (result: VerifyResult) => {
-            console.log('📨 Verification result:', result);
-            
-            if (result.qr_id === currentQrId && !result.valid) {
-              console.warn('⚠️ Verification failed - hiding AR model');
-              setIsARVisible(false);
-              setFlashcardData(null);
-              setCurrentQrId(null);
-              setARObjects([]);
-            }
-          },
-          (error) => {
-            console.error('❌ WebSocket error:', error);
-            setWsConnected(false);
-          },
-          () => {
-            console.log('🔗 Verification WebSocket connected');
-            setWsConnected(true);
-          },
-          () => {
-            console.log('🔌 Verification WebSocket disconnected');
-            setWsConnected(false);
-          }
-        );
+  // Fetch AR data
+  const { arData, isLoading, error: dataError } = useArData(detectedQrId);
 
-        await socket.connect();
-        verifySocketRef.current = socket;
+  // Fetch Quiz data
+  const { quizData, isLoading: quizLoading, error: quizError } = useQuizData(
+    appMode === 'QUIZ' ? detectedQrId : null
+  );
 
-        // Sửa đổi phần startVerification để dùng video từ MindAR
-        const startVerification = async () => {
-          if (!arVideo || !socket.connected) return; // DÙNG arVideo
+  // Fetch Game data
+  const { gameData, isLoading: gameLoading, error: gameError } = useGameData(
+    appMode === 'GAME' ? detectedQrId : null,
+    appMode === 'GAME' ? selectedDifficulty : null,
+    appMode === 'GAME' ? selectedGameType : null
+  );
 
-          try {
-            const frameBlob = await captureFrame(arVideo, 'image/jpeg', 0.92); // DÙNG arVideo
-            socket.sendFrame(currentQrId, frameBlob);
-            console.log('📤 Sent frame for verification from AR video');
-          } catch (error) {
-            console.warn('Frame capture failed:', error);
-          }
-        };
+  // WebSocket verification
+  useVerificationSocket(detectedQrId, arVideoRef.current, !!arData);
 
-        // Initial verification after 2 seconds
-        setTimeout(startVerification, 2000);
-        
-        // Periodic verification
-        verifyTimerRef.current = window.setInterval(startVerification, VERIFY_INTERVAL);
+  // Derive app state
+  let appState: 'SCANNING_IN_AR' | 'LOADING_DATA' | 'AR_VIEW' | 'ERROR';
+  
+  if (dataError) {
+    appState = 'ERROR';
+  } else if (detectedQrId && isLoading) {
+    appState = 'LOADING_DATA';
+  } else if (detectedQrId && arData) {
+    appState = 'AR_VIEW';
+  } else {
+    appState = 'SCANNING_IN_AR';
+  }
 
-      } catch (error) {
-        console.error('❌ Failed to initialize verification:', error);
-      }
-    };
+  // Event handlers
+  const handleDisplayModeToggle = useCallback(() => {
+    console.log('🔄 Display mode toggle clicked');
+    toggleDisplayMode();
+  }, [toggleDisplayMode]);
 
-    initVerificationSocket();
+  const handleAppModeSwitch = useCallback((mode: typeof appMode) => {
+    console.log('🎮 App mode switch clicked:', mode);
+    
+    if (mode === 'GAME') {
+      setShowGameSelector(true);
+      setSelectorStep('difficulty');
+    } else {
+      setAppMode(mode);
+    }
+  }, [setAppMode]);
 
-    // Cleanup
-    return () => {
-      if (verifyTimerRef.current) {
-        clearInterval(verifyTimerRef.current);
-      }
-      if (verifySocketRef.current) {
-        verifySocketRef.current.close();
-      }
-    };
-  }, [currentQrId, arVideo]); // Thêm arVideo vào dependency array
+  const handleReset = useCallback(() => {
+    console.log('🔄 Reset clicked');
+    setDetectedQrId(null);
+    setAppMode('LEARNING');
+    setSelectedDifficulty(null);
+    setSelectedGameType(null);
+    setShowGameSelector(false);
+    markerEventCountRef.current = 0;
+  }, [setAppMode]);
 
-  /**
-   * Handle AR scene events
-   */
-  const handleARReady = () => {
-    console.log('🚀 AR scene ready');
+  const handleQuizExit = useCallback(() => {
+    console.log('🔙 Exiting quiz');
+    setAppMode('LEARNING');
+  }, [setAppMode]);
+
+  const handleGameExit = useCallback(() => {
+    console.log('🔙 Exiting game');
+    setAppMode('LEARNING');
+    setSelectedDifficulty(null);
+    setSelectedGameType(null);
+  }, [setAppMode]);
+
+  // ========== Change Level Handler ==========
+  const handleChangeLevel = useCallback(() => {
+    console.log('🎯 Change level clicked');
+    setSelectedGameType(null);
+    setSelectedDifficulty(null);
+    setSelectorStep('difficulty');
+    setShowGameSelector(true);
+    setAppMode('LEARNING');
+  }, [setAppMode]);
+
+  // ========== Game Selection Handlers ==========
+  const handleDifficultySelect = useCallback((difficulty: GameDifficulty) => {
+    console.log('🎯 Selected difficulty:', difficulty);
+    setSelectedDifficulty(difficulty);
+    setSelectorStep('game_type');
+  }, []);
+
+  const handleGameTypeSelect = useCallback((gameType: GameType) => {
+    console.log('🎮 Selected game type:', gameType);
+    setSelectedGameType(gameType);
+    setShowGameSelector(false);
+    setAppMode('GAME');
+  }, [setAppMode]);
+
+  const handleCancelSelector = useCallback(() => {
+    setShowGameSelector(false);
+    setSelectedDifficulty(null);
+    setSelectedGameType(null);
+    setSelectorStep('difficulty');
+  }, []);
+
+  const handleBackToStep = useCallback(() => {
+    if (selectorStep === 'game_type') {
+      setSelectorStep('difficulty');
+      setSelectedDifficulty(null);
+    }
+  }, [selectorStep]);
+  
+  const renderStatusOverlay = () => {
+    let statusText = '';
+    const isScanning = isVideoReady && !detectedQrId;
+    
+    switch (appState) {
+      case 'SCANNING_IN_AR': 
+        statusText = !isVideoReady 
+          ? 'Initializing camera...' 
+          : isScanning 
+            ? 'Scanning for QR code...' 
+            : 'Please scan a QR code...';
+        break;
+      case 'LOADING_DATA': 
+        statusText = `Loading data for: ${detectedQrId}`; 
+        break;
+      case 'AR_VIEW': 
+        statusText = `Viewing: ${detectedQrId} (${displayMode} ${appMode} mode) [Events: ${markerEventCountRef.current}]`; 
+        break;
+      case 'ERROR': 
+        statusText = `Error: ${dataError}`; 
+        break;
+    }
+    
+    return (
+      <div className="absolute top-4 left-4 p-2 bg-black bg-opacity-50 rounded-lg text-sm text-white z-20">
+        <strong>Status:</strong> {statusText}
+        <br />
+        <small>App: {appMode} | Display: {displayMode}</small>
+      </div>
+    );
   };
-
-  const handleARFound = (targetIndex: number) => {
-    console.log(`🎯 AR target ${targetIndex} found`);
-  };
-
-  const handleARLost = (targetIndex: number) => {
-    console.log(`🎯 AR target ${targetIndex} lost`);
-  };
-
-  const handleARError = (error: Error) => {
-    console.error('❌ AR scene error:', error);
+  
+  const renderResetButton = () => {
+    if (appState === 'AR_VIEW' || appState === 'ERROR') {
+      return (
+        <div className="absolute bottom-4 right-4 z-20">
+          <button 
+            onClick={handleReset} 
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white font-bold shadow-lg"
+          >
+            🔄 Scan Another
+          </button>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
-    <div className="w-screen h-screen relative bg-black overflow-hidden">
-      {/* 1. Camera Video (dùng cho QR scan ban đầu) */}
-      <video
-        ref={videoRef}
-        className="absolute inset-0 w-full h-full object-cover"
-        playsInline
-        muted
-        autoPlay
-        style={{ visibility: isARVisible ? 'hidden' : 'visible' }}
-      />
+    <div className="w-full h-full relative">
+      <div className="ar-wrapper">
+        <ARScene_SOLID
+          isVisible={true}
+          displayMode={displayMode}
+          targets={appState === 'AR_VIEW' && arData ? arData.targets : []}
+          combo={appState === 'AR_VIEW' && arData ? arData.combo : null}
+          onVideoReady={handleArVideoReady}
+          onMarkerEvent={() => {
+            markerEventCountRef.current += 1;
+            console.log('🎯 Marker event triggered:', markerEventCountRef.current);
+          }}
+        />
+      </div>
 
-      {/* 2. Lớp AR Scene (hiển thị khi có AR) */}
-      {isARVisible && arObjects.length > 0 && (
-        <ARSceneMindAR
-          arObjects={arObjects}
-          isVisible={isARVisible}
-          onVideoReady={(video) => setArVideo(video)}
-          onReady={handleARReady}
-          onFound={handleARFound}
-          onLost={handleARLost}
-          onError={handleARError}
-          maxTrack={1}
-          className="absolute inset-0 w-full h-full"
+      {/* Quiz Overlay */}
+      {appMode === 'QUIZ' && appState === 'AR_VIEW' && (
+        <>
+          {quizLoading && (
+            <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80">
+              <div className="text-white text-xl">Loading Quiz...</div>
+            </div>
+          )}
+          
+          {quizError && (
+            <div className="fixed inset-0 z-40 flex items-center justify-center bg-red-900/90">
+              <div className="text-center text-white p-6">
+                <p className="text-2xl mb-4">⚠️ {quizError}</p>
+                <button
+                  onClick={handleQuizExit}
+                  className="px-6 py-3 bg-gray-600 hover:bg-gray-700 rounded-lg font-bold"
+                >
+                  Back to AR
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {!quizLoading && !quizError && quizData && (
+            <QuizOverlay 
+              quizSession={quizData} 
+              onExit={handleQuizExit}
+            />
+          )}
+        </>
+      )}
+
+      {/* Game Overlay */}
+      {appMode === 'GAME' && appState === 'AR_VIEW' && !showGameSelector && (
+        <>
+          {gameLoading && (
+            <div className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm">
+              <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-2xl border-4 border-pink-400">
+                <div className="text-6xl animate-bounce mb-3">🎮</div>
+                <p className="text-xl font-bold text-pink-600">Loading Game...</p>
+              </div>
+            </div>
+          )}
+          
+          {gameError && (
+            <div className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm">
+              <div className="bg-white/95 backdrop-blur-md p-6 rounded-3xl shadow-2xl border-4 border-red-400 text-center max-w-xs">
+                <div className="text-6xl mb-3">😢</div>
+                <p className="text-xl font-bold text-red-600 mb-3">⚠️ {gameError}</p>
+                <button
+                  onClick={handleGameExit}
+                  className="px-5 py-2 bg-blue-500 hover:bg-blue-600 rounded-2xl text-white font-bold"
+                >
+                  Back to AR
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {!gameLoading && !gameError && gameData && (
+            <GameOverlay 
+              gameSession={gameData} 
+              onExit={handleGameExit}
+              onChangeLevel={handleChangeLevel}
+            />
+          )}
+        </>
+      )}
+
+      {/* ========== Game Selector Modal ========== */}
+      {showGameSelector && appState === 'AR_VIEW' && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg bg-gradient-to-br from-purple-100 to-pink-100 backdrop-blur-md rounded-3xl shadow-2xl p-6 border-4 border-purple-400">
+            
+            {/* Step 1: Difficulty Selection */}
+            {selectorStep === 'difficulty' && (
+              <>
+                <div className="text-center mb-6">
+                  <h2 className="text-3xl font-black text-purple-700 mb-2">
+                    Choose Difficulty! 🎯
+                  </h2>
+                  <p className="text-base text-purple-600 font-semibold">
+                    Pick your challenge level!
+                  </p>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  <button
+                    onClick={() => handleDifficultySelect('easy')}
+                    className="w-full p-5 bg-gradient-to-br from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 rounded-2xl text-white font-black text-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-green-600"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>🌱 Easy</span>
+                      <span className="text-sm opacity-90">Perfect for beginners!</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleDifficultySelect('medium')}
+                    className="w-full p-5 bg-gradient-to-br from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 rounded-2xl text-white font-black text-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-orange-600"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>⚡ Medium</span>
+                      <span className="text-sm opacity-90">Ready for a challenge?</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleDifficultySelect('hard')}
+                    className="w-full p-5 bg-gradient-to-br from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 rounded-2xl text-white font-black text-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-red-600"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>🔥 Hard</span>
+                      <span className="text-sm opacity-90">For champions!</span>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Step 2: Game Type Selection */}
+            {selectorStep === 'game_type' && (
+              <>
+                <div className="text-center mb-6">
+                  <h2 className="text-3xl font-black text-purple-700 mb-2">
+                    Choose Game Type! 🎮
+                  </h2>
+                  <p className="text-base text-purple-600 font-semibold">
+                    Pick your favorite game!
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <button
+                    onClick={() => handleGameTypeSelect('drag_match')}
+                    className="p-5 bg-gradient-to-br from-blue-400 to-cyan-500 hover:from-blue-500 hover:to-cyan-600 rounded-2xl text-white font-black text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-blue-600"
+                  >
+                    <div className="text-5xl mb-2">🧩</div>
+                    <div>Drag & Match</div>
+                  </button>
+
+                  <button
+                    onClick={() => handleGameTypeSelect('catch_word')}
+                    className="p-5 bg-gradient-to-br from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 rounded-2xl text-white font-black text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-green-600"
+                  >
+                    <div className="text-5xl mb-2">🎯</div>
+                    <div>Catch Word</div>
+                  </button>
+
+                  <button
+                    onClick={() => handleGameTypeSelect('word_scramble')}
+                    className="p-5 bg-gradient-to-br from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 rounded-2xl text-white font-black text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-purple-600"
+                  >
+                    <div className="text-5xl mb-2">🔀</div>
+                    <div>Word Scramble</div>
+                  </button>
+
+                  <button
+                    onClick={() => handleGameTypeSelect('memory_match')}
+                    className="p-5 bg-gradient-to-br from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 rounded-2xl text-white font-black text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-yellow-600"
+                  >
+                    <div className="text-5xl mb-2">🎪</div>
+                    <div>Memory Match</div>
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleBackToStep}
+                  className="w-full px-6 py-3 bg-gray-400 hover:bg-gray-500 rounded-2xl text-white font-bold text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg mb-3"
+                >
+                  ← Back to Difficulty
+                </button>
+              </>
+            )}
+
+            {/* Cancel button */}
+            <button
+              onClick={handleCancelSelector}
+              className="w-full px-6 py-3 bg-red-400 hover:bg-red-500 rounded-2xl text-white font-bold text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg"
+            >
+              ✕ Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* AR Control Panel */}
+      {appState === 'AR_VIEW' && (
+        <ARControlPanel
+          displayMode={displayMode}
+          appMode={appMode}
+          onDisplayModeToggle={handleDisplayModeToggle}
+          onAppModeSwitch={handleAppModeSwitch}
+          disabled={false}
         />
       )}
 
-      {/* 3. Toàn bộ thông tin debug và status đã được comment out */}
-      {/* --- BẮT ĐẦU KHỐI DEBUG UI ĐÃ ẨN --- */}
-      {/* <div className="absolute top-4 left-4 right-4 z-20 flex flex-col gap-2">
+      <div className="ar-ui-overlay">
+        {renderStatusOverlay()}
+        {renderResetButton()}
 
-        // Phần hiển thị status kết nối và thông tin thẻ
-        <div className="flex items-center gap-2">
-           <div className={`w-3 h-3 rounded-full ${wsConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-           <span className="text-white text-sm font-medium">
-             {wsConnected ? 'Connected' : 'Disconnected'}
-           </span>
-         </div>
-         {flashcardData && (
-           <div className="bg-black bg-opacity-60 rounded-lg p-3 text-white">
-             <div className="text-lg font-bold">{flashcardData.word}</div>
-             <div className="text-sm opacity-80">
-               {Object.entries(flashcardData.translation).map(([lang, translation]) => (
-                 <div key={lang}>
-                   <span className="uppercase font-medium">{lang}:</span> {translation}
-                 </div>
-               ))}
-             </div>
-           </div>
-         )}
-
-        // Phần hiển thị lỗi camera 
-         {cameraError && (
-           <div className="bg-red-500 bg-opacity-90 rounded-lg p-3 text-white text-sm">
-             <div className="font-medium">Camera Error</div>
-             <div>{cameraError}</div>
-           </div>
-         )}
-        
-        // Phần hiển thị thông tin debug chi tiết
-        <div className="bg-blue-500 bg-opacity-60 rounded-lg p-2 text-white text-xs">
-           <div>WS Base: {WS_BASE}</div>
-           <div>Status: {wsConnected ? 'Connected' : 'Disconnected'}</div>
-           <div>AR Video: {arVideo ? 'Ready' : 'Not ready'}</div>
-           <div>QR Scan Video: {videoRef.current?.srcObject ? 'Active' : 'Inactive'}</div>
-        </div>
-
-      </div> 
-      */}
-
-      {/* // Phần hướng dẫn ở cuối màn hình
-      <div className="absolute bottom-4 left-4 right-4 z-20">
-         <div className="bg-black bg-opacity-60 rounded-lg p-3 text-white text-sm text-center">
-           {!currentQrId ? (
-             "Point camera at a flashcard QR code to start AR experience"
-           ) : isARVisible ? (
-             "AR model active - point camera at flashcard to see 3D object"
-           ) : (
-             "Loading AR content..."
-           )}
-         </div>
-      </div> 
-      */}
-      {/* --- KẾT THÚC KHỐI DEBUG UI ĐÃ ẨN --- */}
-
+        {appState === 'ERROR' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center h-full text-white bg-red-900 bg-opacity-90 p-4 z-30">
+            <h2 className="text-2xl font-bold mb-4">An Error Occurred</h2>
+            <p className="mb-6">{dataError}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

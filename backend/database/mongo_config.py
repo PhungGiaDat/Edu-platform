@@ -14,4 +14,4 @@ if not MONGO_DB:
     raise ValueError("MONGO_DB environment variable is required")
 
 
-print(f"📊 Database: {MONGO_DB}")
+print(f"[DB] Database: {MONGO_DB}")

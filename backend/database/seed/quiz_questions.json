@@ -1,0 +1,34 @@
+[
+  {
+    "flashcard_qr_id": "ele123",
+    "questions": [
+      {
+        "id": "ele123_q1",
+        "type": "multiple_choice",
+        "question_text": "Từ vựng 'elephant' trong tiếng Việt nghĩa là gì?",
+        "image_url": "/images/flashcard_elephant.png",
+        "options": [
+          "Con voi",
+          "Con mèo",
+          "Con chó",
+          "Con gà"
+        ],
+        "correct_answer": "Con voi",
+        "explanation": "Elephant trong tiếng Việt là 'Con voi'."
+      },
+      {
+        "id": "ele123_q2",
+        "type": "true_false",
+        "question_text": "Elephant là động vật có vú lớn nhất trên cạn.",
+        "options": [
+          "Đúng",
+          "Sai"
+        ],
+        "correct_answer": "Đúng",
+        "explanation": "Đúng, voi là động vật có vú lớn nhất trên cạn."
+      }
+    ],
+    "time_limit": 60,
+    "passing_score": 2
+  }
+]

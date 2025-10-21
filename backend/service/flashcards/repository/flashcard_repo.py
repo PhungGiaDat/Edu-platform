@@ -9,7 +9,10 @@ class FlashcardRepository(BaseRepository):
 
 
     async def get_by_qr_id(self, qr_id: str):
-        return await self.collection.find_one({"qr_id": qr_id})
+        result = await self.collection.find_one({"qr_id": qr_id})
+        if result and "_id" in result:
+            result["_id"] = str(result["_id"])
+        return result
 
     async def get_by_qr_id_and_ar_tag(self, qr_id: str, ar_tag: str):
         return await self.collection.find_one({"qr_id": qr_id, "ar_tag": ar_tag})
