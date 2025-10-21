@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import ARScene_SOLID from '../components/ARScene_SOLID';
 import ARControlPanel from '../components/panel/ARControlPanel';
 import { QuizOverlay } from '../components/Quiz';
-import { GameOverlay } from '../components/Gameoverlay'; // <-- Updated import
+import { GameOverlay } from '../components/GameOverlay';
 import { useArData } from '../hooks/useArData';
 import { useQuizData } from '../hooks/useQuizData';
 import { useGameData } from '../hooks/useGameData';
@@ -25,6 +25,9 @@ export default function LearnAR() {
   const arVideoRef = useRef<HTMLVideoElement | null>(null);
   const [detectedQrId, setDetectedQrId] = useState<string | null>(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
+  
+  // ========== Marker event tracking with ref (NO re-render) ==========
+  const markerEventCountRef = useRef(0);
   
   // ========== Game selection states ==========
   const [selectedDifficulty, setSelectedDifficulty] = useState<GameDifficulty | null>(null);
@@ -93,7 +96,6 @@ export default function LearnAR() {
     console.log('🎮 App mode switch clicked:', mode);
     
     if (mode === 'GAME') {
-      // Show game selector
       setShowGameSelector(true);
       setSelectorStep('difficulty');
     } else {
@@ -108,6 +110,7 @@ export default function LearnAR() {
     setSelectedDifficulty(null);
     setSelectedGameType(null);
     setShowGameSelector(false);
+    markerEventCountRef.current = 0;
   }, [setAppMode]);
 
   const handleQuizExit = useCallback(() => {
@@ -120,6 +123,16 @@ export default function LearnAR() {
     setAppMode('LEARNING');
     setSelectedDifficulty(null);
     setSelectedGameType(null);
+  }, [setAppMode]);
+
+  // ========== Change Level Handler ==========
+  const handleChangeLevel = useCallback(() => {
+    console.log('🎯 Change level clicked');
+    setSelectedGameType(null);
+    setSelectedDifficulty(null);
+    setSelectorStep('difficulty');
+    setShowGameSelector(true);
+    setAppMode('LEARNING');
   }, [setAppMode]);
 
   // ========== Game Selection Handlers ==========
@@ -166,7 +179,7 @@ export default function LearnAR() {
         statusText = `Loading data for: ${detectedQrId}`; 
         break;
       case 'AR_VIEW': 
-        statusText = `Viewing: ${detectedQrId} (${displayMode} ${appMode} mode)`; 
+        statusText = `Viewing: ${detectedQrId} (${displayMode} ${appMode} mode) [Events: ${markerEventCountRef.current}]`; 
         break;
       case 'ERROR': 
         statusText = `Error: ${dataError}`; 
@@ -207,6 +220,10 @@ export default function LearnAR() {
           targets={appState === 'AR_VIEW' && arData ? arData.targets : []}
           combo={appState === 'AR_VIEW' && arData ? arData.combo : null}
           onVideoReady={handleArVideoReady}
+          onMarkerEvent={() => {
+            markerEventCountRef.current += 1;
+            console.log('🎯 Marker event triggered:', markerEventCountRef.current);
+          }}
         />
       </div>
 
@@ -273,6 +290,7 @@ export default function LearnAR() {
             <GameOverlay 
               gameSession={gameData} 
               onExit={handleGameExit}
+              onChangeLevel={handleChangeLevel}
             />
           )}
         </>

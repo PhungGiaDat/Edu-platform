@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route,Navigate } from "react-router-dom";
 import FlashcardPage from "./pages/FlashcardPage";
 import LearnAR from "./pages/LearnAR";
 import Navbar from "./components/Navbar";
@@ -15,6 +15,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<FlashcardPage />} />
           <Route path="/learn-ar" element={<LearnAR />} />
+          <Route path="/scan" element={<Navigate to="/learn-ar" replace />} /> {/* ✅ Redirect */}
         </Routes>
       </main>
     </div>

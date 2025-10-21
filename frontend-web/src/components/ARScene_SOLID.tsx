@@ -13,6 +13,7 @@ interface Props {
   combo: ARCombo | null;
   appMode?: AppMode;
   onVideoReady?: (video: HTMLVideoElement) => void;
+  onMarkerEvent?: () => void; // ✅ NEW: Callback for marker events
 }
 
 const ARScene_SOLID: React.FC<Props> = ({ 
@@ -21,7 +22,8 @@ const ARScene_SOLID: React.FC<Props> = ({
   targets, 
   combo, 
   appMode = 'LEARNING',
-  onVideoReady 
+  onVideoReady,
+  onMarkerEvent
 }) => {
   const sceneRef = useRef<any>(null);
   const { isComboActive, markerHandlers } = useMarkerState(combo);
@@ -126,15 +128,17 @@ const ARScene_SOLID: React.FC<Props> = ({
 
   const anchorTag = combo?.required_tags[0];
 
-  const onMarkerFound = (tag: string) => {
-    console.log('🎯 MARKER FOUND:', tag);
-    markerHandlers.onMarkerFound(tag);
-  };
+const onMarkerFound = (tag: string) => {
+  console.log('🎯 MARKER FOUND:', tag);
+  markerHandlers.onMarkerFound(tag);
+  onMarkerEvent?.(); // ✅ Also trigger here for immediate feedback
+};
 
-  const onMarkerLost = (tag: string) => {
-    console.log('🎯 MARKER LOST:', tag);
-    markerHandlers.onMarkerLost(tag);
-  };
+const onMarkerLost = (tag: string) => {
+  console.log('🎯 MARKER LOST:', tag);
+  markerHandlers.onMarkerLost(tag);
+  onMarkerEvent?.(); // ✅ Also trigger here
+};
 
   console.log('🎬 Rendering ARScene:', {
     targetsCount: targets.length,

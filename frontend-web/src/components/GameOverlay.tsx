@@ -11,6 +11,7 @@ import { MemoryMatchGame } from './game/MemoryMatchGame';
 interface GameOverlayProps {
   gameSession: GameSessionData | null;
   onExit: () => void;
+  onChangeLevel?: () => void; // Optional callback for changing level
 }
 
 /**
@@ -70,7 +71,7 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
   // Results
   if (isFinished) {
     const starArray = Array(totalStars).fill('⭐');
-    const gameType = gameSession.challenges[0]?.game_type || 'game';
+    // const gameType = gameSession.challenges[0]?.game_type || 'game';
 
     return (
       <div className="fixed inset-0 z-40 flex items-center justify-center p-4 backdrop-blur-sm">

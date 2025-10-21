@@ -1,7 +1,7 @@
 // src/components/games/MemoryMatchGame.tsx
 
 import React, { useState, useEffect } from 'react';
-import type { GameChallenge, MemoryPair } from '../../types';
+import type { GameChallenge} from '../../types';
 import { getApiBase } from '../../config';
 
 const API_BASE = getApiBase();
