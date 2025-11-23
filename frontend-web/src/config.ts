@@ -1,3 +1,5 @@
+
+
 // src/config.ts - Smart API & WebSocket detection
 
 /**
@@ -10,9 +12,17 @@ export const getApiBase = (): string => {
   if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
     return ''; // Relative → proxy to localhost:8000
   }
+
+  // Define api base for localhost or development
+
+  const ApiBase =  import.meta.env.VITE_API_BASE || 'http://localhost:8000';
   
   // If localhost, use direct connection
-  return import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+  if(!ApiBase.startsWith('http//') && !ApiBase.startsWith('https://')) {
+    return `http://${ ApiBase}`;
+  }
+
+  return ApiBase;
 };
 
 /**

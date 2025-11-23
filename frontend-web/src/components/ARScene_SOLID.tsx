@@ -1,9 +1,10 @@
+// src/components/ARScene_SOLID.tsx - CORRECT ARCHITECTURE
 import React, { useEffect, useRef } from 'react';
-import { useMarkerState } from '../hooks/useMarkerState';
 import type { ARTarget, ARCombo } from '../types';
 import type { AppMode } from '../hooks/useDisplayMode';
 import { Scene, Entity, Cursor, Plane, Image, GltfModel } from './aframe/AFrameComponents';
 import { Nft } from './aframe/Nft';
+import { eventBus, markerStateManager } from '@/runtime';
 import "../styles/ARScene.css";
 
 interface Props {
@@ -13,7 +14,7 @@ interface Props {
   combo: ARCombo | null;
   appMode?: AppMode;
   onVideoReady?: (video: HTMLVideoElement) => void;
-  onMarkerEvent?: () => void; // ✅ NEW: Callback for marker events
+  onMarkerEvent?: () => void;
 }
 
 const ARScene_SOLID: React.FC<Props> = ({ 
@@ -25,126 +26,86 @@ const ARScene_SOLID: React.FC<Props> = ({
   onVideoReady,
   onMarkerEvent
 }) => {
-  const sceneRef = useRef<any>(null);
-  const { isComboActive, markerHandlers } = useMarkerState(combo);
-
+  const sceneRef = useRef<HTMLElement>(null);
   const needsCursor = appMode === 'GAME' || appMode === 'QUIZ';
 
+  // ========== RENDERER SETUP (Fix White Screen) ==========
   useEffect(() => {
     const sceneEl = sceneRef.current;
-    if (!sceneEl) {
-      console.log('❌ Scene element not found');
-      return;
-    }
+    if (!sceneEl) return;
 
-    let videoFound = false;
-    let setupComplete = false;
-
-    const setupScene = () => {
-      if (setupComplete) return;
-      
-      console.log('🔧 Setting up AR scene...');
-      
-      const renderer = sceneEl.renderer;
+    const setupRenderer = () => {
+      const renderer = (sceneEl as any).renderer;
       if (renderer) {
+        // 🔥 Critical: Set transparent background
         renderer.setClearColor(0x000000, 0);
         renderer.setClearAlpha(0);
-        
-        if (renderer.context && renderer.context.DEPTH_TEST !== undefined) {
-          renderer.context.enable(renderer.context.DEPTH_TEST);
-          console.log('✅ Renderer transparency and depth test applied');
-        } else {
-          console.log('⚠️ Renderer context not ready yet, skipping DEPTH_TEST');
-        }
+        console.log('✅ Renderer transparency applied');
       }
 
-      const scene = sceneEl.object3D;
+      const scene = (sceneEl as any).object3D;
       if (scene) {
         scene.background = null;
         console.log('✅ Scene background removed');
       }
-      
-      setupComplete = true;
     };
 
-    const findVideo = () => {
-      if (videoFound) return;
+    // Setup immediately if already loaded
+    if ((sceneEl as any).hasLoaded) {
+      setupRenderer();
+    }
 
-      const video = document.querySelector('video');
-      if (video) {
-        console.log('✅ Video found');
-        videoFound = true;
-        onVideoReady?.(video);
-      }
-    };
-
+    // Listen for loaded event
     const onLoaded = () => {
-      console.log('🎬 AR.js scene loaded');
-      setupScene();
-      
-      setTimeout(() => {
-        const arSystem = sceneEl.systems?.arjs;
-        console.log('🔍 AR.js System Check:', {
-          hasSystem: !!arSystem,
-          arjsVersion: (window as any).THREEx?.ArToolkitContext?.prototype?.constructor?.toString().match(/v\d+\.\d+\.\d+/)?.[0],
-          trackingMethod: arSystem?.data?.trackingMethod,
-          sourceType: arSystem?.data?.sourceType,
-          actualChangeMatrixMode: arSystem?.data?.changeMatrixMode
-        });
-        
-        const arjsAttr = sceneEl.getAttribute('arjs');
-        console.log('📋 Applied arjs config:', arjsAttr);
-      }, 1000);
-      
-      [100, 500, 1000, 2000].forEach((delay, i) => {
-        setTimeout(() => {
-          console.log(`🔍 Video search ${i + 1}`);
-          findVideo();
-        }, delay);
-      });
+      console.log('📹 A-Frame scene loaded');
+      setupRenderer();
     };
 
-    sceneEl.addEventListener('loaded', onLoaded, { once: true });
-    if (sceneEl.hasLoaded) onLoaded();
-
-    const observer = new MutationObserver(() => {
-      if (document.querySelector('video')) {
-        setTimeout(findVideo, 100);
-      }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
+    sceneEl.addEventListener('loaded', onLoaded);
 
     return () => {
       sceneEl.removeEventListener('loaded', onLoaded);
-      observer.disconnect();
     };
-  }, [onVideoReady]);
+  }, []);
+
+  // ========== COMBO SETUP ==========
+  useEffect(() => {
+    console.log('🎯 ARScene_SOLID: Setting combo', combo?.combo_id);
+    markerStateManager.setCombo(combo);
+    markerStateManager.setEventBus(eventBus);
+  }, [combo]);
+
+  // ========== MARKER EVENT SUBSCRIPTION ==========
+  useEffect(() => {
+    const handleMarkerFound = (payload: any) => {
+      console.log('🎯 ARScene_SOLID: Marker found', payload.markerId);
+      onMarkerEvent?.();
+    };
+
+    const handleMarkerLost = (payload: any) => {
+      console.log('👻 ARScene_SOLID: Marker lost', payload.markerId);
+      onMarkerEvent?.();
+    };
+
+    // Subscribe to events
+    eventBus.on('MARKER_FOUND', handleMarkerFound);
+    eventBus.on('MARKER_LOST', handleMarkerLost);
+
+    return () => {
+      eventBus.off('MARKER_FOUND', handleMarkerFound);
+      eventBus.off('MARKER_LOST', handleMarkerLost);
+    };
+  }, [onMarkerEvent]);
+
+  // ========== GET COMBO STATE ==========
+  // Read state from markerStateManager (not from hook)
+  const isComboActive = markerStateManager.isComboActive();
 
   if (!isVisible) {
-    console.log('🚫 ARScene not visible');
     return null;
   }
 
   const anchorTag = combo?.required_tags[0];
-
-const onMarkerFound = (tag: string) => {
-  console.log('🎯 MARKER FOUND:', tag);
-  markerHandlers.onMarkerFound(tag);
-  onMarkerEvent?.(); // ✅ Also trigger here for immediate feedback
-};
-
-const onMarkerLost = (tag: string) => {
-  console.log('🎯 MARKER LOST:', tag);
-  markerHandlers.onMarkerLost(tag);
-  onMarkerEvent?.(); // ✅ Also trigger here
-};
-
-  console.log('🎬 Rendering ARScene:', {
-    targetsCount: targets.length,
-    displayMode,
-    isComboActive
-  });
 
   return (
     <Scene
@@ -152,17 +113,18 @@ const onMarkerLost = (tag: string) => {
       embedded
       vr-mode-ui="enabled: false"
       renderer="antialias: true; alpha: true; precision: mediump;"
-      arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: true;"
+      arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false; changeMatrixMode: cameraTransformMatrix;"
       light="defaultLightEnabled: false"
+      eventBus={eventBus}
+      onVideoReady={onVideoReady}
     >
+      {/* Camera */}
       <Entity 
         camera 
         position="0 0 0"
         wasd-controls-enabled="false" 
         look-controls-enabled="false"
-        {...(needsCursor && {
-          cursor: "rayOrigin: mouse"
-        })}
+        {...(needsCursor && { cursor: "rayOrigin: mouse" })}
       >
         {needsCursor && (
           <Cursor 
@@ -173,18 +135,22 @@ const onMarkerLost = (tag: string) => {
         )}
       </Entity>
 
+      {/* Lighting */}
       <Entity light="type: ambient; intensity: 0.8" />
       <Entity light="type: directional; position: 0 10 5; intensity: 0.6" />
 
+      {/* NFT Markers */}
       {targets.map(target => (
         <Nft
           key={target.tag}
           type="nft"
           url={target.nft_base_url}
-          onMarkerFound={() => onMarkerFound(target.tag)}
-          onMarkerLost={() => onMarkerLost(target.tag)}
+          markerId={target.tag}
+          target={target}
+          eventBus={eventBus}
+          markerStateManager={markerStateManager}
         >
-          {/* 🔥 DEBUG PLANE - Hình vuông vàng để test anchor */}
+          {/* Debug plane */}
           <Plane
             position="0 0 0"
             rotation="-90 0 0"

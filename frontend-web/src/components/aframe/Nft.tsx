@@ -1,149 +1,162 @@
-// Nft.tsx - FIXED VERSION with force visibility
-import React, { useEffect, useRef } from 'react';
+// src/components/aframe/Nft.tsx
+import React, { useEffect, useRef, memo, useImperativeHandle, forwardRef } from 'react';
+import type { AFrameEntity } from '@/types/aframe'; 
+import type { INftMarkerProps } from '@/core/interfaces/IAFrameProps';
+import { AREvent } from '@/core/types/AREvents';
 
-interface NftProps {
-  type: 'nft';
-  url: string;
-  onMarkerFound?: () => void;
-  onMarkerLost?: () => void;
-  children?: React.ReactNode;
-}
+export const Nft = memo(
+  forwardRef<HTMLElement, INftMarkerProps>(
+    (
+      {
+        type,
+        url,
+        markerId,
+        target,
+        eventBus,
+        markerStateManager,
+        children,
+        smooth = 'true',
+        smoothCount = '10',
+        smoothTolerance = '0.01',
+        smoothThreshold = '5',
+        ...otherProps
+      },
+      ref
+    ) => {
+      const nftRef = useRef<HTMLElement>(null);
+      const isInitializedRef = useRef(false);
 
-export const Nft: React.FC<NftProps> = ({ 
-  type, 
-  url, 
-  onMarkerFound, 
-  onMarkerLost, 
-  children 
-}) => {
-  const nftRef = useRef<any>(null);
+      useImperativeHandle(ref, () => nftRef.current!);
 
-  useEffect(() => {
-    const element = nftRef.current;
-    if (!element) {
-      console.log('❌ NFT element not found');
-      return;
-    }
-
-    console.log('🎯 NFT Component mounted:', {
-      url,
-      type,
-      hasElement: !!element,
-      isLoaded: element.hasLoaded,
-      childrenCount: element.children?.length
-    });
-
-    const setupListeners = () => {
-      const onNftLoading = (e: any) => {
-        console.log('📥 NFT Loading started:', url, e);
-      };
-
-      const onNftLoaded = (e: any) => {
-        console.log('✅ NFT Loaded successfully:', url, e);
+      useEffect(() => {
+        const element = nftRef.current as AFrameEntity | null;
         
-        // 🔥 FIX: Force children visibility after marker loads
-        setTimeout(() => {
-          const children = Array.from(element.children || []);
-          console.log(`🔄 NFT loaded, found ${children.length} children`);
-          
-          children.forEach((child: any, index) => {
-            if (child.object3D) {
-              console.log(`👶 Child ${index}: ${child.tagName}, visible: ${child.object3D.visible}`);
-            }
-          });
-        }, 100);
-      };
-
-      const onNftError = (e: any) => {
-        console.error('❌ NFT Load error:', url, e);
-      };
-
-      const onFound = (e: any) => {
-        console.log('🎯🎯🎯 MARKER FOUND EVENT FIRED! 🎯🎯🎯', {
-          url,
-          event: e,
-          timestamp: Date.now()
-        });
-        
-        // 🔥 FIX: Force all children visible when marker found
-        setTimeout(() => {
-          const children = Array.from(element.children || []);
-          children.forEach((child: any) => {
-            if (child.object3D) {
-              child.object3D.visible = true;
-              console.log('👁️ Forced visible:', child.tagName);
-            }
-          });
-        }, 50);
-        
-        onMarkerFound?.();
-      };
-
-      const onLost = (e: any) => {
-        console.log('❌ MARKER LOST EVENT FIRED!', {
-          url,
-          event: e,
-          timestamp: Date.now()
-        });
-        onMarkerLost?.();
-      };
-
-      element.addEventListener('arjs-nft-loading-start', onNftLoading);
-      element.addEventListener('arjs-nft-loaded', onNftLoaded);
-      element.addEventListener('arjs-nft-load-error', onNftError);
-      element.addEventListener('markerFound', onFound);
-      element.addEventListener('markerLost', onLost);
-
-      console.log('✅ Event listeners attached');
-
-      setTimeout(() => {
-        const arjsAnchor = element.components?.['arjs-anchor'];
-        if (arjsAnchor) {
-          console.log('✅ arjs-anchor found:', arjsAnchor.data);
+        if (!element) {
+          console.warn('⚠️ NFT: Element not found');
+          return;
         }
-        console.log('📋 Components:', Object.keys(element.components || {}));
-      }, 500);
 
-      return () => {
-        element.removeEventListener('arjs-nft-loading-start', onNftLoading);
-        element.removeEventListener('arjs-nft-loaded', onNftLoaded);
-        element.removeEventListener('arjs-nft-load-error', onNftError);
-        element.removeEventListener('markerFound', onFound);
-        element.removeEventListener('markerLost', onLost);
-      };
-    };
+        if (!eventBus || !markerStateManager) {
+          console.warn('⚠️ NFT: Missing dependencies', {
+            markerId,
+            hasEventBus: !!eventBus,
+            hasMarkerStateManager: !!markerStateManager
+          });
+          return;
+        }
 
-    if (element.hasLoaded) {
-      console.log('🚀 NFT element already loaded');
-      return setupListeners();
+        const hasNftTracking = element.components?.['arjs-tracked-controls'];
+        if (isInitializedRef.current && hasNftTracking) {
+          console.log('✅ NFT already initialized:', markerId);
+          return;
+        }
+
+        console.log('🔧 Initializing NFT marker:', {
+          markerId,
+          url,
+          hasTracking: !!hasNftTracking,
+          components: Object.keys(element.components || {})
+        });
+
+        const handleMarkerFound = () => {
+          console.log('📍 Marker found:', markerId);
+          markerStateManager.markFound(markerId);
+          eventBus.emit(AREvent.MARKER_FOUND, { markerId, target });
+        };
+
+        const handleMarkerLost = () => {
+          console.log('❌ Marker lost:', markerId);
+          markerStateManager.markLost(markerId);
+          eventBus.emit(AREvent.MARKER_LOST, { markerId });
+        };
+
+        const handleNftLoading = (e: Event) => {
+          console.log('📥 NFT Loading:', markerId, e);
+        };
+
+        const handleNftLoaded = (e: Event) => {
+          console.log('✅ NFT Loaded:', markerId, e);
+          
+          setTimeout(() => {
+            const children = Array.from(element.children || []) as Element[];
+            console.log(`🔄 NFT ${markerId}: ${children.length} children`);
+            
+            children.forEach((child, index) => {
+              const childEntity = child as unknown as AFrameEntity;
+              if (childEntity.object3D) {
+                console.log(`  Child ${index}: ${child.tagName}, visible: ${childEntity.object3D.visible}`);
+              }
+            });
+          }, 100);
+        };
+
+        const handleNftError = (e: Event) => {
+          console.error('❌ NFT Error:', markerId, e);
+          eventBus.emit(AREvent.AR_ERROR, {
+            error: new Error(`NFT loading failed: ${markerId}`),
+            context: `NFT marker: ${url}`
+          });
+        };
+
+        const setupListeners = () => {
+          element.addEventListener('loading', handleNftLoading);
+          element.addEventListener('loaded', handleNftLoaded);
+          element.addEventListener('error', handleNftError);
+          element.addEventListener('markerFound', handleMarkerFound);
+          element.addEventListener('markerLost', handleMarkerLost);
+
+          console.log('✅ NFT event listeners registered:', markerId);
+
+          return () => {
+            element.removeEventListener('loading', handleNftLoading);
+            element.removeEventListener('loaded', handleNftLoaded);
+            element.removeEventListener('error', handleNftError);
+            element.removeEventListener('markerFound', handleMarkerFound);
+            element.removeEventListener('markerLost', handleMarkerLost);
+            
+            console.log('🧹 NFT cleanup:', markerId);
+          };
+        };
+
+        let cleanup: (() => void) | undefined;
+
+        if ((element as any).hasLoaded) {
+          console.log('✅ NFT element already loaded:', markerId);
+          cleanup = setupListeners();
+        } else {
+          console.log('⏳ Waiting for NFT element load:', markerId);
+          
+          const onElementLoaded = () => {
+            console.log('✅ NFT element loaded event:', markerId);
+            cleanup = setupListeners();
+            element.removeEventListener('loaded', onElementLoaded);
+          };
+          
+          element.addEventListener('loaded', onElementLoaded);
+        }
+
+        isInitializedRef.current = true;
+
+        return cleanup;
+      }, [url, markerId, target, eventBus, markerStateManager]);
+
+      return (
+        <a-nft
+          ref={nftRef}
+          type={type}
+          url={url}
+          smooth={smooth}
+          smoothCount={smoothCount}
+          smoothTolerance={smoothTolerance}
+          smoothThreshold={smoothThreshold}
+          registerevents="true"
+          {...otherProps}
+        >
+          {children}
+        </a-nft>
+      );
     }
+  )
+);
 
-    const onLoaded = () => {
-      console.log('🚀 NFT element loaded event');
-      return setupListeners();
-    };
-
-    element.addEventListener('loaded', onLoaded, { once: true });
-
-    return () => {
-      element.removeEventListener('loaded', onLoaded);
-    };
-  }, [url, onMarkerFound, onMarkerLost]);
-
-  console.log('🔄 Rendering NFT with URL:', url);
-
-  return (
-    // @ts-ignore: A-Frame NFT tag
-    <a-nft
-      ref={nftRef}
-      type={type}
-      url={url}
-      smooth="true"
-      smoothCount="10"
-      smoothTolerance="10"
-      smoothThreshold="2"
-    >
-      {children}
-    </a-nft>
-  );
-};
+Nft.displayName = 'Nft';

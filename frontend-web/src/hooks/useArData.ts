@@ -32,35 +32,35 @@ export const useArData = (qrId: string | null) => {
 
   useEffect(() => {
     if (!qrId) {
-      console.log('í´ useArData: No QR ID provided');
+      console.log('ï¿½ï¿½ï¿½ useArData: No QR ID provided');
       return;
     }
 
     const fetchData = async () => {
-      console.log('í´ useArData: Fetching data for QR ID:', qrId);
+      console.log('ï¿½ï¿½ï¿½ useArData: Fetching data for QR ID:', qrId);
       setIsLoading(true);
       setError(null);
 
       try {
         const response = await fetch(`${API_BASE}/api/flashcard/${qrId}`);
-        console.log('í³¡ Raw response status:', response.status);
-        console.log('í³¡ Raw response headers:', Object.fromEntries(response.headers.entries()));
+        console.log('ï¿½ï¿½ï¿½ Raw response status:', response.status);
+        console.log('ï¿½ï¿½ï¿½ Raw response headers:', Object.fromEntries(response.headers.entries()));
 
         if (!response.ok) {
           throw new Error(`Failed to fetch AR data: ${response.statusText}`);
         }
 
         const text = await response.text();
-        console.log('í³„ Raw response text:', text);
+        console.log('ï¿½ï¿½ï¿½ Raw response text:', text);
 
         const data = JSON.parse(text);
-        console.log('í³¦ Parsed JSON data:', data);
+        console.log('ï¿½ï¿½ï¿½ Parsed JSON data:', data);
 
-        console.log('í´ Validating data structure...');
-        console.log('í³Š Data keys:', Object.keys(data));
+        console.log('ï¿½ï¿½ï¿½ Validating data structure...');
+        console.log('ï¿½ï¿½ï¿½ Data keys:', Object.keys(data));
         console.log('ï¿½ï¿½ Has flashcard:', !!data.flashcard);
-        console.log('í³Š Has target:', !!data.target);
-        console.log('í³Š Has related_combos:', !!data.related_combos);
+        console.log('ï¿½ï¿½ï¿½ Has target:', !!data.target);
+        console.log('ï¿½ï¿½ï¿½ Has related_combos:', !!data.related_combos);
 
         if (!data.flashcard || !data.target) {
           console.log('âŒ Missing required fields:', {
@@ -73,7 +73,9 @@ export const useArData = (qrId: string | null) => {
         // Transform target data
         const target: ARTarget = {
           tag: data.target.ar_tag,
-          nft_base_url: data.target.nft_base_url, // Keep relative path
+          nft_base_url: data.target.nft_base_url
+            .replace(/^\/public\//, '/')
+            .replace(/^public\//, '/'),
           image_2d_url: data.target.image_2d_url ? `${API_BASE}${data.target.image_2d_url}` : undefined,
           model_3d_url: `${API_BASE}${data.target.model_3d_url}`,
           position: data.target.position,
