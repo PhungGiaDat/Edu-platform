@@ -1,99 +1,164 @@
-// src/pages/LearnAR.tsx
+// src/pages/LearnAR.tsx - REFACTORED WITH RUNTIME BRIDGE
+import { useEffect, useRef, useState, useCallback } from 'react';
+// import { useNavigate } from 'react-router-dom';
+import ARScene_SOLID from '@/components/ARScene_SOLID';
+import ARControlPanel from '@/components/panel/ARControlPanel';
+import { QuizOverlay } from '@/components/Quiz';
+import { GameOverlay } from '@/components/GameOverlay';
+import { useArData } from '@/hooks/useArData';
+import { useQuizData } from '@/hooks/useQuizData';
+import { useGameData } from '@/hooks/useGameData';
+import { useVerificationSocket } from '@/hooks/useVerificationSocket';
+import { useRuntimeBridge } from '@/hooks/useRuntimeBridge';
+import type { DisplayMode, AppMode } from '@/hooks/useDisplayMode';
+import type { GameDifficulty, GameType } from '@/types';
+import '@/styles/ARScene.css';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
-import ARScene_SOLID from '../components/ARScene_SOLID';
-import ARControlPanel from '../components/panel/ARControlPanel';
-import { QuizOverlay } from '../components/Quiz';
-import { GameOverlay } from '../components/GameOverlay';
-import { useArData } from '../hooks/useArData';
-import { useQuizData } from '../hooks/useQuizData';
-import { useGameData } from '../hooks/useGameData';
-import { useVerificationSocket } from '../hooks/useVerificationSocket';
-import { useArQrScanner } from '../hooks/useArQrScanner';
-import '../styles/ARScene.css';
-import { useDisplayMode } from '../hooks/useDisplayMode';
-import type { GameDifficulty, GameType } from '../types';
+// ========== TYPE DEFINITIONS ==========
+type AppState = 'SCANNING_QR' | 'LOADING_DATA' | 'AR_ACTIVE' | 'ERROR';
 
 export default function LearnAR() {
-  const {
-    displayMode,
-    toggleDisplayMode,
-    appMode,
-    setAppMode
-  } = useDisplayMode('2D', 'LEARNING');
-  
-  const arVideoRef = useRef<HTMLVideoElement | null>(null);
+  // const navigate = useNavigate();
+
+  // ========== STATE ==========
+  const [appState, setAppState] = useState<AppState>('SCANNING_QR');
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('2D');
+  const [appMode, setAppMode] = useState<AppMode>('LEARNING');
   const [detectedQrId, setDetectedQrId] = useState<string | null>(null);
-  const [isVideoReady, setIsVideoReady] = useState(false);
-  
-  // ========== Marker event tracking with ref (NO re-render) ==========
-  const markerEventCountRef = useRef(0);
-  
-  // ========== Game selection states ==========
+  const [isComboActive, setIsComboActive] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Game selection states
   const [selectedDifficulty, setSelectedDifficulty] = useState<GameDifficulty | null>(null);
   const [selectedGameType, setSelectedGameType] = useState<GameType | null>(null);
   const [showGameSelector, setShowGameSelector] = useState(false);
   const [selectorStep, setSelectorStep] = useState<'difficulty' | 'game_type'>('difficulty');
 
-  const handleArVideoReady = useCallback((video: HTMLVideoElement) => {
-    console.log('📹 AR Video ready:', video);
-    arVideoRef.current = video;
-    setIsVideoReady(true);
-  }, []);
+  // ========== REFS ==========
+  const arVideoRef = useRef<HTMLVideoElement | null>(null);
+  const markerCountRef = useRef(0);
 
-  // QR Scanner
-  const { qrId: foundQrId } = useArQrScanner(
-    arVideoRef, 
-    detectedQrId === null && isVideoReady
-  );
-  
-  // Update detected QR
+  // ========== RUNTIME BRIDGE INITIALIZATION ==========
+  const bridge = useRuntimeBridge(arVideoRef.current, { debug: true });
+
+  // ========== EVENT SUBSCRIPTIONS ==========
   useEffect(() => {
-    if (foundQrId && foundQrId !== detectedQrId) {
-      console.log('🔍 New QR detected:', foundQrId);
-      setDetectedQrId(foundQrId);
-    }
-  }, [foundQrId, detectedQrId]);
+    const { eventBus } = bridge;
 
-  // Fetch AR data
+    console.log('📡 LearnAR: Setting up event subscriptions');
+
+    const handleVideoReady = (payload: { video: HTMLVideoElement }) => {
+      console.log('📹 Video ready');
+      arVideoRef.current = payload.video;
+    };
+
+    const handleMarkerFound = (payload: { markerId: string }) => {
+      console.log('🎯 Marker/QR found:', payload.markerId);
+      markerCountRef.current++;
+
+      if (appState === 'SCANNING_QR') {
+        console.log('📱 QR detected:', payload.markerId);
+        setDetectedQrId(payload.markerId);
+        setAppState('LOADING_DATA');
+        bridge.stopQRScanning();
+      }
+    };
+
+    const handleMarkerLost = (payload: { markerId: string }) => {
+      console.log('👋 Marker lost:', payload.markerId);
+      markerCountRef.current++;
+    };
+
+    const handleComboActivated = (payload: { combo: any }) => {
+      console.log('🎉 Combo activated:', payload.combo);
+      setIsComboActive(true);
+    };
+
+    const handleComboDeactivated = () => {
+      console.log('💔 Combo deactivated');
+      setIsComboActive(false);
+    };
+
+    eventBus.on('VIDEO_READY', handleVideoReady as any);
+    eventBus.on('MARKER_FOUND', handleMarkerFound as any);
+    eventBus.on('MARKER_LOST', handleMarkerLost as any);
+    eventBus.on('COMBO_ACTIVATED', handleComboActivated as any);
+    eventBus.on('COMBO_DEACTIVATED', handleComboDeactivated as any);
+
+    return () => {
+      console.log('🧹 LearnAR: Cleaning up event subscriptions');
+      eventBus.off('VIDEO_READY', handleVideoReady as any);
+      eventBus.off('MARKER_FOUND', handleMarkerFound as any);
+      eventBus.off('MARKER_LOST', handleMarkerLost as any);
+      eventBus.off('COMBO_ACTIVATED', handleComboActivated as any);
+      eventBus.off('COMBO_DEACTIVATED', handleComboDeactivated as any);
+    };
+  }, [bridge, appState]);
+
+  // ========== DATA FETCHING ==========
   const { arData, isLoading, error: dataError } = useArData(detectedQrId);
-
-  // Fetch Quiz data
   const { quizData, isLoading: quizLoading, error: quizError } = useQuizData(
     appMode === 'QUIZ' ? detectedQrId : null
   );
-
-  // Fetch Game data
   const { gameData, isLoading: gameLoading, error: gameError } = useGameData(
     appMode === 'GAME' ? detectedQrId : null,
     appMode === 'GAME' ? selectedDifficulty : null,
     appMode === 'GAME' ? selectedGameType : null
   );
 
-  // WebSocket verification
   useVerificationSocket(detectedQrId, arVideoRef.current, !!arData);
 
-  // Derive app state
-  let appState: 'SCANNING_IN_AR' | 'LOADING_DATA' | 'AR_VIEW' | 'ERROR';
-  
-  if (dataError) {
-    appState = 'ERROR';
-  } else if (detectedQrId && isLoading) {
-    appState = 'LOADING_DATA';
-  } else if (detectedQrId && arData) {
-    appState = 'AR_VIEW';
-  } else {
-    appState = 'SCANNING_IN_AR';
-  }
+  useEffect(() => {
+    if (dataError) {
+      setAppState('ERROR');
+      setErrorMessage(dataError);
+    } else if (detectedQrId && isLoading) {
+      setAppState('LOADING_DATA');
+    } else if (detectedQrId && arData) {
+      setAppState('AR_ACTIVE');
+    }
+  }, [detectedQrId, isLoading, arData, dataError]);
 
-  // Event handlers
+  // ========== MULTI-FLASHCARD TRACKING ==========
+  useEffect(() => {
+    if (appState === 'AR_ACTIVE' && arData?.combo) {
+      const requiredTags = arData.combo.required_tags;
+      
+      console.log('🎯 Starting multi-flashcard tracking:', requiredTags);
+      bridge.startMultiFlashcardTracking(requiredTags, 30000);
+
+      const handleProgress = (payload: any) => {
+        console.log('📊 Multi-flashcard progress:', payload.progress);
+      };
+
+      const handleComplete = (payload: any) => {
+        console.log('🎉 Multi-flashcard complete!', payload);
+      };
+
+      const handleTimeout = (payload: any) => {
+        console.log('⏰ Multi-flashcard timeout', payload);
+      };
+
+      bridge.eventBus.on('MULTI_FLASHCARD_PROGRESS' as any, handleProgress);
+      bridge.eventBus.on('MULTI_FLASHCARD_COMPLETE' as any, handleComplete);
+      bridge.eventBus.on('MULTI_FLASHCARD_TIMEOUT' as any, handleTimeout);
+
+      return () => {
+        bridge.stopMultiFlashcardTracking();
+        bridge.eventBus.off('MULTI_FLASHCARD_PROGRESS' as any, handleProgress);
+        bridge.eventBus.off('MULTI_FLASHCARD_COMPLETE' as any, handleComplete);
+        bridge.eventBus.off('MULTI_FLASHCARD_TIMEOUT' as any, handleTimeout);
+      };
+    }
+  }, [appState, arData, bridge]);
+
+  // ========== ACTION HANDLERS ==========
   const handleDisplayModeToggle = useCallback(() => {
-    console.log('🔄 Display mode toggle clicked');
-    toggleDisplayMode();
-  }, [toggleDisplayMode]);
+    setDisplayMode((prev: DisplayMode) => prev === '2D' ? '3D' : '2D');
+  }, []);
 
-  const handleAppModeSwitch = useCallback((mode: typeof appMode) => {
-    console.log('🎮 App mode switch clicked:', mode);
+  const handleAppModeSwitch = useCallback((mode: AppMode) => {
+    console.log('🔀 Switch to', mode);
     
     if (mode === 'GAME') {
       setShowGameSelector(true);
@@ -101,53 +166,36 @@ export default function LearnAR() {
     } else {
       setAppMode(mode);
     }
-  }, [setAppMode]);
-
-  const handleReset = useCallback(() => {
-    console.log('🔄 Reset clicked');
-    setDetectedQrId(null);
-    setAppMode('LEARNING');
-    setSelectedDifficulty(null);
-    setSelectedGameType(null);
-    setShowGameSelector(false);
-    markerEventCountRef.current = 0;
-  }, [setAppMode]);
+  }, []);
 
   const handleQuizExit = useCallback(() => {
-    console.log('🔙 Exiting quiz');
     setAppMode('LEARNING');
-  }, [setAppMode]);
+  }, []);
 
   const handleGameExit = useCallback(() => {
-    console.log('🔙 Exiting game');
     setAppMode('LEARNING');
     setSelectedDifficulty(null);
     setSelectedGameType(null);
-  }, [setAppMode]);
+  }, []);
 
-  // ========== Change Level Handler ==========
   const handleChangeLevel = useCallback(() => {
-    console.log('🎯 Change level clicked');
     setSelectedGameType(null);
     setSelectedDifficulty(null);
     setSelectorStep('difficulty');
     setShowGameSelector(true);
     setAppMode('LEARNING');
-  }, [setAppMode]);
+  }, []);
 
-  // ========== Game Selection Handlers ==========
   const handleDifficultySelect = useCallback((difficulty: GameDifficulty) => {
-    console.log('🎯 Selected difficulty:', difficulty);
     setSelectedDifficulty(difficulty);
     setSelectorStep('game_type');
   }, []);
 
   const handleGameTypeSelect = useCallback((gameType: GameType) => {
-    console.log('🎮 Selected game type:', gameType);
     setSelectedGameType(gameType);
     setShowGameSelector(false);
     setAppMode('GAME');
-  }, [setAppMode]);
+  }, []);
 
   const handleCancelSelector = useCallback(() => {
     setShowGameSelector(false);
@@ -162,73 +210,113 @@ export default function LearnAR() {
       setSelectedDifficulty(null);
     }
   }, [selectorStep]);
-  
-  const renderStatusOverlay = () => {
-    let statusText = '';
-    const isScanning = isVideoReady && !detectedQrId;
-    
-    switch (appState) {
-      case 'SCANNING_IN_AR': 
-        statusText = !isVideoReady 
-          ? 'Initializing camera...' 
-          : isScanning 
-            ? 'Scanning for QR code...' 
-            : 'Please scan a QR code...';
-        break;
-      case 'LOADING_DATA': 
-        statusText = `Loading data for: ${detectedQrId}`; 
-        break;
-      case 'AR_VIEW': 
-        statusText = `Viewing: ${detectedQrId} (${displayMode} ${appMode} mode) [Events: ${markerEventCountRef.current}]`; 
-        break;
-      case 'ERROR': 
-        statusText = `Error: ${dataError}`; 
-        break;
-    }
-    
-    return (
-      <div className="absolute top-4 left-4 p-2 bg-black bg-opacity-50 rounded-lg text-sm text-white z-20">
-        <strong>Status:</strong> {statusText}
-        <br />
-        <small>App: {appMode} | Display: {displayMode}</small>
-      </div>
-    );
-  };
-  
-  const renderResetButton = () => {
-    if (appState === 'AR_VIEW' || appState === 'ERROR') {
-      return (
-        <div className="absolute bottom-4 right-4 z-20">
-          <button 
-            onClick={handleReset} 
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white font-bold shadow-lg"
-          >
-            🔄 Scan Another
-          </button>
-        </div>
-      );
-    }
-    return null;
-  };
 
+  const handleReset = useCallback(() => {
+    console.log('🔄 Reset experience');
+    setAppState('SCANNING_QR');
+    setDetectedQrId(null);
+    setSelectedDifficulty(null);
+    setSelectedGameType(null);
+    setAppMode('LEARNING');
+    setIsComboActive(false);
+    setErrorMessage(null);
+    setShowGameSelector(false);
+    bridge.resetMarkers();
+    markerCountRef.current = 0;
+
+    if (arVideoRef.current) {
+      bridge.startQRScanning(arVideoRef.current);
+    }
+  }, [bridge]);
+
+  // const handleBack = useCallback(() => {
+  //   navigate('/');
+  // }, [navigate]);
+
+  // ========== RENDER ==========
   return (
-    <div className="w-full h-full relative">
+    <div className="learn-ar-container">
+      {/* AR Scene Wrapper */}
       <div className="ar-wrapper">
         <ARScene_SOLID
           isVisible={true}
           displayMode={displayMode}
-          targets={appState === 'AR_VIEW' && arData ? arData.targets : []}
-          combo={appState === 'AR_VIEW' && arData ? arData.combo : null}
-          onVideoReady={handleArVideoReady}
+          targets={appState === 'AR_ACTIVE' && arData ? arData.targets : []}
+          combo={appState === 'AR_ACTIVE' && arData ? arData.combo : null}
+          appMode={appMode}
+          onVideoReady={() => {}}
           onMarkerEvent={() => {
-            markerEventCountRef.current += 1;
-            console.log('🎯 Marker event triggered:', markerEventCountRef.current);
+            markerCountRef.current += 1;
           }}
         />
       </div>
 
+      {/* UI Overlay Layer */}
+      <div className="ar-ui-overlay">
+        {/* Loading State */}
+        {appState === 'LOADING_DATA' && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-auto bg-black/80">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-white text-xl">Loading AR content...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {appState === 'ERROR' && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-auto bg-black/90">
+            <div className="text-center text-white p-8 max-w-md">
+              <div className="text-6xl mb-4">❌</div>
+              <p className="text-xl font-semibold mb-6">{errorMessage || 'Error loading AR'}</p>
+              <button 
+                className="px-8 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-bold transition-all"
+                onClick={handleReset}
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Status Overlay (Debug) */}
+        {process.env.NODE_ENV === 'development' && appState === 'AR_ACTIVE' && (
+          <div className="absolute top-4 left-4 bg-black/50 text-white text-sm rounded-lg p-3 pointer-events-none">
+            <div><strong>State:</strong> {appState}</div>
+            <div><strong>Mode:</strong> {appMode}</div>
+            <div><strong>QR:</strong> {detectedQrId || 'none'}</div>
+            <div><strong>Display:</strong> {displayMode}</div>
+            <div><strong>Combo:</strong> {isComboActive ? '✅' : '❌'}</div>
+            <div><strong>Events:</strong> {markerCountRef.current}</div>
+          </div>
+        )}
+
+        {/* Reset Button */}
+        {(appState === 'AR_ACTIVE' || appState === 'ERROR') && (
+          <div className="absolute bottom-4 right-4 pointer-events-auto">
+            <button 
+              onClick={handleReset} 
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white font-bold shadow-lg transition-all"
+            >
+              🔄 Scan Another
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Control Panel */}
+      {appState === 'AR_ACTIVE' && (
+        <ARControlPanel
+          displayMode={displayMode}
+          appMode={appMode}
+          onDisplayModeToggle={handleDisplayModeToggle}
+          onAppModeSwitch={handleAppModeSwitch}
+          disabled={false}
+        />
+      )}
+
       {/* Quiz Overlay */}
-      {appMode === 'QUIZ' && appState === 'AR_VIEW' && (
+      {appMode === 'QUIZ' && appState === 'AR_ACTIVE' && (
         <>
           {quizLoading && (
             <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80">
@@ -260,7 +348,7 @@ export default function LearnAR() {
       )}
 
       {/* Game Overlay */}
-      {appMode === 'GAME' && appState === 'AR_VIEW' && !showGameSelector && (
+      {appMode === 'GAME' && appState === 'AR_ACTIVE' && !showGameSelector && (
         <>
           {gameLoading && (
             <div className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm">
@@ -296,12 +384,11 @@ export default function LearnAR() {
         </>
       )}
 
-      {/* ========== Game Selector Modal ========== */}
-      {showGameSelector && appState === 'AR_VIEW' && (
+      {/* Game Selector Modal */}
+      {showGameSelector && appState === 'AR_ACTIVE' && (
         <div className="fixed inset-0 z-40 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="w-full max-w-lg bg-gradient-to-br from-purple-100 to-pink-100 backdrop-blur-md rounded-3xl shadow-2xl p-6 border-4 border-purple-400">
             
-            {/* Step 1: Difficulty Selection */}
             {selectorStep === 'difficulty' && (
               <>
                 <div className="text-center mb-6">
@@ -347,7 +434,6 @@ export default function LearnAR() {
               </>
             )}
 
-            {/* Step 2: Game Type Selection */}
             {selectorStep === 'game_type' && (
               <>
                 <div className="text-center mb-6">
@@ -402,7 +488,6 @@ export default function LearnAR() {
               </>
             )}
 
-            {/* Cancel button */}
             <button
               onClick={handleCancelSelector}
               className="w-full px-6 py-3 bg-red-400 hover:bg-red-500 rounded-2xl text-white font-bold text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg"
@@ -412,29 +497,6 @@ export default function LearnAR() {
           </div>
         </div>
       )}
-
-      {/* AR Control Panel */}
-      {appState === 'AR_VIEW' && (
-        <ARControlPanel
-          displayMode={displayMode}
-          appMode={appMode}
-          onDisplayModeToggle={handleDisplayModeToggle}
-          onAppModeSwitch={handleAppModeSwitch}
-          disabled={false}
-        />
-      )}
-
-      <div className="ar-ui-overlay">
-        {renderStatusOverlay()}
-        {renderResetButton()}
-
-        {appState === 'ERROR' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center h-full text-white bg-red-900 bg-opacity-90 p-4 z-30">
-            <h2 className="text-2xl font-bold mb-4">An Error Occurred</h2>
-            <p className="mb-6">{dataError}</p>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
