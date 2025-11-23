@@ -1,0 +1,69 @@
+# .dockerignore
+# Prevent unnecessary files from being copied to Docker image
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment files (NEVER copy to Docker!)
+.env
+.env.*
+*.env
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Database (local only)
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Old/backup files
+*.bak
+*.old
+*_old/
+*_backup/
+service/
+
+# Docker files themselves
+Dockerfile*
+docker-compose*.yml
+.dockerignore
