@@ -1,0 +1,64 @@
+# ========================================
+# Render.com Deployment Configuration
+# ========================================
+# This file is automatically detected by Render
+# https://render.com/docs/yaml-spec
+
+services:
+  # Web Service - FastAPI Backend
+  - type: web
+    name: eduplatform-ar-api
+    env: python
+    region: singapore  # Choose region closest to users
+    plan: free  # Change to 'starter' or higher for production
+    
+    # Build settings
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app --bind 0.0.0.0:$PORT --workers 4 --worker-class uvicorn.workers.UvicornWorker --log-level info
+    
+    # Environment variables (configure in Render Dashboard)
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      
+      - key: MONGO_URL
+        sync: false  # Set manually in Render dashboard (sensitive)
+      
+      - key: MONGO_DB
+        value: eduplatform
+      
+      - key: SECRET_KEY
+        generateValue: true  # Auto-generate secure key
+      
+      - key: DEBUG
+        value: false
+      
+      - key: ALLOWED_ORIGINS
+        value: "*"  # Update with your frontend domain
+      
+      - key: WORKERS
+        value: 4
+    
+    # Health check
+    healthCheckPath: /health
+    
+    # Auto-deploy settings
+    autoDeploy: true  # Auto-deploy on git push
+    
+    # Resource allocation
+    disk:
+      name: data
+      mountPath: /app/data
+      sizeGB: 1
+
+# ========================================
+# Notes for Render Deployment:
+# ========================================
+# 1. Connect your GitHub repo to Render
+# 2. Set MONGO_URL in Render dashboard (Environment tab)
+# 3. Update ALLOWED_ORIGINS with your frontend URL
+# 4. For production, upgrade to paid plan for:
+#    - More CPU/RAM
+#    - No auto-sleep
+#    - Custom domain support
+# ========================================
