@@ -9,7 +9,7 @@ from pathlib import Path
 
 from repositories.flashcard_repository import FlashcardRepository
 from repositories.ar_object_repository import ARObjectRepository
-from services.flashcard_service import detect_qr_code  # Import existing QR detection
+from utils.qr_utils import detect_qr_code  # Import QR detection from utils
 
 
 class VerificationService:
