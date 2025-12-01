@@ -63,6 +63,7 @@ declare global {
           smoothTolerance?: number | string;
           smoothThreshold?: number | string;
           registerevents?: boolean | string;
+          emitevents?: boolean | string;
         },
         HTMLElement
       >;
