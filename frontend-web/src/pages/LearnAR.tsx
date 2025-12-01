@@ -240,6 +240,11 @@ const sceneKey = arData?.targets?.length
   ? `ar-scene-${arData.targets.map(t => t.tag).join('-')}` 
   : 'ar-scene-empty';
 
+// CRITICAL: Pass targets when arData is available (not just when AR_ACTIVE)
+// This ensures AR.js initializes with NFT markers present in DOM
+const activeTargets = arData?.targets || [];
+const activeCombo = arData?.combo || null;
+
 return (
   <div className="learn-ar-container">
     {/* AR Scene Wrapper */}
@@ -248,8 +253,8 @@ return (
         key={sceneKey}
         isVisible={true}
         displayMode={displayMode}
-        targets={appState === 'AR_ACTIVE' && arData ? arData.targets : []}
-        combo={appState === 'AR_ACTIVE' && arData ? arData.combo : null}
+        targets={activeTargets}
+        combo={activeCombo}
         appMode={appMode}
         onVideoReady={() => { }}
         onMarkerEvent={() => {
