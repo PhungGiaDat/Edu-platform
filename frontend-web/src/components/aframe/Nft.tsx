@@ -70,18 +70,32 @@ export const Nft = memo(
           const arjsSystem = (sceneEl as any).systems?.['arjs'];
           console.log('🔍 AR.js system found:', !!arjsSystem);
 
-          // Force AR.js to recognize this NFT element
-          // AR.js uses 'arjs-anchor' component for NFT tracking
-          if (element.components && !element.components['arjs-anchor']) {
-            console.log('🔄 Manually triggering AR.js anchor component...');
+          // Check if arjs-anchor component exists
+          const anchorComponent = element.components?.['arjs-anchor'];
+          console.log('🔍 AR.js anchor component:', {
+            exists: !!anchorComponent,
+            url: url
+          });
+
+          // If anchor exists but NFT not loaded, try to force re-init
+          if (anchorComponent) {
+            console.log('🔄 Force re-initializing AR.js anchor...');
             
-            // The component should auto-initialize, but we need to ensure AR.js sees it
-            // Dispatch a custom event to notify AR.js
-            const nftAddedEvent = new CustomEvent('arjs-nft-added', {
-              detail: { element, url, markerId }
-            });
-            sceneEl.dispatchEvent(nftAddedEvent);
-            window.dispatchEvent(nftAddedEvent);
+            // Try to access the internal markerControls
+            const markerControls = (anchorComponent as any).markerControls;
+            if (markerControls) {
+              console.log('🔍 MarkerControls found:', markerControls);
+            }
+            
+            // AR.js NFT uses ArMarkerControls internally
+            // Check if it's trying to load NFT
+            const arContext = arjsSystem?._arSession?.arContext;
+            if (arContext) {
+              console.log('🔍 AR Context:', {
+                parameters: arContext.parameters,
+                arController: !!arContext.arController
+              });
+            }
           }
 
           // Log AR.js internal state
@@ -90,6 +104,27 @@ export const Nft = memo(
               hasArSource: !!arjsSystem._arSession.arSource,
               hasArContext: !!arjsSystem._arSession.arContext
             });
+          }
+
+          // FORCE: Manually trigger NFT load by accessing the component's internal init
+          // This is a workaround for AR.js not auto-loading NFT when element is added dynamically
+          if (anchorComponent && !anchorComponent._nftLoaded) {
+            console.log('⚡ Attempting to manually trigger NFT load...');
+            
+            // Try to call init again or update
+            try {
+              if (typeof anchorComponent.init === 'function') {
+                console.log('🔄 Calling anchor.init()...');
+                // Don't call init directly as it may cause issues
+                // Instead, try to trigger update
+              }
+              if (typeof anchorComponent.update === 'function') {
+                console.log('🔄 Calling anchor.update()...');
+                anchorComponent.update();
+              }
+            } catch (err) {
+              console.error('❌ Error triggering NFT load:', err);
+            }
           }
         };
 
