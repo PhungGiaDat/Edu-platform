@@ -29,6 +29,46 @@ const ARScene_SOLID: React.FC<Props> = ({
   const sceneRef = useRef<HTMLElement>(null);
   const needsCursor = appMode === 'GAME' || appMode === 'QUIZ';
 
+  // ========== DEBUG AR.JS EVENTS (catch ALL events) ==========
+  useEffect(() => {
+    const sceneEl = sceneRef.current;
+    if (!sceneEl) return;
+
+    // Listen for ALL AR.js related events at scene level
+    const debugEvents = [
+      'arjs-video-loaded',
+      'arjs-nft-loaded', 
+      'arjs-nft-init-data',
+      'camera-init',
+      'camera-error',
+      'markerFound',
+      'markerLost',
+      'nftmarker-found',
+      'nftmarker-lost'
+    ];
+
+    const debugHandler = (eventName: string) => (e: Event) => {
+      console.log(`🔍 [AR.js DEBUG] Scene event: ${eventName}`, e);
+    };
+
+    debugEvents.forEach(eventName => {
+      sceneEl.addEventListener(eventName, debugHandler(eventName));
+    });
+
+    // Also listen on window for global AR.js events
+    window.addEventListener('arjs-video-loaded', (e) => {
+      console.log('🔍 [AR.js DEBUG] Window: arjs-video-loaded', e);
+    });
+
+    console.log('🔍 AR.js debug listeners registered at scene level');
+
+    return () => {
+      debugEvents.forEach(eventName => {
+        sceneEl.removeEventListener(eventName, debugHandler(eventName));
+      });
+    };
+  }, []);
+
   // ========== RENDERER SETUP (Fix White Screen) ==========
   useEffect(() => {
     const sceneEl = sceneRef.current;
@@ -59,6 +99,22 @@ const ARScene_SOLID: React.FC<Props> = ({
     const onLoaded = () => {
       console.log('📹 A-Frame scene loaded');
       setupRenderer();
+      
+      // Debug AR.js system
+      const arSystem = (sceneEl as any).systems?.['arjs'];
+      console.log('🔍 [AR.js DEBUG] AR.js system:', arSystem);
+      
+      // Check all a-nft elements
+      const nftElements = sceneEl.querySelectorAll('a-nft');
+      console.log('🔍 [AR.js DEBUG] NFT elements found:', nftElements.length);
+      nftElements.forEach((nft, i) => {
+        const nftEl = nft as any;
+        console.log(`  NFT ${i}:`, {
+          url: nft.getAttribute('url'),
+          components: Object.keys(nftEl.components || {}),
+          isLoaded: nftEl.hasLoaded
+        });
+      });
     };
 
     sceneEl.addEventListener('loaded', onLoaded);
