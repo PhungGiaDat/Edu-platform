@@ -58,6 +58,46 @@ export const Nft = memo(
           components: Object.keys(element.components || {})
         });
 
+        // ========== CRITICAL: Manually initialize AR.js NFT tracking ==========
+        const initializeNftTracking = () => {
+          const sceneEl = element.sceneEl;
+          if (!sceneEl) {
+            console.warn('⚠️ NFT: Scene element not found');
+            return;
+          }
+
+          // Access AR.js system
+          const arjsSystem = (sceneEl as any).systems?.['arjs'];
+          console.log('🔍 AR.js system found:', !!arjsSystem);
+
+          // Force AR.js to recognize this NFT element
+          // AR.js uses 'arjs-anchor' component for NFT tracking
+          if (element.components && !element.components['arjs-anchor']) {
+            console.log('🔄 Manually triggering AR.js anchor component...');
+            
+            // The component should auto-initialize, but we need to ensure AR.js sees it
+            // Dispatch a custom event to notify AR.js
+            const nftAddedEvent = new CustomEvent('arjs-nft-added', {
+              detail: { element, url, markerId }
+            });
+            sceneEl.dispatchEvent(nftAddedEvent);
+            window.dispatchEvent(nftAddedEvent);
+          }
+
+          // Log AR.js internal state
+          if (arjsSystem?._arSession) {
+            console.log('🔍 AR.js session:', {
+              hasArSource: !!arjsSystem._arSession.arSource,
+              hasArContext: !!arjsSystem._arSession.arContext
+            });
+          }
+        };
+
+        // Wait for element to be fully in DOM, then initialize
+        requestAnimationFrame(() => {
+          initializeNftTracking();
+        });
+
         const handleMarkerFound = (e?: Event) => {
           console.log('📍 NFT Marker FOUND:', markerId, e);
           markerStateManager.markFound(markerId);
@@ -160,6 +200,7 @@ export const Nft = memo(
           smoothTolerance={smoothTolerance}
           smoothThreshold={smoothThreshold}
           registerevents="true"
+          emitevents="true"
           {...otherProps}
         >
           {children}
