@@ -169,7 +169,7 @@ const ARScene_SOLID: React.FC<Props> = ({
       embedded
       vr-mode-ui="enabled: false"
       renderer="antialias: true; alpha: true; precision: mediump;"
-      arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false; changeMatrixMode: cameraTransformMatrix;"
+      arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: true; changeMatrixMode: cameraTransformMatrix;"
       light="defaultLightEnabled: false"
       eventBus={eventBus}
       onVideoReady={onVideoReady}
