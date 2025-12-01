@@ -2,46 +2,52 @@
 
 /**
  * Get API base URL based on current environment
- * - HTTPS (tunnel/production): Use relative path → Vite proxy
- * - HTTP (localhost): Use direct connection
+ * Priority:
+ * 1. VITE_API_BASE env variable (set in Vercel/local .env)
+ * 2. Localhost fallback for development
  */
 export const getApiBase = (): string => {
-  // If running through tunnel (HTTPS), use relative path (Vite proxy)
-  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-    return ''; // Relative → proxy to localhost:8000
-  }
-
-  // Define api base for localhost or development
-  const ApiBase = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+  // Always prioritize VITE_API_BASE if set
+  const envApiBase = import.meta.env.VITE_API_BASE;
   
-  // If localhost, use direct connection (FIX: http:// not http//)
-  if (!ApiBase.startsWith('http://') && !ApiBase.startsWith('https://')) {
-    return `http://${ApiBase}`;
+  if (envApiBase) {
+    // Ensure proper protocol
+    if (!envApiBase.startsWith('http://') && !envApiBase.startsWith('https://')) {
+      return `https://${envApiBase}`;
+    }
+    return envApiBase;
   }
 
-  return ApiBase;
+  // Fallback for local development without .env
+  return 'http://localhost:8000';
 };
 
 /**
  * Get WebSocket URL based on current environment
- * - HTTPS (tunnel): Use wss:// with same host
- * - HTTP (localhost): Use ws:// direct connection
+ * Priority:
+ * 1. VITE_WS_URL env variable
+ * 2. Derive from API base URL
+ * 3. Localhost fallback
  */
 export const getWsUrl = (): string => {
-  if (typeof window === 'undefined') {
-    return 'ws://localhost:8000';
+  // Prioritize VITE_WS_URL if set
+  const envWsUrl = import.meta.env.VITE_WS_URL;
+  
+  if (envWsUrl) {
+    return envWsUrl;
   }
 
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = window.location.host;
-  
-  // If tunnel (HTTPS), use same host with wss
-  if (window.location.protocol === 'https:') {
-    return `${protocol}//${host}`;
+  // Derive from API base
+  const apiBase = getApiBase();
+  if (apiBase.startsWith('https://')) {
+    return apiBase.replace('https://', 'wss://');
+  }
+  if (apiBase.startsWith('http://')) {
+    return apiBase.replace('http://', 'ws://');
   }
   
-  // If localhost, use direct WS connection
-  return import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+  // Fallback
+  return 'ws://localhost:8000';
 };
 
 /**
