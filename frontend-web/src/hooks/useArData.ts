@@ -70,7 +70,7 @@ export const useArData = (qrId: string | null) => {
           throw new Error('Invalid or empty data received from API');
         }
 
-        // Helper function to build full URL
+        // Helper function to build full URL for backend assets
         const buildUrl = (path: string | undefined): string | undefined => {
           if (!path) return undefined;
           if (path.startsWith('http://') || path.startsWith('https://')) {
@@ -80,19 +80,29 @@ export const useArData = (qrId: string | null) => {
           return `${API_BASE}${cleanPath}`;
         };
 
+        // Helper to get frontend origin for static assets like NFT
+        const getFrontendOrigin = (): string => {
+          if (typeof window !== 'undefined') {
+            return window.location.origin;
+          }
+          return ''; // Relative path fallback
+        };
+
         // Transform target data
         const target: ARTarget = {
           tag: data.target.ar_tag,
+          // NFT files are served from FRONTEND (public folder), not backend!
           nft_base_url: (() => {
-            // Ensure we have a clean path without leading slash for joining
             const cleanPath = data.target.nft_base_url
               .replace(/^\/public\//, '')
               .replace(/^public\//, '')
               .replace(/^\//, '');
             
-            // Construct full absolute URL
-            return `${API_BASE}/${cleanPath}`;
+            // Use frontend origin for NFT files (they're in public/)
+            const frontendOrigin = getFrontendOrigin();
+            return frontendOrigin ? `${frontendOrigin}/${cleanPath}` : `/${cleanPath}`;
           })(),
+          // Other assets (images, models) come from backend
           image_2d_url: buildUrl(data.target.image_2d_url),
           model_3d_url: buildUrl(data.target.model_3d_url) || '',
           position: data.target.position,
