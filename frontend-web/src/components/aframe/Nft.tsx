@@ -58,20 +58,20 @@ export const Nft = memo(
           components: Object.keys(element.components || {})
         });
 
-        const handleMarkerFound = () => {
-          console.log('📍 Marker found:', markerId);
+        const handleMarkerFound = (e?: Event) => {
+          console.log('📍 NFT Marker FOUND:', markerId, e);
           markerStateManager.markFound(markerId);
           eventBus.emit(AREvent.MARKER_FOUND, { markerId, target });
         };
 
-        const handleMarkerLost = () => {
-          console.log('❌ Marker lost:', markerId);
+        const handleMarkerLost = (e?: Event) => {
+          console.log('👋 NFT Marker LOST:', markerId, e);
           markerStateManager.markLost(markerId);
           eventBus.emit(AREvent.MARKER_LOST, { markerId });
         };
 
         const handleNftLoading = (e: Event) => {
-          console.log('📥 NFT Loading:', markerId, e);
+          console.log('📥 NFT Loading:', markerId, 'URL:', url, e);
         };
 
         const handleNftLoaded = (e: Event) => {
@@ -99,13 +99,21 @@ export const Nft = memo(
         };
 
         const setupListeners = () => {
+          // AR.js NFT uses different event names!
+          // Standard: 'markerFound', 'markerLost'
+          // Alternative: 'nftmarker-found', 'nftmarker-lost' (AR.js specific)
+          
           element.addEventListener('loading', handleNftLoading);
           element.addEventListener('loaded', handleNftLoaded);
           element.addEventListener('error', handleNftError);
+          
+          // Listen to both naming conventions for compatibility
           element.addEventListener('markerFound', handleMarkerFound);
           element.addEventListener('markerLost', handleMarkerLost);
+          element.addEventListener('nftmarker-found', handleMarkerFound);
+          element.addEventListener('nftmarker-lost', handleMarkerLost);
 
-          console.log('✅ NFT event listeners registered:', markerId);
+          console.log('✅ NFT event listeners registered:', markerId, '(both markerFound and nftmarker-found)');
 
           return () => {
             element.removeEventListener('loading', handleNftLoading);
@@ -113,6 +121,8 @@ export const Nft = memo(
             element.removeEventListener('error', handleNftError);
             element.removeEventListener('markerFound', handleMarkerFound);
             element.removeEventListener('markerLost', handleMarkerLost);
+            element.removeEventListener('nftmarker-found', handleMarkerFound);
+            element.removeEventListener('nftmarker-lost', handleMarkerLost);
             
             console.log('🧹 NFT cleanup:', markerId);
           };

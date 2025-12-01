@@ -70,6 +70,16 @@ export const useArData = (qrId: string | null) => {
           throw new Error('Invalid or empty data received from API');
         }
 
+        // Helper function to build full URL
+        const buildUrl = (path: string | undefined): string | undefined => {
+          if (!path) return undefined;
+          if (path.startsWith('http://') || path.startsWith('https://')) {
+            return path; // Already full URL
+          }
+          const cleanPath = path.startsWith('/') ? path : `/${path}`;
+          return `${API_BASE}${cleanPath}`;
+        };
+
         // Transform target data
         const target: ARTarget = {
           tag: data.target.ar_tag,
@@ -83,19 +93,25 @@ export const useArData = (qrId: string | null) => {
             // Construct full absolute URL
             return `${API_BASE}/${cleanPath}`;
           })(),
-          image_2d_url: data.target.image_2d_url ? `${API_BASE}${data.target.image_2d_url}` : undefined,
-          model_3d_url: data.target.model_3d_url.startsWith('http')
-            ? data.target.model_3d_url  // Already full URL
-            : `${API_BASE}${data.target.model_3d_url.startsWith('/') ? '' : '/'}${data.target.model_3d_url}`,
+          image_2d_url: buildUrl(data.target.image_2d_url),
+          model_3d_url: buildUrl(data.target.model_3d_url) || '',
           position: data.target.position,
           rotation: data.target.rotation,
           scale: data.target.scale,
         };
 
+        // Transform combo data with full URLs
+        const rawCombo = data.related_combos?.length > 0 ? data.related_combos[0] : null;
+        const combo = rawCombo ? {
+          ...rawCombo,
+          image_2d_url: buildUrl(rawCombo.image_2d_url),
+          model_3d_url: buildUrl(rawCombo.model_3d_url),
+        } : null;
+
         const transformedData: ArData = {
           flashcard: data.flashcard,
           targets: [target],
-          combo: data.related_combos?.length > 0 ? data.related_combos[0] : null
+          combo: combo,
         };
 
         console.log('✅ Transformed AR data:', transformedData);
