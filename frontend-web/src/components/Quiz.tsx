@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuiz } from '../hooks/useQuiz';
 import type { QuizSessionData } from '../types';
 import { getApiBase } from '../config';
+import '../styles/Overlays.css';
 
 const API_BASE = getApiBase();
 

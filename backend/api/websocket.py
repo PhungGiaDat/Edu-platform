@@ -116,7 +116,7 @@ async def websocket_verify_endpoint(
                 })
                 continue
             
-            card_ref_path = flashcard.get("questionImagePath")
+            card_ref_path = flashcard.get("image_url")
             if not card_ref_path:
                 await ws_manager.send_json(websocket, {
                     "status": "fail",

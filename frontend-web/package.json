@@ -12,13 +12,11 @@
   "dependencies": {
     "@react-three/drei": "^9.88.13",
     "@react-three/fiber": "^8.15.11",
-    "@tailwindcss/postcss": "^4.1.11",
+    "@tailwindcss/postcss": "^4.1.17",
     "@tailwindcss/vite": "^4.1.11",
     "@types/aframe": "^1.2.9",
     "@zxing/library": "^0.20.0",
-    "aframe": "^1.7.1",
     "axios": "^1.10.0",
-    "mind-ar": "^1.2.5",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
@@ -28,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
+    "@types/node": "^24.10.1",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@types/three": "^0.158.3",

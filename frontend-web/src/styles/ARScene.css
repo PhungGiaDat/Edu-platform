@@ -21,23 +21,26 @@ body:has(.learn-ar-container) {
 /* Force #root fullscreen */
 body:has(.learn-ar-container) #root {
   position: fixed !important;
-  inset: 0 !important; /* top/right/bottom/left: 0 */
+  inset: 0 !important;
+  /* top/right/bottom/left: 0 */
   width: 100vw !important;
   height: 100vh !important;
   height: 100dvh !important;
   overflow: hidden !important;
-  display: block !important; /* Break any flex/grid */
+  display: block !important;
+  /* Break any flex/grid */
 }
 
 /* Force parent div (h-screen flex flex-col) to fullscreen */
-body:has(.learn-ar-container) #root > div {
+body:has(.learn-ar-container) #root>div {
   position: fixed !important;
   inset: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
   height: 100dvh !important;
   overflow: hidden !important;
-  display: block !important; /* Break flex-col */
+  display: block !important;
+  /* Break flex-col */
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -52,7 +55,8 @@ body:has(.learn-ar-container) main {
   overflow: hidden !important;
   margin: 0 !important;
   padding: 0 !important;
-  display: block !important; /* Override flex-grow */
+  display: block !important;
+  /* Override flex-grow */
 }
 
 /* Hide Navbar when AR active */
@@ -98,7 +102,7 @@ body:has(.learn-ar-container) header {
    ======================================================================== */
 
 /* AR.js injects video to body */
-body > #arjs-video,
+body>#arjs-video,
 #arjs-video {
   position: fixed !important;
   inset: 0 !important;
@@ -150,12 +154,13 @@ body > #arjs-video,
   width: 100% !important;
   height: 100% !important;
   pointer-events: none !important;
-  z-index: 1000 !important; /* Increased from 100 to 1000 */
+  z-index: 1000 !important;
+  /* Increased from 100 to 1000 */
   background: transparent !important;
 }
 
 /* Enable clicks on interactive elements */
-.ar-ui-overlay > *,
+.ar-ui-overlay>*,
 .ar-ui-overlay button,
 .ar-ui-overlay a,
 .ar-ui-overlay input,
@@ -166,7 +171,203 @@ body > #arjs-video,
 }
 
 /* Ensure all child containers in overlay have proper stacking */
-.ar-ui-overlay > div {
+.ar-ui-overlay>div {
+  position: relative;
+  z-index: inherit;
+}
+
+/* ========================================================================
+   SECTION 7.1: GAME & QUIZ OVERLAYS - CRITICAL Z-INDEX
+   ======================================================================== */
+
+/* Game overlay must be above everything */
+.ar-ui-overlay .game-overlay,
+.ar-ui-overlay [class*="game"],
+.ar-ui-overlay [class*="Game"] {
+  position: fixed !important;
+  z-index: 2000 !important;
+  pointer-events: auto !important;
+}
+
+/* Quiz overlay must be above everything */
+.ar-ui-overlay .quiz-overlay,
+.ar-ui-overlay [class*="quiz"],
+.ar-ui-overlay [class*="Quiz"] {
+  position: fixed !important;
+  z-index: 2000 !important;
+  pointer-events: auto !important;
+}
+
+/* Control panel */
+.ar-ui-overlay .ar-control-panel,
+.ar-control-panel {
+  position: fixed !important;
+  z-index: 1500 !important;
+  pointer-events: auto !important;
+}
+
+/* Loading and error overlays */
+.ar-ui-overlay [class*="loading"],
+.ar-ui-overlay [class*="error"],
+.ar-ui-overlay .absolute.inset-0 {
+  position: fixed !important;
+  z-index: 1800 !important;
+  pointer-events: auto !important;
+}
+
+/* Status/debug overlay */
+.ar-ui-overlay [class*="status"],
+.ar-ui-overlay [class*="debug"] {
+  z-index: 1900 !important;
+  pointer-events: none !important;
+}
+
+/* ========================================================================
+   SECTION 8: HIDE A-FRAME UI
+   ======================================================================== */
+
+.a-inspector-button,
+.arjs-loader,
+.a-enter-vr-button,
+.a-enter-ar-button {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* ========================================================================
+   SECTION 9: MOBILE RESPONSIVE
+   ======================================================================== */
+
+@media (max-width: 768px) {
+  .ar-wrapper {
+    position: fixed !important;
+  }
+
+  #arjs-video {
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    object-fit: cover !important;
+  }
+
+  .ar-ui-overlay {
+    font-size: 0.75rem !important;
+  }
+
+  .ar-ui-overlay button {
+    padding: 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+}
+
+
+
+/* ========================================================================
+   SECTION 2: MAIN CONTAINER
+   ======================================================================== */
+
+.learn-ar-container {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  overflow: hidden !important;
+  background: #000 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 1 !important;
+}
+
+/* ========================================================================
+   SECTION 3: AR WRAPPER - Base Layer
+   ======================================================================== */
+
+.ar-wrapper {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  background: #000 !important;
+  z-index: 1 !important;
+}
+
+/* ========================================================================
+   SECTION 4: VIDEO LAYER - Camera Feed
+   ======================================================================== */
+
+/* AR.js injects video to body */
+body>#arjs-video,
+#arjs-video {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  z-index: 2 !important;
+  display: block !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* ========================================================================
+   SECTION 5: A-FRAME SCENE
+   ======================================================================== */
+
+.learn-ar-container a-scene {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+  z-index: 2 !important;
+  display: block !important;
+}
+
+/* ========================================================================
+   SECTION 6: CANVAS LAYER - AR Content (MUST BE TRANSPARENT)
+   ======================================================================== */
+
+.learn-ar-container canvas,
+.learn-ar-container .a-canvas,
+.learn-ar-container a-scene canvas {
+  background: transparent !important;
+  z-index: 3 !important;
+  pointer-events: auto !important;
+}
+
+/* ========================================================================
+   SECTION 7: UI OVERLAY - Top Layer (HIGHEST PRIORITY)
+   ======================================================================== */
+
+.ar-ui-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+  z-index: 1000 !important;
+  /* Increased from 100 to 1000 */
+  background: transparent !important;
+}
+
+/* Enable clicks on interactive elements */
+.ar-ui-overlay>*,
+.ar-ui-overlay button,
+.ar-ui-overlay a,
+.ar-ui-overlay input,
+.ar-ui-overlay select,
+.ar-ui-overlay [role="button"] {
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+/* Ensure all child containers in overlay have proper stacking */
+.ar-ui-overlay>div {
   position: relative;
   z-index: inherit;
 }
@@ -266,4 +467,28 @@ body > #arjs-video,
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
+}
+
+/* ========================================================================
+   SECTION 11: AR CONTROL PANEL - PLAIN CSS (AR.JS COMPATIBLE)
+   ======================================================================== */
+
+/* Control panel - Plain CSS for AR.js compatibility */
+.ar-control-panel {
+  position: fixed !important;
+  top: 1rem !important;
+  right: 1rem !important;
+  z-index: 99999 !important;
+  /* Highest z-index to appear above everything */
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  pointer-events: auto !important;
+  background: transparent !important;
+}
+
+.ar-control-buttons {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.25rem !important;
 }

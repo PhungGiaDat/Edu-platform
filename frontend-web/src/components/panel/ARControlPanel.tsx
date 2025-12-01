@@ -11,24 +11,24 @@ interface Props {
   disabled?: boolean;
 }
 
-const ARControlPanel: React.FC<Props> = ({ 
-  displayMode, 
-  appMode, 
-  onDisplayModeToggle, 
+const ARControlPanel: React.FC<Props> = ({
+  displayMode,
+  appMode,
+  onDisplayModeToggle,
   onAppModeSwitch,
-  disabled = false 
+  disabled = false
 }) => {
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+    <div className="ar-control-panel">
       {/* Display Mode Toggle */}
       <DisplayModeButton
         displayMode={displayMode}
         onToggle={onDisplayModeToggle}
         disabled={disabled}
       />
-      
+
       {/* App Mode Buttons */}
-      <div className="flex flex-col gap-1">
+      <div className="ar-control-buttons">
         <AppModeButton
           currentMode={appMode}
           targetMode="LEARNING"
