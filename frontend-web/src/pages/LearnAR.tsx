@@ -234,11 +234,18 @@ const handleReset = useCallback(() => {
 // }, [navigate]);
 
 // ========== RENDER ==========
+// Generate a unique key that changes when targets are loaded
+// This forces AR.js to re-initialize with the NFT markers
+const sceneKey = arData?.targets?.length 
+  ? `ar-scene-${arData.targets.map(t => t.tag).join('-')}` 
+  : 'ar-scene-empty';
+
 return (
   <div className="learn-ar-container">
     {/* AR Scene Wrapper */}
     <div className="ar-wrapper">
       <ARScene_SOLID
+        key={sceneKey}
         isVisible={true}
         displayMode={displayMode}
         targets={appState === 'AR_ACTIVE' && arData ? arData.targets : []}
