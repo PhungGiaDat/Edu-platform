@@ -1,5 +1,3 @@
-
-
 // src/config.ts - Smart API & WebSocket detection
 
 /**
@@ -14,12 +12,11 @@ export const getApiBase = (): string => {
   }
 
   // Define api base for localhost or development
-
-  const ApiBase =  import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+  const ApiBase = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
   
-  // If localhost, use direct connection
-  if(!ApiBase.startsWith('http//') && !ApiBase.startsWith('https://')) {
-    return `http://${ ApiBase}`;
+  // If localhost, use direct connection (FIX: http:// not http//)
+  if (!ApiBase.startsWith('http://') && !ApiBase.startsWith('https://')) {
+    return `http://${ApiBase}`;
   }
 
   return ApiBase;

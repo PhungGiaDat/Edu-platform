@@ -1,0 +1,232 @@
+/* ========================================================================
+   MOBILE-RESPONSIVE CSS FOR AR/GAME/QUIZ
+   Optimized for phone camera usage
+   ======================================================================== */
+
+/* ========== AR CONTROL PANEL - MOBILE RESPONSIVE ========== */
+.ar-control-panel {
+    position: fixed !important;
+    top: 0.5rem !important;
+    right: 0.5rem !important;
+    z-index: 99999 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.rem !important;
+    pointer-events: auto !important;
+    background: transparent !important;
+}
+
+.ar-control-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.25rem !important;
+}
+
+/* Touch-friendly button sizes for mobile */
+.ar-control-panel button {
+    min-width: 48px !important;
+    /* iOS/Android recommendation */
+    min-height: 48px !important;
+    padding: 0.75rem !important;
+    font-size: 0.875rem !important;
+    touch-action: manipulation !important;
+    /* Prevent double-tap zoom */
+}
+
+/* ========== GAME OVERLAY -RESPONSIVE ========== */
+.game-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2000 !important;
+    padding: 0.5rem !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    /* Smooth scrolling on iOS */
+}
+
+/* Game content container */
+.game-overlay>div {
+    max-width: 100% !important;
+    margin: 0 auto !important;
+}
+
+/* Game buttons - touch friendly */
+.game-overlay button {
+    min-height: 44px !important;
+    padding: 0.75rem 1.5rem !important;
+    font-size: 1rem !important;
+    touch-action: manipulation !important;
+}
+
+/* ========== QUIZ OVERLAY - MOBILE RESPONSIVE ========== */
+.quiz-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2000 !important;
+    padding: 0.5rem !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+/* Quiz content container */
+.quiz-overlay>div {
+    max-width: 100% !important;
+    margin: 0 auto !important;
+}
+
+/* Quiz buttons - touch friendly */
+.quiz-overlay button {
+    min-height: 44px !important;
+    padding: 0.75rem 1.5rem !important;
+    font-size: 1rem !important;
+    touch-action: manipulation !important;
+}
+
+/* ========== RESPONSIVE BREAKPOINTS ========== */
+
+/* Small phones (< 375px) */
+@media (max-width: 374px) {
+    .ar-control-panel {
+        top: 0.25rem !important;
+        right: 0.25rem !important;
+        gap: 0.25rem !important;
+    }
+
+    .ar-control-panel button {
+        min-width: 40px !important;
+        min-height: 40px !important;
+        padding: 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    .game-overlay,
+    .quiz-overlay {
+        padding: 0.25rem !important;
+    }
+}
+
+/* Standard phones (375px - 767px) */
+@media (min-width: 375px) and (max-width: 767px) {
+    .ar-control-panel {
+        top: 0.5rem !important;
+        right: 0.5rem !important;
+    }
+
+    .game-overlay,
+    .quiz-overlay {
+        padding: 0.75rem !important;
+    }
+
+    /* Ensure text is readable */
+    .game-overlay h2,
+    .quiz-overlay h2 {
+        font-size: 1.25rem !important;
+    }
+
+    .game-overlay p,
+    .quiz-overlay p {
+        font-size: 0.875rem !important;
+    }
+}
+
+/* Tablets (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .ar-control-panel {
+        top: 1rem !important;
+        right: 1rem !important;
+    }
+
+    .game-overlay,
+    .quiz-overlay {
+        padding: 1rem !important;
+    }
+
+    .game-overlay>div,
+    .quiz-overlay>div {
+        max-width: 600px !important;
+    }
+}
+
+/* Desktop (>= 1024px) */
+@media (min-width: 1024px) {
+    .ar-control-panel {
+        top: 1.5rem !important;
+        right: 1.5rem !important;
+    }
+
+    .game-overlay,
+    .quiz-overlay {
+        padding: 2rem !important;
+    }
+
+    .game-overlay>div,
+    .quiz-overlay>div {
+        max-width: 800px !important;
+    }
+}
+
+/* ========== LANDSCAPE MODE (Phone rotated) ========== */
+@media (max-height: 500px) and (orientation: landscape) {
+    .ar-control-panel {
+        top: 0.25rem !important;
+        right: 0.25rem !important;
+        gap: 0.15rem !important;
+    }
+
+    .ar-control-panel button {
+        min-width: 36px !important;
+        min-height: 36px !important;
+        padding: 0.4rem !important;
+        font-size: 0.7rem !important;
+    }
+
+    .ar-control-buttons {
+        gap: 0.15rem !important;
+    }
+
+    /* Make overlays scrollable in landscape */
+    .game-overlay,
+    .quiz-overlay {
+        padding: 0.5rem !important;
+        max-height: 100vh !important;
+        overflow-y: scroll !important;
+    }
+}
+
+/* ========== SAFE AREA SUPPORT (iPhone notch, etc) ========== */
+@supports (padding: env(safe-area-inset-top)) {
+    .ar-control-panel {
+        top: calc(0.5rem + env(safe-area-inset-top)) !important;
+        right: calc(0.5rem + env(safe-area-inset-right)) !important;
+    }
+
+    .game-overlay,
+    .quiz-overlay {
+        padding-top: calc(0.5rem + env(safe-area-inset-top)) !important;
+        padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)) !important;
+        padding-left: calc(0.5rem + env(safe-area-inset-left)) !important;
+        padding-right: calc(0.5rem + env(safe-area-inset-right)) !important;
+    }
+}
+
+/* ========== HIGH DPI SCREENS (Retina displays) ========== */
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+
+    .ar-control-panel button,
+    .game-overlay button,
+    .quiz-overlay button {
+        /* Slightly larger hit targets for high-DPI screens */
+        min-width: 50px !important;
+        min-height: 50px !important;
+    }
+}
+
+/* ========== ENSURE VISIBILITY ========== */
+.ar-control-panel,
+.game-overlay,
+.quiz-overlay {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: flex !important;
+}

@@ -1,4 +1,4 @@
-import 'aframe';
+/// <reference types="aframe" />
 import * as React from 'react';
 
 declare global {

@@ -42,7 +42,7 @@ export const useArData = (qrId: string | null) => {
       setError(null);
 
       try {
-        const response = await fetch(`${API_BASE}/api/flashcard/${qrId}`);
+        const response = await fetch(`${API_BASE}/api/v1/flashcard/${qrId}`);
         console.log('��� Raw response status:', response.status);
         console.log('��� Raw response headers:', Object.fromEntries(response.headers.entries()));
 
@@ -73,11 +73,20 @@ export const useArData = (qrId: string | null) => {
         // Transform target data
         const target: ARTarget = {
           tag: data.target.ar_tag,
-          nft_base_url: data.target.nft_base_url
-            .replace(/^\/public\//, '/')
-            .replace(/^public\//, '/'),
+          nft_base_url: (() => {
+            // Ensure we have a clean path without leading slash for joining
+            const cleanPath = data.target.nft_base_url
+              .replace(/^\/public\//, '')
+              .replace(/^public\//, '')
+              .replace(/^\//, '');
+            
+            // Construct full absolute URL
+            return `${API_BASE}/${cleanPath}`;
+          })(),
           image_2d_url: data.target.image_2d_url ? `${API_BASE}${data.target.image_2d_url}` : undefined,
-          model_3d_url: `${API_BASE}${data.target.model_3d_url}`,
+          model_3d_url: data.target.model_3d_url.startsWith('http')
+            ? data.target.model_3d_url  // Already full URL
+            : `${API_BASE}${data.target.model_3d_url.startsWith('/') ? '' : '/'}${data.target.model_3d_url}`,
           position: data.target.position,
           rotation: data.target.rotation,
           scale: data.target.scale,

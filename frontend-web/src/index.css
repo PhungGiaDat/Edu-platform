@@ -1,8 +1,4 @@
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -30,10 +26,14 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+}
+
+/* Only apply flex layout when NOT in AR mode */
+body:not(:has(.learn-ar-container)) {
+  display: flex;
+  place-items: center;
 }
 
 h1 {
