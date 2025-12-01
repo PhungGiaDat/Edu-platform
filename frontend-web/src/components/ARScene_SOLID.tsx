@@ -163,13 +163,17 @@ const ARScene_SOLID: React.FC<Props> = ({
 
   const anchorTag = combo?.required_tags[0];
 
+  // Determine tracking method based on whether we have NFT targets
+  const hasNftTargets = targets.length > 0;
+  const trackingMethod = hasNftTargets ? 'nft' : 'best';
+  
   return (
     <Scene
       ref={sceneRef}
       embedded
       vr-mode-ui="enabled: false"
-      renderer="antialias: true; alpha: true; precision: mediump;"
-      arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: true; changeMatrixMode: cameraTransformMatrix;"
+      renderer="antialias: true; alpha: true; precision: mediump;logarithmicDepthBuffer: true"
+      arjs={`sourceType: webcam; trackingMethod: ${trackingMethod}; debugUIEnabled: true; changeMatrixMode: cameraTransformMatrix;`}
       light="defaultLightEnabled: false"
       eventBus={eventBus}
       onVideoReady={onVideoReady}
