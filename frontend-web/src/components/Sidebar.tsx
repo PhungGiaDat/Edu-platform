@@ -14,9 +14,12 @@ export const Sidebar: React.FC = () => {
     return (
         <>
             {/* Desktop Sidebar (Left) */}
-            <aside className="hidden md:flex flex-col w-64 h-screen bg-white border-r-2 border-neutral-200 fixed left-0 top-0 z-50">
-                <div className="p-8">
-                    <h1 className="text-2xl font-black text-primary tracking-wide">EduPlatform</h1>
+            <aside className="hidden md:flex flex-col w-64 h-screen bg-white border-r-2 border-neutral-200 fixed left-0 top-0 z-50 shadow-sm">
+                <div className="p-8 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white text-2xl shadow-lg">
+                        🎓
+                    </div>
+                    <h1 className="text-2xl font-black text-neutral-800 tracking-tight">Edu<span className="text-primary">AR</span></h1>
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2">
