@@ -23,7 +23,15 @@ from settings import settings
 from database.connection import connect_to_database, close_database_connection
 
 # Import API routers
-from api import flashcard_router, quiz_router, game_router
+# Import API routers
+from api import (
+    flashcard_router, 
+    quiz_router, 
+    game_router,
+    course_router,
+    chat_router,
+    gamification_router
+)
 from api.websocket import router as websocket_router
 
 # Configure logging
@@ -120,6 +128,24 @@ app.include_router(
     game_router,
     prefix=settings.API_V1_PREFIX,
     tags=["Games"]
+)
+
+app.include_router(
+    course_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Courses"]
+)
+
+app.include_router(
+    chat_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Chat"]
+)
+
+app.include_router(
+    gamification_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Gamification"]
 )
 
 # WebSocket router (no prefix - keep legacy path)
