@@ -4,27 +4,26 @@ import LearnAR from "./pages/LearnAR";
 import { CourseList } from "./pages/CourseList";
 import { CourseDetail } from "./pages/CourseDetail";
 import { Profile } from "./pages/Profile";
-import Navbar from "./components/Navbar";
+import { Login } from "./pages/Login";
+import { Register } from "./pages/Register";
+import { Layout } from "./components/Layout";
 
 const App = () => {
   return (
-    // v23.0: Layout tích hợp - sử dụng flexbox để tạo navbar cố định và main area co giãn
-    <div className="h-screen w-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Navigation Header - chiều cao cố định */}
-      <Navbar />
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
-      {/* Main Content - tự động co giãn để lấp đầy không gian còn lại */}
-      <main className="flex-grow relative overflow-hidden">
-        <Routes>
-          <Route path="/" element={<FlashcardPage />} />
-          <Route path="/learn-ar" element={<LearnAR />} />
-          <Route path="/courses" element={<CourseList />} />
-          <Route path="/courses/:id" element={<CourseDetail />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/scan" element={<Navigate to="/learn-ar" replace />} /> {/* ✅ Redirect */}
-        </Routes>
-      </main>
-    </div>
+      {/* Protected Routes (Wrapped in Layout) */}
+      <Route path="/" element={<Layout><FlashcardPage /></Layout>} />
+      <Route path="/learn-ar" element={<Layout><LearnAR /></Layout>} />
+      <Route path="/courses" element={<Layout><CourseList /></Layout>} />
+      <Route path="/courses/:id" element={<Layout><CourseDetail /></Layout>} />
+      <Route path="/profile" element={<Layout><Profile /></Layout>} />
+
+      <Route path="/scan" element={<Navigate to="/learn-ar" replace />} />
+    </Routes>
   );
 };
 

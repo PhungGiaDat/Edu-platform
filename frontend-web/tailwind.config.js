@@ -10,31 +10,32 @@ export default {
                 '9999': '9999',
             },
             colors: {
-                // Kid-friendly palette (Duolingo-inspired but distinct)
+                // Refined Kid-friendly palette (Balanced, not over-saturated)
                 primary: {
-                    DEFAULT: '#58CC02', // Bright Green
-                    dark: '#46A302',
-                    light: '#89E219',
+                    DEFAULT: '#2ECC71', // Soft Green
+                    dark: '#27AE60',
+                    light: '#A9DFBF',
                 },
                 secondary: {
-                    DEFAULT: '#1CB0F6', // Bright Blue
-                    dark: '#1899D6',
-                    light: '#58CC02',
+                    DEFAULT: '#3498DB', // Calm Blue
+                    dark: '#2980B9',
+                    light: '#AED6F1',
                 },
                 accent: {
-                    DEFAULT: '#FFC800', // Yellow/Gold
-                    dark: '#E5B400',
+                    DEFAULT: '#F1C40F', // Warm Yellow
+                    dark: '#F39C12',
                 },
                 danger: {
-                    DEFAULT: '#FF4B4B', // Red
-                    dark: '#D33131',
+                    DEFAULT: '#E74C3C', // Soft Red
+                    dark: '#C0392B',
                 },
                 neutral: {
-                    100: '#F7F7F7',
-                    200: '#E5E5E5',
-                    300: '#D4D4D4',
-                    800: '#4B4B4B',
-                    900: '#3C3C3C',
+                    50: '#FDFEFE',
+                    100: '#F4F6F7',
+                    200: '#E5E8E8',
+                    300: '#D7DBDD',
+                    800: '#2C3E50', // Dark Blue-Grey for text (easier on eyes than black)
+                    900: '#17202A',
                 }
             },
             fontFamily: {
