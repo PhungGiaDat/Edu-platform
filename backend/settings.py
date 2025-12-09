@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     MONGO_URL: str
     MONGO_DB: str = "eduplatform"
     
+    # ========== PostgreSQL/Supabase Configuration ==========
+    # Connection pooling URL (for normal operations)
+    DATABASE_URL: Optional[str] = None
+    # Direct connection URL (for migrations)
+    DIRECT_URL: Optional[str] = None
+    
     # ========== Security ==========
     SECRET_KEY: str = "dev-secret-key-change-in-production"
     ALGORITHM: str = "HS256"

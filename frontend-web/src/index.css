@@ -1,9 +1,41 @@
 @import "tailwindcss";
 
+/* ========== Global Reset to prevent black gaps ========== */
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* ========== Google Fonts: Quicksand for Kids ========== */
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+
+/* ========== Kid-Friendly Color Palette ========== */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Primary Colors */
+  --color-honey: #F4D03F;
+  --color-honey-dark: #D4AC0D;
+  --color-sky: #5DADE2;
+  --color-sky-dark: #2E86AB;
+  --color-creamy: #FEF9E7;
+
+  /* Semantic Colors */
+  --color-success: #58D68D;
+  --color-error: #EC7063;
+  --color-warning: #F5B041;
+
+  /* Neutrals */
+  --color-text: #2C3E50;
+  --color-text-light: #7F8C8D;
+
+  /* Font Family */
+  font-family: 'Quicksand', system-ui, sans-serif;
   line-height: 1.5;
-  font-weight: 400;
+  font-weight: 500;
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
@@ -15,11 +47,18 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Apply light theme for kid-friendly pages */
+.kid-theme {
+  background-color: var(--color-creamy);
+  color: var(--color-text);
+}
+
 a {
   font-weight: 500;
   color: #646cff;
   text-decoration: inherit;
 }
+
 a:hover {
   color: #535bf2;
 }
@@ -52,9 +91,11 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
@@ -65,21 +106,25 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
   }
 }
 
-/* Add to src/index.css for fadeIn animation */
+/* ========== Animations ========== */
 
+/* Fade In */
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -88,4 +133,108 @@ button:focus-visible {
 
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
+}
+
+/* Slide Up (for chat window) */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Bounce (for chat bubble) */
+@keyframes gentleBounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-gentleBounce {
+  animation: gentleBounce 2s ease-in-out infinite;
+}
+
+/* Pulse Glow (for notification) */
+@keyframes pulseGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(93, 173, 226, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 25px rgba(93, 173, 226, 0.8);
+  }
+}
+
+.animate-pulseGlow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Slide Down (for mobile menu) */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.2s ease-out;
+}
+
+/* Breathe (for chat bubble attention) */
+@keyframes breathe {
+
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 10px 25px -3px rgba(6, 182, 212, 0.4);
+  }
+
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 15px 35px -3px rgba(6, 182, 212, 0.5);
+  }
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* Bounce Slow (for mascot on Login) */
+@keyframes bounce-slow {
+
+  0%,
+  100% {
+    transform: translateY(-5%);
+  }
+
+  50% {
+    transform: translateY(5%);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s infinite ease-in-out;
 }

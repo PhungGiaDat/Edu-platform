@@ -8,7 +8,7 @@ export const Sidebar: React.FC = () => {
         { path: '/courses', label: 'Learn', icon: '📚' },
         { path: '/learn-ar', label: 'AR Practice', icon: '🦁' },
         { path: '/profile', label: 'Profile', icon: '👤' },
-        { path: '/', label: 'Flashcards', icon: '🎴' },
+        { path: '/flashcards', label: 'Flashcards', icon: '🎴' },
     ];
 
     return (

@@ -1,12 +1,13 @@
 # backend/api/flashcards.py
 """
 Flashcard API Router - Thin controller layer
-Only handles HTTP request/response, delegates business logic to service
+Includes endpoints for flashcard CRUD with AI embedding support
 """
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Body
 from core.base_router import create_router
 from services import FlashcardService, get_flashcard_service, ARService, get_ar_service
 from models import FlashcardSchema, ARExperienceResponseSchema
+from models.flashcard import FlashcardCreate, FlashcardResponse
 from typing import List
 import logging
 
@@ -17,6 +18,64 @@ router = create_router(
     prefix="/flashcard",
     tags=["Flashcards"]
 )
+
+
+@router.post("", response_model=FlashcardResponse)
+async def create_flashcard(
+    flashcard: FlashcardCreate,
+    service: FlashcardService = Depends(get_flashcard_service)
+):
+    """
+    Create a new flashcard with auto-generated embedding.
+    
+    The embedding is automatically generated from word + translation + definition
+    using Gemini embedding API for vector search.
+    """
+    logger.info(f"[API] POST /flashcard - Creating: {flashcard.word}")
+    
+    try:
+        result = await service.create_with_embedding(flashcard.model_dump())
+        
+        # Add has_embedding flag for response
+        response_data = {**result}
+        response_data['has_embedding'] = bool(result.get('vector_embedding'))
+        
+        return response_data
+    except Exception as e:
+        logger.error(f"[API] Flashcard creation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create flashcard: {str(e)}"
+        )
+
+
+@router.post("/batch-embed")
+async def batch_generate_embeddings(
+    limit: int = Body(10, embed=True),
+    service: FlashcardService = Depends(get_flashcard_service)
+):
+    """
+    Generate embeddings for flashcards that don't have them.
+    
+    Use this to update existing flashcards with embeddings.
+    
+    Args:
+        limit: Max number of flashcards to process (default: 10)
+    """
+    logger.info(f"[API] POST /flashcard/batch-embed - Processing up to {limit} flashcards")
+    
+    if limit > 50:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Limit cannot exceed 50 per batch"
+        )
+    
+    updated_count = await service.generate_embeddings_for_missing(limit)
+    
+    return {
+        "message": f"Updated {updated_count} flashcards with embeddings",
+        "updated_count": updated_count
+    }
 
 
 @router.get("/{qr_id}", response_model=ARExperienceResponseSchema)
@@ -95,3 +154,4 @@ async def search_flashcards(
     results = await service.search(query)
     
     return results
+

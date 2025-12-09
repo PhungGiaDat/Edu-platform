@@ -1,14 +1,24 @@
 # backend/database/connection.py
 """
-MongoDB Connection Manager - Uses centralized settings
+Database Connection Manager
+Supports MongoDB (primary) and PostgreSQL/Supabase (secondary)
 """
 import motor.motor_asyncio
 from pymongo import MongoClient
 import certifi
 from settings import settings
+from typing import Optional
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Import PostgreSQL functions (new architecture)
+from database.postgres import (
+    init_postgres,
+    close_postgres,
+    get_session as get_pg_session_impl,
+    test_connection as test_postgres_connection,
+)
 
 
 class DatabaseManager:
@@ -78,11 +88,14 @@ class DatabaseManager:
 # ========== Singleton Instance ==========
 db_manager = DatabaseManager()
 
+# ========== PostgreSQL Status Flag ==========
+_postgres_initialized = False
+
 
 # ========== Dependency for FastAPI ==========
 def get_database() -> motor.motor_asyncio.AsyncIOMotorDatabase:
     """
-    FastAPI Dependency
+    FastAPI Dependency for MongoDB
     Usage: 
         @app.get("/")
         async def endpoint(db = Depends(get_database)):
@@ -91,18 +104,54 @@ def get_database() -> motor.motor_asyncio.AsyncIOMotorDatabase:
     return db_manager.database
 
 
+async def get_pg_session():
+    """
+    FastAPI Dependency for PostgreSQL/Supabase
+    Usage:
+        @app.get("/users")
+        async def get_users(db: AsyncSession = Depends(get_pg_session)):
+            ...
+    """
+    global _postgres_initialized
+    if not _postgres_initialized:
+        raise RuntimeError("PostgreSQL not initialized. Set DATABASE_URL and ensure connect_to_database() was called.")
+    async for session in get_pg_session_impl():
+        yield session
+
+
 # ========== Startup/Shutdown Events ==========
 async def connect_to_database():
     """Call this on FastAPI startup"""
+    global _postgres_initialized
+    
+    # MongoDB
     logger.info("🚀 [MongoDB] Initializing database connection...")
-    # Connection is established in __init__, just verify
     if await db_manager.ping():
         logger.info("✅ [MongoDB] Database ready")
     else:
         raise RuntimeError("Failed to connect to MongoDB")
+    
+    # PostgreSQL (if configured)
+    if settings.DATABASE_URL:
+        logger.info("🚀 [PostgreSQL] Initializing Supabase connection...")
+        await init_postgres(settings.DATABASE_URL)
+        if await test_postgres_connection():
+            _postgres_initialized = True
+            logger.info("✅ [PostgreSQL] Supabase ready")
+        else:
+            logger.warning("⚠️ [PostgreSQL] Supabase connection failed - continuing with MongoDB only")
 
 
 async def close_database_connection():
     """Call this on FastAPI shutdown"""
+    global _postgres_initialized
+    
+    # MongoDB
     logger.info("🔄 [MongoDB] Closing database connection...")
     await db_manager.close()
+    
+    # PostgreSQL
+    if _postgres_initialized:
+        logger.info("🔄 [PostgreSQL] Closing Supabase connection...")
+        await close_postgres()
+        _postgres_initialized = False
