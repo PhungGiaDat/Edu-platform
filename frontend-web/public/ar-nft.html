@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <title>AR Runtime</title>
+
+    <!-- Separated CSS -->
+    <link rel="stylesheet" href="./static/ar-assets/css/ar-runtime.css">
+</head>
+
+<body>
+    <!-- Loading Screen -->
+    <div class="arjs-loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Initializing AR Camera...</div>
+            <div class="loader-status">Please allow camera access</div>
+        </div>
+    </div>
+
+    <!-- Debug Panel (hidden by default) -->
+    <div class="ar-debug-panel">
+        <strong>AR Debug</strong><br>
+        Waiting for init...
+    </div>
+
+    <!-- NFT Loading Indicator -->
+    <div class="nft-loading-indicator"></div>
+
+    <!-- 
+        A-Frame Scene
+        IMPORTANT: No <a-nft> elements here!
+        NFT markers will be dynamically injected via JavaScript
+        when React sends marker data via postMessage
+    -->
+    <a-scene vr-mode-ui="enabled: false;" renderer="logarithmicDepthBuffer: true; antialias: true;" embedded
+        arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;">
+        <!-- Camera entity -->
+        <a-entity camera></a-entity>
+
+        <!-- 
+            NFT markers will be dynamically added here by ar-runtime.js
+            Example of what will be injected:
+            <a-nft type="nft" url="./static/ar-assets/descriptors/elephant" ...>
+                <a-entity gltf-model="./static/ar-assets/models/elephant.glb" ...></a-entity>
+            </a-nft>
+        -->
+    </a-scene>
+
+    <!-- 
+        CRITICAL: Load scripts at end of body
+        Order matters: A-Frame first, then AR.js, then our runtime
+    -->
+    <script
+        src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1c2407b26c61958baa93960954dbced957e8ffe7/dist/aframe-master.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+
+    <!-- Our runtime script - handles dynamic NFT injection -->
+    <script src="./static/ar-assets/js/ar-runtime.js"></script>
+</body>
+
+</html>
