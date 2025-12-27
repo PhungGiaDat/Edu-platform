@@ -52,13 +52,16 @@
 
     <!-- 
         CRITICAL: Load scripts at end of body
-        Order matters: A-Frame first, then AR.js, then our runtime
+        Order matters: A-Frame first, then AR.js, then ZXing, then our runtime
     -->
     <script
         src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1c2407b26c61958baa93960954dbced957e8ffe7/dist/aframe-master.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
 
-    <!-- Our runtime script - handles dynamic NFT injection -->
+    <!-- ZXing QR Code Reader -->
+    <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
+
+    <!-- Our runtime script - handles dynamic NFT injection + QR detection -->
     <script src="./static/ar-assets/js/ar-runtime.js"></script>
 
     <!-- Mobile Debug - Enable with ?debug=true in URL -->

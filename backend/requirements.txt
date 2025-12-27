@@ -14,14 +14,10 @@ pymongo>=4.10.0
 dnspython>=2.6.0
 beanie>=1.27.0
 
-# === Database - PostgreSQL/Supabase (SQLModel ORM) ===
-sqlmodel>=0.0.22
-sqlalchemy[asyncio]>=2.0.30
-asyncpg>=0.30.0
-
 # === Authentication ===
 PyJWT>=2.9.0
 python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
 
 # === Environment & Utils ===
 python-dotenv>=1.0.0
@@ -30,13 +26,10 @@ python-multipart>=0.0.12
 # === WebSocket ===
 websockets>=13.0
 
-# === Supabase Client ===
-supabase>=2.0.0
-
 # === AI - LangChain (Core only - no numpy conflict) ===
 langchain-core>=0.3.0
 langchain-google-genai>=2.0.0
 google-generativeai>=0.8.0
 
 # === Optional: Production Server ===
-gunicorn>=23.0.0  # Uncomment for production deployment
+gunicorn>=23.0.0

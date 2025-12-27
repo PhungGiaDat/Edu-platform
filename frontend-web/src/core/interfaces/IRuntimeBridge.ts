@@ -14,14 +14,13 @@ export interface IRuntimeBridge {
   readonly eventBus: IEventBus;
   readonly markerStateManager: IMarkerStateManager;
   readonly arSceneManager: ISceneManager;
-  readonly qrService: IQRDetectionService;
+  readonly qrService?: IQRDetectionService;
 
   // ========== LIFECYCLE METHODS ==========
   /**
    * Initialize all runtime services
-   * @param video - Optional video element to start QR scanning immediately
    */
-  init(video?: HTMLVideoElement): void;
+  init(): void;
 
   /**
    * Cleanup all runtime services
@@ -34,7 +33,7 @@ export interface IRuntimeBridge {
   isInitialized(): boolean;
 
   // ========== QR DETECTION CONTROL ==========
-  startQRScanning(video: HTMLVideoElement): void;
+  startQRScanning(): void;
   stopQRScanning(): void;
 
   // ========== MARKER STATE CONTROL ==========

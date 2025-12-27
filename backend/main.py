@@ -143,6 +143,12 @@ app.include_router(
 )
 
 app.include_router(
+    auth_router,
+    prefix=f"{settings.API_V1_PREFIX}/auth",
+    tags=["Authentication"]
+)
+
+app.include_router(
     gamification_router,
     prefix=settings.API_V1_PREFIX,
     tags=["Gamification"]

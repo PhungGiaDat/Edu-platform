@@ -1,10 +1,8 @@
-// src/runtime/RuntimeBridge.ts - WITH AUTO-START QR ON VIDEO_READY
+// src/runtime/RuntimeBridge.ts - REFACTORED FOR IFRAME AR Isolation
 import { eventBus } from './EventBus';
 import { markerStateManager } from './MarkerStateManager';
 import { arSceneManager } from './ARSceneManager';
 import { getARSceneController } from './ARSceneController';
-import { QRDetectionService } from './QRDetectionService';
-import { ZxingQRDecoder } from '@/adapters/ZxingQRDecoder';
 import { MultiFlashcardTracker } from './MultiFlashcardTracker';
 import type { IRuntimeBridge } from '@/core/interfaces/IRuntimeBridge';
 import { AREvent } from '@/core/types/AREvents';
@@ -13,18 +11,15 @@ class RuntimeBridge implements IRuntimeBridge {
   public readonly eventBus = eventBus;
   public readonly markerStateManager = markerStateManager;
   public readonly arSceneManager = arSceneManager;
-  public readonly qrService: QRDetectionService;
+  // Note: qrService is removed as detection is now in the Iframe
 
   private controller: ReturnType<typeof getARSceneController>;
   private multiFlashcardTracker: MultiFlashcardTracker;
   private initialized: boolean = false;
-  private videoReadyHandler?: (payload: { video: HTMLVideoElement }) => void;
 
   constructor() {
     console.log('🏗️ RuntimeBridge: Constructing...');
 
-    const qrDecoder = new ZxingQRDecoder();
-    this.qrService = new QRDetectionService(qrDecoder, this.eventBus);
     this.controller = getARSceneController(this.eventBus, this.markerStateManager);
     this.multiFlashcardTracker = new MultiFlashcardTracker(
       this.eventBus,
@@ -34,7 +29,7 @@ class RuntimeBridge implements IRuntimeBridge {
     console.log('✅ RuntimeBridge: Services injected');
   }
 
-  init(video?: HTMLVideoElement): void {
+  init(): void {
     if (this.initialized) {
       console.warn('⚠️ RuntimeBridge: Already initialized');
       return;
@@ -46,50 +41,14 @@ class RuntimeBridge implements IRuntimeBridge {
     this.arSceneManager.setEventBus(this.eventBus);
     this.controller.init(this.eventBus, this.markerStateManager);
 
-    // ✅ AUTO-START: Listen to VIDEO_READY event and automatically start QR scanning
-    this.videoReadyHandler = (payload: { video: HTMLVideoElement }) => {
-      console.log('🎥 RuntimeBridge: VIDEO_READY received, auto-starting QR scanning');
-      
-      // Wait a bit for AR.js to fully initialize video stream
-      setTimeout(() => {
-        if (payload.video.readyState >= payload.video.HAVE_CURRENT_DATA) {
-          console.log('✅ RuntimeBridge: Video readyState OK, starting QR service');
-          this.startQRScanning(payload.video);
-        } else {
-          console.warn('⚠️ RuntimeBridge: Video not ready yet, readyState:', payload.video.readyState);
-          
-          // Retry with interval if not ready
-          const checkInterval = setInterval(() => {
-            if (payload.video.readyState >= payload.video.HAVE_CURRENT_DATA) {
-              console.log('✅ RuntimeBridge: Video now ready, starting QR service');
-              this.startQRScanning(payload.video);
-              clearInterval(checkInterval);
-            }
-          }, 100);
-          
-          // Timeout after 5 seconds
-          setTimeout(() => {
-            clearInterval(checkInterval);
-            if (!this.qrService.isRunning()) {
-              console.error('❌ RuntimeBridge: Video readyState timeout after 5s');
-            }
-          }, 5000);
-        }
-      }, 500); // Wait 500ms for AR.js initialization
-    };
-    
-    this.eventBus.on('VIDEO_READY', this.videoReadyHandler as any);
-    console.log('📡 RuntimeBridge: VIDEO_READY listener registered for auto-start');
-
-    // Manual start if video provided directly
-    if (video) {
-      this.startQRScanning(video);
-    }
+    // Note: We no longer auto-start QR scanning here.
+    // The ARContainer (Iframe) will emit VIDEO_READY and MARKER_FOUND events.
 
     this.initialized = true;
-    console.log('✅ RuntimeBridge: Initialized with VIDEO_READY auto-start enabled');
+    console.log('✅ RuntimeBridge: Initialized (QR detection offloaded to Iframe)');
 
-    this.eventBus.emit(AREvent.SCENE_READY, { scene: null });
+    // We still emit SCENE_READY to signal that the bridge is ready
+    this.eventBus.emit(AREvent.SCENE_READY, { scene: null } as any);
   }
 
   cleanup(): void {
@@ -100,14 +59,6 @@ class RuntimeBridge implements IRuntimeBridge {
 
     console.log('🧹 RuntimeBridge: Cleaning up...');
 
-    // ✅ Cleanup VIDEO_READY listener
-    if (this.videoReadyHandler) {
-      this.eventBus.off('VIDEO_READY', this.videoReadyHandler as any);
-      this.videoReadyHandler = undefined;
-      console.log('🧹 RuntimeBridge: VIDEO_READY listener removed');
-    }
-
-    this.qrService.stop();
     this.multiFlashcardTracker.stop();
     this.markerStateManager.reset();
     this.arSceneManager.destroy();
@@ -120,25 +71,13 @@ class RuntimeBridge implements IRuntimeBridge {
     return this.initialized;
   }
 
-  startQRScanning(video: HTMLVideoElement): void {
-    if (!video) {
-      console.error('❌ RuntimeBridge: Cannot start QR scanning - no video');
-      return;
-    }
-
-    // Prevent double-start
-    if (this.qrService.isRunning()) {
-      console.log('⏭️ RuntimeBridge: QR scanning already running');
-      return;
-    }
-
-    console.log('🔍 RuntimeBridge: Starting QR scanning');
-    this.qrService.start(video);
+  // These methods are now mostly shells or proxies as the iframe handles the hardware
+  startQRScanning(): void {
+    console.log('🔍 RuntimeBridge: QR Scanning is managed by the AR Iframe');
   }
 
   stopQRScanning(): void {
-    console.log('🛑 RuntimeBridge: Stopping QR scanning');
-    this.qrService.stop();
+    console.log('🛑 RuntimeBridge: QR Scanning is managed by the AR Iframe');
   }
 
   resetMarkers(): void {
@@ -181,7 +120,7 @@ class RuntimeBridge implements IRuntimeBridge {
   getStatus() {
     return {
       initialized: this.initialized,
-      qrScanning: this.qrService.isRunning(),
+      qrScanning: true, // Always true if AR is active in iframe
       markersFound: this.markerStateManager.getFoundMarkers().size,
       comboActive: this.markerStateManager.isComboActive(),
       combo: this.markerStateManager.getCombo()?.combo_id || null,
