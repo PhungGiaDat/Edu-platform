@@ -1,25 +1,20 @@
 # backend/database/connection.py
 """
-Database Connection Manager
-Supports MongoDB (primary) and PostgreSQL/Supabase (secondary)
+Database Connection Manager - Exclusive MongoDB (Beanie ODM)
 """
 import motor.motor_asyncio
-from pymongo import MongoClient
 import certifi
+import logging
 from settings import settings
 from typing import Optional
-import logging
+
+# Import Beanie initialization and Documents
+from database.mongodb import init_mongodb, close_mongodb, test_connection
+from models.flashcard import Flashcard
+from models.user_mongo import UserDocument, LearningProgressDocument, QuizAttemptDocument
+# Note: Add other models as they are converted to Beanie
 
 logger = logging.getLogger(__name__)
-
-# Import PostgreSQL functions (new architecture)
-from database.postgres import (
-    init_postgres,
-    close_postgres,
-    get_session as get_pg_session_impl,
-    test_connection as test_postgres_connection,
-)
-
 
 class DatabaseManager:
     """
@@ -48,7 +43,7 @@ class DatabaseManager:
                 settings.MONGO_URL,
                 tls=True,
                 tlsCAFile=certifi.where(),
-                serverSelectionTimeoutMS=5000  # 5 second timeout
+                serverSelectionTimeoutMS=5000
             )
             self._db = self._client[settings.MONGO_DB]
             logger.info(f"✅ [MongoDB] Connected to database: {settings.MONGO_DB}")
@@ -63,12 +58,9 @@ class DatabaseManager:
             self._connect()
         return self._db
     
-    def get_collection(self, collection_name: str):
-        """Get a collection from database"""
-        return self.database[collection_name]
-    
     async def close(self):
         """Close MongoDB connection"""
+        await close_mongodb()
         if self._client:
             self._client.close()
             self._client = None
@@ -77,81 +69,43 @@ class DatabaseManager:
     
     async def ping(self) -> bool:
         """Test database connection"""
-        try:
-            await self._client.admin.command('ping')
-            return True
-        except Exception as e:
-            logger.error(f"❌ [MongoDB] Ping failed: {e}")
-            return False
-
+        return await test_connection()
 
 # ========== Singleton Instance ==========
 db_manager = DatabaseManager()
 
-# ========== PostgreSQL Status Flag ==========
-_postgres_initialized = False
-
-
 # ========== Dependency for FastAPI ==========
 def get_database() -> motor.motor_asyncio.AsyncIOMotorDatabase:
-    """
-    FastAPI Dependency for MongoDB
-    Usage: 
-        @app.get("/")
-        async def endpoint(db = Depends(get_database)):
-            ...
-    """
+    """FastAPI Dependency for MongoDB"""
     return db_manager.database
-
-
-async def get_pg_session():
-    """
-    FastAPI Dependency for PostgreSQL/Supabase
-    Usage:
-        @app.get("/users")
-        async def get_users(db: AsyncSession = Depends(get_pg_session)):
-            ...
-    """
-    global _postgres_initialized
-    if not _postgres_initialized:
-        raise RuntimeError("PostgreSQL not initialized. Set DATABASE_URL and ensure connect_to_database() was called.")
-    async for session in get_pg_session_impl():
-        yield session
-
 
 # ========== Startup/Shutdown Events ==========
 async def connect_to_database():
     """Call this on FastAPI startup"""
-    global _postgres_initialized
+    logger.info("🚀 [MongoDB] Initializing Beanie ODM and connections...")
     
-    # MongoDB
-    logger.info("🚀 [MongoDB] Initializing database connection...")
-    if await db_manager.ping():
-        logger.info("✅ [MongoDB] Database ready")
-    else:
-        raise RuntimeError("Failed to connect to MongoDB")
+    # Define models to register with Beanie
+    document_models = [
+        UserDocument,
+        Flashcard,
+        LearningProgressDocument,
+        QuizAttemptDocument,
+        # Add other Beanie Documents here (ARObject, Quiz, etc.)
+    ]
     
-    # PostgreSQL (if configured)
-    if settings.DATABASE_URL:
-        logger.info("🚀 [PostgreSQL] Initializing Supabase connection...")
-        await init_postgres(settings.DATABASE_URL)
-        if await test_postgres_connection():
-            _postgres_initialized = True
-            logger.info("✅ [PostgreSQL] Supabase ready")
-        else:
-            logger.warning("⚠️ [PostgreSQL] Supabase connection failed - continuing with MongoDB only")
-
+    try:
+        await init_mongodb(
+            mongo_url=settings.MONGO_URL,
+            database_name=settings.MONGO_DB,
+            document_models=document_models
+        )
+        logger.info("✅ [MongoDB] Beanie ODM initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ [MongoDB] Initialization failed: {e}")
+        raise
 
 async def close_database_connection():
     """Call this on FastAPI shutdown"""
-    global _postgres_initialized
-    
-    # MongoDB
     logger.info("🔄 [MongoDB] Closing database connection...")
     await db_manager.close()
-    
-    # PostgreSQL
-    if _postgres_initialized:
-        logger.info("🔄 [PostgreSQL] Closing Supabase connection...")
-        await close_postgres()
-        _postgres_initialized = False
+

@@ -18,6 +18,7 @@ import { AREvent } from '@/core/types/AREvents';
 // ========== TYPES ==========
 interface ARContainerProps {
     onReady?: () => void;
+    onQRDetected?: (qrId: string, allDetected: string[]) => void;
     onModelClick?: (markerId: string) => void;
     onNFTFound?: (markerId: string) => void;
     onNFTLost?: (markerId: string) => void;
@@ -38,6 +39,8 @@ interface NFTMarkerData {
 // Message types from iframe
 type ARMessageType =
     | 'AR_READY'
+    | 'AR_VIDEO_READY'
+    | 'QR_DETECTED'
     | 'AR_NFT_CREATED'
     | 'AR_NFT_REMOVED'
     | 'AR_NFT_FOUND'
@@ -54,6 +57,7 @@ interface ARMessage {
 // ========== COMPONENT ==========
 const ARContainer: React.FC<ARContainerProps> = ({
     onReady,
+    onQRDetected,
     onModelClick,
     onNFTFound,
     onNFTLost,
@@ -65,6 +69,7 @@ const ARContainer: React.FC<ARContainerProps> = ({
     const [remountKey] = useState(Date.now());
     const [isReady, setIsReady] = useState(false);
     const [activeNFTs, setActiveNFTs] = useState<Set<string>>(new Set());
+    const [detectedQRs, setDetectedQRs] = useState<Set<string>>(new Set());
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
     // ========== IFRAME COMMUNICATION ==========
@@ -123,14 +128,31 @@ const ARContainer: React.FC<ARContainerProps> = ({
 
             if (!type) return;
 
-            console.log('[ARContainer] � Received from iframe:', type, payload);
+            console.log('[ARContainer] 📥 Received from iframe:', type, payload);
 
             switch (type) {
                 case 'AR_READY':
                     setIsReady(true);
                     onReady?.();
                     // Emit to EventBus for other components
-                    eventBus.emit(AREvent.SCENE_READY, { scene: 'iframe' });
+                    eventBus.emit(AREvent.SCENE_READY, { scene: 'iframe' } as any);
+                    break;
+
+                case 'AR_VIDEO_READY':
+                    console.log('[ARContainer] 🎥 Video ready in iframe:', payload);
+                    // Emit VIDEO_READY to EventBus
+                    eventBus.emit(AREvent.VIDEO_READY, { video: null } as any);
+                    break;
+
+                case 'QR_DETECTED':
+                    console.log('[ARContainer] 📱 QR detected:', payload.qrId);
+                    setDetectedQRs(prev => new Set(prev).add(payload.qrId));
+                    onQRDetected?.(payload.qrId, payload.allDetected);
+                    // Emit MARKER_FOUND to EventBus (same as QRDetectionService did)
+                    eventBus.emit(AREvent.MARKER_FOUND, {
+                        markerId: payload.qrId,
+                        target: null
+                    } as any);
                     break;
 
                 case 'AR_NFT_CREATED':
@@ -147,11 +169,11 @@ const ARContainer: React.FC<ARContainerProps> = ({
 
                 case 'AR_NFT_FOUND':
                     onNFTFound?.(payload.markerId);
-                    // Emit to EventBus
+                    // Emit to EventBus (for NFT visual tracking, different from QR detection)
                     eventBus.emit(AREvent.MARKER_FOUND, {
                         markerId: payload.markerId,
                         target: null
-                    });
+                    } as any);
                     break;
 
                 case 'AR_NFT_LOST':
@@ -159,13 +181,13 @@ const ARContainer: React.FC<ARContainerProps> = ({
                     // Emit to EventBus
                     eventBus.emit(AREvent.MARKER_LOST, {
                         markerId: payload.markerId
-                    });
+                    } as any);
                     break;
 
                 case 'AR_MODEL_CLICK':
                     onModelClick?.(payload.markerId);
                     // Emit custom event for click handling
-                    eventBus.emit('AR_MODEL_CLICKED', {
+                    eventBus.emit('AR_MODEL_CLICKED' as any, {
                         markerId: payload.markerId
                     });
                     break;
@@ -174,7 +196,7 @@ const ARContainer: React.FC<ARContainerProps> = ({
 
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
-    }, [onReady, onModelClick, onNFTFound, onNFTLost]);
+    }, [onReady, onQRDetected, onModelClick, onNFTFound, onNFTLost]);
 
     // ========== DEBUG MODE ==========
 

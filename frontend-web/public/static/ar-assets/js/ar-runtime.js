@@ -2,7 +2,8 @@
  * AR Runtime JavaScript
  * public/static/ar-assets/js/ar-runtime.js
  * 
- * Dynamic NFT Loading System
+ * Dynamic NFT Loading System + QR Detection
+ * - QR detection using ZXing library
  * - Listens for postMessage from parent React app
  * - Dynamically creates <a-nft> elements based on marker data
  * - Sends events back to React via postMessage
@@ -15,9 +16,21 @@
     const ARRuntime = {
         initialized: false,
         scene: null,
+        video: null,
         activeNFTs: new Map(), // markerId -> a-nft element
         activeModels: new Map(), // markerId -> a-entity element
         debug: false,
+
+        // QR Detection state
+        qrDetection: {
+            enabled: true,
+            scanning: false,
+            lastDetected: null,
+            detectedMarkers: new Set(), // Track all detected markers for multi-flashcard
+            scanInterval: 500, // ms between scans
+            scanTimeoutId: null,
+            reader: null, // ZXing reader instance
+        },
 
         // Configuration
         config: {
@@ -32,6 +45,7 @@
             }
         }
     };
+
 
     // ========== LOGGING ==========
     function log(emoji, message, data = null) {
@@ -287,6 +301,154 @@
         }
     }
 
+    // ========== QR DETECTION ==========
+
+    /**
+     * Initialize ZXing QR reader
+     */
+    function initQRReader() {
+        if (typeof ZXing === 'undefined') {
+            log('⚠️', 'ZXing library not loaded');
+            return false;
+        }
+
+        try {
+            const hints = new Map();
+            hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.QR_CODE]);
+            ARRuntime.qrDetection.reader = new ZXing.BrowserMultiFormatReader(hints);
+            log('✅', 'ZXing QR reader initialized');
+            return true;
+        } catch (e) {
+            log('❌', 'Failed to initialize ZXing:', e);
+            return false;
+        }
+    }
+
+    /**
+     * Start QR code scanning from video element
+     */
+    function startQRScanning() {
+        if (!ARRuntime.qrDetection.enabled || ARRuntime.qrDetection.scanning) {
+            return;
+        }
+
+        // Find AR.js video element
+        const video = document.querySelector('#arjs-video') ||
+            document.querySelector('video') ||
+            document.querySelector('[id*="video"]');
+
+        if (!video || video.readyState < video.HAVE_CURRENT_DATA) {
+            log('⏳', 'Video not ready, waiting...');
+            setTimeout(startQRScanning, 500);
+            return;
+        }
+
+        ARRuntime.video = video;
+        ARRuntime.qrDetection.scanning = true;
+
+        log('🔍', 'QR scanning started', {
+            videoWidth: video.videoWidth,
+            videoHeight: video.videoHeight
+        });
+
+        // Send video ready to parent
+        sendToParent('AR_VIDEO_READY', {
+            width: video.videoWidth,
+            height: video.videoHeight
+        });
+
+        // Start scan loop
+        scanQRCode();
+    }
+
+    /**
+     * Stop QR scanning
+     */
+    function stopQRScanning() {
+        ARRuntime.qrDetection.scanning = false;
+        if (ARRuntime.qrDetection.scanTimeoutId) {
+            clearTimeout(ARRuntime.qrDetection.scanTimeoutId);
+            ARRuntime.qrDetection.scanTimeoutId = null;
+        }
+        log('🛑', 'QR scanning stopped');
+    }
+
+    /**
+     * Scan a single frame for QR codes
+     */
+    async function scanQRCode() {
+        if (!ARRuntime.qrDetection.scanning || !ARRuntime.video) {
+            return;
+        }
+
+        try {
+            const video = ARRuntime.video;
+
+            if (video.readyState >= video.HAVE_CURRENT_DATA) {
+                // Create canvas for frame capture
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Decode QR from canvas
+                if (ARRuntime.qrDetection.reader) {
+                    try {
+                        const result = await ARRuntime.qrDetection.reader.decodeFromCanvas(canvas);
+                        if (result && result.text) {
+                            handleQRDetected(result.text);
+                        }
+                    } catch (decodeError) {
+                        // No QR found in this frame - normal
+                    }
+                }
+            }
+        } catch (error) {
+            log('❌', 'QR scan error:', error);
+        }
+
+        // Schedule next scan (continue for multi-flashcard support)
+        if (ARRuntime.qrDetection.scanning) {
+            ARRuntime.qrDetection.scanTimeoutId = setTimeout(
+                scanQRCode,
+                ARRuntime.qrDetection.scanInterval
+            );
+        }
+    }
+
+    /**
+     * Handle detected QR code
+     */
+    function handleQRDetected(qrId) {
+        const qr = ARRuntime.qrDetection;
+
+        // Check if this is a new detection
+        if (qrId === qr.lastDetected) {
+            return; // Same QR, skip duplicate
+        }
+
+        log('📱', `QR Code detected: ${qrId}`);
+
+        qr.lastDetected = qrId;
+        qr.detectedMarkers.add(qrId);
+
+        // Send to parent React app
+        sendToParent('QR_DETECTED', {
+            qrId: qrId,
+            allDetected: Array.from(qr.detectedMarkers)
+        });
+    }
+
+    /**
+     * Clear QR detection cache (for reset)
+     */
+    function clearQRCache() {
+        ARRuntime.qrDetection.lastDetected = null;
+        ARRuntime.qrDetection.detectedMarkers.clear();
+        log('🔄', 'QR detection cache cleared');
+    }
+
     // ========== A-FRAME COMPONENTS ==========
 
     /**
@@ -327,6 +489,15 @@
         // Register custom components
         registerComponents();
 
+        // Initialize ZXing QR reader
+        initQRReader();
+
+        // Listen for AR.js video ready
+        window.addEventListener('arjs-video-loaded', () => {
+            log('🎥', 'AR.js video loaded event received');
+            startQRScanning();
+        });
+
         // Listen for AR.js ready
         window.addEventListener('arjs-nft-loaded', () => {
             log('✅', 'AR.js NFT system loaded');
@@ -335,20 +506,25 @@
             sendToParent('AR_READY', { initialized: true });
         });
 
-        // Fallback: Hide loader after timeout if event doesn't fire
+        // Fallback: Try to start QR scanning after delay
         setTimeout(() => {
+            if (!ARRuntime.qrDetection.scanning) {
+                log('⏳', 'Fallback: Attempting to start QR scanning...');
+                startQRScanning();
+            }
+
             if (!ARRuntime.initialized) {
                 log('⚠️', 'AR.js init timeout, forcing ready state');
                 hideLoader();
                 ARRuntime.initialized = true;
                 sendToParent('AR_READY', { initialized: true, fallback: true });
             }
-        }, 5000);
+        }, 3000);
 
         // Listen for messages from parent
         window.addEventListener('message', handleParentMessage);
 
-        log('✅', 'AR Runtime initialized, waiting for AR.js...');
+        log('✅', 'AR Runtime initialized, waiting for AR.js and starting QR scan...');
     }
 
     // ========== BOOTSTRAP ==========
@@ -365,5 +541,9 @@
     window.ARRuntime.createNFT = createNFTMarker;
     window.ARRuntime.removeNFT = removeNFTMarker;
     window.ARRuntime.clearAll = clearAllNFTs;
+    window.ARRuntime.startQR = startQRScanning;
+    window.ARRuntime.stopQR = stopQRScanning;
+    window.ARRuntime.clearQRCache = clearQRCache;
 
 })();
+
