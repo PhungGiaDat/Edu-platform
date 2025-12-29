@@ -478,11 +478,19 @@
     function init() {
         log('🚀', 'AR Runtime initializing...');
 
+        // Wait for A-Frame to be fully loaded
+        if (typeof AFRAME === 'undefined') {
+            log('⏳', 'A-Frame not yet loaded, retrying in 100ms...');
+            setTimeout(init, 100);
+            return;
+        }
+
         // Get scene reference
         ARRuntime.scene = document.querySelector('a-scene');
 
         if (!ARRuntime.scene) {
-            console.error('A-Frame scene not found!');
+            log('⏳', 'A-Frame scene not found, retrying in 100ms...');
+            setTimeout(init, 100);
             return;
         }
 
@@ -491,6 +499,22 @@
 
         // Initialize ZXing QR reader
         initQRReader();
+
+        // Wait for scene to be loaded before proceeding
+        if (ARRuntime.scene.hasLoaded) {
+            onSceneLoaded();
+        } else {
+            ARRuntime.scene.addEventListener('loaded', onSceneLoaded);
+        }
+
+        // Listen for messages from parent
+        window.addEventListener('message', handleParentMessage);
+
+        log('✅', 'AR Runtime initialized, waiting for AR.js and starting QR scan...');
+    }
+
+    function onSceneLoaded() {
+        log('🎬', 'A-Frame scene loaded');
 
         // Listen for AR.js video ready
         window.addEventListener('arjs-video-loaded', () => {
@@ -520,11 +544,6 @@
                 sendToParent('AR_READY', { initialized: true, fallback: true });
             }
         }, 3000);
-
-        // Listen for messages from parent
-        window.addEventListener('message', handleParentMessage);
-
-        log('✅', 'AR Runtime initialized, waiting for AR.js and starting QR scan...');
     }
 
     // ========== BOOTSTRAP ==========
