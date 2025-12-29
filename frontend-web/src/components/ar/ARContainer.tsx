@@ -69,7 +69,6 @@ const ARContainer: React.FC<ARContainerProps> = ({
     const [remountKey] = useState(Date.now());
     const [isReady, setIsReady] = useState(false);
     const [activeNFTs, setActiveNFTs] = useState<Set<string>>(new Set());
-    const [detectedQRs, setDetectedQRs] = useState<Set<string>>(new Set());
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
     // ========== IFRAME COMMUNICATION ==========
@@ -146,7 +145,6 @@ const ARContainer: React.FC<ARContainerProps> = ({
 
                 case 'QR_DETECTED':
                     console.log('[ARContainer] 📱 QR detected:', payload.qrId);
-                    setDetectedQRs(prev => new Set(prev).add(payload.qrId));
                     onQRDetected?.(payload.qrId, payload.allDetected);
                     // Emit MARKER_FOUND to EventBus (same as QRDetectionService did)
                     eventBus.emit(AREvent.MARKER_FOUND, {
