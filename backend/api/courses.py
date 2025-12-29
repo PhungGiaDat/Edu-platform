@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Any
 from services.course_service import CourseService, get_course_service
 from models.course_model import CourseSchema
-from database.supabase_client import get_supabase
 
 router = APIRouter()
 

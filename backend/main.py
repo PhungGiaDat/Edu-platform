@@ -30,7 +30,8 @@ from api import (
     game_router,
     course_router,
     chat_router,
-    gamification_router
+    gamification_router,
+    auth_router,
 )
 from api.websocket import router as websocket_router
 
