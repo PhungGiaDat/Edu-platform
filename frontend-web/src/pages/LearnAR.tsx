@@ -1,5 +1,5 @@
 // src/pages/LearnAR.tsx - REFACTORED WITH RUNTIME BRIDGE
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import ARContainer from '@/components/ar/ARContainer';
 import ARControlPanel from '@/components/panel/ARControlPanel';
 import { QuizOverlay } from '@/components/Quiz';
