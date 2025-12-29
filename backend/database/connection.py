@@ -58,6 +58,18 @@ class DatabaseManager:
             self._connect()
         return self._db
     
+    def get_collection(self, collection_name: str) -> motor.motor_asyncio.AsyncIOMotorCollection:
+        """
+        Get a collection from the database
+        
+        Args:
+            collection_name: Name of the MongoDB collection
+            
+        Returns:
+            AsyncIOMotorCollection instance
+        """
+        return self.database[collection_name]
+    
     async def close(self):
         """Close MongoDB connection"""
         await close_mongodb()

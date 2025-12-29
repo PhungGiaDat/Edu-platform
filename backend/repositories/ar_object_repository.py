@@ -48,11 +48,6 @@ class ARObjectRepository(BaseRepository):
             filter={"marker_type": marker_type}
         )
 
-
-def get_ar_object_repository() -> ARObjectRepository:
-    """Factory function for dependency injection"""
-    return ARObjectRepository()
-    
     async def get_all_tags(self) -> List[str]:
         """
         Get list of all unique AR tags
@@ -61,3 +56,10 @@ def get_ar_object_repository() -> ARObjectRepository:
             List of AR tag names
         """
         return await self.collection.distinct("ar_tag")
+
+
+def get_ar_object_repository() -> ARObjectRepository:
+    """Factory function for dependency injection"""
+    return ARObjectRepository()
+
+
