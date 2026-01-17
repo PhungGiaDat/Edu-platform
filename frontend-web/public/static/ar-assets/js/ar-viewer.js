@@ -93,7 +93,13 @@
 
     // ============ INIT ============
     function init() {
+        log('🚀', 'Initializing MindAR Viewer...');
+        log('📍', `mind=${mindUrl}`);
+        log('📍', `model=${modelUrl}`);
+        log('📍', `image=${imageUrl}`);
+
         if (!mindUrl) {
+            log('❌', 'No mind file specified!');
             loadingText.textContent = '❌ No mind file specified';
             sendToParent('SYSTEM_ERROR', {
                 code: 'NO_MIND_FILE',
@@ -102,21 +108,28 @@
             return;
         }
 
+        log('⏳', 'Setting up A-Frame scene with MindAR...');
         scene.setAttribute('mindar-image', `imageTargetSrc: ${mindUrl}; maxTrack: 2; uiLoading: no; uiScanning: no; uiError: no`);
+        log('✅', 'MindAR attribute set');
 
         if (modelUrl) {
+            log('📦', 'Loading 3D model 0:', modelUrl);
             document.getElementById('mode-3d-0').setAttribute('gltf-model', modelUrl);
         }
 
         if (imageUrl) {
+            log('🖼️', 'Loading 2D image 0:', imageUrl);
             document.getElementById('mode-2d-0').setAttribute('src', imageUrl);
         }
 
         if (modelUrl2) {
+            log('📦', 'Loading 3D model 1:', modelUrl2);
             document.getElementById('mode-3d-1').setAttribute('gltf-model', modelUrl2);
         }
 
+        log('🎧', 'Setting up event listeners...');
         setupEventListeners();
+        log('✅', 'MindAR Viewer initialization complete');
     }
 
     // ============ EVENT LISTENERS ============

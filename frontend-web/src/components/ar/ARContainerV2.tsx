@@ -161,7 +161,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                     transitionTo('VIEWING');
                     eventBus.emit(AREvent.SCENE_READY, { scene: 'viewer' } as any);
                     break;
-                    break;
 
                 case 'TARGET_FOUND': {
                     const data = payload as ARMessagePayloadMap['TARGET_FOUND'];
@@ -265,6 +264,20 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             eventBus.off('AR_COMMAND' as any, handleARCommand);
         };
     }, [switchToViewer, switchToScanner, setMode, sendTypedMessage]);
+
+    // ========== AUTO TRANSITION FROM LOADING TO VIEWING ==========
+    // When mindUrl becomes available during LOADING phase, transition to VIEWING
+    useEffect(() => {
+        if (phase === 'LOADING' && mindUrl) {
+            console.log('[ARContainerV2] 🔄 mindUrl ready, transitioning to VIEWING:', mindUrl);
+            setIsLoading(true);
+            // Small delay to ensure state is updated
+            const timer = setTimeout(() => {
+                transitionTo('VIEWING');
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [phase, mindUrl, transitionTo]);
 
     // ========== RENDER ==========
     return (

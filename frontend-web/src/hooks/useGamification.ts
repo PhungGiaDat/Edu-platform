@@ -172,9 +172,9 @@ export function useGamification(userId: string | null) {
     }, [userId, fetchProgress]);
 
     // Get leaderboard
-    const getLeaderboard = useCallback(async (_limit: number = 10) => {
+    const getLeaderboard = useCallback(async (limit: number = 10) => {
         try {
-            const response = await fetch(`${API_BASE}/api/v1/gamification/leaderboard`);
+            const response = await fetch(`${API_BASE}/api/v1/gamification/leaderboard?limit=${limit}`);
             if (!response.ok) throw new Error('Failed to fetch leaderboard');
             return await response.json();
         } catch (err) {
@@ -246,12 +246,12 @@ export function useGamification(userId: string | null) {
         ? Math.round((progress.total_xp / progress.xp_to_next_level) * 100)
         : 0;
 
-    // Convenience methods for common actions
-    const trackFlashcardView = () => addXP('flashcard_viewed');
-    const trackQuizComplete = () => addXP('quiz_completed');
-    const trackGameComplete = () => addXP('game_completed');
-    const trackPronunciationCorrect = () => addXP('pronunciation_correct');
-    const trackComboDiscovered = () => addXP('combo_discovered');
+    // Convenience methods for common actions (memoized to prevent stale closures)
+    const trackFlashcardView = useCallback(() => addXP('flashcard_viewed'), [addXP]);
+    const trackQuizComplete = useCallback(() => addXP('quiz_completed'), [addXP]);
+    const trackGameComplete = useCallback(() => addXP('game_completed'), [addXP]);
+    const trackPronunciationCorrect = useCallback(() => addXP('pronunciation_correct'), [addXP]);
+    const trackComboDiscovered = useCallback(() => addXP('combo_discovered'), [addXP]);
 
     // Auto-fetch on mount
     useEffect(() => {
@@ -260,7 +260,7 @@ export function useGamification(userId: string | null) {
         }
     }, [userId, fetchProgress]);
 
-    // Listen for EventBus events
+    // Listen for EventBus events - include memoized handlers in deps to prevent stale closures
     useEffect(() => {
         const handlePronunciationResult = (data: any) => {
             if (data.isCorrect) {
@@ -279,7 +279,7 @@ export function useGamification(userId: string | null) {
             eventBus.off('PRONUNCIATION_RESULT', handlePronunciationResult);
             eventBus.off('AR_COMBO_ACTIVATED', handleComboActivated);
         };
-    }, []);
+    }, [trackPronunciationCorrect, trackComboDiscovered]);
 
     return {
         // State
