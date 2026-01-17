@@ -4,6 +4,11 @@
  * Uses ARContainerV2 with iframe swapping:
  * - SCANNING phase: ar-scanner.html (jsQR)
  * - VIEWING phase: ar-viewer.html (MindAR)
+ * 
+ * Multi-Flashcard Detection:
+ * - Scan multiple QR codes to detect flashcards
+ * - Auto-check for combo when 2+ flashcards detected
+ * - Switch to combo mind file for multi-target AR
  */
 
 import { useEffect, useState, useCallback } from 'react';
@@ -15,6 +20,7 @@ import { useArData } from '@/hooks/useArData';
 import { useQuizData } from '@/hooks/useQuizData';
 import { useGameData } from '@/hooks/useGameData';
 import { useGamification } from '@/hooks/useGamification';
+import { useMultiFlashcard } from '@/hooks/useMultiFlashcard';
 import { eventBus } from '@/runtime/EventBus';
 import type { DisplayMode, AppMode } from '@/hooks/useDisplayMode';
 import type { GameDifficulty, GameType } from '@/types';
@@ -37,6 +43,17 @@ export default function LearnARV2() {
     const [selectedGameType, setSelectedGameType] = useState<GameType | null>(null);
     const [showGameSelector, setShowGameSelector] = useState(false);
 
+    // ========== MULTI-FLASHCARD DETECTION ==========
+    const {
+        addFlashcard,
+        flashcardCount,
+        activeCombo,
+        comboMindUrl,
+        mode: multiMode,
+        hasCombo
+        // getFlashcardByIndex - TODO: use when ARContainerV2 supports model2Url
+    } = useMultiFlashcard();
+
     // ========== DATA HOOKS ==========
     const { arData, error: arError } = useArData(detectedQrId);
     const { quizData } = useQuizData(detectedQrId);
@@ -50,18 +67,42 @@ export default function LearnARV2() {
     const { trackFlashcardView, trackComboDiscovered } = useGamification('demo-user');
 
     // ========== AR DATA ==========
-    const mindUrl = arData?.targets?.[0]?.nft_base_url?.replace(/\.(fset|fset3|iset)$/, '.mind') ||
+    // Use combo mind URL when combo is active, otherwise use single flashcard
+    const mindUrl = hasCombo && comboMindUrl
+        ? comboMindUrl
+        : arData?.targets?.[0]?.nft_base_url?.replace(/\.(fset|fset3|iset)$/, '.mind') ||
         '/assets/target/elephant_targets.mind';
-    const modelUrl = arData?.targets?.[0]?.model_3d_url || '/assets/models/elephant cartoon.glb';
-    const imageUrl = arData?.targets?.[0]?.image_2d_url || arData?.flashcard?.image_url || undefined;
+
+    const modelUrl = hasCombo && activeCombo?.model3dUrl
+        ? activeCombo.model3dUrl
+        : arData?.targets?.[0]?.model_3d_url || '/assets/models/elephant cartoon.glb';
+
+    const imageUrl = hasCombo && activeCombo?.image2dUrl
+        ? activeCombo.image2dUrl
+        : arData?.targets?.[0]?.image_2d_url || arData?.flashcard?.image_url || undefined;
+
+    // Get second model for multi-target (target-1) - TODO: pass to ARContainerV2 when supported
+    // const model2Url = hasCombo
+    //     ? getFlashcardByIndex(1)?.model3dUrl
+    //     : undefined;
 
     // ========== HANDLERS ==========
     const handleQRDetected = useCallback((qrId: string) => {
         console.log('[LearnARV2] QR Detected:', qrId);
-        setDetectedQrId(qrId);
+
+        // Add to multi-flashcard tracker
+        addFlashcard(qrId);
+
+        // Set as primary if no QR detected yet
+        if (!detectedQrId) {
+            setDetectedQrId(qrId);
+        }
+
         setAppState('LOADING');
         trackFlashcardView();
-    }, [trackFlashcardView]);
+
+        console.log('[LearnARV2] Multi-mode:', multiMode, 'Cards:', flashcardCount + 1);
+    }, [trackFlashcardView, addFlashcard, detectedQrId, multiMode, flashcardCount]);
 
     const handlePhaseChange = useCallback((phase: ARPhase) => {
         console.log('[LearnARV2] Phase changed:', phase);
@@ -74,32 +115,23 @@ export default function LearnARV2() {
     }, []);
 
     const handleComboDetected = useCallback(async (targets: number[]) => {
-        console.log('[LearnARV2] Combo detected:', targets);
+        console.log('[LearnARV2] 🔗 AR Combo detected - targets:', targets);
         setIsComboActive(true);
         trackComboDiscovered();
 
-        // Check for combo via API
-        try {
-            const arTags = targets.map(i => encodeURIComponent(`target-${i}`));
-            const response = await fetch(
-                `${import.meta.env.VITE_API_BASE || ''}/api/v1/combos/check?tags=${arTags.join(',')}`
-            );
+        // The combo is already checked by useMultiFlashcard hook
+        // Just log and celebrate if combo exists
+        if (hasCombo && activeCombo) {
+            console.log('[LearnARV2] ✅ Active combo:', activeCombo.comboId);
+            console.log('[LearnARV2] 🎁 Bonus XP:', activeCombo.bonusXp);
 
-            if (!response.ok) {
-                console.warn('[LearnARV2] Combo check returned', response.status);
-                return;
-            }
-
-            const data = await response.json();
-
-            if (data.found && data.combo) {
-                console.log('[LearnARV2] Combo found:', data.combo);
-                // Could load combo model here
-            }
-        } catch (error) {
-            console.error('[LearnARV2] Combo check failed:', error);
+            // Could trigger celebration animation here
+            eventBus.emit('AR_COMMAND' as any, {
+                type: 'TRIGGER_ANIMATION',
+                payload: { clip: 'celebrate', loop: false }
+            });
         }
-    }, [trackComboDiscovered]);
+    }, [trackComboDiscovered, hasCombo, activeCombo]);
 
     const handleModelClick = useCallback((modelId: string) => {
         console.log('[LearnARV2] Model clicked:', modelId);
