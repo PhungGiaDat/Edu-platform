@@ -82,7 +82,7 @@ export default function LearnARV2() {
         try {
             const arTags = targets.map(i => encodeURIComponent(`target-${i}`));
             const response = await fetch(
-                `${import.meta.env.VITE_API_BASE || ''}/api/combos/check?tags=${arTags.join(',')}`
+                `${import.meta.env.VITE_API_BASE || ''}/api/v1/combos/check?tags=${arTags.join(',')}`
             );
 
             if (!response.ok) {

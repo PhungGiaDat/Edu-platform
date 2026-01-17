@@ -10,7 +10,7 @@ const API_BASE = getApiBase();
  * Hook to fetch game challenges from backend with game type filter
  */
 export function useGameData(
-  qrId: string | null, 
+  qrId: string | null,
   difficulty: GameDifficulty | null = null,
   gameType: GameType | null = null
 ) {
@@ -34,13 +34,13 @@ export function useGameData(
         const params = new URLSearchParams();
         if (difficulty) params.append('difficulty', difficulty);
         if (gameType) params.append('game_type', gameType);
-        
+
         const queryString = params.toString();
-        const url = `${API_BASE}/api/game/${qrId}${queryString ? `?${queryString}` : ''}`;
-        
+        const url = `${API_BASE}/api/v1/game/${qrId}${queryString ? `?${queryString}` : ''}`;
+
         console.log('📡 [useGameData] URL:', url);
         const response = await fetch(url);
-        
+
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error('No games available for this selection');
