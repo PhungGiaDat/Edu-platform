@@ -1,7 +1,7 @@
-// src/components/games/MemoryMatchGame.tsx
+// src/components/games/MemoryMatchGame.tsx - Mobile-first kid-friendly design
 
 import React, { useState, useEffect } from 'react';
-import type { GameChallenge} from '../../types';
+import type { GameChallenge } from '../../types';
 import { getApiBase } from '../../config';
 
 const API_BASE = getApiBase();
@@ -115,36 +115,66 @@ export const MemoryMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint
     setCanFlip(true);
   };
 
-  const gridCols = challenge.game_config?.grid_size === '4x2' ? 4 : 3;
+  // Auto grid: 4 columns for 8 cards, 3 for 6, 2 for 4
+  const numCards = cards.length;
+  const gridCols = numCards >= 8 ? 4 : numCards >= 6 ? 3 : 2;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
+      {/* Question */}
+      <div
+        className="text-center p-2 rounded-xl"
+        style={{
+          background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+        }}
+      >
+        <p className="text-sm font-bold text-white">{challenge.question}</p>
+      </div>
+
       {/* Stats */}
-      <div className="flex justify-between items-center">
-        <div className="bg-purple-500/90 backdrop-blur-sm px-4 py-2 rounded-full border-2 border-white shadow-lg">
-          <span className="text-white font-bold text-sm md:text-base">
+      <div className="flex justify-between items-center gap-2">
+        <div
+          className="px-3 py-1 rounded-full shadow"
+          style={{
+            background: 'linear-gradient(135deg, #a855f7 0%, #c084fc 100%)',
+            border: '2px solid #fff'
+          }}
+        >
+          <span className="text-white font-bold text-xs">
             🎯 Moves: {moves}
           </span>
         </div>
-        <div className="bg-green-500/90 backdrop-blur-sm px-4 py-2 rounded-full border-2 border-white shadow-lg">
-          <span className="text-white font-bold text-sm md:text-base">
-            ✅ Found: {matchedPairs.length}/{challenge.pairs?.length || 0}
+        <div
+          className="px-3 py-1 rounded-full shadow"
+          style={{
+            background: 'linear-gradient(135deg, #22c55e 0%, #4ade80 100%)',
+            border: '2px solid #fff'
+          }}
+        >
+          <span className="text-white font-bold text-xs">
+            ✅ {matchedPairs.length}/{challenge.pairs?.length || 0}
           </span>
         </div>
       </div>
 
       {/* Hint */}
       {showHint && challenge.hint && (
-        <div className="p-3 bg-yellow-100 rounded-2xl border-4 border-yellow-300">
-          <p className="text-sm md:text-base font-bold text-yellow-800 text-center">
+        <div
+          className="p-2 rounded-xl text-center"
+          style={{
+            background: 'linear-gradient(135deg, #fef08a 0%, #fde047 100%)',
+            border: '2px solid #eab308'
+          }}
+        >
+          <p className="text-xs font-bold text-amber-800">
             💡 {challenge.hint}
           </p>
         </div>
       )}
 
-      {/* Card Grid */}
+      {/* Card Grid - Mobile optimized */}
       <div
-        className={`grid gap-3 md:gap-4`}
+        className="grid gap-2"
         style={{
           gridTemplateColumns: `repeat(${gridCols}, 1fr)`
         }}
@@ -154,36 +184,48 @@ export const MemoryMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint
             key={card.id}
             onClick={() => handleCardClick(card)}
             disabled={!canFlip || card.isFlipped || card.isMatched}
-            className={`relative aspect-square rounded-2xl border-4 transition-all duration-300 transform ${
-              card.isMatched
-                ? 'bg-green-400 border-green-600 scale-95 opacity-75'
-                : card.isFlipped
-                ? 'bg-white border-blue-400 scale-105'
-                : 'bg-gradient-to-br from-purple-400 to-pink-500 border-purple-600 hover:scale-110 active:scale-95'
-            } shadow-lg`}
+            className="relative overflow-hidden"
             style={{
-              transformStyle: 'preserve-3d',
-              transition: 'transform 0.3s'
+              aspectRatio: '1 / 1',
+              borderRadius: '0.75rem',
+              border: card.isMatched
+                ? '3px solid #22c55e'
+                : card.isFlipped
+                  ? '3px solid #60a5fa'
+                  : '3px solid #c084fc',
+              background: card.isMatched
+                ? 'linear-gradient(135deg, #86efac 0%, #4ade80 100%)'
+                : card.isFlipped
+                  ? '#fff'
+                  : 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)',
+              boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
+              transform: card.isMatched ? 'scale(0.95)' : 'scale(1)',
+              opacity: card.isMatched ? 0.8 : 1,
+              transition: 'all 0.3s ease',
+              WebkitTapHighlightColor: 'transparent'
             }}
           >
             {/* Card Back */}
             {!card.isFlipped && !card.isMatched && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-6xl md:text-7xl">❓</span>
+                <span style={{ fontSize: 'clamp(24px, 8vw, 40px)' }}>❓</span>
               </div>
             )}
 
             {/* Card Front */}
             {(card.isFlipped || card.isMatched) && (
-              <div className="absolute inset-0 flex items-center justify-center p-2">
+              <div className="absolute inset-0 flex items-center justify-center p-1">
                 {card.type === 'image' ? (
                   <img
                     src={`${API_BASE}${card.content}`}
                     alt="Memory card"
-                    className="w-full h-full object-cover rounded-xl"
+                    className="w-full h-full object-cover rounded-lg"
                   />
                 ) : (
-                  <span className="text-base md:text-xl font-black text-purple-700 text-center break-words">
+                  <span
+                    className="font-black text-purple-700 text-center break-words px-1"
+                    style={{ fontSize: 'clamp(10px, 3vw, 16px)' }}
+                  >
                     {card.content}
                   </span>
                 )}
@@ -192,7 +234,10 @@ export const MemoryMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint
 
             {/* Matched indicator */}
             {card.isMatched && (
-              <div className="absolute top-1 right-1 text-2xl md:text-3xl animate-bounce">
+              <div
+                className="absolute top-0 right-0 animate-bounce"
+                style={{ fontSize: 'clamp(14px, 4vw, 24px)' }}
+              >
                 ✅
               </div>
             )}
@@ -203,14 +248,21 @@ export const MemoryMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint
       {/* Reset button */}
       <button
         onClick={handleReset}
-        className="w-full px-6 py-3 bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 rounded-2xl text-white font-bold text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-orange-600"
+        className="w-full"
+        style={{
+          padding: 'clamp(8px, 2vw, 12px)',
+          fontSize: 'clamp(12px, 3.5vw, 16px)',
+          background: 'linear-gradient(135deg, #fb923c 0%, #f97316 100%)',
+          border: '3px solid #ea580c',
+          borderRadius: '1rem',
+          color: '#fff',
+          fontWeight: 700,
+          boxShadow: '0 4px 12px rgba(249, 115, 22, 0.4)',
+          WebkitTapHighlightColor: 'transparent'
+        }}
       >
         🔄 Shuffle Cards
       </button>
-
-      <p className="text-center text-sm text-white/80 font-semibold">
-        🎴 Flip cards to find matching pairs!
-      </p>
     </div>
   );
 };
