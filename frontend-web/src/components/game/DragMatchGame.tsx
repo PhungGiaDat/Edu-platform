@@ -1,4 +1,4 @@
-// src/components/games/DragMatchGame.tsx
+// src/components/games/DragMatchGame.tsx - Mobile-first kid-friendly design
 
 import React, { useState } from 'react';
 import type { GameChallenge } from '../../types';
@@ -13,22 +13,38 @@ interface Props {
 }
 
 export const DragMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint }) => {
-  const [draggedWord, setDraggedWord] = useState<string | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [droppedWord, setDroppedWord] = useState<string | null>(null);
 
+  // Touch-friendly: tap to select, tap image to drop
+  const handleWordClick = (word: string) => {
+    if (selectedWord === word) {
+      setSelectedWord(null); // Deselect
+    } else {
+      setSelectedWord(word);
+    }
+  };
+
+  const handleImageClick = () => {
+    if (selectedWord) {
+      setDroppedWord(selectedWord);
+      setTimeout(() => {
+        onAnswer(selectedWord);
+        setDroppedWord(null);
+        setSelectedWord(null);
+      }, 600);
+    }
+  };
+
+  // Drag events (for desktop)
   const handleDragStart = (word: string) => {
-    setDraggedWord(word);
+    setSelectedWord(word);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    if (draggedWord) {
-      setDroppedWord(draggedWord);
-      setTimeout(() => {
-        onAnswer(draggedWord);
-        setDroppedWord(null);
-        setDraggedWord(null);
-      }, 500);
+    if (selectedWord) {
+      handleImageClick();
     }
   };
 
@@ -36,32 +52,93 @@ export const DragMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint }
     e.preventDefault();
   };
 
+  const colors = [
+    { bg: 'linear-gradient(135deg, #f472b6 0%, #ec4899 100%)', border: '#db2777' },
+    { bg: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)', border: '#2563eb' },
+    { bg: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)', border: '#16a34a' },
+    { bg: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)', border: '#d97706' }
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Question */}
+      <div
+        className="text-center p-3 rounded-2xl"
+        style={{
+          background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+        }}
+      >
+        <p className="text-base font-bold text-white">{challenge.question}</p>
+      </div>
+
       {/* Image - Drop Zone */}
       {challenge.image_url && (
         <div
+          onClick={handleImageClick}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          className={`relative rounded-2xl overflow-hidden shadow-xl border-4 ${
-            droppedWord ? 'border-green-400 scale-105' : 'border-yellow-300'
-          } transition-all duration-300`}
+          className="relative rounded-2xl overflow-hidden cursor-pointer mx-auto"
+          style={{
+            maxWidth: '280px',
+            border: droppedWord
+              ? '4px solid #22c55e'
+              : selectedWord
+                ? '4px solid #fbbf24'
+                : '4px solid #22d3ee',
+            boxShadow: selectedWord
+              ? '0 0 20px rgba(251, 191, 36, 0.5)'
+              : '0 8px 25px rgba(6, 182, 212, 0.3)',
+            transform: droppedWord ? 'scale(1.02)' : 'scale(1)',
+            transition: 'all 0.3s ease'
+          }}
         >
           <img
             src={`${API_BASE}${challenge.image_url}`}
-            alt="Challenge"
-            className="w-full h-64 object-cover"
+            alt="Match target"
+            className="w-full object-cover"
+            style={{ height: 'clamp(120px, 35vw, 180px)' }}
           />
-          
+
           {/* Drop overlay */}
-          <div className="absolute inset-0 bg-blue-500/20 backdrop-blur-sm flex items-center justify-center border-4 border-dashed border-white/50">
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{
+              background: selectedWord
+                ? 'rgba(251, 191, 36, 0.3)'
+                : 'rgba(6, 182, 212, 0.2)',
+              backdropFilter: 'blur(2px)'
+            }}
+          >
             {droppedWord ? (
-              <div className="bg-white/95 px-8 py-4 rounded-2xl border-4 border-green-500 shadow-2xl animate-bounce">
-                <p className="text-3xl font-black text-green-600">{droppedWord}</p>
+              <div
+                className="px-6 py-3 rounded-2xl animate-bounce"
+                style={{
+                  background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)',
+                  border: '3px solid #fff',
+                  boxShadow: '0 4px 15px rgba(34, 197, 94, 0.5)'
+                }}
+              >
+                <p
+                  className="font-black text-white"
+                  style={{ fontSize: 'clamp(18px, 5vw, 28px)' }}
+                >
+                  ✓ {droppedWord}
+                </p>
               </div>
             ) : (
-              <div className="bg-white/80 px-6 py-3 rounded-2xl border-4 border-yellow-400">
-                <p className="text-xl font-bold text-purple-700">👆 Drop word here!</p>
+              <div
+                className="px-4 py-2 rounded-xl"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  border: '3px dashed #fbbf24'
+                }}
+              >
+                <p
+                  className="font-bold text-purple-700"
+                  style={{ fontSize: 'clamp(12px, 3.5vw, 16px)' }}
+                >
+                  {selectedWord ? '👆 Tap here!' : '👇 Select a word'}
+                </p>
               </div>
             )}
           </div>
@@ -70,40 +147,78 @@ export const DragMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint }
 
       {/* Hint */}
       {showHint && challenge.hint && (
-        <div className="p-3 bg-yellow-100 rounded-2xl border-4 border-yellow-300 animate-fadeIn">
-          <p className="text-sm md:text-base font-bold text-yellow-800 text-center">
+        <div
+          className="p-2 rounded-xl text-center mx-auto"
+          style={{
+            maxWidth: '300px',
+            background: 'linear-gradient(135deg, #fef08a 0%, #fde047 100%)',
+            border: '3px solid #eab308'
+          }}
+        >
+          <p
+            className="font-bold text-amber-800"
+            style={{ fontSize: 'clamp(11px, 3vw, 14px)' }}
+          >
             💡 {challenge.hint}
           </p>
         </div>
       )}
 
-      {/* Draggable Words */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Word Options - Mobile optimized grid */}
+      <div
+        className="grid gap-3"
+        style={{
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          padding: '0 0.5rem'
+        }}
+      >
         {challenge.choices?.map((word, index) => {
-          const colors = [
-            'from-red-400 to-pink-500 border-red-600',
-            'from-blue-400 to-cyan-500 border-blue-600',
-            'from-green-400 to-emerald-500 border-green-600',
-            'from-yellow-400 to-orange-500 border-yellow-600'
-          ];
+          const color = colors[index % colors.length];
+          const isSelected = selectedWord === word;
 
           return (
-            <div
+            <button
               key={index}
               draggable
               onDragStart={() => handleDragStart(word)}
-              className={`p-5 bg-gradient-to-br ${colors[index]} rounded-2xl text-white font-bold text-xl text-center cursor-move transition-all transform hover:scale-110 active:scale-95 shadow-lg border-4 ${
-                draggedWord === word ? 'opacity-50 scale-95' : ''
-              }`}
+              onClick={() => handleWordClick(word)}
+              className="relative overflow-hidden"
+              style={{
+                padding: 'clamp(12px, 3vw, 20px)',
+                background: color.bg,
+                borderRadius: '1rem',
+                border: isSelected ? '4px solid #fff' : `3px solid ${color.border}`,
+                boxShadow: isSelected
+                  ? '0 0 20px rgba(255, 255, 255, 0.5), 0 4px 15px rgba(0,0,0,0.2)'
+                  : '0 4px 12px rgba(0,0,0,0.15)',
+                transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                transition: 'all 0.2s ease',
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent'
+              }}
             >
-              <span className="drop-shadow-md">🎯 {word}</span>
-            </div>
+              <span
+                className="font-bold text-white drop-shadow-md flex items-center justify-center gap-1"
+                style={{ fontSize: 'clamp(14px, 4vw, 20px)' }}
+              >
+                {isSelected && '✓ '}
+                {word}
+              </span>
+            </button>
           );
         })}
       </div>
 
-      <p className="text-center text-sm text-white/80 font-semibold">
-        ✨ Drag a word and drop it on the picture!
+      {/* Instructions */}
+      <p
+        className="text-center font-bold"
+        style={{
+          fontSize: 'clamp(11px, 3vw, 14px)',
+          color: '#fff',
+          textShadow: '0 1px 3px rgba(0,0,0,0.3)'
+        }}
+      >
+        👆 Tap a word, then tap the picture to match!
       </p>
     </div>
   );

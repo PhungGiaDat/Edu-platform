@@ -5,7 +5,7 @@
 import axios from 'axios';
 import { getApiBase } from '../config';
 
-const API_URL = `${getApiBase()}/api`;
+const API_URL = `${getApiBase()}/api/v1`;
 
 // ========== Types ==========
 export interface ChatResponse {
