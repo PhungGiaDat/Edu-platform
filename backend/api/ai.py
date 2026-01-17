@@ -5,8 +5,8 @@ AI API Router - Endpoints for AI-powered features
 from fastapi import Depends, HTTPException, status, Body
 from core.base_router import create_router
 from services.ai_service import AIService, get_ai_service
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict, Any, Literal
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,21 +18,21 @@ router = create_router(
 
 
 class QuizGenerateRequest(BaseModel):
-    word: str
-    translation: str
-    category: str = "general"
-    difficulty: str = "easy"  # easy, medium, hard
-    num_questions: int = 3
+    word: str = Field(..., min_length=1, max_length=100)
+    translation: str = Field(..., min_length=1, max_length=200)
+    category: str = Field(default="general", max_length=50)
+    difficulty: Literal["easy", "medium", "hard"] = "easy"
+    num_questions: int = Field(default=3, ge=1, le=10)
 
 
 class PronunciationRequest(BaseModel):
-    target_word: str
-    transcript: str
+    target_word: str = Field(..., min_length=1, max_length=100)
+    transcript: str = Field(..., min_length=1, max_length=500)
 
 
 class ChatRequest(BaseModel):
-    message: str
-    context: Optional[str] = ""
+    message: str = Field(..., min_length=1, max_length=2000)
+    context: Optional[str] = Field(default="", max_length=4000)
 
 
 @router.post("/generate-quiz")
@@ -66,7 +66,7 @@ async def generate_quiz(
         logger.error(f"[API] Quiz generation failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Quiz generation failed: {str(e)}"
+            detail="Quiz generation failed. Please try again later."
         )
 
 
@@ -98,7 +98,7 @@ async def assess_pronunciation(
         logger.error(f"[API] Pronunciation assessment failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Pronunciation assessment failed: {str(e)}"
+            detail="Pronunciation assessment failed. Please try again later."
         )
 
 
@@ -128,5 +128,5 @@ async def chat_with_ai(
         logger.error(f"[API] Chat failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Chat failed: {str(e)}"
+            detail="Chat failed. Please try again later."
         )

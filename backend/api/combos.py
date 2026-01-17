@@ -48,6 +48,7 @@ def _to_combo_response(combo: dict) -> ComboResponse:
 
 
 # ========== ENDPOINTS (Controller) ==========
+# NOTE: Route order matters! Specific paths first, parameterized last.
 
 @router.get("/check", response_model=ComboCheckResponse)
 async def check_combo(
@@ -59,10 +60,11 @@ async def check_combo(
     
     Example: /api/combos/check?tags=animal_elephant_01,plant_palm_01
     """
-    tag_list = [t.strip() for t in tags.split(",")]
+    # Filter empty tags after split
+    tag_list = [t.strip() for t in tags.split(",") if t.strip()]
     
     if len(tag_list) < 2:
-        raise HTTPException(status_code=400, detail="At least 2 tags required for combo")
+        raise HTTPException(status_code=400, detail="At least 2 valid tags required for combo")
     
     # Delegate to service
     combo = await ar_service.check_combo(tag_list)
@@ -76,6 +78,20 @@ async def check_combo(
     )
 
 
+@router.get("/", response_model=List[ComboResponse])
+async def list_combos(
+    limit: int = Query(20, ge=1, le=100),
+    skip: int = Query(0, ge=0),
+    ar_service: ARService = Depends(get_ar_service)
+):
+    """List all combos with pagination"""
+    # Delegate to service
+    combos = await ar_service.list_combos(skip=skip, limit=limit)
+    
+    return [_to_combo_response(c) for c in combos]
+
+
+# Parameterized route MUST be last to avoid capturing /check and / paths
 @router.get("/{combo_id}", response_model=ComboResponse)
 async def get_combo(
     combo_id: str,
@@ -89,16 +105,3 @@ async def get_combo(
         raise HTTPException(status_code=404, detail="Combo not found")
     
     return _to_combo_response(combo)
-
-
-@router.get("/", response_model=List[ComboResponse])
-async def list_combos(
-    limit: int = Query(20, ge=1, le=100),
-    skip: int = Query(0, ge=0),
-    ar_service: ARService = Depends(get_ar_service)
-):
-    """List all combos with pagination"""
-    # Delegate to service
-    combos = await ar_service.list_combos(skip=skip, limit=limit)
-    
-    return [_to_combo_response(c) for c in combos]
