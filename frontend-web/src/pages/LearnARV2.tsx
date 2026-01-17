@@ -53,6 +53,7 @@ export default function LearnARV2() {
     const mindUrl = arData?.targets?.[0]?.nft_base_url?.replace(/\.(fset|fset3|iset)$/, '.mind') ||
         '/assets/target/elephant_targets.mind';
     const modelUrl = arData?.targets?.[0]?.model_3d_url || '/assets/models/elephant cartoon.glb';
+    const imageUrl = arData?.targets?.[0]?.image_2d_url || arData?.flashcard?.image_url || undefined;
 
     // ========== HANDLERS ==========
     const handleQRDetected = useCallback((qrId: string) => {
@@ -181,6 +182,7 @@ export default function LearnARV2() {
                 initialPhase={detectedQrId ? 'VIEWING' : 'SCANNING'}
                 mindUrl={mindUrl}
                 modelUrl={modelUrl}
+                imageUrl={imageUrl}
                 onPhaseChange={handlePhaseChange}
                 onQRDetected={handleQRDetected}
                 onTargetFound={(idx) => console.log('[LearnARV2] Target found:', idx)}

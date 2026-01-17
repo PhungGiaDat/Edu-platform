@@ -361,11 +361,11 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 </div>
             )}
 
-            {/* AR Iframe */}
+            {/* AR Iframe - key based only on phase to prevent remounting */}
             {iframeSrc && (
                 <iframe
                     ref={iframeRef}
-                    key={`${phase}-${Date.now()}`}
+                    key={phase}
                     src={iframeSrc}
                     allow="camera; microphone; autoplay; fullscreen"
                     style={{
