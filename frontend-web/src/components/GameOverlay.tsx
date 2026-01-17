@@ -237,30 +237,29 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
           </div>
         </div>
 
-        {/* Game Card */}
-        <div className="bg-gradient-to-br from-blue-50 to-purple-50 backdrop-blur-md rounded-3xl shadow-2xl p-4 md:p-6 border-4 border-blue-300 relative">
-          <div className="absolute -top-3 -left-3 text-4xl rotate-12 drop-shadow-lg animate-bounce">🎮</div>
-          <div className="absolute -top-3 -right-3 text-4xl -rotate-12 drop-shadow-lg animate-bounce" style={{ animationDelay: '0.5s' }}>🎯</div>
-
-          <div className="mb-4 text-center">
-            <h2 className="text-xl md:text-2xl font-black text-purple-700 drop-shadow-sm">
-              {currentChallenge.question}
-            </h2>
-          </div>
-
+        {/* Game Card - Simplified for mobile */}
+        <div
+          className="rounded-3xl shadow-2xl p-3 relative"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(243,232,255,0.95) 100%)',
+            border: '4px solid #a78bfa',
+            maxHeight: 'calc(100vh - 200px)',
+            overflowY: 'auto'
+          }}
+        >
           {/* Hint button (not for memory match) */}
           {currentChallenge.hint && currentChallenge.game_type !== 'memory_match' && (
-            <div className="mb-4 text-center">
+            <div className="mb-2 text-center">
               <button
                 onClick={() => setShowHint(!showHint)}
-                className="px-4 py-2 bg-gradient-to-r from-yellow-300 to-orange-300 hover:from-yellow-400 hover:to-orange-400 rounded-full text-purple-700 font-bold text-sm shadow-lg border-2 border-yellow-500 transition-all transform hover:scale-105"
+                className="px-4 py-1.5 bg-gradient-to-r from-yellow-300 to-orange-300 hover:from-yellow-400 hover:to-orange-400 rounded-full text-purple-700 font-bold text-sm shadow-lg border-2 border-yellow-500 transition-all"
               >
                 {showHint ? '🔍 Hide Hint' : '💡 Need Help?'}
               </button>
             </div>
           )}
 
-          {/* Render game */}
+          {/* Render game - games handle their own question display */}
           {renderGame()}
 
           {/* Feedback */}
