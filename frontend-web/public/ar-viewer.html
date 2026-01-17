@@ -23,13 +23,13 @@
         <div id="loading-text">Loading AR Experience...</div>
     </div>
 
-    <div id="mode-indicator">Mode: 3D</div>
+    <!-- Mode indicator removed - control panel handles this -->
 
-    <!-- A-Frame Scene with transparent background for camera feed -->
+    <!-- A-Frame Scene - MindAR handles camera video layer automatically -->
     <a-scene id="ar-scene"
         mindar-image="imageTargetSrc: ; maxTrack: 2; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.0001; filterBeta: 0.01"
         color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true" embedded
-        vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" background="color: transparent">
+        vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
 
         <a-assets>
             <!-- Dynamic assets loaded via URL params -->

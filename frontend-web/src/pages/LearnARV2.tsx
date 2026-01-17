@@ -198,33 +198,7 @@ export default function LearnARV2() {
                     />
                 )}
 
-                {/* Flashcard Info */}
-                {arData?.flashcard && appState === 'VIEWING' && (
-                    <div
-                        style={{
-                            position: 'fixed',
-                            top: 20,
-                            right: 20,
-                            background: 'rgba(0,0,0,0.7)',
-                            padding: '12px 20px',
-                            borderRadius: 16,
-                            color: '#fff',
-                            fontFamily: 'Nunito, sans-serif',
-                            zIndex: 100001,
-                            textAlign: 'center'
-                        }}
-                    >
-                        <div style={{ fontSize: 28, fontWeight: 'bold' }}>
-                            {arData.flashcard.word}
-                        </div>
-                        {arData.flashcard.translation?.vi && (
-                            <div style={{ fontSize: 16, opacity: 0.8 }}>
-                                {arData.flashcard.translation.vi}
-                            </div>
-                        )}
-                    </div>
-                )}
-
+                {/* Flashcard Info - Removed per user request */}
                 {/* Loading indicator */}
                 {(isArLoading || isQuizLoading || isGameLoading) && (
                     <div
