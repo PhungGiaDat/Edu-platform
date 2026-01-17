@@ -16,6 +16,7 @@ import { ARContainerV2, ARPhase } from '@/components/ar/ARContainerV2';
 import ARControlPanel from '@/components/panel/ARControlPanel';
 import { QuizOverlay } from '@/components/Quiz';
 import { GameOverlay } from '@/components/GameOverlay';
+import { ARGamificationPanel } from '@/components/Gamification/ARGamificationPanel';
 import { useArData } from '@/hooks/useArData';
 import { useQuizData } from '@/hooks/useQuizData';
 import { useGameData } from '@/hooks/useGameData';
@@ -296,6 +297,11 @@ export default function LearnARV2() {
                         Try Again
                     </button>
                 </div>
+            )}
+
+            {/* Gamification Panel - Pet & Leaderboard (visible during VIEWING) */}
+            {appState === 'VIEWING' && (
+                <ARGamificationPanel userId="demo-user" />
             )}
         </div>
     );
