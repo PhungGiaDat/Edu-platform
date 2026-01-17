@@ -120,21 +120,25 @@ body:has(.learn-ar-container) aside {
   transform: scale(0.95) !important;
 }
 
-/* App mode button styles */
+/* App mode button styles - KID FRIENDLY COLORS */
 .ar-control-panel .app-mode-btn {
-  background: rgba(40, 40, 40, 0.9) !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   color: #fff !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
 }
 
 .ar-control-panel .app-mode-btn.active {
   background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%) !important;
+  border: 2px solid #fff !important;
+  box-shadow: 0 0 10px rgba(78, 205, 196, 0.5) !important;
 }
 
-/* Display mode button */
+/* Display mode button - bright and fun */
 .ar-control-panel .display-mode-btn {
-  background: rgba(60, 60, 60, 0.9) !important;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%) !important;
   color: #fff !important;
-  font-size: 16px !important;
+  font-size: 14px !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
 }
 
 /* ============================================================
