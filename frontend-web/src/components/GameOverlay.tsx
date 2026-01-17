@@ -7,6 +7,7 @@ import { DragMatchGame } from './game/DragMatchGame';
 import { CatchWordGame } from './game/CatchWordGame';
 import { WordScrambleGame } from './game/WordScrambleGame';
 import { MemoryMatchGame } from './game/MemoryMatchGame';
+import '../styles/Overlays.css';
 
 interface GameOverlayProps {
   gameSession: GameSessionData | null;
@@ -46,7 +47,7 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
 
     // For memory match, "completed" means success
     const correct = answer === 'completed' || answer === currentChallenge?.correct_answer;
-    
+
     setIsCorrect(correct);
     setShowFeedback(true);
 
@@ -59,7 +60,7 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
   // Loading
   if (!gameSession) {
     return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm">
+      <div className="game-overlay fixed inset-0 flex items-center justify-center backdrop-blur-sm">
         <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-2xl border-4 border-pink-400">
           <div className="text-6xl animate-bounce mb-3">🎮</div>
           <p className="text-xl font-bold text-pink-600">Loading Game...</p>
@@ -74,7 +75,7 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
     // const gameType = gameSession.challenges[0]?.game_type || 'game';
 
     return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center p-4 backdrop-blur-sm">
+      <div className="game-overlay fixed inset-0 flex items-center justify-center p-4 backdrop-blur-sm">
         {/* Confetti */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {totalStars > 0 && [...Array(20)].map((_, i) => (
@@ -106,7 +107,7 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
             <h2 className="text-3xl font-black text-purple-600 mb-3">
               {isTimedOut ? 'Time Up! ⏰' : totalStars > 0 ? 'Awesome! 🎉' : 'Great Try! 💪'}
             </h2>
-            
+
             <div className="bg-white/80 rounded-2xl p-6 mb-4 shadow-inner border-4 border-yellow-300">
               <p className="text-lg font-bold text-gray-700 mb-3">Stars Earned:</p>
               <div className="flex flex-wrap justify-center gap-2 mb-3">
@@ -153,7 +154,7 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
 
   if (!currentChallenge) {
     return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm">
+      <div className="game-overlay fixed inset-0 flex items-center justify-center backdrop-blur-sm">
         <div className="bg-white/95 backdrop-blur-md p-6 rounded-3xl shadow-2xl border-4 border-red-400 text-center max-w-xs">
           <div className="text-6xl mb-3">😢</div>
           <p className="text-xl font-bold text-red-600 mb-3">No games yet!</p>
@@ -197,7 +198,7 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-3 overflow-y-auto">
+    <div className="game-overlay fixed inset-0 flex items-center justify-center p-3 overflow-y-auto">
       <div className="w-full max-w-xl my-auto">
         {/* Top Bar */}
         <div className="mb-3 flex justify-between items-center gap-2">
@@ -271,7 +272,7 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
                 </div>
                 <div>
                   <p className="font-black text-xl text-gray-800">
-                    {isCorrect 
+                    {isCorrect
                       ? (currentChallenge.celebration_right || 'Amazing! 🌟')
                       : (currentChallenge.encouragement_wrong || 'Good try! Keep going! 💪')
                     }

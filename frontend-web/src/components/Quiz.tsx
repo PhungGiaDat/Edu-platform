@@ -42,7 +42,7 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
     if (showFeedback) return;
 
     const correct = answer === currentQuestion?.correct_answer;
-    
+
     setSelectedAnswer(answer);
     setIsCorrect(correct);
     setShowFeedback(true);
@@ -57,7 +57,7 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
   // Loading state
   if (!quizSession) {
     return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm">
+      <div className="quiz-overlay fixed inset-0 flex items-center justify-center backdrop-blur-sm">
         <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-2xl border-4 border-purple-400">
           <div className="text-6xl animate-bounce mb-3">🎈</div>
           <p className="text-xl font-bold text-purple-600">Loading Quiz...</p>
@@ -74,7 +74,7 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
     const isGameOver = lives <= 0;
 
     return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center p-4 backdrop-blur-sm">
+      <div className="quiz-overlay fixed inset-0 flex items-center justify-center p-4 backdrop-blur-sm">
         {/* Confetti or Game Over effect */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {isPassed && !isTimedOut && !isGameOver && [...Array(15)].map((_, i) => (
@@ -106,7 +106,7 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
             <h2 className="text-2xl font-black text-purple-600 mb-2">
               {isTimedOut ? 'Time Out! ⏰' : isGameOver ? 'Game Over! 💔' : isPassed ? 'Amazing! 🎉' : 'Great Try! 💪'}
             </h2>
-            
+
             <div className="bg-gradient-to-r from-yellow-300 to-orange-300 rounded-2xl p-4 mb-3 shadow-lg">
               <p className="text-5xl font-black text-white drop-shadow-lg">
                 {score} / {totalQuestions}
@@ -125,7 +125,7 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
             <p className="text-sm text-gray-600 font-semibold">
               {isTimedOut ? '⏰ Time ran out!' : `⏱️ Time: ${totalTimeSpent}s`}
             </p>
-            
+
             {/* Show remaining lives */}
             {isGameOver && (
               <p className="text-sm text-red-600 font-bold mt-2">
@@ -155,7 +155,7 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
 
   if (!currentQuestion) {
     return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm">
+      <div className="quiz-overlay fixed inset-0 flex items-center justify-center backdrop-blur-sm">
         <div className="bg-white/95 backdrop-blur-md p-6 rounded-3xl shadow-2xl border-4 border-red-400 text-center max-w-xs">
           <div className="text-6xl mb-3">😢</div>
           <p className="text-xl font-bold text-red-600 mb-3">No questions!</p>
@@ -179,7 +179,7 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
 
   // Active quiz
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-3 overflow-y-auto">
+    <div className="quiz-overlay fixed inset-0 flex items-center justify-center p-3 overflow-y-auto">
       <div className="w-full max-w-xl my-auto">
         {/* Timer and Lives - Top Bar */}
         <div className="mb-3 flex justify-between items-center gap-2">
@@ -258,7 +258,7 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
               ];
 
               let buttonClass = `p-3 md:p-4 bg-gradient-to-br ${colors[index]} rounded-2xl text-white font-bold text-sm md:text-base transition-all transform shadow-lg border-4 relative overflow-hidden`;
-              
+
               if (showFeedback) {
                 const isThisCorrect = option === currentQuestion.correct_answer;
                 const isThisSelected = option === selectedAnswer;
@@ -273,7 +273,7 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
               } else {
                 buttonClass += ' hover:scale-105 active:scale-95 cursor-pointer';
               }
-              
+
               return (
                 <button
                   key={index}
@@ -285,7 +285,7 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
                     {String.fromCharCode(65 + index)}.
                   </span>
                   <span className="drop-shadow-md">{option}</span>
-                  
+
                   {showFeedback && option === currentQuestion.correct_answer && (
                     <div className="absolute top-1 right-1 text-3xl animate-bounce">✅</div>
                   )}

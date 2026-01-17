@@ -38,9 +38,9 @@ export default function LearnARV2() {
     const [showGameSelector, setShowGameSelector] = useState(false);
 
     // ========== DATA HOOKS ==========
-    const { arData, isLoading: isArLoading, error: arError } = useArData(detectedQrId);
-    const { quizData, isLoading: isQuizLoading } = useQuizData(detectedQrId);
-    const { gameData, isLoading: isGameLoading } = useGameData(
+    const { arData, error: arError } = useArData(detectedQrId);
+    const { quizData } = useQuizData(detectedQrId);
+    const { gameData } = useGameData(
         detectedQrId,
         selectedDifficulty,
         selectedGameType
@@ -201,25 +201,7 @@ export default function LearnARV2() {
                 )}
 
                 {/* Flashcard Info - Removed per user request */}
-                {/* Loading indicator */}
-                {(isArLoading || isQuizLoading || isGameLoading) && (
-                    <div
-                        style={{
-                            position: 'fixed',
-                            bottom: 100,
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            background: 'rgba(0,0,0,0.7)',
-                            padding: '8px 16px',
-                            borderRadius: 20,
-                            color: '#4ECDC4',
-                            fontFamily: 'Nunito, sans-serif',
-                            zIndex: 100001
-                        }}
-                    >
-                        ⏳ Loading...
-                    </div>
-                )}
+                {/* Loading indicator - Removed per user request */}
             </ARContainerV2>
 
             {/* Quiz Overlay */}

@@ -3,20 +3,21 @@
    Mobile-first design matching ARScene
    ============================================================ */
 
-/* Base overlay container */
+/* Base overlay container - ABOVE AR scene (z-index ~100000) */
 .quiz-overlay,
 .game-overlay {
   position: fixed !important;
   inset: 0 !important;
-  z-index: 2000 !important;
+  z-index: 200000 !important;
   pointer-events: auto !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
+  background: rgba(0, 0, 0, 0.85) !important;
 }
 
 /* Content wrapper - responsive padding */
-.quiz-overlay > div,
-.game-overlay > div {
+.quiz-overlay>div,
+.game-overlay>div {
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
@@ -39,7 +40,8 @@
 /* Buttons responsive */
 .quiz-overlay button,
 .game-overlay button {
-  min-height: 44px; /* iOS touch target */
+  min-height: 44px;
+  /* iOS touch target */
   padding: 0.75rem 1.5rem;
   font-size: clamp(0.875rem, 2vw, 1rem);
 }
@@ -62,8 +64,9 @@
 
 /* Mobile optimizations */
 @media (max-width: 640px) {
-  .quiz-overlay > div,
-  .game-overlay > div {
+
+  .quiz-overlay>div,
+  .game-overlay>div {
     padding: 0.5rem;
   }
 
@@ -88,8 +91,9 @@
 
 /* Landscape mobile */
 @media (max-height: 500px) and (orientation: landscape) {
-  .quiz-overlay > div,
-  .game-overlay > div {
+
+  .quiz-overlay>div,
+  .game-overlay>div {
     padding: 0.25rem;
     align-items: flex-start;
   }
@@ -103,6 +107,7 @@
 
 /* Safe area support (iPhone notch) */
 @supports (padding: env(safe-area-inset-top)) {
+
   .quiz-overlay,
   .game-overlay {
     padding-top: env(safe-area-inset-top);
@@ -120,6 +125,7 @@
 
 /* Hide scrollbar on mobile */
 @media (max-width: 768px) {
+
   .quiz-overlay::-webkit-scrollbar,
   .game-overlay::-webkit-scrollbar {
     display: none;
