@@ -25,6 +25,7 @@ class PronunciationService {
     private isListening = false;
     private expectedWord = '';
     private onResultCallback: PronunciationCallback | null = null;
+    private sessionId = 0; // Track session to prevent stale callbacks
 
     constructor() {
         this.initRecognition();
@@ -60,9 +61,14 @@ class PronunciationService {
             });
         };
 
+        // Store session ID at creation for stale callback detection
+        const boundSessionId = this.sessionId;
         this.recognition.onend = () => {
-            this.isListening = false;
-            eventBus.emit('PRONUNCIATION_ENDED' as any, {});
+            // Ignore stale callbacks from previous sessions
+            if (boundSessionId === this.sessionId) {
+                this.isListening = false;
+                eventBus.emit('PRONUNCIATION_ENDED' as any, {});
+            }
         };
 
         console.log('[Pronunciation] Service initialized');
@@ -78,8 +84,13 @@ class PronunciationService {
         }
 
         if (this.isListening) {
-            this.stopListening();
+            // Abort immediately to prevent race condition
+            this.recognition.abort();
+            this.isListening = false;
         }
+
+        // Increment session ID to invalidate any pending callbacks
+        this.sessionId++;
 
         this.expectedWord = expectedWord.toLowerCase().trim();
         this.onResultCallback = onResult || null;
@@ -148,27 +159,36 @@ class PronunciationService {
     }
 
     /**
-     * Calculate string similarity (Levenshtein-based)
+     * Calculate string similarity using Levenshtein distance.
+     * Handles common speech variations like "the cat" vs "cat".
      */
     private calculateSimilarity(str1: string, str2: string): number {
         if (str1 === str2) return 1;
         if (!str1 || !str2) return 0;
 
-        const longer = str1.length > str2.length ? str1 : str2;
-        const shorter = str1.length > str2.length ? str2 : str1;
-
-        if (longer.length === 0) return 1;
-
-        // Simple matching
-        let matches = 0;
-        const longerArr = longer.split('');
-        const shorterArr = shorter.split('');
-
-        for (let i = 0; i < shorterArr.length; i++) {
-            if (shorterArr[i] === longerArr[i]) matches++;
+        // Check if expected word appears in transcript (handles "the cat" matching "cat")
+        // Common for kids adding articles/filler words
+        if (str1.includes(str2) || str2.includes(str1)) {
+            return 0.95;
         }
 
-        return matches / longer.length;
+        // Levenshtein distance calculation
+        const m = str1.length;
+        const n = str2.length;
+        const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
+            Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
+        );
+
+        for (let i = 1; i <= m; i++) {
+            for (let j = 1; j <= n; j++) {
+                dp[i][j] = str1[i - 1] === str2[j - 1]
+                    ? dp[i - 1][j - 1]
+                    : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+            }
+        }
+
+        // Convert distance to similarity (0 to 1)
+        return 1 - dp[m][n] / Math.max(m, n);
     }
 
     /**

@@ -79,10 +79,16 @@ export default function LearnARV2() {
 
         // Check for combo via API
         try {
-            const arTags = targets.map(i => `target-${i}`);
+            const arTags = targets.map(i => encodeURIComponent(`target-${i}`));
             const response = await fetch(
                 `${import.meta.env.VITE_API_BASE || ''}/api/combos/check?tags=${arTags.join(',')}`
             );
+
+            if (!response.ok) {
+                console.warn('[LearnARV2] Combo check returned', response.status);
+                return;
+            }
+
             const data = await response.json();
 
             if (data.found && data.combo) {
