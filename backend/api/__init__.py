@@ -10,6 +10,7 @@ from .courses import router as course_router
 from .chat import router as chat_router
 from .gamification import router as gamification_router
 from .auth import router as auth_router
+from .user import router as user_router
 
 __all__ = [
     "flashcard_router",
@@ -19,4 +20,6 @@ __all__ = [
     "chat_router",
     "gamification_router",
     "auth_router",
+    "user_router",
 ]
+

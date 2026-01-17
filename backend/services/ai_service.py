@@ -213,6 +213,97 @@ Hãy trả lời câu hỏi của bé dựa trên context trên."""
         response = await chain.ainvoke({"target": text, "actual": audio_transcription})
         return {"feedback": response}
 
+    async def generate_quiz(
+        self,
+        word: str,
+        translation: str,
+        category: str = "general",
+        difficulty: str = "easy",
+        num_questions: int = 3
+    ) -> List[Dict[str, Any]]:
+        """
+        Generate kid-friendly quiz questions for a vocabulary word.
+        
+        Args:
+            word: English word
+            translation: Vietnamese translation
+            category: Word category
+            difficulty: easy/medium/hard
+            num_questions: Number of questions
+            
+        Returns:
+            List of quiz question dicts
+        """
+        if not self.llm:
+            return self._fallback_quiz(word, translation)
+        
+        difficulty_map = {
+            "easy": "very simple for ages 3-5",
+            "medium": "moderate for ages 5-7",
+            "hard": "challenging for ages 7-10"
+        }
+        
+        prompt_text = f"""
+You are a fun teacher creating vocabulary quiz for Vietnamese children learning English.
+
+Word: "{word}"
+Vietnamese: "{translation}"
+Category: {category}
+Difficulty: {difficulty_map.get(difficulty, "easy")}
+
+Generate exactly {num_questions} multiple-choice questions.
+Each question must:
+1. Be kid-friendly and fun
+2. Have exactly 4 options
+3. Have ONE correct answer
+4. Include encouraging feedback
+
+Return ONLY valid JSON array:
+[
+  {{
+    "question_text": "Which animal has a trunk?",
+    "options": ["Cat", "Elephant", "Dog", "Bird"],
+    "correct_answer": "Elephant",
+    "hint": "It's big and gray!",
+    "celebration_right": "Amazing! 🎉",
+    "encouragement_wrong": "Great try! 💪"
+  }}
+]
+"""
+        
+        try:
+            prompt = PromptTemplate.from_template("{question}")
+            chain = prompt | self.llm | self.output_parser
+            response = await chain.ainvoke({"question": prompt_text})
+            
+            # Parse JSON from response
+            text = response.strip()
+            if text.startswith('```'):
+                text = text.split('```')[1]
+                if text.startswith('json'):
+                    text = text[4:]
+                text = text.strip()
+            
+            import json
+            questions = json.loads(text)
+            logger.info(f"[AI] Generated {len(questions)} quiz questions for '{word}'")
+            return questions
+            
+        except Exception as e:
+            logger.error(f"[AI] Quiz generation failed: {e}")
+            return self._fallback_quiz(word, translation)
+    
+    def _fallback_quiz(self, word: str, translation: str) -> List[Dict[str, Any]]:
+        """Fallback quiz when AI unavailable"""
+        return [{
+            "question_text": f"What is '{word}' in Vietnamese?",
+            "options": [translation, "Không biết", "Khác", "Thử lại"],
+            "correct_answer": translation,
+            "hint": f"Think about {word}!",
+            "celebration_right": "Excellent! 🎉",
+            "encouragement_wrong": "Try again! 💪"
+        }]
+
 
 def get_ai_service() -> AIService:
     return AIService()

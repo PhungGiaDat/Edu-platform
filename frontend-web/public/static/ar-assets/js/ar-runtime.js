@@ -70,15 +70,139 @@
         }
     }
 
+    // ========== VIDEO LAYERING ENFORCEMENT (Task 1.3 + A-Frame 1.2.0 Fix) ==========
+    /**
+     * Force video element to proper z-index after AR.js injects it
+     * AR.js dynamically creates <video id="arjs-video"> - we must catch it
+     * With A-Frame 1.2.0, this is critical for camera visibility
+     */
+    function forceVideoLayering() {
+        // Find video element - AR.js with A-Frame 1.2.0 usually creates 'arjs-video'
+        const video = document.getElementById('arjs-video') || document.querySelector('video');
+
+        if (!video) {
+            log('⏳', 'Video element not found, retrying...');
+            requestAnimationFrame(forceVideoLayering);
+            return;
+        }
+
+        log('✅', 'Video element found!');
+
+        // Force play if paused (fixes black screen on some browsers)
+        if (video.paused) {
+            video.play()
+                .then(() => log('▶️', 'Video playing forced'))
+                .catch(e => log('⚠️', 'Play error: ' + e.message));
+        }
+
+        // Aggressive style enforcement for A-Frame 1.2.0
+        // CRITICAL: NO TRANSFORM - it creates new stacking context and breaks z-index!
+        // Use inset:0 for full coverage instead
+        video.style.cssText = `
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            object-fit: cover !important;
+            z-index: 1 !important;
+        `;
+
+        log('🎥', 'Video element layering enforced (inset:0, z-index: 1, NO TRANSFORM)');
+
+        const canvas = document.querySelector('.a-canvas');
+        if (canvas) {
+            canvas.style.cssText = `
+                position: fixed !important;
+                inset: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                z-index: 2 !important;
+                background: transparent !important;
+            `;
+            log('🖼️', 'Canvas styled (inset:0, z-index: 2, transparent)');
+        }
+
+        // Notify parent that video is ready
+        sendToParent('AR_VIDEO_READY', {
+            width: video.videoWidth,
+            height: video.videoHeight
+        });
+    }
+
+    /**
+     * Observe DOM for video element injection by AR.js
+     */
+    function observeVideoInjection() {
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                for (const node of mutation.addedNodes) {
+                    if (node.tagName === 'VIDEO' || (node.id && node.id.includes('video'))) {
+                        log('👀', 'Detected video element injection');
+                        forceVideoLayering();
+                    }
+                }
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+        log('👁️', 'DOM observer started for video injection');
+    }
+
     // ========== UI HELPERS ==========
-    function hideLoader() {
+
+    // Loader state tracking (Task 1.7)
+    const loaderState = {
+        videoLoaded: false,
+        nftLoaded: false,
+        hidden: false
+    };
+
+    /**
+     * Check if both video and NFT are loaded, then hide loader
+     * Task 1.7: Only fade out when BOTH arjs-video-loaded AND arjs-nft-loaded have fired
+     */
+    function checkAndHideLoader() {
+        if (loaderState.hidden) return;
+
+        if (loaderState.videoLoaded && loaderState.nftLoaded) {
+            log('✅', 'Both video and NFT loaded - hiding loader');
+            hideLoaderNow();
+        } else {
+            log('⏳', `Loader waiting: video=${loaderState.videoLoaded}, nft=${loaderState.nftLoaded}`);
+        }
+    }
+
+    function markVideoLoaded() {
+        loaderState.videoLoaded = true;
+        log('🎥', 'Video marked as loaded');
+        checkAndHideLoader();
+    }
+
+    function markNFTLoaded() {
+        loaderState.nftLoaded = true;
+        log('📦', 'NFT system marked as loaded');
+        checkAndHideLoader();
+    }
+
+    function hideLoaderNow() {
         const loader = document.querySelector('.arjs-loader');
-        if (loader) {
+        if (loader && !loaderState.hidden) {
+            loaderState.hidden = true;
             loader.style.opacity = '0';
             setTimeout(() => {
                 loader.style.display = 'none';
             }, 300);
+            log('👋', 'Loader hidden');
         }
+    }
+
+    // Legacy function for backwards compatibility
+    function hideLoader() {
+        // Force hide (used by fallback timeout)
+        loaderState.videoLoaded = true;
+        loaderState.nftLoaded = true;
+        hideLoaderNow();
     }
 
     function showNFTLoading(markerId) {
@@ -241,6 +365,129 @@
         }
     }
 
+
+    /**
+     * Check distances between visible NFT markers
+     * If multiple markers are within threshold, trigger combo
+     */
+    const comboState = {
+        enabled: true,
+        checkInterval: 1000, // ms
+        distanceThreshold: 500, // pixels (screen space)
+        activeCombo: null,
+        intervalId: null
+    };
+
+    /**
+     * Get the screen position of a marker
+     * Uses the model's world position projected to screen
+     */
+    function getMarkerScreenPosition(markerId) {
+        const modelEntity = ARRuntime.activeModels.get(markerId);
+        if (!modelEntity || !modelEntity.object3D) return null;
+
+        const position = modelEntity.object3D.getWorldPosition(new THREE.Vector3());
+
+        // Get camera from scene
+        const camera = ARRuntime.scene?.camera?.el?.object3D;
+        if (!camera) return null;
+
+        // Project to screen coordinates
+        const screenPos = position.clone().project(camera);
+
+        return {
+            x: (screenPos.x + 1) / 2 * window.innerWidth,
+            y: (-screenPos.y + 1) / 2 * window.innerHeight,
+            visible: modelEntity.getAttribute('visible') !== false
+        };
+    }
+
+    /**
+     * Calculate distance between two screen positions
+     */
+    function calculateDistance(pos1, pos2) {
+        const dx = pos1.x - pos2.x;
+        const dy = pos1.y - pos2.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    /**
+     * Check all marker combinations for combos
+     */
+    function checkForCombos() {
+        if (!comboState.enabled || ARRuntime.activeModels.size < 2) return;
+
+        const markerIds = Array.from(ARRuntime.activeModels.keys());
+        const visibleMarkers = [];
+
+        // Get positions of all visible markers
+        for (const markerId of markerIds) {
+            const pos = getMarkerScreenPosition(markerId);
+            if (pos && pos.visible) {
+                visibleMarkers.push({ markerId, ...pos });
+            }
+        }
+
+        if (visibleMarkers.length < 2) {
+            if (comboState.activeCombo) {
+                log('💔', 'Combo deactivated - not enough visible markers');
+                sendToParent('COMBO_DEACTIVATED', { combo: comboState.activeCombo });
+                comboState.activeCombo = null;
+            }
+            return;
+        }
+
+        // Check all pairs for proximity
+        for (let i = 0; i < visibleMarkers.length; i++) {
+            for (let j = i + 1; j < visibleMarkers.length; j++) {
+                const distance = calculateDistance(visibleMarkers[i], visibleMarkers[j]);
+
+                if (distance < comboState.distanceThreshold) {
+                    const comboId = [visibleMarkers[i].markerId, visibleMarkers[j].markerId].sort().join('+');
+
+                    if (comboState.activeCombo !== comboId) {
+                        log('🎉', `Combo detected: ${comboId} (distance: ${distance.toFixed(0)}px)`);
+                        comboState.activeCombo = comboId;
+                        sendToParent('COMBO_DETECTED', {
+                            markerIds: [visibleMarkers[i].markerId, visibleMarkers[j].markerId],
+                            distance: distance,
+                            anchorMarkerId: visibleMarkers[i].markerId
+                        });
+                    }
+                    return; // One combo at a time
+                }
+            }
+        }
+
+        // No combo found - deactivate if was active
+        if (comboState.activeCombo) {
+            log('💔', 'Combo deactivated - markers too far apart');
+            sendToParent('COMBO_DEACTIVATED', { combo: comboState.activeCombo });
+            comboState.activeCombo = null;
+        }
+    }
+
+    /**
+     * Start combo detection loop
+     */
+    function startComboDetection() {
+        if (comboState.intervalId) return;
+
+        comboState.intervalId = setInterval(checkForCombos, comboState.checkInterval);
+        log('🔍', 'Combo detection started');
+    }
+
+    /**
+     * Stop combo detection loop
+     */
+    function stopComboDetection() {
+        if (comboState.intervalId) {
+            clearInterval(comboState.intervalId);
+            comboState.intervalId = null;
+        }
+        log('🛑', 'Combo detection stopped');
+    }
+
     // ========== POSTMESSAGE COMMUNICATION ==========
 
     /**
@@ -332,13 +579,39 @@
             return;
         }
 
-        // Find AR.js video element
-        const video = document.querySelector('#arjs-video') ||
-            document.querySelector('video') ||
-            document.querySelector('[id*="video"]');
+        // Find AR.js video element - try multiple selectors
+        // AR.js creates a video element with id "arjs-video" or just a <video> tag
+        let video = document.querySelector('#arjs-video');
 
-        if (!video || video.readyState < video.HAVE_CURRENT_DATA) {
-            log('⏳', 'Video not ready, waiting...');
+        if (!video) {
+            // Try finding any video element
+            video = document.querySelector('video');
+        }
+
+        if (!video) {
+            // Try finding by class or any video-related element
+            video = document.querySelector('.a-grab-cursor video') ||
+                document.querySelector('a-scene video') ||
+                document.querySelector('[id*="video"]');
+        }
+
+        // Log what we found for debugging
+        log('🔎', 'Video search result:', {
+            found: !!video,
+            id: video?.id || 'no-id',
+            readyState: video?.readyState,
+            videoWidth: video?.videoWidth,
+            videoHeight: video?.videoHeight
+        });
+
+        if (!video) {
+            log('⏳', 'Video element not found, waiting...');
+            setTimeout(startQRScanning, 500);
+            return;
+        }
+
+        if (video.readyState < video.HAVE_CURRENT_DATA) {
+            log('⏳', 'Video not ready (state: ' + video.readyState + '), waiting...');
             setTimeout(startQRScanning, 500);
             return;
         }
@@ -500,6 +773,9 @@
         // Initialize ZXing QR reader
         initQRReader();
 
+        // Start observing for video element injection (Task 1.3)
+        observeVideoInjection();
+
         // Wait for scene to be loaded before proceeding
         if (ARRuntime.scene.hasLoaded) {
             onSceneLoaded();
@@ -516,16 +792,18 @@
     function onSceneLoaded() {
         log('🎬', 'A-Frame scene loaded');
 
-        // Listen for AR.js video ready
+        // Listen for AR.js video ready (Task 1.7: mark video loaded)
         window.addEventListener('arjs-video-loaded', () => {
             log('🎥', 'AR.js video loaded event received');
+            forceVideoLayering(); // Enforce layering when video loads
+            markVideoLoaded(); // Task 1.7: Track video loaded state
             startQRScanning();
         });
 
-        // Listen for AR.js ready
+        // Listen for AR.js ready (Task 1.7: mark NFT loaded)
         window.addEventListener('arjs-nft-loaded', () => {
             log('✅', 'AR.js NFT system loaded');
-            hideLoader();
+            markNFTLoaded(); // Task 1.7: Track NFT loaded state (will hide loader if both ready)
             ARRuntime.initialized = true;
             sendToParent('AR_READY', { initialized: true });
         });
@@ -534,6 +812,7 @@
         setTimeout(() => {
             if (!ARRuntime.qrDetection.scanning) {
                 log('⏳', 'Fallback: Attempting to start QR scanning...');
+                forceVideoLayering(); // Try to enforce layering on fallback too
                 startQRScanning();
             }
 

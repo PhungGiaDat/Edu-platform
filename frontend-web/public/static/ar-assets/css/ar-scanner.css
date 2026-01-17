@@ -1,0 +1,61 @@
+/* ar-scanner.css - QR Scanner Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: 'Nunito', sans-serif;
+}
+
+#video {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    object-fit: cover;
+    z-index: 1;
+}
+
+#canvas {
+    display: none;
+}
+
+/* Scanning overlay - HIDDEN */
+.scan-overlay {
+    display: none !important;
+}
+
+.scan-frame {
+    display: none !important;
+}
+
+.scan-line {
+    display: none !important;
+}
+
+/* Status text */
+.status {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-size: 18px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    z-index: 20;
+}
+
+/* Detected indicator */
+.detected {
+    border-color: #4ECDC4 !important;
+    box-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+}
