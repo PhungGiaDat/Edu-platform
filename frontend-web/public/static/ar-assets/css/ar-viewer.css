@@ -11,7 +11,7 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #000;
+    background: transparent;
     font-family: 'Nunito', sans-serif;
 }
 
@@ -22,9 +22,19 @@ body {
     display: none !important;
 }
 
+/* Ensure A-Frame canvas shows camera behind */
 a-scene {
     position: fixed !important;
     inset: 0 !important;
+}
+
+a-scene canvas {
+    background: transparent !important;
+}
+
+/* MindAR camera video should be visible */
+.a-canvas {
+    background: transparent !important;
 }
 
 /* Custom loading overlay */
