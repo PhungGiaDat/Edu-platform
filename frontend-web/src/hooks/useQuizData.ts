@@ -26,8 +26,8 @@ export function useQuizData(qrId: string | null) {
       setError(null);
 
       try {
-        const response = await fetch(`${API_BASE}/api/quiz/${qrId}`);
-        
+        const response = await fetch(`${API_BASE}/api/v1/quiz/${qrId}`);
+
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error('No quiz available for this flashcard');
