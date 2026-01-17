@@ -198,8 +198,14 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
   };
 
   return (
-    <div className="game-overlay fixed inset-0 flex items-center justify-center p-3 overflow-y-auto">
-      <div className="w-full max-w-xl my-auto">
+    <div
+      className="game-overlay fixed inset-0 overflow-y-auto"
+      style={{
+        padding: 'env(safe-area-inset-top, 12px) 12px env(safe-area-inset-bottom, 12px) 12px',
+        background: 'rgba(0, 0, 0, 0.3)'
+      }}
+    >
+      <div className="min-h-full flex flex-col w-full max-w-md mx-auto">
         {/* Top Bar */}
         <div className="mb-3 flex justify-between items-center gap-2">
           <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-400 backdrop-blur-sm rounded-full border-2 border-white shadow-lg">
