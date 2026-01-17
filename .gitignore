@@ -3,6 +3,7 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+.shared/
 # User-specific files
 *.rsuser
 *.suo
@@ -407,3 +408,4 @@ FodyWeavers.xsd
 
 .backend\.env
 .env
+.agent

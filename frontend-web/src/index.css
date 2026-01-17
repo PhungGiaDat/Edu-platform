@@ -1,3 +1,5 @@
+/* ========== CRITICAL: All @imports must come FIRST (Tailwind v4 requirement) ========== */
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* ========== Global Reset to prevent black gaps ========== */
@@ -10,9 +12,6 @@ body,
   height: 100%;
   overflow-x: hidden;
 }
-
-/* ========== Google Fonts: Quicksand for Kids ========== */
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
 
 /* ========== Kid-Friendly Color Palette ========== */
 :root {

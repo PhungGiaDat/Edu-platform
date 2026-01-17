@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import FlashcardPage from "./pages/FlashcardPage";
-import LearnAR from "./pages/LearnAR";
+import LearnARV2 from "./pages/LearnARV2";
 import { CourseList } from "./pages/CourseList";
 import { CourseDetail } from "./pages/CourseDetail";
 import { Profile } from "./pages/Profile";
@@ -22,7 +22,7 @@ const App = () => {
 
         {/* Protected Routes (Wrapped in Layout) */}
         <Route path="/flashcards" element={<Layout><FlashcardPage /></Layout>} />
-        <Route path="/learn-ar" element={<Layout><LearnAR /></Layout>} />
+        <Route path="/learn-ar" element={<LearnARV2 />} />
         <Route path="/courses" element={<Layout><CourseList /></Layout>} />
         <Route path="/courses/:id" element={<Layout><CourseDetail /></Layout>} />
         <Route path="/profile" element={<Layout><Profile /></Layout>} />

@@ -23,7 +23,6 @@ from settings import settings
 from database.connection import connect_to_database, close_database_connection
 
 # Import API routers
-# Import API routers
 from api import (
     flashcard_router, 
     quiz_router, 
@@ -32,7 +31,10 @@ from api import (
     chat_router,
     gamification_router,
     auth_router,
+    user_router,
 )
+from api.combos import router as combo_router
+from api.parental_controls import router as parental_router
 from api.websocket import router as websocket_router
 
 # Configure logging
@@ -153,6 +155,24 @@ app.include_router(
     gamification_router,
     prefix=settings.API_V1_PREFIX,
     tags=["Gamification"]
+)
+
+app.include_router(
+    user_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["User"]
+)
+
+app.include_router(
+    combo_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Combos"]
+)
+
+app.include_router(
+    parental_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Parental Controls"]
 )
 
 # WebSocket router (no prefix - keep legacy path)

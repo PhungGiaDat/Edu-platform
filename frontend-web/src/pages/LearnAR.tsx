@@ -226,13 +226,11 @@ export default function LearnAR() {
   // ========== RENDER ==========
   return (
     <div className="learn-ar-container">
-      {/* 🚀 New Iframe AR Container */}
-      <div className="ar-wrapper">
-        <ARContainer
-          debug={true}
-          className={appState === 'AR_ACTIVE' ? 'visible' : 'hidden'}
-        />
-      </div>
+      {/* 🚀 AR Container - Directly embedded, no wrapper needed */}
+      <ARContainer
+        debug={true}
+        className="" // No conditional hidden - camera must always show
+      />
 
       {/* UI Overlay Layer */}
       <div className="ar-ui-overlay">

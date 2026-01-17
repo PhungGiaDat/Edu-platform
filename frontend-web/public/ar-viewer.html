@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AR Viewer</title>
+
+    <!-- A-Frame 1.4+ -->
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+    <!-- MindAR Image Tracking -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="/static/ar-assets/css/ar-viewer.css">
+</head>
+
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="loader"></div>
+        <div id="loading-text">Loading AR Experience...</div>
+    </div>
+
+    <div id="mode-indicator">Mode: 3D</div>
+
+    <!-- A-Frame Scene -->
+    <a-scene id="ar-scene"
+        mindar-image="imageTargetSrc: ; maxTrack: 2; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.0001; filterBeta: 0.01"
+        color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true" embedded
+        vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+
+        <a-assets>
+            <!-- Dynamic assets loaded via URL params -->
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false">
+            <a-entity cursor="rayOrigin: mouse; fuse: false" raycaster="objects: .clickable; far: 1000">
+            </a-entity>
+        </a-camera>
+
+        <!-- Target 0: Primary flashcard -->
+        <a-entity id="target-0" mindar-image-target="targetIndex: 0" visible="true">
+            <!-- 2D Mode: Image plane -->
+            <a-image id="mode-2d-0" class="clickable" position="0 0 0" rotation="90 0 0" width="1" height="1"
+                visible="false">
+            </a-image>
+
+            <!-- 3D Mode: GLTF Model -->
+            <a-entity id="mode-3d-0" class="clickable" position="0 0.1 0" rotation="0 0 0" scale="0.5 0.5 0.5"
+                animation__hover="property: scale; to: 0.55 0.55 0.55; dur: 200; startEvents: mouseenter"
+                animation__leave="property: scale; to: 0.5 0.5 0.5; dur: 200; startEvents: mouseleave"
+                animation__click="property: rotation; to: 0 360 0; dur: 500; startEvents: click" visible="true">
+            </a-entity>
+        </a-entity>
+
+        <!-- Target 1: Secondary flashcard (for combo) -->
+        <a-entity id="target-1" mindar-image-target="targetIndex: 1" visible="true">
+            <a-entity id="mode-3d-1" class="clickable" position="0 0.1 0" scale="0.5 0.5 0.5" visible="true">
+            </a-entity>
+        </a-entity>
+    </a-scene>
+
+    <!-- External JS -->
+    <script src="/static/ar-assets/js/ar-viewer.js"></script>
+</body>
+
+</html>

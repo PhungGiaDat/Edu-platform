@@ -47,7 +47,10 @@ type ARMessageType =
     | 'AR_NFT_LOST'
     | 'AR_MODEL_CLICK'
     | 'AR_ALL_NFTS_CLEARED'
-    | 'AR_STATUS';
+    | 'AR_STATUS'
+    | 'AR_ERROR'        // Task 3.7: Error handling
+    | 'COMBO_DETECTED'  // Task 3.6: Combo detection
+    | 'COMBO_DEACTIVATED';
 
 interface ARMessage {
     type: ARMessageType;
@@ -62,7 +65,7 @@ const ARContainer: React.FC<ARContainerProps> = ({
     onNFTFound,
     onNFTLost,
     debug = false,
-    className = '',
+    // className is intentionally not used - using inline styles only to avoid Tailwind conflicts
     style = {}
 }) => {
     // Force remount key to ensure fresh iframe on navigation
@@ -189,6 +192,36 @@ const ARContainer: React.FC<ARContainerProps> = ({
                         markerId: payload.markerId
                     });
                     break;
+
+                // Task 3.7: Error Handling
+                case 'AR_ERROR':
+                    console.error('[ARContainer] ❌ AR Error:', payload.error, payload.context);
+                    // Emit to EventBus for React UI to handle (show toast, update state)
+                    eventBus.emit(AREvent.AR_ERROR, {
+                        error: new Error(payload.error || 'Unknown AR error'),
+                        context: payload.context || 'iframe'
+                    } as any);
+                    break;
+
+                // Task 3.6: Combo Detection
+                case 'COMBO_DETECTED':
+                    console.log('[ARContainer] 🎉 Combo detected:', payload.markerIds);
+                    eventBus.emit(AREvent.COMBO_ACTIVATED, {
+                        combo: {
+                            id: payload.markerIds.join('+'),
+                            markerIds: payload.markerIds,
+                            distance: payload.distance
+                        },
+                        anchorMarkerId: payload.anchorMarkerId
+                    } as any);
+                    break;
+
+                case 'COMBO_DEACTIVATED':
+                    console.log('[ARContainer] 💔 Combo deactivated:', payload.combo);
+                    eventBus.emit(AREvent.COMBO_DEACTIVATED, {
+                        combo: { id: payload.combo }
+                    } as any);
+                    break;
             }
         };
 
@@ -266,11 +299,22 @@ const ARContainer: React.FC<ARContainerProps> = ({
 
     return (
         <div
-            className={`ar-container ${className}`}
+            // Using only inline styles to avoid Tailwind/CSS conflicts
             style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
                 width: '100vw',
                 height: '100vh',
-                position: 'relative',
+                // @ts-ignore - dvh for mobile viewport
+                height: '100dvh',
+                background: '#000',
+                overflow: 'hidden',
+                zIndex: 99999, // Very high to cover everything
+                margin: 0,
+                padding: 0,
                 ...style
             }}
         >

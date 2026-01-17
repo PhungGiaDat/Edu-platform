@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AR Scanner</title>
+
+    <!-- jsQR - Lightweight QR Scanner (~50KB) -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="/static/ar-assets/css/ar-scanner.css">
+</head>
+
+<body>
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+
+    <!-- Scan overlay removed -->
+    <div class="scan-overlay" id="scanFrame" style="display: none;"></div>
+
+    <!-- External JS -->
+    <script src="/static/ar-assets/js/ar-scanner.js"></script>
+</body>
+
+</html>

@@ -58,7 +58,25 @@
 body {
     margin: 0;
     overflow: hidden;
-    background: #000;
+    background-color: transparent !important;
+}
+
+/* ========== VIDEO & CANVAS LAYERING (Critical for AR.js) ========== */
+/* AR.js video sits at z-index: -2 by default, we lift it to -1 */
+#arjs-video,
+video {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: -1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+/* WebGL canvas sits above video but below UI */
+.a-canvas {
+    z-index: 0 !important;
 }
 
 /* Hide A-Frame VR button */

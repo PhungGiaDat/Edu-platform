@@ -55,6 +55,51 @@ class ARService:
             "target": ar_object,
             "related_combos": related_combos
         }
+    
+    async def check_combo(self, ar_tags: list[str]) -> Optional[Dict[str, Any]]:
+        """
+        Check if a set of AR tags form a valid combo.
+        
+        Args:
+            ar_tags: List of ar_tag identifiers
+            
+        Returns:
+            Combo document if found, None otherwise
+        """
+        if len(ar_tags) < 2:
+            return None
+        
+        combos = await self.ar_combination_repo.find_by_tags(ar_tags)
+        return combos[0] if combos else None
+    
+    async def get_combo_by_id(self, combo_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get a combo by its combo_id.
+        
+        Args:
+            combo_id: Combo identifier
+            
+        Returns:
+            Combo document if found, None otherwise
+        """
+        return await self.ar_combination_repo.get_by_combo_id(combo_id)
+    
+    async def list_combos(self, skip: int = 0, limit: int = 20) -> list[Dict[str, Any]]:
+        """
+        List all combos with pagination.
+        
+        Args:
+            skip: Number of documents to skip
+            limit: Maximum number to return
+            
+        Returns:
+            List of combo documents
+        """
+        return await self.ar_combination_repo.find_many(
+            filter={},
+            skip=skip,
+            limit=limit
+        )
 
 
 def get_ar_service() -> ARService:
@@ -63,3 +108,4 @@ def get_ar_service() -> ARService:
     ar_object_repo = get_ar_object_repository()
     ar_combination_repo = get_ar_combination_repository()
     return ARService(flashcard_repo, ar_object_repo, ar_combination_repo)
+
