@@ -61,9 +61,21 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> list[str]:
         """Parse ALLOWED_ORIGINS from comma-separated string"""
+        # Default allowed origins for development and production
+        default_origins = [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+            "https://edu-platform-dun.vercel.app",
+        ]
+        
         if self.ALLOWED_ORIGINS == "*":
             return ["*"]
-        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
+        
+        # Parse custom origins and merge with defaults
+        custom_origins = [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+        return list(set(default_origins + custom_origins))
     
     def __repr__(self) -> str:
         return f"<Settings(db={self.MONGO_DB}, debug={self.DEBUG})>"

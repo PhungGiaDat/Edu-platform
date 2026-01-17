@@ -268,6 +268,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     // ========== AUTO TRANSITION FROM LOADING TO VIEWING ==========
     // When mindUrl becomes available during LOADING phase, transition to VIEWING
     useEffect(() => {
+        console.log('[ARContainerV2] 🔍 Auto-transition check:', { phase, mindUrl: mindUrl?.substring(0, 50) });
+
         if (phase === 'LOADING' && mindUrl) {
             console.log('[ARContainerV2] 🔄 mindUrl ready, transitioning to VIEWING:', mindUrl);
             setIsLoading(true);
