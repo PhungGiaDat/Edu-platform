@@ -19,7 +19,6 @@ import { GameOverlay } from '@/components/GameOverlay';
 import { ARGamificationPanel } from '@/components/Gamification/ARGamificationPanel';
 import { RewardCelebration } from '@/components/Gamification/RewardCelebration';
 import { ErrorFriendly } from '@/components/ErrorFriendly';
-import { LoadingAnimation } from '@/components/LoadingAnimation';
 import { useArData } from '@/hooks/useArData';
 import { useQuizData } from '@/hooks/useQuizData';
 import { useGameData } from '@/hooks/useGameData';
@@ -59,7 +58,7 @@ export default function LearnARV2() {
         hasCombo,
         isProximityCombo,
         comboTriggered,
-        proximity,
+        proximity: _proximity,
         handleProximityDetected,
         handleProximityEnded,
         handleProximityUpdate,

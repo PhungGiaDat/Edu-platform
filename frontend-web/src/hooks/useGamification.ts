@@ -135,8 +135,11 @@ export function useGamification(userId: string | null) {
 
             // Handle auto-awarded sticker
             if (result.sticker_earned) {
-                setNewSticker(result.sticker_earned);
-                eventBus.emit('STICKER_COLLECTED' as any, { sticker: result.sticker_earned });
+                const stickerObj: Sticker = typeof result.sticker_earned === 'string'
+                    ? { id: result.sticker_earned, name: result.sticker_earned, imageUrl: '', rarity: 'common', earned_at: new Date().toISOString() }
+                    : result.sticker_earned;
+                setNewSticker(stickerObj);
+                eventBus.emit('STICKER_COLLECTED' as any, { sticker: stickerObj });
                 setTimeout(() => setNewSticker(null), 3000);
             }
 
@@ -348,7 +351,7 @@ export function useGamification(userId: string | null) {
         };
     }, [trackPronunciationCorrect, trackComboDiscovered]);
 
-return {
+    return {
         // State
         progress,
         isLoading,
