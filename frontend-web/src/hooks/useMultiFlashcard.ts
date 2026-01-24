@@ -5,10 +5,13 @@
  * 1. Track multiple QR codes detected in scanner
  * 2. Fetch AR data for each detected flashcard
  * 3. When 2+ flashcards detected, check for combo
- * 4. Provide combo mind URL for AR viewer
+ * 4. Listen for proximity events from AR viewer
+ * 5. Trigger combo effects when cards are close together
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getApiBase } from '../config';
+import { HapticService } from '../services/HapticService';
+import { SoundEffectService } from '../services/SoundEffectService';
 
 const API_BASE = getApiBase();
 
@@ -32,12 +35,21 @@ interface ComboData {
     bonusXp: number;
 }
 
+interface ProximityData {
+    isClose: boolean;
+    distance: number;
+    midpoint: { x: number; y: number; z: number } | null;
+    lastDetected: number;
+}
+
 interface MultiFlashcardState {
     detectedFlashcards: Map<string, FlashcardData>;
     activeCombo: ComboData | null;
     isCheckingCombo: boolean;
     comboMindUrl: string | null;
-    mode: 'SINGLE' | 'MULTI' | 'COMBO';
+    mode: 'SINGLE' | 'MULTI' | 'COMBO' | 'PROXIMITY_COMBO';
+    proximity: ProximityData;
+    comboTriggered: boolean;
 }
 
 export function useMultiFlashcard() {
@@ -46,10 +58,18 @@ export function useMultiFlashcard() {
         activeCombo: null,
         isCheckingCombo: false,
         comboMindUrl: null,
-        mode: 'SINGLE'
+        mode: 'SINGLE',
+        proximity: {
+            isClose: false,
+            distance: Infinity,
+            midpoint: null,
+            lastDetected: 0
+        },
+        comboTriggered: false
     });
 
     const comboCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const proximityComboRef = useRef<boolean>(false);
 
     /**
      * Add a newly detected flashcard
@@ -211,15 +231,107 @@ export function useMultiFlashcard() {
     }, [state.detectedFlashcards.size, state.activeCombo, state.isCheckingCombo, checkCombo]);
 
     /**
+     * Handle proximity detected event from AR viewer
+     */
+    const handleProximityDetected = useCallback((data: {
+        targets: number[];
+        distance: number;
+        midpoint: { x: number; y: number; z: number };
+    }) => {
+        console.log('[MultiFlashcard] 🎯 Proximity detected:', data);
+
+        setState(prev => ({
+            ...prev,
+            proximity: {
+                isClose: true,
+                distance: data.distance,
+                midpoint: data.midpoint,
+                lastDetected: Date.now()
+            },
+            mode: prev.mode === 'MULTI' ? 'PROXIMITY_COMBO' : prev.mode
+        }));
+
+        // Trigger combo effects if not already triggered
+        if (!proximityComboRef.current) {
+            proximityComboRef.current = true;
+            
+            // Haptic and sound feedback for combo discovery
+            HapticService.combo();
+            SoundEffectService.play('combo');
+
+            console.log('[MultiFlashcard] ✨ COMBO DISCOVERED via proximity!');
+
+            setState(prev => ({
+                ...prev,
+                comboTriggered: true,
+                mode: 'PROXIMITY_COMBO'
+            }));
+
+            // Check for combo data from API
+            checkCombo();
+        }
+    }, [checkCombo]);
+
+    /**
+     * Handle proximity ended event from AR viewer
+     */
+    const handleProximityEnded = useCallback((data: {
+        targets: number[];
+        distance?: number;
+    }) => {
+        console.log('[MultiFlashcard] 👋 Proximity ended:', data);
+
+        proximityComboRef.current = false;
+
+        setState(prev => ({
+            ...prev,
+            proximity: {
+                isClose: false,
+                distance: data.distance || Infinity,
+                midpoint: null,
+                lastDetected: prev.proximity.lastDetected
+            },
+            comboTriggered: false,
+            mode: prev.detectedFlashcards.size >= 2 ? 'MULTI' : 'SINGLE'
+        }));
+    }, []);
+
+    /**
+     * Handle proximity update event (continuous updates while close)
+     */
+    const handleProximityUpdate = useCallback((data: {
+        targets: number[];
+        distance: number;
+        midpoint: { x: number; y: number; z: number };
+    }) => {
+        setState(prev => ({
+            ...prev,
+            proximity: {
+                ...prev.proximity,
+                distance: data.distance,
+                midpoint: data.midpoint
+            }
+        }));
+    }, []);
+
+    /**
      * Reset all state
      */
     const reset = useCallback(() => {
+        proximityComboRef.current = false;
         setState({
             detectedFlashcards: new Map(),
             activeCombo: null,
             isCheckingCombo: false,
             comboMindUrl: null,
-            mode: 'SINGLE'
+            mode: 'SINGLE',
+            proximity: {
+                isClose: false,
+                distance: Infinity,
+                midpoint: null,
+                lastDetected: 0
+            },
+            comboTriggered: false
         });
     }, []);
 
@@ -246,6 +358,8 @@ export function useMultiFlashcard() {
         comboMindUrl: state.comboMindUrl,
         mode: state.mode,
         isCheckingCombo: state.isCheckingCombo,
+        proximity: state.proximity,
+        comboTriggered: state.comboTriggered,
 
         // Actions
         addFlashcard,
@@ -253,14 +367,20 @@ export function useMultiFlashcard() {
         checkCombo,
         reset,
 
+        // Proximity handlers (to be connected to AR message events)
+        handleProximityDetected,
+        handleProximityEnded,
+        handleProximityUpdate,
+
         // Helpers
         getFlashcardByIndex,
         getArTags,
 
         // Derived
         hasCombo: !!state.activeCombo,
-        isMultiMode: state.mode === 'MULTI' || state.mode === 'COMBO'
+        isMultiMode: state.mode === 'MULTI' || state.mode === 'COMBO' || state.mode === 'PROXIMITY_COMBO',
+        isProximityCombo: state.mode === 'PROXIMITY_COMBO'
     };
 }
 
-export type { FlashcardData, ComboData, MultiFlashcardState };
+export type { FlashcardData, ComboData, MultiFlashcardState, ProximityData };

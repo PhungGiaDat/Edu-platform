@@ -7,6 +7,8 @@ import { Profile } from "./pages/Profile";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { LandingPage } from "./pages/LandingPage";
+import { ProgressDashboard } from "./pages/ProgressDashboard";
+import { LearningPathSetup } from "./pages/LearningPathSetup";
 import { Layout } from "./components/Layout";
 import { AIChatBuddy } from "./components/AIChatBuddy";
 
@@ -26,6 +28,8 @@ const App = () => {
         <Route path="/courses" element={<Layout><CourseList /></Layout>} />
         <Route path="/courses/:id" element={<Layout><CourseDetail /></Layout>} />
         <Route path="/profile" element={<Layout><Profile /></Layout>} />
+        <Route path="/progress" element={<Layout><ProgressDashboard /></Layout>} />
+        <Route path="/learning-path" element={<Layout><LearningPathSetup /></Layout>} />
 
         <Route path="/scan" element={<Navigate to="/learn-ar" replace />} />
       </Routes>

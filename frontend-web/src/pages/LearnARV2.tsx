@@ -8,7 +8,7 @@
  * Multi-Flashcard Detection:
  * - Scan multiple QR codes to detect flashcards
  * - Auto-check for combo when 2+ flashcards detected
- * - Switch to combo mind file for multi-target AR
+ * - Proximity detection triggers combo effects when cards are close
  */
 
 import { useEffect, useState, useCallback } from 'react';
@@ -17,11 +17,16 @@ import ARControlPanel from '@/components/panel/ARControlPanel';
 import { QuizOverlay } from '@/components/Quiz';
 import { GameOverlay } from '@/components/GameOverlay';
 import { ARGamificationPanel } from '@/components/Gamification/ARGamificationPanel';
+import { RewardCelebration } from '@/components/Gamification/RewardCelebration';
+import { ErrorFriendly } from '@/components/ErrorFriendly';
+import { LoadingAnimation } from '@/components/LoadingAnimation';
 import { useArData } from '@/hooks/useArData';
 import { useQuizData } from '@/hooks/useQuizData';
 import { useGameData } from '@/hooks/useGameData';
 import { useGamification } from '@/hooks/useGamification';
 import { useMultiFlashcard } from '@/hooks/useMultiFlashcard';
+import { HapticService } from '@/services/HapticService';
+import { SoundEffectService } from '@/services/SoundEffectService';
 import { eventBus } from '@/runtime/EventBus';
 import type { DisplayMode, AppMode } from '@/hooks/useDisplayMode';
 import type { GameDifficulty, GameType } from '@/types';
@@ -51,8 +56,14 @@ export default function LearnARV2() {
         activeCombo,
         comboMindUrl,
         mode: multiMode,
-        hasCombo
-        // getFlashcardByIndex - TODO: use when ARContainerV2 supports model2Url
+        hasCombo,
+        isProximityCombo,
+        comboTriggered,
+        proximity,
+        handleProximityDetected,
+        handleProximityEnded,
+        handleProximityUpdate,
+        reset: resetMultiFlashcard
     } = useMultiFlashcard();
 
     // ========== DATA HOOKS ==========
@@ -126,13 +137,47 @@ export default function LearnARV2() {
             console.log('[LearnARV2] ✅ Active combo:', activeCombo.comboId);
             console.log('[LearnARV2] 🎁 Bonus XP:', activeCombo.bonusXp);
 
-            // Could trigger celebration animation here
+            // Trigger celebration
+            HapticService.levelUp();
+            SoundEffectService.play('levelUp');
+
             eventBus.emit('AR_COMMAND' as any, {
                 type: 'TRIGGER_ANIMATION',
                 payload: { clip: 'celebrate', loop: false }
             });
         }
     }, [trackComboDiscovered, hasCombo, activeCombo]);
+
+    /**
+     * Handle proximity events from AR viewer iframe
+     */
+    const handleARMessage = useCallback((event: MessageEvent) => {
+        const data = event.data;
+        if (!data || !data.type) return;
+
+        const { type, payload } = data;
+
+        switch (type) {
+            case 'COMBO_PROXIMITY_DETECTED':
+                console.log('[LearnARV2] 🎯 Proximity combo detected:', payload);
+                handleProximityDetected(payload);
+                break;
+
+            case 'COMBO_PROXIMITY_ENDED':
+                console.log('[LearnARV2] 👋 Proximity combo ended:', payload);
+                handleProximityEnded(payload);
+                break;
+
+            case 'COMBO_PROXIMITY_UPDATE':
+                handleProximityUpdate(payload);
+                break;
+
+            case 'MULTI_TARGET_DETECTED':
+                console.log('[LearnARV2] 🔗 Multi-target detected:', payload);
+                handleComboDetected(payload.targets);
+                break;
+        }
+    }, [handleProximityDetected, handleProximityEnded, handleProximityUpdate, handleComboDetected]);
 
     const handleModelClick = useCallback((modelId: string) => {
         console.log('[LearnARV2] Model clicked:', modelId);
@@ -207,6 +252,14 @@ export default function LearnARV2() {
         }
     }, [arError]);
 
+    // Listen for AR messages (proximity events)
+    useEffect(() => {
+        window.addEventListener('message', handleARMessage);
+        return () => {
+            window.removeEventListener('message', handleARMessage);
+        };
+    }, [handleARMessage]);
+
     // ========== RENDER ==========
     return (
         <div className="learn-ar-v2" style={{ position: 'fixed', inset: 0 }}>
@@ -263,46 +316,87 @@ export default function LearnARV2() {
                 />
             )}
 
-            {/* Error State */}
+            {/* Error State - Kid-Friendly */}
             {appState === 'ERROR' && (
+                <ErrorFriendly
+                    type="general"
+                    title="Oops!"
+                    message={error || 'Something went wrong. Let\'s try again!'}
+                    onRetry={() => {
+                        setAppState('SCANNING');
+                        setDetectedQrId(null);
+                        resetMultiFlashcard();
+                    }}
+                    fullScreen
+                />
+            )}
+
+            {/* Combo Indicator - Shows when proximity combo is active */}
+            {isProximityCombo && comboTriggered && appState === 'VIEWING' && (
                 <div
                     style={{
                         position: 'fixed',
-                        inset: 0,
-                        background: 'rgba(0,0,0,0.9)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexDirection: 'column',
-                        color: '#FF6B6B',
-                        fontFamily: 'Nunito, sans-serif',
-                        zIndex: 100002
+                        bottom: 'max(100px, env(safe-area-inset-bottom))',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 100001,
+                        pointerEvents: 'none'
                     }}
                 >
-                    <span style={{ fontSize: 64 }}>❌</span>
-                    <p style={{ fontSize: 20, marginTop: 16 }}>{error || 'Something went wrong'}</p>
-                    <button
-                        onClick={() => { setAppState('SCANNING'); setDetectedQrId(null); }}
+                    <div
                         style={{
-                            marginTop: 24,
-                            padding: '12px 32px',
-                            background: '#4ECDC4',
-                            border: 'none',
-                            borderRadius: 24,
-                            color: '#fff',
-                            fontSize: 18,
-                            cursor: 'pointer'
+                            background: 'linear-gradient(135deg, #FFD700 0%, #FF6B6B 50%, #A855F7 100%)',
+                            padding: '12px 24px',
+                            borderRadius: '24px',
+                            boxShadow: '0 4px 20px rgba(255, 107, 107, 0.5)',
+                            border: '3px solid #fff',
+                            animation: 'comboPulse 1s ease-in-out infinite'
                         }}
                     >
-                        Try Again
-                    </button>
+                        <p
+                            style={{
+                                color: '#fff',
+                                fontWeight: 800,
+                                fontSize: '18px',
+                                textAlign: 'center',
+                                margin: 0,
+                                textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                            }}
+                        >
+                            ✨ COMBO DISCOVERED! ✨
+                        </p>
+                        {activeCombo && (
+                            <p
+                                style={{
+                                    color: '#fff',
+                                    fontSize: '14px',
+                                    textAlign: 'center',
+                                    margin: '4px 0 0 0',
+                                    opacity: 0.9
+                                }}
+                            >
+                                +{activeCombo.bonusXp} XP Bonus!
+                            </p>
+                        )}
+                    </div>
                 </div>
             )}
+
+            {/* Combo pulse animation */}
+            <style>{`
+                @keyframes comboPulse {
+                    0%, 100% { transform: translateX(-50%) scale(1); }
+                    50% { transform: translateX(-50%) scale(1.05); }
+                }
+            `}</style>
 
             {/* Gamification Panel - Pet & Leaderboard (visible during VIEWING) */}
             {appState === 'VIEWING' && (
                 <ARGamificationPanel userId="demo-user" />
             )}
+
+            {/* Reward Celebration Overlay - auto-listens to EventBus */}
+            <RewardCelebration autoListen={true} />
         </div>
     );
 }
@@ -326,8 +420,27 @@ function GameSelector({ selectedDifficulty, onDifficultySelect, onGameTypeSelect
         { value: 'drag_match', label: 'Match', emoji: '🎯' },
         { value: 'memory_match', label: 'Memory', emoji: '🧠' },
         { value: 'word_scramble', label: 'Scramble', emoji: '🔤' },
-        { value: 'catch_word', label: 'Catch', emoji: '🎮' }
+        { value: 'catch_word', label: 'Catch', emoji: '🎮' },
+        { value: 'pronunciation', label: 'Speak', emoji: '🎤' }
     ];
+
+    const handleDifficultyClick = (value: GameDifficulty) => {
+        HapticService.tap();
+        SoundEffectService.play('tap');
+        onDifficultySelect(value);
+    };
+
+    const handleGameTypeClick = (value: GameType) => {
+        HapticService.success();
+        SoundEffectService.play('success');
+        onGameTypeSelect(value);
+    };
+
+    const handleClose = () => {
+        HapticService.tap();
+        SoundEffectService.play('tap');
+        onClose();
+    };
 
     return (
         <div
@@ -352,7 +465,7 @@ function GameSelector({ selectedDifficulty, onDifficultySelect, onGameTypeSelect
                 }}
             >
                 <button
-                    onClick={onClose}
+                    onClick={handleClose}
                     style={{
                         position: 'absolute',
                         top: 16,
@@ -360,8 +473,10 @@ function GameSelector({ selectedDifficulty, onDifficultySelect, onGameTypeSelect
                         background: 'rgba(255,255,255,0.2)',
                         border: 'none',
                         borderRadius: '50%',
-                        width: 40,
-                        height: 40,
+                        width: 48,
+                        height: 48,
+                        minWidth: 48,
+                        minHeight: 48,
                         color: '#fff',
                         fontSize: 20,
                         cursor: 'pointer'
@@ -379,9 +494,10 @@ function GameSelector({ selectedDifficulty, onDifficultySelect, onGameTypeSelect
                             {difficulties.map((d) => (
                                 <button
                                     key={d.value}
-                                    onClick={() => onDifficultySelect(d.value)}
+                                    onClick={() => handleDifficultyClick(d.value)}
                                     style={{
                                         padding: '16px 24px',
+                                        minHeight: '56px',
                                         background: 'rgba(255,255,255,0.9)',
                                         border: 'none',
                                         borderRadius: 16,
@@ -409,9 +525,10 @@ function GameSelector({ selectedDifficulty, onDifficultySelect, onGameTypeSelect
                             {gameTypes.map((g) => (
                                 <button
                                     key={g.value}
-                                    onClick={() => onGameTypeSelect(g.value)}
+                                    onClick={() => handleGameTypeClick(g.value)}
                                     style={{
                                         padding: '20px 16px',
+                                        minHeight: '80px',
                                         background: 'rgba(255,255,255,0.9)',
                                         border: 'none',
                                         borderRadius: 16,

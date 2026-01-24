@@ -7,6 +7,10 @@ import { DragMatchGame } from './game/DragMatchGame';
 import { CatchWordGame } from './game/CatchWordGame';
 import { WordScrambleGame } from './game/WordScrambleGame';
 import { MemoryMatchGame } from './game/MemoryMatchGame';
+import { ColoringGame } from './game/ColoringGame';
+import { PronunciationGame } from './game/PronunciationGame';
+import { HapticService } from '../services/HapticService';
+import { SoundEffectService } from '../services/SoundEffectService';
 import '../styles/Overlays.css';
 
 interface GameOverlayProps {
@@ -51,10 +55,20 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
     setIsCorrect(correct);
     setShowFeedback(true);
 
+    // Trigger haptic + sound feedback immediately
+    if (correct) {
+      HapticService.success();
+      SoundEffectService.play('success');
+    } else {
+      HapticService.error();
+      SoundEffectService.play('error');
+    }
+
+    // Reduced delay from 2500ms to 1200ms for snappier feedback
     setTimeout(() => {
       handleAnswer(answer);
       setShowFeedback(false);
-    }, 2500);
+    }, 1200);
   };
 
   // Loading
@@ -134,13 +148,21 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
 
             <div className="flex flex-col gap-3">
               <button
-                onClick={restartGame}
+                onClick={() => {
+                  HapticService.tap();
+                  SoundEffectService.play('tap');
+                  restartGame();
+                }}
                 className="px-8 py-4 bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 rounded-2xl text-white font-black text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-green-600"
               >
                 🔄 Play Again!
               </button>
               <button
-                onClick={onExit}
+                onClick={() => {
+                  HapticService.tap();
+                  SoundEffectService.play('tap');
+                  onExit();
+                }}
                 className="px-8 py-4 bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 rounded-2xl text-white font-black text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-purple-600"
               >
                 ← Back to Learning
@@ -183,7 +205,7 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
       showHint
     };
 
-    switch (currentChallenge.game_type) {
+switch (currentChallenge.game_type) {
       case 'drag_match':
         return <DragMatchGame {...props} />;
       case 'catch_word':
@@ -192,6 +214,10 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
         return <WordScrambleGame {...props} />;
       case 'memory_match':
         return <MemoryMatchGame {...props} />;
+      case 'coloring':
+        return <ColoringGame {...props} />;
+      case 'pronunciation':
+        return <PronunciationGame {...props} />;
       default:
         return <div>Unknown game type</div>;
     }
@@ -291,7 +317,11 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
         {/* Exit */}
         <div className="mt-3 text-center">
           <button
-            onClick={onExit}
+            onClick={() => {
+              HapticService.tap();
+              SoundEffectService.play('tap');
+              onExit();
+            }}
             className="px-5 py-2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full text-purple-600 font-bold text-sm shadow-lg border-2 border-purple-400 transition-all transform hover:scale-105 drop-shadow-md"
           >
             ← Exit Game

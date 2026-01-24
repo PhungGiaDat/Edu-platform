@@ -133,6 +133,13 @@ export function useGamification(userId: string | null) {
                 setTimeout(() => setNewBadges([]), 3000);
             }
 
+            // Handle auto-awarded sticker
+            if (result.sticker_earned) {
+                setNewSticker(result.sticker_earned);
+                eventBus.emit('STICKER_COLLECTED' as any, { sticker: result.sticker_earned });
+                setTimeout(() => setNewSticker(null), 3000);
+            }
+
             // Refresh progress
             await fetchProgress();
 
@@ -184,7 +191,7 @@ export function useGamification(userId: string | null) {
     }, []);
 
     // Feed virtual pet
-    const feedPet = useCallback(async (): Promise<{ success: boolean; happiness: number }> => {
+    const feedPet = useCallback(async (): Promise<{ success: boolean; happiness: number; evolved?: boolean; stage?: string }> => {
         if (!userId) return { success: false, happiness: 0 };
 
         try {
@@ -204,11 +211,71 @@ export function useGamification(userId: string | null) {
                 payload: { clip: 'happy', loop: false }
             });
 
+            // Check for evolution
+            if (result.evolved) {
+                eventBus.emit('PET_EVOLVED' as any, { stage: result.stage });
+            }
+
             await fetchProgress();
-            return { success: true, happiness: result.happiness };
+            return { success: true, happiness: result.happiness, evolved: result.evolved, stage: result.stage };
         } catch (err) {
             console.error('[useGamification] Feed pet error:', err);
             return { success: false, happiness: 0 };
+        }
+    }, [userId, fetchProgress]);
+
+    // Play with virtual pet
+    const playPet = useCallback(async (): Promise<{ success: boolean; happiness: number; evolved?: boolean; stage?: string }> => {
+        if (!userId) return { success: false, happiness: 0 };
+
+        try {
+            const response = await fetch(`${API_BASE}/api/v1/gamification/pet/play`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            });
+
+            if (!response.ok) throw new Error('Failed to play with pet');
+
+            const result = await response.json();
+
+            // Trigger play animation in AR
+            eventBus.emit('AR_COMMAND' as any, {
+                type: 'TRIGGER_ANIMATION',
+                payload: { clip: 'play', loop: false }
+            });
+
+            // Check for evolution
+            if (result.evolved) {
+                eventBus.emit('PET_EVOLVED' as any, { stage: result.stage });
+            }
+
+            await fetchProgress();
+            return { success: true, happiness: result.happiness, evolved: result.evolved, stage: result.stage };
+        } catch (err) {
+            console.error('[useGamification] Play pet error:', err);
+            return { success: false, happiness: 0 };
+        }
+    }, [userId, fetchProgress]);
+
+    // Change pet outfit
+    const changePetOutfit = useCallback(async (outfit: string): Promise<boolean> => {
+        if (!userId) return false;
+
+        try {
+            const response = await fetch(`${API_BASE}/api/v1/gamification/pet/outfit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, outfit })
+            });
+
+            if (!response.ok) throw new Error('Failed to change outfit');
+
+            await fetchProgress();
+            return true;
+        } catch (err) {
+            console.error('[useGamification] Change outfit error:', err);
+            return false;
         }
     }, [userId, fetchProgress]);
 
@@ -281,7 +348,7 @@ export function useGamification(userId: string | null) {
         };
     }, [trackPronunciationCorrect, trackComboDiscovered]);
 
-    return {
+return {
         // State
         progress,
         isLoading,
@@ -302,6 +369,8 @@ export function useGamification(userId: string | null) {
         fetchProgress,
         getLeaderboard,
         feedPet,
+        playPet,
+        changePetOutfit,
         collectSticker,
 
         // Convenience

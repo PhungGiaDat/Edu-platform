@@ -51,7 +51,7 @@ export interface QuizAnswer {
 
 // ========== GAME TYPES ==========
 
-export type GameType = 'drag_match' | 'catch_word' | 'word_scramble' | 'memory_match';
+export type GameType = 'drag_match' | 'catch_word' | 'word_scramble' | 'memory_match' | 'coloring' | 'pronunciation';
 export type GameDifficulty = 'easy' | 'medium' | 'hard';
 
 export interface MemoryPair {
@@ -66,17 +66,17 @@ export interface GameChallenge {
   difficulty: GameDifficulty;
   question: string;
   image_url?: string;
-  
+
   // For drag_match and catch_word
   correct_answer?: string;
   choices?: string[];
-  
+
   // For word_scramble
   scrambled_word?: string;
-  
+
   // For memory_match
   pairs?: MemoryPair[];
-  
+
   hint?: string;
   encouragement_wrong?: string;
   celebration_right?: string;
