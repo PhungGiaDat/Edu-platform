@@ -1,7 +1,13 @@
 /* ========================================================================
    MOBILE-RESPONSIVE CSS FOR AR/GAME/QUIZ
-   Optimized for phone camera usage
+   Optimized for phone camera usage + Kids UX
+   
+   CRITICAL: Touch targets must be minimum 48px for kids
+   Reference: kids-design-system.css for design tokens
    ======================================================================== */
+
+/* Import kids design system tokens */
+@import './kids-design-system.css';
 
 /* ========== AR CONTROL PANEL - MOBILE RESPONSIVE ========== */
 .ar-control-panel {
@@ -22,15 +28,14 @@
     gap: 0.25rem !important;
 }
 
-/* Touch-friendly button sizes for mobile */
+/* Touch-friendly button sizes for mobile - MINIMUM 48px for kids */
 .ar-control-panel button {
     min-width: 48px !important;
-    /* iOS/Android recommendation */
     min-height: 48px !important;
     padding: 0.75rem !important;
     font-size: 0.875rem !important;
     touch-action: manipulation !important;
-    /* Prevent double-tap zoom */
+    -webkit-tap-highlight-color: transparent !important;
 }
 
 /* ========== GAME OVERLAY -RESPONSIVE ========== */
@@ -50,12 +55,14 @@
     margin: 0 auto !important;
 }
 
-/* Game buttons - touch friendly */
+/* Game buttons - touch friendly (MINIMUM 48px for kids) */
 .game-overlay button {
-    min-height: 44px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
     padding: 0.75rem 1.5rem !important;
     font-size: 1rem !important;
     touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
 }
 
 /* ========== QUIZ OVERLAY - MOBILE RESPONSIVE ========== */
@@ -74,17 +81,19 @@
     margin: 0 auto !important;
 }
 
-/* Quiz buttons - touch friendly */
+/* Quiz buttons - touch friendly (MINIMUM 48px for kids) */
 .quiz-overlay button {
-    min-height: 44px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
     padding: 0.75rem 1.5rem !important;
     font-size: 1rem !important;
     touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
 }
 
 /* ========== RESPONSIVE BREAKPOINTS ========== */
 
-/* Small phones (< 375px) */
+/* Small phones (< 375px) - STILL maintain 48px minimum for kids */
 @media (max-width: 374px) {
     .ar-control-panel {
         top: 0.25rem !important;
@@ -92,9 +101,10 @@
         gap: 0.25rem !important;
     }
 
+    /* Keep 48px minimum - kids need large touch targets */
     .ar-control-panel button {
-        min-width: 40px !important;
-        min-height: 40px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
         padding: 0.5rem !important;
         font-size: 0.75rem !important;
     }
@@ -166,22 +176,26 @@
 }
 
 /* ========== LANDSCAPE MODE (Phone rotated) ========== */
+/* Compact layout but STILL maintain 48px minimum for kids */
 @media (max-height: 500px) and (orientation: landscape) {
     .ar-control-panel {
         top: 0.25rem !important;
         right: 0.25rem !important;
         gap: 0.15rem !important;
+        flex-direction: row !important; /* Horizontal layout in landscape */
     }
 
+    /* Keep 48px minimum - critical for kids */
     .ar-control-panel button {
-        min-width: 36px !important;
-        min-height: 36px !important;
-        padding: 0.4rem !important;
-        font-size: 0.7rem !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+        padding: 0.5rem !important;
+        font-size: 0.75rem !important;
     }
 
     .ar-control-buttons {
-        gap: 0.15rem !important;
+        flex-direction: row !important; /* Horizontal in landscape */
+        gap: 0.25rem !important;
     }
 
     /* Make overlays scrollable in landscape */

@@ -64,6 +64,12 @@ class GamificationService:
         elif level_up and new_level == 10:
             await self.award_badge(user_id, "level_10")
             badges_earned.append("level_10")
+        elif level_up and new_level == 20:
+            await self.award_badge(user_id, "level_20")
+            badges_earned.append("level_20")
+        
+        # Auto-award stickers based on milestones
+        sticker_earned = await self._check_sticker_rewards(user_id, action, new_level, metadata)
         
         logger.info(f"Added {xp_amount} XP for {user_id} ({action})")
         
@@ -74,7 +80,8 @@ class GamificationService:
             "level": new_level,
             "level_up": level_up,
             "streak": streak_result.get("current_streak", 0),
-            "badges_earned": badges_earned
+            "badges_earned": badges_earned,
+            "sticker_earned": sticker_earned
         }
     
     async def award_badge(self, user_id: str, badge_id: str) -> Dict[str, Any]:
@@ -165,13 +172,30 @@ class GamificationService:
         # Award XP for caring for pet
         await self.repo.update_points(user_id, 5)  # Small XP reward
         
+        # Update pet XP for evolution
+        pet_xp = pet.get("xp_earned", 0) + 5
+        await self.repo.update_pet_xp(user_id, pet_xp)
+        
+        # Check evolution
+        new_stage = self._get_evolution_stage(pet_xp)
+        old_stage = pet.get("stage", "baby")
+        evolved = False
+        
+        if new_stage != old_stage:
+            await self.repo.update_pet_stage(user_id, new_stage)
+            evolved = True
+            logger.info(f"Pet evolved to {new_stage} for user {user_id}")
+        
         logger.info(f"Fed pet for user {user_id}, happiness: {pet.get('happiness')}")
         
         return {
             "success": True,
-            "happiness": pet.get("happiness", 50),
+            "happiness": min(100, pet.get("happiness", 50) + 10),
             "pet_type": pet.get("type", "bunny"),
-            "xp_earned": 5
+            "xp_earned": 5,
+            "pet_xp": pet_xp,
+            "stage": new_stage,
+            "evolved": evolved
         }
     
     async def choose_pet(self, user_id: str, pet_type: str) -> Dict[str, Any]:
@@ -183,22 +207,108 @@ class GamificationService:
         pet_data = {
             "type": pet_type,
             "happiness": 50,
-            "last_fed": None
+            "last_fed": None,
+            "outfit": "none",
+            "xp_earned": 0,
+            "stage": "baby"
         }
         await self.repo.update_pet(user_id, pet_data)
         
         return {"success": True, "pet": pet_data}
     
+    async def play_with_pet(self, user_id: str) -> Dict[str, Any]:
+        """
+        Play with user's pet - increases happiness and awards XP.
+        Returns updated pet state.
+        """
+        result = await self.repo.play_pet(user_id, happiness_boost=15)
+        pet = result.get("pet", {})
+        
+        # Award XP for playing
+        await self.repo.update_points(user_id, 8)
+        
+        # Update pet XP for evolution
+        pet_xp = pet.get("xp_earned", 0) + 8
+        await self.repo.update_pet_xp(user_id, pet_xp)
+        
+        # Check evolution
+        new_stage = self._get_evolution_stage(pet_xp)
+        if new_stage != pet.get("stage", "baby"):
+            await self.repo.update_pet_stage(user_id, new_stage)
+            logger.info(f"Pet evolved to {new_stage} for user {user_id}")
+        
+        logger.info(f"Played with pet for user {user_id}, happiness: {pet.get('happiness')}")
+        
+        return {
+            "success": True,
+            "happiness": min(100, pet.get("happiness", 50) + 15),
+            "pet_type": pet.get("type", "bunny"),
+            "xp_earned": 8,
+            "pet_xp": pet_xp,
+            "stage": new_stage
+        }
+    
+    async def change_pet_outfit(self, user_id: str, outfit: str) -> Dict[str, Any]:
+        """Change pet's outfit/accessory"""
+        valid_outfits = ["none", "crown", "wizard_hat", "superhero_cape", "party_hat", "glasses", "bowtie"]
+        if outfit not in valid_outfits:
+            return {"success": False, "error": f"Invalid outfit. Choose from: {valid_outfits}"}
+        
+        await self.repo.update_pet_outfit(user_id, outfit)
+        
+        return {"success": True, "outfit": outfit}
+    
+    def _get_evolution_stage(self, xp: int) -> str:
+        """Calculate evolution stage based on XP"""
+        if xp >= 2000:
+            return "adult"
+        elif xp >= 500:
+            return "teen"
+        elif xp >= 100:
+            return "child"
+        return "baby"
+    
     # ========== STICKER METHODS ==========
     
     STICKER_CATALOG = {
+        # Common stickers
         "star_gold": {"name": "Gold Star", "rarity": "common", "imageUrl": "/assets/stickers/star_gold.png"},
-        "star_rainbow": {"name": "Rainbow Star", "rarity": "rare", "imageUrl": "/assets/stickers/star_rainbow.png"},
         "trophy_bronze": {"name": "Bronze Trophy", "rarity": "common", "imageUrl": "/assets/stickers/trophy_bronze.png"},
-        "trophy_gold": {"name": "Gold Trophy", "rarity": "epic", "imageUrl": "/assets/stickers/trophy_gold.png"},
         "animal_elephant": {"name": "Elephant", "rarity": "common", "imageUrl": "/assets/stickers/elephant.png"},
+        "heart_pink": {"name": "Pink Heart", "rarity": "common", "imageUrl": "/assets/stickers/heart_pink.png"},
+        "book_blue": {"name": "Blue Book", "rarity": "common", "imageUrl": "/assets/stickers/book_blue.png"},
+        # Rare stickers
+        "star_rainbow": {"name": "Rainbow Star", "rarity": "rare", "imageUrl": "/assets/stickers/star_rainbow.png"},
         "animal_lion": {"name": "Lion", "rarity": "rare", "imageUrl": "/assets/stickers/lion.png"},
+        "rocket": {"name": "Rocket", "rarity": "rare", "imageUrl": "/assets/stickers/rocket.png"},
+        "medal_silver": {"name": "Silver Medal", "rarity": "rare", "imageUrl": "/assets/stickers/medal_silver.png"},
+        # Epic stickers
+        "trophy_gold": {"name": "Gold Trophy", "rarity": "epic", "imageUrl": "/assets/stickers/trophy_gold.png"},
+        "diamond": {"name": "Diamond", "rarity": "epic", "imageUrl": "/assets/stickers/diamond.png"},
+        "unicorn": {"name": "Unicorn", "rarity": "epic", "imageUrl": "/assets/stickers/unicorn.png"},
+        # Legendary stickers
         "crown": {"name": "Crown", "rarity": "legendary", "imageUrl": "/assets/stickers/crown.png"},
+        "dragon": {"name": "Dragon", "rarity": "legendary", "imageUrl": "/assets/stickers/dragon.png"},
+        "phoenix": {"name": "Phoenix", "rarity": "legendary", "imageUrl": "/assets/stickers/phoenix.png"},
+    }
+    
+    # Sticker award rules - maps actions/milestones to sticker rewards
+    STICKER_REWARDS = {
+        # Game completion rewards (based on score)
+        "game_perfect": ["trophy_gold", "diamond"],  # 100% score
+        "game_great": ["star_rainbow", "medal_silver"],  # 80%+ score
+        "game_good": ["star_gold", "heart_pink"],  # 60%+ score
+        # Activity milestones
+        "first_game": ["star_gold"],
+        "games_10": ["rocket"],
+        "games_25": ["unicorn"],
+        "games_50": ["crown"],
+        "pronunciation_perfect": ["animal_lion", "star_rainbow"],
+        "combo_discovered": ["animal_elephant", "book_blue"],
+        "streak_7": ["diamond"],
+        "streak_14": ["dragon"],
+        "level_10": ["trophy_gold"],
+        "level_20": ["phoenix"],
     }
     
     async def get_stickers(self, user_id: str) -> List[Dict[str, Any]]:
@@ -237,6 +347,66 @@ class GamificationService:
             "sticker": sticker,
             "xp_earned": xp
         }
+    
+    async def _check_sticker_rewards(
+        self, 
+        user_id: str, 
+        action: str, 
+        level: int, 
+        metadata: Dict = None
+    ) -> Dict[str, Any]:
+        """
+        Check and auto-award stickers based on action and milestones.
+        Returns sticker info if one was awarded, None otherwise.
+        """
+        import random
+        
+        metadata = metadata or {}
+        sticker_to_award = None
+        
+        # Level-based rewards
+        if level == 10:
+            sticker_to_award = "trophy_gold"
+        elif level == 20:
+            sticker_to_award = "phoenix"
+        
+        # Action-based rewards with random selection
+        if action == "game_completed":
+            score = metadata.get("score", 0)
+            if score >= 100:
+                candidates = self.STICKER_REWARDS.get("game_perfect", [])
+            elif score >= 80:
+                candidates = self.STICKER_REWARDS.get("game_great", [])
+            elif score >= 60:
+                candidates = self.STICKER_REWARDS.get("game_good", [])
+            else:
+                candidates = []
+            
+            if candidates:
+                # Random chance (30%) to award a sticker for game completion
+                if random.random() < 0.3:
+                    sticker_to_award = random.choice(candidates)
+        
+        elif action == "pronunciation_correct":
+            score = metadata.get("score", 0)
+            if score >= 90 and random.random() < 0.25:
+                candidates = self.STICKER_REWARDS.get("pronunciation_perfect", [])
+                if candidates:
+                    sticker_to_award = random.choice(candidates)
+        
+        elif action == "combo_discovered":
+            if random.random() < 0.4:  # 40% chance
+                candidates = self.STICKER_REWARDS.get("combo_discovered", [])
+                if candidates:
+                    sticker_to_award = random.choice(candidates)
+        
+        # Award the sticker if selected
+        if sticker_to_award:
+            result = await self.collect_sticker(user_id, sticker_to_award)
+            if result.get("collected"):
+                return result.get("sticker")
+        
+        return None
     
     # ========== PROGRESS REPORTS ==========
     

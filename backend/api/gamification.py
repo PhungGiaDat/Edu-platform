@@ -28,6 +28,15 @@ class ChoosePetRequest(BaseModel):
     pet_type: str
 
 
+class PlayPetRequest(BaseModel):
+    user_id: str
+
+
+class ChangePetOutfitRequest(BaseModel):
+    user_id: str
+    outfit: str
+
+
 class CollectStickerRequest(BaseModel):
     user_id: str
     sticker_id: str
@@ -110,6 +119,27 @@ async def choose_pet(
 ):
     """Choose/change pet type"""
     result = await service.choose_pet(request.user_id, request.pet_type)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error"))
+    return result
+
+
+@router.post("/gamification/pet/play")
+async def play_pet(
+    request: PlayPetRequest,
+    service: GamificationService = Depends(get_gamification_service)
+):
+    """Play with user's pet to increase happiness"""
+    return await service.play_with_pet(request.user_id)
+
+
+@router.post("/gamification/pet/outfit")
+async def change_pet_outfit(
+    request: ChangePetOutfitRequest,
+    service: GamificationService = Depends(get_gamification_service)
+):
+    """Change pet's outfit/accessory"""
+    result = await service.change_pet_outfit(request.user_id, request.outfit)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error"))
     return result

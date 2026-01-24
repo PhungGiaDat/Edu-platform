@@ -16,6 +16,13 @@
     let isReady = false;
     const activeTargets = new Map();
     const COMBO_THRESHOLD = 2;
+    
+    // Proximity detection settings
+    let PROXIMITY_THRESHOLD = 0.5; // Distance in 3D units to trigger combo
+    const PROXIMITY_CHECK_INTERVAL = 100; // Check every 100ms
+    let proximityCheckTimer = null;
+    let lastProximityState = false;
+    let comboEffectsActive = false;
 
     // ============ URL PARAMS ============
     const params = new URLSearchParams(window.location.search);
@@ -85,6 +92,30 @@
                 break;
             case 'UPDATE_MODEL':
                 updateModel(payload.targetIndex, payload.modelUrl);
+                break;
+            // Proximity detection controls
+            case 'SET_PROXIMITY_THRESHOLD':
+                if (typeof payload.threshold === 'number') {
+                    PROXIMITY_THRESHOLD = payload.threshold;
+                    log('📏', `Proximity threshold set to ${PROXIMITY_THRESHOLD}`);
+                }
+                break;
+            case 'ENABLE_COMBO_EFFECTS':
+                if (lastProximityState) {
+                    const target0 = document.getElementById('target-0');
+                    const target1 = document.getElementById('target-1');
+                    if (target0 && target1) {
+                        const pos0 = new THREE.Vector3();
+                        const pos1 = new THREE.Vector3();
+                        target0.object3D.getWorldPosition(pos0);
+                        target1.object3D.getWorldPosition(pos1);
+                        const midpoint = new THREE.Vector3().addVectors(pos0, pos1).multiplyScalar(0.5);
+                        triggerComboEffects(midpoint);
+                    }
+                }
+                break;
+            case 'DISABLE_COMBO_EFFECTS':
+                removeComboEffects();
                 break;
         }
     }
@@ -188,6 +219,11 @@
                 sendToParent('TARGET_LOST', {
                     targetIndex: index
                 });
+                
+                // Stop proximity checking if not enough targets
+                if (activeTargets.size < COMBO_THRESHOLD) {
+                    stopProximityCheck();
+                }
             });
         });
 
@@ -208,7 +244,10 @@
 
     // ============ MULTI-TARGET DETECTION ============
     function checkMultiTarget() {
-        if (activeTargets.size < COMBO_THRESHOLD) return;
+        if (activeTargets.size < COMBO_THRESHOLD) {
+            stopProximityCheck();
+            return;
+        }
 
         log('🔗', `Multi-target detected - ${activeTargets.size} targets active`);
 
@@ -223,6 +262,186 @@
         sendToParent('COMBO_DETECTED', {
             targets: targetIndices
         });
+        
+        // Start proximity checking when multiple targets are visible
+        startProximityCheck();
+    }
+
+    // ============ PROXIMITY DETECTION ============
+    /**
+     * Start continuous proximity checking between tracked targets
+     */
+    function startProximityCheck() {
+        if (proximityCheckTimer) return; // Already running
+        
+        log('📏', 'Starting proximity detection');
+        
+        proximityCheckTimer = setInterval(() => {
+            checkTargetProximity();
+        }, PROXIMITY_CHECK_INTERVAL);
+    }
+
+    /**
+     * Stop proximity checking
+     */
+    function stopProximityCheck() {
+        if (proximityCheckTimer) {
+            clearInterval(proximityCheckTimer);
+            proximityCheckTimer = null;
+            log('📏', 'Stopped proximity detection');
+        }
+        
+        // If combo was active, send end event
+        if (lastProximityState) {
+            lastProximityState = false;
+            comboEffectsActive = false;
+            sendToParent('COMBO_PROXIMITY_ENDED', {
+                targets: [0, 1]
+            });
+        }
+    }
+
+    /**
+     * Check if tracked targets are close to each other in 3D space
+     */
+    function checkTargetProximity() {
+        if (activeTargets.size < 2) {
+            if (lastProximityState) {
+                lastProximityState = false;
+                comboEffectsActive = false;
+                sendToParent('COMBO_PROXIMITY_ENDED', { targets: [0, 1] });
+            }
+            return;
+        }
+
+        const target0 = document.getElementById('target-0');
+        const target1 = document.getElementById('target-1');
+
+        if (!target0 || !target1) return;
+
+        // Get world positions of both targets
+        const pos0 = new THREE.Vector3();
+        const pos1 = new THREE.Vector3();
+
+        target0.object3D.getWorldPosition(pos0);
+        target1.object3D.getWorldPosition(pos1);
+
+        // Calculate distance
+        const distance = pos0.distanceTo(pos1);
+
+        // Calculate midpoint for combo effects
+        const midpoint = new THREE.Vector3().addVectors(pos0, pos1).multiplyScalar(0.5);
+
+        const isClose = distance < PROXIMITY_THRESHOLD;
+
+        // State changed - send appropriate event
+        if (isClose !== lastProximityState) {
+            lastProximityState = isClose;
+
+            if (isClose) {
+                log('✨', `Proximity detected! Distance: ${distance.toFixed(3)}`);
+                comboEffectsActive = true;
+
+                sendToParent('COMBO_PROXIMITY_DETECTED', {
+                    targets: [0, 1],
+                    distance: distance,
+                    midpoint: {
+                        x: midpoint.x,
+                        y: midpoint.y,
+                        z: midpoint.z
+                    },
+                    positions: {
+                        target0: { x: pos0.x, y: pos0.y, z: pos0.z },
+                        target1: { x: pos1.x, y: pos1.y, z: pos1.z }
+                    }
+                });
+
+                // Trigger visual feedback in scene
+                triggerComboEffects(midpoint);
+            } else {
+                log('👋', `Proximity ended. Distance: ${distance.toFixed(3)}`);
+                comboEffectsActive = false;
+
+                sendToParent('COMBO_PROXIMITY_ENDED', {
+                    targets: [0, 1],
+                    distance: distance
+                });
+
+                // Remove visual effects
+                removeComboEffects();
+            }
+        }
+
+        // Send continuous updates while in proximity (for smooth effects)
+        if (isClose) {
+            sendToParent('COMBO_PROXIMITY_UPDATE', {
+                targets: [0, 1],
+                distance: distance,
+                midpoint: {
+                    x: midpoint.x,
+                    y: midpoint.y,
+                    z: midpoint.z
+                }
+            });
+        }
+    }
+
+    /**
+     * Trigger visual combo effects at the midpoint
+     */
+    function triggerComboEffects(midpoint) {
+        // Create or update combo effect entity
+        let comboEntity = document.getElementById('combo-effect');
+        
+        if (!comboEntity) {
+            comboEntity = document.createElement('a-entity');
+            comboEntity.id = 'combo-effect';
+            scene.appendChild(comboEntity);
+        }
+
+        // Position at midpoint
+        comboEntity.setAttribute('position', `${midpoint.x} ${midpoint.y} ${midpoint.z}`);
+        
+        // Add glowing ring effect
+        comboEntity.innerHTML = `
+            <a-ring 
+                radius-inner="0.08" 
+                radius-outer="0.12" 
+                color="#FFD700" 
+                opacity="0.8"
+                animation="property: scale; to: 1.5 1.5 1.5; dur: 500; easing: easeOutQuad; loop: true; dir: alternate"
+                animation__rotate="property: rotation; to: 0 0 360; dur: 2000; easing: linear; loop: true"
+            ></a-ring>
+            <a-ring 
+                radius-inner="0.12" 
+                radius-outer="0.18" 
+                color="#FF6B6B" 
+                opacity="0.6"
+                animation="property: scale; to: 1.3 1.3 1.3; dur: 700; easing: easeOutQuad; loop: true; dir: alternate"
+                animation__rotate="property: rotation; to: 0 0 -360; dur: 3000; easing: linear; loop: true"
+            ></a-ring>
+            <a-text 
+                value="✨ COMBO! ✨" 
+                align="center" 
+                color="#FFFFFF"
+                scale="0.15 0.15 0.15"
+                position="0 0.2 0"
+                animation="property: position; to: 0 0.25 0; dur: 500; easing: easeOutQuad; loop: true; dir: alternate"
+            ></a-text>
+        `;
+
+        log('🎆', 'Combo effects triggered');
+    }
+
+    /**
+     * Remove combo visual effects
+     */
+    function removeComboEffects() {
+        const comboEntity = document.getElementById('combo-effect');
+        if (comboEntity) {
+            comboEntity.parentNode.removeChild(comboEntity);
+            log('🧹', 'Combo effects removed');
+        }
     }
 
     // ============ MODE SWITCHING ============

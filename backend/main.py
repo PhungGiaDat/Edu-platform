@@ -32,10 +32,10 @@ from api import (
     gamification_router,
     auth_router,
     user_router,
+    learning_path_router,
 )
-from api.combos import router as combo_router
-from api.parental_controls import router as parental_router
 from api.websocket import router as websocket_router
+from api.reports import router as reports_router
 
 # Configure logging
 logging.basicConfig(
@@ -163,22 +163,22 @@ app.include_router(
     tags=["User"]
 )
 
-app.include_router(
-    combo_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Combos"]
-)
-
-app.include_router(
-    parental_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Parental Controls"]
-)
-
 # WebSocket router (no prefix - keep legacy path)
 app.include_router(
     websocket_router,
     tags=["WebSocket"]
+)
+
+app.include_router(
+    reports_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Reports"]
+)
+
+app.include_router(
+    learning_path_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Learning Path"]
 )
 
 logger.info("✅ All routers registered")

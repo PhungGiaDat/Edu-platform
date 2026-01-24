@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useQuiz } from '../hooks/useQuiz';
 import type { QuizSessionData } from '../types';
 import { getApiBase } from '../config';
+import { HapticService } from '../services/HapticService';
+import { SoundEffectService } from '../services/SoundEffectService';
 import '../styles/Overlays.css';
 
 const API_BASE = getApiBase();
@@ -47,11 +49,21 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
     setIsCorrect(correct);
     setShowFeedback(true);
 
+    // Trigger haptic + sound feedback immediately
+    if (correct) {
+      HapticService.success();
+      SoundEffectService.play('success');
+    } else {
+      HapticService.error();
+      SoundEffectService.play('error');
+    }
+
+    // Reduced delay from 3000ms to 1200ms for snappier feedback
     setTimeout(() => {
       handleAnswer(answer);
       setShowFeedback(false);
       setSelectedAnswer(null);
-    }, 3000);
+    }, 1200);
   };
 
   // Loading state
@@ -136,13 +148,21 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
 
           <div className="flex flex-col gap-2 mt-4">
             <button
-              onClick={restartQuiz}
+              onClick={() => {
+                HapticService.tap();
+                SoundEffectService.play('tap');
+                restartQuiz();
+              }}
               className="px-6 py-3 bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 rounded-2xl text-white font-bold text-base transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-green-600"
             >
               🔄 Try Again
             </button>
             <button
-              onClick={onExit}
+              onClick={() => {
+                HapticService.tap();
+                SoundEffectService.play('tap');
+                onExit();
+              }}
               className="px-6 py-3 bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 rounded-2xl text-white font-bold text-base transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-purple-600"
             >
               ← Back to AR
@@ -318,7 +338,11 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
 
         <div className="mt-3 text-center">
           <button
-            onClick={onExit}
+            onClick={() => {
+              HapticService.tap();
+              SoundEffectService.play('tap');
+              onExit();
+            }}
             className="px-5 py-2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full text-purple-600 font-bold text-sm shadow-lg border-2 border-purple-400 transition-all transform hover:scale-105 drop-shadow-md"
           >
             ← Exit

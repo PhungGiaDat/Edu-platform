@@ -1,0 +1,385 @@
+/**
+ * Kids Design System
+ * Mobile-first design tokens optimized for children's AR flashcard app
+ * 
+ * Key Principles:
+ * - Touch targets minimum 48px (larger than Apple's 44px for kids)
+ * - Larger typography for readability
+ * - Faster feedback (max 1200ms) for kids' attention spans
+ * - Haptic/audio feedback on all interactions
+ * - High contrast colors
+ */
+
+:root {
+  /* ========== Touch Targets ========== */
+  /* Minimum sizes for kid-friendly touch interactions */
+  --touch-target-min: 48px;
+  --touch-target-md: 56px;
+  --touch-target-lg: 64px;
+  --touch-target-xl: 72px;
+  
+  /* Spacing between touch targets */
+  --touch-spacing: 12px;
+  
+  /* ========== Typography (Larger for Kids) ========== */
+  --text-xs: clamp(12px, 3vw, 14px);
+  --text-sm: clamp(14px, 3.5vw, 16px);
+  --text-base: clamp(16px, 4vw, 20px);
+  --text-lg: clamp(18px, 4.5vw, 24px);
+  --text-xl: clamp(22px, 5vw, 28px);
+  --text-2xl: clamp(26px, 6vw, 36px);
+  --text-3xl: clamp(32px, 7vw, 48px);
+  
+  /* Button text should be larger */
+  --text-button: clamp(16px, 4.5vw, 22px);
+  --text-button-sm: clamp(14px, 4vw, 18px);
+  
+  /* ========== Timing (Faster for Kids) ========== */
+  /* Feedback should be quick to maintain attention */
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  
+  /* Maximum feedback delay (success/error messages) */
+  --feedback-delay-max: 1200ms;
+  --feedback-delay-short: 800ms;
+  
+  /* Animation durations */
+  --animation-bounce: 400ms;
+  --animation-wiggle: 300ms;
+  --animation-celebration: 1000ms;
+  
+  /* ========== Border Radius (Rounded = Friendly) ========== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-full: 9999px;
+  
+  /* ========== Shadows (Soft for Depth) ========== */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+  --shadow-glow-success: 0 0 20px rgba(88, 214, 141, 0.5);
+  --shadow-glow-error: 0 0 20px rgba(236, 112, 99, 0.5);
+  --shadow-glow-combo: 0 0 30px rgba(244, 208, 63, 0.7);
+  
+  /* ========== Z-Index Scale ========== */
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-overlay: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+  
+  /* ========== Kid-Friendly Colors (Extended) ========== */
+  --kid-primary: #5DADE2;          /* Friendly sky blue */
+  --kid-primary-dark: #2E86AB;
+  --kid-secondary: #F4D03F;        /* Warm honey yellow */
+  --kid-secondary-dark: #D4AC0D;
+  --kid-success: #58D68D;          /* Happy green */
+  --kid-success-dark: #27AE60;
+  --kid-error: #EC7063;            /* Soft red (not scary) */
+  --kid-error-dark: #C0392B;
+  --kid-warning: #F5B041;          /* Attention orange */
+  --kid-purple: #BB8FCE;           /* Magical purple */
+  --kid-pink: #F5B7B1;             /* Gentle pink */
+  --kid-mint: #A3E4D7;             /* Cool mint */
+  
+  /* Background colors */
+  --kid-bg-primary: #FEF9E7;       /* Warm cream */
+  --kid-bg-secondary: #EBF5FB;     /* Light blue tint */
+  --kid-bg-game: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  /* Text colors */
+  --kid-text-primary: #2C3E50;     /* Dark blue-gray */
+  --kid-text-secondary: #5D6D7E;   /* Medium gray */
+  --kid-text-light: #95A5A6;       /* Light gray */
+  --kid-text-on-dark: #FFFFFF;
+}
+
+/* ========== Global Touch Target Enforcement ========== */
+.touch-target,
+button,
+[role="button"],
+.clickable,
+.tappable {
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Large touch targets for primary actions */
+.touch-target-lg {
+  min-width: var(--touch-target-lg);
+  min-height: var(--touch-target-lg);
+}
+
+/* Extra large for game cards and main buttons */
+.touch-target-xl {
+  min-width: var(--touch-target-xl);
+  min-height: var(--touch-target-xl);
+}
+
+/* ========== Kid-Friendly Button Styles ========== */
+.kid-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  padding: 12px 24px;
+  font-size: var(--text-button);
+  font-weight: 600;
+  border-radius: var(--radius-xl);
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kid-btn:active {
+  transform: scale(0.95);
+}
+
+.kid-btn-primary {
+  background: linear-gradient(135deg, var(--kid-primary) 0%, var(--kid-primary-dark) 100%);
+  color: var(--kid-text-on-dark);
+  box-shadow: var(--shadow-md);
+}
+
+.kid-btn-secondary {
+  background: linear-gradient(135deg, var(--kid-secondary) 0%, var(--kid-secondary-dark) 100%);
+  color: var(--kid-text-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.kid-btn-success {
+  background: linear-gradient(135deg, var(--kid-success) 0%, var(--kid-success-dark) 100%);
+  color: var(--kid-text-on-dark);
+  box-shadow: var(--shadow-md);
+}
+
+.kid-btn-danger {
+  background: linear-gradient(135deg, var(--kid-error) 0%, var(--kid-error-dark) 100%);
+  color: var(--kid-text-on-dark);
+  box-shadow: var(--shadow-md);
+}
+
+/* Icon-only button (for control panels) */
+.kid-btn-icon {
+  width: var(--touch-target-md);
+  height: var(--touch-target-md);
+  padding: 0;
+  border-radius: var(--radius-full);
+  font-size: 24px;
+}
+
+/* ========== Kid-Friendly Card Styles ========== */
+.kid-card {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.kid-card-game {
+  min-width: 80px;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+}
+
+.kid-card-game:active {
+  transform: scale(0.95);
+}
+
+/* ========== Feedback Animations ========== */
+@keyframes kid-success-bounce {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(0.95); }
+  75% { transform: scale(1.05); }
+}
+
+@keyframes kid-error-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+@keyframes kid-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+@keyframes kid-celebration {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.2) rotate(-5deg); }
+  50% { transform: scale(1.1) rotate(5deg); }
+  75% { transform: scale(1.15) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes kid-pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px currentColor; }
+  50% { box-shadow: 0 0 25px currentColor; }
+}
+
+@keyframes kid-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-kid-success {
+  animation: kid-success-bounce var(--animation-bounce) ease-out;
+}
+
+.animate-kid-error {
+  animation: kid-error-shake var(--animation-wiggle) ease-out;
+}
+
+.animate-kid-wiggle {
+  animation: kid-wiggle var(--animation-wiggle) ease-in-out;
+}
+
+.animate-kid-celebration {
+  animation: kid-celebration var(--animation-celebration) ease-out;
+}
+
+.animate-kid-pulse {
+  animation: kid-pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-kid-float {
+  animation: kid-float 2s ease-in-out infinite;
+}
+
+/* ========== Loading States ========== */
+@keyframes kid-loading-bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+.kid-loading-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.kid-loading-dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--kid-primary);
+  animation: kid-loading-bounce 1.4s infinite ease-in-out both;
+}
+
+.kid-loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.kid-loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+.kid-loading-dots span:nth-child(3) { animation-delay: 0s; }
+
+/* ========== Microphone Button (Pronunciation) ========== */
+@keyframes mic-pulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(236, 112, 99, 0.7);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 0 0 20px rgba(236, 112, 99, 0);
+  }
+}
+
+.kid-mic-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--kid-error) 0%, #E74C3C 100%);
+  color: white;
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.kid-mic-btn.recording {
+  animation: mic-pulse 1.5s infinite;
+}
+
+/* ========== Stars Rating ========== */
+.kid-stars {
+  display: flex;
+  gap: 8px;
+  font-size: 32px;
+}
+
+.kid-star {
+  color: #DDD;
+  transition: color var(--duration-fast), transform var(--duration-fast);
+}
+
+.kid-star.filled {
+  color: var(--kid-secondary);
+}
+
+.kid-star.animate {
+  animation: kid-success-bounce 0.4s ease-out;
+}
+
+/* ========== Progress Bar ========== */
+.kid-progress {
+  height: 16px;
+  background: #E8E8E8;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.kid-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--kid-success) 0%, var(--kid-primary) 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease-out;
+}
+
+/* ========== Accessibility: Reduced Motion ========== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ========== Safe Area for Mobile (Notch/Home Indicator) ========== */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left, 0);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right, 0);
+}
