@@ -34,10 +34,31 @@ body {
     touch-action: manipulation;
 }
 
-/* Hide MindAR default UI */
+/* Hide MindAR default UI - Aggressive hiding for all dynamic elements */
 .mindar-ui-overlay,
 .mindar-ui-scanning,
-.mindar-ui-loading {
+.mindar-ui-loading,
+[class*="mindar-ui"],
+[class*="mindar-loading"],
+[class*="loading-overlay"],
+[class*="scanning-overlay"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Hide any dynamically created loading text elements */
+div[style*="Loading"],
+span[style*="Loading"],
+p[style*="Loading"] {
+    display: none !important;
+}
+
+/* Hide A-Frame loading screen */
+.a-loader-title,
+.a-enter-vr,
+.a-enter-ar {
     display: none !important;
 }
 

@@ -7,10 +7,25 @@
 (function () {
     'use strict';
 
+    // Note: Loading overlay was removed for cleaner UX - elements may not exist
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingText = document.getElementById('loading-text');
     const modeIndicator = document.getElementById('mode-indicator');
     const scene = document.getElementById('ar-scene');
+    
+    // Safe helper to hide loading overlay (may not exist)
+    function hideLoadingOverlay() {
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+        }
+    }
+    
+    // Safe helper to update loading text (may not exist)
+    function setLoadingText(text) {
+        if (loadingText) {
+            loadingText.textContent = text;
+        }
+    }
 
     let currentMode = '3D';
     let isReady = false;
@@ -131,7 +146,7 @@
 
         if (!mindUrl) {
             log('❌', 'No mind file specified!');
-            loadingText.textContent = '❌ No mind file specified';
+            setLoadingText('❌ No mind file specified');
             sendToParent('SYSTEM_ERROR', {
                 code: 'NO_MIND_FILE',
                 message: 'No mind file URL provided'
@@ -168,7 +183,7 @@
         scene.addEventListener('arReady', () => {
             log('✅', 'AR Ready');
             isReady = true;
-            loadingOverlay.style.display = 'none';
+            hideLoadingOverlay();
 
             // Send SYSTEM_READY with capabilities
             sendToParent('SYSTEM_READY', {
@@ -185,7 +200,7 @@
 
         scene.addEventListener('arError', (e) => {
             log('❌', 'AR Error: ' + e);
-            loadingText.textContent = '❌ AR Error';
+            setLoadingText('❌ AR Error');
             sendToParent('SYSTEM_ERROR', {
                 code: 'AR_ERROR',
                 message: e.detail || 'Unknown error'
@@ -556,6 +571,81 @@
             console.log(`[AR-Viewer] ${emoji} ${message}`);
         }
     }
+
+    // ============ HIDE MINDAR LOADING UI ============
+    /**
+     * Aggressively remove any MindAR loading/scanning UI elements
+     * MindAR creates these dynamically even with uiLoading: no
+     */
+    function hideMindARUI() {
+        // Remove by class patterns
+        const selectors = [
+            '[class*="mindar-ui"]',
+            '[class*="mindar-loading"]',
+            '[class*="loading-overlay"]',
+            '[class*="scanning-overlay"]',
+            '.a-loader-title',
+            '.a-enter-vr',
+            '.a-enter-ar'
+        ];
+        
+        selectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.style.display = 'none';
+                el.style.visibility = 'hidden';
+                el.style.opacity = '0';
+            });
+        });
+        
+        // Find and hide elements containing "Loading" text
+        document.querySelectorAll('div, span, p').forEach(el => {
+            if (el.textContent && el.textContent.includes('Loading')) {
+                // Check if it's not our own element
+                if (!el.id || !el.id.includes('ar-')) {
+                    el.style.display = 'none';
+                    el.style.visibility = 'hidden';
+                }
+            }
+        });
+        
+        log('🧹', 'MindAR UI elements hidden');
+    }
+    
+    // Run immediately and after short delays to catch dynamic elements
+    hideMindARUI();
+    setTimeout(hideMindARUI, 100);
+    setTimeout(hideMindARUI, 500);
+    setTimeout(hideMindARUI, 1000);
+    
+    // Also run when AR is ready
+    scene.addEventListener('arReady', hideMindARUI);
+    
+    // Watch for dynamically added elements
+    const observer = new MutationObserver((mutations) => {
+        let shouldHide = false;
+        mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+                if (node.nodeType === 1) { // Element node
+                    const el = node;
+                    const className = el.className || '';
+                    const textContent = el.textContent || '';
+                    if (className.toString().includes('mindar') || 
+                        className.toString().includes('loading') ||
+                        textContent.includes('Loading')) {
+                        shouldHide = true;
+                    }
+                }
+            });
+        });
+        if (shouldHide) {
+            hideMindARUI();
+        }
+    });
+    
+    observer.observe(document.body, { 
+        childList: true, 
+        subtree: true 
+    });
 
     // ============ START ============
     init();
