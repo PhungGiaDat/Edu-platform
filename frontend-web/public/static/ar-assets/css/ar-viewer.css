@@ -1,6 +1,6 @@
-/* ar-viewer.css - MindAR Viewer Styles - Kid-Friendly Mobile-First */
+/* ar-viewer.css - MindAR Viewer Styles - Kid-Friendly Mobile-First (Performance Optimized) */
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700&display=swap');
 
 * {
     margin: 0;
@@ -14,16 +14,7 @@
     --primary-teal: #4ECDC4;
     --primary-yellow: #FFE66D;
     --primary-purple: #A855F7;
-    --primary-blue: #3B82F6;
-    --primary-pink: #EC4899;
     --primary-green: #22C55E;
-    --primary-orange: #F97316;
-
-    /* Gradients */
-    --gradient-fun: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 50%, #4ECDC4 100%);
-    --gradient-magic: linear-gradient(135deg, #A855F7 0%, #EC4899 50%, #FF6B6B 100%);
-    --gradient-ocean: linear-gradient(135deg, #3B82F6 0%, #4ECDC4 100%);
-    --gradient-sunset: linear-gradient(135deg, #F97316 0%, #FF6B6B 50%, #EC4899 100%);
 
     /* Safe areas */
     --safe-bottom: max(20px, env(safe-area-inset-bottom));
@@ -60,79 +51,34 @@ a-scene canvas {
     background: transparent !important;
 }
 
-/* MindAR camera video should be visible */
 .a-canvas {
     background: transparent !important;
 }
 
-/* ============ KID-FRIENDLY LOADING OVERLAY ============ */
+/* ============ SIMPLE LOADING OVERLAY ============ */
 #loading-overlay {
     position: fixed;
     inset: 0;
-    background: linear-gradient(180deg,
+    background: linear-gradient(135deg,
             rgba(78, 205, 196, 0.95) 0%,
-            rgba(168, 85, 247, 0.95) 50%,
-            rgba(255, 107, 107, 0.95) 100%);
+            rgba(168, 85, 247, 0.90) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
     z-index: 1000;
     color: #fff;
-    backdrop-filter: blur(20px);
 }
 
-/* Fun bouncing loader */
+/* Simple spinner - uses GPU-accelerated transform */
 .loader {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.loader-dot {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    animation: loader-bounce 1.4s ease-in-out infinite both;
-}
-
-.loader-dot:nth-child(1) {
-    background: var(--primary-coral);
-    animation-delay: -0.32s;
-}
-
-.loader-dot:nth-child(2) {
-    background: var(--primary-yellow);
-    animation-delay: -0.16s;
-}
-
-.loader-dot:nth-child(3) {
-    background: var(--primary-teal);
-}
-
-@keyframes loader-bounce {
-
-    0%,
-    80%,
-    100% {
-        transform: scale(0.8);
-        opacity: 0.5;
-    }
-
-    40% {
-        transform: scale(1.2);
-        opacity: 1;
-    }
-}
-
-/* Fallback spinning loader */
-.loader-spinner {
-    width: 60px;
-    height: 60px;
-    border: 5px solid rgba(255, 255, 255, 0.3);
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
     border-top-color: #fff;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
+    will-change: transform;
 }
 
 @keyframes spin {
@@ -141,253 +87,124 @@ a-scene canvas {
     }
 }
 
+/* Hide dot loader by default */
+.loader-dot {
+    display: none;
+}
+
 #loading-text {
-    font-size: clamp(18px, 5vw, 24px);
+    margin-top: 20px;
+    font-size: clamp(16px, 4.5vw, 20px);
     font-weight: 700;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     text-align: center;
     padding: 0 20px;
 }
 
-/* Loading emoji animation */
 .loading-emoji {
-    font-size: 48px;
-    margin-bottom: 16px;
-    animation: loading-wiggle 2s ease-in-out infinite;
+    font-size: 40px;
+    margin-bottom: 12px;
+    /* No animation */
 }
 
-@keyframes loading-wiggle {
-
-    0%,
-    100% {
-        transform: rotate(-10deg) scale(1);
-    }
-
-    25% {
-        transform: rotate(10deg) scale(1.1);
-    }
-
-    50% {
-        transform: rotate(-10deg) scale(1);
-    }
-
-    75% {
-        transform: rotate(10deg) scale(1.05);
-    }
-}
-
-/* ============ MODE INDICATOR ============ */
+/* ============ MODE INDICATOR (SIMPLE) ============ */
 #mode-indicator {
     position: fixed;
     top: var(--safe-top);
     right: var(--safe-right);
     background: rgba(255, 255, 255, 0.95);
     color: #1F2937;
-    padding: 10px 18px;
-    border-radius: 24px;
-    font-size: clamp(12px, 3vw, 14px);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: clamp(11px, 2.8vw, 13px);
     font-weight: 700;
     z-index: 100;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
     display: flex;
     align-items: center;
-    gap: 8px;
-    backdrop-filter: blur(10px);
-    border: 2px solid transparent;
-    background-clip: padding-box;
-    transition: all 0.3s ease;
-}
-
-#mode-indicator.mode-3d {
-    border-color: var(--primary-teal);
-}
-
-#mode-indicator.mode-2d {
-    border-color: var(--primary-coral);
+    gap: 6px;
 }
 
 #mode-indicator::before {
     content: '';
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: var(--primary-green);
-    animation: pulse-dot 2s ease-in-out infinite;
+    /* No pulse animation */
 }
 
-@keyframes pulse-dot {
-
-    0%,
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 0.5;
-        transform: scale(0.8);
-    }
+#mode-indicator.mode-3d {
+    border: 2px solid var(--primary-teal);
 }
 
-/* ============ TARGET FOUND FEEDBACK ============ */
+#mode-indicator.mode-2d {
+    border: 2px solid var(--primary-coral);
+}
+
+/* ============ TARGET FOUND (SIMPLE) ============ */
 .target-found-toast {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) scale(0);
+    transform: translate(-50%, -50%);
     background: rgba(255, 255, 255, 0.98);
-    padding: 24px 40px;
-    border-radius: 24px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    padding: 20px 32px;
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
     z-index: 200;
     text-align: center;
-    animation: toast-pop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
-}
-
-@keyframes toast-pop {
-    0% {
-        transform: translate(-50%, -50%) scale(0);
-    }
-
-    100% {
-        transform: translate(-50%, -50%) scale(1);
-    }
 }
 
 .target-found-emoji {
-    font-size: 56px;
-    margin-bottom: 12px;
-    animation: celebrate-shake 0.5s ease-in-out;
-}
-
-@keyframes celebrate-shake {
-
-    0%,
-    100% {
-        transform: rotate(0);
-    }
-
-    25% {
-        transform: rotate(-15deg);
-    }
-
-    75% {
-        transform: rotate(15deg);
-    }
+    font-size: 48px;
+    margin-bottom: 8px;
 }
 
 .target-found-text {
-    font-size: clamp(18px, 5vw, 24px);
-    font-weight: 800;
-    background: var(--gradient-fun);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: clamp(16px, 4.5vw, 20px);
+    font-weight: 700;
+    color: var(--primary-teal);
 }
 
-/* ============ COMBO CELEBRATION ============ */
-.combo-celebration {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 150;
-    overflow: hidden;
-}
-
+/* ============ COMBO CELEBRATION (DISABLED) ============ */
+.combo-celebration,
 .combo-particle {
-    position: absolute;
-    font-size: 32px;
-    animation: combo-float 2s ease-out forwards;
+    display: none !important;
 }
 
-@keyframes combo-float {
-    0% {
-        opacity: 1;
-        transform: translateY(0) rotate(0deg) scale(1);
-    }
-
-    100% {
-        opacity: 0;
-        transform: translateY(-100vh) rotate(720deg) scale(0);
-    }
-}
-
-/* ============ TOUCH FEEDBACK ============ */
-.clickable {
-    cursor: pointer;
-}
-
+/* ============ TOUCH FEEDBACK (DISABLED) ============ */
 .touch-ripple {
-    position: fixed;
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(78, 205, 196, 0.6) 0%, transparent 70%);
-    transform: translate(-50%, -50%) scale(0);
-    animation: ripple-expand 0.6s ease-out forwards;
-    pointer-events: none;
-    z-index: 50;
+    display: none !important;
 }
 
-@keyframes ripple-expand {
-    0% {
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 1;
-    }
-
-    100% {
-        transform: translate(-50%, -50%) scale(3);
-        opacity: 0;
-    }
-}
-
-/* ============ SCANNING HINT ============ */
+/* ============ SCANNING HINT (SIMPLE) ============ */
 .scanning-hint {
     position: fixed;
-    bottom: calc(var(--safe-bottom) + 80px);
+    bottom: calc(var(--safe-bottom) + 70px);
     left: 50%;
     transform: translateX(-50%);
     background: rgba(255, 255, 255, 0.95);
-    padding: 14px 28px;
-    border-radius: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    padding: 12px 22px;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
     z-index: 90;
     text-align: center;
-    max-width: calc(100vw - 40px);
-    animation: hint-float 3s ease-in-out infinite;
-}
-
-@keyframes hint-float {
-
-    0%,
-    100% {
-        transform: translateX(-50%) translateY(0);
-    }
-
-    50% {
-        transform: translateX(-50%) translateY(-5px);
-    }
+    max-width: calc(100vw - 32px);
+    /* No float animation */
 }
 
 .scanning-hint-text {
-    font-size: clamp(14px, 3.5vw, 16px);
+    font-size: clamp(13px, 3.2vw, 15px);
     font-weight: 600;
     color: #374151;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
-/* ============ ACCESSIBILITY ============ */
-@media (prefers-reduced-motion: reduce) {
-
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
+/* ============ CLICKABLE CURSOR ============ */
+.clickable {
+    cursor: pointer;
 }
 
 /* ============ DARK MODE SUPPORT ============ */
@@ -405,14 +222,16 @@ a-scene canvas {
     .scanning-hint-text {
         color: #F3F4F6;
     }
+
+    .target-found-text {
+        color: var(--primary-teal);
+    }
 }
 
-/* ============ HIGH CONTRAST MODE ============ */
-@media (prefers-contrast: high) {
-
-    #mode-indicator,
-    .target-found-toast,
-    .scanning-hint {
-        border: 3px solid currentColor;
+/* ============ REDUCED MOTION ============ */
+@media (prefers-reduced-motion: reduce) {
+    .loader {
+        animation: none;
+        border-color: #fff;
     }
 }
