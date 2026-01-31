@@ -1,23 +1,9 @@
-/* ar-scanner.css - QR Scanner Styles - Kid-Friendly Mobile-First (Performance Optimized) */
-
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700&display=swap');
+/* ar-scanner.css - QR Scanner Styles - Minimal for Performance */
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-}
-
-:root {
-    /* Kid-friendly color palette */
-    --primary-coral: #FF6B6B;
-    --primary-teal: #4ECDC4;
-    --primary-yellow: #FFE66D;
-    --primary-green: #22C55E;
-
-    /* Safe areas */
-    --safe-bottom: max(20px, env(safe-area-inset-bottom));
-    --safe-top: max(20px, env(safe-area-inset-top));
 }
 
 html,
@@ -26,7 +12,6 @@ body {
     height: 100%;
     overflow: hidden;
     background: #000;
-    font-family: 'Nunito', sans-serif;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
 }
@@ -43,135 +28,4 @@ body {
 
 #canvas {
     display: none;
-}
-
-/* ============ SIMPLE SCAN FRAME (NO ANIMATIONS) ============ */
-.scan-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 10;
-    pointer-events: none;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-}
-
-.scan-frame {
-    width: min(260px, 70vw);
-    height: min(260px, 70vw);
-    border: 4px solid var(--primary-teal);
-    border-radius: 20px;
-    position: relative;
-    /* No animation - static frame */
-}
-
-/* Simple corner accents - CSS only, no animation */
-.scan-frame::before {
-    content: '';
-    position: absolute;
-    top: -6px;
-    left: -6px;
-    width: 32px;
-    height: 32px;
-    border-top: 4px solid var(--primary-coral);
-    border-left: 4px solid var(--primary-coral);
-    border-radius: 6px 0 0 0;
-}
-
-.scan-frame::after {
-    content: '';
-    position: absolute;
-    bottom: -6px;
-    right: -6px;
-    width: 32px;
-    height: 32px;
-    border-bottom: 4px solid var(--primary-yellow);
-    border-right: 4px solid var(--primary-yellow);
-    border-radius: 0 0 6px 0;
-}
-
-/* Scan line - DISABLED for performance */
-.scan-line {
-    display: none !important;
-}
-
-/* ============ SIMPLE INSTRUCTIONS ============ */
-.scan-instructions {
-    position: fixed;
-    bottom: var(--safe-bottom);
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 20;
-    text-align: center;
-    padding: 14px 22px;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 16px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    max-width: calc(100vw - 32px);
-    /* No animation */
-}
-
-.scan-instructions-text {
-    font-size: clamp(15px, 4vw, 18px);
-    font-weight: 700;
-    color: #1F2937;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.scan-instructions-emoji {
-    font-size: 24px;
-    /* No animation */
-}
-
-/* Status text */
-.status {
-    position: fixed;
-    top: var(--safe-top);
-    left: 50%;
-    transform: translateX(-50%);
-    color: #fff;
-    font-size: clamp(13px, 3.5vw, 16px);
-    font-weight: 600;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-    z-index: 20;
-    padding: 8px 16px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 16px;
-    display: none;
-    /* Hidden by default */
-}
-
-.status.visible {
-    display: block;
-}
-
-/* ============ DETECTED STATE (SIMPLE) ============ */
-.detected .scan-frame {
-    border-color: var(--primary-green);
-}
-
-.detected .scan-frame::before {
-    border-color: var(--primary-green);
-}
-
-.detected .scan-frame::after {
-    border-color: var(--primary-green);
-}
-
-/* ============ DARK MODE SUPPORT ============ */
-@media (prefers-color-scheme: dark) {
-    .scan-instructions {
-        background: rgba(31, 41, 55, 0.95);
-    }
-
-    .scan-instructions-text {
-        color: #F9FAFB;
-    }
-}
-
-/* ============ REDUCED MOTION (ALREADY NO ANIMATIONS) ============ */
-@media (prefers-reduced-motion: reduce) {
-    /* Already optimized - no animations to remove */
 }
