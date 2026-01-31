@@ -51,7 +51,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     children
 }) => {
     const [phase, setPhase] = useState<ARPhase>(initialPhase);
-    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isReady, setIsReady] = useState(false);
     const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -156,7 +155,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
                 // Viewer events
                 case 'AR_READY':
-                    setIsLoading(false);
                     setIsReady(true);
                     transitionTo('VIEWING');
                     eventBus.emit(AREvent.SCENE_READY, { scene: 'viewer' } as any);
@@ -227,7 +225,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
     // ========== EXTERNAL CONTROLS ==========
     const switchToViewer = useCallback((params: { mindUrl: string; modelUrl?: string }) => {
-        setIsLoading(true);
         console.log('[ARContainerV2] Switching to viewer with:', params.mindUrl);
         // Parent should update mindUrl/modelUrl props, then transition
         setTimeout(() => transitionTo('VIEWING'), 100);
@@ -272,7 +269,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
         if (phase === 'LOADING' && mindUrl) {
             console.log('[ARContainerV2] 🔄 mindUrl ready, transitioning to VIEWING:', mindUrl);
-            setIsLoading(true);
             // Small delay to ensure state is updated
             const timer = setTimeout(() => {
                 transitionTo('VIEWING');
@@ -297,35 +293,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 zIndex: 99999
             }}
         >
-            {/* Loading Overlay */}
-            {isLoading && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background: 'rgba(0,0,0,0.8)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 100000,
-                        color: '#fff',
-                        fontFamily: 'Nunito, sans-serif'
-                    }}
-                >
-                    <div>
-                        <div className="spinner" style={{
-                            width: 50,
-                            height: 50,
-                            border: '3px solid #4ECDC4',
-                            borderTopColor: 'transparent',
-                            borderRadius: '50%',
-                            animation: 'spin 1s linear infinite'
-                        }} />
-                        <p style={{ marginTop: 16 }}>Loading AR Experience...</p>
-                    </div>
-                </div>
-            )}
-
             {/* Error State */}
             {phase === 'ERROR' && (
                 <div
@@ -342,7 +309,12 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                         flexDirection: 'column'
                     }}
                 >
-                    <span style={{ fontSize: 48 }}>❌</span>
+                    {/* Error Icon - SVG */}
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
                     <p style={{ marginTop: 16 }}>{error || 'An error occurred'}</p>
                     <button
                         onClick={() => transitionTo('SCANNING')}
@@ -353,7 +325,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                             border: 'none',
                             borderRadius: 20,
                             color: '#fff',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            minHeight: 48,
+                            minWidth: 120
                         }}
                     >
                         Try Again
@@ -383,13 +357,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             <div style={{ position: 'relative', zIndex: 100 }}>
                 {children}
             </div>
-
-            {/* CSS for spinner animation */}
-            <style>{`
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-            `}</style>
         </div>
     );
 };
