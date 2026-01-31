@@ -4,12 +4,17 @@
  * 
  * Features:
  * - Kid-friendly "Thỏ Trắng" mascot
+ * - 3D pet that appears behind the chat button
  * - Floating bounce animation
  * - RAG-powered responses with source indicators
  * - Session-based conversation tracking
  */
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, Suspense, lazy } from 'react';
 import { ChatService, RAGChatResponse } from '../services/ChatService';
+import type { PetType, EvolutionStage, PetMood } from './Gamification/VirtualPetEvolved';
+
+// Lazy load the 3D pet component for performance
+const Pet3D = lazy(() => import('./Gamification/Pet3D'));
 
 interface Message {
     id: string;
@@ -18,23 +23,56 @@ interface Message {
     sources?: { word: string; score: number }[];
 }
 
+interface PetState {
+    type: PetType;
+    stage: EvolutionStage;
+    happiness: number;
+}
+
 interface AIChatBuddyProps {
     userId?: string;
     initialOpen?: boolean;
+    pet?: PetState;
+    show3DPet?: boolean;
 }
 
-export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ userId, initialOpen = false }) => {
+// Helper to get mood from happiness
+const getMood = (happiness: number): PetMood => {
+    if (happiness >= 80) return 'happy';
+    if (happiness >= 50) return 'content';
+    if (happiness >= 20) return 'sad';
+    return 'sleeping';
+};
+
+export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ 
+    userId, 
+    initialOpen = false,
+    pet = { type: 'bunny', stage: 'child', happiness: 80 },
+    show3DPet = true
+}) => {
     const [isOpen, setIsOpen] = useState(initialOpen);
+    const [show3D, setShow3D] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
             role: 'ai',
-            content: 'Xin chào! 🐰 Mình là Thỏ Trắng, bạn học của bé! Hỏi mình bất cứ điều gì về tiếng Anh nhé! 🌟'
+            content: 'Xin chào! Mình là Thỏ Trắng, bạn học của bé! Hỏi mình bất cứ điều gì về tiếng Anh nhé!'
         }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Toggle 3D pet visibility when chat opens/closes
+    useEffect(() => {
+        if (show3DPet && !isOpen) {
+            // Show 3D pet when chat is closed (pet sits behind button)
+            setShow3D(true);
+        } else {
+            // Hide 3D pet when chat is open
+            setShow3D(false);
+        }
+    }, [isOpen, show3DPet]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -65,10 +103,10 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ userId, initialOpen = 
             setMessages(prev => [...prev, aiMsg]);
         } catch (error) {
             console.error("[AIChatBuddy] Chat error:", error);
-            const errorMsg: Message = {
+const errorMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'ai',
-                content: 'Ôi không! Mình gặp sự cố rồi 😅 Bạn thử lại nhé!'
+                content: 'Ôi không! Mình gặp sự cố rồi. Bạn thử lại nhé!'
             };
             setMessages(prev => [...prev, errorMsg]);
         } finally {
@@ -76,13 +114,13 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ userId, initialOpen = 
         }
     };
 
-    const handleNewChat = () => {
+const handleNewChat = () => {
         ChatService.resetSession();
         setMessages([
             {
                 id: Date.now().toString(),
                 role: 'ai',
-                content: 'Cuộc trò chuyện mới! 🌈 Hỏi mình bất cứ điều gì nhé! 🐰'
+                content: 'Cuộc trò chuyện mới! Hỏi mình bất cứ điều gì nhé!'
             }
         ]);
     };
@@ -94,8 +132,35 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ userId, initialOpen = 
         }
     };
 
-    return (
+return (
         <>
+            {/* 3D Pet Container - sits behind the chat button */}
+            {show3D && show3DPet && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        bottom: 24,
+                        right: 24,
+                        width: 100,
+                        height: 100,
+                        zIndex: 40,
+                        pointerEvents: 'none',
+                        borderRadius: '50%',
+                        overflow: 'visible',
+                    }}
+                >
+                    <Suspense fallback={null}>
+                        <Pet3D
+                            petType={pet.type}
+                            stage={pet.stage}
+                            mood={getMood(pet.happiness)}
+                            happiness={pet.happiness}
+                            visible={show3D}
+                        />
+                    </Suspense>
+                </div>
+            )}
+
             {/* Floating Bubble Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
@@ -109,13 +174,20 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ userId, initialOpen = 
                     transform transition-all duration-300
                     hover:scale-110 hover:shadow-xl
                     ${isOpen ? 'scale-90' : 'animate-breathe'}
+                    ${show3D ? 'bg-opacity-90' : ''}
                 `}
+                style={{
+                    // When 3D pet is showing, make button slightly transparent to see pet
+                    background: show3D 
+                        ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.85), rgba(6, 182, 212, 0.85))'
+                        : undefined
+                }}
                 aria-label="Mở chat với Thỏ Trắng"
             >
-                {isOpen ? '✕' : '🐰'}
+                {isOpen ? 'X' : (show3D ? '' : 'T')}
             </button>
 
-            {/* Chat Window */}
+{/* Chat Window */}
             {isOpen && (
                 <div
                     className={`
@@ -133,12 +205,12 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ userId, initialOpen = 
                     <div className="bg-gradient-to-r from-sky-400 to-cyan-500 p-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-3xl shadow-md">
-                                🐰
+                                T
                             </div>
                             <div>
                                 <h3 className="text-white font-bold text-lg">Thỏ Trắng</h3>
                                 <span className="text-xs bg-white/30 text-white px-2 py-0.5 rounded-full font-medium">
-                                    🟢 Sẵn sàng giúp bé
+                                    Sẵn sàng giúp bé
                                 </span>
                             </div>
                         </div>
@@ -147,7 +219,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ userId, initialOpen = 
                             className="text-white/80 hover:text-white text-sm bg-white/20 px-3 py-1.5 rounded-full font-medium hover:bg-white/30 transition-colors"
                             title="Cuộc trò chuyện mới"
                         >
-                            🔄 Mới
+                            Mới
                         </button>
                     </div>
 
@@ -160,8 +232,8 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ userId, initialOpen = 
                             >
                                 {/* AI Avatar */}
                                 {msg.role === 'ai' && (
-                                    <div className="w-8 h-8 bg-gradient-to-br from-sky-400 to-cyan-500 rounded-full flex items-center justify-center text-lg shadow-sm flex-shrink-0">
-                                        🐰
+                                    <div className="w-8 h-8 bg-gradient-to-br from-sky-400 to-cyan-500 rounded-full flex items-center justify-center text-lg shadow-sm flex-shrink-0 text-white font-bold">
+                                        T
                                     </div>
                                 )}
 
@@ -188,7 +260,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ userId, initialOpen = 
                                                     className="text-xs bg-sky-100 text-sky-600 px-2 py-0.5 rounded-full"
                                                     title={`Độ liên quan: ${(src.score * 100).toFixed(0)}%`}
                                                 >
-                                                    📚 {src.word}
+                                                    {src.word}
                                                 </span>
                                             ))}
                                         </div>
@@ -220,7 +292,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ userId, initialOpen = 
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyPress={handleKeyPress}
-                                placeholder="Hỏi Thỏ Trắng đi nào... 🐰"
+                                placeholder="Hỏi Thỏ Trắng đi nào..."
                                 className="
                                     flex-1 bg-amber-50 border-2 border-amber-200 
                                     rounded-xl px-4 py-3 
@@ -247,7 +319,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ userId, initialOpen = 
                             </button>
                         </div>
                         <p className="text-center text-xs text-gray-400 mt-2">
-                            Powered by AI 🤖 • Dành cho trẻ em 💚
+                            Powered by AI - Dành cho trẻ em
                         </p>
                     </div>
                 </div>

@@ -55,56 +55,7 @@ a-scene canvas {
     background: transparent !important;
 }
 
-/* ============ SIMPLE LOADING OVERLAY ============ */
-#loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(135deg,
-            rgba(78, 205, 196, 0.95) 0%,
-            rgba(168, 85, 247, 0.90) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    z-index: 1000;
-    color: #fff;
-}
-
-/* Simple spinner - uses GPU-accelerated transform */
-.loader {
-    width: 48px;
-    height: 48px;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    will-change: transform;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-/* Hide dot loader by default */
-.loader-dot {
-    display: none;
-}
-
-#loading-text {
-    margin-top: 20px;
-    font-size: clamp(16px, 4.5vw, 20px);
-    font-weight: 700;
-    text-align: center;
-    padding: 0 20px;
-}
-
-.loading-emoji {
-    font-size: 40px;
-    margin-bottom: 12px;
-    /* No animation */
-}
+/* Loading overlay removed - direct AR experience */
 
 /* ============ MODE INDICATOR (SIMPLE) ============ */
 #mode-indicator {

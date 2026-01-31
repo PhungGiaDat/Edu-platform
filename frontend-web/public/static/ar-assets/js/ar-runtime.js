@@ -149,78 +149,17 @@
         log('👁️', 'DOM observer started for video injection');
     }
 
-    // ========== UI HELPERS ==========
+// ========== UI HELPERS ==========
 
-    // Loader state tracking (Task 1.7)
-    const loaderState = {
-        videoLoaded: false,
-        nftLoaded: false,
-        hidden: false
-    };
-
-    /**
-     * Check if both video and NFT are loaded, then hide loader
-     * Task 1.7: Only fade out when BOTH arjs-video-loaded AND arjs-nft-loaded have fired
-     */
-    function checkAndHideLoader() {
-        if (loaderState.hidden) return;
-
-        if (loaderState.videoLoaded && loaderState.nftLoaded) {
-            log('✅', 'Both video and NFT loaded - hiding loader');
-            hideLoaderNow();
-        } else {
-            log('⏳', `Loader waiting: video=${loaderState.videoLoaded}, nft=${loaderState.nftLoaded}`);
-        }
-    }
-
-    function markVideoLoaded() {
-        loaderState.videoLoaded = true;
-        log('🎥', 'Video marked as loaded');
-        checkAndHideLoader();
-    }
-
-    function markNFTLoaded() {
-        loaderState.nftLoaded = true;
-        log('📦', 'NFT system marked as loaded');
-        checkAndHideLoader();
-    }
-
-    function hideLoaderNow() {
-        const loader = document.querySelector('.arjs-loader');
-        if (loader && !loaderState.hidden) {
-            loaderState.hidden = true;
-            loader.style.opacity = '0';
-            setTimeout(() => {
-                loader.style.display = 'none';
-            }, 300);
-            log('👋', 'Loader hidden');
-        }
-    }
-
-    // Legacy function for backwards compatibility
-    function hideLoader() {
-        // Force hide (used by fallback timeout)
-        loaderState.videoLoaded = true;
-        loaderState.nftLoaded = true;
-        hideLoaderNow();
-    }
+    // Loader removed - direct AR experience
 
     function showNFTLoading(markerId) {
-        let indicator = document.querySelector('.nft-loading-indicator');
-        if (!indicator) {
-            indicator = document.createElement('div');
-            indicator.className = 'nft-loading-indicator';
-            document.body.appendChild(indicator);
-        }
-        indicator.textContent = `Loading NFT: ${markerId}...`;
-        indicator.classList.add('visible');
+        // Disabled - no loading indicators
+        console.log('[AR-Runtime] Loading NFT:', markerId);
     }
 
     function hideNFTLoading() {
-        const indicator = document.querySelector('.nft-loading-indicator');
-        if (indicator) {
-            indicator.classList.remove('visible');
-        }
+        // Disabled - no loading indicators
     }
 
     // ========== NFT MANAGEMENT ==========
@@ -792,37 +731,34 @@
     function onSceneLoaded() {
         log('🎬', 'A-Frame scene loaded');
 
-        // Listen for AR.js video ready (Task 1.7: mark video loaded)
-        window.addEventListener('arjs-video-loaded', () => {
-            log('🎥', 'AR.js video loaded event received');
-            forceVideoLayering(); // Enforce layering when video loads
-            markVideoLoaded(); // Task 1.7: Track video loaded state
-            startQRScanning();
-        });
-
-        // Listen for AR.js ready (Task 1.7: mark NFT loaded)
-        window.addEventListener('arjs-nft-loaded', () => {
-            log('✅', 'AR.js NFT system loaded');
-            markNFTLoaded(); // Task 1.7: Track NFT loaded state (will hide loader if both ready)
-            ARRuntime.initialized = true;
-            sendToParent('AR_READY', { initialized: true });
-        });
-
-        // Fallback: Try to start QR scanning after delay
-        setTimeout(() => {
-            if (!ARRuntime.qrDetection.scanning) {
-                log('⏳', 'Fallback: Attempting to start QR scanning...');
-                forceVideoLayering(); // Try to enforce layering on fallback too
+// Listen for AR.js video ready
+            window.addEventListener('arjs-video-loaded', () => {
+                log('🎥', 'AR.js video loaded event received');
+                forceVideoLayering();
                 startQRScanning();
-            }
+            });
 
-            if (!ARRuntime.initialized) {
-                log('⚠️', 'AR.js init timeout, forcing ready state');
-                hideLoader();
+            // Listen for AR.js ready
+            window.addEventListener('arjs-nft-loaded', () => {
+                log('✅', 'AR.js NFT system loaded');
                 ARRuntime.initialized = true;
-                sendToParent('AR_READY', { initialized: true, fallback: true });
-            }
-        }, 3000);
+                sendToParent('AR_READY', { initialized: true });
+            });
+
+// Fallback: Try to start QR scanning after delay
+            setTimeout(() => {
+                if (!ARRuntime.qrDetection.scanning) {
+                    log('⏳', 'Fallback: Attempting to start QR scanning...');
+                    forceVideoLayering();
+                    startQRScanning();
+                }
+
+                if (!ARRuntime.initialized) {
+                    log('⚠️', 'AR.js init timeout, forcing ready state');
+                    ARRuntime.initialized = true;
+                    sendToParent('AR_READY', { initialized: true, fallback: true });
+                }
+            }, 3000);
     }
 
     // ========== BOOTSTRAP ==========
