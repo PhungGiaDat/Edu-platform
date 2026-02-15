@@ -8,6 +8,17 @@ from .ar_combination import ArCombinationSchema, TransformSchema
 from .ar_experience import ARExperienceResponseSchema
 from .quiz import QuizQuestion, QuizSessionSchema
 from .game import MemoryPair, GameChallenge, GameSessionSchema
+from .pet import (
+    PetDocument,
+    PetCreate,
+    PetUpdate,
+    PetResponse,
+    PetListResponse,
+    PetPreferences,
+    UnlockCondition,
+    SetActivePetRequest,
+    UnlockPetResponse,
+)
 
 __all__ = [
     # Flashcard
@@ -26,4 +37,14 @@ __all__ = [
     "MemoryPair",
     "GameChallenge",
     "GameSessionSchema",
+    # Pet
+    "PetDocument",
+    "PetCreate",
+    "PetUpdate",
+    "PetResponse",
+    "PetListResponse",
+    "PetPreferences",
+    "UnlockCondition",
+    "SetActivePetRequest",
+    "UnlockPetResponse",
 ]

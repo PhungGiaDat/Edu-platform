@@ -9,6 +9,8 @@ from typing import Optional, List
 from datetime import datetime
 import uuid
 
+from .pet import PetPreferences
+
 # ========== Beanie Documents ==========
 
 class UserDocument(Document):
@@ -26,6 +28,11 @@ class UserDocument(Document):
     is_active: bool = True
     is_verified: bool = False
     is_superuser: bool = False
+    
+    # Pet system fields
+    active_pet: Optional[str] = None  # pet_id of currently active pet
+    unlocked_pets: List[str] = Field(default_factory=list)  # List of unlocked pet_ids
+    pet_preferences: Optional[PetPreferences] = None  # User's pet display preferences
     
     # Timestamps
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -106,6 +113,11 @@ class UserResponse(BaseModel):
     is_active: bool
     is_verified: bool
     created_at: datetime
+    
+    # Pet system fields
+    active_pet: Optional[str] = None
+    unlocked_pets: List[str] = Field(default_factory=list)
+    pet_preferences: Optional[PetPreferences] = None
 
     class Config:
         from_attributes = True

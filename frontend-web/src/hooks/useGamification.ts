@@ -146,6 +146,9 @@ export function useGamification(userId: string | null) {
             // Refresh progress
             await fetchProgress();
 
+            // Check if any pets can now be unlocked after XP gain
+            checkPetUnlocks(result.total_xp, result.streak);
+
             return result;
         } catch (err) {
             console.error('[useGamification] Add XP error:', err);
@@ -316,6 +319,18 @@ export function useGamification(userId: string | null) {
         ? Math.round((progress.total_xp / progress.xp_to_next_level) * 100)
         : 0;
 
+    // Check if any pets can be unlocked based on current XP/streak
+    const checkPetUnlocks = useCallback((currentXP?: number, currentStreak?: number) => {
+        const xp = currentXP ?? progress?.total_xp ?? 0;
+        const streak = currentStreak ?? progress?.current_streak ?? 0;
+
+        eventBus.emit('PET_CAN_UNLOCK' as any, {
+            userXP: xp,
+            userStreak: streak,
+            level: progress?.level ?? 1,
+        });
+    }, [progress]);
+
     // Convenience methods for common actions (memoized to prevent stale closures)
     const trackFlashcardView = useCallback(() => addXP('flashcard_viewed'), [addXP]);
     const trackQuizComplete = useCallback(() => addXP('quiz_completed'), [addXP]);
@@ -375,6 +390,9 @@ export function useGamification(userId: string | null) {
         playPet,
         changePetOutfit,
         collectSticker,
+
+        // Pet Integration
+        checkPetUnlocks,
 
         // Convenience
         trackFlashcardView,

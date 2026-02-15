@@ -33,6 +33,7 @@ from api import (
     auth_router,
     user_router,
     learning_path_router,
+    pet_router,
 )
 from api.websocket import router as websocket_router
 from api.reports import router as reports_router
@@ -179,6 +180,12 @@ app.include_router(
     learning_path_router,
     prefix=settings.API_V1_PREFIX,
     tags=["Learning Path"]
+)
+
+app.include_router(
+    pet_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Pets"]
 )
 
 logger.info("✅ All routers registered")

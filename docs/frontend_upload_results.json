@@ -1,0 +1,281 @@
+{
+  "uploaded": [
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\apple01_card.png",
+      "remote": "frontend/flashcards/apple01_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/apple01_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\banana01_card.png",
+      "remote": "frontend/flashcards/banana01_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/banana01_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\birthday01_card.png",
+      "remote": "frontend/flashcards/birthday01_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/birthday01_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\cactus01_card.png",
+      "remote": "frontend/flashcards/cactus01_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/cactus01_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\cake01_card.png",
+      "remote": "frontend/flashcards/cake01_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/cake01_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\car01_card.png",
+      "remote": "frontend/flashcards/car01_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/car01_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\ele123_card.png",
+      "remote": "frontend/flashcards/ele123_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/ele123_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\elephant_card.png",
+      "remote": "frontend/flashcards/elephant_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/elephant_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\elephent.jpg",
+      "remote": "frontend/flashcards/elephent.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/elephent.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\flower01_card.png",
+      "remote": "frontend/flashcards/flower01_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/flower01_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\jungle.jpg",
+      "remote": "frontend/flashcards/jungle.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/jungle.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\jungle_card.png",
+      "remote": "frontend/flashcards/jungle_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/jungle_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\mushroom01_card.png",
+      "remote": "frontend/flashcards/mushroom01_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/mushroom01_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\palm01_card.png",
+      "remote": "frontend/flashcards/palm01_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/palm01_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\suv01_card.png",
+      "remote": "frontend/flashcards/suv01_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/suv01_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\table.jpg",
+      "remote": "frontend/flashcards/table.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/table.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\tiger.jpg",
+      "remote": "frontend/flashcards/tiger.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/tiger.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\tree01_card.png",
+      "remote": "frontend/flashcards/tree01_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/tree01_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\flashcards\\truck01_card.png",
+      "remote": "frontend/flashcards/truck01_card.png",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/flashcards/truck01_card.png"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\apple.jpg",
+      "remote": "frontend/model2D/apple.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/apple.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\banana.jpg",
+      "remote": "frontend/model2D/banana.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/banana.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\birthday_cake.jpg",
+      "remote": "frontend/model2D/birthday_cake.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/birthday_cake.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\cactus.jpg",
+      "remote": "frontend/model2D/cactus.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/cactus.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\cake.jpg",
+      "remote": "frontend/model2D/cake.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/cake.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\car.jpg",
+      "remote": "frontend/model2D/car.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/car.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\Elephant.jpg",
+      "remote": "frontend/model2D/Elephant.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/Elephant.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\flower.jpg",
+      "remote": "frontend/model2D/flower.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/flower.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\jungle_combo.jpg",
+      "remote": "frontend/model2D/jungle_combo.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/jungle_combo.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\monster_truck.jpg",
+      "remote": "frontend/model2D/monster_truck.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/monster_truck.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\mushroom.jpg",
+      "remote": "frontend/model2D/mushroom.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/mushroom.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\oak_tree.jpg",
+      "remote": "frontend/model2D/oak_tree.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/oak_tree.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\Palm.jpg",
+      "remote": "frontend/model2D/Palm.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/Palm.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\palm_tree.jpg",
+      "remote": "frontend/model2D/palm_tree.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/palm_tree.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\model2D\\suv.jpg",
+      "remote": "frontend/model2D/suv.jpg",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/suv.jpg"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\apple.glb",
+      "remote": "frontend/models/apple.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/apple.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\banana.glb",
+      "remote": "frontend/models/banana.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/banana.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\buddy.glb",
+      "remote": "frontend/models/buddy.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/buddy.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\cactus_tall.glb",
+      "remote": "frontend/models/cactus_tall.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/cactus_tall.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\cake-birthday.glb",
+      "remote": "frontend/models/cake-birthday.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/cake-birthday.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\cake.glb",
+      "remote": "frontend/models/cake.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/cake.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\elephant cartoon.glb",
+      "remote": "frontend/models/elephant cartoon.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/elephant cartoon.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\elephant.glb",
+      "remote": "frontend/models/elephant.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/elephant.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\flower_redA.glb",
+      "remote": "frontend/models/flower_redA.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/flower_redA.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\mushroom_red.glb",
+      "remote": "frontend/models/mushroom_red.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/mushroom_red.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\palm_tree.glb",
+      "remote": "frontend/models/palm_tree.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/palm_tree.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\tree_oak.glb",
+      "remote": "frontend/models/tree_oak.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/tree_oak.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\vehicle-monster-truck.glb",
+      "remote": "frontend/models/vehicle-monster-truck.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/vehicle-monster-truck.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\vehicle-racer.glb",
+      "remote": "frontend/models/vehicle-racer.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/vehicle-racer.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\models\\vehicle-suv.glb",
+      "remote": "frontend/models/vehicle-suv.glb",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/models/vehicle-suv.glb"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\target\\combo_targets.mind",
+      "remote": "frontend/target/combo_targets.mind",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/target/combo_targets.mind"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\target\\elephant_targets.mind",
+      "remote": "frontend/target/elephant_targets.mind",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/target/elephant_targets.mind"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\target\\jungle_targets.mind",
+      "remote": "frontend/target/jungle_targets.mind",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/target/jungle_targets.mind"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\target\\elephant_nft\\elephant.fset",
+      "remote": "frontend/target/elephant_nft/elephant.fset",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/target/elephant_nft/elephant.fset"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\target\\elephant_nft\\elephant.fset3",
+      "remote": "frontend/target/elephant_nft/elephant.fset3",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/target/elephant_nft/elephant.fset3"
+    },
+    {
+      "local": "frontend-web\\public\\assets\\target\\elephant_nft\\elephant.iset",
+      "remote": "frontend/target/elephant_nft/elephant.iset",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/target/elephant_nft/elephant.iset"
+    }
+  ],
+  "failed": [],
+  "skipped": []
+}
