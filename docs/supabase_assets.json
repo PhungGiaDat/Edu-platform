@@ -1,0 +1,180 @@
+{
+  "models": [],
+  "mind_files": [],
+  "model2d": [
+    {
+      "name": "suv",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/model2d/suv.jpg"
+    }
+  ],
+  "flashcards": [
+    {
+      "name": "apple01_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/apple01_card.png"
+    },
+    {
+      "name": "banana01_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/banana01_card.png"
+    },
+    {
+      "name": "birthday01_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/birthday01_card.png"
+    },
+    {
+      "name": "cactus01_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/cactus01_card.png"
+    },
+    {
+      "name": "cake01_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/cake01_card.png"
+    },
+    {
+      "name": "car01_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/car01_card.png"
+    },
+    {
+      "name": "ele123_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/ele123_card.png"
+    },
+    {
+      "name": "elephant_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/elephant_card.png"
+    },
+    {
+      "name": "elephent",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/elephent.jpg"
+    },
+    {
+      "name": "flower01_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/flower01_card.png"
+    },
+    {
+      "name": "jungle",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/jungle.jpg"
+    },
+    {
+      "name": "jungle_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/jungle_card.png"
+    },
+    {
+      "name": "mushroom01_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/mushroom01_card.png"
+    },
+    {
+      "name": "palm01_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/palm01_card.png"
+    },
+    {
+      "name": "suv01_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/suv01_card.png"
+    },
+    {
+      "name": "table",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/table.jpg"
+    },
+    {
+      "name": "tiger",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/tiger.jpg"
+    },
+    {
+      "name": "tree01_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/tree01_card.png"
+    },
+    {
+      "name": "truck01_card",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/truck01_card.png"
+    }
+  ],
+  "pets": [
+    {
+      "name": "character-a",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-a.glb",
+      "size": 113596
+    },
+    {
+      "name": "character-b",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-b.glb",
+      "size": 113596
+    },
+    {
+      "name": "character-c",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-c.glb",
+      "size": 113580
+    },
+    {
+      "name": "character-d",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-d.glb",
+      "size": 113596
+    },
+    {
+      "name": "character-e",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-e.glb",
+      "size": 113596
+    },
+    {
+      "name": "character-f",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-f.glb",
+      "size": 113592
+    },
+    {
+      "name": "character-g",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-g.glb",
+      "size": 113596
+    },
+    {
+      "name": "character-h",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-h.glb",
+      "size": 113596
+    },
+    {
+      "name": "character-i",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-i.glb",
+      "size": 113532
+    },
+    {
+      "name": "character-j",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-j.glb",
+      "size": 113584
+    },
+    {
+      "name": "character-k",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-k.glb",
+      "size": 113596
+    },
+    {
+      "name": "character-l",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-l.glb",
+      "size": 113596
+    },
+    {
+      "name": "character-m",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-m.glb",
+      "size": 113596
+    },
+    {
+      "name": "character-n",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-n.glb",
+      "size": 113596
+    },
+    {
+      "name": "character-o",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-o.glb",
+      "size": 113596
+    },
+    {
+      "name": "character-p",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-p.glb",
+      "size": 113584
+    },
+    {
+      "name": "character-q",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-q.glb",
+      "size": 113596
+    },
+    {
+      "name": "character-r",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/pets/character-r.glb",
+      "size": 113596
+    }
+  ]
+}

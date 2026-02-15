@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { PetSelector } from '@/components/pets';
 
 // SVG Icons as components
 const BookIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
@@ -48,6 +50,17 @@ const SettingsIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" 
     </svg>
 );
 
+const PetIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {/* Paw print icon */}
+        <ellipse cx="12" cy="17" rx="4" ry="3" />
+        <circle cx="7" cy="10" r="2" />
+        <circle cx="17" cy="10" r="2" />
+        <circle cx="9" cy="6" r="1.5" />
+        <circle cx="15" cy="6" r="1.5" />
+    </svg>
+);
+
 // Icon mapping for nav items
 const iconComponents: Record<string, React.FC<{ className?: string }>> = {
     'learn': BookIcon,
@@ -55,10 +68,12 @@ const iconComponents: Record<string, React.FC<{ className?: string }>> = {
     'profile': UserIcon,
     'flashcards': FlashcardIcon,
     'settings': SettingsIcon,
+    'pets': PetIcon,
 };
 
 export const Sidebar: React.FC = () => {
     const location = useLocation();
+    const [showPetSelector, setShowPetSelector] = useState(false);
 
     const navItems = [
         { path: '/courses', label: 'Learn', iconKey: 'learn' },
@@ -97,7 +112,14 @@ export const Sidebar: React.FC = () => {
                     })}
                 </nav>
 
-                <div className="p-4 border-t-2 border-neutral-200">
+                <div className="p-4 border-t-2 border-neutral-200 space-y-2">
+                    <button 
+                        onClick={() => setShowPetSelector(true)}
+                        className="w-full flex items-center gap-4 px-4 py-3 text-neutral-500 hover:bg-primary-light/10 hover:text-primary rounded-xl font-bold min-h-[48px] transition-all"
+                    >
+                        <PetIcon className="w-6 h-6" />
+                        <span>My Pet</span>
+                    </button>
                     <button className="w-full flex items-center gap-4 px-4 py-3 text-neutral-500 hover:bg-neutral-100 rounded-xl font-bold min-h-[48px]">
                         <SettingsIcon className="w-6 h-6" />
                         <span>Settings</span>
@@ -123,8 +145,21 @@ export const Sidebar: React.FC = () => {
                             </Link>
                         );
                     })}
+                    {/* Pet Button */}
+                    <button
+                        onClick={() => setShowPetSelector(true)}
+                        className="flex flex-col items-center justify-center w-full h-full min-h-[48px] text-neutral-400 hover:text-primary transition-colors"
+                    >
+                        <PetIcon className="w-6 h-6 mb-1" />
+                    </button>
                 </div>
             </nav>
+
+            {/* Pet Selector Modal */}
+            <PetSelector 
+                isOpen={showPetSelector} 
+                onClose={() => setShowPetSelector(false)} 
+            />
         </>
     );
 };

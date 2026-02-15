@@ -3,6 +3,11 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+
+scripts
+.git
+.opencode
+.docs
 .agent
 .shared/
 # User-specific files
@@ -410,3 +415,17 @@ FodyWeavers.xsd
 .backend\.env
 .env
 .agent
+
+# 3D Model files (assets hosted on Supabase, URLs in MongoDB)
+*.glb
+*.gltf
+*.fbx
+*.obj
+*.mtl
+*.blend
+*.blend1
+
+# Model directories (if any local copies exist)
+**/models/3d/
+**/assets/models/
+**/public/models/
