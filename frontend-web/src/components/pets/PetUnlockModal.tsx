@@ -36,7 +36,7 @@ export interface PetUnlockModalProps {
 
 // ========== Confetti Configuration ==========
 
-const UNLOCK_CONFETTI = ['🎉', '✨', '🌟', '⭐', '💫', '🎊', '🐾', '💖'];
+
 
 const RARITY_CONFETTI: Record<Pet['rarity'], string[]> = {
     common: ['🎉', '✨', '⭐', '🐾', '💚'],
@@ -88,7 +88,7 @@ export const PetUnlockModal: React.FC<PetUnlockModalProps> = ({
 
             // Haptic + Sound feedback
             HapticService.levelUp();
-            SoundEffectService.play('unlock');
+            SoundEffectService.play('levelUp');
 
             // Auto-dismiss after timeout
             if (autoDismissMs > 0) {
@@ -107,7 +107,7 @@ export const PetUnlockModal: React.FC<PetUnlockModalProps> = ({
     const handleDismiss = useCallback(() => {
         HapticService.tap();
         setIsVisible(false);
-        
+
         // Wait for fade animation
         setTimeout(() => {
             onClose();
@@ -189,7 +189,7 @@ export const PetUnlockModal: React.FC<PetUnlockModalProps> = ({
                     >
                         🎉
                     </div>
-                    
+
                     {/* Sparkle effects around header */}
                     <span
                         className="absolute text-xl animate-ping"

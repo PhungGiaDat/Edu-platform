@@ -95,8 +95,8 @@ function Pet3DModel({ url, scale, enableAnimation = true, onLoad }: Pet3DModelPr
     return (
         <group ref={groupRef}>
             <Center>
-                <primitive 
-                    object={clonedScene} 
+                <primitive
+                    object={clonedScene}
                     scale={scale}
                     position={[0, 0, 0]}
                     castShadow
@@ -122,9 +122,9 @@ function LoadingFallback() {
     return (
         <mesh ref={meshRef}>
             <boxGeometry args={[0.5, 0.5, 0.5]} />
-            <meshStandardMaterial 
-                color="#60a5fa" 
-                wireframe 
+            <meshStandardMaterial
+                color="#60a5fa"
+                wireframe
             />
         </mesh>
     );
@@ -132,11 +132,10 @@ function LoadingFallback() {
 
 // ========== Loading Overlay Component ==========
 
-const LoadingOverlay: React.FC<{ rarity?: Pet['rarity'] }> = ({ rarity = 'common' }) => {
-    const config = rarityConfig[rarity];
-    
+const LoadingOverlay: React.FC<{ rarity?: Pet['rarity'] }> = ({ rarity: _rarity = 'common' }) => {
+
     return (
-        <div 
+        <div
             className="absolute inset-0 flex items-center justify-center"
             style={{
                 background: 'rgba(0,0,0,0.3)',
@@ -144,14 +143,14 @@ const LoadingOverlay: React.FC<{ rarity?: Pet['rarity'] }> = ({ rarity = 'common
             }}
         >
             <div className="text-center">
-                <div 
+                <div
                     className="w-12 h-12 mx-auto mb-3 rounded-full animate-spin"
                     style={{
                         border: '4px solid rgba(255,255,255,0.2)',
                         borderTopColor: 'white',
                     }}
                 />
-                <p 
+                <p
                     className="text-white font-medium text-sm"
                     style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
                 >
@@ -165,7 +164,7 @@ const LoadingOverlay: React.FC<{ rarity?: Pet['rarity'] }> = ({ rarity = 'common
 // ========== Error Display Component ==========
 
 const ErrorDisplay: React.FC<{ message: string }> = ({ message }) => (
-    <div 
+    <div
         className="absolute inset-0 flex items-center justify-center p-4"
         style={{
             background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
@@ -189,7 +188,7 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
     autoRotateSpeed = 2,
     showLoading = true,
     onLoad,
-    onError,
+    onError: _onError,
     background = 'gradient',
     backgroundColor,
     disableFloat = false,
@@ -205,12 +204,14 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
         onLoad?.();
     };
 
-    // Handle model load error
+    // Handle model load error  
     const handleError = (err: Error) => {
         setIsLoading(false);
         setError(err.message || 'Failed to load pet model');
-        onError?.(err);
+        _onError?.(err);
     };
+    // Preserved for future Canvas ErrorBoundary integration
+    void handleError;
 
     // Determine background style
     const getBackgroundStyle = (): React.CSSProperties => {
@@ -221,7 +222,7 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                 return { background: backgroundColor || '#1a1a2e' };
             case 'gradient':
             default:
-                return { 
+                return {
                     background: `linear-gradient(180deg, ${config.glow} 0%, rgba(0,0,0,0.4) 100%)`,
                 };
         }
@@ -230,9 +231,9 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
     // Check if model URL is valid
     if (!pet.model_url) {
         return (
-            <div 
+            <div
                 className="relative rounded-2xl overflow-hidden"
-                style={{ 
+                style={{
                     height: typeof height === 'number' ? `${height}px` : height,
                     ...getBackgroundStyle(),
                 }}
@@ -243,9 +244,9 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
     }
 
     return (
-        <div 
+        <div
             className="relative rounded-2xl overflow-hidden"
-            style={{ 
+            style={{
                 height: typeof height === 'number' ? `${height}px` : height,
                 border: '3px solid rgba(255,255,255,0.2)',
                 boxShadow: `0 8px 32px ${config.glow}`,
@@ -262,15 +263,15 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
 
             {/* 3D Canvas */}
             <Canvas
-                camera={{ 
-                    position: [0, 0.5, 4], 
+                camera={{
+                    position: [0, 0.5, 4],
                     fov: 45,
                     near: 0.1,
                     far: 100,
                 }}
                 style={{ background: 'transparent' }}
-                gl={{ 
-                    alpha: true, 
+                gl={{
+                    alpha: true,
                     antialias: true,
                     powerPreference: 'high-performance',
                 }}
@@ -281,25 +282,25 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
             >
                 {/* Lighting Setup */}
                 <ambientLight intensity={0.6} />
-                <directionalLight 
-                    position={[5, 5, 5]} 
+                <directionalLight
+                    position={[5, 5, 5]}
                     intensity={0.8}
                     castShadow
                     shadow-mapSize={[1024, 1024]}
                 />
-                <directionalLight 
-                    position={[-5, 3, -5]} 
+                <directionalLight
+                    position={[-5, 3, -5]}
                     intensity={0.4}
                 />
-                <pointLight 
-                    position={[0, 4, 0]} 
-                    intensity={0.3} 
-                    color="#fff" 
+                <pointLight
+                    position={[0, 4, 0]}
+                    intensity={0.3}
+                    color="#fff"
                 />
                 {/* Colored rim light based on rarity */}
-                <pointLight 
-                    position={[-3, 2, 3]} 
-                    intensity={0.3} 
+                <pointLight
+                    position={[-3, 2, 3]}
+                    intensity={0.3}
                     color={config.glow}
                 />
 
@@ -309,7 +310,7 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                 {/* Float wrapper for bobbing animation */}
                 {disableFloat ? (
                     <Suspense fallback={<LoadingFallback />}>
-                        <Pet3DModel 
+                        <Pet3DModel
                             url={pet.model_url}
                             scale={scale}
                             onLoad={handleLoad}
@@ -322,7 +323,7 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                         floatIntensity={0.5}
                     >
                         <Suspense fallback={<LoadingFallback />}>
-                            <Pet3DModel 
+                            <Pet3DModel
                                 url={pet.model_url}
                                 scale={scale}
                                 onLoad={handleLoad}
@@ -347,13 +348,13 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
             </Canvas>
 
             {/* Pet Name Label */}
-            <div 
+            <div
                 className="absolute bottom-2 left-2 right-2 text-center"
                 style={{ pointerEvents: 'none' }}
             >
-                <p 
+                <p
                     className="text-white font-bold text-sm"
-                    style={{ 
+                    style={{
                         textShadow: '0 2px 8px rgba(0,0,0,0.5)',
                         background: 'rgba(0,0,0,0.3)',
                         padding: '4px 8px',
@@ -366,9 +367,9 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
             </div>
 
             {/* Rarity Badge */}
-            <div 
+            <div
                 className="absolute top-2 right-2 text-2xl"
-                style={{ 
+                style={{
                     filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
                     pointerEvents: 'none',
                 }}
@@ -401,7 +402,7 @@ export const PetViewer3DCompact: React.FC<PetViewer3DCompactProps> = ({
 }) => {
     if (!modelUrl) {
         return (
-            <div 
+            <div
                 className="flex items-center justify-center bg-gray-200 rounded-lg"
                 style={{ width: size, height: size }}
             >
@@ -411,10 +412,10 @@ export const PetViewer3DCompact: React.FC<PetViewer3DCompactProps> = ({
     }
 
     return (
-        <div 
+        <div
             className="rounded-lg overflow-hidden"
-            style={{ 
-                width: size, 
+            style={{
+                width: size,
                 height: size,
                 background: 'linear-gradient(135deg, #f3f4f6 0%, #d1d5db 100%)',
             }}
@@ -426,10 +427,10 @@ export const PetViewer3DCompact: React.FC<PetViewer3DCompactProps> = ({
             >
                 <ambientLight intensity={0.8} />
                 <directionalLight position={[3, 3, 3]} intensity={0.6} />
-                
+
                 <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.3}>
                     <Suspense fallback={null}>
-                        <Pet3DModel 
+                        <Pet3DModel
                             url={modelUrl}
                             scale={scale}
                             enableAnimation={false}
