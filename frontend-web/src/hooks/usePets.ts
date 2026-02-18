@@ -66,7 +66,7 @@ export interface SetActivePetResponse {
 
 // ========== Event Types ==========
 
-export type PetEventType = 
+export type PetEventType =
     | 'PET_UNLOCKED'
     | 'PET_ACTIVATED'
     | 'PET_DEACTIVATED'
@@ -119,7 +119,7 @@ export function usePets(userId: string | null) {
 
         try {
             const response = await fetch(`${API_BASE}/api/pets/active/current?user_id=${userId}`);
-            
+
             if (response.status === 404) {
                 // No active pet
                 setActivePetState(null);
@@ -155,7 +155,7 @@ export function usePets(userId: string | null) {
 
             if (result.success && result.pet) {
                 // Update local state
-                setPets(prev => prev.map(p => 
+                setPets(prev => prev.map(p =>
                     p.pet_id === petId ? { ...p, is_unlocked: true, can_unlock: false } : p
                 ));
 
@@ -197,7 +197,7 @@ export function usePets(userId: string | null) {
                 throw new Error(errorData.detail || 'Failed to set active pet');
             }
 
-            const result = await response.json();
+            await response.json();
 
             // Update local state
             setPets(prev => prev.map(p => ({
@@ -215,7 +215,7 @@ export function usePets(userId: string | null) {
             if (newActivePet) {
                 eventBus.emit('AR_COMMAND' as any, {
                     type: 'LOAD_PET_MODEL',
-                    payload: { 
+                    payload: {
                         modelUrl: newActivePet.model_url,
                         petId: newActivePet.pet_id,
                         animations: newActivePet.animations

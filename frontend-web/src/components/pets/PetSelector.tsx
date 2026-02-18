@@ -82,7 +82,7 @@ export const PetSelector: React.FC<PetSelectorProps> = ({
         setIsVisible(false);
         HapticService.tap();
         SoundEffectService.play('click');
-        
+
         // Delay actual close for animation
         setTimeout(() => {
             onClose();
@@ -245,7 +245,7 @@ export const PetSelector: React.FC<PetSelectorProps> = ({
                                         }}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <span className="text-2xl">{selectedPet.emoji}</span>
+                                            <span className="text-2xl">{rarityConfig[selectedPet.rarity]?.badge || '🐾'}</span>
                                             <div>
                                                 <h3 className="text-xl font-bold text-white drop-shadow">
                                                     {selectedPet.name}
@@ -258,7 +258,7 @@ export const PetSelector: React.FC<PetSelectorProps> = ({
                                                             color: 'white',
                                                         }}
                                                     >
-                                                        {selectedRarityConfig?.label || selectedPet.rarity}
+                                                        {selectedPet.rarity}
                                                     </span>
                                                     {selectedPet.is_unlocked && (
                                                         <span className="text-xs text-white/80">Unlocked</span>
@@ -319,27 +319,8 @@ export const PetSelector: React.FC<PetSelectorProps> = ({
                                     {/* Pet Description */}
                                     <div className="px-5 py-4" style={{ background: 'rgba(255, 255, 255, 0.5)' }}>
                                         <p className="text-gray-700 text-sm leading-relaxed">
-                                            {selectedPet.description || `Meet ${selectedPet.name}, your adorable ${selectedPet.rarity} companion!`}
+                                            {`Meet ${selectedPet.name}, your adorable ${selectedPet.rarity} companion!`}
                                         </p>
-                                        
-                                        {/* Personality traits if available */}
-                                        {selectedPet.personality_traits && selectedPet.personality_traits.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 mt-3">
-                                                {selectedPet.personality_traits.map((trait, index) => (
-                                                    <span
-                                                        key={index}
-                                                        className="px-3 py-1 rounded-full text-xs font-medium"
-                                                        style={{
-                                                            background: `${selectedRarityConfig?.gradient[0] || '#8B5CF6'}20`,
-                                                            color: selectedRarityConfig?.gradient[0] || '#8B5CF6',
-                                                            border: `1px solid ${selectedRarityConfig?.gradient[0] || '#8B5CF6'}40`,
-                                                        }}
-                                                    >
-                                                        {trait}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             )}
