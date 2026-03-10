@@ -61,13 +61,18 @@ export const PetSelector: React.FC<PetSelectorProps> = ({
     const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
     const [isModelLoading, setIsModelLoading] = useState(false);
 
-    // Handle modal visibility animation
+    // Handle modal visibility animation and default selection
     useEffect(() => {
         if (isOpen) {
             // Small delay for slide-up animation
             requestAnimationFrame(() => {
                 setIsVisible(true);
             });
+            // Auto-select the active pet if one exists
+            const activePet = pets.find(p => p.is_active);
+            if (activePet) {
+                setSelectedPet(activePet);
+            }
             HapticService.tap();
             SoundEffectService.play('click');
         } else {
@@ -75,7 +80,7 @@ export const PetSelector: React.FC<PetSelectorProps> = ({
             // Clear selection when modal closes
             setSelectedPet(null);
         }
-    }, [isOpen]);
+    }, [isOpen, pets]);
 
     // Handle close with animation
     const handleClose = useCallback(() => {
@@ -209,139 +214,148 @@ export const PetSelector: React.FC<PetSelectorProps> = ({
                                 padding: '20px',
                             }}
                         >
-                            {/* Pet Grid with built-in filters */}
-                            <PetGrid
-                                pets={pets}
-                                selectedPetId={selectedPet?.pet_id}
-                                userXP={userXP}
-                                userStreak={userStreak}
-                                onPreview={handlePreview}
-                                onSelect={handleSetActive}
-                                onUnlock={handleUnlock}
-                                showFilters={true}
-                                compact={false}
-                            />
+                            <div className="flex flex-col md:flex-row gap-6">
+                                {/* Left Side: Grid */}
+                                <div className="flex-1 order-2 md:order-1">
+                                    <PetGrid
+                                        pets={pets}
+                                        selectedPetId={selectedPet?.pet_id}
+                                        userXP={userXP}
+                                        userStreak={userStreak}
+                                        onPreview={handlePreview}
+                                        onSelect={handleSetActive}
+                                        onUnlock={handleUnlock}
+                                        showFilters={true}
+                                        compact={false}
+                                    />
+                                </div>
 
-                            {/* 3D Preview Panel - shown when a pet is selected */}
-                            {selectedPet && (
-                                <div
-                                    className="mt-6 rounded-2xl overflow-hidden"
-                                    style={{
-                                        background: selectedRarityConfig
-                                            ? `linear-gradient(145deg, ${selectedRarityConfig.gradient[0]}15, ${selectedRarityConfig.gradient[1]}15)`
-                                            : 'linear-gradient(145deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1))',
-                                        border: `3px solid ${selectedRarityConfig?.gradient[0] || '#8B5CF6'}40`,
-                                        boxShadow: `0 4px 20px ${selectedRarityConfig?.gradient[0] || '#8B5CF6'}20`,
-                                    }}
-                                >
-                                    {/* Preview Header */}
-                                    <div
-                                        className="flex items-center justify-between px-5 py-3"
-                                        style={{
-                                            background: selectedRarityConfig
-                                                ? `linear-gradient(135deg, ${selectedRarityConfig.gradient[0]}, ${selectedRarityConfig.gradient[1]})`
-                                                : 'linear-gradient(135deg, #8B5CF6, #EC4899)',
-                                            borderBottom: '2px solid rgba(255, 255, 255, 0.3)',
-                                        }}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-2xl">{rarityConfig[selectedPet.rarity]?.badge || '🐾'}</span>
-                                            <div>
-                                                <h3 className="text-xl font-bold text-white drop-shadow">
-                                                    {selectedPet.name}
-                                                </h3>
-                                                <div className="flex items-center gap-2">
-                                                    <span
-                                                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                                                        style={{
-                                                            background: 'rgba(255, 255, 255, 0.25)',
-                                                            color: 'white',
-                                                        }}
-                                                    >
-                                                        {selectedPet.rarity}
-                                                    </span>
+                                {/* Right Side: Preview */}
+                                <div className="w-full md:w-80 lg:w-96 shrink-0 order-1 md:order-2">
+                                    <div className="sticky top-0">
+                                        {/* 3D Preview Panel - shown when a pet is selected */}
+                                        {selectedPet ? (
+                                            <div
+                                                className="rounded-2xl overflow-hidden"
+                                                style={{
+                                                    background: selectedRarityConfig
+                                                        ? `linear-gradient(145deg, ${selectedRarityConfig.gradient[0]}15, ${selectedRarityConfig.gradient[1]}15)`
+                                                        : 'linear-gradient(145deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1))',
+                                                    border: `3px solid ${selectedRarityConfig?.gradient[0] || '#8B5CF6'}40`,
+                                                    boxShadow: `0 4px 20px ${selectedRarityConfig?.gradient[0] || '#8B5CF6'}20`,
+                                                }}
+                                            >
+                                                {/* Preview Header */}
+                                                <div
+                                                    className="flex items-center justify-between px-5 py-3"
+                                                    style={{
+                                                        background: selectedRarityConfig
+                                                            ? `linear-gradient(135deg, ${selectedRarityConfig.gradient[0]}, ${selectedRarityConfig.gradient[1]})`
+                                                            : 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                                                        borderBottom: '2px solid rgba(255, 255, 255, 0.3)',
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-2xl">{rarityConfig[selectedPet.rarity]?.badge || '🐾'}</span>
+                                                        <div>
+                                                            <h3 className="text-xl font-bold text-white drop-shadow">
+                                                                {selectedPet.name}
+                                                            </h3>
+                                                            <div className="flex items-center gap-2">
+                                                                <span
+                                                                    className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                                                    style={{
+                                                                        background: 'rgba(255, 255, 255, 0.25)',
+                                                                        color: 'white',
+                                                                    }}
+                                                                >
+                                                                    {selectedPet.rarity}
+                                                                </span>
+                                                                {selectedPet.is_unlocked && (
+                                                                    <span className="text-xs text-white/80">Unlocked</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Set as Active Button */}
                                                     {selectedPet.is_unlocked && (
-                                                        <span className="text-xs text-white/80">Unlocked</span>
+                                                        <button
+                                                            onClick={handleSetActiveFromPreview}
+                                                            className="px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
+                                                            style={{
+                                                                background: 'linear-gradient(135deg, #10B981, #059669)',
+                                                                color: 'white',
+                                                                border: '2px solid rgba(255, 255, 255, 0.4)',
+                                                                boxShadow: '0 2px 10px rgba(16, 185, 129, 0.4)',
+                                                            }}
+                                                        >
+                                                            Select
+                                                        </button>
                                                     )}
                                                 </div>
-                                            </div>
-                                        </div>
 
-                                        {/* Set as Active Button */}
-                                        {selectedPet.is_unlocked && (
-                                            <button
-                                                onClick={handleSetActiveFromPreview}
-                                                className="px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
-                                                style={{
-                                                    background: 'linear-gradient(135deg, #10B981, #059669)',
-                                                    color: 'white',
-                                                    border: '2px solid rgba(255, 255, 255, 0.4)',
-                                                    boxShadow: '0 2px 10px rgba(16, 185, 129, 0.4)',
-                                                }}
-                                            >
-                                                Set as Active
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* 3D Viewer */}
-                                    <div className="relative" style={{ height: '280px' }}>
-                                        <PetViewer3D
-                                            pet={selectedPet}
-                                            height="100%"
-                                            enableControls={true}
-                                            autoRotate={true}
-                                            autoRotateSpeed={1.5}
-                                            showLoading={true}
-                                            onLoad={handleModelLoad}
-                                            background="transparent"
-                                        />
-
-                                        {/* Loading overlay */}
-                                        {isModelLoading && (
-                                            <div
-                                                className="absolute inset-0 flex items-center justify-center"
-                                                style={{
-                                                    background: 'rgba(255, 255, 255, 0.7)',
-                                                    backdropFilter: 'blur(4px)',
-                                                }}
-                                            >
-                                                <div className="text-center">
-                                                    <div
-                                                        className="w-12 h-12 rounded-full border-4 border-t-purple-500 border-r-pink-500 border-b-amber-500 border-l-transparent animate-spin mx-auto mb-2"
+                                                {/* 3D Viewer */}
+                                                <div className="relative" style={{ height: '280px' }}>
+                                                    <PetViewer3D
+                                                        pet={selectedPet}
+                                                        height="100%"
+                                                        enableControls={true}
+                                                        autoRotate={true}
+                                                        autoRotateSpeed={1.5}
+                                                        showLoading={true}
+                                                        onLoad={handleModelLoad}
+                                                        background="transparent"
                                                     />
-                                                    <p className="text-gray-600 font-medium">Loading 3D Model...</p>
+
+                                                    {/* Loading overlay */}
+                                                    {isModelLoading && (
+                                                        <div
+                                                            className="absolute inset-0 flex items-center justify-center"
+                                                            style={{
+                                                                background: 'rgba(255, 255, 255, 0.7)',
+                                                                backdropFilter: 'blur(4px)',
+                                                            }}
+                                                        >
+                                                            <div className="text-center">
+                                                                <div
+                                                                    className="w-12 h-12 rounded-full border-4 border-t-purple-500 border-r-pink-500 border-b-amber-500 border-l-transparent animate-spin mx-auto mb-2"
+                                                                />
+                                                                <p className="text-gray-600 font-medium">Loading 3D Model...</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Pet Description */}
+                                                <div className="px-5 py-4" style={{ background: 'rgba(255, 255, 255, 0.5)' }}>
+                                                    <p className="text-gray-700 text-sm leading-relaxed">
+                                                        {`Meet ${selectedPet.name}, your adorable ${selectedPet.rarity} companion!`}
+                                                    </p>
                                                 </div>
                                             </div>
+                                        ) : (
+                                            /* Empty state when no pet selected */
+                                            pets.length > 0 && (
+                                                <div
+                                                    className="rounded-2xl p-8 text-center"
+                                                    style={{
+                                                        background: 'linear-gradient(145deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.05))',
+                                                        border: '2px dashed rgba(139, 92, 246, 0.3)',
+                                                    }}
+                                                >
+                                                    <span className="text-5xl mb-3 block animate-bounce">
+                                                        👆
+                                                    </span>
+                                                    <p className="text-gray-500 font-medium">
+                                                        Tap on a pet to preview in 3D!
+                                                    </p>
+                                                </div>
+                                            )
                                         )}
                                     </div>
-
-                                    {/* Pet Description */}
-                                    <div className="px-5 py-4" style={{ background: 'rgba(255, 255, 255, 0.5)' }}>
-                                        <p className="text-gray-700 text-sm leading-relaxed">
-                                            {`Meet ${selectedPet.name}, your adorable ${selectedPet.rarity} companion!`}
-                                        </p>
-                                    </div>
                                 </div>
-                            )}
-
-                            {/* Empty state when no pet selected */}
-                            {!selectedPet && pets.length > 0 && (
-                                <div
-                                    className="mt-6 rounded-2xl p-8 text-center"
-                                    style={{
-                                        background: 'linear-gradient(145deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.05))',
-                                        border: '2px dashed rgba(139, 92, 246, 0.3)',
-                                    }}
-                                >
-                                    <span className="text-5xl mb-3 block animate-bounce">
-                                        👆
-                                    </span>
-                                    <p className="text-gray-500 font-medium">
-                                        Tap on a pet to preview in 3D!
-                                    </p>
-                                </div>
-                            )}
+                            </div>
                         </div>
                     </div>
                 </div>

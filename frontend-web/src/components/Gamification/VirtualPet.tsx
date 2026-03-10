@@ -4,6 +4,7 @@ import React from 'react';
 
 interface VirtualPetProps {
     petType?: 'bunny' | 'cat' | 'dog' | 'panda';
+    thumbnailUrl?: string;
     happiness?: number; // 0-100
     name?: string;
     onFeed?: () => void;
@@ -20,6 +21,7 @@ const PET_EMOJIS = {
 
 export const VirtualPet: React.FC<VirtualPetProps> = ({
     petType = 'bunny',
+    thumbnailUrl,
     happiness = 80,
     name = 'Buddy',
     onFeed,
@@ -42,7 +44,11 @@ export const VirtualPet: React.FC<VirtualPetProps> = ({
                     WebkitTapHighlightColor: 'transparent'
                 }}
             >
-                <span style={{ fontSize: '28px' }}>{petEmoji}</span>
+                {thumbnailUrl ? (
+                    <img src={thumbnailUrl} alt={name} className="w-8 h-8 object-contain drop-shadow" />
+                ) : (
+                    <span style={{ fontSize: '28px' }}>{petEmoji}</span>
+                )}
                 <div className="flex flex-col items-start">
                     <span className="text-white font-bold text-xs">{name}</span>
                     <div
@@ -83,7 +89,11 @@ export const VirtualPet: React.FC<VirtualPetProps> = ({
                         filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))'
                     }}
                 >
-                    {petEmoji}
+                    {thumbnailUrl ? (
+                        <img src={thumbnailUrl} alt={name} className="w-24 h-24 object-contain mx-auto" />
+                    ) : (
+                        petEmoji
+                    )}
                 </div>
                 <p className="text-white font-black text-lg drop-shadow">{name}</p>
             </div>
