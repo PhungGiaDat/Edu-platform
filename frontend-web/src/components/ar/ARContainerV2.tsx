@@ -311,9 +311,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 >
                     {/* Error Icon - SVG */}
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="15" y1="9" x2="9" y2="15"/>
-                        <line x1="9" y1="9" x2="15" y2="15"/>
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
                     </svg>
                     <p style={{ marginTop: 16 }}>{error || 'An error occurred'}</p>
                     <button
@@ -339,7 +339,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             {iframeSrc && (
                 <iframe
                     ref={iframeRef}
-                    key={phase}
+                    key={`${phase}-${mindUrl || ''}-${modelUrl || ''}`}
                     src={iframeSrc}
                     allow="camera; microphone; autoplay; fullscreen"
                     style={{

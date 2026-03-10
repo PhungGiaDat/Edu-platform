@@ -77,7 +77,11 @@ export const useArData = (qrId: string | null) => {
         const target: ARTarget = {
           tag: data.target.ar_tag,
           nft_base_url: (() => {
-            const cleanPath = data.target.nft_base_url
+            const rawPath = data.target.nft_base_url;
+            if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
+              return rawPath;
+            }
+            const cleanPath = rawPath
               .replace(/^\/public\//, '')
               .replace(/^public\//, '')
               .replace(/^\//, '');
