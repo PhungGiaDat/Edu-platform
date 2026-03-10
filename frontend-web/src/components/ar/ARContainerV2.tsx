@@ -27,6 +27,8 @@ interface ARContainerV2Props {
     mindUrl?: string;
     modelUrl?: string;
     imageUrl?: string;
+    modelUrl2?: string;
+    imageUrl2?: string;
     onPhaseChange?: (phase: ARPhase) => void;
     onQRDetected?: (qrId: string) => void;
     onTargetFound?: (targetIndex: number) => void;
@@ -42,6 +44,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     mindUrl,
     modelUrl,
     imageUrl,
+    modelUrl2,
+    imageUrl2,
     onPhaseChange,
     onQRDetected,
     onTargetFound,
@@ -66,11 +70,13 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 params.set('mind', mindUrl);
                 if (modelUrl) params.set('model', modelUrl);
                 if (imageUrl) params.set('image', imageUrl);
+                if (modelUrl2) params.set('model2', modelUrl2);
+                if (imageUrl2) params.set('image2', imageUrl2);
                 return `/ar-viewer.html?${params.toString()}`;
             default:
                 return null;
         }
-    }, [phase, mindUrl, modelUrl, imageUrl]);
+    }, [phase, mindUrl, modelUrl, imageUrl, modelUrl2, imageUrl2]);
 
     const iframeSrc = getIframeSrc();
 
@@ -339,7 +345,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             {iframeSrc && (
                 <iframe
                     ref={iframeRef}
-                    key={`${phase}-${mindUrl || ''}-${modelUrl || ''}`}
+                    key={`${phase}-${mindUrl || ''}-${modelUrl || ''}-${modelUrl2 || ''}`}
                     src={iframeSrc}
                     allow="camera; microphone; autoplay; fullscreen"
                     style={{

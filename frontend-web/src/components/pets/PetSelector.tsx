@@ -193,7 +193,7 @@ export const PetSelector: React.FC<PetSelectorProps> = ({
                             }}
                         >
                             <h2 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg">
-                                Choose Your Companion
+                                My Pet Achievements
                             </h2>
                             <button
                                 onClick={handleClose}

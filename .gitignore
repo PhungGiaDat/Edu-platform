@@ -8,7 +8,7 @@ scripts
 .git
 .opencode
 .docs
-.agent
+
 .shared/
 # User-specific files
 *.rsuser
