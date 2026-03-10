@@ -615,6 +615,7 @@
             });
         });
 
+
         // Find and hide elements containing "Loading" text
         document.querySelectorAll('div, span, p').forEach(el => {
             if (el.textContent && el.textContent.includes('Loading')) {

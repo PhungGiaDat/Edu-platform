@@ -45,13 +45,23 @@
             <a-entity id="mode-3d-0" class="clickable" position="0 0.05 0" rotation="0 0 0" scale="0.25 0.25 0.25"
                 animation__hover="property: scale; to: 0.28 0.28 0.28; dur: 200; startEvents: mouseenter"
                 animation__leave="property: scale; to: 0.25 0.25 0.25; dur: 200; startEvents: mouseleave"
-                animation__click="property: rotation; to: 0 360 0; dur: 500; startEvents: click" visible="true">
+                animation__click="property: scale; from: 0.25 0.25 0.25; to: 0.3 0.3 0.3; dir: alternate; loop: 1; dur: 150; startEvents: click"
+                visible="true">
             </a-entity>
         </a-entity>
 
         <!-- Target 1: Secondary flashcard (for combo) -->
         <a-entity id="target-1" mindar-image-target="targetIndex: 1" visible="true">
-            <a-entity id="mode-3d-1" class="clickable" position="0 0.1 0" scale="0.5 0.5 0.5" visible="true">
+            <!-- 2D Mode: Image plane -->
+            <a-image id="mode-2d-1" class="clickable" position="0 0 0" rotation="0 0 0" width="1" height="1"
+                visible="false">
+            </a-image>
+
+            <!-- 3D Mode: GLTF Model -->
+            <a-entity id="mode-3d-1" class="clickable" position="0 0.1 0" scale="0.5 0.5 0.5" visible="true"
+                animation__hover="property: scale; to: 0.55 0.55 0.55; dur: 200; startEvents: mouseenter"
+                animation__leave="property: scale; to: 0.5 0.5 0.5; dur: 200; startEvents: mouseleave"
+                animation__click="property: scale; from: 0.5 0.5 0.5; to: 0.6 0.6 0.6; dir: alternate; loop: 1; dur: 150; startEvents: click">
             </a-entity>
         </a-entity>
     </a-scene>

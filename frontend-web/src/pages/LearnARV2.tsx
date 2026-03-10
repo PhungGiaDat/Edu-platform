@@ -177,21 +177,53 @@ export default function LearnARV2() {
         }
     }, [handleProximityDetected, handleProximityEnded, handleProximityUpdate, handleComboDetected]);
 
-    const handleModelClick = useCallback((modelId: string) => {
-        console.log('[LearnARV2] Model clicked:', modelId);
+    const handleModelClick = useCallback((modelId: string, targetIndex?: number) => {
+        console.log('[LearnARV2] Model clicked:', modelId, 'Index:', targetIndex);
 
-        // Play audio
-        if (arData?.flashcard?.audio_url) {
-            const audio = new Audio(arData.flashcard.audio_url);
-            audio.play().catch(() => { });
+        // Determine which flashcard was clicked
+        let targetWord = "";
+        let audioUrl = "";
+
+        if (targetIndex === 1) {
+            const card2 = getFlashcardByIndex(1);
+            if (card2) {
+                targetWord = card2.word;
+                // Currently no direct way to get second card audio without storing it or doing another fetch, 
+                // so we rely heavily on TTS for the secondary cards
+            }
+        } else {
+            // Default to primary flashcard
+            targetWord = arData?.flashcard?.word || "";
+            audioUrl = arData?.flashcard?.audio_url || "";
         }
 
-        // Trigger "tap" animation in AR
+        console.log('[LearnARV2] Pronouncing:', targetWord);
+
+        // Play native audio URL if it exists (usually only for primary card)
+        if (audioUrl) {
+            const audio = new Audio(audioUrl);
+            audio.play().catch((err) => console.log('Audio play error:', err));
+        } else if (targetWord) {
+            // Fallback to Web Speech API TTS
+            if ('speechSynthesis' in window) {
+                // Cancel any ongoing speech
+                window.speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(targetWord);
+                utterance.lang = 'en-US'; // Adjust based on your primary lesson language
+                utterance.rate = 0.9;     // Slightly slower for kids
+                utterance.pitch = 1.1;    // Slightly higher pitched for kids
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Trigger "tap" animation in AR using AR_COMMAND (mostly for 3D mode)
         eventBus.emit('AR_COMMAND' as any, {
             type: 'TRIGGER_ANIMATION',
-            payload: { clip: 'tap', loop: false }
+            payload: { clip: 'tap', loop: false, targetId: modelId }
         });
-    }, [arData]);
+    }, [arData, getFlashcardByIndex]);
 
     // Mode toggles
     const handleDisplayModeChange = useCallback((mode: DisplayMode) => {
