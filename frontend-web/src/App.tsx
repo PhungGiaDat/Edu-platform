@@ -11,10 +11,12 @@ import { ProgressDashboard } from "./pages/ProgressDashboard";
 import { LearningPathSetup } from "./pages/LearningPathSetup";
 import { Layout } from "./components/Layout";
 import { AIChatBuddy } from "./components/AIChatBuddy";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const App = () => {
   return (
     <>
+      <SpeedInsights />
       {/* Routes */}
       <Routes>
         {/* Public Routes */}
