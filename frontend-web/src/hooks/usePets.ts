@@ -96,11 +96,13 @@ export function usePets(userId: string | null) {
             }
 
             const data: PetListResponse = await response.json();
+            console.log('[usePets] API Response Data:', data);
             setPets(data.pets);
             setStats(data.stats);
 
             // Find and set active pet
             const active = data.pets.find(p => p.is_active);
+            console.log('[usePets] Setting active pet to:', active);
             setActivePetState(active || null);
 
             eventBus.emit('PET_LIST_UPDATED' as any, { pets: data.pets, stats: data.stats });

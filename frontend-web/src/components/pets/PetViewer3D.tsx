@@ -59,6 +59,7 @@ interface Pet3DModelProps {
 
 function Pet3DModel({ url, scale, enableAnimation = true, onLoad }: Pet3DModelProps) {
     const groupRef = useRef<THREE.Group>(null);
+    console.log('[PetViewer3D] Loading GLTF model from:', url);
     const { scene, animations } = useGLTF(url);
     const mixerRef = useRef<THREE.AnimationMixer | null>(null);
 

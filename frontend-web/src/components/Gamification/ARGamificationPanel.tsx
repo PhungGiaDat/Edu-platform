@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { VirtualPet } from './VirtualPet';
 import { getApiBase } from '../../config';
+import { usePets } from '@/hooks/usePets';
 
 const API_BASE = getApiBase();
 
@@ -32,6 +33,8 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
     const [stats, setStats] = useState<UserStats | null>(null);
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [petHappiness, setPetHappiness] = useState(75);
+
+    const { activePet } = usePets(userId);
 
     // Fetch stats
     useEffect(() => {
@@ -167,9 +170,10 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
 
             {/* Pet (compact) */}
             <VirtualPet
-                petType="bunny"
+                petType={activePet?.category as any || 'bunny'}
+                thumbnailUrl={activePet?.thumbnail_url || undefined}
                 happiness={petHappiness}
-                name="Buddy"
+                name={activePet?.name || 'Buddy'}
                 onFeed={handleFeedPet}
                 compact={true}
             />
