@@ -33,7 +33,7 @@ interface ARContainerV2Props {
     onQRDetected?: (qrId: string) => void;
     onTargetFound?: (targetIndex: number) => void;
     onTargetLost?: (targetIndex: number) => void;
-    onModelClick?: (modelId: string) => void;
+    onModelClick?: (modelId: string, targetIndex?: number) => void;
     onComboDetected?: (targets: number[]) => void;
     children?: React.ReactNode;
 }
@@ -192,9 +192,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 }
 
                 case 'MODEL_CLICKED': {
-                    const data = payload as ARMessagePayloadMap['MODEL_CLICKED'];
-                    onModelClick?.(data.modelId);
-                    eventBus.emit('AR_MODEL_CLICKED' as any, { modelId: data.modelId });
+                    const data = payload as ARMessagePayloadMap['MODEL_CLICKED'] & { targetIndex?: number };
+                    onModelClick?.(data.modelId, data.targetIndex);
+                    eventBus.emit('AR_MODEL_CLICKED' as any, { modelId: data.modelId, targetIndex: data.targetIndex });
                     break;
                 }
 
