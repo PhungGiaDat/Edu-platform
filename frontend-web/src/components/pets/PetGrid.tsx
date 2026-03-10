@@ -133,7 +133,7 @@ export const PetGrid: React.FC<PetGridProps> = ({
         const { title, subtitle, emoji } = emptyMessages[filter];
 
         return (
-            <div 
+            <div
                 className="flex flex-col items-center justify-center py-12 px-4"
                 style={{
                     background: 'rgba(255,255,255,0.1)',
@@ -141,19 +141,19 @@ export const PetGrid: React.FC<PetGridProps> = ({
                     border: '2px dashed rgba(255,255,255,0.3)',
                 }}
             >
-                <div 
+                <div
                     className="text-6xl mb-4"
                     style={{ animation: 'bounce 2s infinite' }}
                 >
                     {emoji}
                 </div>
-                <h3 
+                <h3
                     className="text-xl font-bold text-white mb-2"
                     style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
                 >
                     {title}
                 </h3>
-                <p 
+                <p
                     className="text-white/70 text-center"
                     style={{ textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}
                 >
@@ -167,7 +167,7 @@ export const PetGrid: React.FC<PetGridProps> = ({
         <div className={`pet-grid-container ${className}`}>
             {/* Filter Tabs */}
             {showFilters && (
-                <div 
+                <div
                     className="flex gap-2 mb-4 p-1 rounded-2xl"
                     style={{
                         background: 'rgba(255,255,255,0.1)',
@@ -201,7 +201,7 @@ export const PetGrid: React.FC<PetGridProps> = ({
                             >
                                 <span className="text-lg">{emoji}</span>
                                 <span className="hidden sm:inline text-sm">{label}</span>
-                                <span 
+                                <span
                                     className="text-xs px-2 py-0.5 rounded-full"
                                     style={{
                                         background: isActive
@@ -219,7 +219,7 @@ export const PetGrid: React.FC<PetGridProps> = ({
 
             {/* Pet Grid */}
             {filteredPets.length > 0 ? (
-                <div 
+                <div
                     className={`
                         grid gap-4
                         grid-cols-2 
@@ -247,7 +247,7 @@ export const PetGrid: React.FC<PetGridProps> = ({
 
             {/* Stats Summary (when showing all) */}
             {activeFilter === 'all' && pets.length > 0 && (
-                <div 
+                <div
                     className="mt-6 p-4 rounded-2xl flex items-center justify-center gap-6"
                     style={{
                         background: 'rgba(255,255,255,0.1)',
@@ -260,7 +260,7 @@ export const PetGrid: React.FC<PetGridProps> = ({
                         </div>
                         <div className="text-xs text-white/60">Unlocked</div>
                     </div>
-                    <div 
+                    <div
                         className="w-px h-8"
                         style={{ background: 'rgba(255,255,255,0.2)' }}
                     />
@@ -270,12 +270,12 @@ export const PetGrid: React.FC<PetGridProps> = ({
                         </div>
                         <div className="text-xs text-white/60">Total</div>
                     </div>
-                    <div 
+                    <div
                         className="w-px h-8"
                         style={{ background: 'rgba(255,255,255,0.2)' }}
                     />
                     <div className="text-center">
-                        <div 
+                        <div
                             className="text-2xl font-bold"
                             style={{
                                 background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',

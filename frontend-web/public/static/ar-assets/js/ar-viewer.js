@@ -12,14 +12,14 @@
     const loadingText = document.getElementById('loading-text');
     const modeIndicator = document.getElementById('mode-indicator');
     const scene = document.getElementById('ar-scene');
-    
+
     // Safe helper to hide loading overlay (may not exist)
     function hideLoadingOverlay() {
         if (loadingOverlay) {
             loadingOverlay.style.display = 'none';
         }
     }
-    
+
     // Safe helper to update loading text (may not exist)
     function setLoadingText(text) {
         if (loadingText) {
@@ -31,7 +31,7 @@
     let isReady = false;
     const activeTargets = new Map();
     const COMBO_THRESHOLD = 2;
-    
+
     // Proximity detection settings
     let PROXIMITY_THRESHOLD = 0.5; // Distance in 3D units to trigger combo
     const PROXIMITY_CHECK_INTERVAL = 100; // Check every 100ms
@@ -158,19 +158,37 @@
         scene.setAttribute('mindar-image', `imageTargetSrc: ${mindUrl}; maxTrack: 2; uiLoading: no; uiScanning: no; uiError: no`);
         log('✅', 'MindAR attribute set');
 
+        const assetsEl = document.querySelector('a-assets') || document.createElement('a-assets');
+        if (!document.querySelector('a-assets')) scene.appendChild(assetsEl);
+
         if (modelUrl) {
             log('📦', 'Loading 3D model 0:', modelUrl);
-            document.getElementById('mode-3d-0').setAttribute('gltf-model', modelUrl);
+            const assetItem = document.createElement('a-asset-item');
+            assetItem.setAttribute('id', 'model-asset-0');
+            assetItem.setAttribute('src', modelUrl);
+            assetItem.setAttribute('crossorigin', 'anonymous');
+            assetsEl.appendChild(assetItem);
+            document.getElementById('mode-3d-0').setAttribute('gltf-model', '#model-asset-0');
         }
 
         if (imageUrl) {
             log('🖼️', 'Loading 2D image 0:', imageUrl);
-            document.getElementById('mode-2d-0').setAttribute('src', imageUrl);
+            const imgAsset = document.createElement('img');
+            imgAsset.setAttribute('id', 'img-asset-0');
+            imgAsset.setAttribute('src', imageUrl);
+            imgAsset.setAttribute('crossorigin', 'anonymous');
+            assetsEl.appendChild(imgAsset);
+            document.getElementById('mode-2d-0').setAttribute('src', '#img-asset-0');
         }
 
         if (modelUrl2) {
             log('📦', 'Loading 3D model 1:', modelUrl2);
-            document.getElementById('mode-3d-1').setAttribute('gltf-model', modelUrl2);
+            const assetItem2 = document.createElement('a-asset-item');
+            assetItem2.setAttribute('id', 'model-asset-1');
+            assetItem2.setAttribute('src', modelUrl2);
+            assetItem2.setAttribute('crossorigin', 'anonymous');
+            assetsEl.appendChild(assetItem2);
+            document.getElementById('mode-3d-1').setAttribute('gltf-model', '#model-asset-1');
         }
 
         log('🎧', 'Setting up event listeners...');
@@ -234,7 +252,7 @@
                 sendToParent('TARGET_LOST', {
                     targetIndex: index
                 });
-                
+
                 // Stop proximity checking if not enough targets
                 if (activeTargets.size < COMBO_THRESHOLD) {
                     stopProximityCheck();
@@ -277,7 +295,7 @@
         sendToParent('COMBO_DETECTED', {
             targets: targetIndices
         });
-        
+
         // Start proximity checking when multiple targets are visible
         startProximityCheck();
     }
@@ -288,9 +306,9 @@
      */
     function startProximityCheck() {
         if (proximityCheckTimer) return; // Already running
-        
+
         log('📏', 'Starting proximity detection');
-        
+
         proximityCheckTimer = setInterval(() => {
             checkTargetProximity();
         }, PROXIMITY_CHECK_INTERVAL);
@@ -305,7 +323,7 @@
             proximityCheckTimer = null;
             log('📏', 'Stopped proximity detection');
         }
-        
+
         // If combo was active, send end event
         if (lastProximityState) {
             lastProximityState = false;
@@ -407,7 +425,7 @@
     function triggerComboEffects(midpoint) {
         // Create or update combo effect entity
         let comboEntity = document.getElementById('combo-effect');
-        
+
         if (!comboEntity) {
             comboEntity = document.createElement('a-entity');
             comboEntity.id = 'combo-effect';
@@ -416,7 +434,7 @@
 
         // Position at midpoint
         comboEntity.setAttribute('position', `${midpoint.x} ${midpoint.y} ${midpoint.z}`);
-        
+
         // Add glowing ring effect
         comboEntity.innerHTML = `
             <a-ring 
@@ -588,7 +606,7 @@
             '.a-enter-vr',
             '.a-enter-ar'
         ];
-        
+
         selectors.forEach(selector => {
             document.querySelectorAll(selector).forEach(el => {
                 el.style.display = 'none';
@@ -596,7 +614,7 @@
                 el.style.opacity = '0';
             });
         });
-        
+
         // Find and hide elements containing "Loading" text
         document.querySelectorAll('div, span, p').forEach(el => {
             if (el.textContent && el.textContent.includes('Loading')) {
@@ -607,19 +625,19 @@
                 }
             }
         });
-        
+
         log('🧹', 'MindAR UI elements hidden');
     }
-    
+
     // Run immediately and after short delays to catch dynamic elements
     hideMindARUI();
     setTimeout(hideMindARUI, 100);
     setTimeout(hideMindARUI, 500);
     setTimeout(hideMindARUI, 1000);
-    
+
     // Also run when AR is ready
     scene.addEventListener('arReady', hideMindARUI);
-    
+
     // Watch for dynamically added elements
     const observer = new MutationObserver((mutations) => {
         let shouldHide = false;
@@ -629,7 +647,7 @@
                     const el = node;
                     const className = el.className || '';
                     const textContent = el.textContent || '';
-                    if (className.toString().includes('mindar') || 
+                    if (className.toString().includes('mindar') ||
                         className.toString().includes('loading') ||
                         textContent.includes('Loading')) {
                         shouldHide = true;
@@ -641,10 +659,10 @@
             hideMindARUI();
         }
     });
-    
-    observer.observe(document.body, { 
-        childList: true, 
-        subtree: true 
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
     });
 
     // ============ START ============

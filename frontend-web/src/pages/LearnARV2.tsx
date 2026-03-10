@@ -62,7 +62,8 @@ export default function LearnARV2() {
         handleProximityDetected,
         handleProximityEnded,
         handleProximityUpdate,
-        reset: resetMultiFlashcard
+        reset: resetMultiFlashcard,
+        getFlashcardByIndex
     } = useMultiFlashcard();
 
     // ========== DATA HOOKS ==========
@@ -91,10 +92,9 @@ export default function LearnARV2() {
         ? activeCombo.image2dUrl
         : arData?.targets?.[0]?.image_2d_url || arData?.flashcard?.image_url;
 
-    // Get second model for multi-target (target-1) - TODO: pass to ARContainerV2 when supported
-    // const model2Url = hasCombo
-    //     ? getFlashcardByIndex(1)?.model3dUrl
-    //     : undefined;
+    // Get second model for multi-target (target-1)
+    const modelUrl2 = getFlashcardByIndex(1)?.model3dUrl || arData?.targets?.[1]?.model_3d_url;
+    const imageUrl2 = getFlashcardByIndex(1)?.image2dUrl || arData?.targets?.[1]?.image_2d_url;
 
     // ========== HANDLERS ==========
     const handleQRDetected = useCallback((qrId: string) => {
@@ -267,6 +267,8 @@ export default function LearnARV2() {
                 mindUrl={mindUrl}
                 modelUrl={modelUrl}
                 imageUrl={imageUrl}
+                modelUrl2={modelUrl2}
+                imageUrl2={imageUrl2}
                 onPhaseChange={handlePhaseChange}
                 onQRDetected={handleQRDetected}
                 onTargetFound={(idx) => console.log('[LearnARV2] Target found:', idx)}

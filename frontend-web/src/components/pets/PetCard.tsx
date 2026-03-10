@@ -271,7 +271,7 @@ export const PetCard: React.FC<PetCardProps> = ({
                                 }}
                                 onClick={handleSelect}
                             >
-                                Select Pet
+                                Set Companion
                             </button>
                         )
                     ) : pet.can_unlock ? (
@@ -288,7 +288,7 @@ export const PetCard: React.FC<PetCardProps> = ({
                             }}
                             onClick={handleUnlock}
                         >
-                            ✨ Unlock Now!
+                            🏆 Claim Reward!
                         </button>
                     ) : null}
                 </div>
