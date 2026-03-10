@@ -81,16 +81,15 @@ export default function LearnARV2() {
     // Use combo mind URL when combo is active, otherwise use single flashcard
     const mindUrl = hasCombo && comboMindUrl
         ? comboMindUrl
-        : arData?.targets?.[0]?.nft_base_url?.replace(/\.(fset|fset3|iset)$/, '.mind') ||
-        '/assets/target/elephant_targets.mind';
+        : arData?.targets?.[0]?.nft_base_url?.replace(/\.(fset|fset3|iset)$/, '.mind');
 
     const modelUrl = hasCombo && activeCombo?.model3dUrl
         ? activeCombo.model3dUrl
-        : arData?.targets?.[0]?.model_3d_url || '/assets/models/elephant cartoon.glb';
+        : arData?.targets?.[0]?.model_3d_url;
 
     const imageUrl = hasCombo && activeCombo?.image2dUrl
         ? activeCombo.image2dUrl
-        : arData?.targets?.[0]?.image_2d_url || arData?.flashcard?.image_url || undefined;
+        : arData?.targets?.[0]?.image_2d_url || arData?.flashcard?.image_url;
 
     // Get second model for multi-target (target-1) - TODO: pass to ARContainerV2 when supported
     // const model2Url = hasCombo
