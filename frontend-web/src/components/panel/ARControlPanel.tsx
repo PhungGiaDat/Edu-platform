@@ -170,6 +170,21 @@ const ARControlPanel: React.FC<Props> = ({
           <span>Quiz</span>
         </button>
 
+        {/* Speak / Pronunciation Button */}
+        <button
+          onClick={() => handleModeSwitch('SPEAK')}
+          disabled={disabled}
+          aria-label="Pronunciation practice"
+          style={getButtonStyle(
+            appMode === 'SPEAK',
+            'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+            '#d97706'
+          )}
+        >
+          <span style={{ fontSize: '22px', marginBottom: '2px' }}>🎤</span>
+          <span>Speak</span>
+        </button>
+
         {/* Exit Button (if handler provided) */}
         {onExit && (
           <button
@@ -217,6 +232,8 @@ const ARControlPanel: React.FC<Props> = ({
               ? 'linear-gradient(135deg, #4ECDC4, #44A08D)'
               : appMode === 'GAME'
               ? 'linear-gradient(135deg, #FF6B6B, #FF8E53)'
+              : appMode === 'SPEAK'
+              ? 'linear-gradient(135deg, #f59e0b, #d97706)'
               : 'linear-gradient(135deg, #a855f7, #7c3aed)',
             borderRadius: '12px',
             color: '#fff',
@@ -230,6 +247,7 @@ const ARControlPanel: React.FC<Props> = ({
           {appMode === 'LEARNING' && '📚 Learning Mode'}
           {appMode === 'GAME' && '🎮 Game Mode'}
           {appMode === 'QUIZ' && '🎯 Quiz Mode'}
+          {appMode === 'SPEAK' && '🎤 Speak Mode'}
         </span>
       </div>
     </div>

@@ -16,36 +16,47 @@ from datetime import datetime
 class Flashcard(Document):
     """
     Flashcard Document - stored in MongoDB
-    
+
     Collection: flashcards
     """
     qr_id: Indexed(str, unique=True)  # Unique identifier for QR code
     word: str
     translation: Dict[str, str] = Field(
-        ..., 
+        ...,
         description="Translations in different languages, e.g., {'en': 'hello', 'vi': 'xin chào'}"
     )
     definition: Optional[str] = None  # Text description for embedding generation
     category: str
     image_url: str
+
+    # Supabase public URL format:
+    # https://<project>.supabase.co/storage/v1/object/public/audio/<filename>.mp3
     audio_url: Optional[str] = None
+
     difficulty: str = Field(default="easy")  # easy, medium, hard
     ar_tag: Optional[str] = None  # Reference to AR target/marker
-    
+
+    # Animation hint for Flashcard.tsx component.
+    # "bounce" → animate-bounce (Tailwind)
+    # "pulse"  → animate-pulse (Tailwind)
+    # "wiggle" → custom CSS keyframe (±15deg rotation)
+    # None     → static image; brief bounce plays on tap
+    image_animation_type: Optional[str] = None
+
     # AI Vector Embedding (768 dimensions for Gemini embedding-001)
     vector_embedding: Optional[List[float]] = None
-    
+
     # Metadata
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
-    
+
     class Settings:
         name = "flashcards"  # MongoDB collection name
         indexes = [
             "category",
             "difficulty"
         ]
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -53,10 +64,11 @@ class Flashcard(Document):
                 "word": "apple",
                 "translation": {"en": "apple", "vi": "quả táo"},
                 "category": "fruits",
-                "image_url": "/static/images/apple.png",
-                "audio_url": "/static/audio/apple.mp3",
+                "image_url": "https://<project>.supabase.co/storage/v1/object/public/images/apple.png",
+                "audio_url": "https://<project>.supabase.co/storage/v1/object/public/audio/apple.mp3",
                 "difficulty": "easy",
-                "ar_tag": "apple_marker"
+                "ar_tag": "apple_marker",
+                "image_animation_type": "bounce"
             }
         }
 
@@ -70,9 +82,10 @@ class FlashcardCreate(BaseModel):
     definition: Optional[str] = None  # Text for AI embedding
     category: str
     image_url: str
-    audio_url: Optional[str] = None
+    audio_url: Optional[str] = None           # Supabase URL
     difficulty: str = "easy"
     ar_tag: Optional[str] = None
+    image_animation_type: Optional[str] = None  # "bounce" | "pulse" | "wiggle" | None
 
 
 class FlashcardUpdate(BaseModel):
@@ -82,9 +95,10 @@ class FlashcardUpdate(BaseModel):
     definition: Optional[str] = None
     category: Optional[str] = None
     image_url: Optional[str] = None
-    audio_url: Optional[str] = None
+    audio_url: Optional[str] = None           # Supabase URL
     difficulty: Optional[str] = None
     ar_tag: Optional[str] = None
+    image_animation_type: Optional[str] = None
 
 
 class FlashcardResponse(BaseModel):
@@ -99,8 +113,9 @@ class FlashcardResponse(BaseModel):
     audio_url: Optional[str] = None
     difficulty: str
     ar_tag: Optional[str] = None
+    image_animation_type: Optional[str] = None
     has_embedding: bool = False  # Indicates if vector_embedding exists
-    
+
     class Config:
         from_attributes = True
         populate_by_name = True
@@ -120,6 +135,7 @@ class FlashcardSchema(BaseModel):
     audio_url: Optional[str] = None
     difficulty: str
     ar_tag: Optional[str] = None
-    
+    image_animation_type: Optional[str] = None
+
     class Config:
         populate_by_name = True

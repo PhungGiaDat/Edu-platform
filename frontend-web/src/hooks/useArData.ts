@@ -18,6 +18,7 @@ interface Flashcard {
   ar_tag: string;
   difficulty: string;
   created_at: string;
+  image_animation_type?: string | null;
 }
 
 interface ArData {

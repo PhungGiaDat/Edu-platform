@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # ========== Application ==========
     APP_NAME: str = "Eduplatform AR API"
     DEBUG: bool = False
-    API_V1_PREFIX: str = "/api"
+    API_V1_PREFIX: str = "/api/v1"
     
     # ========== CORS ==========
     ALLOWED_ORIGINS: str = "*"  # Comma-separated list

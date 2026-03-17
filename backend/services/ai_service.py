@@ -196,19 +196,35 @@ Hãy trả lời câu hỏi của bé dựa trên context trên."""
         response = await chain.ainvoke({"context": context, "question": message})
         return response
 
-    async def analyze_pronunciation(self, text: str, audio_transcription: str) -> Dict[str, Any]:
+    async def analyze_pronunciation(self, text: str, audio_transcription: str, score: int = -1) -> Dict[str, Any]:
         """
         Analyze pronunciation by comparing target text with transcribed audio.
-        Returns score and feedback.
+        Returns structured JSON with message, emoji and stars when score is provided.
+        Falls back to plain-text feedback otherwise.
         """
         if not self.llm:
             return {"score": 0, "feedback": "AI not configured"}
 
+        if score >= 0:
+            # Structured JSON mode — used by /pronunciation/ai-feedback endpoint
+            star_rule = "stars=3 if score>=90, stars=2 if score>=70, stars=1 otherwise"
+            structured_prompt = (
+                f"The child was asked to say: '{text}'. They said: '{audio_transcription}'. "
+                f"Score: {score}/100.\n"
+                "Reply with ONLY valid JSON, no markdown:\n"
+                '{"message": "<10 words max, encouraging>", "emoji": "<1-3 emojis>", "stars": <1|2|3>}\n'
+                f"Rule: {star_rule}. Never criticise. Always encourage."
+            )
+            prompt = PromptTemplate.from_template("{q}")
+            chain = prompt | self.llm | self.output_parser
+            response = await chain.ainvoke({"q": structured_prompt})
+            return {"feedback": response}
+
+        # Legacy plain-text mode
         prompt = ChatPromptTemplate.from_messages([
             ("system", "You are a pronunciation coach for children. Be encouraging and helpful."),
             ("human", "Compare the target sentence '{target}' with the spoken sentence '{actual}'. Rate the pronunciation accuracy from 0-100 and provide simple feedback for a child.")
         ])
-        
         chain = prompt | self.llm | self.output_parser
         response = await chain.ainvoke({"target": text, "actual": audio_transcription})
         return {"feedback": response}
