@@ -21,11 +21,9 @@
  * - PronunciationGame upgraded with Gemini AI feedback + backend XP logging
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, Suspense, lazy } from 'react';
 import { ARContainerV2, ARPhase } from '@/components/ar/ARContainerV2';
 import ARControlPanel from '@/components/panel/ARControlPanel';
-import { QuizOverlay } from '@/components/Quiz';
-import { GameOverlay } from '@/components/GameOverlay';
 import { ARGamificationPanel } from '@/components/Gamification/ARGamificationPanel';
 import { RewardCelebration } from '@/components/Gamification/RewardCelebration';
 import { ErrorFriendly } from '@/components/ErrorFriendly';
@@ -47,6 +45,10 @@ import type { GameDifficulty, GameType } from '@/types';
 
 const API_BASE = getApiBase();
 const USER_ID = 'demo-user';
+
+// Lazy-load heavy overlay components to reduce initial bundle
+const QuizOverlay = lazy(() => import('@/components/Quiz').then(m => ({ default: m.QuizOverlay })));
+const GameOverlay = lazy(() => import('@/components/GameOverlay').then(m => ({ default: m.GameOverlay })));
 
 // Session limits (in minutes)
 const SESSION_LIMIT_MINS = 30;
@@ -326,6 +328,127 @@ function PronunciationOverlay({ word, audioUrl, flashcardQrId, onClose }: Pronun
 }
 
 
+// ========== PET CHAT POPUP ==========
+// Shown when user taps the pet in ARGamificationPanel
+
+function PetChatPopup({ petName, word, onClose }: { petName: string; word: string; onClose: () => void }) {
+    const [message, setMessage] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [displayed, setDisplayed] = useState('');
+
+    useEffect(() => {
+        let cancelled = false;
+        const fetchMessage = async () => {
+            setLoading(true);
+            setDisplayed('');
+            try {
+                const prompt = word
+                    ? `You are ${petName}, a friendly pet. The student just learned '${word}'. Say something fun and encouraging in 1 short sentence.`
+                    : `You are ${petName}, a friendly learning pet. Say a short, fun encouraging message to a student in 1 sentence.`;
+                const res = await fetch(`${API_BASE}/api/v1/chat/rag`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: prompt, session_id: 'pet-chat' }),
+                });
+                if (!res.ok) throw new Error('Chat failed');
+                const data = await res.json();
+                if (!cancelled) setMessage(data.response || 'Keep learning! You are doing great!');
+            } catch {
+                if (!cancelled) setMessage('You are doing amazing! Keep it up!');
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        };
+        fetchMessage();
+        return () => { cancelled = true; };
+    }, [petName, word]);
+
+    // Typewriter effect
+    useEffect(() => {
+        if (loading || !message) return;
+        let i = 0;
+        setDisplayed('');
+        const interval = setInterval(() => {
+            i++;
+            setDisplayed(message.slice(0, i));
+            if (i >= message.length) clearInterval(interval);
+        }, 28);
+        return () => clearInterval(interval);
+    }, [loading, message]);
+
+    return (
+        <div
+            style={{
+                position: 'fixed',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                zIndex: 500,
+                background: 'rgba(0,0,0,0.45)',
+            }}
+            onClick={onClose}
+        >
+            <div
+                onClick={e => e.stopPropagation()}
+                style={{
+                    background: 'linear-gradient(180deg, #e0f2fe 0%, #f0fdf4 100%)',
+                    borderRadius: '24px 24px 0 0',
+                    padding: '24px 20px max(24px, env(safe-area-inset-bottom))',
+                    width: '100%',
+                    maxWidth: 460,
+                    textAlign: 'center',
+                    boxShadow: '0 -8px 40px rgba(0,0,0,0.2)',
+                    border: '3px solid #bae6fd',
+                    borderBottom: 'none',
+                }}
+            >
+                <div style={{ fontSize: 56, marginBottom: 8 }}>
+                    {petName === 'Buddy' ? '🐰' : '🐾'}
+                </div>
+                <p style={{ fontWeight: 800, fontSize: 18, color: '#0369a1', marginBottom: 12 }}>
+                    {petName} says...
+                </p>
+                <div style={{
+                    background: '#fff',
+                    borderRadius: 16,
+                    padding: '14px 18px',
+                    minHeight: 60,
+                    border: '2px solid #7dd3fc',
+                    fontSize: 16,
+                    fontWeight: 600,
+                    color: '#1e293b',
+                    lineHeight: 1.5,
+                }}>
+                    {loading ? (
+                        <span style={{ color: '#94a3b8' }}>Thinking...</span>
+                    ) : (
+                        displayed || '\u00A0'
+                    )}
+                </div>
+                <button
+                    onClick={onClose}
+                    style={{
+                        marginTop: 16,
+                        padding: '10px 28px',
+                        background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)',
+                        border: 'none',
+                        borderRadius: 20,
+                        color: '#fff',
+                        fontWeight: 700,
+                        fontSize: 15,
+                        cursor: 'pointer',
+                        minHeight: 44,
+                    }}
+                >
+                    Thanks!
+                </button>
+            </div>
+        </div>
+    );
+}
+
+
 // ========== MAIN COMPONENT ==========
 export default function LearnARV2() {
 
@@ -340,6 +463,9 @@ export default function LearnARV2() {
     // Mirror showBreakReminder in a ref so the unmount cleanup reads the latest value
     // (the cleanup effect has an empty dep array and would otherwise capture a stale false)
     const showBreakReminderRef = useRef(false);
+
+    // Pet chat popup state
+    const [petChat, setPetChat] = useState<{ petName: string; word: string } | null>(null);
 
     // Track whether the AR target marker is visible (for 2D overlay)
     const [markerFound, setMarkerFound] = useState(false);
@@ -612,6 +738,15 @@ export default function LearnARV2() {
         return () => window.removeEventListener('message', handleARMessage);
     }, [handleARMessage]);
 
+    // Pet chat popup — listen for tap on pet in ARGamificationPanel
+    useEffect(() => {
+        const handler = (data: { petName: string; word: string }) => {
+            setPetChat(data);
+        };
+        eventBus.on('PET_CHAT_OPEN' as any, handler);
+        return () => eventBus.off('PET_CHAT_OPEN' as any, handler);
+    }, []);
+
     // ========== RENDER ==========
     return (
         <div className="learn-ar-v2" style={{ position: 'fixed', inset: 0 }}>
@@ -694,12 +829,16 @@ export default function LearnARV2() {
 
             {/* Quiz Overlay */}
             {appState === 'QUIZ' && quizData && (
-                <QuizOverlay quizSession={quizData} onExit={handleExitQuiz} />
+                <Suspense fallback={null}>
+                    <QuizOverlay quizSession={quizData} onExit={handleExitQuiz} />
+                </Suspense>
             )}
 
             {/* Game Overlay */}
             {appState === 'GAME' && gameData && (
-                <GameOverlay gameSession={gameData} onExit={handleExitGame} />
+                <Suspense fallback={null}>
+                    <GameOverlay gameSession={gameData} onExit={handleExitGame} />
+                </Suspense>
             )}
 
             {/* Game Selector */}
@@ -788,6 +927,15 @@ export default function LearnARV2() {
                 onExtend={handleBreakExtend}
                 onExit={handleBreakExit}
             />
+
+            {/* Pet Chat Popup — shown when user taps the pet */}
+            {petChat && (
+                <PetChatPopup
+                    petName={petChat.petName}
+                    word={petChat.word}
+                    onClose={() => setPetChat(null)}
+                />
+            )}
 
             {/* Global Animations */}
             <style>{`

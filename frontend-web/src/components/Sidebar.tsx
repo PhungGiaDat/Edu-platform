@@ -1,7 +1,4 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { PetSelector } from '@/components/pets';
-import { usePets } from '@/hooks/usePets';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 // SVG Icons as components
 const BookIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
@@ -74,15 +71,7 @@ const iconComponents: Record<string, React.FC<{ className?: string }>> = {
 
 export const Sidebar: React.FC = () => {
     const location = useLocation();
-    const [showPetSelector, setShowPetSelector] = useState(false);
-
-    // Pet system integration
-    const {
-        pets,
-        unlockPet,
-        setActivePet,
-        recentlyUnlocked,
-    } = usePets('demo-user');
+    const navigate = useNavigate();
 
     const navItems = [
         { path: '/courses', label: 'Learn', iconKey: 'learn' },
@@ -123,7 +112,7 @@ export const Sidebar: React.FC = () => {
 
                 <div className="p-4 border-t-2 border-neutral-200 space-y-2">
                     <button
-                        onClick={() => setShowPetSelector(true)}
+                        onClick={() => navigate('/pets')}
                         className="w-full flex items-center gap-4 px-4 py-3 text-neutral-500 hover:bg-primary-light/10 hover:text-primary rounded-xl font-bold min-h-[48px] transition-all"
                     >
                         <PetIcon className="w-6 h-6" />
@@ -156,23 +145,13 @@ export const Sidebar: React.FC = () => {
                     })}
                     {/* Pet Button */}
                     <button
-                        onClick={() => setShowPetSelector(true)}
+                        onClick={() => navigate('/pets')}
                         className="flex flex-col items-center justify-center w-full h-full min-h-[48px] text-neutral-400 hover:text-primary transition-colors"
                     >
                         <PetIcon className="w-6 h-6 mb-1" />
                     </button>
                 </div>
             </nav>
-
-            {/* Pet Selector Modal */}
-            <PetSelector
-                isOpen={showPetSelector}
-                onClose={() => setShowPetSelector(false)}
-                pets={pets}
-                onUnlock={(petId) => unlockPet(petId)}
-                onSetActive={(petId) => setActivePet(petId)}
-                recentlyUnlockedPet={recentlyUnlocked}
-            />
         </>
     );
 };
