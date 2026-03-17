@@ -106,7 +106,7 @@ const GlobalPetUnlockNotifier: React.FC = () => {
   useEffect(() => {
     const handleCanUnlock = async (_data: { userXP: number; userStreak: number; level: number }) => {
       try {
-        const res = await fetch(`${API_BASE}/api/pets?user_id=${USER_ID}`);
+        const res = await fetch(`${API_BASE}/api/v1/pets?user_id=${USER_ID}`);
         if (!res.ok) return;
         const { pets: freshPets } = await res.json();
 
@@ -160,6 +160,13 @@ const ConditionalAIChatBuddy: React.FC = () => {
 // ========== App ==========
 
 const App = () => {
+  // Fire-and-forget warmup ping to wake Render free-tier from cold-start sleep.
+  // This runs once on first page load so the backend is warmed by the time
+  // the user navigates to any data-fetching page.
+  useEffect(() => {
+    fetch(`${API_BASE}/health`).catch(() => {/* ignore — best-effort warmup */});
+  }, []);
+
   return (
     <>
       <SpeedInsights />

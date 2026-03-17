@@ -6,8 +6,27 @@ import { getApiBase } from '../config';
 
 const API_BASE = getApiBase();
 
+// ── localStorage cache helpers ──────────────────────────────────────────────
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+function getCached<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { data, ts } = JSON.parse(raw) as { data: T; ts: number };
+    if (Date.now() - ts > CACHE_TTL) { localStorage.removeItem(key); return null; }
+    return data;
+  } catch { return null; }
+}
+
+function setCache(key: string, data: unknown): void {
+  try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); } catch { /* quota exceeded — ignore */ }
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 /**
- * Hook to fetch quiz questions from backend
+ * Hook to fetch quiz questions from backend.
+ * Serves cached data instantly (<10 min TTL), then revalidates in background.
  */
 export function useQuizData(qrId: string | null) {
   const [quizData, setQuizData] = useState<QuizSessionData | null>(null);
@@ -20,10 +39,10 @@ export function useQuizData(qrId: string | null) {
       return;
     }
 
-    const fetchQuizData = async () => {
-      console.log('📚 [useQuizData] Fetching quiz for QR:', qrId);
-      setIsLoading(true);
-      setError(null);
+    const cacheKey = `quiz:${qrId}`;
+
+    const fetchQuizData = async (showLoading: boolean) => {
+      if (showLoading) { setIsLoading(true); setError(null); }
 
       try {
         const response = await fetch(`${API_BASE}/api/v1/quiz/${qrId}`);
@@ -36,20 +55,27 @@ export function useQuizData(qrId: string | null) {
         }
 
         const data: QuizSessionData = await response.json();
-        console.log('✅ [useQuizData] Quiz loaded:', data);
+        setCache(cacheKey, data);
         setQuizData(data);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        console.error('❌ [useQuizData] Error:', errorMessage);
-        setError(errorMessage);
-        setQuizData(null);
+        // Only surface the error when there's no cached data to show
+        if (!quizData) setError(errorMessage);
       } finally {
-        setIsLoading(false);
+        if (showLoading) setIsLoading(false);
       }
     };
 
-    fetchQuizData();
-  }, [qrId]);
+    // Serve cache immediately; skip the loading spinner if we have fresh data
+    const cached = getCached<QuizSessionData>(cacheKey);
+    if (cached) {
+      setQuizData(cached);
+      // Revalidate silently in background (no loading indicator)
+      fetchQuizData(false);
+    } else {
+      fetchQuizData(true);
+    }
+  }, [qrId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { quizData, isLoading, error };
 }
