@@ -68,7 +68,7 @@ async def generate_embeddings_for_flashcards():
             # Generate embedding
             embedding = await ai_service.generate_embedding(text_for_embedding)
             
-            if embedding and len(embedding) == 768:
+            if embedding and len(embedding) == 3072:
                 # Save to database
                 success = await flashcard_repo.update_embedding(qr_id, embedding)
                 
@@ -103,24 +103,28 @@ async def generate_embeddings_for_flashcards():
 
 async def main():
     """Main entry point"""
-    logger.info("🚀 Starting embedding generation...")
-    logger.info(f"📦 Database: {settings.MONGO_DB}")
-    
+    logger.info("Starting embedding generation...")
+    logger.info(f"Database: {settings.MONGO_DB}")
+
     try:
-        # Test database connection
-        if await db_manager.ping():
-            logger.info("✅ MongoDB connected")
-        else:
-            logger.error("❌ MongoDB connection failed!")
+        # Test database connectivity directly (bypass Beanie ping which
+        # requires init_mongodb to have been called — not needed here
+        # because BaseRepository uses Motor via db_manager._db directly).
+        try:
+            await db_manager.database.command("ping")
+            logger.info("MongoDB connected")
+        except Exception as e:
+            logger.error(f"MongoDB connection failed: {e}")
             return
-        
+
         # Generate embeddings
         await generate_embeddings_for_flashcards()
-        
+
     finally:
-        # Cleanup
-        await db_manager.close()
-        logger.info("🔌 Database connection closed")
+        # Cleanup Motor client only (no Beanie to close)
+        if db_manager._client:
+            db_manager._client.close()
+        logger.info("Database connection closed")
 
 
 if __name__ == "__main__":

@@ -218,7 +218,10 @@ class FlashcardRepository(BaseRepository):
             List of flashcard documents without embeddings
         """
         cursor = self.collection.find(
-            {"vector_embedding": {"$exists": False}},
+            {"$or": [
+                {"vector_embedding": {"$exists": False}},
+                {"vector_embedding": None}
+            ]},
             {"_id": 1, "qr_id": 1, "word": 1, "definition": 1, "translation": 1}
         ).limit(limit)
         

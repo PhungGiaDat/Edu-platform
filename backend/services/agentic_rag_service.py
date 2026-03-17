@@ -24,7 +24,7 @@ import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
-import google.generativeai as genai
+from google import genai as google_genai
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -110,8 +110,8 @@ class AgenticRAGService:
          "3. Mức độ khó phù hợp (difficulty: easy/medium/hard)\n"
          "4. Ngôn ngữ trả lời (vi/en/bilingual)\n"
          "Chỉ trả lời JSON, ví dụ:\n"
-         '{"topic":"animals","keywords":["elephant","animal","jungle"],'
-         '"difficulty":"easy","language":"bilingual"}\n'
+         '{{"topic":"animals","keywords":["elephant","animal","jungle"],'
+         '"difficulty":"easy","language":"bilingual"}}\n'
          "Dữ liệu tiến trình:\n{progress_summary}"
         ),
         ("human", "Câu hỏi: {question}")
@@ -156,9 +156,8 @@ class AgenticRAGService:
         api_key = settings.GOOGLE_API_KEY
         if not api_key:
             return None
-        genai.configure(api_key=api_key)
         return ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             google_api_key=api_key,
             temperature=0.4,
         )
@@ -167,7 +166,7 @@ class AgenticRAGService:
 
     async def _get_cache(self, key: str) -> Optional[Dict[str, Any]]:
         try:
-            db = db_manager.db
+            db = db_manager.database
             if db is None:
                 return None
             doc = await db[CACHE_COLLECTION].find_one(
@@ -182,7 +181,7 @@ class AgenticRAGService:
 
     async def _set_cache(self, key: str, payload: Dict[str, Any]) -> None:
         try:
-            db = db_manager.db
+            db = db_manager.database
             if db is None:
                 return
             await db[CACHE_COLLECTION].update_one(
@@ -205,7 +204,7 @@ class AgenticRAGService:
         if not user_id:
             return "Chưa có dữ liệu tiến trình (khách vãng lai)."
         try:
-            db = db_manager.db
+            db = db_manager.database
             if db is None:
                 return "Không thể truy cập dữ liệu tiến trình."
             cursor = db[LEARNING_PROGRESS_COLLECTION].find(
@@ -233,7 +232,7 @@ class AgenticRAGService:
     async def _get_recent_history(self, session_id: str, limit: int = 5) -> str:
         """Fetch recent AI responses for the Validator to check for duplicates."""
         try:
-            db = db_manager.db
+            db = db_manager.database
             if db is None:
                 return "Không có lịch sử."
             cursor = db[CHAT_LOG_COLLECTION].find(
@@ -322,13 +321,13 @@ class AgenticRAGService:
         context_flashcards: List[Dict[str, Any]] = []
         if api_key:
             try:
-                genai.configure(api_key=api_key)
-                embed_result = genai.embed_content(
-                    model="models/embedding-001",
-                    content=search_query,
-                    task_type="retrieval_query"
+                genai_client = google_genai.Client(api_key=api_key)
+                embed_result = genai_client.models.embed_content(
+                    model="models/gemini-embedding-001",
+                    contents=search_query,
+                    config={"task_type": "RETRIEVAL_QUERY"}
                 )
-                query_vector = embed_result["embedding"]
+                query_vector = list(embed_result.embeddings[0].values)
                 context_flashcards = await flashcard_repo.vector_search(
                     query_vector=query_vector,
                     limit=3
