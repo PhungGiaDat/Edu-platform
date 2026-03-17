@@ -27,8 +27,6 @@ import {
 export type ARPhase = 'IDLE' | 'SCANNING' | 'LOADING' | 'VIEWING' | 'ERROR'
     | 'GAME_DRAG' | 'GAME_MEMORY' | 'GAME_COLORING';
 
-const MAX_CARDS = 3;
-
 interface ARContainerV2Props {
     initialPhase?: ARPhase;
     mindUrl?: string;
@@ -36,7 +34,7 @@ interface ARContainerV2Props {
     imageUrl?: string;
     modelUrl2?: string;
     imageUrl2?: string;
-    /** Number of flashcards already loaded — hides PiP when >= MAX_CARDS */
+    /** Number of flashcards already loaded — kept for parent API compatibility */
     cardCount?: number;
     onPhaseChange?: (phase: ARPhase) => void;
     onQRDetected?: (qrId: string) => void;
@@ -55,7 +53,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     imageUrl,
     modelUrl2,
     imageUrl2,
-    cardCount = 1,
+    cardCount: _cardCount,   // accepted for API compatibility, not used internally
     onPhaseChange,
     onQRDetected,
     onTargetFound,
