@@ -16,6 +16,11 @@
   <!-- Performance: preconnect to Google Fonts CDN before CSS @import fires -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Performance: early DNS resolution + TCP connection to Render API backend.
+       Reduces cold-connection latency on first API call (quiz, AR data, pets). -->
+  <link rel="preconnect" href="https://edu-platform-api-do20.onrender.com" />
+  <link rel="dns-prefetch" href="https://edu-platform-api-do20.onrender.com" />
 </head>
 
 <body>

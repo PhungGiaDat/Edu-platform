@@ -27,6 +27,16 @@ export default defineConfig(({ mode }) => {
       '**/*.flist'
     ],
     build: {
+      // Use terser to strip all console.log/debugger calls from production bundle.
+      // The project has 200+ console.log calls across AR/game/pet code — removing
+      // them shaves meaningful parse/execution time on iOS Safari.
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true,
+          drop_debugger: true,
+        },
+      },
       rollupOptions: {
         output: {
           manualChunks: (id) => {

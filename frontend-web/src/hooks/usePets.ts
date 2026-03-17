@@ -90,7 +90,7 @@ export function usePets(userId: string | null) {
         setError(null);
 
         try {
-            const response = await fetch(`${API_BASE}/api/pets?user_id=${userId}`);
+            const response = await fetch(`${API_BASE}/api/v1/pets?user_id=${userId}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch pets');
             }
@@ -120,7 +120,7 @@ export function usePets(userId: string | null) {
         if (!userId) return null;
 
         try {
-            const response = await fetch(`${API_BASE}/api/pets/active/current?user_id=${userId}`);
+            const response = await fetch(`${API_BASE}/api/v1/pets/active/current?user_id=${userId}`);
 
             if (response.status === 404) {
                 // No active pet
@@ -148,7 +148,7 @@ export function usePets(userId: string | null) {
         }
 
         try {
-            const response = await fetch(`${API_BASE}/api/pets/${petId}/unlock?user_id=${userId}`, {
+            const response = await fetch(`${API_BASE}/api/v1/pets/${petId}/unlock?user_id=${userId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -188,7 +188,7 @@ export function usePets(userId: string | null) {
         }
 
         try {
-            const response = await fetch(`${API_BASE}/api/pets/active?user_id=${userId}`, {
+            const response = await fetch(`${API_BASE}/api/v1/pets/active?user_id=${userId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pet_id: petId })
@@ -237,7 +237,7 @@ export function usePets(userId: string | null) {
         if (!userId) return false;
 
         try {
-            const response = await fetch(`${API_BASE}/api/pets/active?user_id=${userId}`, {
+            const response = await fetch(`${API_BASE}/api/v1/pets/active?user_id=${userId}`, {
                 method: 'DELETE'
             });
 

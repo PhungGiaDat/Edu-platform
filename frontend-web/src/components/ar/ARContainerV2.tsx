@@ -68,12 +68,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     const [error, setError] = useState<string | null>(null);
     const [isReady, setIsReady] = useState(false);
 
-    // PiP scanner state
-    const [showPiP, setShowPiP] = useState(true);
-    const [pipExpanded, setPipExpanded] = useState(false);
-
     const iframeRef = useRef<HTMLIFrameElement>(null);       // main iframe
-    const pipRef    = useRef<HTMLIFrameElement>(null);       // PiP scanner iframe
+    const pipRef    = useRef<HTMLIFrameElement>(null);       // background scanner iframe (invisible)
 
     // ========== VIEWER SRC ==========
     const getViewerSrc = useCallback(() => {
@@ -96,9 +92,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         }
     })();
 
-    // PiP scanner shown only during VIEWING and when there's room for more cards
-    const pipVisible = phase === 'VIEWING' && showPiP && cardCount < MAX_CARDS;
-
     // ========== PHASE TRANSITIONS ==========
     const transitionTo = useCallback((newPhase: ARPhase) => {
         console.log(`[ARContainerV2] Phase: ${phase} → ${newPhase}`);
@@ -106,10 +99,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         onPhaseChange?.(newPhase);
         eventBus.emit('AR_PHASE_CHANGED' as any, { phase: newPhase });
 
-        // When entering VIEWING, reset PiP to visible
+        // When entering VIEWING, background scanner iframe auto-mounts (no state needed)
         if (newPhase === 'VIEWING') {
-            setShowPiP(true);
-            setPipExpanded(false);
+            // nothing extra — pipRef iframe mounts automatically when phase === 'VIEWING'
         }
     }, [phase, onPhaseChange]);
 
@@ -201,9 +193,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                         setError(data.error);
                         transitionTo('ERROR');
                     } else {
-                        // PiP error is non-fatal — just hide the PiP
-                        console.warn('[ARBridge] PiP scanner error (non-fatal):', data.error);
-                        setShowPiP(false);
+                        // Background scanner error is non-fatal — log and ignore
+                        console.warn('[ARBridge] Background scanner error (non-fatal):', data.error);
                     }
                     break;
                 }
@@ -289,7 +280,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         };
         const handleResumeScan = () => {
             sendToScanner('RESUME_SCANNING');
-            if (phase === 'VIEWING') setShowPiP(true);
         };
 
         eventBus.on('AR_SWITCH_TO_VIEWER'  as any, handleSwitchToViewer);
@@ -315,14 +305,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             return () => clearTimeout(t);
         }
     }, [phase, mindUrl, transitionTo]);
-
-    // ========== AUTO-HIDE PiP WHEN MAX CARDS REACHED ==========
-    useEffect(() => {
-        if (cardCount >= MAX_CARDS) setShowPiP(false);
-    }, [cardCount]);
-
-    // ========== RENDER ==========
-    const pipSize = pipExpanded ? 200 : 120;
 
     return (
         <div
@@ -398,147 +380,27 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 />
             )}
 
-            {/* ── PiP scanner (only during VIEWING, top-left corner) ── */}
+            {/* ── Background scanner (invisible, full-size, behind main viewer) ── */}
+            {/* Always mounted during VIEWING so camera stays alive for second-card detection.
+                opacity:0 + pointerEvents:none + zIndex:0 keeps it fully hidden behind the viewer. */}
             {phase === 'VIEWING' && (
-                <>
-                    {/* Always keep the iframe mounted during VIEWING so camera stays alive;
-                        just toggle visibility to avoid killing the stream */}
-                    <iframe
-                        ref={pipRef}
-                        key="pip-scanner"
-                        src="/ar-scanner.html"
-                        allow="camera; microphone; autoplay"
-                        style={{
-                            position: 'absolute',
-                            top: 16,
-                            left: 16,
-                            width:  pipVisible ? pipSize : 0,
-                            height: pipVisible ? pipSize : 0,
-                            border: 'none',
-                            borderRadius: pipVisible ? (pipExpanded ? 16 : '50%') : 0,
-                            overflow: 'hidden',
-                            zIndex: 200,
-                            opacity: pipVisible ? 1 : 0,
-                            pointerEvents: pipVisible ? 'auto' : 'none',
-                            transition: 'width 0.25s ease, height 0.25s ease, opacity 0.2s ease, border-radius 0.25s ease',
-                            boxShadow: pipVisible ? '0 4px 20px rgba(0,0,0,0.6)' : 'none',
-                        }}
-                    />
-
-                    {/* PiP controls overlay (only when visible) */}
-                    {pipVisible && (
-                        <div
-                            style={{
-                                position: 'absolute',
-                                top: 16,
-                                left: 16,
-                                width: pipSize,
-                                height: pipSize,
-                                zIndex: 201,
-                                pointerEvents: 'none',
-                            }}
-                        >
-                            {/* Expand/collapse toggle — top-right of PiP */}
-                            <button
-                                onClick={() => setPipExpanded(e => !e)}
-                                style={{
-                                    position: 'absolute',
-                                    top: 4,
-                                    right: 4,
-                                    width: 24,
-                                    height: 24,
-                                    borderRadius: '50%',
-                                    background: 'rgba(0,0,0,0.55)',
-                                    border: 'none',
-                                    color: '#fff',
-                                    fontSize: 12,
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    pointerEvents: 'auto',
-                                }}
-                                title={pipExpanded ? 'Shrink' : 'Expand'}
-                            >
-                                {pipExpanded ? '−' : '+'}
-                            </button>
-
-                            {/* Dismiss button — bottom-right of PiP */}
-                            <button
-                                onClick={() => setShowPiP(false)}
-                                style={{
-                                    position: 'absolute',
-                                    bottom: 4,
-                                    right: 4,
-                                    width: 24,
-                                    height: 24,
-                                    borderRadius: '50%',
-                                    background: 'rgba(0,0,0,0.55)',
-                                    border: 'none',
-                                    color: '#fff',
-                                    fontSize: 14,
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    pointerEvents: 'auto',
-                                }}
-                                title="Hide scanner"
-                            >
-                                ×
-                            </button>
-
-                            {/* Label at bottom of PiP */}
-                            {pipExpanded && (
-                                <div
-                                    style={{
-                                        position: 'absolute',
-                                        bottom: 8,
-                                        left: '50%',
-                                        transform: 'translateX(-50%)',
-                                        background: 'rgba(0,0,0,0.65)',
-                                        color: '#fff',
-                                        fontSize: 10,
-                                        fontWeight: 700,
-                                        borderRadius: 999,
-                                        padding: '2px 8px',
-                                        whiteSpace: 'nowrap',
-                                        pointerEvents: 'none',
-                                    }}
-                                >
-                                    Card {cardCount}/{MAX_CARDS}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* "Scan more" re-show button — only when PiP is hidden and more cards allowed */}
-                    {!showPiP && cardCount < MAX_CARDS && (
-                        <button
-                            onClick={() => {
-                                setShowPiP(true);
-                                sendToPiP('RESUME_SCANNING');
-                            }}
-                            style={{
-                                position: 'absolute',
-                                top: 16,
-                                left: 16,
-                                background: 'rgba(0,0,0,0.65)',
-                                border: '2px solid rgba(255,255,255,0.3)',
-                                borderRadius: 12,
-                                color: '#fff',
-                                fontSize: 12,
-                                fontWeight: 700,
-                                padding: '8px 12px',
-                                cursor: 'pointer',
-                                zIndex: 202,
-                                backdropFilter: 'blur(4px)',
-                            }}
-                        >
-                            📷 Scan more
-                        </button>
-                    )}
-                </>
+                <iframe
+                    ref={pipRef}
+                    key="pip-scanner"
+                    src="/ar-scanner.html"
+                    allow="camera; microphone; autoplay"
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        zIndex: 0,           // behind main viewer (zIndex: 1)
+                        opacity: 0,
+                        pointerEvents: 'none',
+                    }}
+                />
             )}
 
             {/* ── UI Overlays (children) ── */}
