@@ -12,6 +12,9 @@
 import React, { useState, useRef, useEffect, Suspense, lazy } from 'react';
 import { ChatService, RAGChatResponse } from '../services/ChatService';
 import type { PetType, EvolutionStage, PetMood } from './Gamification/VirtualPetEvolved';
+import { usePets } from '@/hooks/usePets';
+
+const USER_ID = 'demo-user';
 
 // Lazy load the 3D pet component for performance
 const Pet3D = lazy(() => import('./Gamification/Pet3D'));
@@ -45,11 +48,21 @@ const getMood = (happiness: number): PetMood => {
 };
 
 export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ 
-    userId, 
+    userId = USER_ID, 
     initialOpen = false,
-    pet = { type: 'bunny', stage: 'child', happiness: 80 },
+    pet: petProp,
     show3DPet = true
 }) => {
+    const { activePet } = usePets(userId);
+
+    // Derive pet state from the active pet (fallback to prop or default)
+    const pet: PetState = petProp ?? (activePet
+        ? {
+            type: (activePet.category as PetType) || 'bunny',
+            stage: 'child' as EvolutionStage,
+            happiness: 80,
+          }
+        : { type: 'bunny', stage: 'child', happiness: 80 });
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [show3D, setShow3D] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
@@ -165,7 +178,7 @@ return (
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={`
-                    fixed bottom-6 right-6 z-50
+                    fixed bottom-20 right-4 md:bottom-6 md:right-6
                     w-16 h-16 rounded-full
                     bg-gradient-to-br from-sky-400 to-cyan-500
                     shadow-lg shadow-cyan-500/40
@@ -177,7 +190,7 @@ return (
                     ${show3D ? 'bg-opacity-90' : ''}
                 `}
                 style={{
-                    // When 3D pet is showing, make button slightly transparent to see pet
+                    zIndex: 'var(--z-chatbot)' as any,
                     background: show3D 
                         ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.85), rgba(6, 182, 212, 0.85))'
                         : undefined
@@ -191,15 +204,19 @@ return (
             {isOpen && (
                 <div
                     className={`
-                        fixed bottom-24 right-6 z-50
-                        w-[90vw] max-w-[380px] h-[500px]
-                        bg-gray-50
-                        rounded-3xl shadow-2xl
-                        border border-gray-200
+                        fixed right-4 md:right-6
+                        w-[92vw] max-w-[380px] h-[500px]
+                        clay-card
                         flex flex-col overflow-hidden
                         animate-slideUp
                     `}
-                    style={{ fontFamily: "'Quicksand', sans-serif" }}
+                    style={{
+                        bottom: 144,
+                        zIndex: 'var(--z-chatbot)' as any,
+                        fontFamily: "'Nunito Sans', 'Quicksand', sans-serif",
+                        background: 'var(--color-surface)',
+                        border: '3px solid var(--color-border)',
+                    }}
                 >
                     {/* Header */}
                     <div className="bg-gradient-to-r from-sky-400 to-cyan-500 p-4 flex items-center justify-between">
@@ -224,7 +241,7 @@ return (
                     </div>
 
                     {/* Messages Container */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ background: 'var(--color-surface-soft)' }}>
                         {messages.map((msg) => (
                             <div
                                 key={msg.id}

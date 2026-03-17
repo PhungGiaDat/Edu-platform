@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import FlashcardPage from "./pages/FlashcardPage";
 import LearnARV2 from "./pages/LearnARV2";
 import { CourseList } from "./pages/CourseList";
@@ -17,6 +17,7 @@ import { PetUnlockModal } from "./components/pets";
 import { eventBus } from "./runtime/EventBus";
 import { usePets, type Pet } from "./hooks/usePets";
 import { getApiBase } from "./config";
+import PetsPage from "./pages/PetsPage";
 
 // ========== Global Pet Unlock Notifier ==========
 // Listens to PET_CAN_UNLOCK (XP gate met) and PET_UNLOCKED (after actual unlock)
@@ -147,6 +148,15 @@ const GlobalPetUnlockNotifier: React.FC = () => {
   );
 };
 
+// ========== Conditional AI Chat Buddy ==========
+// Suppressed on /learn-ar to avoid z-index conflicts with AR overlays
+
+const ConditionalAIChatBuddy: React.FC = () => {
+  const location = useLocation();
+  if (location.pathname === '/learn-ar') return null;
+  return <AIChatBuddy />;
+};
+
 // ========== App ==========
 
 const App = () => {
@@ -169,11 +179,12 @@ const App = () => {
         <Route path="/progress" element={<Layout><ProgressDashboard /></Layout>} />
         <Route path="/learning-path" element={<Layout><LearningPathSetup /></Layout>} />
 
+        <Route path="/pets" element={<Layout><PetsPage /></Layout>} />
         <Route path="/scan" element={<Navigate to="/learn-ar" replace />} />
       </Routes>
 
-      {/* Global AI Chat Buddy - Floating on all pages */}
-      <AIChatBuddy />
+      {/* Global AI Chat Buddy - Hidden on AR page to avoid z-index conflicts */}
+      <ConditionalAIChatBuddy />
 
       {/* Global Pet Unlock Celebration Modal */}
       <GlobalPetUnlockNotifier />

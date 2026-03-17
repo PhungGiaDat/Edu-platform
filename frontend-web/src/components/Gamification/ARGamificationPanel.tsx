@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { VirtualPet } from './VirtualPet';
 import { getApiBase } from '../../config';
 import { usePets } from '@/hooks/usePets';
+import { eventBus } from '@/runtime/EventBus';
 
 const API_BASE = getApiBase();
 
@@ -23,11 +24,13 @@ interface LeaderboardEntry {
 interface ARGamificationPanelProps {
     userId?: string;
     onFeedPet?: () => void;
+    onPetClick?: () => void;
 }
 
 export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
     userId = 'demo-user',
-    onFeedPet
+    onFeedPet,
+    onPetClick
 }) => {
     const [showLeaderboard, setShowLeaderboard] = useState(false);
     const [stats, setStats] = useState<UserStats | null>(null);
@@ -92,7 +95,7 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
         <div
             className="fixed bottom-4 right-4 flex flex-col items-end gap-2"
             style={{
-                zIndex: 150000,
+                zIndex: 400,
                 pointerEvents: 'auto'
             }}
         >
@@ -168,15 +171,25 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
                 </button>
             )}
 
-            {/* Pet (compact) */}
-            <VirtualPet
-                petType={activePet?.category as any || 'bunny'}
-                thumbnailUrl={activePet?.thumbnail_url || undefined}
-                happiness={petHappiness}
-                name={activePet?.name || 'Buddy'}
-                onFeed={handleFeedPet}
-                compact={true}
-            />
+            {/* Pet (compact) — tap to open chat */}
+            <div
+                onClick={() => {
+                    const petName = activePet?.name || 'Buddy';
+                    eventBus.emit('PET_CHAT_OPEN' as any, { petName, word: '' });
+                    onPetClick?.();
+                }}
+                style={{ cursor: 'pointer' }}
+                title={`Chat with ${activePet?.name || 'Buddy'}`}
+            >
+                <VirtualPet
+                    petType={activePet?.category as any || 'bunny'}
+                    thumbnailUrl={activePet?.thumbnail_url || undefined}
+                    happiness={petHappiness}
+                    name={activePet?.name || 'Buddy'}
+                    onFeed={handleFeedPet}
+                    compact={true}
+                />
+            </div>
         </div>
     );
 };

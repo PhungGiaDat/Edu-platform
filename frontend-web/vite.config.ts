@@ -26,6 +26,26 @@ export default defineConfig(({ mode }) => {
       '**/*.mind',
       '**/*.flist'
     ],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            // Three.js ecosystem — split into its own chunk to reduce main bundle
+            if (id.includes('node_modules/three') || 
+                id.includes('node_modules/@react-three')) {
+              return 'three-vendor';
+            }
+            // React core — isolated for long-term caching
+            if (id.includes('node_modules/react') ||
+                id.includes('node_modules/react-dom') ||
+                id.includes('node_modules/react-router')) {
+              return 'react-vendor';
+            }
+          }
+        }
+      }
+    },
+
     server: {
       host: '0.0.0.0',
       port: 5173,
