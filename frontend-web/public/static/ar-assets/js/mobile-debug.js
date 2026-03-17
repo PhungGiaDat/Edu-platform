@@ -231,6 +231,31 @@
         }
     };
 
+    // ========== INTERCEPT postMessage FROM IFRAMES ==========
+    // The React bundle uses drop_console:true in production, stripping all
+    // console.* calls. But iframe→parent postMessage events still fire.
+    // We intercept them here so the debug panel shows AR iframe communication
+    // even when React's own logging is absent.
+    window.addEventListener('message', function (event) {
+        try {
+            const data = event.data;
+            if (data && typeof data === 'object' && data.type) {
+                const typeStr = String(data.type);
+                // Only show AR-related messages to avoid noise
+                const arTypes = [
+                    'SCANNER_READY', 'QR_DETECTED', 'SCANNER_ERROR',
+                    'AR_READY', 'TARGET_FOUND', 'TARGET_LOST',
+                    'SYSTEM_READY', 'SYSTEM_ERROR', 'AR_ERROR',
+                    'MULTI_TARGET_DETECTED', 'MODEL_CLICKED',
+                ];
+                if (arTypes.includes(typeStr)) {
+                    const payload = JSON.stringify(data, null, 1);
+                    addLog('info', [`📨 [iframe→parent] ${typeStr}`, payload]);
+                }
+            }
+        } catch (_e) { /* ignore parse errors */ }
+    });
+
     // Initial log
     console.log('🔧 Mobile Debug Panel Ready');
     console.log('📱 User Agent:', navigator.userAgent);

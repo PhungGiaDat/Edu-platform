@@ -13,8 +13,18 @@
     let lastDetectedCode = null;
     let detectionCooldown = false;
 
+    // ============ STATUS OVERLAY HELPER ============
+    const statusEl = document.getElementById('scanner-status');
+    function setStatus(msg, color) {
+        if (statusEl) {
+            statusEl.textContent = msg;
+            if (color) statusEl.style.color = color;
+        }
+    }
+
     // ============ CAMERA INIT ============
     async function initCamera() {
+        setStatus('⏳ Requesting camera...', '#0f0');
         try {
             const constraints = {
                 video: {
@@ -27,11 +37,15 @@
 
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
             video.srcObject = stream;
+            setStatus('📸 Camera granted, waiting for video...', '#0f0');
 
             video.onloadedmetadata = () => {
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 log('📷', `Camera ready: ${video.videoWidth}x${video.videoHeight}`);
+                setStatus('✅ Camera ready - scan a QR code', '#0f0');
+                // Hide status after 3s once camera is confirmed working
+                setTimeout(function() { if (statusEl) statusEl.style.display = 'none'; }, 3000);
                 startScanning();
 
                 sendToParent('SCANNER_READY', {
@@ -41,6 +55,7 @@
             };
         } catch (err) {
             log('❌', 'Camera error: ' + err.message);
+            setStatus('❌ Camera error: ' + err.message, '#f55');
             sendToParent('SCANNER_ERROR', { error: err.message });
         }
     }
