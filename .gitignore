@@ -6,8 +6,9 @@
 
 scripts
 .git
-.opencode
+
 .docs
+
 
 .shared/
 # User-specific files
