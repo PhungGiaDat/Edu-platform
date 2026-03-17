@@ -17,6 +17,34 @@
     <video id="video" autoplay playsinline muted></video>
     <canvas id="canvas"></canvas>
 
+    <!-- Status overlay: shown only when ?debug=true, removed once camera is ready -->
+    <div id="scanner-status" style="
+        display: none;
+        position: fixed;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.75);
+        color: #0f0;
+        font-family: monospace;
+        font-size: 12px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        z-index: 9999;
+        pointer-events: none;
+        white-space: nowrap;
+    ">⏳ Requesting camera...</div>
+
+    <script>
+        // Show status overlay only in debug mode
+        (function() {
+            var params = new URLSearchParams(window.location.search);
+            if (params.get('debug') === 'true') {
+                document.getElementById('scanner-status').style.display = 'block';
+            }
+        })();
+    </script>
+
     <!-- External JS -->
     <script src="/static/ar-assets/js/ar-scanner.js"></script>
 </body>
