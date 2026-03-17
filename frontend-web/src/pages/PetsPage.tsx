@@ -94,9 +94,7 @@ function PetCard({
                             }
                         >
                             <PetViewer3D
-                                modelUrl={pet.model_url}
-                                thumbnailUrl={pet.thumbnail_url || undefined}
-                                petName={pet.name}
+                                pet={pet}
                                 autoRotate={false}
                                 enableControls={false}
                             />
@@ -257,9 +255,7 @@ function PetCareTab({ activePet, onFeed, onPlay }: {
                         }
                     >
                         <PetViewer3D
-                            modelUrl={activePet.model_url}
-                            thumbnailUrl={activePet.thumbnail_url || undefined}
-                            petName={activePet.name}
+                            pet={activePet}
                             autoRotate={true}
                             enableControls={true}
                         />

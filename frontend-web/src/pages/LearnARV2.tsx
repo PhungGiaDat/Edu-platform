@@ -758,6 +758,7 @@ export default function LearnARV2() {
                 imageUrl={imageUrl}
                 modelUrl2={modelUrl2}
                 imageUrl2={imageUrl2}
+                cardCount={flashcardCount}
                 onPhaseChange={handlePhaseChange}
                 onQRDetected={handleQRDetected}
                 onTargetFound={(idx) => { console.log('[LearnARV2] Target found:', idx); if (idx === 0) setMarkerFound(true); }}
