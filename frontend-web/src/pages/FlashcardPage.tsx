@@ -1,17 +1,255 @@
+// frontend-web/src/pages/FlashcardPage.tsx
+// Fetches all flashcards from /api/v1/flashcards and renders a scrollable grid.
+// Tap any card to select it; a collapsible Practice panel appears below with
+// PronunciationPractice and buttons for the 4 game types.
+// Falls back to a single demo card if the API is offline.
+
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import Flashcard from "../components/Flashcard";
+import { PronunciationPractice } from "../components/PronunciationPractice";
+import { getApiBase } from "../config";
 import jungle from "../../public/assets/flashcards/jungle.jpg";
 
+// -------- Types --------
+
+interface FlashcardData {
+  id?: string;
+  _id?: string;
+  word: string;
+  translation?: string;
+  image_url?: string;
+  audio_url?: string;
+  ar_tag?: string;
+  category?: string;
+  image_animation_type?: string;
+}
+
+type GameType = "drag_match" | "catch_word" | "word_scramble" | "memory_match";
+
+const GAME_LABELS: Record<GameType, { label: string; emoji: string; color: string }> = {
+  drag_match:    { label: "Drag Match",    emoji: "🖐️",  color: "#6366f1" },
+  catch_word:    { label: "Catch Word",    emoji: "🎯",  color: "#f59e0b" },
+  word_scramble: { label: "Word Scramble", emoji: "🔀",  color: "#10b981" },
+  memory_match:  { label: "Memory Match",  emoji: "🧠",  color: "#ec4899" },
+};
+
+const DEMO_CARD: FlashcardData = {
+  word: "jungle",
+  translation: "rừng rậm",
+  image_url: jungle as string,
+  audio_url: undefined,
+  ar_tag: "tree_palm_02",
+  image_animation_type: undefined,
+};
+
+const BG_FALLBACK =
+  "https://cdn.pixabay.com/photo/2016/11/14/03/22/elephant-1822636_1280.jpg";
+
+const API_BASE = getApiBase();
+const USER_ID = "demo-user"; // replaced by real auth when available
+
+// -------- Component --------
+
 const FlashcardPage = () => {
-  return (
-    <div className="h-full w-full flex items-center justify-center py-8 px-4 bg-white/90 backdrop-blur-sm">
-      <div className="transform hover:scale-105 transition-transform duration-300 ease-in-out">
-        <Flashcard
-          word="jungle"
-          imgUrl={jungle}
-          qrData="tree_palm_02"
-          bgUrl="https://cdn.pixabay.com/photo/2016/11/14/03/22/elephant-1822636_1280.jpg"
-        />
+  const navigate = useNavigate();
+  const [cards, setCards] = useState<FlashcardData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCard, setSelectedCard] = useState<FlashcardData | null>(null);
+  const [practiceOpen, setPracticeOpen] = useState(false);
+  const [startingGame, setStartingGame] = useState(false);
+
+  // Fetch flashcards from API
+  useEffect(() => {
+    let cancelled = false;
+    const fetchCards = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/flashcards`, {
+          signal: AbortSignal.timeout(6000),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const list: FlashcardData[] = Array.isArray(data)
+          ? data
+          : data.flashcards ?? data.items ?? [];
+        if (!cancelled) {
+          setCards(list.length > 0 ? list : [DEMO_CARD]);
+        }
+      } catch {
+        if (!cancelled) setCards([DEMO_CARD]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    fetchCards();
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleCardClick = useCallback((card: FlashcardData) => {
+    setSelectedCard(card);
+    setPracticeOpen(true);
+  }, []);
+
+  const handlePronunciationComplete = useCallback(
+    async (score: number) => {
+      if (!selectedCard) return;
+      // POST attempt to backend to award XP
+      try {
+        await fetch(`${API_BASE}/api/v1/pronunciation/attempt`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: USER_ID,
+            flashcard_qr_id: selectedCard.ar_tag ?? selectedCard.word,
+            spoken_text: selectedCard.word, // browser speech transcription
+            score,
+          }),
+        });
+      } catch {
+        // non-blocking — XP loss is acceptable if network is down
+      }
+    },
+    [selectedCard]
+  );
+
+  const handleStartGame = useCallback(
+    async (gameType: GameType) => {
+      if (!selectedCard || startingGame) return;
+      setStartingGame(true);
+      try {
+        const qrId = selectedCard.ar_tag ?? selectedCard.word;
+        const res = await fetch(
+          `${API_BASE}/api/v1/game/start?type=${gameType}&flashcard_id=${qrId}&user_id=${USER_ID}`,
+          { method: "POST" }
+        );
+        if (res.ok) {
+          navigate(`/game?type=${gameType}&flashcard_id=${qrId}`);
+        }
+      } catch {
+        // If the game endpoint isn't available, navigate anyway so UI isn't stuck
+        navigate(`/game?type=${gameType}`);
+      } finally {
+        setStartingGame(false);
+      }
+    },
+    [selectedCard, startingGame, navigate]
+  );
+
+  if (loading) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-5xl mb-4 animate-bounce">📚</div>
+          <p className="text-blue-700 font-bold text-lg">Loading flashcards...</p>
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-full w-full bg-white/90 backdrop-blur-sm py-8 px-4">
+      {/* Header */}
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-black text-blue-800">Flashcards</h1>
+        <p className="text-blue-600 text-sm mt-1">Tap a card to practice pronunciation!</p>
+      </div>
+
+      {/* Card grid */}
+      <div className="flex flex-wrap justify-center gap-6 mb-8">
+        {cards.map((card, idx) => {
+          const cardId = card.id ?? card._id ?? `card-${idx}`;
+          const isSelected = selectedCard
+            ? (selectedCard.id ?? selectedCard._id ?? selectedCard.word) ===
+              (card.id ?? card._id ?? card.word)
+            : false;
+
+          return (
+            <button
+              key={cardId}
+              onClick={() => handleCardClick(card)}
+              className={`focus:outline-none rounded-2xl transition-transform duration-200
+                ${isSelected ? "ring-4 ring-yellow-400 scale-105" : "hover:scale-105"}`}
+              aria-label={`Select ${card.word} flashcard`}
+            >
+              <Flashcard
+                word={card.word}
+                bgUrl={BG_FALLBACK}
+                imgUrl={card.image_url ?? jungle as string}
+                qrData={card.ar_tag ?? card.word}
+                audioUrl={card.audio_url}
+                imageAnimationType={card.image_animation_type}
+                translation={card.translation}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Practice panel — collapsible */}
+      {selectedCard && practiceOpen && (
+        <div className="max-w-md mx-auto rounded-3xl shadow-2xl overflow-hidden"
+          style={{ border: "4px solid #60a5fa" }}>
+          {/* Panel header */}
+          <div
+            className="flex items-center justify-between px-5 py-3 cursor-pointer"
+            style={{ background: "linear-gradient(135deg, #3b82f6, #6366f1)" }}
+            onClick={() => setPracticeOpen(false)}
+          >
+            <span className="text-white font-black text-lg">
+              Practice: {selectedCard.word.toUpperCase()}
+            </span>
+            <span className="text-white text-xl">▲</span>
+          </div>
+
+          {/* Pronunciation */}
+          <div className="p-4" style={{ background: "#eff6ff" }}>
+            <PronunciationPractice
+              targetText={selectedCard.word}
+              imageUrl={selectedCard.image_url}
+              audioUrl={selectedCard.audio_url}
+              onComplete={handlePronunciationComplete}
+            />
+          </div>
+
+          {/* Game buttons */}
+          <div className="px-4 pb-5" style={{ background: "#eff6ff" }}>
+            <p className="text-center font-bold text-blue-700 text-sm mb-3">
+              Or play a mini-game!
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {(Object.entries(GAME_LABELS) as [GameType, (typeof GAME_LABELS)[GameType]][]).map(
+                ([type, meta]) => (
+                  <button
+                    key={type}
+                    onClick={() => handleStartGame(type)}
+                    disabled={startingGame}
+                    className="flex items-center gap-2 rounded-2xl px-4 py-3 font-bold text-white text-sm
+                      shadow-md active:scale-95 transition-transform disabled:opacity-60"
+                    style={{ background: meta.color }}
+                  >
+                    <span className="text-xl">{meta.emoji}</span>
+                    <span>{meta.label}</span>
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Collapsed tab — reopen practice panel */}
+      {selectedCard && !practiceOpen && (
+        <div className="fixed bottom-4 left-0 right-0 flex justify-center z-40">
+          <button
+            onClick={() => setPracticeOpen(true)}
+            className="rounded-full px-6 py-3 font-black text-white shadow-xl text-sm
+              active:scale-95 transition-transform"
+            style={{ background: "linear-gradient(135deg, #3b82f6, #6366f1)" }}
+          >
+            🎤 Practice {selectedCard.word.toUpperCase()} ▼
+          </button>
+        </div>
+      )}
     </div>
   );
 };

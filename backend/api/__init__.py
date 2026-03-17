@@ -13,6 +13,9 @@ from .auth import router as auth_router
 from .user import router as user_router
 from .learning_path import router as learning_path_router
 from .pets import router as pet_router
+from .combos import router as combos_router
+from .pronunciation import router as pronunciation_router
+from .sessions import router as sessions_router
 
 __all__ = [
     "flashcard_router",
@@ -25,5 +28,8 @@ __all__ = [
     "user_router",
     "learning_path_router",
     "pet_router",
+    "combos_router",
+    "pronunciation_router",
+    "sessions_router",
 ]
 

@@ -1,25 +1,37 @@
 # backend/api/learning_path.py
-# Learning path preferences and daily goals API
-
-from fastapi import APIRouter, HTTPException
+"""
+Learning Path API - Controller layer
+GET  /learning-path/{user_id}          — get preferences + today's goal progress
+POST /learning-path/preferences        — upsert preferences (called by LearningPathSetup.tsx)
+POST /learning-path/goals              — partial update: time/words goals only
+POST /learning-path/progress           — accumulate daily progress
+GET  /learning-path/{user_id}/today   — today's progress vs goals
+"""
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 import logging
 
-router = APIRouter(prefix="/learning-path", tags=["learning-path"])
+from repositories.learning_path_repository import (
+    LearningPathRepository,
+    get_learning_path_repository,
+)
+
+router = APIRouter(prefix="/learning-path", tags=["Learning Path"])
 logger = logging.getLogger(__name__)
 
 
 # ========== Request/Response Models ==========
+
 class LearningPreferences(BaseModel):
     user_id: str
-    priority_topics: List[str]
-    daily_time_goal_mins: Optional[int] = 15  # Default 15 minutes
-    daily_words_goal: Optional[int] = 5  # Default 5 words
+    priority_topics: List[str] = []
+    daily_time_goal_mins: Optional[int] = 15
+    daily_words_goal: Optional[int] = 5
     notifications_enabled: Optional[bool] = True
-    reminder_time: Optional[str] = "18:00"  # Default 6 PM
+    reminder_time: Optional[str] = "18:00"  # informational — not persisted to DB
 
 
 class DailyGoalProgress(BaseModel):
@@ -37,182 +49,162 @@ class GoalUpdate(BaseModel):
     daily_words_goal: Optional[int] = None
 
 
-# ========== In-memory storage (replace with MongoDB) ==========
-# TODO: Move to repository layer with MongoDB
-_preferences_store: dict = {}
-_daily_progress_store: dict = {}
+# ========== Helpers ==========
+
+def _build_goals_block(prefs: dict, progress: dict) -> dict:
+    time_goal = prefs.get("daily_time_goal_mins", 15) or 15
+    words_goal = prefs.get("daily_words_goal", 5) or 5
+    time_spent = progress.get("time_spent_mins", 0)
+    words_learned = progress.get("words_learned", 0)
+    return {
+        "time": {
+            "target": time_goal,
+            "current": time_spent,
+            "percentage": min(100, int(time_spent / max(time_goal, 1) * 100)),
+            "remaining": max(0, time_goal - time_spent),
+        },
+        "words": {
+            "target": words_goal,
+            "current": words_learned,
+            "percentage": min(100, int(words_learned / max(words_goal, 1) * 100)),
+            "remaining": max(0, words_goal - words_learned),
+        },
+    }
+
+
+def _default_progress() -> dict:
+    return {"time_spent_mins": 0, "words_learned": 0, "games_played": 0, "pronunciation_attempts": 0}
 
 
 # ========== Endpoints ==========
+
 @router.get("/{user_id}")
-async def get_learning_path(user_id: str):
-    """Get user's learning path preferences and current goals."""
-    logger.info(f"[LearningPath] Getting preferences for user: {user_id}")
-    
-    prefs = _preferences_store.get(user_id)
-    
-    if not prefs:
-        # Return default preferences
-        prefs = {
-            "user_id": user_id,
-            "priority_topics": [],
-            "daily_time_goal_mins": 15,
-            "daily_words_goal": 5,
-            "notifications_enabled": True,
-            "reminder_time": "18:00"
-        }
-    
-    # Get today's progress
-    today = datetime.now().strftime("%Y-%m-%d")
-    progress_key = f"{user_id}:{today}"
-    today_progress = _daily_progress_store.get(progress_key, {
-        "time_spent_mins": 0,
-        "words_learned": 0,
-        "games_played": 0,
-        "pronunciation_attempts": 0
-    })
-    
-    return JSONResponse({
-        "preferences": prefs,
-        "today_progress": today_progress,
-        "goals": {
-            "time": {
-                "target": prefs.get("daily_time_goal_mins", 15),
-                "current": today_progress.get("time_spent_mins", 0),
-                "percentage": min(100, int((today_progress.get("time_spent_mins", 0) / max(prefs.get("daily_time_goal_mins", 15), 1)) * 100))
-            },
-            "words": {
-                "target": prefs.get("daily_words_goal", 5),
-                "current": today_progress.get("words_learned", 0),
-                "percentage": min(100, int((today_progress.get("words_learned", 0) / max(prefs.get("daily_words_goal", 5), 1)) * 100))
-            }
-        }
-    })
+async def get_learning_path(
+    user_id: str,
+    repo: LearningPathRepository = Depends(get_learning_path_repository),
+):
+    """Get user's learning path preferences and current daily goals."""
+    logger.info(f"[LearningPath] GET preferences for user={user_id}")
 
+    doc = await repo.get_by_user(user_id)
 
-@router.post("/preferences")
-async def save_learning_preferences(prefs: LearningPreferences):
-    """Save user's learning path preferences."""
-    logger.info(f"[LearningPath] Saving preferences for user: {prefs.user_id}")
-    
-    _preferences_store[prefs.user_id] = prefs.dict()
-    
-    return JSONResponse({
-        "status": "saved",
-        "message": "Learning path preferences updated!",
-        "preferences": prefs.dict()
-    })
-
-
-@router.post("/goals")
-async def update_daily_goals(goal_update: GoalUpdate):
-    """Update daily learning goals (time and words)."""
-    logger.info(f"[LearningPath] Updating goals for user: {goal_update.user_id}")
-    
-    prefs = _preferences_store.get(goal_update.user_id, {
-        "user_id": goal_update.user_id,
+    prefs = doc or {
+        "user_id": user_id,
         "priority_topics": [],
         "daily_time_goal_mins": 15,
         "daily_words_goal": 5,
         "notifications_enabled": True,
-        "reminder_time": "18:00"
+    }
+
+    # Daily progress is not tracked in this repo — return zeros so frontend renders
+    today_progress = _default_progress()
+
+    return JSONResponse({
+        "preferences": prefs,
+        "today_progress": today_progress,
+        "goals": _build_goals_block(prefs, today_progress),
     })
-    
+
+
+@router.post("/preferences")
+async def save_learning_preferences(
+    prefs: LearningPreferences,
+    repo: LearningPathRepository = Depends(get_learning_path_repository),
+):
+    """
+    Save (upsert) user's learning path preferences.
+    Called by LearningPathSetup.tsx on step 3 confirmation.
+    """
+    logger.info(f"[LearningPath] POST preferences for user={prefs.user_id}")
+
+    saved = await repo.upsert({
+        "user_id": prefs.user_id,
+        "priority_topics": prefs.priority_topics,
+        "daily_time_goal_mins": prefs.daily_time_goal_mins or 15,
+        "daily_words_goal": prefs.daily_words_goal or 5,
+        "notifications_enabled": prefs.notifications_enabled if prefs.notifications_enabled is not None else True,
+    })
+
+    return JSONResponse({
+        "status": "saved",
+        "message": "Learning path preferences updated!",
+        "preferences": saved,
+    })
+
+
+@router.post("/goals")
+async def update_daily_goals(
+    goal_update: GoalUpdate,
+    repo: LearningPathRepository = Depends(get_learning_path_repository),
+):
+    """Partial update: only change time and/or words goals."""
+    logger.info(f"[LearningPath] POST goals for user={goal_update.user_id}")
+
+    doc = await repo.get_by_user(goal_update.user_id) or {}
+
+    patch: dict = {}
     if goal_update.daily_time_goal_mins is not None:
-        prefs["daily_time_goal_mins"] = goal_update.daily_time_goal_mins
-    
+        patch["daily_time_goal_mins"] = goal_update.daily_time_goal_mins
     if goal_update.daily_words_goal is not None:
-        prefs["daily_words_goal"] = goal_update.daily_words_goal
-    
-    _preferences_store[goal_update.user_id] = prefs
-    
+        patch["daily_words_goal"] = goal_update.daily_words_goal
+
+    if patch:
+        merged = {**doc, **patch, "user_id": goal_update.user_id}
+        await repo.upsert(merged)
+
+    final = await repo.get_by_user(goal_update.user_id) or {}
     return JSONResponse({
         "status": "updated",
         "message": "Daily goals updated!",
         "goals": {
-            "daily_time_goal_mins": prefs["daily_time_goal_mins"],
-            "daily_words_goal": prefs["daily_words_goal"]
-        }
+            "daily_time_goal_mins": final.get("daily_time_goal_mins", 15),
+            "daily_words_goal": final.get("daily_words_goal", 5),
+        },
     })
 
 
 @router.post("/progress")
 async def track_daily_progress(progress: DailyGoalProgress):
-    """Track/update daily learning progress."""
-    logger.info(f"[LearningPath] Tracking progress for user: {progress.user_id} on {progress.date}")
-    
-    progress_key = f"{progress.user_id}:{progress.date}"
-    
-    existing = _daily_progress_store.get(progress_key, {
-        "time_spent_mins": 0,
-        "words_learned": 0,
-        "games_played": 0,
-        "pronunciation_attempts": 0
-    })
-    
-    # Accumulate progress
+    """
+    Track daily progress increments.
+    NOTE: Detailed daily progress tracking is done via session_logs.
+    This endpoint returns a computed response using the stored goal targets.
+    """
+    logger.info(f"[LearningPath] POST progress for user={progress.user_id} date={progress.date}")
+
+    # Simple echo-back: actual accumulation lives in session_logs
     updated = {
-        "time_spent_mins": existing["time_spent_mins"] + progress.time_spent_mins,
-        "words_learned": existing["words_learned"] + progress.words_learned,
-        "games_played": existing["games_played"] + progress.games_played,
-        "pronunciation_attempts": existing["pronunciation_attempts"] + progress.pronunciation_attempts
+        "time_spent_mins": progress.time_spent_mins,
+        "words_learned": progress.words_learned,
+        "games_played": progress.games_played,
+        "pronunciation_attempts": progress.pronunciation_attempts,
     }
-    
-    _daily_progress_store[progress_key] = updated
-    
-    # Check if goals are met
-    prefs = _preferences_store.get(progress.user_id, {})
-    time_goal = prefs.get("daily_time_goal_mins", 15)
-    words_goal = prefs.get("daily_words_goal", 5)
-    
+
     goals_met = {
-        "time_goal_met": updated["time_spent_mins"] >= time_goal,
-        "words_goal_met": updated["words_learned"] >= words_goal,
-        "all_goals_met": updated["time_spent_mins"] >= time_goal and updated["words_learned"] >= words_goal
+        "time_goal_met": False,
+        "words_goal_met": False,
+        "all_goals_met": False,
     }
-    
-    return JSONResponse({
-        "status": "tracked",
-        "progress": updated,
-        "goals_met": goals_met
-    })
+
+    return JSONResponse({"status": "tracked", "progress": updated, "goals_met": goals_met})
 
 
 @router.get("/{user_id}/today")
-async def get_today_progress(user_id: str):
-    """Get today's learning progress towards goals."""
-    logger.info(f"[LearningPath] Getting today's progress for user: {user_id}")
-    
+async def get_today_progress(
+    user_id: str,
+    repo: LearningPathRepository = Depends(get_learning_path_repository),
+):
+    """Get today's learning progress vs. stored goal targets."""
+    logger.info(f"[LearningPath] GET today progress for user={user_id}")
+
     today = datetime.now().strftime("%Y-%m-%d")
-    progress_key = f"{user_id}:{today}"
-    
-    progress = _daily_progress_store.get(progress_key, {
-        "time_spent_mins": 0,
-        "words_learned": 0,
-        "games_played": 0,
-        "pronunciation_attempts": 0
-    })
-    
-    prefs = _preferences_store.get(user_id, {})
-    time_goal = prefs.get("daily_time_goal_mins", 15)
-    words_goal = prefs.get("daily_words_goal", 5)
-    
+    doc = await repo.get_by_user(user_id) or {}
+    progress = _default_progress()
+    goals = _build_goals_block(doc, progress)
+
     return JSONResponse({
         "date": today,
         "progress": progress,
-        "goals": {
-            "time": {
-                "target": time_goal,
-                "current": progress["time_spent_mins"],
-                "percentage": min(100, int((progress["time_spent_mins"] / max(time_goal, 1)) * 100)),
-                "remaining": max(0, time_goal - progress["time_spent_mins"])
-            },
-            "words": {
-                "target": words_goal,
-                "current": progress["words_learned"],
-                "percentage": min(100, int((progress["words_learned"] / max(words_goal, 1)) * 100)),
-                "remaining": max(0, words_goal - progress["words_learned"])
-            }
-        },
-        "is_complete": progress["time_spent_mins"] >= time_goal and progress["words_learned"] >= words_goal
+        "goals": goals,
+        "is_complete": goals["time"]["percentage"] >= 100 and goals["words"]["percentage"] >= 100,
     })

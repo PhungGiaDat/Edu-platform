@@ -12,7 +12,10 @@ from typing import Optional
 from database.mongodb import init_mongodb, close_mongodb, test_connection
 from models.flashcard import Flashcard
 from models.user_mongo import UserDocument, LearningProgressDocument, QuizAttemptDocument
-# Note: Add other models as they are converted to Beanie
+from models.pet import PetDocument
+from models.pronunciation import PronunciationAttemptDocument
+from models.learning_path import LearningPathDocument
+from models.session_log import SessionLogDocument
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +105,10 @@ async def connect_to_database():
         Flashcard,
         LearningProgressDocument,
         QuizAttemptDocument,
-        # Add other Beanie Documents here (ARObject, Quiz, etc.)
+        PetDocument,
+        PronunciationAttemptDocument,
+        LearningPathDocument,
+        SessionLogDocument,
     ]
     
     try:

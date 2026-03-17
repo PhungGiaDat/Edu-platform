@@ -24,8 +24,8 @@ from database.connection import connect_to_database, close_database_connection
 
 # Import API routers
 from api import (
-    flashcard_router, 
-    quiz_router, 
+    flashcard_router,
+    quiz_router,
     game_router,
     course_router,
     chat_router,
@@ -34,6 +34,9 @@ from api import (
     user_router,
     learning_path_router,
     pet_router,
+    combos_router,
+    pronunciation_router,
+    sessions_router,
 )
 from api.websocket import router as websocket_router
 from api.reports import router as reports_router
@@ -186,6 +189,24 @@ app.include_router(
     pet_router,
     prefix=settings.API_V1_PREFIX,
     tags=["Pets"]
+)
+
+app.include_router(
+    combos_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Combos"]
+)
+
+app.include_router(
+    pronunciation_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Pronunciation"]
+)
+
+app.include_router(
+    sessions_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Sessions"]
 )
 
 logger.info("✅ All routers registered")

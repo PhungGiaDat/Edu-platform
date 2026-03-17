@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 export type DisplayMode = '2D' | '3D';
-export type AppMode = 'LEARNING' | 'GAME' | 'QUIZ';
+export type AppMode = 'LEARNING' | 'GAME' | 'QUIZ' | 'SPEAK';
 
 interface UseDisplayModeReturn {
   // Display modes

@@ -22,8 +22,10 @@ class ArCombinationSchema(BaseModel):
     required_tags: List[str] = Field(..., min_length=2)
     model_3d_url: str
     image_2d_url: Optional[str] = None
+    combo_mind_url: Optional[str] = None  # MindAR .mind file with both target images
+    bonus_xp: int = Field(default=100, description="XP awarded when combo is triggered")
     center_transform: Optional[TransformSchema] = None
-    
+
     class Config:
         json_encoders = {
             ObjectId: str
