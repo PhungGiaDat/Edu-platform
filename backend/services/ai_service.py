@@ -3,7 +3,7 @@ AI Service - Business logic for AI-powered features using LangChain Core
 Uses langchain-core and langchain-google-genai (no full langchain dependency)
 """
 from typing import List, Dict, Any
-import google.generativeai as genai
+from google import genai as google_genai
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -38,68 +38,74 @@ Context về các flashcard:
 
 Hãy trả lời câu hỏi của bé dựa trên context trên."""
 
+    # Gemini embedding model (3072 dimensions — matches Atlas Vector Search index)
+    EMBEDDING_MODEL = "models/gemini-embedding-001"
+
     def __init__(self):
         self.repo = get_ai_repository()
-        self._embedding_model = "models/embedding-001"
-        
+        self._embedding_model = self.EMBEDDING_MODEL
+
         if settings.GOOGLE_API_KEY:
-            genai.configure(api_key=settings.GOOGLE_API_KEY)
+            # New google.genai SDK for embeddings
+            self._genai_client = google_genai.Client(api_key=settings.GOOGLE_API_KEY)
+            # LangChain still uses the old package for chat — that's fine
             self.llm = ChatGoogleGenerativeAI(
                 model="gemini-1.5-flash",
                 google_api_key=settings.GOOGLE_API_KEY
             )
             self.output_parser = StrOutputParser()
-            logger.info("[AI] Service initialized with Gemini 1.5 Flash")
+            logger.info("[AI] Service initialized with Gemini 1.5 Flash + gemini-embedding-001")
         else:
             logger.warning("GOOGLE_API_KEY not set. AI features disabled.")
+            self._genai_client = None
             self.llm = None
             self.output_parser = None
 
     async def generate_embedding(self, text: str) -> List[float]:
         """
-        Generate 768-dimensional embedding using Gemini embedding model.
-        
+        Generate 3072-dimensional embedding using Gemini embedding model.
+
         Args:
             text: Text to generate embedding for
-            
+
         Returns:
-            List of 768 floats representing the embedding vector
+            List of 3072 floats representing the embedding vector
         """
-        if not settings.GOOGLE_API_KEY:
+        if not self._genai_client:
             logger.warning("[AI] Cannot generate embedding: GOOGLE_API_KEY not set")
             return []
-        
+
         if not text or not text.strip():
             logger.warning("[AI] Cannot generate embedding: empty text")
             return []
-        
+
         try:
-            result = genai.embed_content(
+            result = self._genai_client.models.embed_content(
                 model=self._embedding_model,
-                content=text,
-                task_type="retrieval_document"
+                contents=text,
+                config={"task_type": "RETRIEVAL_DOCUMENT"},
             )
-            embedding = result['embedding']
+            embedding = result.embeddings[0].values
             logger.debug(f"[AI] Generated embedding with {len(embedding)} dimensions")
-            return embedding
+            return list(embedding)
         except Exception as e:
             logger.error(f"[AI] Embedding generation failed: {e}")
             return []
 
     async def generate_query_embedding(self, query: str) -> List[float]:
         """
-        Generate embedding for search query (uses retrieval_query task type).
+        Generate embedding for search query (uses RETRIEVAL_QUERY task type).
         """
-        if not settings.GOOGLE_API_KEY or not query or not query.strip():
+        if not self._genai_client or not query or not query.strip():
             return []
-        
+
         try:
-            result = genai.embed_content(
+            result = self._genai_client.models.embed_content(
                 model=self._embedding_model,
-                content=query,
-                task_type="retrieval_query"
+                contents=query,
+                config={"task_type": "RETRIEVAL_QUERY"},
             )
-            return result['embedding']
+            return list(result.embeddings[0].values)
         except Exception as e:
             logger.error(f"[AI] Query embedding generation failed: {e}")
             return []

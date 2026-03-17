@@ -3,16 +3,238 @@
     "qr_id": "ele123",
     "word": "elephant",
     "translation": {
-      "vi": "con voi",
       "en": "elephant",
-      "fr": "éléphant"
+      "vi": "con voi"
     },
-    "category": "animal",
-    "image_url": "/images/flashcard_elephant.png",
-    "model_3d_url": "/models/elephant.glb",
-    "audio_url": "/audio/elephant.mp3",
-    "ar_tag": "animal_elephant_01",
+    "definition": "Elephant (con voi): A very large gray animal with a long trunk, big ears, and ivory tusks. Elephants are the largest land animals on Earth. Chủ đề: animals. Cấp độ: medium. Trẻ em học từ vựng tiếng Anh về động vật.",
+    "category": "animals",
+    "image_url": "/assets/flashcards/ele123_card.png",
+    "audio_url": null,
     "difficulty": "medium",
+    "ar_tag": "elephant_marker_01",
+    "image_animation_type": "wiggle",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "apple01",
+    "word": "apple",
+    "translation": {
+      "en": "apple",
+      "vi": "quả táo"
+    },
+    "definition": "Apple (quả táo): A round, sweet fruit with smooth red or green skin and white flesh. Apples are one of the most popular fruits eaten by children and adults. Chủ đề: fruits. Cấp độ: easy. Trẻ em học từ vựng tiếng Anh về hoa quả.",
+    "category": "fruits",
+    "image_url": "/assets/flashcards/apple01_card.png",
+    "audio_url": null,
+    "difficulty": "easy",
+    "ar_tag": "apple_marker_01",
+    "image_animation_type": "bounce",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "banana01",
+    "word": "banana",
+    "translation": {
+      "en": "banana",
+      "vi": "quả chuối"
+    },
+    "definition": "Banana (quả chuối): A long, curved yellow fruit with a soft, sweet inside. Bananas grow in tropical places and are full of energy. Chủ đề: fruits. Cấp độ: easy. Trẻ em học từ vựng tiếng Anh về hoa quả.",
+    "category": "fruits",
+    "image_url": "/assets/flashcards/banana01_card.png",
+    "audio_url": null,
+    "difficulty": "easy",
+    "ar_tag": "banana_marker_01",
+    "image_animation_type": "bounce",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "cake01",
+    "word": "cake",
+    "translation": {
+      "en": "cake",
+      "vi": "bánh ngọt"
+    },
+    "definition": "Cake (bánh ngọt): A sweet baked food made from flour, sugar, butter, and eggs, often covered with icing or frosting. Cakes are eaten at parties and celebrations. Chủ đề: food. Cấp độ: easy. Trẻ em học từ vựng tiếng Anh về thức ăn.",
+    "category": "food",
+    "image_url": "/assets/flashcards/cake01_card.png",
+    "audio_url": null,
+    "difficulty": "easy",
+    "ar_tag": "cake_marker_01",
+    "image_animation_type": "pulse",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "birthday01",
+    "word": "birthday cake",
+    "translation": {
+      "en": "birthday cake",
+      "vi": "bánh sinh nhật"
+    },
+    "definition": "Birthday cake (bánh sinh nhật): A special decorated cake with candles on top, eaten to celebrate someone's birthday. Children love to blow out the candles and make a wish. Chủ đề: food. Cấp độ: medium. Trẻ em học từ vựng tiếng Anh về thức ăn và lễ kỷ niệm.",
+    "category": "food",
+    "image_url": "/assets/flashcards/birthday01_card.png",
+    "audio_url": null,
+    "difficulty": "medium",
+    "ar_tag": "birthday_marker_01",
+    "image_animation_type": "bounce",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "flower01",
+    "word": "flower",
+    "translation": {
+      "en": "flower",
+      "vi": "bông hoa"
+    },
+    "definition": "Flower (bông hoa): The colorful, beautiful part of a plant that blooms and produces seeds. Flowers have petals and often smell sweet. People give flowers as gifts. Chủ đề: nature. Cấp độ: easy. Trẻ em học từ vựng tiếng Anh về thiên nhiên.",
+    "category": "nature",
+    "image_url": "/assets/flashcards/flower01_card.png",
+    "audio_url": null,
+    "difficulty": "easy",
+    "ar_tag": "flower_marker_01",
+    "image_animation_type": "wiggle",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "mushroom01",
+    "word": "mushroom",
+    "translation": {
+      "en": "mushroom",
+      "vi": "cây nấm"
+    },
+    "definition": "Mushroom (cây nấm): A small fungus with a round cap and a stem, often found in forests and fields. Some mushrooms are safe to eat and some are poisonous. Chủ đề: nature. Cấp độ: easy. Trẻ em học từ vựng tiếng Anh về thiên nhiên.",
+    "category": "nature",
+    "image_url": "/assets/flashcards/mushroom01_card.png",
+    "audio_url": null,
+    "difficulty": "easy",
+    "ar_tag": "mushroom_marker_01",
+    "image_animation_type": "bounce",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "palm01",
+    "word": "palm tree",
+    "translation": {
+      "en": "palm tree",
+      "vi": "cây cọ"
+    },
+    "definition": "Palm tree (cây cọ): A tall tropical tree with a long trunk and large fan-shaped leaves at the top. Palm trees grow near beaches and in warm, sunny places. Chủ đề: nature. Cấp độ: easy. Trẻ em học từ vựng tiếng Anh về cây cối và thiên nhiên.",
+    "category": "nature",
+    "image_url": "/assets/flashcards/palm01_card.png",
+    "audio_url": null,
+    "difficulty": "easy",
+    "ar_tag": "palm_marker_01",
+    "image_animation_type": "wiggle",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "tree01",
+    "word": "tree",
+    "translation": {
+      "en": "tree",
+      "vi": "cái cây"
+    },
+    "definition": "Tree (cái cây): A large plant with a thick wooden trunk, branches, and leaves. Trees provide shade, clean air, and homes for birds and animals. Chủ đề: nature. Cấp độ: easy. Trẻ em học từ vựng tiếng Anh về cây cối và thiên nhiên.",
+    "category": "nature",
+    "image_url": "/assets/flashcards/tree01_card.png",
+    "audio_url": null,
+    "difficulty": "easy",
+    "ar_tag": "tree_marker_01",
+    "image_animation_type": "wiggle",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "cactus01",
+    "word": "cactus",
+    "translation": {
+      "en": "cactus",
+      "vi": "cây xương rồng"
+    },
+    "definition": "Cactus (cây xương rồng): A spiky desert plant that stores water in its thick stem and can survive in very hot, dry places. Cacti have sharp thorns to protect themselves. Chủ đề: nature. Cấp độ: medium. Trẻ em học từ vựng tiếng Anh về cây cối sa mạc.",
+    "category": "nature",
+    "image_url": "/assets/flashcards/cactus01_card.png",
+    "audio_url": null,
+    "difficulty": "medium",
+    "ar_tag": "cactus_marker_01",
+    "image_animation_type": "pulse",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "car01",
+    "word": "car",
+    "translation": {
+      "en": "car",
+      "vi": "xe ô tô"
+    },
+    "definition": "Car (xe ô tô): A vehicle with four wheels and an engine used for transportation on roads. Cars can carry a few people and are one of the most common ways to travel. Chủ đề: vehicles. Cấp độ: easy. Trẻ em học từ vựng tiếng Anh về phương tiện giao thông.",
+    "category": "vehicles",
+    "image_url": "/assets/flashcards/car01_card.png",
+    "audio_url": null,
+    "difficulty": "easy",
+    "ar_tag": "car_marker_01",
+    "image_animation_type": "bounce",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "suv01",
+    "word": "SUV",
+    "translation": {
+      "en": "SUV",
+      "vi": "xe SUV"
+    },
+    "definition": "SUV (xe SUV): A large, tall vehicle with four-wheel drive that can travel on rough roads. SUV stands for Sports Utility Vehicle. It can carry more people than a regular car. Chủ đề: vehicles. Cấp độ: medium. Trẻ em học từ vựng tiếng Anh về phương tiện giao thông.",
+    "category": "vehicles",
+    "image_url": "/assets/flashcards/suv01_card.png",
+    "audio_url": null,
+    "difficulty": "medium",
+    "ar_tag": "suv_marker_01",
+    "image_animation_type": "bounce",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "truck01",
+    "word": "monster truck",
+    "translation": {
+      "en": "monster truck",
+      "vi": "xe tải quái vật"
+    },
+    "definition": "Monster truck (xe tải quái vật): A very large truck with enormous wheels, built to crush cars and perform stunts at shows. Monster trucks are exciting vehicles that children love to watch. Chủ đề: vehicles. Cấp độ: medium. Trẻ em học từ vựng tiếng Anh về phương tiện giao thông đặc biệt.",
+    "category": "vehicles",
+    "image_url": "/assets/flashcards/truck01_card.png",
+    "audio_url": null,
+    "difficulty": "medium",
+    "ar_tag": "truck_marker_01",
+    "image_animation_type": "bounce",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "jungle01",
+    "word": "jungle",
+    "translation": {
+      "en": "jungle",
+      "vi": "rừng rậm"
+    },
+    "definition": "Jungle (rừng rậm): A dense, tropical forest filled with tall trees, wild animals, and many different plants. Jungles are found near the equator and receive a lot of rain. Chủ đề: nature. Cấp độ: hard. Trẻ em học từ vựng tiếng Anh về môi trường tự nhiên và hệ sinh thái.",
+    "category": "nature",
+    "image_url": "/assets/flashcards/jungle_card.png",
+    "audio_url": null,
+    "difficulty": "hard",
+    "ar_tag": "jungle_marker_01",
+    "image_animation_type": "pulse",
+    "vector_embedding": null,
     "created_at": "2025-07-03T12:00:00Z"
   }
 ]

@@ -43,7 +43,7 @@ class Flashcard(Document):
     # None     → static image; brief bounce plays on tap
     image_animation_type: Optional[str] = None
 
-    # AI Vector Embedding (768 dimensions for Gemini embedding-001)
+    # AI Vector Embedding (3072 dimensions for Gemini gemini-embedding-001)
     vector_embedding: Optional[List[float]] = None
 
     # Metadata
