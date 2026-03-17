@@ -24,19 +24,6 @@ const ANIMATION_CLASS: Record<string, string> = {
   wiggle: "animate-wiggle",   // custom keyframe defined in index.css / tailwind.config
 };
 
-function playWord(word: string, audioUrl?: string): HTMLAudioElement | null {
-  if (audioUrl) {
-    const audio = new Audio(audioUrl);
-    audio.play().catch(() => {
-      // Fallback to speech synthesis if Supabase audio fails
-      speakWord(word);
-    });
-    return audio;
-  }
-  speakWord(word);
-  return null;
-}
-
 function speakWord(word: string) {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
