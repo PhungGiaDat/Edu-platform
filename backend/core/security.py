@@ -37,10 +37,16 @@ class TokenPayload(BaseModel):
 # ========== Password Hashing ==========
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    # Bcrypt has a 72-byte limit for password input
+    # Truncate password if it exceeds this limit to match hashing behavior
+    truncated_password = plain_password[:72]
+    return pwd_context.verify(truncated_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    # Bcrypt has a 72-byte limit for password input
+    # Truncate password if it exceeds this limit
+    truncated_password = password[:72]
+    return pwd_context.hash(truncated_password)
 
 # ========== JWT Token Management ==========
 
