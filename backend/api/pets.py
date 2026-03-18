@@ -19,23 +19,11 @@ from models.pet import (
 )
 from models.user_mongo import UserDocument
 from services.gamification_service import GamificationService, get_gamification_service
+from core.security import get_current_user
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-# ========== Helper Functions ==========
-
-async def get_current_user(user_id: str) -> UserDocument:
-    """Get user by ID or raise 404"""
-    user = await UserDocument.find_one(UserDocument.user_id == user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User not found: {user_id}"
-        )
-    return user
 
 
 def pet_to_response(
@@ -83,20 +71,20 @@ def pet_to_response(
 
 @router.get("/pets", response_model=PetListResponse)
 async def list_pets(
-    user_id: str,
     category: Optional[str] = None,
     rarity: Optional[str] = None,
+    current_user: UserDocument = Depends(get_current_user),
     gamification_service: GamificationService = Depends(get_gamification_service)
 ):
     """
     Get all available pets with user's unlock status.
     
-    - **user_id**: The user to check unlock status for
     - **category**: Optional filter by category (character, animal, robot)
     - **rarity**: Optional filter by rarity (common, rare, epic, legendary)
     """
     # Get user data
-    user = await get_current_user(user_id)
+    user_id = str(current_user.id)
+    user = current_user
     user_stats = await gamification_service.get_user_stats(user_id)
     
     user_xp = user_stats.get("total_points", 0)
@@ -138,22 +126,15 @@ async def list_pets(
 @router.get("/pets/{pet_id}", response_model=PetResponse)
 async def get_pet(
     pet_id: str,
-    user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
     gamification_service: GamificationService = Depends(get_gamification_service)
 ):
     """
     Get a specific pet by ID with user's unlock status.
     """
-    # Get pet
-    pet = await PetDocument.find_one(PetDocument.pet_id == pet_id)
-    if not pet:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Pet not found: {pet_id}"
-        )
-    
     # Get user data
-    user = await get_current_user(user_id)
+    user_id = str(current_user.id)
+    user = current_user
     user_stats = await gamification_service.get_user_stats(user_id)
     
     user_xp = user_stats.get("total_points", 0)
@@ -169,7 +150,7 @@ async def get_pet(
 @router.post("/pets/{pet_id}/unlock", response_model=UnlockPetResponse)
 async def unlock_pet(
     pet_id: str,
-    user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
     gamification_service: GamificationService = Depends(get_gamification_service)
 ):
     """
@@ -178,16 +159,9 @@ async def unlock_pet(
     Checks if the user meets the unlock requirements (XP, streak, etc.)
     and adds the pet to their unlocked_pets list.
     """
-    # Get pet
-    pet = await PetDocument.find_one(PetDocument.pet_id == pet_id)
-    if not pet:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Pet not found: {pet_id}"
-        )
-    
-    # Get user
-    user = await get_current_user(user_id)
+    # Get user data
+    user_id = str(current_user.id)
+    user = current_user
     user_stats = await gamification_service.get_user_stats(user_id)
     
     user_xp = user_stats.get("total_points", 0)
@@ -253,7 +227,7 @@ async def unlock_pet(
 @router.put("/pets/active", response_model=PetResponse)
 async def set_active_pet(
     request: SetActivePetRequest,
-    user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
     gamification_service: GamificationService = Depends(get_gamification_service)
 ):
     """
@@ -261,18 +235,10 @@ async def set_active_pet(
     
     The pet must be unlocked before it can be set as active.
     """
+    # Get user data
+    user_id = str(current_user.id)
+    user = current_user
     pet_id = request.pet_id
-    
-    # Get pet
-    pet = await PetDocument.find_one(PetDocument.pet_id == pet_id)
-    if not pet:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Pet not found: {pet_id}"
-        )
-    
-    # Get user
-    user = await get_current_user(user_id)
     user_stats = await gamification_service.get_user_stats(user_id)
     
     user_xp = user_stats.get("total_points", 0)
@@ -297,7 +263,7 @@ async def set_active_pet(
 
 @router.get("/pets/active/current", response_model=Optional[PetResponse])
 async def get_active_pet(
-    user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
     gamification_service: GamificationService = Depends(get_gamification_service)
 ):
     """
@@ -305,8 +271,9 @@ async def get_active_pet(
     
     Returns null if no pet is set as active.
     """
-    # Get user
-    user = await get_current_user(user_id)
+    # Get user data
+    user_id = str(current_user.id)
+    user = current_user
     
     if not user.active_pet:
         return None
@@ -328,11 +295,14 @@ async def get_active_pet(
 
 
 @router.delete("/pets/active")
-async def clear_active_pet(user_id: str):
+async def clear_active_pet(
+    current_user: UserDocument = Depends(get_current_user)
+):
     """
     Clear the user's active pet (no pet displayed in AR).
     """
-    user = await get_current_user(user_id)
+    user_id = str(current_user.id)
+    user = current_user
     user.active_pet = None
     await user.save()
     

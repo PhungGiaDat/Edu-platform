@@ -20,6 +20,8 @@ from repositories.session_log_repository import (
     SessionLogRepository,
     get_session_log_repository,
 )
+from models.user_mongo import UserDocument
+from core.security import get_current_user
 
 router = APIRouter(prefix="/sessions", tags=["Sessions"])
 logger = logging.getLogger(__name__)
@@ -93,12 +95,14 @@ async def end_session(
 @router.get("/{user_id}/summary", response_model=SessionSummary)
 async def get_session_summary(
     user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
     repo: SessionLogRepository = Depends(get_session_log_repository),
 ):
     """
     Aggregated session stats for the Progress Report dashboard.
     Returns totals, average, longest session, and most studied topic.
     """
+    user_id = str(current_user.id)
     logger.info(f"[Session] Summary requested for user={user_id}")
 
     summary = await repo.get_summary(user_id)
@@ -108,12 +112,14 @@ async def get_session_summary(
 @router.get("/{user_id}/active")
 async def get_active_session(
     user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
     repo: SessionLogRepository = Depends(get_session_log_repository),
 ):
     """
     Return the most recent unclosed session for a user, or null.
     Used by the frontend to resume session tracking after page reload.
     """
+    user_id = str(current_user.id)
     doc = await repo.get_active_session(user_id)
     if not doc:
         return {"active_session": None}

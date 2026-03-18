@@ -18,6 +18,8 @@ from repositories.learning_path_repository import (
     LearningPathRepository,
     get_learning_path_repository,
 )
+from models.user_mongo import UserDocument
+from core.security import get_current_user
 
 router = APIRouter(prefix="/learning-path", tags=["Learning Path"])
 logger = logging.getLogger(__name__)
@@ -81,9 +83,11 @@ def _default_progress() -> dict:
 @router.get("/{user_id}")
 async def get_learning_path(
     user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
     repo: LearningPathRepository = Depends(get_learning_path_repository),
 ):
     """Get user's learning path preferences and current daily goals."""
+    user_id = str(current_user.id)
     logger.info(f"[LearningPath] GET preferences for user={user_id}")
 
     doc = await repo.get_by_user(user_id)
@@ -109,16 +113,18 @@ async def get_learning_path(
 @router.post("/preferences")
 async def save_learning_preferences(
     prefs: LearningPreferences,
+    current_user: UserDocument = Depends(get_current_user),
     repo: LearningPathRepository = Depends(get_learning_path_repository),
 ):
     """
     Save (upsert) user's learning path preferences.
     Called by LearningPathSetup.tsx on step 3 confirmation.
     """
-    logger.info(f"[LearningPath] POST preferences for user={prefs.user_id}")
+    user_id = str(current_user.id)
+    logger.info(f"[LearningPath] POST preferences for user={user_id}")
 
     saved = await repo.upsert({
-        "user_id": prefs.user_id,
+        "user_id": user_id,
         "priority_topics": prefs.priority_topics,
         "daily_time_goal_mins": prefs.daily_time_goal_mins or 15,
         "daily_words_goal": prefs.daily_words_goal or 5,
@@ -135,12 +141,14 @@ async def save_learning_preferences(
 @router.post("/goals")
 async def update_daily_goals(
     goal_update: GoalUpdate,
+    current_user: UserDocument = Depends(get_current_user),
     repo: LearningPathRepository = Depends(get_learning_path_repository),
 ):
     """Partial update: only change time and/or words goals."""
-    logger.info(f"[LearningPath] POST goals for user={goal_update.user_id}")
+    user_id = str(current_user.id)
+    logger.info(f"[LearningPath] POST goals for user={user_id}")
 
-    doc = await repo.get_by_user(goal_update.user_id) or {}
+    doc = await repo.get_by_user(user_id) or {}
 
     patch: dict = {}
     if goal_update.daily_time_goal_mins is not None:
@@ -149,10 +157,10 @@ async def update_daily_goals(
         patch["daily_words_goal"] = goal_update.daily_words_goal
 
     if patch:
-        merged = {**doc, **patch, "user_id": goal_update.user_id}
+        merged = {**doc, **patch, "user_id": user_id}
         await repo.upsert(merged)
 
-    final = await repo.get_by_user(goal_update.user_id) or {}
+    final = await repo.get_by_user(user_id) or {}
     return JSONResponse({
         "status": "updated",
         "message": "Daily goals updated!",
@@ -164,13 +172,17 @@ async def update_daily_goals(
 
 
 @router.post("/progress")
-async def track_daily_progress(progress: DailyGoalProgress):
+async def track_daily_progress(
+    progress: DailyGoalProgress,
+    current_user: UserDocument = Depends(get_current_user),
+):
     """
     Track daily progress increments.
     NOTE: Detailed daily progress tracking is done via session_logs.
     This endpoint returns a computed response using the stored goal targets.
     """
-    logger.info(f"[LearningPath] POST progress for user={progress.user_id} date={progress.date}")
+    user_id = str(current_user.id)
+    logger.info(f"[LearningPath] POST progress for user={user_id} date={progress.date}")
 
     # Simple echo-back: actual accumulation lives in session_logs
     updated = {
@@ -192,9 +204,11 @@ async def track_daily_progress(progress: DailyGoalProgress):
 @router.get("/{user_id}/today")
 async def get_today_progress(
     user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
     repo: LearningPathRepository = Depends(get_learning_path_repository),
 ):
     """Get today's learning progress vs. stored goal targets."""
+    user_id = str(current_user.id)
     logger.info(f"[LearningPath] GET today progress for user={user_id}")
 
     today = datetime.now().strftime("%Y-%m-%d")
