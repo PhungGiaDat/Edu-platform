@@ -11,10 +11,9 @@
  */
 import React, { useState, useRef, useEffect, Suspense, lazy } from 'react';
 import { ChatService, RAGChatResponse } from '../services/ChatService';
+import { useAuth } from '../contexts/AuthContext';
 import type { PetType, EvolutionStage, PetMood } from './Gamification/VirtualPetEvolved';
 import { usePets } from '@/hooks/usePets';
-
-const USER_ID = 'demo-user';
 
 // Lazy load the 3D pet component for performance
 const Pet3D = lazy(() => import('./Gamification/Pet3D'));
@@ -48,12 +47,12 @@ const getMood = (happiness: number): PetMood => {
 };
 
 export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ 
-    userId = USER_ID, 
     initialOpen = false,
     pet: petProp,
     show3DPet = true
 }) => {
-    const { activePet } = usePets(userId);
+    const { user } = useAuth();
+    const { activePet } = usePets(user?.id || null);
 
     // Derive pet state from the active pet (fallback to prop or default)
     const pet: PetState = petProp ?? (activePet
@@ -94,7 +93,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
     useEffect(scrollToBottom, [messages]);
 
     const handleSend = async () => {
-        if (!input.trim() || isLoading) return;
+        if (!input.trim() || isLoading || !user?.id) return;
 
         const userMsg: Message = {
             id: Date.now().toString(),
@@ -106,7 +105,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
         setIsLoading(true);
 
         try {
-            const response: RAGChatResponse = await ChatService.sendRAGMessage(input, userId);
+            const response: RAGChatResponse = await ChatService.sendRAGMessage(input, user.id);
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'ai',

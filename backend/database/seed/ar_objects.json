@@ -5,7 +5,7 @@
     "animation_type": "rotate",
     "glb_size": 2.0,
     "nft_base_url": "/assets/target/elephant_nft/elephant",
-    "model_3d_url": "/assets/models/elephant cartoon.glb",
+    "model_3d_url": "/assets/models/elephant.glb",
     "image_2d_url": "/assets/model2D/Elephant.jpg",
     "position": "0 0.5 0",
     "rotation": "0 0 0",

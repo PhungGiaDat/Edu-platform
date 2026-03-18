@@ -10,12 +10,10 @@ import { AudioService } from '../../services/AudioService';
 import { HapticService } from '../../services/HapticService';
 import { SoundEffectService } from '../../services/SoundEffectService';
 import { eventBus } from '../../runtime/EventBus';
+import { useAuth } from '../../contexts/AuthContext';
 import { getApiBase } from '../../config';
 
 const API_BASE = getApiBase();
-
-// Hardcoded user ID (same as App.tsx → "demo-user")
-const USER_ID = 'demo-user';
 
 interface Props {
   challenge: GameChallenge;
@@ -56,6 +54,7 @@ export const PronunciationGame: React.FC<Props> = ({
   showHint,
   flashcardQrId,
 }) => {
+  const { user } = useAuth();
   const [state, setState] = useState<RecordingState>({
     status: 'idle',
     transcription: null,
@@ -79,12 +78,17 @@ export const PronunciationGame: React.FC<Props> = ({
   // ── Helper: POST attempt to backend ──────────────────────────────────────────
   const logAttemptToBackend = useCallback(
     async (spokenText: string, score: number) => {
+      if (!user?.id) {
+        console.error('User not authenticated');
+        return;
+      }
+
       try {
         await fetch(`${API_BASE}/api/v1/pronunciation/attempt`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            user_id: USER_ID,
+            user_id: user.id,
             flashcard_qr_id: flashcardQrId || targetWord,
             spoken_text: spokenText,
             score,

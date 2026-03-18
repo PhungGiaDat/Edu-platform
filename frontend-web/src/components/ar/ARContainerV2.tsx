@@ -34,6 +34,10 @@ interface ARContainerV2Props {
     imageUrl?: string;
     modelUrl2?: string;
     imageUrl2?: string;
+    /** Word label for click-to-sound on target 0 */
+    word?: string;
+    /** Word label for click-to-sound on target 1 */
+    word2?: string;
     /** Number of flashcards already loaded — kept for parent API compatibility */
     cardCount?: number;
     onPhaseChange?: (phase: ARPhase) => void;
@@ -53,6 +57,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     imageUrl,
     modelUrl2,
     imageUrl2,
+    word,
+    word2,
     cardCount: _cardCount,   // accepted for API compatibility, not used internally
     onPhaseChange,
     onQRDetected,
@@ -78,8 +84,11 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         if (imageUrl)  params.set('image',  imageUrl);
         if (modelUrl2) params.set('model2', modelUrl2);
         if (imageUrl2) params.set('image2', imageUrl2);
+        // Pass words for click-to-sound in ar-viewer.js
+        if (word)  params.set('word',  word);
+        if (word2) params.set('word2', word2);
         return `/ar-viewer.html?${params.toString()}`;
-    }, [mindUrl, modelUrl, imageUrl, modelUrl2, imageUrl2]);
+    }, [mindUrl, modelUrl, imageUrl, modelUrl2, imageUrl2, word, word2]);
 
     // Main iframe src (only scanner or viewer — not both at once)
     const mainSrc = (() => {
