@@ -16,6 +16,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { PetUnlockModal } from "./components/pets";
 import { eventBus } from "./runtime/EventBus";
 import { usePets, type Pet } from "./hooks/usePets";
+import { useAuth } from "./contexts/AuthContext";
 import { getApiBase } from "./config";
 import PetsPage from "./pages/PetsPage";
 
@@ -23,7 +24,6 @@ import PetsPage from "./pages/PetsPage";
 // Listens to PET_CAN_UNLOCK (XP gate met) and PET_UNLOCKED (after actual unlock)
 // Shows PetUnlockModal as a global overlay on any page
 
-const USER_ID = "demo-user"; // TODO: replace with real auth user ID
 const API_BASE = getApiBase();
 const SESSION_KEY = "pet_notified_ids";
 
@@ -57,7 +57,8 @@ const GlobalPetUnlockNotifier: React.FC = () => {
   // Track notified pets across navigation within the tab (sessionStorage-backed)
   const notifiedIdsRef = useRef<Set<string>>(loadNotifiedIds());
 
-  const { setActivePet } = usePets(USER_ID);
+  const { user } = useAuth();
+  const { setActivePet } = usePets(user?.id || null);
 
   const handleSetActive = useCallback(async (petId: string) => {
     await setActivePet(petId);
@@ -105,8 +106,10 @@ const GlobalPetUnlockNotifier: React.FC = () => {
   // Fetches fresh data directly to avoid stale closure on pets state.
   useEffect(() => {
     const handleCanUnlock = async (_data: { userXP: number; userStreak: number; level: number }) => {
+      if (!user?.id) return;
+
       try {
-        const res = await fetch(`${API_BASE}/api/v1/pets?user_id=${USER_ID}`);
+        const res = await fetch(`${API_BASE}/api/v1/pets?user_id=${user.id}`);
         if (!res.ok) return;
         const { pets: freshPets } = await res.json();
 
@@ -123,7 +126,7 @@ const GlobalPetUnlockNotifier: React.FC = () => {
 
     eventBus.on("PET_CAN_UNLOCK", handleCanUnlock);
     return () => eventBus.off("PET_CAN_UNLOCK", handleCanUnlock);
-  }, [enqueue]);
+  }, [user?.id, enqueue]);
 
   // Listen for PET_UNLOCKED - emitted by usePets after a confirmed server unlock.
   // Always show celebration (forceShow=true), even if we notified before.

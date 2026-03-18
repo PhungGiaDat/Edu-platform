@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { getApiBase } from '../../config';
+import { useAuth } from '../../contexts/AuthContext';
 
 const API_BASE = getApiBase();
 
@@ -37,17 +38,18 @@ interface DailyGoalProps {
 }
 
 export const DailyGoal: React.FC<DailyGoalProps> = ({
-    userId = 'demo-user',
     variant = 'compact',
     showCelebration = true,
     onGoalComplete
 }) => {
+    const { user } = useAuth();
+    const userId = user?.id || null;
     const [data, setData] = useState<DailyGoalData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [showComplete, setShowComplete] = useState(false);
 
     const fetchProgress = useCallback(async () => {
-        try {
+        if (!userId) return;
             const res = await fetch(`${API_BASE}/api/v1/learning-path/${userId}/today`);
             if (res.ok) {
                 const result = await res.json();

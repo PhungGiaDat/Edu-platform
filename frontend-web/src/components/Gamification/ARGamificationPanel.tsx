@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { VirtualPet } from './VirtualPet';
 import { getApiBase } from '../../config';
+import { useAuth } from '../../contexts/AuthContext';
 import { usePets } from '@/hooks/usePets';
 import { eventBus } from '@/runtime/EventBus';
 
@@ -28,10 +29,11 @@ interface ARGamificationPanelProps {
 }
 
 export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
-    userId = 'demo-user',
     onFeedPet,
     onPetClick
 }) => {
+    const { user } = useAuth();
+    const userId = user?.id || null;
     const [showLeaderboard, setShowLeaderboard] = useState(false);
     const [stats, setStats] = useState<UserStats | null>(null);
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);

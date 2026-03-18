@@ -60,8 +60,13 @@ class Settings(BaseSettings):
     
     @property
     def cors_origins(self) -> list[str]:
-        """Parse ALLOWED_ORIGINS from comma-separated string"""
-        # Default allowed origins for development and production
+        """Parse ALLOWED_ORIGINS from comma-separated string.
+        
+        The hardcoded defaults are ALWAYS included regardless of the
+        ALLOWED_ORIGINS env var so that the Vercel frontend is never blocked
+        even when Render sets ALLOWED_ORIGINS to a custom value.
+        """
+        # These are always allowed — never remove
         default_origins = [
             "http://localhost:3000",
             "http://localhost:5173",
@@ -71,10 +76,15 @@ class Settings(BaseSettings):
         ]
         
         if self.ALLOWED_ORIGINS == "*":
+            # Wildcard requested — honour it
             return ["*"]
         
-        # Parse custom origins and merge with defaults
-        custom_origins = [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+        # Parse any extra origins from env and merge with always-allowed defaults
+        custom_origins = [
+            origin.strip()
+            for origin in self.ALLOWED_ORIGINS.split(",")
+            if origin.strip()
+        ]
         return list(set(default_origins + custom_origins))
     
     def __repr__(self) -> str:

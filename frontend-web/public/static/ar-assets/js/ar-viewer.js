@@ -45,8 +45,11 @@
     const modelUrl = params.get('model');
     const imageUrl = params.get('image');
     const modelUrl2 = params.get('model2');
+    // Words for click-to-sound — stored in window globals so SET_WORD can update them too
+    window._arWord0 = params.get('word') || '';
+    window._arWord1 = params.get('word2') || '';
 
-    log('🔧', `Params: mind=${mindUrl}, model=${modelUrl}`);
+    log('🔧', `Params: mind=${mindUrl}, model=${modelUrl}, word=${window._arWord0}`);
 
     // ============ TYPED MESSAGE PROTOCOL ============
 
@@ -132,6 +135,13 @@
             case 'DISABLE_COMBO_EFFECTS':
                 removeComboEffects();
                 break;
+            // Set the word label for click-to-sound
+            case 'SET_WORD':
+                if (typeof payload.targetIndex === 'number' && typeof payload.word === 'string') {
+                    window[`_arWord${payload.targetIndex}`] = payload.word;
+                    log('🔤', `Word set for target ${payload.targetIndex}: "${payload.word}"`);
+                }
+                break;
         }
     }
 
@@ -155,7 +165,8 @@
         }
 
         log('⏳', 'Setting up A-Frame scene with MindAR...');
-        scene.setAttribute('mindar-image', `imageTargetSrc: ${mindUrl}; maxTrack: 2; uiLoading: no; uiScanning: no; uiError: no`);
+        // filterMinCF: higher = faster response; filterBeta: lower = smoother tracking
+        scene.setAttribute('mindar-image', `imageTargetSrc: ${mindUrl}; maxTrack: 2; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.001`);
         log('✅', 'MindAR attribute set');
 
         const assetsEl = document.querySelector('a-assets') || document.createElement('a-assets');
@@ -163,10 +174,24 @@
 
         if (modelUrl) {
             log('📦', 'Loading 3D model 0:', modelUrl);
+            const loadText = document.getElementById('ar-load-text');
+            if (loadText) loadText.textContent = 'Loading 3D model...';
             const assetItem = document.createElement('a-asset-item');
             assetItem.setAttribute('id', 'model-asset-0');
             assetItem.setAttribute('src', modelUrl);
             assetItem.setAttribute('crossorigin', 'anonymous');
+            // Update loading text on load events
+            assetItem.addEventListener('loaded', () => {
+                if (loadText) loadText.textContent = 'Model ready! Starting AR...';
+            });
+            assetItem.addEventListener('error', () => {
+                if (loadText) loadText.textContent = 'Model unavailable, continuing...';
+                // Don't block — AR can still track without the model
+                setTimeout(() => {
+                    const overlay = document.getElementById('ar-loading-overlay');
+                    if (overlay) { overlay.style.opacity = '0'; setTimeout(() => { overlay.style.display = 'none'; }, 400); }
+                }, 1000);
+            });
             assetsEl.appendChild(assetItem);
             document.getElementById('mode-3d-0').setAttribute('gltf-model', '#model-asset-0');
         }
@@ -202,6 +227,13 @@
             log('✅', 'AR Ready');
             isReady = true;
             hideLoadingOverlay();
+
+            // Hide the custom loading overlay
+            const arLoadingOverlay = document.getElementById('ar-loading-overlay');
+            if (arLoadingOverlay) {
+                arLoadingOverlay.style.opacity = '0';
+                setTimeout(() => { arLoadingOverlay.style.display = 'none'; }, 400);
+            }
 
             // Send SYSTEM_READY with capabilities
             sendToParent('SYSTEM_READY', {
@@ -260,20 +292,90 @@
             });
         });
 
-        // Clickable models
-        document.querySelectorAll('.clickable').forEach((el) => {
-            el.addEventListener('click', () => {
-                log('👆', `Model clicked: ${el.id}`);
+        // ── Click-to-sound + click-to-move via event delegation ──────────────────
+        // Use scene-level delegation so it fires even after models load dynamically.
+        // A-Frame bubbles 'click' up to the scene element.
+        scene.addEventListener('click', (evt) => {
+            const el = evt.target;
+            if (!el || !el.classList || !el.classList.contains('clickable')) return;
 
-                if (navigator.vibrate) navigator.vibrate(50);
+            log('👆', `Model clicked: ${el.id}`);
 
-                sendToParent('MODEL_CLICKED', {
-                    modelId: el.id,
-                    targetIndex: el.id.includes('0') ? 0 : 1
-                });
+            // Haptic feedback
+            if (navigator.vibrate) navigator.vibrate([40, 20, 40]);
+
+            const targetIndex = el.id.includes('-1') ? 1 : 0;
+
+            // ── Click-to-move: bounce the model up then back ──────────────────
+            const modelEl = document.getElementById(`mode-3d-${targetIndex}`);
+            if (modelEl) {
+                const currentPos = modelEl.getAttribute('position') || { x: 0, y: 0.05, z: 0 };
+                const baseY = parseFloat(currentPos.y) || 0.05;
+                const jumpY = baseY + 0.15;
+
+                // Jump up
+                modelEl.setAttribute('animation__click_up', [
+                    'property: position',
+                    `from: ${currentPos.x || 0} ${baseY} ${currentPos.z || 0}`,
+                    `to: ${currentPos.x || 0} ${jumpY} ${currentPos.z || 0}`,
+                    'dur: 200',
+                    'easing: easeOutQuad',
+                    'startEvents: click-jump-up'
+                ].join('; '));
+
+                // Drop back
+                modelEl.setAttribute('animation__click_down', [
+                    'property: position',
+                    `from: ${currentPos.x || 0} ${jumpY} ${currentPos.z || 0}`,
+                    `to: ${currentPos.x || 0} ${baseY} ${currentPos.z || 0}`,
+                    'dur: 300',
+                    'easing: easeInBounce',
+                    'startEvents: click-jump-down'
+                ].join('; '));
+
+                modelEl.emit('click-jump-up');
+                setTimeout(() => modelEl.emit('click-jump-down'), 200);
+
+                // Scale pulse for feedback
+                modelEl.setAttribute('animation__click_scale', [
+                    'property: scale',
+                    'from: 0.25 0.25 0.25',
+                    'to: 0.32 0.32 0.32',
+                    'dir: alternate',
+                    'loop: 1',
+                    'dur: 150',
+                    'startEvents: click-scale'
+                ].join('; '));
+                modelEl.emit('click-scale');
+            }
+
+            // ── Click-to-sound: speak the word via Web Speech API ────────────────
+            const wordToSpeak = targetIndex === 0
+                ? (window._arWord0 || '')
+                : (window._arWord1 || '');
+
+            if (wordToSpeak && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(wordToSpeak);
+                utter.lang = 'en-US';
+                utter.rate = 0.85;
+                utter.pitch = 1.1;
+                utter.volume = 1.0;
+                window.speechSynthesis.speak(utter);
+                log('🔊', `Speaking: "${wordToSpeak}"`);
+            }
+
+            // Notify React parent
+            sendToParent('MODEL_CLICKED', {
+                modelId: el.id,
+                targetIndex
             });
         });
     }
+
+    // ── Expose word slots so React parent can push words after QR decode ────────
+    // Parent posts: { type: 'SET_WORD', payload: { targetIndex: 0, word: 'Elephant' } }
+    // ar-viewer.js stores them in window._arWord0 / _arWord1
 
     // ============ MULTI-TARGET DETECTION ============
     function checkMultiTarget() {

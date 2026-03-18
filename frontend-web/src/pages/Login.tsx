@@ -9,6 +9,7 @@
  */
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 // SVG Icons
 const BunnyIcon: React.FC<{ className?: string }> = ({ className = "w-8 h-8" }) => (
@@ -88,16 +89,20 @@ const RobotIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) 
 export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [localError, setLocalError] = useState('');
     const navigate = useNavigate();
+    const { login, isLoading } = useAuth();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        console.log("Login with", email, password);
-        navigate('/courses');
-        setIsLoading(false);
+        setLocalError('');
+
+        const result = await login(email, password);
+        if (result.success) {
+            navigate('/courses');
+        } else {
+            setLocalError(result.error || 'Login failed');
+        }
     };
 
     return (
@@ -130,7 +135,12 @@ export const Login: React.FC = () => {
 
                     {/* Login Form */}
                     <form onSubmit={handleLogin} className="space-y-5 md:space-y-6 mt-6 md:mt-8">
-                        <div className="space-y-4">
+                        {/* Error Message */}
+                        {localError && (
+                            <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded">
+                                <p className="text-red-700 font-medium">{localError}</p>
+                            </div>
+                        )}
                             {/* Email */}
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
