@@ -124,12 +124,12 @@ export const Login: React.FC = () => {
                     {/* Welcome Text */}
                     <div className="space-y-2">
                         <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 flex flex-wrap items-center gap-2">
-                            <span>Chào mừng</span><br />
-                            <span>trở lại!</span>
+                            <span>Welcome</span><br />
+                            <span>Back!</span>
                             <WaveHandIcon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 inline-block" />
                         </h1>
                         <p className="text-gray-500 text-base sm:text-lg">
-                            Đăng nhập để tiếp tục học nhé!
+                            Sign in to continue your learning adventure!
                         </p>
                     </div>
 
@@ -157,11 +157,11 @@ export const Login: React.FC = () => {
                             />
                         </div>
 
-                        {/* Password */}
-                        <div className="space-y-2">
-                            <label className="text-xs sm:text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
-                                Mật khẩu
-                            </label>
+                         {/* Password */}
+                         <div className="space-y-2">
+                             <label className="text-xs sm:text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
+                                 Password
+                             </label>
                             <input
                                 type="password"
                                 value={password}
@@ -179,19 +179,19 @@ export const Login: React.FC = () => {
                                 disabled={isLoading}
                                 className="w-full py-3 sm:py-4 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-base sm:text-lg md:text-xl shadow-[0_4px_0_rgb(194,65,12)] hover:shadow-[0_2px_0_rgb(194,65,12)] hover:translate-y-[2px] active:shadow-none active:translate-y-[4px] transition-all duration-200 disabled:opacity-50 min-h-[48px] sm:min-h-[52px] md:min-h-[56px]"
                             >
-                                {isLoading ? 'ĐANG ĐĂNG NHẬP...' : 'ĐĂNG NHẬP'}
-                            </button>
+                                 {isLoading ? 'SIGNING IN...' : 'SIGN IN'}
+                             </button>
                         </div>
 
                         {/* Register Link */}
-                        <div className="text-center pt-3 sm:pt-4">
-                            <p className="text-gray-500 text-sm sm:text-base font-medium">
-                                Chưa có tài khoản?{' '}
-                                <Link to="/register" className="text-blue-500 hover:text-blue-600 font-bold hover:underline transition-colors">
-                                    Đăng ký ngay
-                                </Link>
-                            </p>
-                        </div>
+                         <div className="text-center pt-3 sm:pt-4">
+                             <p className="text-gray-500 text-sm sm:text-base font-medium">
+                                 Don't have an account?{' '}
+                                 <Link to="/register" className="text-blue-500 hover:text-blue-600 font-bold hover:underline transition-colors">
+                                     Sign up now
+                                 </Link>
+                             </p>
+                         </div>
                     </form>
                 </div>
             </div>
@@ -216,27 +216,27 @@ export const Login: React.FC = () => {
                     </div>
 
                     <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4 drop-shadow-md">
-                        Học cùng Thỏ Trắng!
+                        Learn with Bunny!
                     </h2>
                     <p className="text-white text-xl md:text-2xl font-medium opacity-90 max-w-lg mx-auto">
-                        Khám phá thế giới tiếng Anh qua AR Flashcards và trò chơi vui nhộn
+                        Discover the world of English through AR Flashcards and fun games
                     </p>
 
-                    {/* Feature Badges */}
-                    <div className="flex gap-4 justify-center mt-8 flex-wrap">
-                        <span className="bg-white/20 backdrop-blur-md px-4 py-3 rounded-full text-white font-bold border border-white/30 flex items-center gap-2 min-h-[48px]">
-                            <GamepadIcon className="w-5 h-5" />
-                            Vui nhộn
-                        </span>
-                        <span className="bg-white/20 backdrop-blur-md px-4 py-3 rounded-full text-white font-bold border border-white/30 flex items-center gap-2 min-h-[48px]">
-                            <PhoneARIcon className="w-5 h-5" />
-                            AR 3D
-                        </span>
-                        <span className="bg-white/20 backdrop-blur-md px-4 py-3 rounded-full text-white font-bold border border-white/30 flex items-center gap-2 min-h-[48px]">
-                            <RobotIcon className="w-5 h-5" />
-                            AI Chat
-                        </span>
-                    </div>
+                     {/* Feature Badges */}
+                     <div className="flex gap-4 justify-center mt-8 flex-wrap">
+                         <span className="bg-white/20 backdrop-blur-md px-4 py-3 rounded-full text-white font-bold border border-white/30 flex items-center gap-2 min-h-[48px]">
+                             <GamepadIcon className="w-5 h-5" />
+                             Fun
+                         </span>
+                         <span className="bg-white/20 backdrop-blur-md px-4 py-3 rounded-full text-white font-bold border border-white/30 flex items-center gap-2 min-h-[48px]">
+                             <PhoneARIcon className="w-5 h-5" />
+                             AR 3D
+                         </span>
+                         <span className="bg-white/20 backdrop-blur-md px-4 py-3 rounded-full text-white font-bold border border-white/30 flex items-center gap-2 min-h-[48px]">
+                             <RobotIcon className="w-5 h-5" />
+                             AI Chat
+                         </span>
+                     </div>
                 </div>
             </div>
         </div>
