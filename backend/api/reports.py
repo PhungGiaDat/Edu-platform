@@ -1,21 +1,27 @@
 # backend/api/reports.py
 # Progress reports API for learning analytics
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from fastapi.responses import JSONResponse
 from datetime import datetime, timedelta
 import logging
+from models.user_mongo import UserDocument
+from core.security import get_current_user
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 logger = logging.getLogger(__name__)
 
 
 @router.get("/user/{user_id}/summary")
-async def get_user_progress_summary(user_id: str):
+async def get_user_progress_summary(
+    user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
+):
     """
     Get comprehensive learning progress summary for a user.
     Returns stats, topic progress, and achievements.
     """
+    user_id = str(current_user.id)
     logger.info(f"[Reports API] Getting summary for user: {user_id}")
     
     # TODO: Replace with actual MongoDB aggregation
@@ -50,8 +56,12 @@ async def get_user_progress_summary(user_id: str):
 
 
 @router.get("/user/{user_id}/weekly")
-async def get_weekly_report(user_id: str):
+async def get_weekly_report(
+    user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
+):
     """Get weekly learning report."""
+    user_id = str(current_user.id)
     logger.info(f"[Reports API] Getting weekly report for user: {user_id}")
     
     return JSONResponse({
@@ -76,8 +86,12 @@ async def get_weekly_report(user_id: str):
 
 
 @router.get("/user/{user_id}/achievements")
-async def get_achievements(user_id: str):
+async def get_achievements(
+    user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
+):
     """Get user achievements and badges."""
+    user_id = str(current_user.id)
     logger.info(f"[Reports API] Getting achievements for user: {user_id}")
     
     return JSONResponse({
