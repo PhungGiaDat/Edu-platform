@@ -113,41 +113,41 @@ export const Register: React.FC = () => {
         <div className="w-full min-h-screen flex flex-col md:flex-row absolute inset-0 z-50">
 
             {/* === LEFT SIDE: REGISTER FORM === */}
-            <div className="w-full md:w-[45%] lg:w-[40%] flex flex-col justify-center items-center p-6 md:p-12 lg:p-16 bg-[#ECFDF5] relative z-10">
+            <div className="w-full md:w-[45%] lg:w-[40%] flex flex-col justify-center items-center p-4 sm:p-6 md:p-12 lg:p-16 bg-[#ECFDF5] relative z-10">
 
-                <div className="w-full max-w-md space-y-6 md:space-y-8">
+                <div className="w-full max-w-md space-y-4 sm:space-y-5 md:space-y-8">
                     {/* Logo */}
-                    <div className="flex items-center gap-3 mb-4 md:mb-6">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-4 md:mb-6">
                         <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg min-w-[48px]">
                             <BunnyIcon className="w-10 h-10" />
                         </div>
-                        <span className="text-2xl font-bold text-emerald-600">EduPlatform</span>
+                        <span className="text-xl sm:text-2xl font-bold text-emerald-600">EduPlatform</span>
                     </div>
 
                     {/* Welcome Text */}
                     <div className="space-y-2">
-                        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 flex flex-wrap items-center gap-2">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 flex flex-wrap items-center gap-2">
                             <span>Bắt đầu</span><br />
                             <span>hành trình!</span>
-                            <RocketIcon className="w-10 h-10 md:w-12 md:h-12 inline-block" />
+                            <RocketIcon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 inline-block" />
                         </h1>
-                        <p className="text-gray-500 text-lg">
+                        <p className="text-gray-500 text-base sm:text-lg">
                             Tạo tài khoản miễn phí ngay hôm nay!
                         </p>
                     </div>
 
                     {/* Register Form */}
-                    <form onSubmit={handleRegister} className="space-y-5 md:space-y-6 mt-6 md:mt-8">
+                    <form onSubmit={handleRegister} className="space-y-4 sm:space-y-5 md:space-y-6 mt-4 sm:mt-6 md:mt-8">
                         {/* Error Message */}
                         {localError && (
-                            <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded">
-                                <p className="text-red-700 font-medium">{localError}</p>
+                            <div className="p-3 sm:p-4 bg-red-50 border-l-4 border-red-500 rounded">
+                                <p className="text-red-700 text-sm sm:text-base font-medium">{localError}</p>
                             </div>
                         )}
 
                         {/* Name */}
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
+                            <label className="text-xs sm:text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
                                 Tên của bạn
                             </label>
                             <input
@@ -155,14 +155,14 @@ export const Register: React.FC = () => {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="Nhập tên"
-                                className="w-full px-5 md:px-6 py-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-emerald-400 focus:outline-none transition-all shadow-sm text-lg placeholder:text-gray-300 min-h-[56px]"
+                                className="w-full px-4 sm:px-5 md:px-6 py-3 sm:py-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-emerald-400 focus:outline-none transition-all shadow-sm text-base sm:text-lg placeholder:text-gray-300 min-h-[48px] sm:min-h-[52px] md:min-h-[56px]"
                                 required
                             />
                         </div>
 
                         {/* Email */}
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
+                            <label className="text-xs sm:text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
                                 Email
                             </label>
                             <input
@@ -170,14 +170,14 @@ export const Register: React.FC = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="hello@example.com"
-                                className="w-full px-5 md:px-6 py-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-emerald-400 focus:outline-none transition-all shadow-sm text-lg placeholder:text-gray-300 min-h-[56px]"
+                                className="w-full px-4 sm:px-5 md:px-6 py-3 sm:py-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-emerald-400 focus:outline-none transition-all shadow-sm text-base sm:text-lg placeholder:text-gray-300 min-h-[48px] sm:min-h-[52px] md:min-h-[56px]"
                                 required
                             />
                         </div>
 
                         {/* Password */}
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
+                            <label className="text-xs sm:text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
                                 Mật khẩu
                             </label>
                             <input
@@ -185,7 +185,7 @@ export const Register: React.FC = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
-                                className="w-full px-5 md:px-6 py-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-emerald-400 focus:outline-none transition-all shadow-sm text-lg placeholder:text-gray-300 min-h-[56px]"
+                                className="w-full px-4 sm:px-5 md:px-6 py-3 sm:py-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-emerald-400 focus:outline-none transition-all shadow-sm text-base sm:text-lg placeholder:text-gray-300 min-h-[48px] sm:min-h-[52px] md:min-h-[56px]"
                                 required
                             />
                         </div>
@@ -195,15 +195,15 @@ export const Register: React.FC = () => {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xl shadow-[0_4px_0_rgb(4,120,87)] hover:shadow-[0_2px_0_rgb(4,120,87)] hover:translate-y-[2px] active:shadow-none active:translate-y-[4px] transition-all duration-200 disabled:opacity-50 min-h-[56px]"
+                                className="w-full py-3 sm:py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-base sm:text-lg md:text-xl shadow-[0_4px_0_rgb(4,120,87)] hover:shadow-[0_2px_0_rgb(4,120,87)] hover:translate-y-[2px] active:shadow-none active:translate-y-[4px] transition-all duration-200 disabled:opacity-50 min-h-[48px] sm:min-h-[52px] md:min-h-[56px]"
                             >
                                 {isLoading ? 'ĐANG TẠO TÀI KHOẢN...' : 'TẠO TÀI KHOẢN'}
                             </button>
                         </div>
 
                         {/* Login Link */}
-                        <div className="text-center pt-4">
-                            <p className="text-gray-500 font-medium">
+                        <div className="text-center pt-3 sm:pt-4">
+                            <p className="text-gray-500 text-sm sm:text-base font-medium">
                                 Đã có tài khoản?{' '}
                                 <Link to="/login" className="text-blue-500 hover:text-blue-600 font-bold hover:underline transition-colors">
                                     Đăng nhập

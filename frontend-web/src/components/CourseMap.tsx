@@ -98,18 +98,19 @@ const LessonNode: React.FC<{
 
     return (
         <div
-            className={`relative flex flex-col items-center ${isEven ? 'mr-auto ml-8 md:ml-16' : 'ml-auto mr-8 md:mr-16'}`}
+            className={`relative flex flex-col items-center ${isEven ? 'mr-auto ml-4 sm:ml-8 md:ml-16' : 'ml-auto mr-4 sm:mr-8 md:mr-16'}`}
         >
             {/* Node Button */}
             <button
                 onClick={() => lesson.status !== 'locked' && onSelect(lesson)}
                 disabled={lesson.status === 'locked'}
                 className={`
-                    relative w-20 h-20 rounded-full
+                    relative w-16 h-16 sm:w-20 sm:h-20 rounded-full
                     flex items-center justify-center
-                    text-4xl
+                    text-3xl sm:text-4xl
                     transform transition-all duration-300
-                    ${lesson.status !== 'locked' ? 'hover:scale-110 cursor-pointer' : 'cursor-not-allowed'}
+                    touch-target
+                    ${lesson.status !== 'locked' ? 'hover:scale-110 cursor-pointer active:scale-95' : 'cursor-not-allowed'}
                     ${getNodeStyle()}
                 `}
             >
@@ -119,7 +120,7 @@ const LessonNode: React.FC<{
 
             {/* Lesson Title */}
             <div className={`
-                mt-2 px-3 py-1 rounded-full text-sm font-bold text-center max-w-[120px]
+                mt-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold text-center max-w-[100px] sm:max-w-[120px]
                 ${lesson.status === 'locked' ? 'text-gray-400 bg-gray-100' : 'text-gray-700 bg-white/80 shadow-sm'}
             `}>
                 {lesson.title}
@@ -153,39 +154,39 @@ const LessonModal: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50">
             <div
-                className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 animate-slideUp"
+                className="bg-white rounded-3xl shadow-2xl max-w-xs sm:max-w-sm w-full p-4 sm:p-6 animate-slideUp max-h-[90vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200"
+                    className="absolute top-3 sm:top-4 right-3 sm:right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
                     ✕
                 </button>
 
                 {/* Icon */}
-                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-5xl shadow-lg">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-4xl sm:text-5xl shadow-lg">
                     {lesson.icon}
                 </div>
 
                 {/* Title */}
-                <h2 className="text-2xl font-black text-center text-gray-800 mb-2">
+                <h2 className="text-xl sm:text-2xl font-black text-center text-gray-800 mb-2">
                     {lesson.title}
                 </h2>
 
                 {/* Type Badge */}
-                <div className="flex justify-center mb-4">
-                    <span className="bg-sky-100 text-sky-600 px-3 py-1 rounded-full text-sm font-bold">
+                <div className="flex justify-center mb-3 sm:mb-4">
+                    <span className="bg-sky-100 text-sky-600 px-3 py-1 rounded-full text-xs sm:text-sm font-bold">
                         {getTypeLabel()}
                     </span>
                 </div>
 
                 {/* XP Reward */}
-                <div className="text-center mb-6">
-                    <span className="text-amber-500 font-bold text-lg">
+                <div className="text-center mb-4 sm:mb-6">
+                    <span className="text-amber-500 font-bold text-base sm:text-lg">
                         ⚡ +{lesson.xp_reward} XP
                     </span>
                 </div>
@@ -194,12 +195,12 @@ const LessonModal: React.FC<{
                 <button
                     onClick={onStart}
                     className="w-full bg-gradient-to-r from-amber-400 to-orange-500 
-                             text-white font-bold py-4 px-6 rounded-2xl
+                             text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-2xl
                              shadow-lg shadow-amber-500/30
                              border-b-4 border-orange-600
                              hover:shadow-xl hover:from-amber-500 hover:to-orange-600
                              active:border-b-0 active:translate-y-1
-                             transition-all duration-200"
+                             transition-all duration-200 min-h-[48px]"
                 >
                     BẮT ĐẦU HỌC 🚀
                 </button>
@@ -244,23 +245,23 @@ export const CourseMap: React.FC<CourseMapProps> = ({
     const progressPercent = Math.round((completedLessons / totalLessons) * 100);
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-amber-50 py-6 px-4">
+        <div className="min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-amber-50 py-4 sm:py-6 px-2 sm:px-4">
             {/* Header */}
-            <div className="max-w-lg mx-auto mb-8">
-                <h1 className="text-3xl font-black text-gray-800 text-center mb-2">
+            <div className="max-w-sm sm:max-w-lg mx-auto mb-6 sm:mb-8">
+                <h1 className="text-2xl sm:text-3xl font-black text-gray-800 text-center mb-3 sm:mb-2">
                     {courseName}
                 </h1>
 
                 {/* Progress Bar */}
                 <div className="bg-white rounded-full p-2 shadow-md">
-                    <div className="flex items-center gap-3">
-                        <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="flex-1 h-2 sm:h-3 bg-gray-200 rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-500"
                                 style={{ width: `${progressPercent}%` }}
                             />
                         </div>
-                        <span className="text-sm font-bold text-gray-600">
+                        <span className="text-xs sm:text-sm font-bold text-gray-600 whitespace-nowrap">
                             {completedLessons}/{totalLessons}
                         </span>
                     </div>
@@ -268,25 +269,25 @@ export const CourseMap: React.FC<CourseMapProps> = ({
             </div>
 
             {/* Learning Path */}
-            <div className="max-w-lg mx-auto relative">
+            <div className="max-w-sm sm:max-w-lg mx-auto relative">
                 {/* Decorative Path Line */}
                 <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-300 via-sky-300 to-gray-300 -translate-x-1/2 rounded-full" />
 
                 {/* Units */}
                 {units.map((unit, unitIndex) => (
-                    <div key={unit.unit_id} className="relative mb-12">
+                    <div key={unit.unit_id} className="relative mb-8 sm:mb-12">
                         {/* Unit Header */}
-                        <div className="relative z-10 bg-white rounded-2xl shadow-md p-4 mb-6 mx-4">
-                            <h2 className="text-lg font-black text-gray-700 text-center">
+                        <div className="relative z-10 bg-white rounded-2xl shadow-md p-3 sm:p-4 mb-4 sm:mb-6 mx-2 sm:mx-4">
+                            <h2 className="text-base sm:text-lg font-black text-gray-700 text-center">
                                 {unit.title}
                             </h2>
-                            <p className="text-sm text-gray-500 text-center">
+                            <p className="text-xs sm:text-sm text-gray-500 text-center">
                                 {unit.lessons.filter(l => l.status === 'completed').length}/{unit.lessons.length} bài đã hoàn thành
                             </p>
                         </div>
 
                         {/* Lessons in this unit */}
-                        <div className="space-y-8">
+                        <div className="space-y-6 sm:space-y-8">
                             {unit.lessons.map((lesson, lessonIndex) => (
                                 <LessonNode
                                     key={lesson.lesson_id}
