@@ -144,50 +144,50 @@ export const Register: React.FC = () => {
                                 <p className="text-red-700 font-medium">{localError}</p>
                             </div>
                         )}
-                            {/* Name */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
-                                    Tên của bạn
-                                </label>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    placeholder="Nhập tên"
-                                    className="w-full px-5 md:px-6 py-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-emerald-400 focus:outline-none transition-all shadow-sm text-lg placeholder:text-gray-300 min-h-[56px]"
-                                    required
-                                />
-                            </div>
 
-                            {/* Email */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="hello@example.com"
-                                    className="w-full px-5 md:px-6 py-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-emerald-400 focus:outline-none transition-all shadow-sm text-lg placeholder:text-gray-300 min-h-[56px]"
-                                    required
-                                />
-                            </div>
+                        {/* Name */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
+                                Tên của bạn
+                            </label>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="Nhập tên"
+                                className="w-full px-5 md:px-6 py-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-emerald-400 focus:outline-none transition-all shadow-sm text-lg placeholder:text-gray-300 min-h-[56px]"
+                                required
+                            />
+                        </div>
 
-                            {/* Password */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
-                                    Mật khẩu
-                                </label>
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    className="w-full px-5 md:px-6 py-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-emerald-400 focus:outline-none transition-all shadow-sm text-lg placeholder:text-gray-300 min-h-[56px]"
-                                    required
-                                />
-                            </div>
+                        {/* Email */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="hello@example.com"
+                                className="w-full px-5 md:px-6 py-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-emerald-400 focus:outline-none transition-all shadow-sm text-lg placeholder:text-gray-300 min-h-[56px]"
+                                required
+                            />
+                        </div>
+
+                        {/* Password */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-600 tracking-wide uppercase ml-1">
+                                Mật khẩu
+                            </label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="w-full px-5 md:px-6 py-4 rounded-2xl bg-white border-2 border-gray-100 focus:border-emerald-400 focus:outline-none transition-all shadow-sm text-lg placeholder:text-gray-300 min-h-[56px]"
+                                required
+                            />
                         </div>
 
                         {/* Submit Button - Duolingo style with shadow */}

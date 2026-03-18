@@ -50,11 +50,12 @@ export const DailyGoal: React.FC<DailyGoalProps> = ({
 
     const fetchProgress = useCallback(async () => {
         if (!userId) return;
+        try {
             const res = await fetch(`${API_BASE}/api/v1/learning-path/${userId}/today`);
             if (res.ok) {
                 const result = await res.json();
                 setData(result);
-                
+
                 // Check if just completed
                 if (result.is_complete && showCelebration && !showComplete) {
                     setShowComplete(true);
@@ -70,7 +71,7 @@ export const DailyGoal: React.FC<DailyGoalProps> = ({
         } finally {
             setIsLoading(false);
         }
-    }, [userId, showCelebration, onGoalComplete, showComplete]);
+    }, [userId, showCelebration, onGoalComplete]);
 
     useEffect(() => {
         fetchProgress();
