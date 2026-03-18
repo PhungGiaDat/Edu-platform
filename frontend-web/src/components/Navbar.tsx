@@ -47,13 +47,14 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isActive, onClick })
     to={to}
     onClick={onClick}
     className={`
-      flex flex-col items-center justify-center px-4 py-2 rounded-xl
-      transition-all duration-200 min-w-[80px]
+      flex flex-col items-center justify-center px-3 py-3 rounded-xl
+      transition-all duration-200 min-w-[56px]
       ${isActive
         ? 'bg-amber-50 text-amber-600'
         : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
       }
     `}
+    title={label}
   >
     {icon}
     <span className={`text-xs mt-1 font-semibold ${isActive ? 'text-amber-600' : ''}`}>
@@ -76,13 +77,13 @@ const Navbar: React.FC = () => {
   return (
     <>
       {/* Main Navbar - Kid Friendly Style */}
-      <nav className="h-16 bg-white text-gray-800 flex items-center px-4 shadow-md flex-shrink-0 relative z-50 border-b border-gray-100">
+      <nav className="h-16 bg-white text-gray-800 flex items-center px-3 sm:px-4 shadow-md flex-shrink-0 relative z-50 border-b border-gray-100">
         <div className="w-full max-w-7xl mx-auto">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-16 gap-2 sm:gap-4">
 
             {/* Logo/Brand */}
-            <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-md">
+            <Link to="/" className="flex items-center gap-2 flex-shrink-0" title="Home">
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
                 <span className="text-white text-xl">🐰</span>
               </div>
               <span className="text-lg font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent hidden sm:block">
@@ -112,9 +113,10 @@ const Navbar: React.FC = () => {
                   flex items-center gap-2 px-5 py-2.5 mx-2 rounded-full
                   bg-gradient-to-r from-cyan-400 to-sky-500
                   text-white font-bold shadow-lg shadow-cyan-500/30
-                  hover:shadow-xl hover:scale-105 transition-all duration-200
+                  hover:shadow-xl hover:scale-105 transition-all duration-200 min-h-[44px]
                   ${isActive('/learn-ar') ? 'ring-2 ring-cyan-300 ring-offset-2' : ''}
                 `}
+                title="AR Mode"
               >
                 <CameraIcon />
                 <span>AR Mode</span>
@@ -129,8 +131,8 @@ const Navbar: React.FC = () => {
             </div>
 
             {/* XP Progress (Desktop) */}
-            <div className="hidden lg:flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-full">
-              <div className="text-amber-500 font-bold text-sm">⚡ {userXP} XP</div>
+            <div className="hidden lg:flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-full flex-shrink-0">
+              <div className="text-amber-500 font-bold text-sm whitespace-nowrap">⚡ {userXP} XP</div>
               <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-500"
@@ -142,8 +144,9 @@ const Navbar: React.FC = () => {
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors"
-              aria-label="Toggle menu"
+              className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+              title={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
               <svg className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {isMobileMenuOpen ? (
@@ -163,8 +166,8 @@ const Navbar: React.FC = () => {
           {/* XP Progress (Mobile) */}
           <div className="px-4 py-3 bg-amber-50 border-b border-amber-100">
             <div className="flex items-center gap-3">
-              <span className="text-amber-600 font-bold">⚡ {userXP} XP</span>
-              <div className="flex-1 h-2 bg-amber-200 rounded-full overflow-hidden">
+              <span className="text-amber-600 font-bold text-sm flex-shrink-0">⚡ {userXP} XP</span>
+              <div className="flex-1 h-2 bg-amber-200 rounded-full overflow-hidden min-w-0">
                 <div
                   className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
                   style={{ width: `${xpProgress}%` }}
@@ -223,7 +226,7 @@ const MobileNavItem: React.FC<{
     to={to}
     onClick={onClick}
     className={`
-      flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors
+      flex items-center gap-3 px-4 py-4 rounded-xl font-medium transition-colors min-h-[56px]
       ${highlight
         ? 'bg-gradient-to-r from-cyan-400 to-sky-500 text-white'
         : isActive
@@ -232,8 +235,8 @@ const MobileNavItem: React.FC<{
       }
     `}
   >
-    <span className="text-xl">{icon}</span>
-    <span>{label}</span>
+    <span className="text-2xl" role="img" aria-label={label}>{icon}</span>
+    <span className="flex-1">{label}</span>
   </Link>
 );
 
