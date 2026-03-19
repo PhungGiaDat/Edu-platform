@@ -163,19 +163,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ========== Login ==========
 
-  const login = useCallback(
-    async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-      setIsLoading(true);
-      setError(null);
+   const login = useCallback(
+     async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+       setIsLoading(true);
+       setError(null);
 
-      try {
-        const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ username: email, password }),
-        });
+       try {
+         // Backend expects OAuth2PasswordRequestForm (form-encoded, not JSON)
+         const formData = new URLSearchParams();
+         formData.append('username', email);
+         formData.append('password', password);
+
+         const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+           method: 'POST',
+           headers: {
+             'Content-Type': 'application/x-www-form-urlencoded',
+           },
+           body: formData.toString(),
+         });
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -218,19 +223,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ========== Register ==========
 
-  const register = useCallback(
-    async (email: string, password: string, username: string): Promise<{ success: boolean; error?: string }> => {
-      setIsLoading(true);
-      setError(null);
+   const register = useCallback(
+     async (email: string, password: string, username: string): Promise<{ success: boolean; error?: string }> => {
+       setIsLoading(true);
+       setError(null);
 
-      try {
-        const response = await fetch(`${API_BASE}/api/v1/auth/register`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password, username }),
-        });
+       try {
+         const response = await fetch(`${API_BASE}/api/v1/auth/register`, {
+           method: 'POST',
+           headers: {
+             'Content-Type': 'application/json',
+           },
+           body: JSON.stringify({ email, password, username, full_name: username }),
+         });
 
         if (!response.ok) {
           const errorData = await response.json();
