@@ -17,15 +17,26 @@ from models.user_mongo import UserDocument
 logger = logging.getLogger(__name__)
 
 # Password hashing configuration
-# Use bcrypt with passlib
+# Use argon2 as primary (more secure and reliable than bcrypt)
 try:
+    pwd_context = CryptContext(
+        schemes=["argon2"],
+        deprecated="auto",
+        argon2__memory_cost=65540,
+        argon2__parallelism=2,
+        argon2__time_cost=2,
+        argon2__hash_len=32,
+        argon2__salt_len=16
+    )
+    logger.info("Using Argon2 for password hashing")
+except Exception as e:
+    logger.error(f"Failed to initialize Argon2 context: {e}")
+    # Fallback to bcrypt if argon2 fails
     pwd_context = CryptContext(
         schemes=["bcrypt"],
         deprecated="auto"
     )
-except Exception as e:
-    logger.error(f"Failed to initialize password context: {e}")
-    raise
+    logger.info("Fallback to Bcrypt for password hashing")
 
 # OAuth2 scheme for token extraction
 oauth2_scheme = OAuth2PasswordBearer(
@@ -47,12 +58,10 @@ class TokenPayload(BaseModel):
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     Verify a plain text password against a hashed password
-    Bcrypt has a 72-byte limit for password input
+    Note: Using Argon2 which doesn't have password length restrictions like bcrypt
     """
-    # Truncate password if it exceeds 72 bytes (bcrypt limit)
-    truncated_password = plain_password[:72]
     try:
-        result = pwd_context.verify(truncated_password, hashed_password)
+        result = pwd_context.verify(plain_password, hashed_password)
         return result
     except Exception as e:
         logger.error(f"Password verification error: {type(e).__name__}: {e}")
@@ -61,15 +70,13 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     """
-    Hash a plain text password using bcrypt
-    Bcrypt has a 72-byte limit for password input
+    Hash a plain text password using Argon2
+    Note: Argon2 is more secure and reliable than bcrypt
     """
-    # Truncate password if it exceeds 72 bytes (bcrypt limit)
-    truncated_password = password[:72]
     try:
-        return pwd_context.hash(truncated_password)
-    except ValueError as e:
-        logger.error(f"Password hashing error: {e}")
+        return pwd_context.hash(password)
+    except Exception as e:
+        logger.error(f"Password hashing error: {type(e).__name__}: {e}")
         raise
 
 # ========== JWT Token Management ==========
