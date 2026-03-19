@@ -3,7 +3,7 @@
  * AI Chat Buddy - Floating chat bubble for kids
  * 
  * Features:
- * - Kid-friendly "Thỏ Trắng" mascot
+ * - Kid-friendly learning buddy mascot
  * - 3D pet that appears behind the chat button
  * - Floating bounce animation
  * - RAG-powered responses with source indicators
@@ -68,7 +68,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
         {
             id: '1',
             role: 'ai',
-            content: 'Xin chào! Mình là Thỏ Trắng, bạn học của bé! Hỏi mình bất cứ điều gì về tiếng Anh nhé!'
+            content: 'Hello! I\'m your English learning buddy! Ask me anything about English learning!'
         }
     ]);
     const [input, setInput] = useState('');
@@ -118,7 +118,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
 const errorMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'ai',
-                content: 'Ôi không! Mình gặp sự cố rồi. Bạn thử lại nhé!'
+                content: 'Oops! I ran into a problem. Please try again!'
             };
             setMessages(prev => [...prev, errorMsg]);
         } finally {
@@ -132,7 +132,7 @@ const handleNewChat = () => {
             {
                 id: Date.now().toString(),
                 role: 'ai',
-                content: 'Cuộc trò chuyện mới! Hỏi mình bất cứ điều gì nhé!'
+                content: 'New conversation! Ask me anything!'
             }
         ]);
     };
@@ -194,7 +194,7 @@ return (
                         ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.85), rgba(6, 182, 212, 0.85))'
                         : undefined
                 }}
-                aria-label="Mở chat với Thỏ Trắng"
+                aria-label="Open chat with learning buddy"
             >
                 {isOpen ? 'X' : (show3D ? '' : 'T')}
             </button>
@@ -224,18 +224,18 @@ return (
                                 T
                             </div>
                             <div>
-                                <h3 className="text-white font-bold text-lg">Thỏ Trắng</h3>
+                                <h3 className="text-white font-bold text-lg">Learning Buddy</h3>
                                 <span className="text-xs bg-white/30 text-white px-2 py-0.5 rounded-full font-medium">
-                                    Sẵn sàng giúp bé
+                                    Ready to help
                                 </span>
                             </div>
                         </div>
                         <button
                             onClick={handleNewChat}
                             className="text-white/80 hover:text-white text-sm bg-white/20 px-3 py-1.5 rounded-full font-medium hover:bg-white/30 transition-colors"
-                            title="Cuộc trò chuyện mới"
+                            title="Start new conversation"
                         >
-                            Mới
+                            New
                         </button>
                     </div>
 
@@ -274,7 +274,7 @@ return (
                                                 <span
                                                     key={idx}
                                                     className="text-xs bg-sky-100 text-sky-600 px-2 py-0.5 rounded-full"
-                                                    title={`Độ liên quan: ${(src.score * 100).toFixed(0)}%`}
+                                                    title={`Relevance: ${(src.score * 100).toFixed(0)}%`}
                                                 >
                                                     {src.word}
                                                 </span>
@@ -308,7 +308,7 @@ return (
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyPress={handleKeyPress}
-                                placeholder="Hỏi Thỏ Trắng đi nào..."
+                                placeholder="Ask your learning buddy..."
                                 className="
                                     flex-1 bg-amber-50 border-2 border-amber-200 
                                     rounded-xl px-4 py-3 
@@ -331,11 +331,11 @@ return (
                                     disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
                                 "
                             >
-                                GỬI
+                                SEND
                             </button>
                         </div>
                         <p className="text-center text-xs text-gray-400 mt-2">
-                            Powered by AI - Dành cho trẻ em
+                            Powered by AI - For kids learning English
                         </p>
                     </div>
                 </div>

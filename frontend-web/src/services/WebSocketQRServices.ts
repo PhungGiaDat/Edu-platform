@@ -30,10 +30,10 @@ export class VerifySocket {
   private onError?: (error: Event) => void;
   private onConnect?: () => void;
   private onDisconnect?: () => void;
-  private lastSentTime = 0; // THÊM: Throttling
-  private minSendInterval = 5000; // THÊM: Minimum 5 seconds between sends
-  private consecutiveFailures = 0; // THÊM: Track failures
-  private maxConsecutiveFailures = 3; // THÊM: Max failures before pause
+  private lastSentTime = 0; // ADDED: Throttling
+  private minSendInterval = 5000; // ADDED: Minimum 5 seconds between sends
+  private consecutiveFailures = 0; // ADDED: Track failures
+  private maxConsecutiveFailures = 3; // ADDED: Max failures before pause
 
   constructor(
     url: string,
@@ -61,7 +61,7 @@ export class VerifySocket {
 
     return new Promise((resolve, reject) => {
       try {
-        // Sử dụng trực tiếp baseUrl vì đã đúng format từ useVerifySocket hook
+         // Use baseUrl directly as it's already correctly formatted from useVerifySocket hook
         const wsUrl = this.baseUrl;
         console.log('🔗 Connecting to WebSocket:', wsUrl);
         
@@ -79,7 +79,7 @@ export class VerifySocket {
           try {
             const result = JSON.parse(event.data) as VerifyResult;
             
-            // THÊM: Track consecutive failures để tránh infinite loop
+             // ADDED: Track consecutive failures to avoid infinite loop
             if (result.valid) {
               this.consecutiveFailures = 0;
             } else {
@@ -113,12 +113,12 @@ export class VerifySocket {
     });
   }
 
-  /**
-   * Send frame for verification với throttling để tránh infinite loop
-   * @param qrId - Expected QR code ID
-   * @param blob - Image blob to verify
-   * @param format - Image format (default: 'image/jpeg')
-   */
+   /**
+    * Send frame for verification with throttling to avoid infinite loop
+    * @param qrId - Expected QR code ID
+    * @param blob - Image blob to verify
+    * @param format - Image format (default: 'image/jpeg')
+    */
   sendFrame(
     qrId: string, 
     blob: Blob, 
@@ -129,14 +129,14 @@ export class VerifySocket {
       return;
     }
 
-    // THÊM: Throttling để tránh spam
+     // ADDED: Throttling to avoid spam
     const now = Date.now();
     if (now - this.lastSentTime < this.minSendInterval) {
       console.log(`⏳ Throttling: Skipping frame send (${now - this.lastSentTime}ms < ${this.minSendInterval}ms)`);
       return;
     }
 
-    // THÊM: Pause sending sau nhiều failures liên tiếp
+     // ADDED: Pause sending after many consecutive failures
     if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
       console.log(`🚫 Too many consecutive failures (${this.consecutiveFailures}), pausing frame sending`);
       return;

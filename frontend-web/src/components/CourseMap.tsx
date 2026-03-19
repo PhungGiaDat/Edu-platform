@@ -36,28 +36,28 @@ interface CourseMapProps {
 const mockUnits: Unit[] = [
     {
         unit_id: 'unit_1',
-        title: 'Thế giới động vật',
+        title: 'Animal World',
         lessons: [
-            { lesson_id: 'l1', title: 'Nông trại vui vẻ', status: 'completed', type: 'flashcard', xp_reward: 50, icon: '🐔' },
-            { lesson_id: 'l2', title: 'Rừng xanh', status: 'completed', type: 'quiz', xp_reward: 100, icon: '🦁' },
-            { lesson_id: 'l3', title: 'Đại dương sâu', status: 'available', type: 'flashcard', xp_reward: 75, icon: '🐳' },
-            { lesson_id: 'l4', title: 'AR: Khám phá động vật', status: 'locked', type: 'ar_session', xp_reward: 150, icon: '📱' },
+            { lesson_id: 'l1', title: 'Farm Friends', status: 'completed', type: 'flashcard', xp_reward: 50, icon: '🐔' },
+            { lesson_id: 'l2', title: 'Green Jungle', status: 'completed', type: 'quiz', xp_reward: 100, icon: '🦁' },
+            { lesson_id: 'l3', title: 'Deep Ocean', status: 'available', type: 'flashcard', xp_reward: 75, icon: '🐳' },
+            { lesson_id: 'l4', title: 'AR: Discover Animals', status: 'locked', type: 'ar_session', xp_reward: 150, icon: '📱' },
         ]
     },
     {
         unit_id: 'unit_2',
-        title: 'Màu sắc & Hình dạng',
+        title: 'Colors & Shapes',
         lessons: [
-            { lesson_id: 'l5', title: 'Cầu vồng màu sắc', status: 'locked', type: 'flashcard', xp_reward: 50, icon: '🌈' },
-            { lesson_id: 'l6', title: 'Hình học vui nhộn', status: 'locked', type: 'quiz', xp_reward: 100, icon: '🔷' },
+            { lesson_id: 'l5', title: 'Rainbow Colors', status: 'locked', type: 'flashcard', xp_reward: 50, icon: '🌈' },
+            { lesson_id: 'l6', title: 'Fun Geometry', status: 'locked', type: 'quiz', xp_reward: 100, icon: '🔷' },
         ]
     },
     {
         unit_id: 'unit_3',
-        title: 'Gia đình & Bạn bè',
+        title: 'Family & Friends',
         lessons: [
-            { lesson_id: 'l7', title: 'Gia đình của bé', status: 'locked', type: 'flashcard', xp_reward: 50, icon: '👨‍👩‍👧' },
-            { lesson_id: 'l8', title: 'Bạn bè thân thiết', status: 'locked', type: 'quiz', xp_reward: 100, icon: '🤝' },
+            { lesson_id: 'l7', title: 'My Family', status: 'locked', type: 'flashcard', xp_reward: 50, icon: '👨‍👩‍👧' },
+            { lesson_id: 'l8', title: 'Close Friends', status: 'locked', type: 'quiz', xp_reward: 100, icon: '🤝' },
         ]
     },
 ];
