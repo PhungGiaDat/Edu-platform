@@ -230,6 +230,44 @@ async def health_check():
     }
 
 
+@app.get("/debug/test-login", tags=["Debug"])
+async def debug_test_login():
+    """
+    Debug endpoint to test login functionality
+    """
+    from api.auth import login
+    from models.user_mongo import UserDocument
+    
+    class FakeForm:
+        username = "admin"
+        password = "AdminPassword123!"
+    
+    try:
+        # Test database connection
+        admin = await UserDocument.find_one(UserDocument.username == "admin")
+        if not admin:
+            return {"error": "Admin user not found in database"}
+        
+        # Test password verification
+        from core.security import verify_password
+        password_correct = verify_password("AdminPassword123!", admin.hashed_password)
+        
+        if not password_correct:
+            return {"error": "Password verification failed", "user_found": True}
+        
+        # Test login
+        result = await login(FakeForm())
+        return {"success": True, "token_type": result["token_type"], "has_token": bool(result["access_token"])}
+    
+    except Exception as e:
+        import traceback
+        return {
+            "error": str(e),
+            "type": type(e).__name__,
+            "traceback": traceback.format_exc()
+        }
+
+
 @app.get("/", tags=["System"])
 async def root():
     """Root endpoint"""
