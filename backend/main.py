@@ -235,29 +235,58 @@ async def debug_test_login():
     """
     Debug endpoint to test login functionality
     """
-    from api.auth import login
     from models.user_mongo import UserDocument
-    
-    class FakeForm:
-        username = "admin"
-        password = "AdminPassword123!"
+    from core.security import verify_password
     
     try:
-        # Test database connection
+        # Step 1: Test database connection
         admin = await UserDocument.find_one(UserDocument.username == "admin")
         if not admin:
-            return {"error": "Admin user not found in database"}
+            return {"step": 1, "error": "Admin user not found in database"}
         
-        # Test password verification
-        from core.security import verify_password
-        password_correct = verify_password("AdminPassword123!", admin.hashed_password)
+        # Step 2: Verify user found
+        if not admin:
+            return {"step": 2, "error": "User is None after query"}
+        
+        # Step 3: Test password hash format
+        if not admin.hashed_password:
+            return {"step": 3, "error": "Hashed password is None"}
+        
+        # Step 4: Test password verification
+        try:
+            password_correct = verify_password("AdminPassword123!", admin.hashed_password)
+        except Exception as e:
+            return {
+                "step": 4,
+                "error": f"Password verification exception: {type(e).__name__}: {e}"
+            }
         
         if not password_correct:
-            return {"error": "Password verification failed", "user_found": True}
+            return {"step": 5, "error": "Password verification returned False"}
         
-        # Test login
-        result = await login(FakeForm())
-        return {"success": True, "token_type": result["token_type"], "has_token": bool(result["access_token"])}
+        # Step 6: Test token creation
+        from core.security import create_access_token
+        from datetime import timedelta
+        from settings import settings
+        
+        try:
+            access_token = create_access_token(
+                subject=str(admin.id),
+                expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+            )
+        except Exception as e:
+            return {
+                "step": 6,
+                "error": f"Token creation exception: {type(e).__name__}: {e}"
+            }
+        
+        return {
+            "success": True,
+            "user_found": True,
+            "password_correct": True,
+            "token_created": True,
+            "user_id": str(admin.id)
+        }
     
     except Exception as e:
         import traceback
