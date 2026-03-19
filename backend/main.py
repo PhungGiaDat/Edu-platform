@@ -236,7 +236,7 @@ async def debug_test_login():
     Debug endpoint to test login functionality
     """
     from models.user_mongo import UserDocument
-    from core.security import verify_password
+    from passlib.context import CryptContext
     
     try:
         # Step 1: Test database connection
@@ -252,22 +252,36 @@ async def debug_test_login():
         if not admin.hashed_password:
             return {"step": 3, "error": "Hashed password is None"}
         
-        # Step 4: Test password verification
+        # Step 4: Test password verification with direct passlib
         try:
-            password_correct = verify_password("AdminPassword123!", admin.hashed_password)
+            pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+            password_correct = pwd_context.verify("AdminPassword123!", admin.hashed_password)
+            if not password_correct:
+                return {"step": 4, "error": "Direct verify returned False", "using_direct_context": True}
         except Exception as e:
             return {
                 "step": 4,
-                "error": f"Password verification exception: {type(e).__name__}: {e}"
+                "error": f"Direct verify exception: {type(e).__name__}: {e}",
+                "using_direct_context": True
             }
         
-        if not password_correct:
-            return {"step": 5, "error": "Password verification returned False"}
+        # Step 5: Test with our verify_password function
+        try:
+            from core.security import verify_password
+            password_correct_ours = verify_password("AdminPassword123!", admin.hashed_password)
+        except Exception as e:
+            return {
+                "step": 5,
+                "error": f"Our verify_password exception: {type(e).__name__}: {e}",
+                "direct_verify_worked": True
+            }
         
-        # Step 6: Test token creation
+        if not password_correct_ours:
+            return {"step": 6, "error": "Our verify_password returned False", "direct_verify_worked": True}
+        
+        # Step 7: Test token creation
         from core.security import create_access_token
         from datetime import timedelta
-        from settings import settings
         
         try:
             access_token = create_access_token(
@@ -276,8 +290,9 @@ async def debug_test_login():
             )
         except Exception as e:
             return {
-                "step": 6,
-                "error": f"Token creation exception: {type(e).__name__}: {e}"
+                "step": 7,
+                "error": f"Token creation exception: {type(e).__name__}: {e}",
+                "password_verified": True
             }
         
         return {
