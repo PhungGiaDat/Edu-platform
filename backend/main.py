@@ -253,19 +253,19 @@ async def debug_test_login():
             return {"step": 3, "error": "Hashed password is None"}
         
         # Step 4: Test password verification with direct passlib
+        password_to_test = "AdminPassword123!"
+        hash_to_test = admin.hashed_password
+        
+        # Debug info
+        debug_info = {
+            "password_len": len(password_to_test),
+            "hash_len": len(hash_to_test) if hash_to_test else 0,
+            "hash_starts_with": hash_to_test[:10] if hash_to_test else "None",
+            "hash_valid_bcrypt": (hash_to_test.startswith("$2b$") or hash_to_test.startswith("$2a$") or hash_to_test.startswith("$2y$")) if hash_to_test else False
+        }
+        
         try:
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-            password_to_test = "AdminPassword123!"
-            hash_to_test = admin.hashed_password
-            
-            # Debug info
-            debug_info = {
-                "password_len": len(password_to_test),
-                "hash_len": len(hash_to_test) if hash_to_test else 0,
-                "hash_starts_with": hash_to_test[:10] if hash_to_test else "None",
-                "hash_valid_bcrypt": hash_to_test.startswith("$2b$") or hash_to_test.startswith("$2a$") or hash_to_test.startswith("$2y$") if hash_to_test else False
-            }
-            
             password_correct = pwd_context.verify(password_to_test, hash_to_test)
             if not password_correct:
                 return {"step": 4, "error": "Direct verify returned False", "debug": debug_info}
@@ -273,19 +273,8 @@ async def debug_test_login():
             return {
                 "step": 4,
                 "error": f"Direct verify exception: {type(e).__name__}: {e}",
-                "debug": debug_info
-            }
-        
-        # Step 4.5: Test password verification WITHOUT truncation
-        try:
-            pwd_context2 = CryptContext(schemes=["bcrypt"], deprecated="auto")
-            password_correct_no_truncate = pwd_context2.verify("AdminPassword123!"[:72], admin.hashed_password)
-            if not password_correct_no_truncate:
-                return {"step": "4.5", "error": "Verify with [:72] returned False"}
-        except Exception as e:
-            return {
-                "step": "4.5",
-                "error": f"Verify with [:72] exception: {type(e).__name__}: {e}"
+                "debug": debug_info,
+                "traceback": str(e)
             }
         
         # Step 5: Test with our verify_password function
