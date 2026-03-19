@@ -6,6 +6,7 @@ Handles registration and login using JWT and MongoDB
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
+from beanie import operators
 from settings import settings
 from core.security import (
     create_access_token,
@@ -76,8 +77,10 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     """
     # Find user by username or email
     user = await UserDocument.find_one(
-        ((UserDocument.username == form_data.username) | 
-         (UserDocument.email == form_data.username))
+        operators.Or(
+            UserDocument.username == form_data.username,
+            UserDocument.email == form_data.username
+        )
     )
     
     if not user or not verify_password(form_data.password, user.hashed_password):
