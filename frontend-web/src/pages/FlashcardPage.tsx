@@ -147,15 +147,15 @@ const FlashcardPage = () => {
   }
 
   return (
-    <div className="min-h-full w-full bg-white/90 backdrop-blur-sm py-8 px-4">
+    <div className="min-h-full w-full bg-white/90 backdrop-blur-sm py-4 sm:py-6 md:py-8 px-4 sm:px-6">
       {/* Header */}
-      <div className="text-center mb-6">
-        <h1 className="text-3xl font-black text-blue-800">Flashcards</h1>
-        <p className="text-blue-600 text-sm mt-1">Tap a card to practice pronunciation!</p>
+      <div className="text-center mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-black text-blue-800">Flashcards</h1>
+        <p className="text-blue-600 text-xs sm:text-sm mt-1">Tap a card to practice pronunciation!</p>
       </div>
 
       {/* Card grid */}
-      <div className="flex flex-wrap justify-center gap-6 mb-8">
+      <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
         {cards.map((card, idx) => {
           const cardId = card.id ?? card._id ?? `card-${idx}`;
           const isSelected = selectedCard
@@ -187,22 +187,22 @@ const FlashcardPage = () => {
 
       {/* Practice panel — collapsible */}
       {selectedCard && practiceOpen && (
-        <div className="max-w-md mx-auto rounded-3xl shadow-2xl overflow-hidden"
+        <div className="max-w-md mx-auto rounded-3xl shadow-2xl overflow-hidden w-full sm:w-[90%] md:w-full"
           style={{ border: "4px solid #60a5fa" }}>
           {/* Panel header */}
           <div
-            className="flex items-center justify-between px-5 py-3 cursor-pointer"
+            className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 cursor-pointer"
             style={{ background: "linear-gradient(135deg, #3b82f6, #6366f1)" }}
             onClick={() => setPracticeOpen(false)}
           >
-            <span className="text-white font-black text-lg">
+            <span className="text-white font-black text-base sm:text-lg truncate">
               Practice: {selectedCard.word.toUpperCase()}
             </span>
-            <span className="text-white text-xl">▲</span>
+            <span className="text-white text-lg sm:text-xl ml-2">▲</span>
           </div>
 
           {/* Pronunciation */}
-          <div className="p-4" style={{ background: "#eff6ff" }}>
+          <div className="p-3 sm:p-4" style={{ background: "#eff6ff" }}>
             <PronunciationPractice
               targetText={selectedCard.word}
               imageUrl={selectedCard.image_url}
@@ -212,23 +212,23 @@ const FlashcardPage = () => {
           </div>
 
           {/* Game buttons */}
-          <div className="px-4 pb-5" style={{ background: "#eff6ff" }}>
-            <p className="text-center font-bold text-blue-700 text-sm mb-3">
+          <div className="px-3 sm:px-4 pb-4 sm:pb-5" style={{ background: "#eff6ff" }}>
+            <p className="text-center font-bold text-blue-700 text-xs sm:text-sm mb-3">
               Or play a mini-game!
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {(Object.entries(GAME_LABELS) as [GameType, (typeof GAME_LABELS)[GameType]][]).map(
                 ([type, meta]) => (
                   <button
                     key={type}
                     onClick={() => handleStartGame(type)}
                     disabled={startingGame}
-                    className="flex items-center gap-2 rounded-2xl px-4 py-3 font-bold text-white text-sm
-                      shadow-md active:scale-95 transition-transform disabled:opacity-60"
+                    className="flex items-center justify-center gap-2 rounded-2xl px-3 sm:px-4 py-3 font-bold text-white text-xs sm:text-sm
+                      shadow-md active:scale-95 transition-transform disabled:opacity-60 min-h-[44px]"
                     style={{ background: meta.color }}
                   >
-                    <span className="text-xl">{meta.emoji}</span>
-                    <span>{meta.label}</span>
+                    <span className="text-lg sm:text-xl">{meta.emoji}</span>
+                    <span className="hidden sm:inline">{meta.label}</span>
                   </button>
                 )
               )}
@@ -239,14 +239,14 @@ const FlashcardPage = () => {
 
       {/* Collapsed tab — reopen practice panel */}
       {selectedCard && !practiceOpen && (
-        <div className="fixed bottom-4 left-0 right-0 flex justify-center z-40">
+        <div className="fixed bottom-4 left-0 right-0 flex justify-center z-40 px-4">
           <button
             onClick={() => setPracticeOpen(true)}
-            className="rounded-full px-6 py-3 font-black text-white shadow-xl text-sm
+            className="rounded-full px-4 sm:px-6 py-2 sm:py-3 font-black text-white shadow-xl text-xs sm:text-sm
               active:scale-95 transition-transform"
             style={{ background: "linear-gradient(135deg, #3b82f6, #6366f1)" }}
           >
-            🎤 Practice {selectedCard.word.toUpperCase()} ▼
+            🎤 {selectedCard.word.toUpperCase()} ▼
           </button>
         </div>
       )}

@@ -95,9 +95,9 @@ export const ProgressDashboard: React.FC = () => {
                 </div>
             </div>
 
-            <div className="px-4 pt-4 space-y-4">
+            <div className="px-4 sm:px-6 pt-4 space-y-4">
                 {/* Quick Stats - Always visible */}
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                     <QuickStat
                         icon="🏆"
                         value={`Lv.${summary?.stats.level || 1}`}
