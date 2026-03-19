@@ -3,9 +3,6 @@
 Unified Security Module for MongoDB JWT Authentication
 Replacing Supabase-specific implementation
 """
-import os
-os.environ.setdefault("PASSLIB_BCRYPT_DEFAULT_ROUNDS", "12")
-
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
@@ -20,11 +17,15 @@ from models.user_mongo import UserDocument
 logger = logging.getLogger(__name__)
 
 # Password hashing configuration
-# Use only bcrypt, no deprecated algorithms
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto"
-)
+# Use bcrypt with passlib
+try:
+    pwd_context = CryptContext(
+        schemes=["bcrypt"],
+        deprecated="auto"
+    )
+except Exception as e:
+    logger.error(f"Failed to initialize password context: {e}")
+    raise
 
 # OAuth2 scheme for token extraction
 oauth2_scheme = OAuth2PasswordBearer(
