@@ -65,7 +65,7 @@ export const ChatService = {
             console.error('[ChatService] RAG request failed:', error);
             // Fallback response
             return {
-                response: "Xin lỗi, mình gặp lỗi rồi. Bạn thử lại nhé! 🙏",
+                response: "Sorry, I ran into an error. Please try again! 🙏",
                 sources: [],
                 session_id: this.getSessionId()
             };

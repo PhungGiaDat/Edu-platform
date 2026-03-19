@@ -25,25 +25,25 @@ const CameraCapture = () => {
           video.onloadedmetadata = () => {
             video.play().then(() => {
               setCameraReady(true);
-              alert("📸 Camera đã sẵn sàng!");
+              alert("📸 Camera is ready!");
             }).catch((err) => {
-              alert("⚠️ Không thể auto play video: " + err.message);
+              alert("⚠️ Cannot auto-play video: " + err.message);
             });
           };
         }
-      } catch (err) {
-        alert("🚫 Không thể mở camera: " + (err as any).message);
-      }
+       } catch (err) {
+         alert("🚫 Cannot open camera: " + (err as any).message);
+       }
     };
 
     startCamera();
   }, []);
 
   const handleScan = async () => {
-    alert("🟢 Bắt đầu quét QR...");
+    alert("🟢 Starting QR scan...");
 
     if (!videoRef.current || !canvasRef.current || !cameraReady) {
-      alert("⚠️ Video chưa sẵn sàng hoặc lỗi DOM");
+      alert("⚠️ Video not ready or DOM error");
       return;
     }
 
@@ -55,7 +55,7 @@ const CameraCapture = () => {
     const vh = video.videoHeight;
 
     if (vw === 0 || vh === 0) {
-      alert("⚠️ Video chưa load xong");
+      alert("⚠️ Video not fully loaded");
       return;
     }
 
@@ -63,24 +63,24 @@ const CameraCapture = () => {
     canvas.height = vh;
     context?.drawImage(video, 0, 0, vw, vh);
 
-    alert("🧠 Đã vẽ xong frame lên canvas");
+    alert("🧠 Frame drawn to canvas");
 
     canvas.toBlob(async (blob) => {
       if (!blob) {
-        alert("❌ Không tạo được blob từ ảnh");
+        alert("❌ Could not create blob from image");
         return;
       }
 
-      alert("📤 Đang gửi ảnh lên server...");
+      alert("📤 Sending image to server...");
 
       setScanning(true);
       try {
         const data = await detectQR(blob);
         setResult(data);
-        alert("✅ Server trả về: " + JSON.stringify(data));
+        alert("✅ Server response: " + JSON.stringify(data));
       } catch (err) {
         setResult(null);
-        alert("❌ Không tìm thấy mã QR hoặc server lỗi");
+        alert("❌ QR code not found or server error");
       } finally {
         setScanning(false);
       }
