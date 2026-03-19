@@ -95,16 +95,9 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
-        # Verify password with proper error handling
-        try:
-            password_correct = verify_password(form_data.password, user.hashed_password)
-        except ValueError as e:
-            logger.error(f"Password verification error for user {user.username}: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+        # Verify password
+        password_correct = verify_password(form_data.password, user.hashed_password)
+        logger.info(f"Password verification for {user.username}: {password_correct}")
         
         if not password_correct:
             logger.warning(f"Login attempt with incorrect password for user: {user.username}")

@@ -230,96 +230,29 @@ async def health_check():
     }
 
 
-@app.get("/debug/test-login", tags=["Debug"])
-async def debug_test_login():
+@app.get("/debug/admin-hash", tags=["Debug"])
+async def debug_admin_hash():
     """
-    Debug endpoint to test login functionality
+    Debug endpoint to check admin user hash
     """
     from models.user_mongo import UserDocument
-    from passlib.context import CryptContext
     
     try:
-        # Step 1: Test database connection
         admin = await UserDocument.find_one(UserDocument.username == "admin")
         if not admin:
-            return {"step": 1, "error": "Admin user not found in database"}
-        
-        # Step 2: Verify user found
-        if not admin:
-            return {"step": 2, "error": "User is None after query"}
-        
-        # Step 3: Test password hash format
-        if not admin.hashed_password:
-            return {"step": 3, "error": "Hashed password is None"}
-        
-        # Step 4: Test password verification with direct passlib
-        password_to_test = "AdminPassword123!"
-        hash_to_test = admin.hashed_password
-        
-        # Debug info
-        debug_info = {
-            "password_len": len(password_to_test),
-            "hash_len": len(hash_to_test) if hash_to_test else 0,
-            "hash_starts_with": hash_to_test[:10] if hash_to_test else "None",
-            "hash_valid_bcrypt": (hash_to_test.startswith("$2b$") or hash_to_test.startswith("$2a$") or hash_to_test.startswith("$2y$")) if hash_to_test else False
-        }
-        
-        try:
-            pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-            password_correct = pwd_context.verify(password_to_test, hash_to_test)
-            if not password_correct:
-                return {"step": 4, "error": "Direct verify returned False", "debug": debug_info}
-        except Exception as e:
-            return {
-                "step": 4,
-                "error": f"Direct verify exception: {type(e).__name__}: {e}",
-                "debug": debug_info,
-                "traceback": str(e)
-            }
-        
-        # Step 5: Test with our verify_password function
-        try:
-            from core.security import verify_password
-            password_correct_ours = verify_password("AdminPassword123!", admin.hashed_password)
-        except Exception as e:
-            return {
-                "step": 5,
-                "error": f"Our verify_password exception: {type(e).__name__}: {e}",
-                "direct_verify_worked": True
-            }
-        
-        if not password_correct_ours:
-            return {"step": 6, "error": "Our verify_password returned False", "direct_verify_worked": True}
-        
-        # Step 7: Test token creation
-        from core.security import create_access_token
-        from datetime import timedelta
-        
-        try:
-            access_token = create_access_token(
-                subject=str(admin.id),
-                expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-            )
-        except Exception as e:
-            return {
-                "step": 7,
-                "error": f"Token creation exception: {type(e).__name__}: {e}",
-                "password_verified": True
-            }
+            return {"error": "Admin user not found"}
         
         return {
-            "success": True,
-            "user_found": True,
-            "password_correct": True,
-            "token_created": True,
-            "user_id": str(admin.id)
+            "username": admin.username,
+            "hash": admin.hashed_password,
+            "hash_length": len(admin.hashed_password),
+            "hash_type": admin.hashed_password[:7] if admin.hashed_password else None,
+            "is_bcrypt": admin.hashed_password.startswith("$2") if admin.hashed_password else False
         }
-    
     except Exception as e:
         import traceback
         return {
             "error": str(e),
-            "type": type(e).__name__,
             "traceback": traceback.format_exc()
         }
 
