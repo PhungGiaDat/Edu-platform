@@ -253,9 +253,9 @@ export const LandingPage: React.FC = () => {
       {/* ── 1. Navbar ─────────────────────────────────────────────────────── */}
       <nav style={{
         position: 'sticky', top: 0, zIndex: 100,
-        padding: '12px 24px',
+        padding: 'clamp(12px, 3vw, 12px) clamp(16px, 5vw, 24px)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        maxWidth: 1200, margin: '0 auto',
+        maxWidth: 1200, margin: '0 auto', width: '100%', boxSizing: 'border-box',
       }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -274,7 +274,7 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* Nav links */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 'clamp(4px, 2vw, 8px)', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <Link to="/courses" style={{
             padding: '10px 18px', fontWeight: 700, color: '#1A2744',
             textDecoration: 'none', borderRadius: 14,
@@ -314,10 +314,11 @@ export const LandingPage: React.FC = () => {
       {/* ── 2. Hero ───────────────────────────────────────────────────────── */}
       <section style={{
         maxWidth: 1200, margin: '0 auto',
-        padding: '40px 24px 60px',
+        padding: 'clamp(30px, 8vw, 60px) clamp(16px, 5vw, 24px)',
         display: 'grid',
         gridTemplateColumns: '1fr',
-        gap: 48,
+        gap: 'clamp(32px, 8vw, 48px)',
+        width: '100%', boxSizing: 'border-box',
       }}>
         <style>{`
           @media (min-width: 768px) {

@@ -207,9 +207,9 @@ function MyCharactersTab({ pets, activePet, onActivate }: {
     return (
         <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-            gap: 16,
-            padding: '16px 0',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(120px, 45vw, 150px), 1fr))',
+            gap: 'clamp(12px, 3vw, 16px)',
+            padding: 'clamp(12px, 3vw, 16px) 0',
         }}>
             {pets.map(pet => (
                 <PetCard
@@ -348,11 +348,11 @@ export default function PetsPage() {
             }}
         >
             {/* Page header */}
-            <div style={{ padding: '24px 20px 0' }}>
+            <div style={{ padding: 'clamp(16px, 4vw, 24px) clamp(12px, 4vw, 20px) 0' }}>
                 <h1 style={{
                     fontFamily: "'Baloo 2', 'Nunito Sans', sans-serif",
                     fontWeight: 800,
-                    fontSize: 28,
+                    fontSize: 'clamp(20px, 5vw, 28px)',
                     color: 'var(--color-text)',
                     margin: '0 0 4px',
                 }}>
@@ -364,7 +364,7 @@ export default function PetsPage() {
             </div>
 
             {/* Tab switcher */}
-            <div style={{ padding: '16px 20px 0', display: 'flex', gap: 8 }}>
+            <div style={{ padding: 'clamp(12px, 3vw, 16px) clamp(12px, 4vw, 20px) 0', display: 'flex', gap: 'clamp(4px, 2vw, 8px)' }}>
                 {(['characters', 'care'] as const).map(tab => (
                     <button
                         key={tab}
@@ -390,7 +390,7 @@ export default function PetsPage() {
             </div>
 
             {/* Tab content */}
-            <div style={{ padding: '0 20px 100px' }}>
+            <div style={{ padding: '0 clamp(12px, 4vw, 20px) clamp(60px, 15vw, 100px)' }}>
                 {isLoading ? (
                     <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--color-text-soft)' }}>
                         <div style={{ fontSize: 48, marginBottom: 12 }}>🐾</div>

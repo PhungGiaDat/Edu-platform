@@ -143,7 +143,7 @@ export const LearningPathSetup: React.FC = () => {
             }}
         >
             {/* Progress Indicator */}
-            <div className="px-4 pt-4">
+            <div className="px-4 sm:px-6 pt-4 sm:pt-6">
                 <div className="flex gap-2 mb-2">
                     {['topics', 'goals', 'complete'].map((s, i) => (
                         <div
@@ -157,7 +157,7 @@ export const LearningPathSetup: React.FC = () => {
                         />
                     ))}
                 </div>
-                <p className="text-center text-amber-700 text-xs font-bold">
+                <p className="text-center text-amber-700 text-xs sm:text-sm font-bold">
                     Step {step === 'topics' ? 1 : step === 'goals' ? 2 : 3} of 3
                 </p>
             </div>
@@ -208,22 +208,22 @@ const TopicSelectionStep: React.FC<TopicStepProps> = ({
     togglePriority,
     onNext,
 }) => (
-    <div className="px-4 pt-4">
+    <div className="px-4 sm:px-6 pt-4 sm:pt-6">
         {/* Header */}
-        <div className="text-center mb-6">
-            <h1 className="text-2xl font-black text-amber-800">📚 Choose Topics</h1>
-            <p className="text-amber-700 text-sm">What do you want to learn?</p>
+        <div className="text-center mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl font-black text-amber-800">📚 Choose Topics</h1>
+            <p className="text-amber-700 text-xs sm:text-sm">What do you want to learn?</p>
         </div>
 
         {/* Priority count */}
         <div
-            className="mb-4 p-3 rounded-2xl text-center"
+            className="mb-4 p-3 sm:p-4 rounded-2xl text-center"
             style={{
                 background: 'rgba(255,255,255,0.9)',
                 border: '3px solid #f59e0b',
             }}
         >
-            <p className="text-amber-800 font-bold">
+            <p className="text-amber-800 font-bold text-sm sm:text-base">
                 {priorityCount === 0
                     ? '👆 Tap topics to prioritize'
                     : `${priorityCount} topic${priorityCount > 1 ? 's' : ''} selected`}
@@ -231,12 +231,12 @@ const TopicSelectionStep: React.FC<TopicStepProps> = ({
         </div>
 
         {/* Topics Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-6">
             {topics.map((topic) => (
                 <button
                     key={topic.id}
                     onClick={() => togglePriority(topic.id)}
-                    className="p-4 rounded-2xl text-left transition-all"
+                    className="p-3 sm:p-4 rounded-2xl text-left transition-all"
                     style={{
                         background: topic.isPriority
                             ? 'linear-gradient(135deg, #22c55e, #4ade80)'
@@ -250,10 +250,10 @@ const TopicSelectionStep: React.FC<TopicStepProps> = ({
                     }}
                 >
                     <div className="flex items-start gap-2">
-                        <span className="text-3xl">{topic.emoji}</span>
+                        <span className="text-2xl sm:text-3xl flex-shrink-0">{topic.emoji}</span>
                         <div className="flex-1 min-w-0">
                             <div
-                                className="font-bold text-sm truncate"
+                                className="font-bold text-xs sm:text-sm truncate"
                                 style={{ color: topic.isPriority ? '#fff' : '#1f2937' }}
                             >
                                 {topic.name}
@@ -272,7 +272,7 @@ const TopicSelectionStep: React.FC<TopicStepProps> = ({
                             </div>
                         </div>
                         {topic.isPriority && (
-                            <span className="text-white text-xl">✓</span>
+                            <span className="text-white text-lg sm:text-xl flex-shrink-0">✓</span>
                         )}
                     </div>
                 </button>
@@ -283,7 +283,7 @@ const TopicSelectionStep: React.FC<TopicStepProps> = ({
         <button
             onClick={onNext}
             disabled={priorityCount === 0}
-            className="w-full py-4 rounded-2xl font-bold text-lg"
+            className="w-full py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg"
             style={{
                 background: priorityCount > 0
                     ? 'linear-gradient(135deg, #8b5cf6, #a855f7)'
@@ -313,22 +313,22 @@ const GoalSettingStep: React.FC<GoalStepProps> = ({
     onSave,
     isLoading,
 }) => (
-    <div className="px-4 pt-4">
+    <div className="px-4 sm:px-6 pt-4 sm:pt-6">
         {/* Header */}
-        <div className="text-center mb-6">
-            <h1 className="text-2xl font-black text-amber-800">🎯 Daily Goals</h1>
-            <p className="text-amber-700 text-sm">How much time each day?</p>
+        <div className="text-center mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl font-black text-amber-800">🎯 Daily Goals</h1>
+            <p className="text-amber-700 text-xs sm:text-sm">How much time each day?</p>
         </div>
 
         {/* Time Goal */}
         <div
-            className="mb-4 p-4 rounded-2xl"
+            className="mb-4 p-4 sm:p-5 rounded-2xl"
             style={{
                 background: 'rgba(255,255,255,0.95)',
                 border: '3px solid #8b5cf6',
             }}
         >
-            <h3 className="text-purple-800 font-bold mb-3 flex items-center gap-2">
+            <h3 className="text-purple-800 font-bold mb-3 flex items-center gap-2 text-sm sm:text-base">
                 <span>⏱️</span> Daily Time Goal
             </h3>
             <div className="grid grid-cols-2 gap-2">
@@ -336,7 +336,7 @@ const GoalSettingStep: React.FC<GoalStepProps> = ({
                     <button
                         key={option.value}
                         onClick={() => setDailyGoals(prev => ({ ...prev, timeGoalMins: option.value }))}
-                        className="p-3 rounded-xl text-center transition-all"
+                        className="p-2 sm:p-3 rounded-xl text-center transition-all"
                         style={{
                             background: dailyGoals.timeGoalMins === option.value
                                 ? 'linear-gradient(135deg, #8b5cf6, #a855f7)'
@@ -347,9 +347,9 @@ const GoalSettingStep: React.FC<GoalStepProps> = ({
                             minHeight: 64,
                         }}
                     >
-                        <div className={`text-xl mb-1`}>{option.emoji}</div>
+                        <div className={`text-lg sm:text-xl mb-1`}>{option.emoji}</div>
                         <div
-                            className="font-bold text-sm"
+                            className="font-bold text-xs sm:text-sm"
                             style={{ color: dailyGoals.timeGoalMins === option.value ? '#fff' : '#374151' }}
                         >
                             {option.label}
@@ -367,13 +367,13 @@ const GoalSettingStep: React.FC<GoalStepProps> = ({
 
         {/* Words Goal */}
         <div
-            className="mb-6 p-4 rounded-2xl"
+            className="mb-6 p-4 sm:p-5 rounded-2xl"
             style={{
                 background: 'rgba(255,255,255,0.95)',
                 border: '3px solid #22c55e',
             }}
         >
-            <h3 className="text-green-800 font-bold mb-3 flex items-center gap-2">
+            <h3 className="text-green-800 font-bold mb-3 flex items-center gap-2 text-sm sm:text-base">
                 <span>📚</span> Daily Words Goal
             </h3>
             <div className="grid grid-cols-2 gap-2">
@@ -381,7 +381,7 @@ const GoalSettingStep: React.FC<GoalStepProps> = ({
                     <button
                         key={option.value}
                         onClick={() => setDailyGoals(prev => ({ ...prev, wordsGoal: option.value }))}
-                        className="p-3 rounded-xl text-center transition-all"
+                        className="p-2 sm:p-3 rounded-xl text-center transition-all"
                         style={{
                             background: dailyGoals.wordsGoal === option.value
                                 ? 'linear-gradient(135deg, #22c55e, #4ade80)'
@@ -392,9 +392,9 @@ const GoalSettingStep: React.FC<GoalStepProps> = ({
                             minHeight: 64,
                         }}
                     >
-                        <div className={`text-xl mb-1`}>{option.emoji}</div>
+                        <div className={`text-lg sm:text-xl mb-1`}>{option.emoji}</div>
                         <div
-                            className="font-bold text-sm"
+                            className="font-bold text-xs sm:text-sm"
                             style={{ color: dailyGoals.wordsGoal === option.value ? '#fff' : '#374151' }}
                         >
                             {option.label}
@@ -412,14 +412,14 @@ const GoalSettingStep: React.FC<GoalStepProps> = ({
 
         {/* Summary */}
         <div
-            className="mb-6 p-4 rounded-2xl text-center"
+            className="mb-6 p-4 sm:p-5 rounded-2xl text-center"
             style={{
                 background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
                 border: '3px solid #f59e0b',
             }}
         >
-            <p className="text-amber-800 font-bold">Your Daily Goal:</p>
-            <p className="text-amber-900 text-lg font-black mt-1">
+            <p className="text-amber-800 font-bold text-sm sm:text-base">Your Daily Goal:</p>
+            <p className="text-amber-900 text-base sm:text-lg font-black mt-1">
                 {dailyGoals.timeGoalMins} mins & {dailyGoals.wordsGoal} words/day
             </p>
         </div>
@@ -428,7 +428,7 @@ const GoalSettingStep: React.FC<GoalStepProps> = ({
         <div className="flex gap-3">
             <button
                 onClick={onBack}
-                className="flex-1 py-4 rounded-2xl font-bold text-lg"
+                className="flex-1 py-3 sm:py-4 rounded-2xl font-bold text-sm sm:text-lg"
                 style={{
                     background: 'rgba(255,255,255,0.9)',
                     color: '#6b7280',
@@ -441,7 +441,7 @@ const GoalSettingStep: React.FC<GoalStepProps> = ({
             <button
                 onClick={onSave}
                 disabled={isLoading}
-                className="flex-[2] py-4 rounded-2xl font-bold text-lg"
+                className="flex-[2] py-3 sm:py-4 rounded-2xl font-bold text-sm sm:text-lg"
                 style={{
                     background: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
                     color: '#fff',
@@ -473,23 +473,23 @@ const CompletionStep: React.FC<CompletionStepProps> = ({
     const priorityTopics = topics.filter(t => t.isPriority);
 
     return (
-        <div className="px-4 pt-8">
+        <div className="px-4 sm:px-6 pt-8 sm:pt-12">
             {/* Success Animation */}
-            <div className="text-center mb-6">
-                <div className="text-6xl mb-4 animate-bounce">🎉</div>
-                <h1 className="text-2xl font-black text-green-800">All Set!</h1>
-                <p className="text-green-700 text-sm">{savedMessage || 'Learning path saved!'}</p>
+            <div className="text-center mb-6 sm:mb-8">
+                <div className="text-5xl sm:text-6xl mb-4 animate-bounce">🎉</div>
+                <h1 className="text-xl sm:text-2xl font-black text-green-800">All Set!</h1>
+                <p className="text-green-700 text-xs sm:text-sm">{savedMessage || 'Learning path saved!'}</p>
             </div>
 
             {/* Summary Card */}
             <div
-                className="p-4 rounded-2xl mb-6"
+                className="p-4 sm:p-5 rounded-2xl mb-6"
                 style={{
                     background: 'rgba(255,255,255,0.95)',
                     border: '3px solid #22c55e',
                 }}
             >
-                <h3 className="text-green-800 font-bold mb-3">Your Learning Plan:</h3>
+                <h3 className="text-green-800 font-bold mb-3 text-sm sm:text-base">Your Learning Plan:</h3>
                 
                 <div className="space-y-3">
                     {/* Topics */}
@@ -497,7 +497,7 @@ const CompletionStep: React.FC<CompletionStepProps> = ({
                         {priorityTopics.map(topic => (
                             <span
                                 key={topic.id}
-                                className="px-3 py-1 rounded-full text-sm font-bold"
+                                className="px-3 py-1 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold"
                                 style={{
                                     background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)',
                                     color: '#16a34a',
@@ -509,14 +509,14 @@ const CompletionStep: React.FC<CompletionStepProps> = ({
                     </div>
                     
                     {/* Goals */}
-                    <div className="flex gap-4 pt-2 border-t border-green-200">
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-green-200">
                         <div className="flex items-center gap-2">
-                            <span className="text-xl">⏱️</span>
-                            <span className="font-bold text-green-800">{dailyGoals.timeGoalMins} mins/day</span>
+                            <span className="text-lg sm:text-xl">⏱️</span>
+                            <span className="font-bold text-green-800 text-sm sm:text-base">{dailyGoals.timeGoalMins} mins/day</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-xl">📚</span>
-                            <span className="font-bold text-green-800">{dailyGoals.wordsGoal} words/day</span>
+                            <span className="text-lg sm:text-xl">📚</span>
+                            <span className="font-bold text-green-800 text-sm sm:text-base">{dailyGoals.wordsGoal} words/day</span>
                         </div>
                     </div>
                 </div>
@@ -526,7 +526,7 @@ const CompletionStep: React.FC<CompletionStepProps> = ({
             <div className="space-y-3">
                 <button
                     onClick={() => window.location.href = '/learn'}
-                    className="w-full py-4 rounded-2xl font-bold text-lg"
+                    className="w-full py-3 sm:py-4 rounded-2xl font-bold text-sm sm:text-lg"
                     style={{
                         background: 'linear-gradient(135deg, #22c55e, #4ade80)',
                         color: '#fff',
@@ -540,7 +540,7 @@ const CompletionStep: React.FC<CompletionStepProps> = ({
                 
                 <button
                     onClick={onRestart}
-                    className="w-full py-3 rounded-2xl font-bold"
+                    className="w-full py-3 sm:py-4 rounded-2xl font-bold text-sm sm:text-base"
                     style={{
                         background: 'rgba(255,255,255,0.9)',
                         color: '#6b7280',
