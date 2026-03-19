@@ -8,6 +8,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 from beanie import operators
 from settings import settings
+import logging
+
+logger = logging.getLogger(__name__)
 from core.security import (
     create_access_token,
     get_password_hash,
@@ -75,34 +78,66 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     Login with username and password, returns JWT token
     Note: OAuth2 uses 'username' field, which we map to email or username
     """
-    # Find user by username or email
-    user = await UserDocument.find_one(
-        operators.Or(
-            UserDocument.username == form_data.username,
-            UserDocument.email == form_data.username
+    try:
+        # Find user by username or email
+        user = await UserDocument.find_one(
+            operators.Or(
+                UserDocument.username == form_data.username,
+                UserDocument.email == form_data.username
+            )
         )
-    )
-    
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Inactive user"
-        )
+        
+        if not user:
+            logger.warning(f"Login attempt with non-existent user: {form_data.username}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Verify password with proper error handling
+        try:
+            password_correct = verify_password(form_data.password, user.hashed_password)
+        except ValueError as e:
+            logger.error(f"Password verification error for user {user.username}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        if not password_correct:
+            logger.warning(f"Login attempt with incorrect password for user: {user.username}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        if not user.is_active:
+            logger.warning(f"Login attempt for inactive user: {user.username}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="Inactive user"
+            )
 
-    # Create access token
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        subject=str(user.id), expires_delta=access_token_expires
-    )
+        # Create access token
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            subject=str(user.id), expires_delta=access_token_expires
+        )
+        
+        logger.info(f"Successful login for user: {user.username}")
+        return {"access_token": access_token, "token_type": "bearer"}
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error during login: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error during login"
+        )
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: UserDocument = Depends(get_current_user)):
