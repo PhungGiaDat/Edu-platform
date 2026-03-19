@@ -52,9 +52,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     # Truncate password if it exceeds 72 bytes (bcrypt limit)
     truncated_password = plain_password[:72]
     try:
-        return pwd_context.verify(truncated_password, hashed_password)
-    except ValueError as e:
-        logger.error(f"Password verification error: {e}")
+        result = pwd_context.verify(truncated_password, hashed_password)
+        return result
+    except Exception as e:
+        logger.error(f"Password verification error: {type(e).__name__}: {e}")
         # Return False instead of raising exception to avoid HTTP 500
         return False
 
