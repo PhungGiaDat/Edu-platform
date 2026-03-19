@@ -3,6 +3,9 @@
 Unified Security Module for MongoDB JWT Authentication
 Replacing Supabase-specific implementation
 """
+import os
+os.environ.setdefault("PASSLIB_BCRYPT_DEFAULT_ROUNDS", "12")
+
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
@@ -17,7 +20,11 @@ from models.user_mongo import UserDocument
 logger = logging.getLogger(__name__)
 
 # Password hashing configuration
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use only bcrypt, no deprecated algorithms
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
 
 # OAuth2 scheme for token extraction
 oauth2_scheme = OAuth2PasswordBearer(
@@ -37,16 +44,31 @@ class TokenPayload(BaseModel):
 # ========== Password Hashing ==========
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    # Bcrypt has a 72-byte limit for password input
-    # Truncate password if it exceeds this limit to match hashing behavior
+    """
+    Verify a plain text password against a hashed password
+    Bcrypt has a 72-byte limit for password input
+    """
+    # Truncate password if it exceeds 72 bytes (bcrypt limit)
     truncated_password = plain_password[:72]
-    return pwd_context.verify(truncated_password, hashed_password)
+    try:
+        return pwd_context.verify(truncated_password, hashed_password)
+    except ValueError as e:
+        logger.error(f"Password verification error: {e}")
+        # Return False instead of raising exception to avoid HTTP 500
+        return False
 
 def get_password_hash(password: str) -> str:
-    # Bcrypt has a 72-byte limit for password input
-    # Truncate password if it exceeds this limit
+    """
+    Hash a plain text password using bcrypt
+    Bcrypt has a 72-byte limit for password input
+    """
+    # Truncate password if it exceeds 72 bytes (bcrypt limit)
     truncated_password = password[:72]
-    return pwd_context.hash(truncated_password)
+    try:
+        return pwd_context.hash(truncated_password)
+    except ValueError as e:
+        logger.error(f"Password hashing error: {e}")
+        raise
 
 # ========== JWT Token Management ==========
 
