@@ -130,7 +130,7 @@ class PronunciationService {
         // Local accuracy check
         const localAccuracy = this.calculateSimilarity(cleanTranscript, this.expectedWord);
 
-        let result: PronunciationResult = {
+        const result: PronunciationResult = {
             transcript,
             confidence,
             accuracy: Math.round(localAccuracy * 100),

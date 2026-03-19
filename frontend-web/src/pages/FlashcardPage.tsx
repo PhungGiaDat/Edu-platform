@@ -36,7 +36,7 @@ const GAME_LABELS: Record<GameType, { label: string; emoji: string; color: strin
 
 const DEMO_CARD: FlashcardData = {
   word: "jungle",
-  translation: "rừng rậm",
+  translation: "rainforest",
   image_url: jungle as string,
   audio_url: undefined,
   ar_tag: "tree_palm_02",
