@@ -85,6 +85,7 @@ async def lifespan(app: FastAPI):
 
 
 # ========== Create FastAPI App ==========
+# Using Argon2 for secure password hashing
 app = FastAPI(
     title=settings.APP_NAME,
     description="Educational AR platform with flashcards, quizzes, and games",
