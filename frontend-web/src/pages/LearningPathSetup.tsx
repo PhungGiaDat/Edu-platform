@@ -22,14 +22,14 @@ interface DailyGoals {
 }
 
 const AVAILABLE_TOPICS: Topic[] = [
-    { id: 'animals', name: 'Animals', nameVi: 'Động vật', emoji: '🦁', wordCount: 15, isPriority: false },
-    { id: 'colors', name: 'Colors', nameVi: 'Màu sắc', emoji: '🌈', wordCount: 8, isPriority: false },
-    { id: 'family', name: 'Family', nameVi: 'Gia đình', emoji: '👨‍👩‍👧', wordCount: 12, isPriority: false },
-    { id: 'nature', name: 'Nature', nameVi: 'Thiên nhiên', emoji: '🌳', wordCount: 10, isPriority: false },
-    { id: 'food', name: 'Food', nameVi: 'Đồ ăn', emoji: '🍎', wordCount: 14, isPriority: false },
-    { id: 'school', name: 'School', nameVi: 'Trường học', emoji: '📚', wordCount: 11, isPriority: false },
-    { id: 'body', name: 'Body Parts', nameVi: 'Bộ phận cơ thể', emoji: '🖐️', wordCount: 10, isPriority: false },
-    { id: 'transport', name: 'Transport', nameVi: 'Phương tiện', emoji: '🚗', wordCount: 9, isPriority: false },
+    { id: 'animals', name: 'Animals', nameVi: 'Animals', emoji: '🦁', wordCount: 15, isPriority: false },
+    { id: 'colors', name: 'Colors', nameVi: 'Colors', emoji: '🌈', wordCount: 8, isPriority: false },
+    { id: 'family', name: 'Family', nameVi: 'Family', emoji: '👨‍👩‍👧', wordCount: 12, isPriority: false },
+    { id: 'nature', name: 'Nature', nameVi: 'Nature', emoji: '🌳', wordCount: 10, isPriority: false },
+    { id: 'food', name: 'Food', nameVi: 'Food', emoji: '🍎', wordCount: 14, isPriority: false },
+    { id: 'school', name: 'School', nameVi: 'School', emoji: '📚', wordCount: 11, isPriority: false },
+    { id: 'body', name: 'Body Parts', nameVi: 'Body Parts', emoji: '🖐️', wordCount: 10, isPriority: false },
+    { id: 'transport', name: 'Transport', nameVi: 'Transport', emoji: '🚗', wordCount: 9, isPriority: false },
 ];
 
 const TIME_OPTIONS = [
