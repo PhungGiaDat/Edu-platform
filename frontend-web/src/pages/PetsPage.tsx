@@ -10,10 +10,9 @@
 
 import React, { Suspense, lazy } from 'react';
 import { usePets, type Pet } from '@/hooks/usePets';
-import { getApiBase } from '@/config';
+import { apiClient } from '@/services/apiClient';
+import { useAuth } from '@/contexts/AuthContext';
 
-const API_BASE = getApiBase();
-const USER_ID = 'demo-user';
 
 // Lazy-load the heavy 3D viewer
 const PetViewer3D = lazy(() =>
@@ -308,8 +307,31 @@ function PetCareTab({ activePet, onFeed, onPlay }: {
 
 // ─── Main PetsPage ──────────────────────────────────────────────────────────
 export default function PetsPage() {
+    const { user, isLoading: authLoading, isAuthenticated } = useAuth();
     const [activeTab, setActiveTab] = React.useState<'characters' | 'care'>('characters');
-    const { pets, activePet, setActivePet, isLoading } = usePets(USER_ID);
+    const userId = user?.id ?? null;
+    const { pets, activePet, setActivePet, isLoading } = usePets(userId);
+
+    if (authLoading) {
+        return (
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <p style={{ color: 'var(--color-text-soft)' }}>Loading...</p>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated || !userId) {
+        return (
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+                <div className="clay-card" style={{ maxWidth: 420, textAlign: 'center' }}>
+                    <h2 style={{ margin: '0 0 8px' }}>Sign in to view pets</h2>
+                    <p style={{ margin: 0, color: 'var(--color-text-soft)' }}>
+                        Guest mode can explore AR, but pets are available only for signed-in users.
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     const handleActivate = async (petId: string) => {
         await setActivePet(petId);
@@ -317,11 +339,7 @@ export default function PetsPage() {
 
     const handleFeed = async () => {
         try {
-            await fetch(`${API_BASE}/api/v1/gamification/pet/feed`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: USER_ID }),
-            });
+            await apiClient.post('/api/v1/gamification/pet/feed', { user_id: userId });
         } catch {
             // optimistic — ignore error
         }
@@ -329,11 +347,7 @@ export default function PetsPage() {
 
     const handlePlay = async () => {
         try {
-            await fetch(`${API_BASE}/api/v1/gamification/pet/play`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: USER_ID }),
-            });
+            await apiClient.post('/api/v1/gamification/pet/play', { user_id: userId });
         } catch {
             // optimistic — ignore error
         }

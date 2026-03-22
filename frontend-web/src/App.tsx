@@ -19,6 +19,7 @@ import { usePets, type Pet } from "./hooks/usePets";
 import { useAuth } from "./contexts/AuthContext";
 import { getApiBase } from "./config";
 import PetsPage from "./pages/PetsPage";
+import { apiClient } from "./services/apiClient";
 
 // ========== Global Pet Unlock Notifier ==========
 // Listens to PET_CAN_UNLOCK (XP gate met) and PET_UNLOCKED (after actual unlock)
@@ -109,9 +110,7 @@ const GlobalPetUnlockNotifier: React.FC = () => {
       if (!user?.id) return;
 
       try {
-        const res = await fetch(`${API_BASE}/api/v1/pets?user_id=${user.id}`);
-        if (!res.ok) return;
-        const { pets: freshPets } = await res.json();
+        const { pets: freshPets } = await apiClient.get('/api/v1/pets');
 
         const newlyUnlockable: Pet[] = freshPets.filter(
           (p: Pet) => !p.is_unlocked && p.can_unlock && !notifiedIdsRef.current.has(p.pet_id)
@@ -203,4 +202,3 @@ const App = () => {
 };
 
 export default App;
-

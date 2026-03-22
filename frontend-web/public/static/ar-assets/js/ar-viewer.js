@@ -157,6 +157,11 @@
         if (!mindUrl) {
             log('❌', 'No mind file specified!');
             setLoadingText('❌ No mind file specified');
+            const overlay = document.getElementById('ar-loading-overlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => { overlay.style.display = 'none'; }, 400);
+            }
             sendToParent('SYSTEM_ERROR', {
                 code: 'NO_MIND_FILE',
                 message: 'No mind file URL provided'
@@ -192,6 +197,7 @@
                     if (overlay) { overlay.style.opacity = '0'; setTimeout(() => { overlay.style.display = 'none'; }, 400); }
                 }, 1000);
             });
+            assetItem.setAttribute('timeout', '15000');
             assetsEl.appendChild(assetItem);
             document.getElementById('mode-3d-0').setAttribute('gltf-model', '#model-asset-0');
         }
@@ -212,6 +218,14 @@
             assetItem2.setAttribute('id', 'model-asset-1');
             assetItem2.setAttribute('src', modelUrl2);
             assetItem2.setAttribute('crossorigin', 'anonymous');
+            assetItem2.setAttribute('timeout', '15000');
+            assetItem2.addEventListener('error', () => {
+                const overlay = document.getElementById('ar-loading-overlay');
+                if (overlay) {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => { overlay.style.display = 'none'; }, 400);
+                }
+            });
             assetsEl.appendChild(assetItem2);
             document.getElementById('mode-3d-1').setAttribute('gltf-model', '#model-asset-1');
         }
@@ -251,11 +265,29 @@
         scene.addEventListener('arError', (e) => {
             log('❌', 'AR Error: ' + e);
             setLoadingText('❌ AR Error');
+            const overlay = document.getElementById('ar-loading-overlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => { overlay.style.display = 'none'; }, 400);
+            }
             sendToParent('SYSTEM_ERROR', {
                 code: 'AR_ERROR',
                 message: e.detail || 'Unknown error'
             });
         });
+
+        // Failsafe: never leave user blocked by loading overlay
+        window.setTimeout(() => {
+            if (!isReady) {
+                const overlay = document.getElementById('ar-loading-overlay');
+                if (overlay && overlay.style.display !== 'none') {
+                    const txt = document.getElementById('ar-load-text');
+                    if (txt) txt.textContent = 'Starting camera...';
+                    overlay.style.opacity = '0';
+                    setTimeout(() => { overlay.style.display = 'none'; }, 400);
+                }
+            }
+        }, 10000);
 
         // Target tracking
         ['target-0', 'target-1'].forEach((id, index) => {

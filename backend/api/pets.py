@@ -132,6 +132,14 @@ async def get_pet(
     """
     Get a specific pet by ID with user's unlock status.
     """
+    # Get pet
+    pet = await PetDocument.find_one(PetDocument.pet_id == pet_id, PetDocument.is_active == True)
+    if not pet:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Pet not found: {pet_id}"
+        )
+
     # Get user data
     user_id = str(current_user.id)
     user = current_user
@@ -159,6 +167,14 @@ async def unlock_pet(
     Checks if the user meets the unlock requirements (XP, streak, etc.)
     and adds the pet to their unlocked_pets list.
     """
+    # Get pet
+    pet = await PetDocument.find_one(PetDocument.pet_id == pet_id, PetDocument.is_active == True)
+    if not pet:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Pet not found: {pet_id}"
+        )
+
     # Get user data
     user_id = str(current_user.id)
     user = current_user
@@ -244,6 +260,14 @@ async def set_active_pet(
     user_xp = user_stats.get("total_points", 0)
     user_streak = user_stats.get("streak_days", 0)
     user_unlocked = user.unlocked_pets or []
+
+    # Get pet
+    pet = await PetDocument.find_one(PetDocument.pet_id == pet_id, PetDocument.is_active == True)
+    if not pet:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Pet not found: {pet_id}"
+        )
     
     # Check if pet is unlocked
     if pet_id not in user_unlocked:
