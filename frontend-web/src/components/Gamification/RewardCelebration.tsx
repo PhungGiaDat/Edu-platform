@@ -42,7 +42,7 @@ const CELEBRATION_CONFIGS: Record<CelebrationType, { bg: string; confetti: strin
         confetti: ['🌟', '⭐', '✨', '🎉', '🚀'],
     },
     sticker_earned: {
-        bg: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 50%, #7c3aed 100%)',
+        bg: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 50%, #0284c7 100%)',
         confetti: ['🎨', '✨', '🌈', '⭐', '💫'],
     },
     badge_earned: {
@@ -54,7 +54,7 @@ const CELEBRATION_CONFIGS: Record<CelebrationType, { bg: string; confetti: strin
         confetti: ['🐾', '✨', '💫', '🌟', '🎉'],
     },
     streak_milestone: {
-        bg: 'linear-gradient(135deg, #f472b6 0%, #ec4899 50%, #db2777 100%)',
+        bg: 'linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%)',
         confetti: ['🔥', '💪', '⚡', '🌟', '🎯'],
     },
 };
@@ -62,7 +62,7 @@ const CELEBRATION_CONFIGS: Record<CelebrationType, { bg: string; confetti: strin
 const RARITY_COLORS: Record<string, string> = {
     common: '#9ca3af',
     rare: '#3b82f6',
-    epic: '#8b5cf6',
+    epic: '#0ea5e9',
     legendary: '#f59e0b',
 };
 

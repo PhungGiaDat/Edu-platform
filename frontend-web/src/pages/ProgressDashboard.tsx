@@ -6,11 +6,13 @@ import React, { useState } from 'react';
 import { useProgressReport } from '../hooks/useProgressReport';
 import { ProgressChart } from '../components/Gamification/ProgressChart';
 import { WeeklyReport } from '../components/Gamification/WeeklyReport';
+import { useAuth } from '../contexts/AuthContext';
 
 type ViewMode = 'overview' | 'detailed';
 
 export const ProgressDashboard: React.FC = () => {
-    const userId = 'demo-user'; // TODO: get from auth context
+    const { user } = useAuth();
+    const userId = user?.id ?? '';
     const [viewMode, setViewMode] = useState<ViewMode>('overview');
     
     const {
@@ -31,10 +33,29 @@ export const ProgressDashboard: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 to-amber-50">
                 <div className="text-center">
                     <div className="text-5xl animate-bounce mb-4">📊</div>
-                    <p className="text-indigo-600 font-bold">Loading progress...</p>
+                    <p className="text-sky-700 font-bold">Loading progress...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!summary) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 to-amber-50 p-4">
+                <div className="max-w-md w-full rounded-3xl border-2 border-sky-200 bg-white/90 p-6 text-center shadow-lg">
+                    <div className="text-4xl mb-3">📭</div>
+                    <h2 className="text-xl font-black text-slate-800 mb-2">Progress unavailable</h2>
+                    <p className="text-slate-600 text-sm mb-4">We could not load this report right now. Try refreshing.</p>
+                    <button
+                        onClick={() => refresh()}
+                        className="px-5 py-2.5 rounded-xl font-bold text-white"
+                        style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%)' }}
+                    >
+                        Try again
+                    </button>
                 </div>
             </div>
         );
@@ -44,14 +65,14 @@ export const ProgressDashboard: React.FC = () => {
         <div
             className="min-h-screen pb-20"
             style={{
-                background: 'linear-gradient(135deg, #eef2ff 0%, #f5f3ff 50%, #fdf4ff 100%)'
+                background: 'linear-gradient(135deg, #f0f9ff 0%, #fff7ed 50%, #ecfeff 100%)'
             }}
         >
             {/* Header */}
             <div 
                 className="px-4 pt-6 pb-4"
                 style={{
-                    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)'
+                    background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
                 }}
             >
                 <div className="flex items-center justify-between mb-4">
@@ -74,7 +95,7 @@ export const ProgressDashboard: React.FC = () => {
                         onClick={() => setViewMode('overview')}
                         className={`flex-1 py-2 px-4 rounded-xl font-bold text-sm transition-all ${
                             viewMode === 'overview'
-                                ? 'bg-white text-indigo-600'
+                                ? 'bg-white text-sky-700'
                                 : 'bg-white/20 text-white'
                         }`}
                         style={{ minHeight: 44 }}
@@ -85,7 +106,7 @@ export const ProgressDashboard: React.FC = () => {
                         onClick={() => setViewMode('detailed')}
                         className={`flex-1 py-2 px-4 rounded-xl font-bold text-sm transition-all ${
                             viewMode === 'detailed'
-                                ? 'bg-white text-indigo-600'
+                                ? 'bg-white text-sky-700'
                                 : 'bg-white/20 text-white'
                         }`}
                         style={{ minHeight: 44 }}
@@ -102,7 +123,7 @@ export const ProgressDashboard: React.FC = () => {
                         icon="🏆"
                         value={`Lv.${summary?.stats.level || 1}`}
                         label="Level"
-                        color="#8b5cf6"
+                        color="#0ea5e9"
                     />
                     <QuickStat
                         icon="⭐"
@@ -143,7 +164,7 @@ export const ProgressDashboard: React.FC = () => {
                                 primaryLabel="Words"
                                 secondaryLabel="Time (mins)"
                                 showSecondary={true}
-                                colorScheme="purple"
+                                colorScheme="blue"
                             />
                         )}
                     </>
@@ -184,10 +205,10 @@ export const ProgressDashboard: React.FC = () => {
                             className="rounded-2xl p-4 shadow-lg"
                             style={{
                                 background: 'rgba(255,255,255,0.95)',
-                                border: '3px solid #a855f7'
+                                border: '3px solid #0ea5e9'
                             }}
                         >
-                            <h2 className="text-purple-800 font-bold text-lg mb-4 flex items-center gap-2">
+                            <h2 className="text-sky-800 font-bold text-lg mb-4 flex items-center gap-2">
                                 <span>📂</span> Topics Progress
                             </h2>
                             <div className="space-y-4">
@@ -195,7 +216,7 @@ export const ProgressDashboard: React.FC = () => {
                                     <div key={topic.topic}>
                                         <div className="flex justify-between text-sm mb-1">
                                             <span className="font-bold text-gray-700">{topic.topic}</span>
-                                            <span className="text-purple-600 font-bold">
+                                            <span className="text-sky-700 font-bold">
                                                 {topic.words_learned}/{topic.total_words} words
                                             </span>
                                         </div>
@@ -206,7 +227,7 @@ export const ProgressDashboard: React.FC = () => {
                                                     width: `${topic.percentage}%`,
                                                     background: topic.percentage === 100
                                                         ? 'linear-gradient(90deg, #22c55e, #4ade80)'
-                                                        : 'linear-gradient(90deg, #a855f7, #c084fc)'
+                                                        : 'linear-gradient(90deg, #0ea5e9, #38bdf8)'
                                                 }}
                                             />
                                         </div>

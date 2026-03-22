@@ -165,7 +165,7 @@ export const PronunciationPractice: React.FC<PronunciationPracticeProps> = ({
                     <button
                         onClick={handleTryAgain}
                         className="mt-3 px-4 py-2 rounded-full text-sm font-bold text-white"
-                        style={{ background: 'linear-gradient(135deg, #8b5cf6, #a855f7)' }}
+                        style={{ background: 'linear-gradient(135deg, #0ea5e9, #22c55e)' }}
                     >
                         🔄 Try Again
                     </button>

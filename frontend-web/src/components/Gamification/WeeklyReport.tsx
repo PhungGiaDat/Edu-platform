@@ -51,7 +51,7 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({
             <div
                 className="px-4 py-3"
                 style={{
-                    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)'
+                    background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
                 }}
             >
                 <div className="flex items-center justify-between">

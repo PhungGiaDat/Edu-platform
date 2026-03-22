@@ -50,9 +50,9 @@ const RARITY_STYLES: Record<string, { border: string; glow: string; bg: string; 
         label: 'Rare'
     },
     epic: {
-        border: '#8b5cf6',
-        glow: '0 0 16px rgba(139, 92, 246, 0.5)',
-        bg: 'linear-gradient(135deg, #ede9fe 0%, #c4b5fd 100%)',
+        border: '#0ea5e9',
+        glow: '0 0 16px rgba(14, 165, 233, 0.45)',
+        bg: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
         label: 'Epic'
     },
     legendary: {
@@ -305,7 +305,7 @@ export const StickerCollection: React.FC<StickerCollectionProps> = ({
                             onClick={handleCloseDetail}
                             className="mt-4 px-6 py-2 rounded-full font-bold text-white transition-transform active:scale-95"
                             style={{
-                                background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
                                 minHeight: '44px',
                             }}
                         >

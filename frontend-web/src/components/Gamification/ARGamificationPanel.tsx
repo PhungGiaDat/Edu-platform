@@ -3,12 +3,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { VirtualPet } from './VirtualPet';
-import { getApiBase } from '../../config';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePets } from '@/hooks/usePets';
 import { eventBus } from '@/runtime/EventBus';
-
-const API_BASE = getApiBase();
+import { apiClient } from '@/services/apiClient';
 
 interface UserStats {
     total_points: number;
@@ -44,13 +42,11 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
     // Fetch stats
     useEffect(() => {
         const fetchStats = async () => {
+            if (!userId) return;
             try {
-                const res = await fetch(`${API_BASE}/api/v1/gamification/user/${userId}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setStats(data);
-                    setPetHappiness(data.pet?.happiness || 75);
-                }
+                const data = await apiClient.get(`/api/v1/gamification/user/${userId}`);
+                setStats(data);
+                setPetHappiness(data.pet?.happiness || 75);
             } catch (e) {
                 console.log('[ARGamification] Stats fetch failed');
             }
@@ -63,11 +59,10 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
         if (showLeaderboard) {
             const fetchLeaderboard = async () => {
                 try {
-                    const res = await fetch(`${API_BASE}/api/v1/gamification/leaderboard?limit=5`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        setLeaderboard(data.entries || []);
-                    }
+                    const data = await apiClient.get('/api/v1/gamification/leaderboard', {
+                        params: { limit: 5 }
+                    });
+                    setLeaderboard(data.entries || []);
                 } catch (e) {
                     console.log('[ARGamification] Leaderboard fetch failed');
                 }
@@ -78,12 +73,8 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
 
     const handleFeedPet = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/v1/gamification/pet/feed`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId })
-            });
-            if (res.ok) {
+            await apiClient.post('/api/v1/gamification/pet/feed', { user_id: userId });
+            {
                 setPetHappiness(prev => Math.min(100, prev + 10));
                 onFeedPet?.();
             }
@@ -109,13 +100,13 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
                         width: 'min(280px, 80vw)',
                         background: 'rgba(255, 255, 255, 0.95)',
                         backdropFilter: 'blur(10px)',
-                        border: '3px solid #a78bfa'
+                        border: '3px solid #38bdf8'
                     }}
                 >
                     <div
                         className="px-3 py-2 text-center"
                         style={{
-                            background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)'
+                            background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
                         }}
                     >
                         <span className="text-white font-bold text-sm">🏆 Top Learners</span>
@@ -141,7 +132,7 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
                                     <span className="flex-1 font-semibold text-sm text-gray-800 truncate">
                                         {entry.username}
                                     </span>
-                                    <span className="font-bold text-purple-600 text-sm">
+                                    <span className="font-bold text-sky-700 text-sm">
                                         {entry.points} XP
                                     </span>
                                 </div>
@@ -157,7 +148,7 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
                     onClick={() => setShowLeaderboard(!showLeaderboard)}
                     className="flex items-center gap-2 px-3 py-2 rounded-full shadow-lg"
                     style={{
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+                        background: 'linear-gradient(135deg, #0ea5e9 0%, #22c55e 100%)',
                         border: '3px solid #fff',
                         WebkitTapHighlightColor: 'transparent'
                     }}

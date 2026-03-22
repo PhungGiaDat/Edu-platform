@@ -150,7 +150,7 @@ export const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
         <p 
           className={`mt-4 ${config.text} font-bold text-center`}
           style={{
-            background: 'linear-gradient(135deg, #667eea, #764ba2, #f093fb)',
+            background: 'linear-gradient(135deg, #0ea5e9, #22c55e, #f59e0b)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
@@ -192,12 +192,12 @@ export const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
       <div 
         className="fixed inset-0 flex items-center justify-center z-50"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(243,232,255,0.95) 100%)',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(224,242,254,0.95) 100%)',
           backdropFilter: 'blur(10px)'
         }}
       >
         <div 
-          className="bg-white/80 rounded-3xl shadow-2xl border-4 border-purple-300"
+          className="bg-white/80 rounded-3xl shadow-2xl border-4 border-sky-300"
           style={{ padding: '2rem 3rem' }}
         >
           {content}

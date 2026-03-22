@@ -12,6 +12,7 @@ import { SoundEffectService } from '../../services/SoundEffectService';
 import { eventBus } from '../../runtime/EventBus';
 import { useAuth } from '../../contexts/AuthContext';
 import { getApiBase } from '../../config';
+import { apiClient } from '@/services/apiClient';
 
 const API_BASE = getApiBase();
 
@@ -54,7 +55,7 @@ export const PronunciationGame: React.FC<Props> = ({
   showHint,
   flashcardQrId,
 }) => {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [state, setState] = useState<RecordingState>({
     status: 'idle',
     transcription: null,
@@ -78,29 +79,24 @@ export const PronunciationGame: React.FC<Props> = ({
   // ── Helper: POST attempt to backend ──────────────────────────────────────────
   const logAttemptToBackend = useCallback(
     async (spokenText: string, score: number) => {
-      if (!user?.id) {
-        console.error('User not authenticated');
+      if (isGuest || !user?.id) {
         return;
       }
 
       try {
-        await fetch(`${API_BASE}/api/v1/pronunciation/attempt`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_id: user.id,
-            flashcard_qr_id: flashcardQrId || targetWord,
-            spoken_text: spokenText,
-            score,
-            feedback: null,
-            audio_url: null,
-          }),
+        await apiClient.post('/api/v1/pronunciation/attempt', {
+          user_id: user.id,
+          flashcard_qr_id: flashcardQrId || targetWord,
+          spoken_text: spokenText,
+          score,
+          feedback: null,
+          audio_url: null,
         });
       } catch (err) {
         console.warn('[PronunciationGame] Failed to log attempt:', err);
       }
     },
-    [flashcardQrId, targetWord]
+    [flashcardQrId, targetWord, isGuest, user?.id]
   );
 
   // ── Helper: Fetch AI feedback from backend ────────────────────────────────────
@@ -242,13 +238,13 @@ export const PronunciationGame: React.FC<Props> = ({
     return (
       <div className="text-center p-6">
         <div className="text-6xl mb-4">🎤</div>
-        <h3 className="text-xl font-bold text-purple-600 mb-2">Speech Not Supported</h3>
+        <h3 className="text-xl font-bold text-sky-700 mb-2">Speech Not Supported</h3>
         <p className="text-gray-600 mb-4">
           Your browser doesn't support speech recognition. Try Chrome on Android or desktop!
         </p>
         <button
           onClick={handleSkip}
-          className="px-6 py-3 bg-gradient-to-r from-purple-400 to-pink-500 rounded-2xl text-white font-bold"
+          className="px-6 py-3 bg-gradient-to-r from-sky-400 to-orange-500 rounded-2xl text-white font-bold"
           style={{ minHeight: '48px' }}
         >
           Skip This Game
@@ -422,7 +418,7 @@ export const PronunciationGame: React.FC<Props> = ({
             <button
               onClick={handleTryAgain}
               className="mt-3 px-5 py-2 rounded-full text-sm font-bold text-white transition-transform active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #8b5cf6, #a855f7)', minHeight: '44px' }}
+              style={{ background: 'linear-gradient(135deg, #0ea5e9, #22c55e)', minHeight: '44px' }}
             >
               🔄 Try Again
             </button>

@@ -125,7 +125,7 @@ export const MemoryMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint
       <div
         className="text-center p-2 rounded-xl"
         style={{
-          background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+          background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
         }}
       >
         <p className="text-sm font-bold text-white">{challenge.question}</p>
@@ -136,7 +136,7 @@ export const MemoryMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint
         <div
           className="px-3 py-1 rounded-full shadow"
           style={{
-            background: 'linear-gradient(135deg, #a855f7 0%, #c084fc 100%)',
+            background: 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)',
             border: '2px solid #fff'
           }}
         >
@@ -190,14 +190,14 @@ export const MemoryMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint
               borderRadius: '0.75rem',
               border: card.isMatched
                 ? '3px solid #22c55e'
-                : card.isFlipped
-                  ? '3px solid #60a5fa'
-                  : '3px solid #c084fc',
-              background: card.isMatched
-                ? 'linear-gradient(135deg, #86efac 0%, #4ade80 100%)'
-                : card.isFlipped
-                  ? '#fff'
-                  : 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)',
+                  : card.isFlipped
+                    ? '3px solid #60a5fa'
+                    : '3px solid #93c5fd',
+                background: card.isMatched
+                  ? 'linear-gradient(135deg, #86efac 0%, #4ade80 100%)'
+                  : card.isFlipped
+                    ? '#fff'
+                    : 'linear-gradient(135deg, #93c5fd 0%, #0ea5e9 100%)',
               boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
               transform: card.isMatched ? 'scale(0.95)' : 'scale(1)',
               opacity: card.isMatched ? 0.8 : 1,
@@ -223,7 +223,7 @@ export const MemoryMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint
                   />
                 ) : (
                   <span
-                    className="font-black text-purple-700 text-center break-words px-1"
+                    className="font-black text-sky-700 text-center break-words px-1"
                     style={{ fontSize: 'clamp(10px, 3vw, 16px)' }}
                   >
                     {card.content}

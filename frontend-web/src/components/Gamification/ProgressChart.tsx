@@ -17,16 +17,10 @@ interface ProgressChartProps {
     secondaryLabel?: string;  // Label for secondary bars (default: "Time (mins)")
     showSecondary?: boolean;
     maxValue?: number;        // For normalization, auto-calculated if not provided
-    colorScheme?: 'purple' | 'blue' | 'green' | 'orange';
+    colorScheme?: 'blue' | 'green' | 'orange';
 }
 
 const COLOR_SCHEMES = {
-    purple: {
-        primary: 'linear-gradient(180deg, #a855f7 0%, #7c3aed 100%)',
-        secondary: 'linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)',
-        text: '#7c3aed',
-        bg: '#f5f3ff'
-    },
     blue: {
         primary: 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)',
         secondary: 'linear-gradient(180deg, #93c5fd 0%, #60a5fa 100%)',
@@ -54,7 +48,7 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
     secondaryLabel = 'Time (mins)',
     showSecondary = false,
     maxValue,
-    colorScheme = 'purple'
+    colorScheme = 'blue'
 }) => {
     const colors = COLOR_SCHEMES[colorScheme];
     

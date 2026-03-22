@@ -5,6 +5,8 @@ import { AuthProvider } from './contexts/AuthContext'
 import App from './App'
 import './styles/global.css'
 import './index.css'
+// Configure axios interceptors for automatic JWT token injection
+import './services/axiosConfig'
 
 // NOTE: StrictMode temporarily disabled to debug AR camera issues
 // It causes double-mount which disrupts iframe camera initialization

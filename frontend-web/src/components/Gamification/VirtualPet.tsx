@@ -139,8 +139,8 @@ export const VirtualPet: React.FC<VirtualPetProps> = ({
                     onClick={onPlay}
                     className="flex-1 py-2 rounded-xl font-bold text-sm shadow"
                     style={{
-                        background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)',
-                        border: '2px solid #7c3aed',
+                        background: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)',
+                        border: '2px solid #0284c7',
                         color: '#fff'
                     }}
                 >

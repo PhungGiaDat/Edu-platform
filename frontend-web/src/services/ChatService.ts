@@ -2,10 +2,7 @@
 /**
  * Chat Service - Handles AI chat API calls including RAG
  */
-import axios from 'axios';
-import { getApiBase } from '../config';
-
-const API_URL = `${getApiBase()}/api/v1`;
+import { apiClient } from './apiClient';
 
 // ========== Types ==========
 export interface ChatResponse {
@@ -49,18 +46,18 @@ export const ChatService = {
      */
     async sendRAGMessage(question: string, userId?: string): Promise<RAGChatResponse> {
         try {
-            const response = await axios.post(`${API_URL}/chat/rag`, {
+            const response = await apiClient.post('/api/v1/chat/rag', {
                 question,
                 session_id: this.getSessionId(),
                 user_id: userId || null
             });
 
             // Update session ID from response
-            if (response.data.session_id) {
-                currentSessionId = response.data.session_id;
+            if (response.session_id) {
+                currentSessionId = response.session_id;
             }
 
-            return response.data;
+            return response;
         } catch (error) {
             console.error('[ChatService] RAG request failed:', error);
             // Fallback response
@@ -76,32 +73,32 @@ export const ChatService = {
      * Send message using legacy endpoint (backward compatibility)
      */
     async sendMessage(message: string, context: string = ""): Promise<string> {
-        const response = await axios.post(`${API_URL}/chat/message`, {
+        const response = await apiClient.post('/api/v1/chat/message', {
             message,
             context
         });
-        return response.data.response;
+        return response.response;
     },
 
     /**
      * Analyze pronunciation
      */
     async analyzePronunciation(targetText: string, audioText: string): Promise<PronunciationResult> {
-        const response = await axios.post(`${API_URL}/chat/pronunciation`, {
+        const response = await apiClient.post('/api/v1/chat/pronunciation', {
             target_text: targetText,
             audio_text: audioText
         });
-        return response.data;
+        return response;
     },
 
     /**
      * Test embedding generation (debug)
      */
     async testEmbedding(text: string): Promise<{ status: string; embedding_length: number }> {
-        const response = await axios.post(`${API_URL}/chat/test-embedding`, {
+        const response = await apiClient.post('/api/v1/chat/test-embedding', {
             text
         });
-        return response.data;
+        return response;
     }
 };
 

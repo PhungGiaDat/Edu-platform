@@ -1,84 +1,108 @@
 import React, { useState } from 'react';
-// import { useParams } from 'react-router-dom';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { PronunciationPractice } from '../components/PronunciationPractice';
 
+const course = {
+    title: 'English Basics 1',
+    lessons: [
+        { id: '1', title: 'The Alphabet', type: 'video', videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4' },
+        { id: '2', title: 'Pronunciation: Apple', type: 'practice', targetText: 'Apple' },
+        { id: '3', title: 'Greetings', type: 'video', videoUrl: 'https://www.w3schools.com/html/movie.mp4' },
+    ],
+} as const;
+
 export const CourseDetail: React.FC = () => {
-    // const { id } = useParams(); // Unused for now with mock data
     const [activeLesson, setActiveLesson] = useState(0);
-
-    // Mock Data
-    const course = {
-        title: "English Basics 1",
-        lessons: [
-            { id: '1', title: "The Alphabet", type: 'video', videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4" },
-            { id: '2', title: "Pronunciation: Apple", type: 'practice', targetText: "Apple" },
-            { id: '3', title: "Greetings", type: 'video', videoUrl: "https://www.w3schools.com/html/movie.mp4" },
-        ]
-    };
-
     const currentLesson = course.lessons[activeLesson];
 
     return (
-        <div className="flex flex-col md:flex-row h-screen md:h-[calc(100vh-80px)] bg-neutral-100">
-            {/* Sidebar - Lesson List */}
-            <div className="w-full md:w-80 max-h-48 md:max-h-none bg-white border-b-2 md:border-b-0 md:border-r-2 border-neutral-200 overflow-y-auto">
-                <div className="p-3 sm:p-4 md:p-6 border-b-2 border-neutral-200">
-                    <h2 className="font-black text-lg sm:text-xl text-neutral-800">{course.title}</h2>
-                    <p className="text-neutral-400 font-bold text-xs sm:text-sm mt-1">{activeLesson + 1} / {course.lessons.length} COMPLETED</p>
-                </div>
-                <div className="p-2 sm:p-3 md:p-4 space-y-2">
-                    {course.lessons.map((lesson, index) => (
-                        <button
-                            key={lesson.id}
-                            onClick={() => setActiveLesson(index)}
-                            className={`w-full p-2 sm:p-3 md:p-4 rounded-xl flex items-center text-left text-sm sm:text-base transition-all ${index === activeLesson
-                                ? 'bg-secondary text-white shadow-lg scale-105 font-bold'
-                                : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
-                                }`}
-                        >
-                            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mr-2 sm:mr-3 text-xs sm:text-sm ${index === activeLesson ? 'bg-white/20' : 'bg-neutral-300'
-                                }`}>
-                                {index + 1}
-                            </div>
-                            <span className="line-clamp-2">{lesson.title}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
+        <div
+            className="min-h-screen"
+            style={{
+                background:
+                    'radial-gradient(circle at 12% 14%, rgba(14,165,233,0.18), transparent 42%), radial-gradient(circle at 84% 86%, rgba(34,197,94,0.16), transparent 40%), linear-gradient(135deg, #f0f9ff 0%, #fff8e8 54%, #ecfeff 100%)',
+            }}
+        >
+            <div className="mx-auto flex max-w-7xl flex-col gap-4 px-3 py-4 sm:px-6 sm:py-6 lg:flex-row lg:gap-6">
+                <aside className="w-full lg:w-80">
+                    <div
+                        className="rounded-3xl p-4 sm:p-5"
+                        style={{ background: 'rgba(255,255,255,0.92)', border: '2px solid #bae6fd', boxShadow: '0 10px 26px rgba(14,165,233,0.14)' }}
+                    >
+                        <h2 className="text-xl font-black text-slate-800">{course.title}</h2>
+                        <p className="mt-1 text-xs font-bold uppercase tracking-wide text-slate-500">
+                            Lesson {activeLesson + 1} of {course.lessons.length}
+                        </p>
 
-            {/* Main Content */}
-            <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-10 overflow-y-auto flex items-center justify-center">
-                <div className="w-full max-w-3xl">
-                    {currentLesson.type === 'video' ? (
-                        <div className="space-y-4 sm:space-y-6">
-                            <VideoPlayer url={currentLesson.videoUrl!} />
-                            <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-neutral-200">
-                                <h1 className="text-lg sm:text-2xl font-bold text-neutral-800 mb-2">{currentLesson.title}</h1>
-                                <p className="text-neutral-500 text-sm sm:text-base">Watch the video carefully and repeat after the speaker.</p>
-                                <button
-                                    onClick={() => setActiveLesson(prev => Math.min(prev + 1, course.lessons.length - 1))}
-                                    className="mt-4 sm:mt-6 w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 sm:py-4 px-4 rounded-lg sm:rounded-xl border-b-4 border-primary-dark active:border-b-0 active:translate-y-1 transition-all text-sm sm:text-base"
-                                >
-                                    CONTINUE
-                                </button>
+                        <div className="mt-4 space-y-2">
+                            {course.lessons.map((lesson, index) => {
+                                const isActive = index === activeLesson;
+                                return (
+                                    <button
+                                        key={lesson.id}
+                                        onClick={() => setActiveLesson(index)}
+                                        className="w-full rounded-2xl px-3 py-3 text-left transition-all"
+                                        style={{
+                                            minHeight: 48,
+                                            background: isActive
+                                                ? 'linear-gradient(135deg, #0ea5e9 0%, #22c55e 100%)'
+                                                : '#f8fafc',
+                                            color: isActive ? '#fff' : '#334155',
+                                            border: isActive ? '2px solid #0284c7' : '2px solid #e2e8f0',
+                                            boxShadow: isActive ? '0 8px 20px rgba(14,165,233,0.24)' : 'none',
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div
+                                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black"
+                                                style={{ background: isActive ? 'rgba(255,255,255,0.24)' : '#e2e8f0' }}
+                                            >
+                                                {index + 1}
+                                            </div>
+                                            <span className="line-clamp-2 text-sm font-bold sm:text-base">{lesson.title}</span>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </aside>
+
+                <main className="flex-1">
+                    <div
+                        className="rounded-3xl p-4 sm:p-6"
+                        style={{ background: 'rgba(255,255,255,0.9)', border: '2px solid #dbeafe', boxShadow: '0 10px 26px rgba(2,132,199,0.12)' }}
+                    >
+                        {currentLesson.type === 'video' ? (
+                            <div className="space-y-4 sm:space-y-6">
+                                <VideoPlayer url={currentLesson.videoUrl} />
+                                <div className="rounded-2xl border-2 border-sky-100 bg-white px-4 py-4 sm:px-5">
+                                    <h1 className="text-xl font-black text-slate-900 sm:text-2xl">{currentLesson.title}</h1>
+                                    <p className="mt-2 text-sm text-slate-600 sm:text-base">
+                                        Watch carefully, then repeat each word out loud before moving on.
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                    ) : (
-                        <div className="space-y-4 sm:space-y-6">
-                            <PronunciationPractice
-                                targetText={currentLesson.targetText!}
-                                onComplete={() => { }}
-                            />
-                            <button
-                                onClick={() => setActiveLesson(prev => Math.min(prev + 1, course.lessons.length - 1))}
-                                className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 sm:py-4 px-4 rounded-lg sm:rounded-xl border-b-4 border-primary-dark active:border-b-0 active:translate-y-1 transition-all text-sm sm:text-base"
-                            >
-                                CONTINUE
-                            </button>
-                        </div>
-                    )}
-                </div>
+                        ) : (
+                            <div className="space-y-4 sm:space-y-6">
+                                <PronunciationPractice targetText={currentLesson.targetText} onComplete={() => {}} />
+                            </div>
+                        )}
+
+                        <button
+                            onClick={() => setActiveLesson((prev) => Math.min(prev + 1, course.lessons.length - 1))}
+                            className="mt-5 w-full rounded-2xl px-4 py-3 text-sm font-black text-white sm:py-4 sm:text-base"
+                            style={{
+                                minHeight: 52,
+                                background: 'linear-gradient(135deg, #0ea5e9 0%, #22c55e 100%)',
+                                border: '3px solid #0284c7',
+                                boxShadow: '0 8px 20px rgba(14,165,233,0.25)',
+                            }}
+                        >
+                            CONTINUE
+                        </button>
+                    </div>
+                </main>
             </div>
         </div>
     );

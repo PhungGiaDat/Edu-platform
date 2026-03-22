@@ -11,6 +11,7 @@ import { getApiBase } from '@/config';
 const API_BASE = getApiBase();
 const TOKEN_KEY = 'authToken';
 const USER_KEY = 'authUser';
+const GUEST_KEY = 'guestMode';
 
 // ========== Types ==========
 
@@ -24,6 +25,7 @@ export interface User {
 export interface AuthContextType {
   user: User | null;
   token: string | null;
+  isGuest: boolean;
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
@@ -31,6 +33,7 @@ export interface AuthContextType {
   // Methods
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  enterGuestMode: () => void;
   register: (email: string, password: string, username: string) => Promise<{ success: boolean; error?: string }>;
   refreshToken: () => Promise<boolean>;
   clearError: () => void;
@@ -90,29 +93,35 @@ function isTokenExpired(token: string): boolean {
 /**
  * Load token and user from localStorage
  */
-function loadAuthFromStorage(): { token: string | null; user: User | null } {
+function loadAuthFromStorage(): { token: string | null; user: User | null; isGuest: boolean } {
   try {
     const token = localStorage.getItem(TOKEN_KEY);
     const userJson = localStorage.getItem(USER_KEY);
+    const guestMode = localStorage.getItem(GUEST_KEY) === 'true';
+
+    if (guestMode) {
+      return { token: null, user: null, isGuest: true };
+    }
 
     if (!token || !userJson) {
-      return { token: null, user: null };
+      return { token: null, user: null, isGuest: false };
     }
 
     // Check if token is expired
     if (isTokenExpired(token)) {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
-      return { token: null, user: null };
+      return { token: null, user: null, isGuest: false };
     }
 
     return {
       token,
       user: JSON.parse(userJson),
+      isGuest: false,
     };
   } catch (error) {
     console.error('[AuthContext] Error loading auth from storage:', error);
-    return { token: null, user: null };
+    return { token: null, user: null, isGuest: false };
   }
 }
 
@@ -135,6 +144,7 @@ function clearAuthFromStorage(): void {
   try {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(GUEST_KEY);
   } catch (error) {
     console.error('[AuthContext] Error clearing auth from storage:', error);
   }
@@ -145,17 +155,21 @@ function clearAuthFromStorage(): void {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Initialize auth state from localStorage on mount
   useEffect(() => {
-    const { token: storedToken, user: storedUser } = loadAuthFromStorage();
+    const { token: storedToken, user: storedUser, isGuest: storedGuest } = loadAuthFromStorage();
 
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(storedUser);
       console.log('[AuthContext] Restored auth from localStorage:', storedUser);
+    } else if (storedGuest) {
+      setIsGuest(true);
+      console.log('[AuthContext] Restored guest mode from localStorage');
     }
 
     setIsLoading(false);
@@ -203,6 +217,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // Save to state and localStorage
+        setIsGuest(false);
+        localStorage.removeItem(GUEST_KEY);
         setToken(authToken);
         setUser(decodedUser);
         saveAuthToStorage(authToken, decodedUser);
@@ -258,6 +274,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // Save to state and localStorage
+        setIsGuest(false);
+        localStorage.removeItem(GUEST_KEY);
         setToken(authToken);
         setUser(decodedUser);
         saveAuthToStorage(authToken, decodedUser);
@@ -281,8 +299,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
+    setIsGuest(false);
     clearAuthFromStorage();
     console.log('[AuthContext] Logout successful');
+  }, []);
+
+  const enterGuestMode = useCallback(() => {
+    setError(null);
+    setToken(null);
+    setUser(null);
+    setIsGuest(true);
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      localStorage.setItem(GUEST_KEY, 'true');
+    } catch (storageError) {
+      console.error('[AuthContext] Error enabling guest mode:', storageError);
+    }
   }, []);
 
   // ========== Refresh Token ==========
@@ -341,11 +374,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value: AuthContextType = {
     user,
     token,
+    isGuest,
     isLoading,
     error,
     isAuthenticated: !!token && !!user,
     login,
     logout,
+    enterGuestMode,
     register,
     refreshToken,
     clearError,

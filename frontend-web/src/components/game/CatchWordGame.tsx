@@ -99,7 +99,7 @@ export const CatchWordGame: React.FC<Props> = ({ challenge, onAnswer, showHint }
       <div
         className="text-center p-3 rounded-2xl"
         style={{
-          background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
+          background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
         }}
       >
         <p className="text-base font-bold text-white">{challenge.question}</p>
@@ -171,8 +171,8 @@ export const CatchWordGame: React.FC<Props> = ({ challenge, onAnswer, showHint }
               fontWeight: 700,
               background: word.word === challenge.correct_answer
                 ? 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)'
-                : 'linear-gradient(135deg, #f472b6 0%, #ec4899 100%)',
-              color: '#fff',
+                : 'linear-gradient(135deg, #fb923c 0%, #f97316 100%)',
+                color: '#fff',
               borderRadius: '1rem',
               border: '3px solid rgba(255,255,255,0.5)',
               whiteSpace: 'nowrap'
