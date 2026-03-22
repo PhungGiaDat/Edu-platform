@@ -162,8 +162,8 @@ const ARControlPanel: React.FC<Props> = ({
           aria-label="Quiz mode"
           style={getButtonStyle(
             appMode === 'QUIZ',
-            'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
-            '#a855f7'
+            'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+            '#0ea5e9'
           )}
         >
           <span style={{ fontSize: '22px', marginBottom: '2px' }}>🎯</span>
@@ -234,7 +234,7 @@ const ARControlPanel: React.FC<Props> = ({
               ? 'linear-gradient(135deg, #FF6B6B, #FF8E53)'
               : appMode === 'SPEAK'
               ? 'linear-gradient(135deg, #f59e0b, #d97706)'
-              : 'linear-gradient(135deg, #a855f7, #7c3aed)',
+              : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
             borderRadius: '12px',
             color: '#fff',
             fontSize: '11px',

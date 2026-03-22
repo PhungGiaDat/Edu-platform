@@ -23,7 +23,7 @@ const PetViewer3D = lazy(() =>
 const RARITY_COLORS: Record<Pet['rarity'], { bg: string; text: string; label: string }> = {
     common:    { bg: '#e2e8f5', text: '#4a5568', label: 'Common' },
     rare:      { bg: '#bfdbfe', text: '#1d4ed8', label: 'Rare' },
-    epic:      { bg: '#e9d5ff', text: '#7c3aed', label: 'Epic' },
+    epic:      { bg: '#e0f2fe', text: '#0369a1', label: 'Epic' },
     legendary: { bg: '#fde68a', text: '#92400e', label: 'Legendary' },
 };
 

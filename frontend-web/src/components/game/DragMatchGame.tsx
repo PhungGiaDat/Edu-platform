@@ -53,7 +53,7 @@ export const DragMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint }
   };
 
   const colors = [
-    { bg: 'linear-gradient(135deg, #f472b6 0%, #ec4899 100%)', border: '#db2777' },
+    { bg: 'linear-gradient(135deg, #fb923c 0%, #f97316 100%)', border: '#ea580c' },
     { bg: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)', border: '#2563eb' },
     { bg: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)', border: '#16a34a' },
     { bg: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)', border: '#d97706' }
@@ -65,7 +65,7 @@ export const DragMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint }
       <div
         className="text-center p-3 rounded-2xl"
         style={{
-          background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
+          background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
         }}
       >
         <p className="text-base font-bold text-white">{challenge.question}</p>
@@ -133,10 +133,10 @@ export const DragMatchGame: React.FC<Props> = ({ challenge, onAnswer, showHint }
                   border: '3px dashed #fbbf24'
                 }}
               >
-                <p
-                  className="font-bold text-purple-700"
-                  style={{ fontSize: 'clamp(12px, 3.5vw, 16px)' }}
-                >
+                  <p
+                    className="font-bold text-sky-700"
+                    style={{ fontSize: 'clamp(12px, 3.5vw, 16px)' }}
+                  >
                   {selectedWord ? '👆 Tap here!' : '👇 Select a word'}
                 </p>
               </div>

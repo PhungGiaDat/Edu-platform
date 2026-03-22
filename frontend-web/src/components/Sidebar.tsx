@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 // SVG Icons as components
 const BookIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
@@ -72,13 +73,18 @@ const iconComponents: Record<string, React.FC<{ className?: string }>> = {
 export const Sidebar: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { isGuest } = useAuth();
 
-    const navItems = [
+    const fullNavItems = [
         { path: '/courses', label: 'Learn', iconKey: 'learn' },
         { path: '/learn-ar', label: 'AR Practice', iconKey: 'ar' },
         { path: '/profile', label: 'Profile', iconKey: 'profile' },
         { path: '/flashcards', label: 'Flashcards', iconKey: 'flashcards' },
     ];
+
+    const navItems = isGuest
+        ? fullNavItems.filter((item) => item.path === '/courses' || item.path === '/learn-ar')
+        : fullNavItems;
 
     return (
         <>
@@ -110,19 +116,21 @@ export const Sidebar: React.FC = () => {
                     })}
                 </nav>
 
-                <div className="p-4 border-t-2 border-neutral-200 space-y-2">
-                    <button
-                        onClick={() => navigate('/pets')}
-                        className="w-full flex items-center gap-4 px-4 py-3 text-neutral-500 hover:bg-primary-light/10 hover:text-primary rounded-xl font-bold min-h-[48px] transition-all"
-                    >
-                        <PetIcon className="w-6 h-6" />
-                        <span>My Pet</span>
-                    </button>
-                    <button className="w-full flex items-center gap-4 px-4 py-3 text-neutral-500 hover:bg-neutral-100 rounded-xl font-bold min-h-[48px]">
-                        <SettingsIcon className="w-6 h-6" />
-                        <span>Settings</span>
-                    </button>
-                </div>
+                {!isGuest && (
+                    <div className="p-4 border-t-2 border-neutral-200 space-y-2">
+                        <button
+                            onClick={() => navigate('/pets')}
+                            className="w-full flex items-center gap-4 px-4 py-3 text-neutral-500 hover:bg-primary-light/10 hover:text-primary rounded-xl font-bold min-h-[48px] transition-all"
+                        >
+                            <PetIcon className="w-6 h-6" />
+                            <span>My Pet</span>
+                        </button>
+                        <button className="w-full flex items-center gap-4 px-4 py-3 text-neutral-500 hover:bg-neutral-100 rounded-xl font-bold min-h-[48px]">
+                            <SettingsIcon className="w-6 h-6" />
+                            <span>Settings</span>
+                        </button>
+                    </div>
+                )}
             </aside>
 
             {/* Mobile Bottom Navigation */}
@@ -143,13 +151,14 @@ export const Sidebar: React.FC = () => {
                             </Link>
                         );
                     })}
-                    {/* Pet Button */}
-                    <button
-                        onClick={() => navigate('/pets')}
-                        className="flex flex-col items-center justify-center w-full h-full min-h-[48px] text-neutral-400 hover:text-primary transition-colors"
-                    >
-                        <PetIcon className="w-6 h-6 mb-1" />
-                    </button>
+                    {!isGuest && (
+                        <button
+                            onClick={() => navigate('/pets')}
+                            className="flex flex-col items-center justify-center w-full h-full min-h-[48px] text-neutral-400 hover:text-primary transition-colors"
+                        >
+                            <PetIcon className="w-6 h-6 mb-1" />
+                        </button>
+                    )}
                 </div>
             </nav>
         </>

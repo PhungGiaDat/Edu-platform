@@ -39,17 +39,17 @@ const errorConfigs: Record<ErrorType, ErrorConfig> = {
     emoji: '🔍',
     defaultTitle: 'Can\'t Find It!',
     defaultMessage: 'Hmm, we looked everywhere but couldn\'t find what you\'re looking for.',
-    color: '#8b5cf6',
-    borderColor: '#a78bfa',
-    bgGradient: 'from-purple-100 to-pink-100'
+    color: '#0ea5e9',
+    borderColor: '#7dd3fc',
+    bgGradient: 'from-sky-100 to-cyan-100'
   },
   camera: {
     emoji: '📸',
     defaultTitle: 'Camera is Shy!',
     defaultMessage: 'The camera needs your permission to play. Ask a grown-up for help!',
-    color: '#ec4899',
-    borderColor: '#f472b6',
-    bgGradient: 'from-pink-100 to-rose-100'
+    color: '#f97316',
+    borderColor: '#fdba74',
+    bgGradient: 'from-orange-100 to-amber-100'
   },
   permission: {
     emoji: '🔐',
@@ -158,7 +158,7 @@ export const ErrorFriendly: React.FC<ErrorFriendlyProps> = ({
         {onGoBack && (
           <button
             onClick={() => handleButtonClick(onGoBack)}
-            className="w-full px-6 py-4 bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 rounded-2xl text-white font-black text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-purple-600"
+            className="w-full px-6 py-4 bg-gradient-to-r from-blue-400 to-cyan-500 hover:from-blue-500 hover:to-cyan-600 rounded-2xl text-white font-black text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-cyan-600"
             style={{ minHeight: '56px' }}
           >
             ← Go Back
@@ -188,7 +188,7 @@ export const ErrorFriendly: React.FC<ErrorFriendlyProps> = ({
       <div 
         className="fixed inset-0 flex items-center justify-center z-50 p-4"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(243,232,255,0.95) 100%)',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(224,242,254,0.95) 100%)',
           backdropFilter: 'blur(10px)'
         }}
       >
@@ -232,7 +232,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         {emoji}
       </div>
       
-      <h3 className="text-xl font-black text-purple-600 mb-2">
+      <h3 className="text-xl font-black text-sky-700 mb-2">
         {title}
       </h3>
       
@@ -243,7 +243,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       {actionLabel && onAction && (
         <button
           onClick={handleAction}
-          className="px-6 py-3 bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 rounded-2xl text-white font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-purple-600"
+          className="px-6 py-3 bg-gradient-to-r from-sky-400 to-orange-500 hover:from-sky-500 hover:to-orange-600 rounded-2xl text-white font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-sky-600"
           style={{ minHeight: '48px' }}
         >
           {actionLabel}

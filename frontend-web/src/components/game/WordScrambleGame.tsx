@@ -45,7 +45,7 @@ export const WordScrambleGame: React.FC<Props> = ({ challenge, onAnswer, showHin
       <div
         className="text-center p-3 rounded-2xl"
         style={{
-          background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
+          background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
         }}
       >
         <p className="text-base font-bold text-white">{challenge.question}</p>
@@ -137,7 +137,7 @@ export const WordScrambleGame: React.FC<Props> = ({ challenge, onAnswer, showHin
         className="rounded-2xl p-3"
         style={{
           background: 'rgba(255, 255, 255, 0.95)',
-          border: '3px solid #c084fc'
+          border: '3px solid #93c5fd'
         }}
       >
         <p
@@ -149,8 +149,8 @@ export const WordScrambleGame: React.FC<Props> = ({ challenge, onAnswer, showHin
         <div className="flex flex-wrap justify-center gap-1.5">
           {availableLetters.map((letter, index) => {
             const colors = [
-              { bg: 'linear-gradient(135deg, #f472b6 0%, #ec4899 100%)', border: '#db2777' },
-              { bg: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)', border: '#7c3aed' },
+              { bg: 'linear-gradient(135deg, #fb923c 0%, #f97316 100%)', border: '#ea580c' },
+              { bg: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)', border: '#0284c7' },
               { bg: 'linear-gradient(135deg, #34d399 0%, #10b981 100%)', border: '#059669' },
               { bg: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)', border: '#d97706' },
               { bg: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)', border: '#2563eb' },

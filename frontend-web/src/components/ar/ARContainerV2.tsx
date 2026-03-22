@@ -313,6 +313,19 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         }
     }, [phase, mindUrl, transitionTo]);
 
+    useEffect(() => {
+        if (phase !== 'LOADING') return;
+        const timeoutId = window.setTimeout(() => {
+            if (!mindUrl) {
+                console.error('[ARContainerV2] LOADING timeout: missing mindUrl');
+                setError('Missing AR target data. Please rescan the flashcard.');
+                transitionTo('ERROR');
+            }
+        }, 10000);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [phase, mindUrl, transitionTo]);
+
     return (
         <div
             className="ar-container-v2"

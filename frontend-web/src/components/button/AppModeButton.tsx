@@ -16,7 +16,7 @@ const AppModeButton: React.FC<Props> = ({ currentMode, targetMode, onSwitch, dis
       case 'LEARNING':
         return `${baseStyle} bg-green-600 hover:bg-green-700 disabled:bg-gray-400`;
       case 'GAME':
-        return `${baseStyle} bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400`;
+        return `${baseStyle} bg-sky-600 hover:bg-sky-700 disabled:bg-gray-400`;
       case 'QUIZ':
         return `${baseStyle} bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400`;
       default:

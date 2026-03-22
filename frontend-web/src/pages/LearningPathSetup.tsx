@@ -3,9 +3,8 @@
 // Parent and kid-friendly interface
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { getApiBase } from '../config';
-
-const API_BASE = getApiBase();
+import { apiClient } from '../services/apiClient';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Topic {
     id: string;
@@ -58,38 +57,40 @@ export const LearningPathSetup: React.FC = () => {
     const [savedMessage, setSavedMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    const userId = 'demo-user'; // TODO: get from auth context
+    const { user } = useAuth();
+    const userId = user?.id ?? '';
 
     // Load existing preferences on mount
     useEffect(() => {
+        if (!userId) {
+            return;
+        }
+
         const loadPreferences = async () => {
             try {
-                const res = await fetch(`${API_BASE}/api/v1/learning-path/${userId}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.preferences) {
-                        // Update topics with saved priorities
-                        if (data.preferences.priority_topics?.length > 0) {
-                            setTopics(prev =>
-                                prev.map(t => ({
-                                    ...t,
-                                    isPriority: data.preferences.priority_topics.includes(t.id)
-                                }))
-                            );
-                        }
-                        // Update goals
-                        setDailyGoals({
-                            timeGoalMins: data.preferences.daily_time_goal_mins || 15,
-                            wordsGoal: data.preferences.daily_words_goal || 5,
-                        });
+                const data = await apiClient.get(`/api/v1/learning-path/${userId}`);
+                if (data.preferences) {
+                    // Update topics with saved priorities
+                    if (data.preferences.priority_topics?.length > 0) {
+                        setTopics(prev =>
+                            prev.map(t => ({
+                                ...t,
+                                isPriority: data.preferences.priority_topics.includes(t.id)
+                            }))
+                        );
                     }
+                    // Update goals
+                    setDailyGoals({
+                        timeGoalMins: data.preferences.daily_time_goal_mins || 15,
+                        wordsGoal: data.preferences.daily_words_goal || 5,
+                    });
                 }
-            } catch (e) {
+            } catch {
                 console.log('[LearningPathSetup] Could not load preferences, using defaults');
             }
         };
         loadPreferences();
-    }, []);
+    }, [userId]);
 
     const togglePriority = useCallback((topicId: string) => {
         setTopics((prev) =>
@@ -101,28 +102,25 @@ export const LearningPathSetup: React.FC = () => {
     }, []);
 
     const handleSave = useCallback(async () => {
+        if (!userId) {
+            setSavedMessage('Sign in required to save learning path');
+            return;
+        }
+
         setIsLoading(true);
         const priorityTopics = topics.filter((t) => t.isPriority).map((t) => t.id);
 
         try {
-            const res = await fetch(`${API_BASE}/api/v1/learning-path/preferences`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: userId,
-                    priority_topics: priorityTopics,
-                    daily_time_goal_mins: dailyGoals.timeGoalMins,
-                    daily_words_goal: dailyGoals.wordsGoal,
-                    notifications_enabled: true,
-                }),
+            await apiClient.post('/api/v1/learning-path/preferences', {
+                user_id: userId,
+                priority_topics: priorityTopics,
+                daily_time_goal_mins: dailyGoals.timeGoalMins,
+                daily_words_goal: dailyGoals.wordsGoal,
+                notifications_enabled: true,
             });
 
-            if (res.ok) {
-                setSavedMessage('Learning path saved!');
-                setStep('complete');
-            } else {
-                setSavedMessage('Saved locally (server offline)');
-            }
+            setSavedMessage('Learning path saved!');
+            setStep('complete');
         } catch {
             setSavedMessage('Saved locally');
         } finally {
@@ -139,7 +137,7 @@ export const LearningPathSetup: React.FC = () => {
             style={{
                 background: step === 'complete'
                     ? 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 50%, #86efac 100%)'
-                    : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%)',
+                    : 'linear-gradient(135deg, #fefce8 0%, #fff7ed 52%, #ecfeff 100%)',
             }}
         >
             {/* Progress Indicator */}
@@ -151,13 +149,13 @@ export const LearningPathSetup: React.FC = () => {
                             className="flex-1 h-2 rounded-full transition-all duration-300"
                             style={{
                                 background: ['topics', 'goals', 'complete'].indexOf(step) >= i
-                                    ? 'linear-gradient(90deg, #8b5cf6, #a855f7)'
+                                    ? 'linear-gradient(90deg, #0ea5e9, #22c55e)'
                                     : '#e5e7eb'
                             }}
                         />
                     ))}
                 </div>
-                <p className="text-center text-amber-700 text-xs sm:text-sm font-bold">
+                <p className="text-center text-slate-700 text-xs sm:text-sm font-bold">
                     Step {step === 'topics' ? 1 : step === 'goals' ? 2 : 3} of 3
                 </p>
             </div>
@@ -286,10 +284,10 @@ const TopicSelectionStep: React.FC<TopicStepProps> = ({
             className="w-full py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg"
             style={{
                 background: priorityCount > 0
-                    ? 'linear-gradient(135deg, #8b5cf6, #a855f7)'
+                    ? 'linear-gradient(135deg, #0ea5e9, #22c55e)'
                     : 'linear-gradient(135deg, #e5e7eb, #d1d5db)',
                 color: priorityCount > 0 ? '#fff' : '#9ca3af',
-                border: priorityCount > 0 ? '4px solid #7c3aed' : '3px solid #d1d5db',
+                border: priorityCount > 0 ? '4px solid #0284c7' : '3px solid #d1d5db',
                 minHeight: 56,
             }}
         >
@@ -325,10 +323,10 @@ const GoalSettingStep: React.FC<GoalStepProps> = ({
             className="mb-4 p-4 sm:p-5 rounded-2xl"
             style={{
                 background: 'rgba(255,255,255,0.95)',
-                border: '3px solid #8b5cf6',
+                border: '3px solid #0ea5e9',
             }}
         >
-            <h3 className="text-purple-800 font-bold mb-3 flex items-center gap-2 text-sm sm:text-base">
+            <h3 className="text-sky-800 font-bold mb-3 flex items-center gap-2 text-sm sm:text-base">
                 <span>⏱️</span> Daily Time Goal
             </h3>
             <div className="grid grid-cols-2 gap-2">
@@ -339,10 +337,10 @@ const GoalSettingStep: React.FC<GoalStepProps> = ({
                         className="p-2 sm:p-3 rounded-xl text-center transition-all"
                         style={{
                             background: dailyGoals.timeGoalMins === option.value
-                                ? 'linear-gradient(135deg, #8b5cf6, #a855f7)'
+                                ? 'linear-gradient(135deg, #0ea5e9, #38bdf8)'
                                 : '#f3f4f6',
                             border: dailyGoals.timeGoalMins === option.value
-                                ? '3px solid #7c3aed'
+                                ? '3px solid #0284c7'
                                 : '2px solid #e5e7eb',
                             minHeight: 64,
                         }}
@@ -443,10 +441,10 @@ const GoalSettingStep: React.FC<GoalStepProps> = ({
                 disabled={isLoading}
                 className="flex-[2] py-3 sm:py-4 rounded-2xl font-bold text-sm sm:text-lg"
                 style={{
-                    background: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
+                    background: 'linear-gradient(135deg, #0ea5e9, #22c55e)',
                     color: '#fff',
-                    border: '4px solid #7c3aed',
-                    boxShadow: '0 8px 20px rgba(139,92,246,0.4)',
+                    border: '4px solid #0284c7',
+                    boxShadow: '0 8px 20px rgba(14,165,233,0.35)',
                     minHeight: 56,
                     opacity: isLoading ? 0.7 : 1,
                 }}

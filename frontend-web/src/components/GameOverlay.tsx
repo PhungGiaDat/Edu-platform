@@ -74,10 +74,10 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
   // Loading
   if (!gameSession) {
     return (
-      <div className="game-overlay fixed inset-0 flex items-center justify-center backdrop-blur-sm">
-        <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-2xl border-4 border-pink-400">
+        <div className="game-overlay fixed inset-0 flex items-center justify-center backdrop-blur-sm">
+        <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-2xl border-4 border-sky-400">
           <div className="text-6xl animate-bounce mb-3">🎮</div>
-          <p className="text-xl font-bold text-pink-600">Loading Game...</p>
+          <p className="text-xl font-bold text-sky-700">Loading Game...</p>
         </div>
       </div>
     );
@@ -118,7 +118,7 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
           </div>
 
           <div className="mt-12">
-            <h2 className="text-3xl font-black text-purple-600 mb-3">
+            <h2 className="text-3xl font-black text-sky-700 mb-3">
               {isTimedOut ? 'Time Up! ⏰' : totalStars > 0 ? 'Awesome! 🎉' : 'Great Try! 💪'}
             </h2>
 
@@ -163,7 +163,7 @@ export const GameOverlay: React.FC<GameOverlayProps> = ({ gameSession, onExit })
                   SoundEffectService.play('tap');
                   onExit();
                 }}
-                className="px-8 py-4 bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 rounded-2xl text-white font-black text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-purple-600"
+                className="px-8 py-4 bg-gradient-to-r from-blue-400 to-cyan-500 hover:from-blue-500 hover:to-cyan-600 rounded-2xl text-white font-black text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-cyan-600"
               >
                 ← Back to Learning
               </button>
@@ -252,16 +252,16 @@ switch (currentChallenge.game_type) {
         {/* Progress */}
         <div className="mb-3">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm md:text-base font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] bg-purple-500/90 backdrop-blur-sm px-3 py-1 rounded-full border-2 border-white">
+            <span className="text-sm md:text-base font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] bg-sky-500/90 backdrop-blur-sm px-3 py-1 rounded-full border-2 border-white">
               Challenge {currentChallengeIndex + 1}/{totalChallenges}
             </span>
-            <span className="text-sm md:text-base font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] bg-pink-500/90 backdrop-blur-sm px-3 py-1 rounded-full border-2 border-white">
+            <span className="text-sm md:text-base font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] bg-orange-500/90 backdrop-blur-sm px-3 py-1 rounded-full border-2 border-white">
               {currentChallenge.game_type.replace('_', ' ').toUpperCase()}
             </span>
           </div>
-          <div className="w-full bg-white/80 backdrop-blur-sm rounded-full h-4 border-2 border-pink-400 shadow-lg overflow-hidden">
+          <div className="w-full bg-white/80 backdrop-blur-sm rounded-full h-4 border-2 border-sky-400 shadow-lg overflow-hidden">
             <div
-              className="bg-gradient-to-r from-pink-400 via-purple-400 to-blue-500 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-1"
+              className="bg-gradient-to-r from-orange-400 via-sky-400 to-blue-500 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-1"
               style={{ width: `${((currentChallengeIndex + 1) / totalChallenges) * 100}%` }}
             >
               <span className="text-xs">🚀</span>
@@ -273,8 +273,8 @@ switch (currentChallenge.game_type) {
         <div
           className="rounded-3xl shadow-2xl p-3 relative"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(243,232,255,0.95) 100%)',
-            border: '4px solid #a78bfa',
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(224,242,254,0.95) 100%)',
+            border: '4px solid #7dd3fc',
             maxHeight: 'calc(100vh - 200px)',
             overflowY: 'auto'
           }}
@@ -284,7 +284,7 @@ switch (currentChallenge.game_type) {
             <div className="mb-2 text-center">
               <button
                 onClick={() => setShowHint(!showHint)}
-                className="px-4 py-1.5 bg-gradient-to-r from-yellow-300 to-orange-300 hover:from-yellow-400 hover:to-orange-400 rounded-full text-purple-700 font-bold text-sm shadow-lg border-2 border-yellow-500 transition-all"
+                className="px-4 py-1.5 bg-gradient-to-r from-yellow-300 to-orange-300 hover:from-yellow-400 hover:to-orange-400 rounded-full text-slate-700 font-bold text-sm shadow-lg border-2 border-yellow-500 transition-all"
               >
                 {showHint ? '🔍 Hide Hint' : '💡 Need Help?'}
               </button>
@@ -322,7 +322,7 @@ switch (currentChallenge.game_type) {
               SoundEffectService.play('tap');
               onExit();
             }}
-            className="px-5 py-2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full text-purple-600 font-bold text-sm shadow-lg border-2 border-purple-400 transition-all transform hover:scale-105 drop-shadow-md"
+            className="px-5 py-2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full text-sky-700 font-bold text-sm shadow-lg border-2 border-sky-400 transition-all transform hover:scale-105 drop-shadow-md"
           >
             ← Exit Game
           </button>

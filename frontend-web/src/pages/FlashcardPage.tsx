@@ -8,7 +8,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Flashcard from "../components/Flashcard";
 import { PronunciationPractice } from "../components/PronunciationPractice";
-import { getApiBase } from "../config";
+import { apiClient } from "../services/apiClient";
+import { useAuth } from "../contexts/AuthContext";
 import jungle from "../../public/assets/flashcards/jungle.jpg";
 
 // -------- Types --------
@@ -28,10 +29,10 @@ interface FlashcardData {
 type GameType = "drag_match" | "catch_word" | "word_scramble" | "memory_match";
 
 const GAME_LABELS: Record<GameType, { label: string; emoji: string; color: string }> = {
-  drag_match:    { label: "Drag Match",    emoji: "🖐️",  color: "#6366f1" },
+  drag_match:    { label: "Drag Match",    emoji: "🖐️",  color: "#0ea5e9" },
   catch_word:    { label: "Catch Word",    emoji: "🎯",  color: "#f59e0b" },
   word_scramble: { label: "Word Scramble", emoji: "🔀",  color: "#10b981" },
-  memory_match:  { label: "Memory Match",  emoji: "🧠",  color: "#ec4899" },
+  memory_match:  { label: "Memory Match",  emoji: "🧠",  color: "#f97316" },
 };
 
 const DEMO_CARD: FlashcardData = {
@@ -46,13 +47,12 @@ const DEMO_CARD: FlashcardData = {
 const BG_FALLBACK =
   "https://cdn.pixabay.com/photo/2016/11/14/03/22/elephant-1822636_1280.jpg";
 
-const API_BASE = getApiBase();
-const USER_ID = "demo-user"; // replaced by real auth when available
-
 // -------- Component --------
 
 const FlashcardPage = () => {
   const navigate = useNavigate();
+  const { user, token, isGuest } = useAuth();
+  const userId = user?.id;
   const [cards, setCards] = useState<FlashcardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCard, setSelectedCard] = useState<FlashcardData | null>(null);
@@ -64,11 +64,9 @@ const FlashcardPage = () => {
     let cancelled = false;
     const fetchCards = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/v1/flashcards`, {
+        const data = await apiClient.get('/api/v1/flashcards', {
           signal: AbortSignal.timeout(6000),
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
         const list: FlashcardData[] = Array.isArray(data)
           ? data
           : data.flashcards ?? data.items ?? [];
@@ -92,24 +90,20 @@ const FlashcardPage = () => {
 
   const handlePronunciationComplete = useCallback(
     async (score: number) => {
-      if (!selectedCard) return;
+      if (!selectedCard || !userId || !token || isGuest) return;
       // POST attempt to backend to award XP
       try {
-        await fetch(`${API_BASE}/api/v1/pronunciation/attempt`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: USER_ID,
-            flashcard_qr_id: selectedCard.ar_tag ?? selectedCard.word,
-            spoken_text: selectedCard.word, // browser speech transcription
-            score,
-          }),
+        await apiClient.post('/api/v1/pronunciation/attempt', {
+          user_id: userId,
+          flashcard_qr_id: selectedCard.ar_tag ?? selectedCard.word,
+          spoken_text: selectedCard.word, // browser speech transcription
+          score,
         });
       } catch {
         // non-blocking — XP loss is acceptable if network is down
       }
     },
-    [selectedCard]
+    [selectedCard, userId, token, isGuest]
   );
 
   const handleStartGame = useCallback(
@@ -118,13 +112,12 @@ const FlashcardPage = () => {
       setStartingGame(true);
       try {
         const qrId = selectedCard.ar_tag ?? selectedCard.word;
-        const res = await fetch(
-          `${API_BASE}/api/v1/game/start?type=${gameType}&flashcard_id=${qrId}&user_id=${USER_ID}`,
-          { method: "POST" }
-        );
-        if (res.ok) {
-          navigate(`/game?type=${gameType}&flashcard_id=${qrId}`);
+        if (userId && token && !isGuest) {
+          await apiClient.post('/api/v1/game/start', null, {
+            params: { type: gameType, flashcard_id: qrId, user_id: userId }
+          });
         }
+        navigate(`/game?type=${gameType}&flashcard_id=${qrId}`);
       } catch {
         // If the game endpoint isn't available, navigate anyway so UI isn't stuck
         navigate(`/game?type=${gameType}`);
@@ -132,7 +125,7 @@ const FlashcardPage = () => {
         setStartingGame(false);
       }
     },
-    [selectedCard, startingGame, navigate]
+    [selectedCard, startingGame, navigate, userId, token, isGuest]
   );
 
   if (loading) {
@@ -192,7 +185,7 @@ const FlashcardPage = () => {
           {/* Panel header */}
           <div
             className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 cursor-pointer"
-            style={{ background: "linear-gradient(135deg, #3b82f6, #6366f1)" }}
+            style={{ background: "linear-gradient(135deg, #3b82f6, #0ea5e9)" }}
             onClick={() => setPracticeOpen(false)}
           >
             <span className="text-white font-black text-base sm:text-lg truncate">
@@ -244,7 +237,7 @@ const FlashcardPage = () => {
             onClick={() => setPracticeOpen(true)}
             className="rounded-full px-4 sm:px-6 py-2 sm:py-3 font-black text-white shadow-xl text-xs sm:text-sm
               active:scale-95 transition-transform"
-            style={{ background: "linear-gradient(135deg, #3b82f6, #6366f1)" }}
+            style={{ background: "linear-gradient(135deg, #3b82f6, #0ea5e9)" }}
           >
             🎤 {selectedCard.word.toUpperCase()} ▼
           </button>

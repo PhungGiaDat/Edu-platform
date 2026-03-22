@@ -69,10 +69,10 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
   // Loading state
   if (!quizSession) {
     return (
-      <div className="quiz-overlay fixed inset-0 flex items-center justify-center backdrop-blur-sm">
-        <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-2xl border-4 border-purple-400">
+        <div className="quiz-overlay fixed inset-0 flex items-center justify-center backdrop-blur-sm">
+        <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-2xl border-4 border-sky-400">
           <div className="text-6xl animate-bounce mb-3">🎈</div>
-          <p className="text-xl font-bold text-purple-600">Loading Quiz...</p>
+          <p className="text-xl font-bold text-sky-700">Loading Quiz...</p>
         </div>
       </div>
     );
@@ -115,7 +115,7 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
           </div>
 
           <div className="mt-8">
-            <h2 className="text-2xl font-black text-purple-600 mb-2">
+            <h2 className="text-2xl font-black text-sky-700 mb-2">
               {isTimedOut ? 'Time Out! ⏰' : isGameOver ? 'Game Over! 💔' : isPassed ? 'Amazing! 🎉' : 'Great Try! 💪'}
             </h2>
 
@@ -157,16 +157,16 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
             >
               🔄 Try Again
             </button>
-            <button
-              onClick={() => {
-                HapticService.tap();
-                SoundEffectService.play('tap');
-                onExit();
-              }}
-              className="px-6 py-3 bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 rounded-2xl text-white font-bold text-base transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-purple-600"
-            >
-              ← Back to AR
-            </button>
+              <button
+                onClick={() => {
+                  HapticService.tap();
+                  SoundEffectService.play('tap');
+                  onExit();
+                }}
+                className="px-6 py-3 bg-gradient-to-r from-blue-400 to-cyan-500 hover:from-blue-500 hover:to-cyan-600 rounded-2xl text-white font-bold text-base transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-cyan-600"
+              >
+                ← Back to AR
+              </button>
           </div>
         </div>
       </div>
@@ -224,16 +224,16 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
         {/* Progress Bar */}
         <div className="mb-3">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm md:text-base font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] bg-purple-500/90 backdrop-blur-sm px-3 py-1 rounded-full border-2 border-white">
+            <span className="text-sm md:text-base font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] bg-sky-500/90 backdrop-blur-sm px-3 py-1 rounded-full border-2 border-white">
               Question {currentQuestionIndex + 1} / {totalQuestions}
             </span>
-            <span className="text-sm md:text-base font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] bg-pink-500/90 backdrop-blur-sm px-3 py-1 rounded-full border-2 border-white">
+            <span className="text-sm md:text-base font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] bg-orange-500/90 backdrop-blur-sm px-3 py-1 rounded-full border-2 border-white">
               {Math.round(((currentQuestionIndex + 1) / totalQuestions) * 100)}%
             </span>
           </div>
           <div className="w-full bg-white/80 backdrop-blur-sm rounded-full h-4 border-2 border-yellow-400 shadow-lg overflow-hidden">
             <div
-              className="bg-gradient-to-r from-green-400 via-blue-400 to-purple-500 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-1"
+              className="bg-gradient-to-r from-green-400 via-blue-400 to-orange-500 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-1"
               style={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
             >
               <span className="text-xs">🚀</span>
@@ -247,7 +247,7 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
           <div className="absolute -top-3 -right-3 text-4xl -rotate-12 drop-shadow-lg">✨</div>
 
           <div className="mb-3 flex justify-center">
-            <span className="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-pink-400 to-purple-500 rounded-full text-white font-bold text-xs md:text-sm uppercase shadow-lg">
+            <span className="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-orange-400 to-sky-500 rounded-full text-white font-bold text-xs md:text-sm uppercase shadow-lg">
               {currentQuestion.type === 'multiple_choice' ? '📝 MULTIPLE' : '✓ TRUE/FALSE'}
             </span>
           </div>
@@ -262,8 +262,8 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
             </div>
           )}
 
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-4 mb-4 border-4 border-blue-300 shadow-inner">
-            <h2 className="text-base md:text-xl font-black text-purple-800 leading-snug text-center drop-shadow-sm">
+          <div className="bg-gradient-to-r from-blue-50 to-orange-50 rounded-2xl p-4 mb-4 border-4 border-blue-300 shadow-inner">
+            <h2 className="text-base md:text-xl font-black text-slate-800 leading-snug text-center drop-shadow-sm">
               {currentQuestion.question_text}
             </h2>
           </div>
@@ -343,7 +343,7 @@ export const QuizOverlay: React.FC<QuizOverlayProps> = ({ quizSession, onExit })
               SoundEffectService.play('tap');
               onExit();
             }}
-            className="px-5 py-2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full text-purple-600 font-bold text-sm shadow-lg border-2 border-purple-400 transition-all transform hover:scale-105 drop-shadow-md"
+            className="px-5 py-2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full text-sky-700 font-bold text-sm shadow-lg border-2 border-sky-400 transition-all transform hover:scale-105 drop-shadow-md"
           >
             ← Exit
           </button>

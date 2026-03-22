@@ -1,15 +1,18 @@
 import React from 'react';
 import { Leaderboard } from '../components/Gamification/Leaderboard';
 import { BadgeList } from '../components/Gamification/BadgeList';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Profile: React.FC = () => {
-    // Mock Data
+    const { user } = useAuth();
+
+    const username = user?.username || 'Learner';
     const userStats = {
-        username: "Daniel",
+        username,
         level: 5,
         total_points: 1250,
         streak_days: 12,
-        avatar_url: "https://api.dicebear.com/7.x/avataaars/svg?seed=Daniel"
+        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username)}`,
     };
 
     const badges = [
@@ -19,46 +22,55 @@ export const Profile: React.FC = () => {
     ];
 
     const leaderboard = [
-        { user_id: '1', username: 'Daniel', points: 1250, rank: 1, avatar_url: userStats.avatar_url },
+        { user_id: '1', username, points: 1250, rank: 1, avatar_url: userStats.avatar_url },
         { user_id: '2', username: 'Sarah', points: 980, rank: 2 },
         { user_id: '3', username: 'Mike', points: 850, rank: 3 },
     ];
 
     return (
-        <div className="px-4 sm:px-6 py-6 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-            {/* Left Column - Stats */}
-            <div className="lg:col-span-2 space-y-6 sm:space-y-8">
-                {/* Profile Header */}
-                <div className="bg-white p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border-2 border-neutral-200 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-neutral-100 border-4 border-secondary overflow-hidden flex-shrink-0">
-                        <img src={userStats.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="text-center sm:text-left flex-1">
-                        <h1 className="text-2xl sm:text-3xl font-black text-neutral-800">{userStats.username}</h1>
-                        <p className="text-neutral-400 font-bold text-sm mt-1">Level {userStats.level} Scholar</p>
-                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-3 sm:mt-4">
-                            <div className="flex items-center justify-center sm:justify-start gap-2">
-                                <span className="text-lg sm:text-2xl">🔥</span>
-                                <span className="font-bold text-neutral-600 text-sm sm:text-base">{userStats.streak_days} Day Streak</span>
+        <div
+            className="min-h-screen"
+            style={{
+                background:
+                    'radial-gradient(circle at 14% 12%, rgba(14,165,233,0.17), transparent 42%), radial-gradient(circle at 88% 84%, rgba(245,158,11,0.16), transparent 40%), linear-gradient(135deg, #f8fbff 0%, #fff8e8 55%, #ecfeff 100%)',
+            }}
+        >
+            <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 px-4 py-6 sm:px-6 lg:grid-cols-3 lg:gap-6">
+                <div className="space-y-5 lg:col-span-2">
+                    <section
+                        className="rounded-3xl p-5 sm:p-6"
+                        style={{ background: 'rgba(255,255,255,0.92)', border: '2px solid #dbeafe', boxShadow: '0 10px 26px rgba(14,165,233,0.13)' }}
+                    >
+                        <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-5">
+                            <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-sky-300 bg-white sm:h-28 sm:w-28">
+                                <img src={userStats.avatar_url} alt="Profile" className="h-full w-full object-cover" />
                             </div>
-                            <div className="flex items-center justify-center sm:justify-start gap-2">
-                                <span className="text-lg sm:text-2xl">⚡</span>
-                                <span className="font-bold text-neutral-600 text-sm sm:text-base">{userStats.total_points} XP</span>
+                            <div className="text-center sm:text-left">
+                                <h1 className="text-2xl font-black text-slate-900 sm:text-3xl">{userStats.username}</h1>
+                                <p className="mt-1 text-sm font-bold text-slate-500">Level {userStats.level} Scholar</p>
+                                <div className="mt-3 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
+                                    <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-bold text-orange-700">🔥 {userStats.streak_days} Day Streak</span>
+                                    <span className="rounded-full bg-sky-100 px-3 py-1 text-sm font-bold text-sky-700">⚡ {userStats.total_points} XP</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
+
+                    <section
+                        className="rounded-3xl p-5 sm:p-6"
+                        style={{ background: 'rgba(255,255,255,0.92)', border: '2px solid #e2e8f0', boxShadow: '0 8px 22px rgba(2,132,199,0.08)' }}
+                    >
+                        <h2 className="mb-4 text-xl font-black text-slate-900">Badges</h2>
+                        <BadgeList badges={badges} earnedBadgeIds={['1', '3']} />
+                    </section>
                 </div>
 
-                {/* Badges */}
-                <div className="bg-white p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border-2 border-neutral-200">
-                    <h2 className="text-lg sm:text-xl font-black text-neutral-800 mb-4 sm:mb-6">Badges</h2>
-                    <BadgeList badges={badges} earnedBadgeIds={['1', '3']} />
-                </div>
-            </div>
-
-            {/* Right Column - Leaderboard */}
-            <div className="space-y-6 sm:space-y-8">
-                <Leaderboard entries={leaderboard} />
+                <section
+                    className="rounded-3xl p-4 sm:p-5"
+                    style={{ background: 'rgba(255,255,255,0.92)', border: '2px solid #e2e8f0', boxShadow: '0 8px 22px rgba(2,132,199,0.08)' }}
+                >
+                    <Leaderboard entries={leaderboard} />
+                </section>
             </div>
         </div>
     );

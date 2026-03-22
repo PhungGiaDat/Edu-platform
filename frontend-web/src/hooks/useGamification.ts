@@ -11,10 +11,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { getApiBase } from '@/config';
+import { apiClient } from '@/services/apiClient';
 import { eventBus } from '@/runtime/EventBus';
-
-const API_BASE = getApiBase();
 
 export interface Badge {
     id: string;
@@ -89,10 +87,7 @@ export function useGamification(userId: string | null) {
 
         setIsLoading(true);
         try {
-            const response = await fetch(`${API_BASE}/api/v1/gamification/user/${userId}`);
-            if (!response.ok) throw new Error('Failed to fetch progress');
-
-            const data = await response.json();
+            const data = await apiClient.get(`/api/v1/gamification/user/${userId}`);
             setProgress(data);
             setError(null);
         } catch (err) {
@@ -108,15 +103,11 @@ export function useGamification(userId: string | null) {
         if (!userId) return null;
 
         try {
-            const response = await fetch(`${API_BASE}/api/v1/gamification/add-xp`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId, action, metadata })
+            const result: XPResult = await apiClient.post('/api/v1/gamification/add-xp', {
+                user_id: userId,
+                action,
+                metadata
             });
-
-            if (!response.ok) throw new Error('Failed to add XP');
-
-            const result: XPResult = await response.json();
 
             // Update local state
             setRecentXP({ amount: result.xp_added, action });
@@ -161,15 +152,10 @@ export function useGamification(userId: string | null) {
         if (!userId) return false;
 
         try {
-            const response = await fetch(`${API_BASE}/api/v1/gamification/award-badge`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId, badge_id: badgeId })
+            const result = await apiClient.post('/api/v1/gamification/award-badge', {
+                user_id: userId,
+                badge_id: badgeId
             });
-
-            if (!response.ok) throw new Error('Failed to award badge');
-
-            const result = await response.json();
 
             if (result.awarded) {
                 setNewBadges([badgeId]);
@@ -187,9 +173,7 @@ export function useGamification(userId: string | null) {
     // Get leaderboard
     const getLeaderboard = useCallback(async (limit: number = 10) => {
         try {
-            const response = await fetch(`${API_BASE}/api/v1/gamification/leaderboard?limit=${limit}`);
-            if (!response.ok) throw new Error('Failed to fetch leaderboard');
-            return await response.json();
+            return await apiClient.get('/api/v1/gamification/leaderboard', { params: { limit } });
         } catch (err) {
             console.error('[useGamification] Leaderboard error:', err);
             return { leaderboard: [] };
@@ -201,15 +185,9 @@ export function useGamification(userId: string | null) {
         if (!userId) return { success: false, happiness: 0 };
 
         try {
-            const response = await fetch(`${API_BASE}/api/v1/gamification/pet/feed`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId })
+            const result = await apiClient.post('/api/v1/gamification/pet/feed', {
+                user_id: userId
             });
-
-            if (!response.ok) throw new Error('Failed to feed pet');
-
-            const result = await response.json();
 
             // Trigger happy animation in AR
             eventBus.emit('AR_COMMAND' as any, {
@@ -235,15 +213,9 @@ export function useGamification(userId: string | null) {
         if (!userId) return { success: false, happiness: 0 };
 
         try {
-            const response = await fetch(`${API_BASE}/api/v1/gamification/pet/play`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId })
+            const result = await apiClient.post('/api/v1/gamification/pet/play', {
+                user_id: userId
             });
-
-            if (!response.ok) throw new Error('Failed to play with pet');
-
-            const result = await response.json();
 
             // Trigger play animation in AR
             eventBus.emit('AR_COMMAND' as any, {
@@ -269,13 +241,10 @@ export function useGamification(userId: string | null) {
         if (!userId) return false;
 
         try {
-            const response = await fetch(`${API_BASE}/api/v1/gamification/pet/outfit`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId, outfit })
+            await apiClient.post('/api/v1/gamification/pet/outfit', {
+                user_id: userId,
+                outfit
             });
-
-            if (!response.ok) throw new Error('Failed to change outfit');
 
             await fetchProgress();
             return true;
@@ -290,15 +259,10 @@ export function useGamification(userId: string | null) {
         if (!userId) return false;
 
         try {
-            const response = await fetch(`${API_BASE}/api/v1/gamification/stickers/collect`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId, sticker_id: stickerId })
+            const result = await apiClient.post('/api/v1/gamification/stickers/collect', {
+                user_id: userId,
+                sticker_id: stickerId
             });
-
-            if (!response.ok) throw new Error('Failed to collect sticker');
-
-            const result = await response.json();
 
             if (result.collected) {
                 setNewSticker(result.sticker);

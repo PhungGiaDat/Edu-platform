@@ -23,8 +23,8 @@ const COLORS: ColorOption[] = [
     { name: 'Green', nameVi: 'Xanh lá', hex: '#22c55e' },
     { name: 'Yellow', nameVi: 'Vàng', hex: '#eab308' },
     { name: 'Orange', nameVi: 'Cam', hex: '#f97316' },
-    { name: 'Purple', nameVi: 'Tím', hex: '#a855f7' },
-    { name: 'Pink', nameVi: 'Hồng', hex: '#ec4899' },
+    { name: 'Cyan', nameVi: 'Xanh ngoc', hex: '#06b6d4' },
+    { name: 'Sky', nameVi: 'Xanh troi', hex: '#0ea5e9' },
     { name: 'Brown', nameVi: 'Nâu', hex: '#a16207' },
 ];
 
@@ -149,13 +149,13 @@ export const ColoringGame: React.FC<Props> = ({ challenge, onAnswer, showHint })
         <div className="space-y-3">
             <div
                 className="text-center p-2 rounded-xl"
-                style={{ background: 'linear-gradient(135deg, #ec4899, #f472b6)' }}
+                style={{ background: 'linear-gradient(135deg, #0ea5e9, #22c55e)' }}
             >
                 <p className="text-sm font-bold text-white">{challenge.question}</p>
             </div>
 
             <div className="flex justify-between items-center px-2">
-                <span className="text-sm font-bold text-purple-700">🎨 {coloredPercentage}%</span>
+                <span className="text-sm font-bold text-sky-700">🎨 {coloredPercentage}%</span>
                 <button
                     onClick={handleClear}
                     className="px-3 py-1 text-xs font-bold text-white rounded-full"
@@ -170,7 +170,7 @@ export const ColoringGame: React.FC<Props> = ({ challenge, onAnswer, showHint })
                 style={{
                     width: 'min(300px, 90vw)',
                     height: 'min(300px, 90vw)',
-                    border: '4px solid #ec4899',
+                    border: '4px solid #0ea5e9',
                     touchAction: 'none'
                 }}
             >

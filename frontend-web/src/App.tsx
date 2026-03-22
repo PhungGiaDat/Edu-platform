@@ -106,7 +106,7 @@ const GlobalPetUnlockNotifier: React.FC = () => {
   // Listen for PET_CAN_UNLOCK - emitted by useGamification after XP is added.
   // Fetches fresh data directly to avoid stale closure on pets state.
   useEffect(() => {
-    const handleCanUnlock = async (_data: { userXP: number; userStreak: number; level: number }) => {
+    const handleCanUnlock = async () => {
       if (!user?.id) return;
 
       try {
@@ -159,6 +159,24 @@ const ConditionalAIChatBuddy: React.FC = () => {
   return <AIChatBuddy />;
 };
 
+const RequireLearnerAccess: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isLoading, isAuthenticated, isGuest } = useAuth();
+  if (isLoading) return null;
+  if (!isAuthenticated && !isGuest) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
+
+const RequireUserAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isLoading, isAuthenticated, isGuest } = useAuth();
+  if (isLoading) return null;
+  if (!isAuthenticated || isGuest) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
+
 // ========== App ==========
 
 const App = () => {
@@ -180,15 +198,15 @@ const App = () => {
         <Route path="/register" element={<Register />} />
 
         {/* Protected Routes (Wrapped in Layout) */}
-        <Route path="/flashcards" element={<Layout><FlashcardPage /></Layout>} />
-        <Route path="/learn-ar" element={<LearnARV2 />} />
-        <Route path="/courses" element={<Layout><CourseList /></Layout>} />
-        <Route path="/courses/:id" element={<Layout><CourseDetail /></Layout>} />
-        <Route path="/profile" element={<Layout><Profile /></Layout>} />
-        <Route path="/progress" element={<Layout><ProgressDashboard /></Layout>} />
-        <Route path="/learning-path" element={<Layout><LearningPathSetup /></Layout>} />
+        <Route path="/flashcards" element={<RequireUserAuth><Layout><FlashcardPage /></Layout></RequireUserAuth>} />
+        <Route path="/learn-ar" element={<RequireLearnerAccess><LearnARV2 /></RequireLearnerAccess>} />
+        <Route path="/courses" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/:id" element={<RequireLearnerAccess><Layout><CourseDetail /></Layout></RequireLearnerAccess>} />
+        <Route path="/profile" element={<RequireUserAuth><Layout><Profile /></Layout></RequireUserAuth>} />
+        <Route path="/progress" element={<RequireUserAuth><Layout><ProgressDashboard /></Layout></RequireUserAuth>} />
+        <Route path="/learning-path" element={<RequireUserAuth><Layout><LearningPathSetup /></Layout></RequireUserAuth>} />
 
-        <Route path="/pets" element={<Layout><PetsPage /></Layout>} />
+        <Route path="/pets" element={<RequireUserAuth><Layout><PetsPage /></Layout></RequireUserAuth>} />
         <Route path="/scan" element={<Navigate to="/learn-ar" replace />} />
       </Routes>
 

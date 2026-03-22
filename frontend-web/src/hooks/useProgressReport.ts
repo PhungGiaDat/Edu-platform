@@ -2,9 +2,7 @@
 // Hook for fetching and managing progress reports for parents
 
 import { useState, useEffect, useCallback } from 'react';
-import { getApiBase } from '../config';
-
-const API_BASE = getApiBase();
+import { apiClient } from '../services/apiClient';
 
 // Types
 export interface ProgressStats {
@@ -122,21 +120,22 @@ export function useProgressReport(userId: string): UseProgressReportReturn {
 
     // Fetch summary
     const fetchSummary = useCallback(async () => {
-        if (!userId) return;
+        if (!userId) {
+            setSummary(null);
+            setIsLoading(false);
+            return;
+        }
         
         setIsLoading(true);
         setError(null);
         
         try {
-            const res = await fetch(`${API_BASE}/api/v1/reports/user/${userId}/summary`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await apiClient.get(`/api/v1/reports/user/${userId}/summary`);
             setSummary(data);
         } catch (e) {
             console.error('[useProgressReport] Summary fetch failed:', e);
             setError('Failed to load progress data');
-            // Use mock data for demo
-            setSummary(getMockSummary(userId));
+            setSummary(null);
         } finally {
             setIsLoading(false);
         }
@@ -144,19 +143,20 @@ export function useProgressReport(userId: string): UseProgressReportReturn {
 
     // Fetch weekly report
     const fetchWeekly = useCallback(async () => {
-        if (!userId) return;
+        if (!userId) {
+            setWeeklyReport(null);
+            setIsLoadingWeekly(false);
+            return;
+        }
         
         setIsLoadingWeekly(true);
         
         try {
-            const res = await fetch(`${API_BASE}/api/v1/reports/user/${userId}/weekly`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await apiClient.get(`/api/v1/reports/user/${userId}/weekly`);
             setWeeklyReport(data);
         } catch (e) {
             console.error('[useProgressReport] Weekly fetch failed:', e);
-            // Use mock data for demo
-            setWeeklyReport(getMockWeeklyReport(userId));
+            setWeeklyReport(null);
         } finally {
             setIsLoadingWeekly(false);
         }
@@ -164,19 +164,20 @@ export function useProgressReport(userId: string): UseProgressReportReturn {
 
     // Fetch achievements
     const fetchAchievements = useCallback(async () => {
-        if (!userId) return;
+        if (!userId) {
+            setAchievements(null);
+            setIsLoadingAchievements(false);
+            return;
+        }
         
         setIsLoadingAchievements(true);
         
         try {
-            const res = await fetch(`${API_BASE}/api/v1/reports/user/${userId}/achievements`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await apiClient.get(`/api/v1/reports/user/${userId}/achievements`);
             setAchievements(data);
         } catch (e) {
             console.error('[useProgressReport] Achievements fetch failed:', e);
-            // Use mock data for demo
-            setAchievements(getMockAchievements());
+            setAchievements(null);
         } finally {
             setIsLoadingAchievements(false);
         }
@@ -209,76 +210,6 @@ export function useProgressReport(userId: string): UseProgressReportReturn {
         refreshWeekly: fetchWeekly,
         refreshAchievements: fetchAchievements,
         weeklyComparison
-    };
-}
-
-// Mock data generators for demo/fallback
-function getMockSummary(userId: string): ProgressSummary {
-    return {
-        user_id: userId,
-        stats: {
-            total_words_learned: 24,
-            total_xp: 1250,
-            level: 5,
-            streak_days: 3,
-            topics_completed: ['Animals', 'Colors'],
-            favorite_topic: 'Animals',
-            time_spent_mins: 45,
-            games_played: 12,
-            pronunciation_score_avg: 82
-        },
-        topics: [
-            { topic: 'Animals', words_learned: 10, total_words: 15, percentage: 67 },
-            { topic: 'Colors', words_learned: 8, total_words: 8, percentage: 100 },
-            { topic: 'Family', words_learned: 4, total_words: 12, percentage: 33 },
-            { topic: 'Nature', words_learned: 2, total_words: 10, percentage: 20 }
-        ],
-        recent_activity: [
-            { date: '2026-01-22', words_learned: 5, games_played: 2 },
-            { date: '2026-01-21', words_learned: 3, games_played: 1 },
-            { date: '2026-01-20', words_learned: 4, games_played: 3 }
-        ],
-        generated_at: new Date().toISOString()
-    };
-}
-
-function getMockWeeklyReport(userId: string): WeeklyReport {
-    const now = new Date();
-    const weekStart = new Date(now);
-    weekStart.setDate(weekStart.getDate() - 7);
-    
-    return {
-        user_id: userId,
-        week_start: weekStart.toISOString(),
-        week_end: now.toISOString(),
-        summary: {
-            total_sessions: 5,
-            total_time_mins: 45,
-            words_learned: 12,
-            games_completed: 8,
-            avg_pronunciation_score: 78
-        },
-        daily_breakdown: [
-            { day: 'Mon', time_mins: 10, words: 2, xp: 50 },
-            { day: 'Tue', time_mins: 8, words: 3, xp: 75 },
-            { day: 'Wed', time_mins: 12, words: 4, xp: 100 },
-            { day: 'Thu', time_mins: 0, words: 0, xp: 0 },
-            { day: 'Fri', time_mins: 15, words: 3, xp: 80 },
-            { day: 'Sat', time_mins: 0, words: 0, xp: 0 },
-            { day: 'Sun', time_mins: 0, words: 0, xp: 0 }
-        ]
-    };
-}
-
-function getMockAchievements(): AchievementsData {
-    return {
-        badges: [
-            { id: 'first_word', name: 'First Word!', emoji: '🌟', earned_at: '2026-01-15' },
-            { id: 'streak_3', name: '3 Day Streak', emoji: '🔥', earned_at: '2026-01-20' },
-            { id: 'perfect_pronun', name: 'Perfect Pronunciation', emoji: '🎤', earned_at: '2026-01-21' }
-        ],
-        stickers_collected: 15,
-        total_stars: 42
     };
 }
 

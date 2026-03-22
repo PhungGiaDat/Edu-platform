@@ -332,9 +332,9 @@ export default function LearnAR() {
           <>
             {gameLoading && (
               <div className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm">
-                <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-2xl border-4 border-pink-400">
+                <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-2xl border-4 border-sky-400">
                   <div className="text-6xl animate-bounce mb-3">🎮</div>
-                  <p className="text-xl font-bold text-pink-600">Loading Game...</p>
+                  <p className="text-xl font-bold text-sky-700">Loading Game...</p>
                 </div>
               </div>
             )}
@@ -367,15 +367,15 @@ export default function LearnAR() {
         {/* Game Selector Modal - INSIDE ar-ui-overlay */}
         {showGameSelector && appState === 'AR_ACTIVE' && (
           <div className="fixed inset-0 z-40 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="w-full max-w-lg bg-gradient-to-br from-purple-100 to-pink-100 backdrop-blur-md rounded-3xl shadow-2xl p-6 border-4 border-purple-400">
+            <div className="w-full max-w-lg bg-gradient-to-br from-sky-100 to-orange-100 backdrop-blur-md rounded-3xl shadow-2xl p-6 border-4 border-sky-400">
 
               {selectorStep === 'difficulty' && (
                 <>
                   <div className="text-center mb-6">
-                    <h2 className="text-3xl font-black text-purple-700 mb-2">
+                    <h2 className="text-3xl font-black text-sky-700 mb-2">
                       Choose Difficulty! 🎯
                     </h2>
-                    <p className="text-base text-purple-600 font-semibold">
+                    <p className="text-base text-sky-700 font-semibold">
                       Pick your challenge level!
                     </p>
                   </div>
@@ -417,10 +417,10 @@ export default function LearnAR() {
               {selectorStep === 'game_type' && (
                 <>
                   <div className="text-center mb-6">
-                    <h2 className="text-3xl font-black text-purple-700 mb-2">
+                    <h2 className="text-3xl font-black text-sky-700 mb-2">
                       Choose Game Type! 🎮
                     </h2>
-                    <p className="text-base text-purple-600 font-semibold">
+                    <p className="text-base text-sky-700 font-semibold">
                       Pick your favorite game!
                     </p>
                   </div>
@@ -444,7 +444,7 @@ export default function LearnAR() {
 
                     <button
                       onClick={() => handleGameTypeSelect('word_scramble')}
-                      className="p-5 bg-gradient-to-br from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 rounded-2xl text-white font-black text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-purple-600"
+                      className="p-5 bg-gradient-to-br from-sky-400 to-cyan-500 hover:from-sky-500 hover:to-cyan-600 rounded-2xl text-white font-black text-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-4 border-sky-600"
                     >
                       <div className="text-5xl mb-2">🔀</div>
                       <div>Word Scramble</div>

@@ -140,7 +140,19 @@ class GamificationService:
         """Get user gamification stats"""
         stats = await self.repo.get_by_user_id(user_id)
         if not stats:
-            return {"total_points": 0, "level": 1, "badges": [], "streak_days": 0}
+            return {
+                "user_id": user_id,
+                "total_points": 0,
+                "level": 1,
+                "xp_to_next_level": 100,
+                "stars": 0,
+                "badges": [],
+                "streak_days": 0,
+                "longest_streak": 0,
+                "daily_progress": [],
+            }
+        if "user_id" not in stats:
+            stats["user_id"] = user_id
         return stats
 
     async def get_leaderboard(self) -> List[Dict[str, Any]]:

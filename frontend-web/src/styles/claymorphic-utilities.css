@@ -1,0 +1,311 @@
+/**
+ * Claymorphic Utility Classes
+ * Apply these to any element for instant clay effects
+ * Based on the EduAR Landing Page design system
+ */
+
+/* ─── Cards ─────────────────────────────────────────────────── */
+.clay-card-sm {
+  border-radius: 24px;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+}
+
+.clay-card {
+  border-radius: 28px;
+  box-shadow: 0 8px 0 rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+}
+
+.clay-card-lg {
+  border-radius: 32px;
+  box-shadow: 0 14px 0 rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+}
+
+.clay-card:hover,
+.clay-card-sm:hover,
+.clay-card-lg:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 14px 0 rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+/* No hover effect variant */
+.clay-card-no-hover:hover {
+  transform: none;
+  box-shadow: 0 8px 0 rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+/* ─── Buttons ───────────────────────────────────────────────── */
+.clay-btn {
+  border-radius: 20px;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+  font-weight: 900;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.clay-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 9px 0 rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+/* Color Variants */
+.clay-btn-yellow {
+  background: #FFD93D;
+  box-shadow: 0 6px 0 #E5B800, inset 0 1px 0 rgba(255,255,255,0.4);
+  color: #1A2744;
+}
+
+.clay-btn-yellow:hover {
+  box-shadow: 0 9px 0 #E5B800, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-yellow:active {
+  box-shadow: 0 3px 0 #E5B800, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-blue {
+  background: #6EB9FF;
+  box-shadow: 0 6px 0 #3A8FD1, inset 0 1px 0 rgba(255,255,255,0.4);
+  color: #fff;
+}
+
+.clay-btn-blue:hover {
+  box-shadow: 0 9px 0 #3A8FD1, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-blue:active {
+  box-shadow: 0 3px 0 #3A8FD1, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-green {
+  background: #B4E197;
+  box-shadow: 0 6px 0 #7DC760, inset 0 1px 0 rgba(255,255,255,0.4);
+  color: #1A2744;
+}
+
+.clay-btn-green:hover {
+  box-shadow: 0 9px 0 #7DC760, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-green:active {
+  box-shadow: 0 3px 0 #7DC760, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-pink {
+  background: #FF9F9F;
+  box-shadow: 0 6px 0 #D97070, inset 0 1px 0 rgba(255,255,255,0.4);
+  color: #fff;
+}
+
+.clay-btn-pink:hover {
+  box-shadow: 0 9px 0 #D97070, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-pink:active {
+  box-shadow: 0 3px 0 #D97070, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-white {
+  background: #fff;
+  box-shadow: 0 6px 0 #E2E8F0, inset 0 1px 0 rgba(255,255,255,0.4);
+  color: #1A2744;
+}
+
+.clay-btn-white:hover {
+  box-shadow: 0 9px 0 #E2E8F0, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-white:active {
+  box-shadow: 0 3px 0 #E2E8F0, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+/* Button Sizes */
+.clay-btn-sm {
+  padding: 10px 18px;
+  font-size: 15px;
+  min-height: 44px;
+}
+
+.clay-btn-md {
+  padding: 16px 32px;
+  font-size: 17px;
+  min-height: 56px;
+}
+
+.clay-btn-lg {
+  padding: 18px 36px;
+  font-size: 18px;
+  min-height: 60px;
+}
+
+/* ─── Animations ────────────────────────────────────────────── */
+.clay-float {
+  animation: clay-float 4s ease-in-out infinite;
+}
+
+.clay-float-delay {
+  animation: clay-float-delay 3.5s ease-in-out infinite 0.8s;
+}
+
+@keyframes clay-float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-14px) rotate(2deg); }
+}
+
+@keyframes clay-float-delay {
+  0%, 100% { transform: translateY(0) rotate(3deg); }
+  50% { transform: translateY(-10px) rotate(-1deg); }
+}
+
+/* XP Pulse Animation */
+.clay-xp-pulse {
+  animation: clay-xp-pulse 2s ease-in-out infinite;
+}
+
+@keyframes clay-xp-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+/* Shimmer Animation (for progress bars) */
+.clay-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.clay-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: clay-shimmer 2s infinite;
+}
+
+@keyframes clay-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* ─── Stagger Reveal ────────────────────────────────────────── */
+.clay-reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.34,1.2,0.64,1);
+}
+
+.clay-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Auto-stagger utility (use with JS to add transition-delay) */
+.clay-stagger-1 { transition-delay: 0.1s; }
+.clay-stagger-2 { transition-delay: 0.2s; }
+.clay-stagger-3 { transition-delay: 0.3s; }
+.clay-stagger-4 { transition-delay: 0.4s; }
+.clay-stagger-5 { transition-delay: 0.5s; }
+.clay-stagger-6 { transition-delay: 0.6s; }
+
+/* ─── Badges/Pills ──────────────────────────────────────────── */
+.clay-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 99px;
+  padding: 6px 16px;
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.15);
+}
+
+.clay-badge-yellow {
+  background: #FFD93D;
+  box-shadow: 0 3px 0 #E5B800;
+  color: #1A2744;
+}
+
+.clay-badge-pink {
+  background: #FF9F9F;
+  box-shadow: 0 3px 0 #D97070;
+  color: #1A2744;
+}
+
+.clay-badge-blue {
+  background: #6EB9FF;
+  box-shadow: 0 3px 0 #3A8FD1;
+  color: #fff;
+}
+
+.clay-badge-green {
+  background: #B4E197;
+  box-shadow: 0 3px 0 #7DC760;
+  color: #1A2744;
+}
+
+/* ─── Progress Bar with Shimmer ────────────────────────────── */
+.clay-progress-bar {
+  position: relative;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.2);
+}
+
+.clay-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.clay-progress-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: clay-shimmer 2s infinite;
+}
+
+/* ─── Accessibility ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .clay-card,
+  .clay-card-sm,
+  .clay-card-lg,
+  .clay-btn,
+  .clay-reveal,
+  .clay-float,
+  .clay-float-delay,
+  .clay-xp-pulse,
+  .clay-shimmer::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ─── Utility Classes ───────────────────────────────────────── */
+
+/* Spring physics transition */
+.clay-spring {
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* Cursor pointer for interactive elements */
+.clay-interactive {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Touch-friendly sizing */
+.clay-touch-target {
+  min-width: 48px;
+  min-height: 48px;
+}

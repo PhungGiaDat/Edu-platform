@@ -42,6 +42,7 @@ import { SpeechService } from '@/services/SpeechService';
 import { AudioService } from '@/services/AudioService';
 import { eventBus } from '@/runtime/EventBus';
 import { getApiBase } from '@/config';
+import { apiClient } from '@/services/apiClient';
 import { useAuth } from '@/contexts/AuthContext';
 import type { DisplayMode, AppMode } from '@/hooks/useDisplayMode';
 import type { GameDifficulty, GameType } from '@/types';
@@ -56,6 +57,33 @@ const GameOverlay = lazy(() => import('@/components/GameOverlay').then(m => ({ d
 const SESSION_LIMIT_MINS = 30;
 const SESSION_WARNING_MINS = 25;
 
+function resolveMindUrl(rawUrl?: string): string | undefined {
+    if (!rawUrl) return undefined;
+    const trimmed = rawUrl.trim();
+    if (!trimmed) return undefined;
+
+    const match = trimmed.match(/^([^?#]*)([?#].*)?$/);
+    if (!match) return undefined;
+
+    const path = match[1];
+    const suffix = match[2] || '';
+
+    if (path.toLowerCase().endsWith('.mind')) {
+        return trimmed;
+    }
+
+    if (/\.(fset|fset3|iset)$/i.test(path)) {
+        return `${path.replace(/\.(fset|fset3|iset)$/i, '.mind')}${suffix}`;
+    }
+
+    const lastSegment = path.split('/').pop() || '';
+    if (lastSegment && !lastSegment.includes('.')) {
+        return `${path}.mind${suffix}`;
+    }
+
+    return trimmed;
+}
+
 // ========== TYPES ==========
 type AppState = 'SCANNING' | 'LOADING' | 'VIEWING' | 'QUIZ' | 'GAME' | 'PRONUNCIATION' | 'ERROR';
 
@@ -66,10 +94,11 @@ interface PronunciationOverlayProps {
     flashcardQrId?: string;
     userId?: string | null;
     authToken?: string | null;
+    isGuest?: boolean;
     onClose: () => void;
 }
 
-function PronunciationOverlay({ word, audioUrl, flashcardQrId, userId, authToken, onClose }: PronunciationOverlayProps) {
+function PronunciationOverlay({ word, audioUrl, flashcardQrId, userId, authToken, isGuest, onClose }: PronunciationOverlayProps) {
     const [status, setStatus] = useState<'idle' | 'recording' | 'processing' | 'ai_loading' | 'result'>('idle');
     const [transcription, setTranscription] = useState<string | null>(null);
     const [score, setScore] = useState<number | null>(null);
@@ -101,25 +130,20 @@ function PronunciationOverlay({ word, audioUrl, flashcardQrId, userId, authToken
     }, [word]);
 
     const logAttempt = useCallback(async (spokenText: string, sc: number) => {
+        if (isGuest || !authToken || !userId) return;
         try {
-            const headers: HeadersInit = { 'Content-Type': 'application/json' };
-            if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-            await fetch(`${API_BASE}/api/v1/pronunciation/attempt`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({
-                    user_id: userId || '',
-                    flashcard_qr_id: flashcardQrId || word,
-                    spoken_text: spokenText,
-                    score: sc,
-                    feedback: null,
-                    audio_url: null,
-                }),
+            await apiClient.post('/api/v1/pronunciation/attempt', {
+                user_id: userId,
+                flashcard_qr_id: flashcardQrId || word,
+                spoken_text: spokenText,
+                score: sc,
+                feedback: null,
+                audio_url: null,
             });
         } catch (e) {
             console.warn('[PronunciationOverlay] log attempt failed:', e);
         }
-    }, [flashcardQrId, word, userId, authToken]);
+    }, [flashcardQrId, word, userId, authToken, isGuest]);
 
     const handleRecord = useCallback(async () => {
         if (status === 'recording') {
@@ -309,7 +333,7 @@ function PronunciationOverlay({ word, audioUrl, flashcardQrId, userId, authToken
                                 onClick={handleTryAgain}
                                 style={{
                                     marginTop: 8, padding: '8px 20px',
-                                    background: 'linear-gradient(135deg,#8b5cf6,#a855f7)',
+                                    background: 'linear-gradient(135deg,#0ea5e9,#22c55e)',
                                     border: 'none', borderRadius: 20, color: '#fff',
                                     fontWeight: 700, fontSize: 14, cursor: 'pointer', minHeight: 44
                                 }}
@@ -457,25 +481,18 @@ function PetChatPopup({ petName, word, onClose }: { petName: string; word: strin
 
 // ========== MAIN COMPONENT ==========
 export default function LearnARV2() {
-    const { user, token, isAuthenticated, isLoading: authLoading } = useAuth();
+    const { user, token, isGuest, isAuthenticated, isLoading: authLoading } = useAuth();
     const navigate = useNavigate();
 
     // Redirect to login if not authenticated (after auth finishes loading)
     useEffect(() => {
-        if (!authLoading && !isAuthenticated) {
+        if (!authLoading && !isAuthenticated && !isGuest) {
             navigate('/login', { replace: true });
         }
-    }, [authLoading, isAuthenticated, navigate]);
+    }, [authLoading, isAuthenticated, isGuest, navigate]);
 
-    // Derive user ID from JWT — never fall back to demo-user
-    const USER_ID = user?.id ?? null;
-
-    // Auth headers for all API calls
-    const authHeaders = useCallback((): HeadersInit => {
-        const headers: HeadersInit = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        return headers;
-    }, [token]);
+    // Derive user ID from JWT; guest mode has no user id and must stay read-only
+    const USER_ID = isGuest ? null : (user?.id ?? null);
 
     // ========== STATE ==========
     const [appState, setAppState] = useState<AppState>('SCANNING');
@@ -521,13 +538,11 @@ export default function LearnARV2() {
         if (!USER_ID || !token) return;
         const startSession = async () => {
             try {
-                const res = await fetch(`${API_BASE}/api/v1/sessions/start`, {
-                    method: 'POST',
-                    headers: authHeaders(),
-                    body: JSON.stringify({ user_id: USER_ID, active_topic: null }),
+                const data = await apiClient.post('/api/v1/sessions/start', {
+                    user_id: USER_ID,
+                    active_topic: null,
                 });
-                if (res.ok) {
-                    const data = await res.json();
+                if (data?._id) {
                     sessionIdRef.current = data._id;
                 }
             } catch (e) {
@@ -547,15 +562,13 @@ export default function LearnARV2() {
         return () => {
             const sid = sessionIdRef.current;
             if (!sid) return;
-            const headers: HeadersInit = { 'Content-Type': 'application/json' };
-            if (tokenRef.current) headers['Authorization'] = `Bearer ${tokenRef.current}`;
+            if (!tokenRef.current) return;
             // Fire-and-forget (page unmounting)
-            fetch(`${API_BASE}/api/v1/sessions/${sid}/end`, {
-                method: 'PATCH',
-                headers,
-                body: JSON.stringify({ break_reminder_sent: showBreakReminderRef.current }),
-                keepalive: true,
-            }).catch(() => {});
+            apiClient.patch(
+                `/api/v1/sessions/${sid}/end`,
+                { break_reminder_sent: showBreakReminderRef.current },
+                { keepalive: true }
+            ).catch(() => {});
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -592,8 +605,8 @@ export default function LearnARV2() {
 
     // ========== AR DATA ==========
     const mindUrl = hasCombo && comboMindUrl
-        ? comboMindUrl
-        : arData?.targets?.[0]?.nft_base_url?.replace(/\.(fset|fset3|iset)$/, '.mind');
+        ? resolveMindUrl(comboMindUrl)
+        : resolveMindUrl(arData?.targets?.[0]?.nft_base_url);
 
     const modelUrl = hasCombo && activeCombo?.model3dUrl
         ? activeCombo.model3dUrl
@@ -746,20 +759,30 @@ export default function LearnARV2() {
         const sid = sessionIdRef.current;
         if (sid) {
             try {
-                await fetch(`${API_BASE}/api/v1/sessions/${sid}/end`, {
-                    method: 'PATCH',
-                    headers: authHeaders(),
-                    body: JSON.stringify({ break_reminder_sent: true }),
-                });
+                await apiClient.patch(`/api/v1/sessions/${sid}/end`, { break_reminder_sent: true });
             } catch { /* ignore */ }
         }
         navigate('/');
-    }, [authHeaders, navigate]);
+    }, [navigate]);
 
     // ========== EFFECTS ==========
     useEffect(() => {
-        if (arData && appState === 'LOADING') setAppState('VIEWING');
-    }, [arData, appState]);
+        if (arData && mindUrl && appState === 'LOADING') {
+            setAppState('VIEWING');
+        }
+    }, [arData, mindUrl, appState]);
+
+    useEffect(() => {
+        if (appState !== 'LOADING') return;
+        const timeoutId = window.setTimeout(() => {
+            if (!mindUrl) {
+                setError('AR target file could not be resolved. Please scan again.');
+                setAppState('ERROR');
+            }
+        }, 10000);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [appState, mindUrl]);
 
     useEffect(() => {
         if (arError) { setError(arError); setAppState('ERROR'); }
@@ -781,7 +804,7 @@ export default function LearnARV2() {
 
     // ========== RENDER ==========
     // While auth is resolving show a minimal spinner — avoids flash of AR UI for unauthenticated users
-    if (authLoading || !isAuthenticated || !USER_ID) {
+    if (authLoading || (!isAuthenticated && !isGuest)) {
         return (
             <div style={{
                 position: 'fixed', inset: 0,
@@ -914,6 +937,7 @@ export default function LearnARV2() {
                     flashcardQrId={detectedQrId || undefined}
                     userId={USER_ID}
                     authToken={token}
+                    isGuest={isGuest}
                     onClose={handleExitPronunciation}
                 />
             )}
@@ -967,7 +991,7 @@ export default function LearnARV2() {
                 </div>
             )}
 
-            {/* Gamification Panel */}
+            {/* Gamification Panel (disabled in guest mode) */}
             {appState === 'VIEWING' && USER_ID && (
                 <ARGamificationPanel userId={USER_ID} />
             )}

@@ -275,7 +275,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                             className="h-full rounded-full transition-all duration-500"
                             style={{
                                 width: `${evolutionProgress.percentage}%`,
-                                background: 'linear-gradient(90deg, #a78bfa, #8b5cf6)'
+                                background: 'linear-gradient(90deg, #38bdf8, #0ea5e9)'
                             }}
                         />
                     </div>
@@ -287,7 +287,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
             
             {stage === 'adult' && (
                 <div className="text-center mb-2">
-                    <span className="inline-block px-3 py-1 rounded-full text-xs font-bold text-white bg-purple-500/80">
+                    <span className="inline-block px-3 py-1 rounded-full text-xs font-bold text-white bg-sky-500/80">
                         MAX EVOLUTION! 🌟
                     </span>
                 </div>
@@ -311,8 +311,8 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                     onClick={handlePlay}
                     className="flex-1 py-3 rounded-xl font-bold text-sm shadow transition-transform active:scale-95"
                     style={{
-                        background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)',
-                        border: '2px solid #7c3aed',
+                        background: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)',
+                        border: '2px solid #0284c7',
                         color: '#fff',
                         minHeight: '48px'
                     }}
@@ -327,8 +327,8 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                     onClick={() => setIsOutfitOpen(!isOutfitOpen)}
                     className="w-full py-2 rounded-xl font-bold text-sm shadow transition-transform active:scale-95"
                     style={{
-                        background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
-                        border: '2px solid #be185d',
+                        background: 'linear-gradient(135deg, #fb923c 0%, #f97316 100%)',
+                        border: '2px solid #ea580c',
                         color: '#fff',
                         minHeight: '44px'
                     }}
@@ -347,12 +347,12 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                     <div
                         className="rounded-3xl p-4 max-w-sm w-full mx-4"
                         style={{
-                            background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
-                            border: '4px solid #ec4899'
+                            background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
+                            border: '4px solid #f97316'
                         }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-lg font-black text-pink-600 text-center mb-3">
+                        <h3 className="text-lg font-black text-orange-600 text-center mb-3">
                             👗 Choose Outfit
                         </h3>
                         
@@ -364,9 +364,9 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                                     className="p-3 rounded-xl text-center transition-transform active:scale-95"
                                     style={{
                                         background: outfit === id
-                                            ? 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)'
+                                            ? 'linear-gradient(135deg, #fb923c 0%, #f97316 100%)'
                                             : 'rgba(255,255,255,0.9)',
-                                        border: outfit === id ? '2px solid #be185d' : '2px solid #f9a8d4',
+                                        border: outfit === id ? '2px solid #ea580c' : '2px solid #fdba74',
                                         minHeight: '70px'
                                     }}
                                 >
@@ -375,7 +375,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                                     </span>
                                     <p
                                         className="text-xs font-bold mt-1"
-                                        style={{ color: outfit === id ? '#fff' : '#be185d' }}
+                                        style={{ color: outfit === id ? '#fff' : '#c2410c' }}
                                     >
                                         {outfitInfo.name}
                                     </p>

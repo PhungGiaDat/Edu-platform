@@ -127,7 +127,7 @@ const MiniGoal: React.FC<{ data: DailyGoalData }> = ({ data }) => {
                         cy="20"
                         r="16"
                         fill="none"
-                        stroke={timePercent >= 100 ? '#22c55e' : '#8b5cf6'}
+                        stroke={timePercent >= 100 ? '#22c55e' : '#0ea5e9'}
                         strokeWidth="4"
                         strokeDasharray={`${(timePercent / 100) * 100.5} 100.5`}
                         strokeLinecap="round"
@@ -197,7 +197,7 @@ const CompactGoal: React.FC<GoalVariantProps> = ({ data, showComplete }) => {
             {/* Time Progress */}
             <div className="mb-2">
                 <div className="flex justify-between text-xs mb-1">
-                    <span className="text-purple-700 font-bold">⏱️ Time</span>
+                    <span className="text-sky-700 font-bold">⏱️ Time</span>
                     <span className="text-gray-600">
                         {data.goals.time.current}/{data.goals.time.target} mins
                     </span>
@@ -209,7 +209,7 @@ const CompactGoal: React.FC<GoalVariantProps> = ({ data, showComplete }) => {
                             width: `${Math.min(data.goals.time.percentage, 100)}%`,
                             background: data.goals.time.percentage >= 100
                                 ? 'linear-gradient(90deg, #22c55e, #4ade80)'
-                                : 'linear-gradient(90deg, #8b5cf6, #a855f7)'
+                                : 'linear-gradient(90deg, #0ea5e9, #38bdf8)'
                         }}
                     />
                 </div>
@@ -263,11 +263,11 @@ const FullGoal: React.FC<GoalVariantProps> = ({ data, showComplete }) => {
             className="p-4 rounded-2xl"
             style={{
                 background: 'rgba(255,255,255,0.95)',
-                border: '3px solid #8b5cf6'
+                border: '3px solid #0ea5e9'
             }}
         >
             <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-purple-800 flex items-center gap-2">
+                <h3 className="font-bold text-sky-800 flex items-center gap-2">
                     <span>🎯</span> Today's Goal
                 </h3>
                 <span className="text-xs text-gray-500">{data.date}</span>
@@ -292,19 +292,19 @@ const FullGoal: React.FC<GoalVariantProps> = ({ data, showComplete }) => {
                                 cy="40"
                                 r="32"
                                 fill="none"
-                                stroke={data.goals.time.percentage >= 100 ? '#22c55e' : '#8b5cf6'}
+                                stroke={data.goals.time.percentage >= 100 ? '#22c55e' : '#0ea5e9'}
                                 strokeWidth="8"
                                 strokeDasharray={`${(data.goals.time.percentage / 100) * 201} 201`}
                                 strokeLinecap="round"
                             />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-lg font-black text-purple-700">
+                            <span className="text-lg font-black text-sky-700">
                                 {data.goals.time.percentage}%
                             </span>
                         </div>
                     </div>
-                    <p className="text-sm font-bold text-purple-700 mt-1">⏱️ Time</p>
+                    <p className="text-sm font-bold text-sky-700 mt-1">⏱️ Time</p>
                     <p className="text-xs text-gray-500">
                         {data.goals.time.current}/{data.goals.time.target} mins
                     </p>
@@ -362,8 +362,8 @@ const FullGoal: React.FC<GoalVariantProps> = ({ data, showComplete }) => {
 
             {/* Encouragement */}
             {!data.is_complete && (
-                <div className="mt-3 p-2 rounded-lg bg-purple-50 text-center">
-                    <p className="text-sm text-purple-700">
+                <div className="mt-3 p-2 rounded-lg bg-sky-50 text-center">
+                    <p className="text-sm text-sky-700">
                         {data.goals.time.remaining > 0
                             ? `Just ${data.goals.time.remaining} more minutes to go!`
                             : data.goals.words.remaining > 0
