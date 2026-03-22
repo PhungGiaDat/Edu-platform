@@ -1,0 +1,174 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "orchestrator",
+  "agent": {
+    "orchestrator": {
+      "description": "Multi-agent coordination and task orchestration. Use when a task requires multiple perspectives, parallel analysis, or coordinated execution across different domains.",
+      "model": "github-copilot/gpt-5.3-codex",
+      "prompt": "You are the master orchestrator agent. You coordinate multiple specialized agents using OpenCode's Task tool to solve complex tasks through parallel analysis and synthesis.",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "grep": true,
+        "glob": true,
+        "task": true
+      }
+    },
+    "backend-specialist": {
+      "description": "Backend API and server development expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "frontend-specialist": {
+      "description": "Frontend UI/UX development expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "database-architect": {
+      "description": "Database design and optimization expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "security-auditor": {
+      "description": "Security auditing and compliance expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "test-engineer": {
+      "description": "Testing and QA expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "devops-engineer": {
+      "description": "DevOps and deployment expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "mobile-developer": {
+      "description": "Mobile app development expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "game-developer": {
+      "description": "Game development expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "performance-optimizer": {
+      "description": "Performance optimization expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "seo-specialist": {
+      "description": "SEO and marketing expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "project-planner": {
+      "description": "Project planning and task breakdown expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "explorer-agent": {
+      "description": "Codebase exploration and discovery expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "debugger": {
+      "description": "Debugging and root cause analysis expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "documentation-writer": {
+      "description": "Documentation and technical writing expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "penetration-tester": {
+      "description": "Penetration testing and offensive security expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "product-manager": {
+      "description": "Product management and requirements expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "product-owner": {
+      "description": "Product ownership and strategy expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "qa-automation-engineer": {
+      "description": "QA automation and E2E testing expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    },
+    "code-archaeologist": {
+      "description": "Legacy code analysis and refactoring expert",
+      "model": "github-copilot/gpt-5.3-codex"
+    }
+  },
+  "command": {
+    "orchestrate": {
+      "template": "Coordinate multiple agents for complex tasks: $ARGUMENTS",
+      "description": "Multi-agent orchestration for comprehensive analysis",
+      "agent": "orchestrator"
+    },
+    "brainstorm": {
+      "template": "Brainstorm and explore ideas: $ARGUMENTS",
+      "description": "Socratic discovery and ideation"
+    },
+    "plan": {
+      "template": "Create detailed project plan: $ARGUMENTS",
+      "description": "Task breakdown and planning"
+    },
+    "create": {
+      "template": "Create new features: $ARGUMENTS",
+      "description": "Feature development workflow"
+    },
+    "enhance": {
+      "template": "Improve and enhance: $ARGUMENTS",
+      "description": "Code improvement workflow"
+    },
+    "debug": {
+      "template": "Debug and fix issues: $ARGUMENTS",
+      "description": "Systematic debugging workflow"
+    },
+    "test": {
+      "template": "Run tests and validate: $ARGUMENTS",
+      "description": "Testing and validation workflow"
+    },
+    "deploy": {
+      "template": "Deploy to production: $ARGUMENTS",
+      "description": "Production deployment workflow"
+    },
+    "preview": {
+      "template": "Preview changes: $ARGUMENTS",
+      "description": "Change preview workflow"
+    },
+    "status": {
+      "template": "Check project status: $ARGUMENTS",
+      "description": "Project status check"
+    }
+  },
+  "instructions": [
+    ".opencodee/ARCHITECTURE.md",
+    ".opencodee/agents/**/*.md",
+    ".opencodee/workflows/**/*.md",
+    ".opencodee/skills/**/*.md",
+    ".opencodee/rules/**/*.md"
+  ],
+  "model": "github-copilot/gpt-5.3-codex",
+  "small_model": "github-copilot/gpt-5.3-codex",
+  "autoupdate": true,
+  "snapshot": true,
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 10000
+  },
+  "share": "manual",
+  "tools": {
+    "read": true,
+    "write": true,
+    "edit": true,
+    "bash": true,
+    "grep": true,
+    "glob": true,
+    "task": true,
+    "question": true,
+    "todowrite": true,
+    "skill": true,
+    "webfetch": true
+  },
+  "permission": {
+    "bash": "allow",
+    "write": "allow",
+    "edit": "allow"
+  }
+}

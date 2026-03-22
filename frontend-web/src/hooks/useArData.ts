@@ -60,9 +60,13 @@ export const useArData = (qrId: string | null) => {
     const cacheKey = `ardata:${qrId}`;
 
     // Helper function to build full URL for backend assets
+    // If backend returns full Supabase URLs (https://...), use them as-is
+    // Otherwise fall back to API_BASE for legacy relative paths
     const buildUrl = (path: string | undefined): string | undefined => {
       if (!path) return undefined;
+      // Use full URLs directly (Supabase storage URLs from backend)
       if (path.startsWith('http://') || path.startsWith('https://')) return path;
+      // Fallback: prepend API_BASE for relative paths (legacy support)
       const cleanPath = path.startsWith('/') ? path : `/${path}`;
       return `${API_BASE}${cleanPath}`;
     };
