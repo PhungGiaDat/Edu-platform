@@ -6,6 +6,21 @@
 **Status:** ✅ READY FOR PRODUCTION  
 **Commit:** `071f21b` - Bcrypt password validation fix  
 
+### Phase 6 QA Validation (March 22, 2026)
+
+- Frontend verification: `npm run build` passes on current `main`.
+- Production backend smoke checks (Render) passed for fresh users:
+  - `POST /api/v1/auth/register` -> 201
+  - `POST /api/v1/auth/login` -> 200
+  - `GET /api/v1/auth/me` -> 200
+  - `GET /api/v1/pets` -> 200
+  - `GET /api/v1/gamification/user/{id}` -> 200
+  - `GET /api/v1/learning-path/{id}/today` -> 200
+  - `POST /api/v1/sessions/start` -> 201
+  - `PATCH /api/v1/sessions/{id}/end` -> 200
+  - `POST /api/v1/pronunciation/attempt` -> 201
+- Deployment trigger commit added to `main` to run frontend auto-deploy workflow.
+
 ---
 
 ## 📋 What Was Deployed
