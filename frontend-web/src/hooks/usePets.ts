@@ -9,10 +9,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { getApiBase } from '@/config';
+import { apiClient } from '@/services/apiClient';
 import { eventBus } from '@/runtime/EventBus';
-
-const API_BASE = getApiBase();
 
 // ========== TypeScript Interfaces ==========
 
@@ -90,12 +88,7 @@ export function usePets(userId: string | null) {
         setError(null);
 
         try {
-            const response = await fetch(`${API_BASE}/api/v1/pets?user_id=${userId}`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch pets');
-            }
-
-            const data: PetListResponse = await response.json();
+            const data: PetListResponse = await apiClient.get('/api/v1/pets');
             console.log('[usePets] API Response Data:', data);
             setPets(data.pets);
             setStats(data.stats);
@@ -120,22 +113,15 @@ export function usePets(userId: string | null) {
         if (!userId) return null;
 
         try {
-            const response = await fetch(`${API_BASE}/api/v1/pets/active/current?user_id=${userId}`);
-
-            if (response.status === 404) {
-                // No active pet
-                setActivePetState(null);
-                return null;
-            }
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch active pet');
-            }
-
-            const pet: Pet = await response.json();
+            const pet: Pet = await apiClient.get('/api/v1/pets/active/current');
             setActivePetState(pet);
             return pet;
         } catch (err) {
+            // 404 means user has no active pet yet
+            if (err instanceof Error && err.message === 'Not found') {
+                setActivePetState(null);
+                return null;
+            }
             console.error('[usePets] Fetch active pet error:', err);
             return null;
         }
@@ -148,12 +134,7 @@ export function usePets(userId: string | null) {
         }
 
         try {
-            const response = await fetch(`${API_BASE}/api/v1/pets/${petId}/unlock?user_id=${userId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            const result: UnlockPetResponse = await response.json();
+            const result: UnlockPetResponse = await apiClient.post(`/api/v1/pets/${petId}/unlock`, {});
 
             if (result.success && result.pet) {
                 // Update local state
@@ -188,18 +169,7 @@ export function usePets(userId: string | null) {
         }
 
         try {
-            const response = await fetch(`${API_BASE}/api/v1/pets/active?user_id=${userId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pet_id: petId })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Failed to set active pet');
-            }
-
-            await response.json();
+            await apiClient.put('/api/v1/pets/active', { pet_id: petId });
 
             // Update local state
             setPets(prev => prev.map(p => ({
@@ -237,13 +207,7 @@ export function usePets(userId: string | null) {
         if (!userId) return false;
 
         try {
-            const response = await fetch(`${API_BASE}/api/v1/pets/active?user_id=${userId}`, {
-                method: 'DELETE'
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to clear active pet');
-            }
+            await apiClient.delete('/api/v1/pets/active');
 
             // Update local state
             setPets(prev => prev.map(p => ({ ...p, is_active: false })));

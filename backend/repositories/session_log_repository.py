@@ -49,6 +49,7 @@ class SessionLogRepository(BaseRepository):
     async def end_session(
         self,
         session_id: str,
+        user_id: Optional[str] = None,
         break_reminder_sent: bool = False,
     ) -> Optional[Dict[str, Any]]:
         """
@@ -61,7 +62,11 @@ class SessionLogRepository(BaseRepository):
             logger.warning(f"[Session] Invalid session_id: {session_id}")
             return None
 
-        doc = await self.collection.find_one({"_id": oid})
+        query: Dict[str, Any] = {"_id": oid}
+        if user_id:
+            query["user_id"] = user_id
+
+        doc = await self.collection.find_one(query)
         if not doc:
             return None
 
@@ -70,7 +75,7 @@ class SessionLogRepository(BaseRepository):
         duration_seconds = int((now - started_at).total_seconds())
 
         await self.collection.update_one(
-            {"_id": oid},
+            query,
             {
                 "$set": {
                     "ended_at": now,

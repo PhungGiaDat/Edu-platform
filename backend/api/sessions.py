@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 @router.post("/start", response_model=SessionLogResponse, status_code=201)
 async def start_session(
     payload: SessionStartRequest,
+    current_user: UserDocument = Depends(get_current_user),
     repo: SessionLogRepository = Depends(get_session_log_repository),
 ):
     """
@@ -37,10 +38,11 @@ async def start_session(
     Called by useSessionTimer hook when the learner enters the app.
     Returns the new session document (id needed to call /end).
     """
-    logger.info(f"[Session] Starting session for user={payload.user_id} topic={payload.active_topic}")
+    user_id = str(current_user.id)
+    logger.info(f"[Session] Starting session for user={user_id} topic={payload.active_topic}")
 
     session_id = await repo.create_session(
-        user_id=payload.user_id,
+        user_id=user_id,
         active_topic=payload.active_topic,
     )
 
@@ -65,6 +67,7 @@ async def start_session(
 async def end_session(
     session_id: str,
     payload: SessionEndRequest,
+    current_user: UserDocument = Depends(get_current_user),
     repo: SessionLogRepository = Depends(get_session_log_repository),
 ):
     """
@@ -73,8 +76,10 @@ async def end_session(
     """
     logger.info(f"[Session] Ending session id={session_id} break_reminder={payload.break_reminder_sent}")
 
+    user_id = str(current_user.id)
     updated = await repo.end_session(
         session_id=session_id,
+        user_id=user_id,
         break_reminder_sent=payload.break_reminder_sent,
     )
 
