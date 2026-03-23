@@ -40,6 +40,8 @@ interface ARContainerV2Props {
     word2?: string;
     /** Number of flashcards already loaded — kept for parent API compatibility */
     cardCount?: number;
+    /** Combo model URL to load when cards are close together */
+    comboModelUrl?: string;
     onPhaseChange?: (phase: ARPhase) => void;
     onQRDetected?: (qrId: string) => void;
     onTargetFound?: (targetIndex: number) => void;
@@ -60,6 +62,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     word,
     word2,
     cardCount: _cardCount,   // accepted for API compatibility, not used internally
+    comboModelUrl,
     onPhaseChange,
     onQRDetected,
     onTargetFound,
@@ -87,8 +90,10 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         // Pass words for click-to-sound in ar-viewer.js
         if (word)  params.set('word',  word);
         if (word2) params.set('word2', word2);
+        // Pass combo model URL for proximity combo
+        if (comboModelUrl) params.set('comboModel', comboModelUrl);
         return `/ar-viewer.html?${params.toString()}`;
-    }, [mindUrl, modelUrl, imageUrl, modelUrl2, imageUrl2, word, word2]);
+    }, [mindUrl, modelUrl, imageUrl, modelUrl2, imageUrl2, word, word2, comboModelUrl]);
 
     // Main iframe src (only scanner or viewer — not both at once)
     const mainSrc = (() => {
