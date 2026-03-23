@@ -490,6 +490,296 @@
                 targetIndex
             });
         });
+
+        // ============ TOUCH GESTURE SYSTEM ============
+        // Native touch events for mobile compatibility (A-Frame cursor doesn't work on mobile)
+        
+        const touchState = {
+            active: false,
+            touchCount: 0,
+            startTouch: null,
+            lastTouch: null,
+            initialDistance: 0,
+            initialAngle: 0,
+            targetedModel: null,
+            targetIndex: null,
+            lastTapTime: 0,
+            isDragging: false,
+            gestureType: null, // 'tap', 'drag', 'pinch', 'twist'
+            startPosition: { x: 0, y: 0 }
+        };
+
+        // Gesture detection thresholds
+        const DRAG_THRESHOLD = 10; // pixels - movement > 10px = drag, not tap
+        const DOUBLE_TAP_TIMEOUT = 300; // ms - taps < 300ms apart = double-tap
+        const ROTATION_SPEED = 0.01; // radians per pixel drag (for Phase 2)
+        const MIN_SCALE = 0.15; // minimum model scale (for Phase 3)
+        const MAX_SCALE = 2.5; // maximum model scale (for Phase 3)
+
+        /**
+         * Handle touch start - detect which model was touched
+         */
+        function handleTouchStart(evt) {
+            evt.preventDefault();
+            
+            const touches = evt.touches;
+            touchState.touchCount = touches.length;
+            touchState.active = true;
+            touchState.startTouch = touches[0];
+            touchState.lastTouch = touches[0];
+            touchState.startPosition = {
+                x: touches[0].clientX,
+                y: touches[0].clientY
+            };
+            touchState.isDragging = false;
+
+            // Perform raycast to find which model was touched
+            const intersectedModel = performRaycast(touches[0].clientX, touches[0].clientY);
+            
+            if (intersectedModel) {
+                touchState.targetedModel = intersectedModel.element;
+                touchState.targetIndex = intersectedModel.targetIndex;
+                
+                log('👆', `Touch started on model ${touchState.targetIndex}`);
+                
+                // Haptic feedback on touch start
+                if (navigator.vibrate) {
+                    navigator.vibrate(40);
+                }
+            } else {
+                touchState.targetedModel = null;
+                touchState.targetIndex = null;
+            }
+
+            // For multi-touch gestures (Phase 3 & 4)
+            if (touches.length === 2) {
+                const dx = touches[1].clientX - touches[0].clientX;
+                const dy = touches[1].clientY - touches[0].clientY;
+                touchState.initialDistance = Math.sqrt(dx * dx + dy * dy);
+                touchState.initialAngle = Math.atan2(dy, dx);
+                touchState.gestureType = 'pinch'; // Will be used in Phase 3
+            } else {
+                touchState.gestureType = 'tap'; // Assume tap until proven otherwise
+            }
+        }
+
+        /**
+         * Handle touch move - detect drag/pinch/twist gestures
+         */
+        function handleTouchMove(evt) {
+            evt.preventDefault();
+
+            if (!touchState.active) return;
+
+            const touches = evt.touches;
+            
+            // Single-finger drag detection
+            if (touches.length === 1 && touchState.gestureType === 'tap') {
+                const deltaX = touches[0].clientX - touchState.startPosition.x;
+                const deltaY = touches[0].clientY - touchState.startPosition.y;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+                // If moved more than threshold, it's a drag not a tap
+                if (distance > DRAG_THRESHOLD) {
+                    touchState.isDragging = true;
+                    touchState.gestureType = 'drag';
+                    
+                    // Phase 2: Drag-to-rotate will be implemented here
+                    // For now, just log it
+                    log('🔄', `Drag detected - Phase 2 will implement rotation`);
+                }
+            }
+
+            // Multi-finger gestures (Phase 3 & 4)
+            if (touches.length === 2 && touchState.targetedModel) {
+                const dx = touches[1].clientX - touches[0].clientX;
+                const dy = touches[1].clientY - touches[0].clientY;
+                const currentDistance = Math.sqrt(dx * dx + dy * dy);
+                const currentAngle = Math.atan2(dy, dx);
+
+                // Phase 3: Pinch-to-zoom will be implemented here
+                const scaleFactor = currentDistance / touchState.initialDistance;
+                log('🤏', `Pinch detected - scale factor: ${scaleFactor.toFixed(2)} (Phase 3)`);
+
+                // Phase 4: Two-finger rotation will be implemented here
+                const angleDelta = currentAngle - touchState.initialAngle;
+                log('🔄', `Twist detected - angle delta: ${angleDelta.toFixed(2)}rad (Phase 4)`);
+            }
+
+            touchState.lastTouch = touches[0];
+        }
+
+        /**
+         * Handle touch end - trigger tap actions (audio + animation)
+         */
+        function handleTouchEnd(evt) {
+            evt.preventDefault();
+
+            if (!touchState.active) return;
+
+            const now = Date.now();
+            const timeSinceLastTap = now - touchState.lastTapTime;
+
+            // If it was a tap (not drag) and a model was targeted
+            if (!touchState.isDragging && touchState.targetedModel && touchState.gestureType === 'tap') {
+                
+                // Check for double-tap (Phase 5)
+                if (timeSinceLastTap < DOUBLE_TAP_TIMEOUT) {
+                    log('👆👆', `Double-tap detected on model ${touchState.targetIndex} (Phase 5 will reset)`);
+                    // Phase 5: Reset model transform will be implemented here
+                } else {
+                    // Single tap - play audio and animate
+                    handleModelTap(touchState.targetedModel, touchState.targetIndex);
+                }
+
+                touchState.lastTapTime = now;
+            }
+
+            // Reset touch state
+            touchState.active = false;
+            touchState.touchCount = 0;
+            touchState.startTouch = null;
+            touchState.lastTouch = null;
+            touchState.isDragging = false;
+            touchState.gestureType = null;
+            touchState.targetedModel = null;
+            touchState.targetIndex = null;
+        }
+
+        /**
+         * Perform manual 3D raycast from touch coordinates
+         * Returns { element, targetIndex } if a model was hit, null otherwise
+         */
+        function performRaycast(touchX, touchY) {
+            try {
+                const camera = scene.camera;
+                if (!camera) return null;
+
+                // Convert touch coordinates to normalized device coordinates (NDC)
+                // NDC range: -1 to 1 for both X and Y
+                const ndcX = (touchX / window.innerWidth) * 2 - 1;
+                const ndcY = -(touchY / window.innerHeight) * 2 + 1;
+
+                // Create THREE.js raycaster
+                const raycaster = new THREE.Raycaster();
+                const mouse = new THREE.Vector2(ndcX, ndcY);
+                raycaster.setFromCamera(mouse, camera);
+
+                // Get all clickable models
+                const model0 = document.getElementById('mode-3d-0');
+                const model1 = document.getElementById('mode-3d-1');
+                const models = [model0, model1].filter(m => m && m.object3D);
+
+                // Raycast against all models
+                const intersects = [];
+                models.forEach((modelEl, idx) => {
+                    const hits = raycaster.intersectObjects(modelEl.object3D.children, true);
+                    if (hits.length > 0) {
+                        intersects.push({
+                            element: modelEl,
+                            targetIndex: modelEl.id.includes('-1') ? 1 : 0,
+                            distance: hits[0].distance
+                        });
+                    }
+                });
+
+                // Return closest intersection
+                if (intersects.length > 0) {
+                    intersects.sort((a, b) => a.distance - b.distance);
+                    return intersects[0];
+                }
+
+                return null;
+            } catch (error) {
+                log('❌', 'Raycast error:', error);
+                return null;
+            }
+        }
+
+        /**
+         * Handle model tap - play audio and animate (Phase 1 core functionality)
+         */
+        function handleModelTap(modelEl, targetIndex) {
+            log('👆', `Model tapped: ${modelEl.id}`);
+
+            // Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate([40, 20, 40]);
+            }
+
+            // ── Bounce animation ──────────────────────────────────────────────
+            const currentPos = modelEl.getAttribute('position') || { x: 0, y: 0.05, z: 0 };
+            const baseY = parseFloat(currentPos.y) || (targetIndex === 0 ? 0.05 : 0.1);
+            const jumpY = baseY + 0.15;
+
+            // Jump up
+            modelEl.setAttribute('animation__touch_up', [
+                'property: position',
+                `from: ${currentPos.x || 0} ${baseY} ${currentPos.z || 0}`,
+                `to: ${currentPos.x || 0} ${jumpY} ${currentPos.z || 0}`,
+                'dur: 200',
+                'easing: easeOutQuad',
+                'startEvents: touch-jump-up'
+            ].join('; '));
+
+            // Drop back
+            modelEl.setAttribute('animation__touch_down', [
+                'property: position',
+                `from: ${currentPos.x || 0} ${jumpY} ${currentPos.z || 0}`,
+                `to: ${currentPos.x || 0} ${baseY} ${currentPos.z || 0}`,
+                'dur: 300',
+                'easing: easeInBounce',
+                'startEvents: touch-jump-down'
+            ].join('; '));
+
+            modelEl.emit('touch-jump-up');
+            setTimeout(() => modelEl.emit('touch-jump-down'), 200);
+
+            // Scale pulse for feedback
+            const baseScale = targetIndex === 0 ? 0.25 : 0.5;
+            const pulseScale = baseScale + 0.07;
+            
+            modelEl.setAttribute('animation__touch_scale', [
+                'property: scale',
+                `from: ${baseScale} ${baseScale} ${baseScale}`,
+                `to: ${pulseScale} ${pulseScale} ${pulseScale}`,
+                'dir: alternate',
+                'loop: 1',
+                'dur: 150',
+                'startEvents: touch-scale'
+            ].join('; '));
+            modelEl.emit('touch-scale');
+
+            // ── Play audio (Web Speech API) ───────────────────────────────────
+            const wordToSpeak = targetIndex === 0
+                ? (window._arWord0 || '')
+                : (window._arWord1 || '');
+
+            if (wordToSpeak && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(wordToSpeak);
+                utter.lang = 'en-US';
+                utter.rate = 0.85;
+                utter.pitch = 1.1;
+                utter.volume = 1.0;
+                window.speechSynthesis.speak(utter);
+                log('🔊', `Speaking: "${wordToSpeak}"`);
+            }
+
+            // Notify React parent
+            sendToParent('MODEL_CLICKED', {
+                modelId: modelEl.id,
+                targetIndex,
+                eventType: 'touch'
+            });
+        }
+
+        // ── Attach touch event listeners to scene ─────────────────────────────
+        scene.addEventListener('touchstart', handleTouchStart, { passive: false });
+        scene.addEventListener('touchmove', handleTouchMove, { passive: false });
+        scene.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+        log('✅', 'Touch gesture system initialized (Phase 1: tap-to-audio active)');
     }
 
     // ── Expose word slots so React parent can push words after QR decode ────────
