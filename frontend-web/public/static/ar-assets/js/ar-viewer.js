@@ -506,15 +506,35 @@
             lastTapTime: 0,
             isDragging: false,
             gestureType: null, // 'tap', 'drag', 'pinch', 'twist'
-            startPosition: { x: 0, y: 0 }
+            startPosition: { x: 0, y: 0 },
+            initialRotation: { x: 0, y: 0, z: 0 }, // Store initial rotation for Phase 2 & 4
+            initialScale: { x: 1, y: 1, z: 1 }, // Store initial scale for Phase 3
+            currentRotation: { x: 0, y: 0, z: 0 }, // Accumulated rotation
+            currentScale: 1 // Accumulated scale
         };
 
         // Gesture detection thresholds
         const DRAG_THRESHOLD = 10; // pixels - movement > 10px = drag, not tap
         const DOUBLE_TAP_TIMEOUT = 300; // ms - taps < 300ms apart = double-tap
-        const ROTATION_SPEED = 0.01; // radians per pixel drag (for Phase 2)
-        const MIN_SCALE = 0.15; // minimum model scale (for Phase 3)
-        const MAX_SCALE = 2.5; // maximum model scale (for Phase 3)
+        const ROTATION_SPEED = 0.01; // radians per pixel drag (Phase 2)
+        const ROTATION_SPEED_Z = 1.5; // multiplier for Z-axis rotation (Phase 4)
+        const MIN_SCALE = 0.15; // minimum model scale (Phase 3)
+        const MAX_SCALE = 2.5; // maximum model scale (Phase 3)
+        const LERP_FACTOR = 0.15; // Smooth interpolation factor for rotations
+
+        // Default transforms for reset (Phase 5)
+        const DEFAULT_TRANSFORMS = {
+            0: {
+                position: { x: 0, y: 0.05, z: 0 },
+                scale: { x: 0.25, y: 0.25, z: 0.25 },
+                rotation: { x: 0, y: 0, z: 0 }
+            },
+            1: {
+                position: { x: 0, y: 0.1, z: 0 },
+                scale: { x: 0.5, y: 0.5, z: 0.5 },
+                rotation: { x: 0, y: 0, z: 0 }
+            }
+        };
 
         /**
          * Handle touch start - detect which model was touched
@@ -540,6 +560,24 @@
                 touchState.targetedModel = intersectedModel.element;
                 touchState.targetIndex = intersectedModel.targetIndex;
                 
+                // Store initial rotation and scale for gesture tracking
+                const rotation = touchState.targetedModel.getAttribute('rotation');
+                const scale = touchState.targetedModel.getAttribute('scale');
+                
+                touchState.initialRotation = { 
+                    x: rotation ? rotation.x : 0, 
+                    y: rotation ? rotation.y : 0, 
+                    z: rotation ? rotation.z : 0 
+                };
+                touchState.currentRotation = { ...touchState.initialRotation };
+                
+                touchState.initialScale = { 
+                    x: scale ? scale.x : 1, 
+                    y: scale ? scale.y : 1, 
+                    z: scale ? scale.z : 1 
+                };
+                touchState.currentScale = scale ? scale.x : 1;
+                
                 log('👆', `Touch started on model ${touchState.targetIndex}`);
                 
                 // Haptic feedback on touch start
@@ -552,12 +590,14 @@
             }
 
             // For multi-touch gestures (Phase 3 & 4)
-            if (touches.length === 2) {
+            if (touches.length === 2 && touchState.targetedModel) {
                 const dx = touches[1].clientX - touches[0].clientX;
                 const dy = touches[1].clientY - touches[0].clientY;
                 touchState.initialDistance = Math.sqrt(dx * dx + dy * dy);
                 touchState.initialAngle = Math.atan2(dy, dx);
-                touchState.gestureType = 'pinch'; // Will be used in Phase 3
+                touchState.gestureType = 'pinch'; // Will be refined in touchmove
+                
+                log('🤏', `Two-finger gesture started on model ${touchState.targetIndex}`);
             } else {
                 touchState.gestureType = 'tap'; // Assume tap until proven otherwise
             }
@@ -569,12 +609,12 @@
         function handleTouchMove(evt) {
             evt.preventDefault();
 
-            if (!touchState.active) return;
+            if (!touchState.active || !touchState.targetedModel) return;
 
             const touches = evt.touches;
             
-            // Single-finger drag detection
-            if (touches.length === 1 && touchState.gestureType === 'tap') {
+            // ============ PHASE 2: SINGLE-FINGER DRAG TO ROTATE (Y-AXIS) ============
+            if (touches.length === 1 && touchState.gestureType !== 'pinch') {
                 const deltaX = touches[0].clientX - touchState.startPosition.x;
                 const deltaY = touches[0].clientY - touchState.startPosition.y;
                 const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -584,33 +624,60 @@
                     touchState.isDragging = true;
                     touchState.gestureType = 'drag';
                     
-                    // Phase 2: Drag-to-rotate will be implemented here
-                    // For now, just log it
-                    log('🔄', `Drag detected - Phase 2 will implement rotation`);
+                    // Calculate rotation based on horizontal drag
+                    // Positive deltaX = drag right = rotate clockwise (positive Y rotation)
+                    const rotationDelta = deltaX * ROTATION_SPEED;
+                    touchState.currentRotation.y = touchState.initialRotation.y + rotationDelta;
+                    
+                    // Apply rotation to model
+                    touchState.targetedModel.setAttribute('rotation', {
+                        x: touchState.currentRotation.x,
+                        y: touchState.currentRotation.y,
+                        z: touchState.currentRotation.z
+                    });
                 }
             }
 
-            // Multi-finger gestures (Phase 3 & 4)
+            // ============ PHASE 3 & 4: MULTI-FINGER GESTURES (PINCH + TWIST) ============
             if (touches.length === 2 && touchState.targetedModel) {
                 const dx = touches[1].clientX - touches[0].clientX;
                 const dy = touches[1].clientY - touches[0].clientY;
                 const currentDistance = Math.sqrt(dx * dx + dy * dy);
                 const currentAngle = Math.atan2(dy, dx);
 
-                // Phase 3: Pinch-to-zoom will be implemented here
+                // ---- PHASE 3: PINCH-TO-ZOOM ----
                 const scaleFactor = currentDistance / touchState.initialDistance;
-                log('🤏', `Pinch detected - scale factor: ${scaleFactor.toFixed(2)} (Phase 3)`);
+                const baseScale = touchState.initialScale.x;
+                let newScale = baseScale * scaleFactor;
+                
+                // Clamp scale to min/max limits
+                newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
+                touchState.currentScale = newScale;
+                
+                // Apply scale to model
+                touchState.targetedModel.setAttribute('scale', {
+                    x: newScale,
+                    y: newScale,
+                    z: newScale
+                });
 
-                // Phase 4: Two-finger rotation will be implemented here
-                const angleDelta = currentAngle - touchState.initialAngle;
-                log('🔄', `Twist detected - angle delta: ${angleDelta.toFixed(2)}rad (Phase 4)`);
+                // ---- PHASE 4: TWO-FINGER TWIST (Z-AXIS ROTATION) ----
+                const angleDelta = (currentAngle - touchState.initialAngle) * ROTATION_SPEED_Z;
+                touchState.currentRotation.z = touchState.initialRotation.z + (angleDelta * (180 / Math.PI)); // Convert to degrees
+                
+                // Apply Z-axis rotation to model
+                touchState.targetedModel.setAttribute('rotation', {
+                    x: touchState.currentRotation.x,
+                    y: touchState.currentRotation.y,
+                    z: touchState.currentRotation.z
+                });
             }
 
             touchState.lastTouch = touches[0];
         }
 
         /**
-         * Handle touch end - trigger tap actions (audio + animation)
+         * Handle touch end - trigger tap actions (audio + animation) or reset
          */
         function handleTouchEnd(evt) {
             evt.preventDefault();
@@ -623,10 +690,15 @@
             // If it was a tap (not drag) and a model was targeted
             if (!touchState.isDragging && touchState.targetedModel && touchState.gestureType === 'tap') {
                 
-                // Check for double-tap (Phase 5)
+                // ============ PHASE 5: DOUBLE-TAP RESET ============
                 if (timeSinceLastTap < DOUBLE_TAP_TIMEOUT) {
-                    log('👆👆', `Double-tap detected on model ${touchState.targetIndex} (Phase 5 will reset)`);
-                    // Phase 5: Reset model transform will be implemented here
+                    log('👆👆', `Double-tap detected - resetting model ${touchState.targetIndex} to defaults`);
+                    resetModelTransform(touchState.targetIndex);
+                    
+                    // Haptic feedback for reset
+                    if (navigator.vibrate) {
+                        navigator.vibrate([30, 50, 30]);
+                    }
                 } else {
                     // Single tap - play audio and animate
                     handleModelTap(touchState.targetedModel, touchState.targetIndex);
@@ -771,6 +843,49 @@
                 modelId: modelEl.id,
                 targetIndex,
                 eventType: 'touch'
+            });
+        }
+
+        /**
+         * Reset model transform to defaults (Phase 5: Double-tap reset)
+         */
+        function resetModelTransform(targetIndex) {
+            const modelEl = document.getElementById(`mode-3d-${targetIndex}`);
+            if (!modelEl) return;
+
+            const defaults = DEFAULT_TRANSFORMS[targetIndex];
+            if (!defaults) return;
+
+            log('🔄', `Resetting model ${targetIndex} to default transform`);
+
+            // Animate back to default position
+            modelEl.setAttribute('animation__reset_position', [
+                'property: position',
+                `to: ${defaults.position.x} ${defaults.position.y} ${defaults.position.z}`,
+                'dur: 500',
+                'easing: easeInOutQuad'
+            ].join('; '));
+
+            // Animate back to default scale
+            modelEl.setAttribute('animation__reset_scale', [
+                'property: scale',
+                `to: ${defaults.scale.x} ${defaults.scale.y} ${defaults.scale.z}`,
+                'dur: 500',
+                'easing: easeInOutQuad'
+            ].join('; '));
+
+            // Animate back to default rotation
+            modelEl.setAttribute('animation__reset_rotation', [
+                'property: rotation',
+                `to: ${defaults.rotation.x} ${defaults.rotation.y} ${defaults.rotation.z}`,
+                'dur: 500',
+                'easing: easeInOutQuad'
+            ].join('; '));
+
+            // Notify React parent
+            sendToParent('MODEL_RESET', {
+                modelId: modelEl.id,
+                targetIndex
             });
         }
 
