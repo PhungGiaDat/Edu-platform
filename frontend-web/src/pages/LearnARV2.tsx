@@ -618,6 +618,9 @@ export default function LearnARV2() {
 
     const modelUrl2 = getFlashcardByIndex(1)?.model3dUrl || arData?.targets?.[1]?.model_3d_url;
     const imageUrl2 = getFlashcardByIndex(1)?.image2dUrl || arData?.targets?.[1]?.image_2d_url;
+    
+    // Combo model URL for proximity combo replacement
+    const comboModelUrl = activeCombo?.model3dUrl;
 
     // ========== HANDLERS ==========
     const handleQRDetected = useCallback((qrId: string) => {
@@ -836,6 +839,7 @@ export default function LearnARV2() {
                 word={arData?.flashcard?.word}
                 word2={getFlashcardByIndex(1)?.word}
                 cardCount={flashcardCount}
+                comboModelUrl={comboModelUrl}
                 onPhaseChange={handlePhaseChange}
                 onQRDetected={handleQRDetected}
                 onTargetFound={(idx) => { console.log('[LearnARV2] Target found:', idx); if (idx === 0) setMarkerFound(true); }}

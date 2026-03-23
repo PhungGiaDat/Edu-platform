@@ -113,7 +113,7 @@ if __name__ == "__main__":
     ]:
         fpath = base / filename
         if fpath.exists():
-            with open(fpath) as f:
+            with open(fpath, "r", encoding="utf-8") as f:
                 content = json.load(f)
             if content:
                 upsert_seed_data(name, fpath, unique_key=key)

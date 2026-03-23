@@ -7,6 +7,10 @@
 (function () {
     'use strict';
 
+    console.log('[AR-Viewer] 🚀 ar-viewer.js script loaded and executing');
+    console.log('[AR-Viewer] 📅 Timestamp:', new Date().toISOString());
+    console.log('[AR-Viewer] 🌐 User Agent:', navigator.userAgent);
+
     // Note: Loading overlay was removed for cleaner UX - elements may not exist
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingText = document.getElementById('loading-text');
@@ -45,6 +49,7 @@
     const modelUrl = params.get('model');
     const imageUrl = params.get('image');
     const modelUrl2 = params.get('model2');
+    const comboModelUrl = params.get('comboModel'); // NEW: combo model URL
     // Words for click-to-sound — stored in window globals so SET_WORD can update them too
     window._arWord0 = params.get('word') || '';
     window._arWord1 = params.get('word2') || '';
@@ -153,6 +158,8 @@
         log('📍', `mind=${mindUrl}`);
         log('📍', `model=${modelUrl}`);
         log('📍', `image=${imageUrl}`);
+        log('🌐', `window.location.href=${window.location.href}`);
+        log('🔍', `URL params count: ${Array.from(params.keys()).length}`);
 
         if (!mindUrl) {
             log('❌', 'No mind file specified!');
@@ -170,15 +177,41 @@
         }
 
         log('⏳', 'Setting up A-Frame scene with MindAR...');
+        log('📥', `Attempting to fetch MIND file: ${mindUrl}`);
+        
+        // Test MIND file accessibility
+        fetch(mindUrl, { method: 'HEAD' })
+            .then(response => {
+                log('✅', `MIND file HEAD response: ${response.status} ${response.statusText}`);
+                log('📋', `Content-Type: ${response.headers.get('content-type')}`);
+                log('📊', `Content-Length: ${response.headers.get('content-length')} bytes`);
+            })
+            .catch(error => {
+                log('❌', `MIND file fetch error: ${error.message}`);
+                sendToParent('SYSTEM_ERROR', {
+                    code: 'MIND_FILE_FETCH_ERROR',
+                    message: `Failed to fetch MIND file: ${error.message}`,
+                    url: mindUrl
+                });
+            });
+        
         // filterMinCF: higher = faster response; filterBeta: lower = smoother tracking
-        scene.setAttribute('mindar-image', `imageTargetSrc: ${mindUrl}; maxTrack: 2; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.001`);
-        log('✅', 'MindAR attribute set');
+        const mindArConfig = `imageTargetSrc: ${mindUrl}; maxTrack: 2; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.001`;
+        log('⚙️', `MindAR config: ${mindArConfig}`);
+        scene.setAttribute('mindar-image', mindArConfig);
+        log('✅', 'MindAR attribute set on scene element');
 
         const assetsEl = document.querySelector('a-assets') || document.createElement('a-assets');
-        if (!document.querySelector('a-assets')) scene.appendChild(assetsEl);
+        if (!document.querySelector('a-assets')) {
+            log('📦', 'Creating new a-assets element');
+            scene.appendChild(assetsEl);
+        } else {
+            log('📦', 'Using existing a-assets element');
+        }
 
         if (modelUrl) {
             log('📦', 'Loading 3D model 0:', modelUrl);
+            log('🔗', 'Model URL scheme:', new URL(modelUrl).protocol);
             const loadText = document.getElementById('ar-load-text');
             if (loadText) loadText.textContent = 'Loading 3D model...';
             const assetItem = document.createElement('a-asset-item');
@@ -187,10 +220,17 @@
             assetItem.setAttribute('crossorigin', 'anonymous');
             // Update loading text on load events
             assetItem.addEventListener('loaded', () => {
+                log('✅', 'Model 0 loaded successfully');
                 if (loadText) loadText.textContent = 'Model ready! Starting AR...';
             });
-            assetItem.addEventListener('error', () => {
+            assetItem.addEventListener('error', (e) => {
+                log('❌', 'Model 0 load error:', e);
                 if (loadText) loadText.textContent = 'Model unavailable, continuing...';
+                sendToParent('SYSTEM_ERROR', {
+                    code: 'MODEL_LOAD_ERROR',
+                    message: 'Failed to load 3D model',
+                    url: modelUrl
+                });
                 // Don't block — AR can still track without the model
                 setTimeout(() => {
                     const overlay = document.getElementById('ar-loading-overlay');
@@ -199,7 +239,10 @@
             });
             assetItem.setAttribute('timeout', '15000');
             assetsEl.appendChild(assetItem);
+            log('🔗', 'Setting gltf-model attribute on mode-3d-0');
             document.getElementById('mode-3d-0').setAttribute('gltf-model', '#model-asset-0');
+        } else {
+            log('⚠️', 'No 3D model URL provided for target 0');
         }
 
         if (imageUrl) {
@@ -208,8 +251,16 @@
             imgAsset.setAttribute('id', 'img-asset-0');
             imgAsset.setAttribute('src', imageUrl);
             imgAsset.setAttribute('crossorigin', 'anonymous');
+            imgAsset.addEventListener('load', () => {
+                log('✅', '2D image 0 loaded successfully');
+            });
+            imgAsset.addEventListener('error', (e) => {
+                log('❌', '2D image 0 load error:', e);
+            });
             assetsEl.appendChild(imgAsset);
             document.getElementById('mode-2d-0').setAttribute('src', '#img-asset-0');
+        } else {
+            log('⚠️', 'No 2D image URL provided for target 0');
         }
 
         if (modelUrl2) {
@@ -219,7 +270,16 @@
             assetItem2.setAttribute('src', modelUrl2);
             assetItem2.setAttribute('crossorigin', 'anonymous');
             assetItem2.setAttribute('timeout', '15000');
-            assetItem2.addEventListener('error', () => {
+            assetItem2.addEventListener('loaded', () => {
+                log('✅', 'Model 1 loaded successfully');
+            });
+            assetItem2.addEventListener('error', (e) => {
+                log('❌', 'Model 1 load error:', e);
+                sendToParent('SYSTEM_ERROR', {
+                    code: 'MODEL_LOAD_ERROR',
+                    message: 'Failed to load 3D model 1',
+                    url: modelUrl2
+                });
                 const overlay = document.getElementById('ar-loading-overlay');
                 if (overlay) {
                     overlay.style.opacity = '0';
@@ -228,6 +288,8 @@
             });
             assetsEl.appendChild(assetItem2);
             document.getElementById('mode-3d-1').setAttribute('gltf-model', '#model-asset-1');
+        } else {
+            log('⚠️', 'No 3D model URL provided for target 1 (optional)');
         }
 
         log('🎧', 'Setting up event listeners...');
@@ -237,8 +299,11 @@
 
     // ============ EVENT LISTENERS ============
     function setupEventListeners() {
+        log('🎧', 'Setting up scene event listeners...');
+        
         scene.addEventListener('arReady', () => {
-            log('✅', 'AR Ready');
+            log('✅', '🎉 AR READY EVENT FIRED - MindAR initialized successfully!');
+            log('✅', 'Camera and tracking are now active');
             isReady = true;
             hideLoadingOverlay();
 
@@ -263,7 +328,9 @@
         });
 
         scene.addEventListener('arError', (e) => {
-            log('❌', 'AR Error: ' + e);
+            log('❌', '🚨 AR ERROR EVENT FIRED!');
+            log('❌', 'AR Error details:', e.detail);
+            log('❌', 'This usually means MindAR failed to initialize or MIND file is invalid');
             setLoadingText('❌ AR Error');
             const overlay = document.getElementById('ar-loading-overlay');
             if (overlay) {
@@ -272,13 +339,27 @@
             }
             sendToParent('SYSTEM_ERROR', {
                 code: 'AR_ERROR',
-                message: e.detail || 'Unknown error'
+                message: e.detail || 'Unknown error',
+                mindUrl: mindUrl
             });
+        });
+        
+        // Log A-Frame scene loaded event
+        scene.addEventListener('loaded', () => {
+            log('✅', 'A-Frame scene loaded event fired');
+            log('📊', 'Scene children count:', scene.children.length);
+        });
+        
+        // Monitor for any render errors
+        scene.addEventListener('renderstart', () => {
+            log('🎨', 'Scene render started');
         });
 
         // Failsafe: never leave user blocked by loading overlay
         window.setTimeout(() => {
             if (!isReady) {
+                log('⚠️', '⏰ Timeout reached - AR not ready after 10 seconds');
+                log('⚠️', 'Forcing loading overlay removal');
                 const overlay = document.getElementById('ar-loading-overlay');
                 if (overlay && overlay.style.display !== 'none') {
                     const txt = document.getElementById('ar-load-text');
@@ -290,12 +371,18 @@
         }, 10000);
 
         // Target tracking
+        log('🎯', 'Setting up target tracking listeners for target-0 and target-1');
         ['target-0', 'target-1'].forEach((id, index) => {
             const target = document.getElementById(id);
-            if (!target) return;
+            if (!target) {
+                log('⚠️', `Target element ${id} not found in DOM`);
+                return;
+            }
+            log('✅', `Target element ${id} found, attaching listeners`);
 
             target.addEventListener('targetFound', () => {
-                log('🎯', `Target ${index} found`);
+                log('🎯', `✨ TARGET ${index} FOUND! Image detected by MindAR`);
+                log('🎯', `Target ${index} is now being tracked`);
                 activeTargets.set(index, {
                     element: target,
                     timestamp: Date.now()
@@ -310,7 +397,7 @@
             });
 
             target.addEventListener('targetLost', () => {
-                log('👋', `Target ${index} lost`);
+                log('👋', `Target ${index} lost - image no longer detected`);
                 activeTargets.delete(index);
 
                 sendToParent('TARGET_LOST', {
@@ -525,6 +612,9 @@
 
                 // Trigger visual feedback in scene
                 triggerComboEffects(midpoint);
+                
+                // NEW: Load combo model to replace individual models
+                loadComboModel(midpoint);
             } else {
                 log('👋', `Proximity ended. Distance: ${distance.toFixed(3)}`);
                 comboEffectsActive = false;
@@ -536,6 +626,9 @@
 
                 // Remove visual effects
                 removeComboEffects();
+                
+                // NEW: Remove combo model and restore individual models
+                removeComboModel();
             }
         }
 
@@ -609,6 +702,81 @@
             comboEntity.parentNode.removeChild(comboEntity);
             log('🧹', 'Combo effects removed');
         }
+    }
+
+    /**
+     * Load combo model at midpoint and hide individual models
+     */
+    function loadComboModel(midpoint) {
+        // Only load combo model if we have a combo model URL
+        if (!comboModelUrl) {
+            log('⚠️', 'No combo model URL provided, skipping combo model load');
+            return;
+        }
+
+        log('🎆', 'Loading combo model!');
+        
+        // Fade out individual models
+        const model0 = document.getElementById('mode-3d-0');
+        const model1 = document.getElementById('mode-3d-1');
+        
+        if (model0) model0.setAttribute('visible', 'false');
+        if (model1) model1.setAttribute('visible', 'false');
+        
+        // Create combo model entity if it doesn't exist
+        let comboModel = document.getElementById('combo-model');
+        if (!comboModel) {
+            comboModel = document.createElement('a-entity');
+            comboModel.id = 'combo-model';
+            comboModel.setAttribute('gltf-model', comboModelUrl);
+            comboModel.setAttribute('scale', '0.4 0.4 0.4'); // Bigger for impact!
+            comboModel.setAttribute('animation', 'property: rotation; to: 0 360 0; dur: 4000; easing: linear; loop: true');
+            comboModel.setAttribute('animation__spawn', 'property: scale; from: 0 0 0; to: 0.4 0.4 0.4; dur: 600; easing: easeOutBack');
+            scene.appendChild(comboModel);
+            log('✨', 'Combo model entity created');
+        }
+        
+        // Position at midpoint
+        comboModel.setAttribute('position', `${midpoint.x} ${midpoint.y} ${midpoint.z}`);
+        comboModel.setAttribute('visible', 'true');
+        
+        // Speak combo name
+        if ('speechSynthesis' in window) {
+            const comboName = 'Elephant in jungle combo!';
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(comboName);
+            utter.lang = 'en-US';
+            utter.rate = 0.9;
+            utter.pitch = 1.1;
+            window.speechSynthesis.speak(utter);
+            log('🔊', 'Speaking combo name');
+        }
+
+        log('🎆', 'Combo model loaded at midpoint');
+    }
+
+    /**
+     * Remove combo model and restore individual models
+     */
+    function removeComboModel() {
+        const comboModel = document.getElementById('combo-model');
+        const model0 = document.getElementById('mode-3d-0');
+        const model1 = document.getElementById('mode-3d-1');
+        
+        if (comboModel) {
+            comboModel.setAttribute('visible', 'false');
+            log('🧹', 'Combo model hidden');
+        }
+        if (model0) {
+            model0.setAttribute('visible', 'true');
+            log('🔄', 'Model 0 restored');
+        }
+        if (model1) {
+            model1.setAttribute('visible', 'true');
+            log('🔄', 'Model 1 restored');
+        }
+        
+        log('🧹', 'Combo model removed, individual models restored');
     }
 
     // ============ MODE SWITCHING ============
