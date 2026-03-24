@@ -31,14 +31,15 @@
                 left: 0;
                 right: 0;
                 height: 35vh;
-                background: rgba(0, 0, 0, 0.9);
+                background: rgba(0, 0, 0, 0.75);
                 color: #0f0;
                 font-family: 'Courier New', monospace;
                 font-size: 11px;
-                z-index: 99999;
+                z-index: 100;
                 display: flex;
                 flex-direction: column;
                 border-top: 2px solid #0f0;
+                pointer-events: auto;
             }
             #debug-header {
                 display: flex;
@@ -99,7 +100,7 @@
                 border-radius: 50%;
                 color: #000;
                 font-size: 20px;
-                z-index: 100000;
+                z-index: 101;
                 display: none;
             }
             #mobile-debug-panel.minimized {

@@ -29,3 +29,8 @@ body {
 #canvas {
     display: none;
 }
+
+/* Scanning guide - above video, below debug panel */
+#scanning-guide {
+    z-index: 50 !important;
+}
