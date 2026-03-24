@@ -18,6 +18,10 @@ export type { PetViewer3DProps } from './PetViewer3D';
 export { PetGrid } from './PetGrid';
 export type { PetGridProps } from './PetGrid';
 
+// PetCarousel - Filmstrip-style carousel with center-focused design
+export { PetCarousel } from './PetCarousel';
+export type { PetCarouselProps } from './PetCarousel';
+
 // PetUnlockModal - Celebration modal for newly unlocked pets
 export { PetUnlockModal } from './PetUnlockModal';
 export type { PetUnlockModalProps } from './PetUnlockModal';
