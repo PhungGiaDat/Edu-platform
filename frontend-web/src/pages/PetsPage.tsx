@@ -24,151 +24,6 @@ const PetViewer3D = lazy(() =>
     import('@/components/pets/PetViewer3D').then(m => ({ default: m.PetViewer3D }))
 );
 
-// ─── Rarity badge helper ────────────────────────────────────────────────────
-const RARITY_COLORS: Record<Pet['rarity'], { bg: string; text: string; label: string }> = {
-    common:    { bg: '#e2e8f5', text: '#4a5568', label: 'Common' },
-    rare:      { bg: '#bfdbfe', text: '#1d4ed8', label: 'Rare' },
-    epic:      { bg: '#e0f2fe', text: '#0369a1', label: 'Epic' },
-    legendary: { bg: '#fde68a', text: '#92400e', label: 'Legendary' },
-};
-
-// ─── Lock overlay label ─────────────────────────────────────────────────────
-function UnlockLabel({ pet }: { pet: Pet }) {
-    const { type, value } = pet.unlock_condition;
-    if (type === 'free') return <span>Free</span>;
-    if (type === 'xp') return <span>{value} XP</span>;
-    if (type === 'streak') return <span>{value}-day streak</span>;
-    return <span>Achievement</span>;
-}
-
-// ─── Individual pet card ────────────────────────────────────────────────────
-function PetCard({
-    pet,
-    isActive,
-    onActivate,
-}: {
-    pet: Pet;
-    isActive: boolean;
-    onActivate: (petId: string) => void;
-}) {
-    const rarity = RARITY_COLORS[pet.rarity];
-
-    return (
-        <div
-            className="clay-card relative cursor-pointer transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
-            style={{
-                border: isActive
-                    ? '3px solid var(--color-primary)'
-                    : '3px solid var(--color-border)',
-                boxShadow: isActive
-                    ? '0 0 0 4px var(--color-primary-light), 0 8px 24px rgba(91,141,239,0.25)'
-                    : undefined,
-            }}
-            onClick={() => pet.is_unlocked && onActivate(pet.pet_id)}
-        >
-            {/* Active badge */}
-            {isActive && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        background: 'var(--color-primary)',
-                        color: '#fff',
-                        borderRadius: 999,
-                        padding: '2px 10px',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        zIndex: 2,
-                    }}
-                >
-                    Active
-                </div>
-            )}
-
-            {/* 3D viewer or thumbnail */}
-            <div style={{ height: 140, borderRadius: 14, overflow: 'hidden', position: 'relative', background: 'var(--color-surface-soft)' }}>
-                {pet.is_unlocked ? (
-                    pet.model_url ? (
-                        <Suspense
-                            fallback={
-                                pet.thumbnail_url
-                                    ? <img src={pet.thumbnail_url} alt={pet.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 48 }}>🐾</div>
-                            }
-                        >
-                            <PetViewer3D
-                                pet={pet}
-                                autoRotate={false}
-                                enableControls={false}
-                            />
-                        </Suspense>
-                    ) : (
-                        pet.thumbnail_url
-                            ? <img src={pet.thumbnail_url} alt={pet.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 48 }}>🐾</div>
-                    )
-                ) : (
-                    // Lock overlay
-                    <div
-                        style={{
-                            position: 'absolute',
-                            inset: 0,
-                            background: 'rgba(0,0,0,0.55)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 6,
-                            borderRadius: 14,
-                        }}
-                    >
-                        {pet.thumbnail_url && (
-                            <img
-                                src={pet.thumbnail_url}
-                                alt={pet.name}
-                                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(80%) blur(2px)', borderRadius: 14 }}
-                            />
-                        )}
-                        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-                            <div style={{ fontSize: 28 }}>🔒</div>
-                            <div style={{ color: '#fff', fontSize: 12, fontWeight: 700, marginTop: 4, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-                                <UnlockLabel pet={pet} />
-                            </div>
-                            {pet.can_unlock && (
-                                <div style={{
-                                    marginTop: 6, background: 'var(--color-accent)', color: '#fff',
-                                    borderRadius: 999, padding: '2px 10px', fontSize: 11, fontWeight: 700,
-                                }}>
-                                    Ready to unlock!
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Pet info */}
-            <div style={{ padding: '10px 4px 4px' }}>
-                <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--color-text)', marginBottom: 4 }}>
-                    {pet.name}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{
-                        background: rarity.bg, color: rarity.text,
-                        borderRadius: 999, padding: '2px 8px', fontSize: 11, fontWeight: 700,
-                    }}>
-                        {rarity.label}
-                    </span>
-                    <span style={{ fontSize: 11, color: 'var(--color-text-soft)' }}>
-                        {pet.category}
-                    </span>
-                </div>
-            </div>
-        </div>
-    );
-}
-
 // ─── Stat bar ───────────────────────────────────────────────────────────────
 function StatBar({ label, value, color }: { label: string; value: number; color: string }) {
     return (
@@ -347,14 +202,14 @@ export default function PetsPage() {
     }
 
     const handleActivate = async (petId: string) => {
-        HapticService.impact('medium');
-        SoundEffectService.play('select');
+        HapticService.success();
+        SoundEffectService.play('tap');
         await setActivePet(petId);
     };
 
     const handleFeed = async (petId: string) => {
         try {
-            HapticService.impact('heavy');
+            HapticService.success();
             SoundEffectService.play('success');
             await apiClient.post('/api/v1/gamification/pet/feed', { 
                 user_id: userId,
@@ -369,7 +224,7 @@ export default function PetsPage() {
 
     const handlePlay = async (petId: string) => {
         try {
-            HapticService.impact('heavy');
+            HapticService.success();
             SoundEffectService.play('success');
             await apiClient.post('/api/v1/gamification/pet/play', { 
                 user_id: userId,

@@ -169,7 +169,7 @@ const CarouselItem: React.FC<CarouselItemProps> = ({
                         }}
                         onClick={(e) => {
                             e.stopPropagation();
-                            HapticService.impact('medium');
+                            HapticService.success();
                             SoundEffectService.play('success');
                             onFeed();
                         }}
@@ -187,7 +187,7 @@ const CarouselItem: React.FC<CarouselItemProps> = ({
                         }}
                         onClick={(e) => {
                             e.stopPropagation();
-                            HapticService.impact('medium');
+                            HapticService.success();
                             SoundEffectService.play('success');
                             onPlay();
                         }}
@@ -277,7 +277,7 @@ export const PetCarousel: React.FC<PetCarouselProps> = ({
 
         if (newCenterIndex !== centerIndex && newCenterIndex >= 0 && newCenterIndex < pets.length) {
             setCenterIndex(newCenterIndex);
-            HapticService.selectionChanged();
+            HapticService.tap();
         }
     }, [pets.length, centerIndex]);
 
@@ -321,8 +321,8 @@ export const PetCarousel: React.FC<PetCarouselProps> = ({
 
     // Handle pet selection
     const handleSelectPet = (petId: string) => {
-        HapticService.impact('light');
-        SoundEffectService.play('select');
+        HapticService.tap();
+        SoundEffectService.play('tap');
         onSelectPet?.(petId);
     };
 
