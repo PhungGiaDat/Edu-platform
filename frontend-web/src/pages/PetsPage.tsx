@@ -2,17 +2,22 @@
  * PetsPage.tsx — My Pet Hub
  *
  * Two-tab layout:
- *   Tab 1 "My Characters" — grid of all pets; tap to activate
+ *   Tab 1 "My Characters" — filmstrip carousel with center-focused pet
  *   Tab 2 "Pet Care"      — large 3D viewer of active pet + stat bars
  *
- * Design: Claymorphism (clay-card, clay-btn-* classes from index.css)
+ * Design: Filmstrip carousel with 3D viewer integration
+ * - Center pet is enlarged and interactive
+ * - Left/Right arrows (desktop) + swipe gestures (mobile)
+ * - Feed/Play actions integrated into carousel
  */
 
 import React, { Suspense, lazy } from 'react';
 import { usePets, type Pet } from '@/hooks/usePets';
 import { apiClient } from '@/services/apiClient';
 import { useAuth } from '@/contexts/AuthContext';
-
+import { PetCarousel } from '@/components/pets/PetCarousel';
+import { HapticService } from '@/services/HapticService';
+import { SoundEffectService } from '@/services/SoundEffectService';
 
 // Lazy-load the heavy 3D viewer
 const PetViewer3D = lazy(() =>
@@ -187,11 +192,19 @@ function StatBar({ label, value, color }: { label: string; value: number; color:
     );
 }
 
-// ─── Tab 1: My Characters ───────────────────────────────────────────────────
-function MyCharactersTab({ pets, activePet, onActivate }: {
+// ─── Tab 1: My Characters (Filmstrip Carousel) ─────────────────────────────
+function MyCharactersTab({ 
+    pets, 
+    activePet, 
+    onActivate,
+    onFeed,
+    onPlay,
+}: {
     pets: Pet[];
     activePet: Pet | null;
     onActivate: (petId: string) => void;
+    onFeed: (petId: string) => void;
+    onPlay: (petId: string) => void;
 }) {
     if (pets.length === 0) {
         return (
@@ -203,21 +216,21 @@ function MyCharactersTab({ pets, activePet, onActivate }: {
         );
     }
 
+    // Show only unlocked pets in carousel, or all pets if none unlocked
+    const displayPets = pets.filter(p => p.is_unlocked);
+    const petsToShow = displayPets.length > 0 ? displayPets : pets;
+
     return (
-        <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(120px, 45vw, 150px), 1fr))',
-            gap: 'clamp(12px, 3vw, 16px)',
-            padding: 'clamp(12px, 3vw, 16px) 0',
-        }}>
-            {pets.map(pet => (
-                <PetCard
-                    key={pet.pet_id}
-                    pet={pet}
-                    isActive={activePet?.pet_id === pet.pet_id}
-                    onActivate={onActivate}
-                />
-            ))}
+        <div style={{ padding: '16px 0' }}>
+            <PetCarousel
+                pets={petsToShow}
+                activePetId={activePet?.pet_id}
+                onSelectPet={onActivate}
+                onFeedPet={onFeed}
+                onPlayWithPet={onPlay}
+                height="650px"
+                showActions={true}
+            />
         </div>
     );
 }
@@ -334,22 +347,38 @@ export default function PetsPage() {
     }
 
     const handleActivate = async (petId: string) => {
+        HapticService.impact('medium');
+        SoundEffectService.play('select');
         await setActivePet(petId);
     };
 
-    const handleFeed = async () => {
+    const handleFeed = async (petId: string) => {
         try {
-            await apiClient.post('/api/v1/gamification/pet/feed', { user_id: userId });
-        } catch {
-            // optimistic — ignore error
+            HapticService.impact('heavy');
+            SoundEffectService.play('success');
+            await apiClient.post('/api/v1/gamification/pet/feed', { 
+                user_id: userId,
+                pet_id: petId,
+            });
+            // TODO: Show success toast
+        } catch (error) {
+            console.error('Feed error:', error);
+            // TODO: Show error toast
         }
     };
 
-    const handlePlay = async () => {
+    const handlePlay = async (petId: string) => {
         try {
-            await apiClient.post('/api/v1/gamification/pet/play', { user_id: userId });
-        } catch {
-            // optimistic — ignore error
+            HapticService.impact('heavy');
+            SoundEffectService.play('success');
+            await apiClient.post('/api/v1/gamification/pet/play', { 
+                user_id: userId,
+                pet_id: petId,
+            });
+            // TODO: Show success toast
+        } catch (error) {
+            console.error('Play error:', error);
+            // TODO: Show error toast
         }
     };
 
@@ -415,12 +444,14 @@ export default function PetsPage() {
                         pets={pets}
                         activePet={activePet}
                         onActivate={handleActivate}
+                        onFeed={handleFeed}
+                        onPlay={handlePlay}
                     />
                 ) : (
                     <PetCareTab
                         activePet={activePet}
-                        onFeed={handleFeed}
-                        onPlay={handlePlay}
+                        onFeed={() => activePet && handleFeed(activePet.pet_id)}
+                        onPlay={() => activePet && handlePlay(activePet.pet_id)}
                     />
                 )}
             </div>
