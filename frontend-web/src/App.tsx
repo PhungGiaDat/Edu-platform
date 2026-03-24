@@ -20,6 +20,7 @@ import { useAuth } from "./contexts/AuthContext";
 import { getApiBase } from "./config";
 import PetsPage from "./pages/PetsPage";
 import { apiClient } from "./services/apiClient";
+import { SoundEffectService } from "./services/SoundEffectService";
 
 // ========== Global Pet Unlock Notifier ==========
 // Listens to PET_CAN_UNLOCK (XP gate met) and PET_UNLOCKED (after actual unlock)
@@ -185,6 +186,24 @@ const App = () => {
   // the user navigates to any data-fetching page.
   useEffect(() => {
     fetch(`${API_BASE}/health`).catch(() => {/* ignore — best-effort warmup */});
+  }, []);
+
+  // Initialize audio context on first user interaction
+  useEffect(() => {
+    const unlockAudio = () => {
+      SoundEffectService.unlock().catch(() => {});
+      // Remove listeners after first interaction
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
+    
+    document.addEventListener('click', unlockAudio, { once: true });
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    
+    return () => {
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
   }, []);
 
   return (

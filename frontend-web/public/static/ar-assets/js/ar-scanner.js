@@ -8,7 +8,6 @@
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    const scanningGuide = document.getElementById('scanning-guide');
 
     let scanning = true;
     let lastDetectedCode = null;
@@ -89,9 +88,6 @@
 
         log('🎯', 'QR Detected: ' + data);
 
-        // Hide scanning guide on successful detection
-        if (scanningGuide) scanningGuide.style.display = 'none';
-
         if (navigator.vibrate) navigator.vibrate(100);
 
         sendToParent('QR_DETECTED', {
@@ -126,8 +122,6 @@
             case 'RESET_SCANNER':
                 lastDetectedCode = null;
                 detectionCooldown = false;
-                // Show scanning guide again on reset
-                if (scanningGuide) scanningGuide.style.display = 'flex';
                 break;
         }
     });
