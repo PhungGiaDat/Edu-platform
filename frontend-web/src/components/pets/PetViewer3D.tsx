@@ -12,7 +12,7 @@
  * Following patterns from Pet3D.tsx and spec Pet3DPreview example
  */
 
-import React, { Suspense, useRef, useEffect, useState } from 'react';
+import React, { Suspense, useRef, useEffect, useState, ErrorInfo, Component } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Float, useGLTF, Environment, Center } from '@react-three/drei';
 import * as THREE from 'three';
@@ -20,6 +20,39 @@ import { rarityConfig } from './PetCard';
 import type { Pet } from '@/hooks/usePets';
 
 // ========== Props Interfaces ==========
+
+// Error Boundary for Canvas errors
+interface CanvasErrorBoundaryProps {
+    children: React.ReactNode;
+    onError?: (error: Error) => void;
+}
+
+interface CanvasErrorBoundaryState {
+    hasError: boolean;
+}
+
+class CanvasErrorBoundary extends Component<CanvasErrorBoundaryProps, CanvasErrorBoundaryState> {
+    constructor(props: CanvasErrorBoundaryProps) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError(_error: Error): CanvasErrorBoundaryState {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        console.error('[CanvasErrorBoundary] 3D Canvas error:', error, errorInfo);
+        this.props.onError?.(error);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return null; // Let parent handle error display
+        }
+        return this.props.children;
+    }
+}
 
 export interface PetViewer3DProps {
     /** The pet to display */
@@ -53,15 +86,44 @@ interface Pet3DModelProps {
     scale: number;
     enableAnimation?: boolean;
     onLoad?: () => void;
+    onError?: (error: Error) => void;
 }
 
 // ========== 3D Model Component ==========
 
-function Pet3DModel({ url, scale, enableAnimation = true, onLoad }: Pet3DModelProps) {
+function Pet3DModel({ url, scale, enableAnimation = true, onLoad, onError }: Pet3DModelProps) {
     const groupRef = useRef<THREE.Group>(null);
+    const [loadError, setLoadError] = useState<Error | null>(null);
     console.log('[PetViewer3D] Loading GLTF model from:', url);
-    const { scene, animations } = useGLTF(url);
+    
+    // Wrap useGLTF in error handling
+    let gltf;
+    try {
+        gltf = useGLTF(url);
+    } catch (err) {
+        const error = err instanceof Error ? err : new Error('Failed to load GLTF');
+        console.error('[PetViewer3D] useGLTF error:', error);
+        if (!loadError) {
+            setLoadError(error);
+            onError?.(error);
+        }
+        return null;
+    }
+    
     const mixerRef = useRef<THREE.AnimationMixer | null>(null);
+
+    // Validate GLTF loaded successfully
+    if (!gltf || !gltf.scene) {
+        const error = new Error('GLTF scene is missing or invalid');
+        console.error('[PetViewer3D] Invalid GLTF:', url, gltf);
+        if (!loadError) {
+            setLoadError(error);
+            onError?.(error);
+        }
+        return null;
+    }
+
+    const { scene, animations } = gltf;
 
     // Clone the scene to avoid issues with multiple instances
     const clonedScene = React.useMemo(() => scene.clone(), [scene]);
@@ -164,17 +226,31 @@ const LoadingOverlay: React.FC<{ rarity?: Pet['rarity'] }> = ({ rarity: _rarity 
 
 // ========== Error Display Component ==========
 
-const ErrorDisplay: React.FC<{ message: string }> = ({ message }) => (
+const ErrorDisplay: React.FC<{ message: string; pet?: Pet }> = ({ message, pet }) => (
     <div
-        className="absolute inset-0 flex items-center justify-center p-4"
+        className="absolute inset-0 flex flex-col items-center justify-center p-4"
         style={{
-            background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+            background: pet?.thumbnail_url 
+                ? `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url(${pet.thumbnail_url})`
+                : 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
         }}
     >
         <div className="text-center text-white">
-            <div className="text-4xl mb-2">😿</div>
-            <p className="font-bold mb-1">Oops!</p>
-            <p className="text-xs opacity-80">{message}</p>
+            {pet?.thumbnail_url ? (
+                <>
+                    <div className="text-4xl mb-2">🎨</div>
+                    <p className="font-bold mb-1">Showing 2D Preview</p>
+                    <p className="text-xs opacity-80">3D model unavailable</p>
+                </>
+            ) : (
+                <>
+                    <div className="text-4xl mb-2">😿</div>
+                    <p className="font-bold mb-1">Oops!</p>
+                    <p className="text-xs opacity-80">{message}</p>
+                </>
+            )}
         </div>
     </div>
 );
@@ -207,12 +283,11 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
 
     // Handle model load error  
     const handleError = (err: Error) => {
+        console.error('[PetViewer3D] Model load error:', err);
         setIsLoading(false);
         setError(err.message || 'Failed to load pet model');
         _onError?.(err);
     };
-    // Preserved for future Canvas ErrorBoundary integration
-    void handleError;
 
     // Determine background style
     const getBackgroundStyle = (): React.CSSProperties => {
@@ -239,7 +314,7 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                     ...getBackgroundStyle(),
                 }}
             >
-                <ErrorDisplay message="No model available" />
+                <ErrorDisplay message="No model available" pet={pet} />
             </div>
         );
     }
@@ -260,10 +335,11 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
             )}
 
             {/* Error Display */}
-            {error && <ErrorDisplay message={error} />}
+            {error && <ErrorDisplay message={error} pet={pet} />}
 
             {/* 3D Canvas */}
-            <Canvas
+            <CanvasErrorBoundary onError={handleError}>
+                <Canvas
                 camera={{
                     position: [0, 0.5, 4],
                     fov: 45,
@@ -315,6 +391,7 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                             url={pet.model_url}
                             scale={scale}
                             onLoad={handleLoad}
+                            onError={handleError}
                         />
                     </Suspense>
                 ) : (
@@ -328,6 +405,7 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                                 url={pet.model_url}
                                 scale={scale}
                                 onLoad={handleLoad}
+                                onError={handleError}
                             />
                         </Suspense>
                     </Float>
@@ -347,6 +425,7 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                     />
                 )}
             </Canvas>
+            </CanvasErrorBoundary>
 
             {/* Pet Name Label */}
             <div
