@@ -96,10 +96,27 @@ function Pet3DModel({ url, scale, enableAnimation = true, onLoad, onError }: Pet
     const [loadError, setLoadError] = useState<Error | null>(null);
     console.log('[PetViewer3D] Loading GLTF model from:', url);
     
-    // Wrap useGLTF in error handling
+    // Create a custom loading manager to handle texture errors gracefully
+    const loadingManager = React.useMemo(() => {
+        const manager = new THREE.LoadingManager();
+        
+        // Handle texture loading errors by using a fallback solid color texture
+        manager.onError = (url) => {
+            console.warn('[PetViewer3D] Failed to load resource (likely texture):', url);
+            // Don't fail the entire model - just log the warning
+            // The model will render with missing textures (solid colors)
+        };
+        
+        return manager;
+    }, []);
+    
+    // Wrap useGLTF in error handling with custom loading manager
     let gltf;
     try {
-        gltf = useGLTF(url);
+        gltf = useGLTF(url, undefined, undefined, (loader) => {
+            // Set custom loading manager on the loader
+            loader.manager = loadingManager;
+        });
     } catch (err) {
         const error = err instanceof Error ? err : new Error('Failed to load GLTF');
         console.error('[PetViewer3D] useGLTF error:', error);
@@ -126,7 +143,37 @@ function Pet3DModel({ url, scale, enableAnimation = true, onLoad, onError }: Pet
     const { scene, animations } = gltf;
 
     // Clone the scene to avoid issues with multiple instances
-    const clonedScene = React.useMemo(() => scene.clone(), [scene]);
+    const clonedScene = React.useMemo(() => {
+        const cloned = scene.clone();
+        
+        // Apply fallback materials for any missing textures
+        cloned.traverse((child) => {
+            if ((child as THREE.Mesh).isMesh) {
+                const mesh = child as THREE.Mesh;
+                
+                // Check if material exists and handle texture errors
+                if (mesh.material) {
+                    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+                    
+                    materials.forEach((material) => {
+                        if ((material as THREE.MeshStandardMaterial).map) {
+                            const map = (material as THREE.MeshStandardMaterial).map;
+                            
+                            // If texture failed to load, use a fallback color
+                            if (map && !map.image) {
+                                console.warn('[PetViewer3D] Texture missing, using fallback color');
+                                (material as THREE.MeshStandardMaterial).map = null;
+                                // Use a pleasant default color if texture is missing
+                                (material as THREE.MeshStandardMaterial).color = new THREE.Color(0x8b7fbf);
+                            }
+                        }
+                    });
+                }
+            }
+        });
+        
+        return cloned;
+    }, [scene]);
 
     // Set up animations if available
     useEffect(() => {

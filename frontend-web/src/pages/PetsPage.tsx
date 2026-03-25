@@ -15,7 +15,7 @@ import React, { Suspense, lazy } from 'react';
 import { usePets, type Pet } from '@/hooks/usePets';
 import { apiClient } from '@/services/apiClient';
 import { useAuth } from '@/contexts/AuthContext';
-import { PetCarousel } from '@/components/pets/PetCarousel';
+import { PetDropdownViewer } from '@/components/pets/PetDropdownViewer';
 import { HapticService } from '@/services/HapticService';
 import { SoundEffectService } from '@/services/SoundEffectService';
 
@@ -77,13 +77,12 @@ function MyCharactersTab({
 
     return (
         <div style={{ padding: '16px 0' }}>
-            <PetCarousel
+            <PetDropdownViewer
                 pets={petsToShow}
                 activePetId={activePet?.pet_id}
                 onSelectPet={onActivate}
                 onFeedPet={onFeed}
                 onPlayWithPet={onPlay}
-                height="650px"
                 showActions={true}
             />
         </div>

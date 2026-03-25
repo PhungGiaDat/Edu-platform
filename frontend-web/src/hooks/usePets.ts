@@ -15,7 +15,7 @@ import { eventBus } from '@/runtime/EventBus';
 // ========== TypeScript Interfaces ==========
 
 export interface UnlockCondition {
-    type: 'free' | 'xp' | 'streak' | 'achievement';
+    type: 'free' | 'xp' | 'streak' | 'achievement' | 'purchase';
     value: number;
 }
 
