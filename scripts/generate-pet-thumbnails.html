@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Thumbnail Generator</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        #controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        #preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+        }
+        .thumbnail-card {
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        canvas {
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .download-btn {
+            margin-top: 8px;
+            width: 100%;
+            padding: 8px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .download-btn:hover {
+            background: #4f46e5;
+        }
+        button {
+            padding: 10px 20px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h1>🐾 Pet Thumbnail Generator</h1>
+        <p>Generate placeholder thumbnails for pets without images</p>
+        <button onclick="generateAll()">Generate All Thumbnails</button>
+        <button onclick="downloadAll()">Download All</button>
+    </div>
+    
+    <div id="preview"></div>
+
+    <script>
+        const pets = [
+            { id: 'blocky_beta', name: 'Beta', color: '#60A5FA' },
+            { id: 'blocky_foxtrot', name: 'Foxtrot', color: '#F59E0B' },
+            { id: 'blocky_delta', name: 'Delta', color: '#A78BFA' },
+            { id: 'blocky_echo', name: 'Echo', color: '#34D399' },
+            { id: 'blocky_golf', name: 'Golf', color: '#FB923C' },
+            { id: 'kenney_character_a', name: 'Character A', color: '#FF6B6B' },
+            { id: 'kenney_character_b', name: 'Character B', color: '#4ECDC4' },
+            { id: 'kenney_character_c', name: 'Character C', color: '#FFE66D' },
+            { id: 'kenney_character_d', name: 'Character D', color: '#A8DADC' },
+            { id: 'kenney_character_e', name: 'Character E', color: '#F1FAEE' },
+        ];
+
+        function generateThumbnail(pet) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            // Gradient background
+            const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+            gradient.addColorStop(0, pet.color);
+            gradient.addColorStop(1, adjustBrightness(pet.color, -30));
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 512, 512);
+
+            // Add subtle pattern
+            ctx.globalAlpha = 0.1;
+            for (let i = 0; i < 10; i++) {
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(
+                    Math.random() * 512,
+                    Math.random() * 512,
+                    Math.random() * 100 + 50,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+
+            // Draw paw print
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            drawPawPrint(ctx, 256, 256, 150);
+
+            // Pet name
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 48px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 10;
+            ctx.fillText(pet.name, 256, 400);
+
+            // "3D Model" label
+            ctx.font = '24px Inter, sans-serif';
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.shadowBlur = 5;
+            ctx.fillText('3D Pet Model', 256, 450);
+
+            return canvas;
+        }
+
+        function drawPawPrint(ctx, x, y, size) {
+            // Main pad
+            ctx.beginPath();
+            ctx.ellipse(x, y, size * 0.4, size * 0.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Toe pads
+            const toes = [
+                { x: x - size * 0.3, y: y - size * 0.5, w: size * 0.25, h: size * 0.3 },
+                { x: x, y: y - size * 0.6, w: size * 0.25, h: size * 0.3 },
+                { x: x + size * 0.3, y: y - size * 0.5, w: size * 0.25, h: size * 0.3 },
+                { x: x + size * 0.45, y: y - size * 0.2, w: size * 0.25, h: size * 0.3 },
+            ];
+
+            toes.forEach(toe => {
+                ctx.beginPath();
+                ctx.ellipse(toe.x, toe.y, toe.w, toe.h, 0, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function adjustBrightness(color, percent) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255))
+                .toString(16).slice(1);
+        }
+
+        function generateAll() {
+            const previewContainer = document.getElementById('preview');
+            previewContainer.innerHTML = '';
+
+            pets.forEach(pet => {
+                const canvas = generateThumbnail(pet);
+                
+                const card = document.createElement('div');
+                card.className = 'thumbnail-card';
+                
+                card.appendChild(canvas);
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'download-btn';
+                downloadBtn.textContent = `Download ${pet.name}`;
+                downloadBtn.onclick = () => downloadCanvas(canvas, pet.id);
+                card.appendChild(downloadBtn);
+                
+                previewContainer.appendChild(card);
+            });
+        }
+
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = `${filename}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadAll() {
+            const canvases = document.querySelectorAll('canvas');
+            canvases.forEach((canvas, index) => {
+                setTimeout(() => {
+                    downloadCanvas(canvas, pets[index].id);
+                }, index * 200);
+            });
+        }
+
+        // Generate on load
+        window.onload = generateAll;
+    </script>
+</body>
+</html>

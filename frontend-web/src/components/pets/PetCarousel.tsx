@@ -50,6 +50,7 @@ interface CarouselItemProps {
     pet: Pet;
     isCenter: boolean;
     isActive: boolean;
+    isAdjacent: boolean; // New prop for lazy loading
     onSelect: () => void;
     onFeed: () => void;
     onPlay: () => void;
@@ -69,6 +70,7 @@ const CarouselItem: React.FC<CarouselItemProps> = ({
     pet,
     isCenter,
     isActive,
+    isAdjacent,
     onSelect,
     onFeed,
     onPlay,
@@ -77,6 +79,9 @@ const CarouselItem: React.FC<CarouselItemProps> = ({
     const config = rarityConfig[pet.rarity];
     const scale = isCenter ? CENTER_SCALE : SIDE_SCALE;
     const opacity = isCenter ? 1 : 0.6;
+    
+    // Only load 3D model for center pet and adjacent pets (performance optimization)
+    const shouldLoad3D = isCenter || isAdjacent;
 
     return (
         <div
@@ -91,7 +96,7 @@ const CarouselItem: React.FC<CarouselItemProps> = ({
             }}
             onClick={onSelect}
         >
-            {/* 3D Pet Viewer */}
+            {/* 3D Pet Viewer - Only load for center and adjacent pets */}
             <div
                 className="w-full mb-4"
                 style={{
@@ -100,16 +105,35 @@ const CarouselItem: React.FC<CarouselItemProps> = ({
                         : 'none',
                 }}
             >
-                <PetViewer3D
-                    pet={pet}
-                    height="400px"
-                    enableControls={isCenter}
-                    autoRotate={isCenter}
-                    autoRotateSpeed={1.5}
-                    showLoading
-                    background="gradient"
-                    scale={2.5}
-                />
+                {shouldLoad3D ? (
+                    <PetViewer3D
+                        pet={pet}
+                        height="400px"
+                        enableControls={isCenter}
+                        autoRotate={isCenter}
+                        autoRotateSpeed={1.5}
+                        showLoading
+                        background="gradient"
+                        scale={2.5}
+                    />
+                ) : (
+                    /* Placeholder for non-loaded pets */
+                    <div
+                        className="w-full rounded-2xl overflow-hidden flex items-center justify-center"
+                        style={{
+                            height: '400px',
+                            background: `linear-gradient(180deg, ${config.glow} 0%, rgba(0,0,0,0.4) 100%)`,
+                            border: '3px solid rgba(255,255,255,0.2)',
+                            boxShadow: `0 8px 32px ${config.glow}`,
+                        }}
+                    >
+                        <div className="text-center text-white">
+                            <div className="text-6xl mb-3">🐾</div>
+                            <p className="font-bold text-lg">{pet.name}</p>
+                            <p className="text-sm opacity-70 mt-2">Scroll to load 3D</p>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Pet Info */}
@@ -400,18 +424,23 @@ export const PetCarousel: React.FC<PetCarouselProps> = ({
                     msOverflowStyle: 'none',
                 }}
             >
-                {pets.map((pet, index) => (
-                    <CarouselItem
-                        key={pet.pet_id}
-                        pet={pet}
-                        isCenter={index === centerIndex && !isScrolling}
-                        isActive={pet.pet_id === activePetId}
-                        onSelect={() => handleSelectPet(pet.pet_id)}
-                        onFeed={() => handleFeed(pet.pet_id)}
-                        onPlay={() => handlePlay(pet.pet_id)}
-                        showActions={showActions}
-                    />
-                ))}
+                {pets.map((pet, index) => {
+                    const isAdjacent = Math.abs(index - centerIndex) === 1; // Adjacent to center
+                    
+                    return (
+                        <CarouselItem
+                            key={pet.pet_id}
+                            pet={pet}
+                            isCenter={index === centerIndex && !isScrolling}
+                            isActive={pet.pet_id === activePetId}
+                            isAdjacent={isAdjacent}
+                            onSelect={() => handleSelectPet(pet.pet_id)}
+                            onFeed={() => handleFeed(pet.pet_id)}
+                            onPlay={() => handlePlay(pet.pet_id)}
+                            showActions={showActions}
+                        />
+                    );
+                })}
             </div>
 
             {/* Right Arrow (Desktop) */}
