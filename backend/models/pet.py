@@ -13,7 +13,7 @@ from datetime import datetime
 
 class UnlockCondition(BaseModel):
     """Unlock condition for a pet"""
-    type: Literal["free", "xp", "streak", "achievement"] = "free"
+    type: Literal["free", "xp", "streak", "achievement", "purchase"] = "free"
     value: int = 0  # Threshold value (0 for free)
 
 
