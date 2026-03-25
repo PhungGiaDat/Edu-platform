@@ -530,7 +530,13 @@ export const PetViewer3DCompact: React.FC<PetViewer3DCompactProps> = ({
 
 // Preload helper for better UX
 export const preloadPetModel = (url: string) => {
-    useGLTF.preload(url);
+    if (!url) return;
+    try {
+        useGLTF.preload(url);
+        console.log('[PetViewer3D] Preloading model:', url);
+    } catch (error) {
+        console.warn('[PetViewer3D] Failed to preload model:', url, error);
+    }
 };
 
 export default PetViewer3D;
