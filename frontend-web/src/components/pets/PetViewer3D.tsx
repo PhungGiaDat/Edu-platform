@@ -226,34 +226,40 @@ const LoadingOverlay: React.FC<{ rarity?: Pet['rarity'] }> = ({ rarity: _rarity 
 
 // ========== Error Display Component ==========
 
-const ErrorDisplay: React.FC<{ message: string; pet?: Pet }> = ({ message, pet }) => (
-    <div
-        className="absolute inset-0 flex flex-col items-center justify-center p-4"
-        style={{
-            background: pet?.thumbnail_url 
-                ? `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url(${pet.thumbnail_url})`
-                : 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-        }}
-    >
-        <div className="text-center text-white">
-            {pet?.thumbnail_url ? (
-                <>
-                    <div className="text-4xl mb-2">🎨</div>
-                    <p className="font-bold mb-1">Showing 2D Preview</p>
-                    <p className="text-xs opacity-80">3D model unavailable</p>
-                </>
-            ) : (
-                <>
-                    <div className="text-4xl mb-2">😿</div>
-                    <p className="font-bold mb-1">Oops!</p>
-                    <p className="text-xs opacity-80">{message}</p>
-                </>
+const ErrorDisplay: React.FC<{ message: string; pet?: Pet }> = ({ message, pet }) => {
+    const [thumbnailError, setThumbnailError] = React.useState(false);
+    const config = pet ? rarityConfig[pet.rarity] : null;
+
+    return (
+        <div
+            className="absolute inset-0 flex flex-col items-center justify-center p-4"
+            style={{
+                background: config
+                    ? `linear-gradient(180deg, ${config.glow} 0%, rgba(0,0,0,0.4) 100%)`
+                    : 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+            }}
+        >
+            {/* Try to show thumbnail if available */}
+            {pet?.thumbnail_url && !thumbnailError && (
+                <img
+                    src={pet.thumbnail_url}
+                    alt={pet.name}
+                    className="absolute inset-0 w-full h-full object-cover opacity-30"
+                    onError={() => setThumbnailError(true)}
+                />
             )}
+            
+            <div className="text-center text-white relative z-10">
+                <div className="text-6xl mb-3">🐾</div>
+                <p className="font-bold text-lg mb-1">{pet?.name || 'Pet'}</p>
+                <p className="text-sm opacity-80">3D model loading...</p>
+                {message && (
+                    <p className="text-xs opacity-60 mt-2">{message}</p>
+                )}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // ========== Main Component ==========
 
