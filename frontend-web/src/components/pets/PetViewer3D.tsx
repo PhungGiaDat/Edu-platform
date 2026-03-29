@@ -197,8 +197,8 @@ function Pet3DModel({ url, scale, enableAnimation = true, onLoad, onError }: Pet
         }
     });
 
-    // Show nothing while validating/loading (Suspense fallback will show)
-    if (state === 'validating' || state === 'loading' || state === 'idle') {
+    // Show nothing while loading (parent will show loading indicator)
+    if (state === 'loading' || state === 'idle') {
         return null;
     }
     
