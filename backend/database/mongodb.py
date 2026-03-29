@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 # ========== Global Client & Database ==========
 _client: Optional[motor.motor_asyncio.AsyncIOMotorClient] = None
 _database: Optional[motor.motor_asyncio.AsyncIOMotorDatabase] = None
+_beanie_initialized: bool = False  # Guard against multiple initializations
 
 
 async def init_mongodb(
@@ -44,7 +45,12 @@ async def init_mongodb(
             document_models=[Flashcard, ARObject, ...]
         )
     """
-    global _client, _database
+    global _client, _database, _beanie_initialized
+    
+    # Guard against multiple initializations (especially with multiple workers)
+    if _beanie_initialized:
+        logger.info("[MongoDB] Beanie already initialized, skipping...")
+        return
     
     if not mongo_url:
         logger.warning("[MongoDB] No MONGO_URL provided, skipping initialization")
@@ -65,6 +71,8 @@ async def init_mongodb(
         document_models=document_models
     )
     
+    _beanie_initialized = True  # Mark as initialized
+    
     logger.info(f"[MongoDB] Beanie ODM initialized with database: {database_name}")
     logger.info(f"[MongoDB] Registered {len(document_models)} document models")
 
@@ -75,12 +83,13 @@ async def close_mongodb() -> None:
     
     Call this during FastAPI lifespan shutdown
     """
-    global _client, _database
+    global _client, _database, _beanie_initialized
     
     if _client:
         _client.close()
         _client = None
         _database = None
+        _beanie_initialized = False  # Reset initialization flag
         logger.info("[MongoDB] Connection closed")
 
 

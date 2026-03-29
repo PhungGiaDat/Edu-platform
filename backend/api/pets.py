@@ -20,6 +20,7 @@ from models.pet import (
 from models.user_mongo import UserDocument
 from services.gamification_service import GamificationService, get_gamification_service
 from core.security import get_current_user
+from utils.cache import pet_cache, user_stats_cache, CacheKeys, invalidate_pet_catalog
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +86,14 @@ async def list_pets(
     # Get user data
     user_id = str(current_user.id)
     user = current_user
-    user_stats = await gamification_service.get_user_stats(user_id)
+    
+    # Try to get user stats from cache first
+    cache_key = CacheKeys.user_stats(user_id)
+    user_stats = await user_stats_cache.get(cache_key)
+    
+    if user_stats is None:
+        user_stats = await gamification_service.get_user_stats(user_id)
+        await user_stats_cache.set(cache_key, user_stats, ttl=60)  # Cache for 1 minute
     
     user_xp = user_stats.get("total_points", 0)
     user_streak = user_stats.get("streak_days", 0)
@@ -99,8 +107,18 @@ async def list_pets(
     if rarity:
         query["rarity"] = rarity
     
-    # Fetch pets
-    pets = await PetDocument.find(query).to_list()
+    # Try to get pets from cache (only if no filters)
+    pets = None
+    if not category and not rarity:
+        pets = await pet_cache.get(CacheKeys.ALL_PETS)
+    
+    if pets is None:
+        # Fetch from database
+        pets = await PetDocument.find(query).to_list()
+        
+        # Cache if no filters (full catalog)
+        if not category and not rarity:
+            await pet_cache.set(CacheKeys.ALL_PETS, pets, ttl=600)  # 10 minutes
     
     # Convert to response with user-specific data
     pet_responses = [
@@ -369,6 +387,9 @@ async def create_pet(pet_data: PetCreate):
     
     await pet.insert()
     
+    # Invalidate pet catalog cache
+    await invalidate_pet_catalog()
+    
     logger.info(f"Created new pet: {pet_data.pet_id}")
     
     # Return response (no user context for admin creation)
@@ -412,6 +433,9 @@ async def update_pet(pet_id: str, pet_data: PetUpdate):
     
     await pet.save()
     
+    # Invalidate pet catalog cache
+    await invalidate_pet_catalog()
+    
     logger.info(f"Updated pet: {pet_id}")
     
     return PetResponse(
@@ -446,6 +470,9 @@ async def delete_pet(pet_id: str):
     
     pet.is_active = False
     await pet.save()
+    
+    # Invalidate pet catalog cache
+    await invalidate_pet_catalog()
     
     logger.info(f"Soft-deleted pet: {pet_id}")
     

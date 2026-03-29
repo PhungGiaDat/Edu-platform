@@ -42,8 +42,22 @@ class CanvasErrorBoundary extends Component<CanvasErrorBoundaryProps, CanvasErro
     }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        // Filter out common THREE.js/WebGL errors that can be ignored
+        const errorMessage = error?.message || '';
+        const isIgnorableError = 
+            errorMessage.includes('WebGL') ||
+            errorMessage.includes('body') ||
+            errorMessage.includes('Cannot read properties of undefined');
+            
         console.error('[CanvasErrorBoundary] 3D Canvas error:', error, errorInfo);
-        this.props.onError?.(error);
+        
+        if (!isIgnorableError) {
+            this.props.onError?.(error);
+        } else {
+            // For ignorable errors, still report but don't crash the UI
+            console.warn('[CanvasErrorBoundary] Recoverable error, showing fallback');
+            this.props.onError?.(new Error('3D model failed to load'));
+        }
     }
 
     render() {
@@ -94,6 +108,30 @@ interface Pet3DModelProps {
 function Pet3DModel({ url, scale, enableAnimation = true, onLoad, onError }: Pet3DModelProps) {
     const groupRef = useRef<THREE.Group>(null);
     const [loadError, setLoadError] = useState<Error | null>(null);
+    const [isValidUrl, setIsValidUrl] = useState<boolean>(true);
+    
+    // Validate URL before attempting to load
+    React.useEffect(() => {
+        if (!url || typeof url !== 'string' || url.trim() === '') {
+            setIsValidUrl(false);
+            const error = new Error('Invalid or empty model URL');
+            setLoadError(error);
+            onError?.(error);
+            return;
+        }
+        
+        // Check if URL is valid format
+        try {
+            new URL(url);
+            setIsValidUrl(true);
+        } catch {
+            setIsValidUrl(false);
+            const error = new Error('Malformed model URL');
+            setLoadError(error);
+            onError?.(error);
+        }
+    }, [url, onError]);
+    
     console.log('[PetViewer3D] Loading GLTF model from:', url);
     
     // Create a custom loading manager to handle texture errors gracefully
@@ -109,6 +147,11 @@ function Pet3DModel({ url, scale, enableAnimation = true, onLoad, onError }: Pet
         
         return manager;
     }, []);
+    
+    // Early return if URL is invalid
+    if (!isValidUrl || loadError) {
+        return null;
+    }
     
     // Wrap useGLTF in error handling with custom loading manager
     let gltf;
@@ -338,9 +381,24 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
     const handleError = (err: Error) => {
         console.error('[PetViewer3D] Model load error:', err);
         setIsLoading(false);
-        setError(err.message || 'Failed to load pet model');
+        // Provide user-friendly error message
+        const friendlyMessage = err.message?.includes('body') 
+            ? 'Failed to fetch 3D model'
+            : err.message || 'Failed to load pet model';
+        setError(friendlyMessage);
         _onError?.(err);
     };
+
+    // Validate model URL
+    const isValidModelUrl = React.useMemo(() => {
+        if (!pet.model_url) return false;
+        try {
+            const url = new URL(pet.model_url);
+            return url.protocol === 'https:' || url.protocol === 'http:';
+        } catch {
+            return false;
+        }
+    }, [pet.model_url]);
 
     // Determine background style
     const getBackgroundStyle = (): React.CSSProperties => {
@@ -358,7 +416,7 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
     };
 
     // Check if model URL is valid
-    if (!pet.model_url) {
+    if (!pet.model_url || !isValidModelUrl) {
         return (
             <div
                 className="relative rounded-2xl overflow-hidden"
