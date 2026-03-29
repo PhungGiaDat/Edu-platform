@@ -14,10 +14,11 @@
 
 import React, { Suspense, useRef, useEffect, useState, ErrorInfo, Component } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Float, useGLTF, Environment, Center } from '@react-three/drei';
+import { OrbitControls, Float, Environment, Center } from '@react-three/drei';
 import * as THREE from 'three';
 import { rarityConfig } from './PetCard';
 import type { Pet } from '@/hooks/usePets';
+import { useSafeGLTF, preloadGLTFSafe } from '@/hooks/useSafeGLTF';
 
 // ========== Props Interfaces ==========
 
@@ -105,89 +106,33 @@ interface Pet3DModelProps {
 
 // ========== 3D Model Component ==========
 
+/**
+ * Pet3DModel - Safely loads and renders a GLTF model
+ * Uses useSafeGLTF to prevent synchronous throws that crash React
+ */
 function Pet3DModel({ url, scale, enableAnimation = true, onLoad, onError }: Pet3DModelProps) {
     const groupRef = useRef<THREE.Group>(null);
-    const [loadError, setLoadError] = useState<Error | null>(null);
-    const [isValidUrl, setIsValidUrl] = useState<boolean>(true);
-    
-    // Validate URL before attempting to load
-    React.useEffect(() => {
-        if (!url || typeof url !== 'string' || url.trim() === '') {
-            setIsValidUrl(false);
-            const error = new Error('Invalid or empty model URL');
-            setLoadError(error);
-            onError?.(error);
-            return;
-        }
-        
-        // Check if URL is valid format
-        try {
-            new URL(url);
-            setIsValidUrl(true);
-        } catch {
-            setIsValidUrl(false);
-            const error = new Error('Malformed model URL');
-            setLoadError(error);
-            onError?.(error);
-        }
-    }, [url, onError]);
-    
-    console.log('[PetViewer3D] Loading GLTF model from:', url);
-    
-    // Create a custom loading manager to handle texture errors gracefully
-    const loadingManager = React.useMemo(() => {
-        const manager = new THREE.LoadingManager();
-        
-        // Handle texture loading errors by using a fallback solid color texture
-        manager.onError = (url) => {
-            console.warn('[PetViewer3D] Failed to load resource (likely texture):', url);
-            // Don't fail the entire model - just log the warning
-            // The model will render with missing textures (solid colors)
-        };
-        
-        return manager;
-    }, []);
-    
-    // Early return if URL is invalid
-    if (!isValidUrl || loadError) {
-        return null;
-    }
-    
-    // Wrap useGLTF in error handling with custom loading manager
-    let gltf;
-    try {
-        gltf = useGLTF(url, undefined, undefined, (loader) => {
-            // Set custom loading manager on the loader
-            loader.manager = loadingManager;
-        });
-    } catch (err) {
-        const error = err instanceof Error ? err : new Error('Failed to load GLTF');
-        console.error('[PetViewer3D] useGLTF error:', error);
-        if (!loadError) {
-            setLoadError(error);
-            onError?.(error);
-        }
-        return null;
-    }
-    
     const mixerRef = useRef<THREE.AnimationMixer | null>(null);
-
-    // Validate GLTF loaded successfully
-    if (!gltf || !gltf.scene) {
-        const error = new Error('GLTF scene is missing or invalid');
-        console.error('[PetViewer3D] Invalid GLTF:', url, gltf);
-        if (!loadError) {
-            setLoadError(error);
-            onError?.(error);
+    const hasNotifiedLoad = useRef(false);
+    const hasNotifiedError = useRef(false);
+    
+    // Use safe GLTF loading with URL pre-validation
+    const { gltf, state, error: loadError } = useSafeGLTF(url);
+    
+    // Notify parent of errors
+    useEffect(() => {
+        if (state === 'error' && loadError && !hasNotifiedError.current) {
+            hasNotifiedError.current = true;
+            console.error('[PetViewer3D] Safe GLTF load error:', loadError);
+            onError?.(new Error(loadError));
         }
-        return null;
-    }
-
-    const { scene, animations } = gltf;
+    }, [state, loadError, onError]);
 
     // Clone the scene to avoid issues with multiple instances
     const clonedScene = React.useMemo(() => {
-        const cloned = scene.clone();
+        if (!gltf?.scene) return null;
+        
+        const cloned = gltf.scene.clone();
         
         // Apply fallback materials for any missing textures
         cloned.traverse((child) => {
@@ -216,34 +161,51 @@ function Pet3DModel({ url, scale, enableAnimation = true, onLoad, onError }: Pet
         });
         
         return cloned;
-    }, [scene]);
+    }, [gltf?.scene]);
 
     // Set up animations if available
     useEffect(() => {
-        if (animations && animations.length > 0 && enableAnimation) {
+        if (!clonedScene || !gltf?.animations) return;
+        
+        const animations = gltf.animations;
+        
+        if (animations.length > 0 && enableAnimation) {
             mixerRef.current = new THREE.AnimationMixer(clonedScene);
             const action = mixerRef.current.clipAction(animations[0]);
             action.play();
         }
 
-        // Notify parent that model is loaded
-        onLoad?.();
+        // Notify parent that model is loaded (only once)
+        if (!hasNotifiedLoad.current) {
+            hasNotifiedLoad.current = true;
+            onLoad?.();
+        }
 
         return () => {
             mixerRef.current?.stopAllAction();
         };
-    }, [animations, clonedScene, enableAnimation, onLoad]);
+    }, [clonedScene, gltf?.animations, enableAnimation, onLoad]);
 
     // Update animation mixer
     useFrame((_, delta) => {
         mixerRef.current?.update(delta);
 
         // Add subtle breathing animation if no built-in animations
-        if (groupRef.current && (!animations || animations.length === 0)) {
+        if (groupRef.current && (!gltf?.animations || gltf.animations.length === 0)) {
             const breathe = Math.sin(Date.now() * 0.002) * 0.02;
             groupRef.current.scale.setScalar(scale * (1 + breathe));
         }
     });
+
+    // Show nothing while validating/loading (Suspense fallback will show)
+    if (state === 'validating' || state === 'loading' || state === 'idle') {
+        return null;
+    }
+    
+    // Show nothing on error (parent will handle error display)
+    if (state === 'error' || !clonedScene) {
+        return null;
+    }
 
     return (
         <group ref={groupRef}>
@@ -585,13 +547,20 @@ export interface PetViewer3DCompactProps {
 /**
  * Compact version for use in thumbnails or small previews
  * No controls, simple lighting, minimal UI
+ * Uses safe GLTF loading to prevent crashes
  */
 export const PetViewer3DCompact: React.FC<PetViewer3DCompactProps> = ({
     modelUrl,
     size = 100,
     scale = 1.5,
 }) => {
-    if (!modelUrl) {
+    const [hasError, setHasError] = useState(false);
+    
+    const handleError = () => {
+        setHasError(true);
+    };
+    
+    if (!modelUrl || hasError) {
         return (
             <div
                 className="flex items-center justify-center bg-gray-200 rounded-lg"
@@ -611,37 +580,45 @@ export const PetViewer3DCompact: React.FC<PetViewer3DCompactProps> = ({
                 background: 'linear-gradient(135deg, #f3f4f6 0%, #d1d5db 100%)',
             }}
         >
-            <Canvas
-                camera={{ position: [0, 0.3, 3], fov: 50 }}
-                style={{ background: 'transparent' }}
-                gl={{ alpha: true, antialias: true }}
-            >
-                <ambientLight intensity={0.8} />
-                <directionalLight position={[3, 3, 3]} intensity={0.6} />
+            <CanvasErrorBoundary onError={handleError}>
+                <Canvas
+                    camera={{ position: [0, 0.3, 3], fov: 50 }}
+                    style={{ background: 'transparent' }}
+                    gl={{ alpha: true, antialias: true }}
+                >
+                    <ambientLight intensity={0.8} />
+                    <directionalLight position={[3, 3, 3]} intensity={0.6} />
 
-                <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.3}>
-                    <Suspense fallback={null}>
-                        <Pet3DModel
-                            url={modelUrl}
-                            scale={scale}
-                            enableAnimation={false}
-                        />
-                    </Suspense>
-                </Float>
-            </Canvas>
+                    <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.3}>
+                        <Suspense fallback={null}>
+                            <Pet3DModel
+                                url={modelUrl}
+                                scale={scale}
+                                enableAnimation={false}
+                                onError={handleError}
+                            />
+                        </Suspense>
+                    </Float>
+                </Canvas>
+            </CanvasErrorBoundary>
         </div>
     );
 };
 
-// Preload helper for better UX
+// Preload helper for better UX - uses safe preloading
 export const preloadPetModel = (url: string) => {
     if (!url) return;
-    try {
-        useGLTF.preload(url);
-        console.log('[PetViewer3D] Preloading model:', url);
-    } catch (error) {
-        console.warn('[PetViewer3D] Failed to preload model:', url, error);
-    }
+    preloadGLTFSafe(url)
+        .then((success) => {
+            if (success) {
+                console.log('[PetViewer3D] Preloaded model:', url);
+            } else {
+                console.warn('[PetViewer3D] Failed to preload model (URL not accessible):', url);
+            }
+        })
+        .catch((error) => {
+            console.warn('[PetViewer3D] Failed to preload model:', url, error);
+        });
 };
 
 export default PetViewer3D;
