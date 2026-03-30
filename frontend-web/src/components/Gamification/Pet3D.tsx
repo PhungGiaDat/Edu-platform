@@ -2,7 +2,7 @@
 // 3D Virtual Pet using React Three Fiber
 // Renders a cute procedural 3D pet that appears behind the chatbot button
 
-import React, { Suspense, useRef, useMemo } from 'react';
+import React, { Suspense, useRef, useMemo, Component, ErrorInfo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, MeshWobbleMaterial, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
@@ -17,6 +17,49 @@ interface Pet3DProps {
     onClick?: () => void;
 }
 
+// Error Boundary for Pet3D Canvas
+interface Pet3DErrorBoundaryState {
+    hasError: boolean;
+}
+
+class Pet3DErrorBoundary extends Component<{ children: React.ReactNode }, Pet3DErrorBoundaryState> {
+    constructor(props: { children: React.ReactNode }) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError(_error: Error): Pet3DErrorBoundaryState {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        console.error('[Pet3D] Render error (caught by boundary):', error.message, errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            // Render fallback emoji instead of crashing
+            return (
+                <div
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '2rem',
+                        background: 'linear-gradient(135deg, #A8D5BA 0%, #7FC9A5 100%)',
+                        borderRadius: '50%',
+                    }}
+                >
+                    🐾
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
+
 // Color palettes for different pet types
 const PET_COLORS: Record<PetType, { body: string; accent: string; cheek: string }> = {
     bunny: { body: '#F5F5F5', accent: '#FFB6C1', cheek: '#FFB6C1' },
@@ -24,6 +67,14 @@ const PET_COLORS: Record<PetType, { body: string; accent: string; cheek: string 
     dog: { body: '#D2691E', accent: '#8B4513', cheek: '#FFB6C1' },
     panda: { body: '#FFFFFF', accent: '#000000', cheek: '#FFB6C1' },
 };
+
+// Default colors for unknown pet types (fallback to prevent crashes)
+const DEFAULT_PET_COLORS = { body: '#A8D5BA', accent: '#7FC9A5', cheek: '#FFB6C1' };
+
+// Safely get pet colors with fallback
+function getPetColors(petType: PetType | string): { body: string; accent: string; cheek: string } {
+    return PET_COLORS[petType as PetType] || DEFAULT_PET_COLORS;
+}
 
 // Scale factors for evolution stages
 const STAGE_SCALES: Record<EvolutionStage, number> = {
@@ -39,8 +90,9 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
     const eyeLeftRef = useRef<THREE.Mesh>(null);
     const eyeRightRef = useRef<THREE.Mesh>(null);
     
-    const colors = PET_COLORS[petType];
-    const scale = STAGE_SCALES[stage];
+    // Use safe color getter to prevent crashes on invalid petType
+    const colors = getPetColors(petType);
+    const scale = STAGE_SCALES[stage] || 1;
     
     // Animate the pet
     useFrame((state) => {
@@ -244,43 +296,45 @@ export const Pet3D: React.FC<Pet3DProps> = ({
     if (!visible) return null;
     
     return (
-        <div
-            onClick={onClick}
-            style={{
-                width: '100%',
-                height: '100%',
-                cursor: onClick ? 'pointer' : 'default',
-                borderRadius: '50%',
-                overflow: 'hidden',
-            }}
-        >
-            <Canvas
-                camera={{ position: [0, 0.5, 3], fov: 50 }}
-                style={{ background: 'transparent' }}
-                gl={{ alpha: true, antialias: true }}
+        <Pet3DErrorBoundary>
+            <div
+                onClick={onClick}
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    cursor: onClick ? 'pointer' : 'default',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                }}
             >
-                {/* Lighting */}
-                <ambientLight intensity={0.6} />
-                <directionalLight position={[5, 5, 5]} intensity={0.8} />
-                <pointLight position={[-5, 5, 5]} intensity={0.4} color="#FFB6C1" />
-                
-                {/* Floating animation wrapper */}
-                <Float
-                    speed={2}
-                    rotationIntensity={0.2}
-                    floatIntensity={0.5}
+                <Canvas
+                    camera={{ position: [0, 0.5, 3], fov: 50 }}
+                    style={{ background: 'transparent' }}
+                    gl={{ alpha: true, antialias: true }}
                 >
-                    <Suspense fallback={null}>
-                        <PetModel
-                            petType={petType}
-                            stage={stage}
-                            mood={mood}
-                            happiness={happiness}
-                        />
-                    </Suspense>
-                </Float>
-            </Canvas>
-        </div>
+                    {/* Lighting */}
+                    <ambientLight intensity={0.6} />
+                    <directionalLight position={[5, 5, 5]} intensity={0.8} />
+                    <pointLight position={[-5, 5, 5]} intensity={0.4} color="#FFB6C1" />
+                    
+                    {/* Floating animation wrapper */}
+                    <Float
+                        speed={2}
+                        rotationIntensity={0.2}
+                        floatIntensity={0.5}
+                    >
+                        <Suspense fallback={null}>
+                            <PetModel
+                                petType={petType}
+                                stage={stage}
+                                mood={mood}
+                                happiness={happiness}
+                            />
+                        </Suspense>
+                    </Float>
+                </Canvas>
+            </div>
+        </Pet3DErrorBoundary>
     );
 };
 

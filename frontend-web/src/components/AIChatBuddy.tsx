@@ -54,10 +54,28 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
     const { user } = useAuth();
     const { activePet } = usePets(user?.id || null);
 
+    // Valid pet types for 3D rendering
+    const validPetTypes: PetType[] = ['bunny', 'cat', 'dog', 'panda'];
+    
+    // Map category to a valid PetType (or default to bunny)
+    const getPetTypeFromCategory = (category: string | undefined): PetType => {
+        if (!category) return 'bunny';
+        const lowerCategory = category.toLowerCase();
+        // Map common categories to pet types
+        if (lowerCategory.includes('cat') || lowerCategory.includes('kitten')) return 'cat';
+        if (lowerCategory.includes('dog') || lowerCategory.includes('puppy')) return 'dog';
+        if (lowerCategory.includes('panda') || lowerCategory.includes('bear')) return 'panda';
+        if (lowerCategory.includes('bunny') || lowerCategory.includes('rabbit')) return 'bunny';
+        // Check if it's already a valid type
+        if (validPetTypes.includes(category as PetType)) return category as PetType;
+        // Default to bunny for any other category
+        return 'bunny';
+    };
+
     // Derive pet state from the active pet (fallback to prop or default)
     const pet: PetState = petProp ?? (activePet
         ? {
-            type: (activePet.category as PetType) || 'bunny',
+            type: getPetTypeFromCategory(activePet.category),
             stage: 'child' as EvolutionStage,
             happiness: 80,
           }
