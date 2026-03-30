@@ -237,13 +237,13 @@ export const PetDropdownViewer: React.FC<PetDropdownViewerProps> = ({
             <div className="mb-6">
                 <PetViewer3D
                     pet={selectedPet}
-                    height="500px"
+                    height="400px"
                     enableControls={true}
                     autoRotate={true}
                     autoRotateSpeed={1.5}
                     showLoading
                     background="gradient"
-                    scale={2.5}
+                    scale={1.2}
                 />
             </div>
 
