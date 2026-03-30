@@ -391,7 +391,7 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
     background = 'gradient',
     backgroundColor,
     disableFloat = false,
-    scale = 2,
+    scale = 1.2,
 }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -478,8 +478,8 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
             <CanvasErrorBoundary onError={handleError}>
                 <Canvas
                 camera={{
-                    position: [0, 0.5, 4],
-                    fov: 45,
+                    position: [0, 1.2, 6],
+                    fov: 35,
                     near: 0.1,
                     far: 100,
                 }}
@@ -553,12 +553,13 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                     <OrbitControls
                         enablePan={false}
                         enableZoom={true}
-                        minDistance={2}
-                        maxDistance={8}
-                        minPolarAngle={Math.PI / 4}
-                        maxPolarAngle={Math.PI / 1.5}
+                        minDistance={3}
+                        maxDistance={12}
+                        minPolarAngle={Math.PI / 6}
+                        maxPolarAngle={Math.PI / 1.8}
                         autoRotate={autoRotate}
                         autoRotateSpeed={autoRotateSpeed}
+                        target={[0, 0.5, 0]}
                     />
                 )}
             </Canvas>

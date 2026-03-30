@@ -1,172 +1,158 @@
 /**
  * PetsPage.tsx — My Pet Hub
  *
- * Two-tab layout:
- *   Tab 1 "My Characters" — filmstrip carousel with center-focused pet
- *   Tab 2 "Pet Care"      — large 3D viewer of active pet + stat bars
- *
- * Design: Filmstrip carousel with 3D viewer integration
- * - Center pet is enlarged and interactive
- * - Left/Right arrows (desktop) + swipe gestures (mobile)
- * - Feed/Play actions integrated into carousel
+ * Redesigned with playful claymorphism design:
+ * - Hero section with 3D pet showcase
+ * - Pet collection gallery with clay cards
+ * - Progress tracking and stats
+ * - Vibrant, engaging colors for educational platform
  */
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { usePets, type Pet } from '@/hooks/usePets';
 import { apiClient } from '@/services/apiClient';
 import { useAuth } from '@/contexts/AuthContext';
-import { PetDropdownViewer } from '@/components/pets/PetDropdownViewer';
 import { HapticService } from '@/services/HapticService';
 import { SoundEffectService } from '@/services/SoundEffectService';
+import { rarityConfig } from '@/components/pets/PetCard';
 
 // Lazy-load the heavy 3D viewer
 const PetViewer3D = lazy(() =>
     import('@/components/pets/PetViewer3D').then(m => ({ default: m.PetViewer3D }))
 );
 
-// ─── Stat bar ───────────────────────────────────────────────────────────────
-function StatBar({ label, value, color }: { label: string; value: number; color: string }) {
-    return (
-        <div style={{ marginBottom: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--color-text)' }}>{label}</span>
-                <span style={{ fontWeight: 700, fontSize: 13, color }}>{value}%</span>
-            </div>
-            <div style={{ height: 10, borderRadius: 999, background: 'var(--color-border)' }}>
-                <div
-                    style={{
-                        height: '100%',
-                        borderRadius: 999,
-                        width: `${value}%`,
-                        background: color,
-                        transition: 'width 0.6s ease',
-                    }}
-                />
-            </div>
-        </div>
-    );
-}
-
-// ─── Tab 1: My Characters (Filmstrip Carousel) ─────────────────────────────
-function MyCharactersTab({ 
-    pets, 
-    activePet, 
-    onActivate,
-    onFeed,
-    onPlay,
-}: {
-    pets: Pet[];
-    activePet: Pet | null;
-    onActivate: (petId: string) => void;
-    onFeed: (petId: string) => void;
-    onPlay: (petId: string) => void;
-}) {
-    if (pets.length === 0) {
-        return (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--color-text-soft)' }}>
-                <div style={{ fontSize: 64, marginBottom: 16 }}>🐾</div>
-                <p style={{ fontWeight: 700, fontSize: 18 }}>No pets yet!</p>
-                <p style={{ fontSize: 14 }}>Complete lessons to unlock your first pet companion.</p>
-            </div>
-        );
-    }
-
-    // Show only unlocked pets in carousel, or all pets if none unlocked
-    const displayPets = pets.filter(p => p.is_unlocked);
-    const petsToShow = displayPets.length > 0 ? displayPets : pets;
-
-    return (
-        <div style={{ padding: '16px 0' }}>
-            <PetDropdownViewer
-                pets={petsToShow}
-                activePetId={activePet?.pet_id}
-                onSelectPet={onActivate}
-                onFeedPet={onFeed}
-                onPlayWithPet={onPlay}
-                showActions={true}
-            />
-        </div>
-    );
-}
-
-// ─── Tab 2: Pet Care ────────────────────────────────────────────────────────
-function PetCareTab({ activePet, onFeed, onPlay }: {
-    activePet: Pet | null;
+// ─── Pet Collection Card ────────────────────────────────────────────────────
+function PetCollectionCard({ 
+    pet, 
+    isActive, 
+    onSelect, 
+    onFeed, 
+    onPlay 
+}: { 
+    pet: Pet; 
+    isActive: boolean; 
+    onSelect: () => void;
     onFeed: () => void;
     onPlay: () => void;
 }) {
-    if (!activePet) {
-        return (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--color-text-soft)' }}>
-                <div style={{ fontSize: 64, marginBottom: 16 }}>🐣</div>
-                <p style={{ fontWeight: 700, fontSize: 18 }}>No active pet</p>
-                <p style={{ fontSize: 14 }}>Go to "My Characters" and tap a pet to make it your companion!</p>
-            </div>
-        );
-    }
+    const config = rarityConfig[pet.rarity];
+    const isLocked = !pet.is_unlocked;
+    
+    const colorVariants: Record<string, string> = {
+        common: 'clay-card-mint',
+        rare: 'clay-card-sky',
+        epic: 'clay-card-lavender',
+        legendary: 'clay-card-sunshine',
+    };
 
     return (
-        <div style={{ padding: '16px 0' }}>
-            {/* Large 3D viewer */}
-            <div
-                className="clay-card"
-                style={{ height: 280, marginBottom: 20, overflow: 'hidden', position: 'relative' }}
-            >
-                {activePet.model_url ? (
-                    <Suspense
-                        fallback={
-                            activePet.thumbnail_url
-                                ? <img src={activePet.thumbnail_url} alt={activePet.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 20 }} />
-                                : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 80 }}>🐾</div>
-                        }
-                    >
-                        <PetViewer3D
-                            pet={activePet}
-                            autoRotate={true}
-                            enableControls={true}
-                        />
-                    </Suspense>
-                ) : activePet.thumbnail_url ? (
-                    <img src={activePet.thumbnail_url} alt={activePet.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 20 }} />
+        <div 
+            className={`relative rounded-3xl p-4 transition-all duration-300 cursor-pointer ${
+                isLocked ? 'opacity-60' : ''
+            } ${colorVariants[pet.rarity] || 'clay-card-elevated'}`}
+            onClick={() => !isLocked && onSelect()}
+            style={{
+                transform: isActive ? 'scale(1.02)' : 'scale(1)',
+            }}
+        >
+            {/* Active Indicator */}
+            {isActive && (
+                <div className="absolute -top-2 -right-2 z-10">
+                    <div className="clay-badge-green px-3 py-1 text-xs">
+                        Active
+                    </div>
+                </div>
+            )}
+
+            {/* Lock Overlay */}
+            {isLocked && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 rounded-3xl bg-white/60 backdrop-blur-sm">
+                    <div className="text-center">
+                        <span className="text-4xl">🔒</span>
+                        <p className="text-sm font-bold text-gray-600 mt-2">
+                            {pet.unlock_condition.type === 'xp' && `${pet.unlock_condition.value} XP`}
+                            {pet.unlock_condition.type === 'streak' && `${pet.unlock_condition.value} Days`}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Pet Thumbnail/3D Preview */}
+            <div className="relative h-32 rounded-2xl overflow-hidden mb-3 bg-white/40">
+                {pet.thumbnail_url ? (
+                    <img 
+                        src={pet.thumbnail_url} 
+                        alt={pet.name}
+                        className="w-full h-full object-contain"
+                    />
                 ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 80 }}>🐾</div>
+                    <div className="w-full h-full flex items-center justify-center text-5xl">
+                        {config.badge}
+                    </div>
                 )}
-                <div style={{
-                    position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
-                    background: 'rgba(255,255,255,0.9)', borderRadius: 999, padding: '4px 16px',
-                    fontWeight: 800, fontSize: 15, color: 'var(--color-text)',
-                    backdropFilter: 'blur(4px)',
-                }}>
-                    {activePet.name} · {activePet.name_vi}
+            </div>
+
+            {/* Pet Info */}
+            <div className="text-center">
+                <h3 className="font-bold text-lg text-gray-800">{pet.name}</h3>
+                <div className="flex items-center justify-center gap-2 mt-1">
+                    <span className="text-lg">{config.badge}</span>
+                    <span className="text-sm font-semibold text-gray-600 capitalize">{pet.rarity}</span>
                 </div>
             </div>
 
-            {/* Stat bars */}
-            <div className="clay-card" style={{ marginBottom: 16 }}>
-                <h3 style={{ fontWeight: 800, fontSize: 16, color: 'var(--color-text)', marginBottom: 12 }}>
-                    Pet Wellbeing
-                </h3>
-                <StatBar label="Happiness" value={80} color="var(--color-accent)" />
-                <StatBar label="Energy" value={65} color="var(--color-secondary)" />
-                <StatBar label="Hunger" value={50} color="var(--color-accent-pink)" />
-            </div>
+            {/* Action Buttons (only for unlocked pets) */}
+            {!isLocked && (
+                <div className="flex gap-2 mt-3">
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onFeed(); }}
+                        className="flex-1 py-2 px-3 rounded-xl text-sm font-bold bg-white/60 hover:bg-white/80 transition-all"
+                    >
+                        🍖 Feed
+                    </button>
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onPlay(); }}
+                        className="flex-1 py-2 px-3 rounded-xl text-sm font-bold bg-white/60 hover:bg-white/80 transition-all"
+                    >
+                        🎮 Play
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
 
-            {/* Action buttons */}
-            <div style={{ display: 'flex', gap: 12 }}>
-                <button
-                    className="clay-btn clay-btn-accent"
-                    style={{ flex: 1, fontSize: 15 }}
-                    onClick={onFeed}
-                >
-                    Feed
-                </button>
-                <button
-                    className="clay-btn clay-btn-secondary"
-                    style={{ flex: 1, fontSize: 15 }}
-                    onClick={onPlay}
-                >
-                    Play
-                </button>
+// ─── Stat Card ──────────────────────────────────────────────────────────────
+function StatCard({ icon, value, label, color }: { icon: string; value: number | string; label: string; color: string }) {
+    return (
+        <div className="clay-stat-card">
+            <div className="text-3xl mb-2">{icon}</div>
+            <div className="clay-stat-number" style={{ background: `linear-gradient(135deg, ${color}, #FF9F9F)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                {value}
+            </div>
+            <div className="clay-stat-label">{label}</div>
+        </div>
+    );
+}
+
+// ─── Progress Bar ───────────────────────────────────────────────────────────
+function ProgressBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
+    const percentage = Math.min((value / max) * 100, 100);
+    
+    return (
+        <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+                <span className="font-bold text-gray-700">{label}</span>
+                <span className="font-bold" style={{ color }}>{value}/{max}</span>
+            </div>
+            <div className="h-4 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                <div 
+                    className="h-full rounded-full transition-all duration-500 clay-shimmer"
+                    style={{ 
+                        width: `${percentage}%`,
+                        background: `linear-gradient(90deg, ${color}, ${color}CC)`,
+                    }}
+                />
             </div>
         </div>
     );
@@ -175,35 +161,56 @@ function PetCareTab({ activePet, onFeed, onPlay }: {
 // ─── Main PetsPage ──────────────────────────────────────────────────────────
 export default function PetsPage() {
     const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-    const [activeTab, setActiveTab] = React.useState<'characters' | 'care'>('characters');
     const userId = user?.id ?? null;
     const { pets, activePet, setActivePet, isLoading } = usePets(userId);
+    const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+
+    // Initialize selected pet
+    React.useEffect(() => {
+        if (!selectedPet && activePet) {
+            setSelectedPet(activePet);
+        } else if (!selectedPet && pets.length > 0) {
+            const firstUnlocked = pets.find(p => p.is_unlocked);
+            setSelectedPet(firstUnlocked || pets[0]);
+        }
+    }, [activePet, pets, selectedPet]);
 
     if (authLoading) {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <p style={{ color: 'var(--color-text-soft)' }}>Loading...</p>
+            <div className="min-h-screen clay-bg-playful flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-6xl mb-4 clay-float-element">🐾</div>
+                    <p className="font-bold text-gray-600">Loading your pets...</p>
+                </div>
             </div>
         );
     }
 
     if (!isAuthenticated || !userId) {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-                <div className="clay-card" style={{ maxWidth: 420, textAlign: 'center' }}>
-                    <h2 style={{ margin: '0 0 8px' }}>Sign in to view pets</h2>
-                    <p style={{ margin: 0, color: 'var(--color-text-soft)' }}>
-                        Guest mode can explore AR, but pets are available only for signed-in users.
+            <div className="min-h-screen clay-bg-playful flex items-center justify-center p-6">
+                <div className="clay-card-elevated max-w-md w-full p-8 text-center">
+                    <div className="text-6xl mb-4">🐣</div>
+                    <h2 className="clay-section-title mb-4">Sign In to Meet Your Pets!</h2>
+                    <p className="text-gray-600 mb-6">
+                        Create an account to unlock adorable pet companions that grow with your learning journey!
                     </p>
+                    <button className="clay-cta-primary w-full">
+                        Get Started
+                    </button>
                 </div>
             </div>
         );
     }
 
     const handleActivate = async (petId: string) => {
-        HapticService.success();
-        SoundEffectService.play('tap');
-        await setActivePet(petId);
+        const pet = pets.find(p => p.pet_id === petId);
+        if (pet) {
+            setSelectedPet(pet);
+            HapticService.success();
+            SoundEffectService.play('tap');
+            await setActivePet(petId);
+        }
     };
 
     const handleFeed = async (petId: string) => {
@@ -214,10 +221,8 @@ export default function PetsPage() {
                 user_id: userId,
                 pet_id: petId,
             });
-            // TODO: Show success toast
         } catch (error) {
             console.error('Feed error:', error);
-            // TODO: Show error toast
         }
     };
 
@@ -229,85 +234,179 @@ export default function PetsPage() {
                 user_id: userId,
                 pet_id: petId,
             });
-            // TODO: Show success toast
         } catch (error) {
             console.error('Play error:', error);
-            // TODO: Show error toast
         }
     };
 
+    const unlockedCount = pets.filter(p => p.is_unlocked).length;
+    const displayPet = selectedPet || activePet || pets[0];
+
     return (
-        <div
-            style={{
-                minHeight: '100vh',
-                background: 'var(--color-bg)',
-                fontFamily: "'Nunito Sans', 'Quicksand', sans-serif",
-            }}
-        >
-            {/* Page header */}
-            <div style={{ padding: 'clamp(16px, 4vw, 24px) clamp(12px, 4vw, 20px) 0' }}>
-                <h1 style={{
-                    fontFamily: "'Baloo 2', 'Nunito Sans', sans-serif",
-                    fontWeight: 800,
-                    fontSize: 'clamp(20px, 5vw, 28px)',
-                    color: 'var(--color-text)',
-                    margin: '0 0 4px',
-                }}>
-                    My Pets
-                </h1>
-                <p style={{ color: 'var(--color-text-soft)', fontSize: 14, margin: 0 }}>
-                    {pets.filter(p => p.is_unlocked).length} / {pets.length} companions unlocked
-                </p>
+        <div className="min-h-screen clay-bg-playful">
+            {/* Decorative Background Elements */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="clay-shape-circle w-96 h-96 -top-48 -left-48 opacity-40" />
+                <div className="clay-shape-circle w-64 h-64 top-1/4 right-0 opacity-30" />
+                <div className="clay-shape-circle w-80 h-80 bottom-0 left-1/4 opacity-25" />
             </div>
 
-            {/* Tab switcher */}
-            <div style={{ padding: 'clamp(12px, 3vw, 16px) clamp(12px, 4vw, 20px) 0', display: 'flex', gap: 'clamp(4px, 2vw, 8px)' }}>
-                {(['characters', 'care'] as const).map(tab => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        style={{
-                            padding: '10px 20px',
-                            borderRadius: 999,
-                            fontWeight: 700,
-                            fontSize: 14,
-                            border: 'none',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            background: activeTab === tab ? 'var(--color-primary)' : 'var(--color-surface)',
-                            color: activeTab === tab ? '#fff' : 'var(--color-text-soft)',
-                            boxShadow: activeTab === tab
-                                ? '0 4px 12px rgba(91,141,239,0.35)'
-                                : '0 2px 6px rgba(0,0,0,0.08)',
-                        }}
-                    >
-                        {tab === 'characters' ? 'My Characters' : 'Pet Care'}
-                    </button>
-                ))}
-            </div>
+            <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
+                {/* Header */}
+                <header className="text-center mb-8">
+                    <h1 className="text-4xl md:text-5xl font-black text-gray-800 mb-2" style={{ fontFamily: "'Baloo 2', sans-serif" }}>
+                        My Pet Collection
+                    </h1>
+                    <p className="text-gray-600 font-semibold">
+                        {unlockedCount} of {pets.length} companions unlocked
+                    </p>
+                </header>
 
-            {/* Tab content */}
-            <div style={{ padding: '0 clamp(12px, 4vw, 20px) clamp(60px, 15vw, 100px)' }}>
-                {isLoading ? (
-                    <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--color-text-soft)' }}>
-                        <div style={{ fontSize: 48, marginBottom: 12 }}>🐾</div>
-                        <p style={{ fontWeight: 700 }}>Loading your pets...</p>
+                {/* Stats Row */}
+                <div className="grid grid-cols-3 gap-4 mb-8">
+                    <StatCard icon="🐾" value={unlockedCount} label="Pets Unlocked" color="#5B8DEF" />
+                    <StatCard icon="⚡" value={1250} label="Total XP" color="#FFB347" />
+                    <StatCard icon="🔥" value={12} label="Day Streak" color="#FF9F9F" />
+                </div>
+
+                {/* Main Content Grid */}
+                <div className="grid lg:grid-cols-3 gap-6">
+                    {/* Left: Pet Collection */}
+                    <div className="lg:col-span-2">
+                        <div className="clay-card-elevated p-6">
+                            <h2 className="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">
+                                <span className="clay-icon-bubble clay-icon-bubble-mint w-10 h-10 text-lg">🎯</span>
+                                Pet Gallery
+                            </h2>
+                            
+                            {isLoading ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {[1, 2, 3, 4, 5, 6].map(i => (
+                                        <div key={i} className="h-48 rounded-3xl bg-gray-100 animate-pulse" />
+                                    ))}
+                                </div>
+                            ) : pets.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <div className="text-6xl mb-4">🎁</div>
+                                    <h3 className="font-bold text-xl text-gray-800 mb-2">No Pets Yet!</h3>
+                                    <p className="text-gray-600">Complete lessons to unlock your first pet companion.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {pets.map(pet => (
+                                        <PetCollectionCard
+                                            key={pet.pet_id}
+                                            pet={pet}
+                                            isActive={pet.pet_id === activePet?.pet_id}
+                                            onSelect={() => handleActivate(pet.pet_id)}
+                                            onFeed={() => handleFeed(pet.pet_id)}
+                                            onPlay={() => handlePlay(pet.pet_id)}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                ) : activeTab === 'characters' ? (
-                    <MyCharactersTab
-                        pets={pets}
-                        activePet={activePet}
-                        onActivate={handleActivate}
-                        onFeed={handleFeed}
-                        onPlay={handlePlay}
-                    />
-                ) : (
-                    <PetCareTab
-                        activePet={activePet}
-                        onFeed={() => activePet && handleFeed(activePet.pet_id)}
-                        onPlay={() => activePet && handlePlay(activePet.pet_id)}
-                    />
-                )}
+
+                    {/* Right: Active Pet Showcase */}
+                    <div className="lg:col-span-1">
+                        <div className="clay-pet-showcase sticky top-8">
+                            <h2 className="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">
+                                <span className="clay-icon-bubble clay-icon-bubble-sunshine w-10 h-10 text-lg">⭐</span>
+                                Active Pet
+                            </h2>
+
+                            {displayPet ? (
+                                <>
+                                    {/* 3D Pet Viewer */}
+                                    <div className="rounded-2xl overflow-hidden mb-4 bg-gradient-to-b from-blue-100/50 to-pink-100/50">
+                                        {displayPet.model_url ? (
+                                            <Suspense
+                                                fallback={
+                                                    <div className="h-64 flex items-center justify-center">
+                                                        <div className="text-5xl clay-float-element">🐾</div>
+                                                    </div>
+                                                }
+                                            >
+                                                <PetViewer3D
+                                                    pet={displayPet}
+                                                    height="280px"
+                                                    autoRotate={true}
+                                                    enableControls={true}
+                                                    scale={1.0}
+                                                    background="transparent"
+                                                />
+                                            </Suspense>
+                                        ) : (
+                                            <div className="h-64 flex items-center justify-center">
+                                                <span className="text-7xl">{rarityConfig[displayPet.rarity].badge}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Pet Info */}
+                                    <div className="text-center mb-4">
+                                        <h3 className="font-black text-2xl text-gray-800">{displayPet.name}</h3>
+                                        <div className="clay-badge-blue mt-2 inline-flex">
+                                            <span>{rarityConfig[displayPet.rarity].badge}</span>
+                                            <span className="capitalize">{displayPet.rarity}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Pet Stats */}
+                                    <div className="space-y-3 mb-4">
+                                        <ProgressBar label="Happiness" value={80} max={100} color="#5B8DEF" />
+                                        <ProgressBar label="Energy" value={65} max={100} color="#7BC67E" />
+                                        <ProgressBar label="Hunger" value={50} max={100} color="#FFB347" />
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    {displayPet.is_unlocked && (
+                                        <div className="flex gap-3">
+                                            <button 
+                                                onClick={() => handleFeed(displayPet.pet_id)}
+                                                className="clay-btn clay-btn-yellow clay-btn-md flex-1"
+                                            >
+                                                🍖 Feed
+                                            </button>
+                                            <button 
+                                                onClick={() => handlePlay(displayPet.pet_id)}
+                                                className="clay-btn clay-btn-blue clay-btn-md flex-1"
+                                            >
+                                                🎮 Play
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="text-center py-8">
+                                    <div className="text-6xl mb-4 clay-float-element">🐣</div>
+                                    <p className="text-gray-600 font-semibold">Select a pet to view details</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* CTA Section */}
+                <div className="mt-12 clay-card-elevated p-8 text-center">
+                    <h2 className="text-2xl font-black text-gray-800 mb-2">Want More Pets?</h2>
+                    <p className="text-gray-600 mb-6">Complete lessons and earn XP to unlock rare and legendary companions!</p>
+                    <div className="flex flex-wrap justify-center gap-4">
+                        <button 
+                            className="clay-cta-primary"
+                            onClick={() => window.location.href = '/courses'}
+                        >
+                            Start Learning
+                        </button>
+                        <button 
+                            className="clay-cta-secondary"
+                            onClick={() => window.location.href = '/learn-ar'}
+                        >
+                            Try AR Mode
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );
