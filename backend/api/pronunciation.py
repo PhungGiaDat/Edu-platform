@@ -1,13 +1,19 @@
 # backend/api/pronunciation.py
 """
 Pronunciation API - Controller layer
-POST /pronunciation/attempt         — log attempt, award XP, check badges
-POST /pronunciation/ai-feedback     — Gemini AI encouragement for a pronunciation result
-GET  /pronunciation/{user_id}/{flashcard_qr_id}/stats — stats + history
-GET  /pronunciation/{user_id}/recent                  — recent attempts
+
+Endpoints:
+  POST /pronunciation/attempt         — log attempt, award XP, check badges
+  POST /pronunciation/ai-feedback     — Gemini AI encouragement for a pronunciation result
+  POST /pronunciation/transcribe      — Server-side speech-to-text (Safari/Firefox fallback)
+  POST /pronunciation/feedback        — Dynamic feedback from database templates
+  GET  /pronunciation/transcribe/status — Check speech processing availability
+  GET  /pronunciation/{user_id}/{flashcard_qr_id}/stats — stats + history
+  GET  /pronunciation/{user_id}/recent                  — recent attempts
 """
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from pydantic import BaseModel, Field
+from typing import Optional
 import logging
 
 from models.pronunciation import (
@@ -16,12 +22,20 @@ from models.pronunciation import (
     PronunciationStats,
     PronunciationHistoryItem,
 )
+from models.feedback_template import GeneratedFeedback
 from repositories.pronunciation_repository import (
     PronunciationRepository,
     get_pronunciation_repository,
 )
 from services.gamification_service import GamificationService
 from services.ai_service import get_ai_service
+from services.feedback_service import FeedbackService, get_feedback_service
+from services.speech_processing_service import (
+    SpeechProcessingService,
+    get_speech_processing_service,
+    TranscriptionError,
+    RateLimitError,
+)
 
 router = APIRouter(prefix="/pronunciation", tags=["Pronunciation"])
 logger = logging.getLogger(__name__)
@@ -199,3 +213,152 @@ async def get_ai_pronunciation_feedback(payload: AIFeedbackRequest):
             emoji=emoji_fallback,
             stars=stars_fallback,
         )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# NEW ENDPOINTS: Server-side transcription and dynamic feedback
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+class TranscribeResponse(BaseModel):
+    """Response from server-side speech transcription."""
+    text: str                          # Transcribed text
+    confidence: float = Field(ge=0, le=1)  # Confidence score 0-1
+    language: str = "en"               # Detected language
+
+
+class DynamicFeedbackRequest(BaseModel):
+    """Request for dynamic database-driven feedback."""
+    word: str                          # The word being practiced
+    score: int = Field(ge=0, le=100)   # Pronunciation score
+    attempt_number: int = Field(default=1, ge=1)  # Which attempt this is
+    language: str = "en"               # Feedback language
+
+
+@router.post("/transcribe", response_model=TranscribeResponse)
+async def transcribe_audio(
+    audio: UploadFile = File(..., description="Audio file (WebM, WAV, MP3, OGG, M4A, FLAC)"),
+    language: str = Form(default="en", description="Expected language (en, vi, auto)"),
+    speech_service: SpeechProcessingService = Depends(get_speech_processing_service),
+):
+    """
+    Server-side speech-to-text transcription using Whisper.
+    
+    Use this endpoint when Web Speech API is unavailable (Safari, Firefox).
+    Rate limited to 2 concurrent transcriptions.
+    
+    Accepts audio files up to 10MB in WebM, WAV, MP3, OGG, M4A, or FLAC format.
+    """
+    # Validate file size (10MB max)
+    MAX_SIZE = 10 * 1024 * 1024  # 10MB
+    content = await audio.read()
+    
+    if len(content) > MAX_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Audio file too large. Maximum size: 10MB"
+        )
+    
+    if len(content) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Empty audio file"
+        )
+    
+    # Get file extension from filename or content type
+    filename = audio.filename or "audio.webm"
+    extension = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ".webm"
+    
+    logger.info(
+        f"[Transcribe] Received audio: {len(content)} bytes, "
+        f"format={extension}, language={language}"
+    )
+    
+    try:
+        text, confidence = await speech_service.transcribe_audio(
+            audio_data=content,
+            file_extension=extension,
+            language=language,
+        )
+        
+        return TranscribeResponse(
+            text=text,
+            confidence=confidence,
+            language=language,
+        )
+        
+    except RateLimitError as e:
+        logger.warning(f"[Transcribe] Rate limit exceeded: {e}")
+        raise HTTPException(
+            status_code=429,
+            detail="Too many transcription requests. Please try again shortly."
+        )
+    except TranscriptionError as e:
+        logger.error(f"[Transcribe] Transcription failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+@router.get("/transcribe/status")
+async def get_transcription_status(
+    speech_service: SpeechProcessingService = Depends(get_speech_processing_service),
+):
+    """
+    Check if server-side speech transcription is available.
+    
+    Returns service status including:
+    - Whether Whisper model is loaded
+    - Current number of active transcriptions
+    - Supported audio formats
+    """
+    status = await speech_service.get_status()
+    return status
+
+
+@router.post("/feedback", response_model=GeneratedFeedback)
+async def get_dynamic_feedback(
+    payload: DynamicFeedbackRequest,
+    feedback_service: FeedbackService = Depends(get_feedback_service),
+):
+    """
+    Generate kid-friendly feedback using database templates.
+    
+    Returns personalized, encouraging feedback based on:
+    - Score category (excellent/good/needs_practice)
+    - Random template selection with weighted probabilities
+    - Placeholder substitution ({word}, {score}, {stars})
+    
+    Falls back to default messages if no templates are available.
+    """
+    logger.info(
+        f"[Feedback] Generating for word='{payload.word}' "
+        f"score={payload.score} attempt={payload.attempt_number}"
+    )
+    
+    feedback = await feedback_service.generate_feedback(
+        word=payload.word,
+        score=payload.score,
+        attempt_number=payload.attempt_number,
+        language=payload.language,
+    )
+    
+    return feedback
+
+
+@router.get("/feedback/stats")
+async def get_feedback_stats(
+    language: str = "en",
+    feedback_service: FeedbackService = Depends(get_feedback_service),
+):
+    """
+    Get statistics about available feedback templates.
+    
+    Useful for:
+    - Admin dashboard
+    - Debugging template availability
+    - Verifying seed data was loaded
+    """
+    stats = await feedback_service.get_feedback_stats(language=language)
+    return stats

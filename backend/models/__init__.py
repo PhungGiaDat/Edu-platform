@@ -19,6 +19,18 @@ from .pet import (
     SetActivePetRequest,
     UnlockPetResponse,
 )
+from .feedback_template import (
+    FeedbackTemplateDocument,
+    FeedbackTemplateCreate,
+    FeedbackTemplateUpdate,
+    FeedbackTemplateResponse,
+    GeneratedFeedback,
+    ScoreCategory,
+    get_score_category,
+    score_to_stars,
+    SCORE_RANGES,
+    DEFAULT_ENCOURAGEMENTS,
+)
 
 __all__ = [
     # Flashcard
@@ -47,4 +59,15 @@ __all__ = [
     "UnlockCondition",
     "SetActivePetRequest",
     "UnlockPetResponse",
+    # Feedback Template
+    "FeedbackTemplateDocument",
+    "FeedbackTemplateCreate",
+    "FeedbackTemplateUpdate",
+    "FeedbackTemplateResponse",
+    "GeneratedFeedback",
+    "ScoreCategory",
+    "get_score_category",
+    "score_to_stars",
+    "SCORE_RANGES",
+    "DEFAULT_ENCOURAGEMENTS",
 ]

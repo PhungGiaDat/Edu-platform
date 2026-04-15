@@ -8,6 +8,7 @@ from .ar_object_repository import ARObjectRepository, get_ar_object_repository
 from .ar_combination_repository import ARCombinationRepository, get_ar_combination_repository
 from .quiz_repository import QuizRepository, get_quiz_repository
 from .game_repository import GameRepository, get_game_repository
+from .feedback_template_repository import FeedbackTemplateRepository, get_feedback_template_repository
 
 __all__ = [
     "FlashcardRepository",
@@ -20,4 +21,6 @@ __all__ = [
     "get_quiz_repository",
     "GameRepository",
     "get_game_repository",
+    "FeedbackTemplateRepository",
+    "get_feedback_template_repository",
 ]

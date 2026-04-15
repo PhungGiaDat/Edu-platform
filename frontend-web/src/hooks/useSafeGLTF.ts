@@ -54,95 +54,6 @@ function getGLTFLoader(): GLTFLoader {
 // Cache for loaded models to avoid re-downloading
 const modelCache = new Map<string, GLTF>();
 
-// Pleasant fallback colors for models with missing textures
-const FALLBACK_COLORS = [
-  0x8b7fbf, // Purple
-  0x7fbeeb, // Sky Blue
-  0x7feba8, // Mint Green
-  0xebcf7f, // Golden Yellow
-  0xeb9f7f, // Coral Orange
-  0xf5a0c1, // Pink
-  0xa0c1f5, // Light Blue
-  0xc1f5a0, // Lime Green
-  0xf5d6a0, // Peach
-  0xd6a0f5, // Lavender
-];
-
-/**
- * Apply fallback materials to meshes with missing textures
- * This handles GLB files that reference external textures which fail to load
- */
-function applyFallbackMaterials(scene: THREE.Object3D, url: string): void {
-  // Generate consistent color based on URL
-  const urlHash = url.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-  const fallbackColor = new THREE.Color(FALLBACK_COLORS[urlHash % FALLBACK_COLORS.length]);
-  
-  let texturesFixed = 0;
-  
-  scene.traverse((child) => {
-    if ((child as THREE.Mesh).isMesh) {
-      const mesh = child as THREE.Mesh;
-      
-      if (mesh.material) {
-        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        
-        materials.forEach((material) => {
-          const stdMaterial = material as THREE.MeshStandardMaterial;
-          
-          // Check if map (diffuse texture) exists but failed to load
-          if (stdMaterial.map) {
-            const texture = stdMaterial.map;
-            // Check if texture image is valid
-            const hasValidImage = texture.image && 
-              (texture.image instanceof HTMLImageElement 
-                ? texture.image.complete && texture.image.naturalWidth > 0 
-                : texture.image.data || texture.image.width > 0);
-            
-            if (!hasValidImage) {
-              // Texture failed to load - apply fallback
-              stdMaterial.map = null;
-              stdMaterial.color = fallbackColor;
-              stdMaterial.metalness = 0.1;
-              stdMaterial.roughness = 0.6;
-              stdMaterial.needsUpdate = true;
-              texturesFixed++;
-            }
-          } else {
-            // No texture at all - this might be intentional or might be missing
-            // If color is white (default), apply our fallback color for better visibility
-            if (stdMaterial.color && stdMaterial.color.getHex() === 0xffffff) {
-              stdMaterial.color = fallbackColor;
-              stdMaterial.needsUpdate = true;
-              texturesFixed++;
-            }
-          }
-          
-          // Also check for broken normal/roughness/metalness maps
-          if (stdMaterial.normalMap && !stdMaterial.normalMap.image) {
-            stdMaterial.normalMap = null;
-            stdMaterial.needsUpdate = true;
-          }
-          if (stdMaterial.roughnessMap && !stdMaterial.roughnessMap.image) {
-            stdMaterial.roughnessMap = null;
-            stdMaterial.needsUpdate = true;
-          }
-          if (stdMaterial.metalnessMap && !stdMaterial.metalnessMap.image) {
-            stdMaterial.metalnessMap = null;
-            stdMaterial.needsUpdate = true;
-          }
-          if (stdMaterial.aoMap && !stdMaterial.aoMap.image) {
-            stdMaterial.aoMap = null;
-            stdMaterial.needsUpdate = true;
-          }
-        });
-      }
-    }
-  });
-  
-  if (texturesFixed > 0) {
-    console.warn(`[useSafeGLTF] Applied fallback materials to ${texturesFixed} meshes with missing textures`);
-  }
-}
 
 /**
  * Safe GLTF loader that uses THREE.GLTFLoader directly
@@ -230,9 +141,8 @@ export function useSafeGLTF(url: string | null | undefined): SafeGLTFResult {
       (loadedGltf) => {
         if (signal.aborted) return;
         
-        // Post-process: Apply fallback materials for missing textures
-        // This handles the case where GLB references external textures that fail to load
-        applyFallbackMaterials(loadedGltf.scene, url);
+        // Post-process: Removed aggressive fallback material application
+        // applyFallbackMaterials(loadedGltf.scene, url);
         
         // Cache the result
         modelCache.set(url, loadedGltf);

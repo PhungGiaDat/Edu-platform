@@ -16,6 +16,7 @@ from models.pet import PetDocument
 from models.pronunciation import PronunciationAttemptDocument
 from models.learning_path import LearningPathDocument
 from models.session_log import SessionLogDocument
+from models.feedback_template import FeedbackTemplateDocument
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +110,7 @@ async def connect_to_database():
         PronunciationAttemptDocument,
         LearningPathDocument,
         SessionLogDocument,
+        FeedbackTemplateDocument,
     ]
     
     try:

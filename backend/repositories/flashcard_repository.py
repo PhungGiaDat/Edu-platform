@@ -156,11 +156,15 @@ class FlashcardRepository(BaseRepository):
         to be created on MongoDB Atlas Dashboard before use.
         
         Args:
-            query_vector: 768-dimensional embedding vector from Gemini
+            query_vector: 3072-dimensional embedding vector from Gemini (gemini-embedding-001)
             limit: Maximum number of results to return
             
         Returns:
             List of flashcard documents with similarity scores
+            
+        Note:
+            The Gemini embedding model 'models/gemini-embedding-001' produces 3072-dimensional vectors.
+            Ensure your MongoDB Atlas Vector Search index is configured with dimensions: 3072
         """
         if not query_vector:
             logger.warning("[VectorSearch] Empty query vector provided")
@@ -241,7 +245,7 @@ class FlashcardRepository(BaseRepository):
         
         Args:
             qr_id: Flashcard QR ID
-            embedding: 768-dimensional embedding vector
+            embedding: 3072-dimensional embedding vector from Gemini (gemini-embedding-001)
             
         Returns:
             True if update successful
