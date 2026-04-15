@@ -1,8 +1,14 @@
 /**
  * PronunciationService.ts
  * 
- * Web Speech API integration for pronunciation practice.
- * Uses browser's speech recognition to capture child's voice.
+ * Hybrid speech recognition service for pronunciation practice.
+ * 
+ * Strategy:
+ * 1. Use Web Speech API for Chrome (fast, free, no network latency)
+ * 2. Fall back to server-side Whisper for Safari/Firefox
+ * 
+ * The service automatically detects browser support and uses the
+ * appropriate method.
  */
 
 import { eventBus } from '@/runtime/EventBus';
@@ -16,6 +22,24 @@ export interface PronunciationResult {
     accuracy?: number;
     feedback?: string;
     isCorrect?: boolean;
+    source?: 'webspeech' | 'whisper';  // Which engine was used
+}
+
+export interface TranscriptionStatus {
+    available: boolean;
+    model_loaded: boolean;
+    model_name: string | null;
+    active_transcriptions: number;
+    max_concurrent: number;
+    supported_formats: string[];
+}
+
+export interface GeneratedFeedback {
+    message: string;
+    emoji: string;
+    stars: number;
+    category: string;
+    encouragement: string;
 }
 
 type PronunciationCallback = (result: PronunciationResult) => void;
@@ -25,7 +49,13 @@ class PronunciationService {
     private isListening = false;
     private expectedWord = '';
     private onResultCallback: PronunciationCallback | null = null;
-    private sessionId = 0; // Track session to prevent stale callbacks
+    private sessionId = 0;
+    
+    // Hybrid fallback state
+    private mediaRecorder: MediaRecorder | null = null;
+    private audioChunks: Blob[] = [];
+    private useServerFallback = false;
+    private serverAvailable: boolean | null = null; // null = not checked yet
 
     constructor() {
         this.initRecognition();
@@ -37,7 +67,9 @@ class PronunciationService {
             (window as any).webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
-            console.warn('[Pronunciation] Speech recognition not supported');
+            console.warn('[Pronunciation] Web Speech API not supported, will use server fallback');
+            this.useServerFallback = true;
+            this.checkServerAvailability();
             return;
         }
 
@@ -49,63 +81,231 @@ class PronunciationService {
 
         this.recognition.onresult = (event: any) => {
             const result = event.results[0][0];
-            this.handleResult(result.transcript, result.confidence);
+            this.handleResult(result.transcript, result.confidence, 'webspeech');
         };
 
         this.recognition.onerror = (event: any) => {
-            console.error('[Pronunciation] Error:', event.error);
+            console.error('[Pronunciation] Web Speech error:', event.error);
             this.isListening = false;
+
+            // On certain errors, try server fallback
+            if (['network', 'service-not-allowed', 'not-allowed'].includes(event.error)) {
+                console.log('[Pronunciation] Trying server fallback due to error');
+                this.useServerFallback = true;
+                this.checkServerAvailability();
+            }
 
             eventBus.emit('PRONUNCIATION_ERROR' as any, {
                 error: event.error
             });
         };
 
-        // Store session ID at creation for stale callback detection
         const boundSessionId = this.sessionId;
         this.recognition.onend = () => {
-            // Ignore stale callbacks from previous sessions
             if (boundSessionId === this.sessionId) {
                 this.isListening = false;
                 eventBus.emit('PRONUNCIATION_ENDED' as any, {});
             }
         };
 
-        console.log('[Pronunciation] Service initialized');
+        console.log('[Pronunciation] Service initialized with Web Speech API');
+    }
+
+    /**
+     * Check if server-side transcription is available
+     */
+    async checkServerAvailability(): Promise<boolean> {
+        try {
+            const response = await fetch(`${API_BASE}/api/v1/pronunciation/transcribe/status`);
+            if (!response.ok) {
+                this.serverAvailable = false;
+                return false;
+            }
+            
+            const status: TranscriptionStatus = await response.json();
+            this.serverAvailable = status.available;
+            
+            console.log(`[Pronunciation] Server transcription: ${status.available ? 'available' : 'unavailable'}`);
+            return status.available;
+        } catch (err) {
+            console.warn('[Pronunciation] Failed to check server status:', err);
+            this.serverAvailable = false;
+            return false;
+        }
     }
 
     /**
      * Start listening for pronunciation
      */
-    startListening(expectedWord: string, onResult?: PronunciationCallback): void {
+    async startListening(expectedWord: string, onResult?: PronunciationCallback): Promise<void> {
+        // Increment session ID to invalidate any pending callbacks
+        this.sessionId++;
+        this.expectedWord = expectedWord.toLowerCase().trim();
+        this.onResultCallback = onResult || null;
+
+        if (this.useServerFallback) {
+            await this.startServerListening();
+        } else {
+            this.startWebSpeechListening();
+        }
+    }
+
+    /**
+     * Start Web Speech API listening
+     */
+    private startWebSpeechListening(): void {
         if (!this.recognition) {
-            console.error('[Pronunciation] Not supported');
+            console.error('[Pronunciation] Web Speech API not available');
             return;
         }
 
         if (this.isListening) {
-            // Abort immediately to prevent race condition
             this.recognition.abort();
             this.isListening = false;
         }
-
-        // Increment session ID to invalidate any pending callbacks
-        this.sessionId++;
-
-        this.expectedWord = expectedWord.toLowerCase().trim();
-        this.onResultCallback = onResult || null;
 
         try {
             this.recognition.start();
             this.isListening = true;
 
             eventBus.emit('PRONUNCIATION_STARTED' as any, {
-                expectedWord: this.expectedWord
+                expectedWord: this.expectedWord,
+                source: 'webspeech'
             });
 
-            console.log(`[Pronunciation] Listening for: "${expectedWord}"`);
+            console.log(`[Pronunciation] Web Speech listening for: "${this.expectedWord}"`);
         } catch (err) {
-            console.error('[Pronunciation] Failed to start:', err);
+            console.error('[Pronunciation] Failed to start Web Speech:', err);
+        }
+    }
+
+    /**
+     * Start server-side transcription with audio recording
+     */
+    private async startServerListening(): Promise<void> {
+        // Check server availability if not yet checked
+        if (this.serverAvailable === null) {
+            await this.checkServerAvailability();
+        }
+
+        if (!this.serverAvailable) {
+            console.error('[Pronunciation] Server transcription not available');
+            eventBus.emit('PRONUNCIATION_ERROR' as any, {
+                error: 'Speech recognition not available in this browser'
+            });
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            
+            this.audioChunks = [];
+            this.mediaRecorder = new MediaRecorder(stream, {
+                mimeType: this.getSupportedMimeType()
+            });
+
+            this.mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    this.audioChunks.push(event.data);
+                }
+            };
+
+            this.mediaRecorder.onstop = async () => {
+                // Stop all tracks to release microphone
+                stream.getTracks().forEach(track => track.stop());
+                
+                // Send audio to server for transcription
+                await this.sendAudioToServer();
+            };
+
+            this.mediaRecorder.start();
+            this.isListening = true;
+
+            eventBus.emit('PRONUNCIATION_STARTED' as any, {
+                expectedWord: this.expectedWord,
+                source: 'whisper'
+            });
+
+            console.log(`[Pronunciation] Server recording for: "${this.expectedWord}"`);
+
+            // Auto-stop after 5 seconds (kids shouldn't speak longer)
+            setTimeout(() => {
+                if (this.isListening && this.mediaRecorder?.state === 'recording') {
+                    this.stopListening();
+                }
+            }, 5000);
+
+        } catch (err) {
+            console.error('[Pronunciation] Failed to start recording:', err);
+            eventBus.emit('PRONUNCIATION_ERROR' as any, {
+                error: 'microphone-not-allowed'
+            });
+        }
+    }
+
+    /**
+     * Get supported MIME type for audio recording
+     */
+    private getSupportedMimeType(): string {
+        const types = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/ogg;codecs=opus',
+            'audio/mp4',
+        ];
+
+        for (const type of types) {
+            if (MediaRecorder.isTypeSupported(type)) {
+                return type;
+            }
+        }
+
+        return 'audio/webm'; // Fallback
+    }
+
+    /**
+     * Send recorded audio to server for transcription
+     */
+    private async sendAudioToServer(): Promise<void> {
+        if (this.audioChunks.length === 0) {
+            console.warn('[Pronunciation] No audio recorded');
+            return;
+        }
+
+        const audioBlob = new Blob(this.audioChunks, { type: this.getSupportedMimeType() });
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.webm');
+        formData.append('language', 'en');
+
+        try {
+            const response = await fetch(`${API_BASE}/api/v1/pronunciation/transcribe`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (response.status === 429) {
+                // Rate limited
+                eventBus.emit('PRONUNCIATION_ERROR' as any, {
+                    error: 'rate-limited'
+                });
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            const result = await response.json();
+            this.handleResult(result.text, result.confidence, 'whisper');
+
+        } catch (err) {
+            console.error('[Pronunciation] Server transcription failed:', err);
+            eventBus.emit('PRONUNCIATION_ERROR' as any, {
+                error: 'transcription-failed'
+            });
+        } finally {
+            this.isListening = false;
+            eventBus.emit('PRONUNCIATION_ENDED' as any, {});
         }
     }
 
@@ -113,37 +313,50 @@ class PronunciationService {
      * Stop listening
      */
     stopListening(): void {
-        if (this.recognition && this.isListening) {
+        if (this.useServerFallback) {
+            if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+                this.mediaRecorder.stop();
+            }
+        } else if (this.recognition && this.isListening) {
             this.recognition.stop();
-            this.isListening = false;
         }
+        this.isListening = false;
     }
 
     /**
-     * Handle speech recognition result
+     * Handle speech recognition result (from either source)
      */
-    private async handleResult(transcript: string, confidence: number): Promise<void> {
+    private async handleResult(
+        transcript: string,
+        confidence: number,
+        source: 'webspeech' | 'whisper'
+    ): Promise<void> {
         const cleanTranscript = transcript.toLowerCase().trim();
 
-        console.log(`[Pronunciation] Heard: "${transcript}" (${(confidence * 100).toFixed(1)}%)`);
+        console.log(`[Pronunciation] [${source}] Heard: "${transcript}" (${(confidence * 100).toFixed(1)}%)`);
 
-        // Local accuracy check
+        // Local accuracy check with kid bonus
         const localAccuracy = this.calculateSimilarity(cleanTranscript, this.expectedWord);
+        const kidBonus = 0.2; // +20% bonus for kids (as per design)
+        const finalAccuracy = Math.min(1, localAccuracy + (localAccuracy > 0.5 ? kidBonus * (1 - localAccuracy) : 0));
 
         const result: PronunciationResult = {
             transcript,
             confidence,
-            accuracy: Math.round(localAccuracy * 100),
-            isCorrect: localAccuracy > 0.8
+            accuracy: Math.round(finalAccuracy * 100),
+            isCorrect: finalAccuracy > 0.7, // Lower threshold for kids
+            source,
         };
 
-        // Try AI assessment for detailed feedback
+        // Get dynamic feedback from database templates
         try {
-            const aiResult = await this.assessWithAI(this.expectedWord, transcript);
-            if (aiResult.feedback) {
-                result.feedback = aiResult.feedback;
-            }
+            const feedback = await this.getDynamicFeedback(
+                this.expectedWord,
+                result.accuracy || 0
+            );
+            result.feedback = `${feedback.emoji} ${feedback.message}`;
         } catch {
+            // Fallback to simple messages
             result.feedback = result.isCorrect
                 ? "Great job! 🌟"
                 : "Good try! Let's practice more! 💪";
@@ -167,7 +380,6 @@ class PronunciationService {
         if (!str1 || !str2) return 0;
 
         // Check if expected word appears in transcript (handles "the cat" matching "cat")
-        // Common for kids adding articles/filler words
         if (str1.includes(str2) || str2.includes(str1)) {
             return 0.95;
         }
@@ -187,37 +399,50 @@ class PronunciationService {
             }
         }
 
-        // Convert distance to similarity (0 to 1)
         return 1 - dp[m][n] / Math.max(m, n);
     }
 
     /**
-     * Call backend AI for detailed pronunciation assessment
+     * Get dynamic feedback from database templates
      */
-    private async assessWithAI(targetWord: string, transcript: string): Promise<{ feedback?: string }> {
-        try {
-            const response = await fetch(`${API_BASE}/api/v1/ai/assess-pronunciation`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    target_word: targetWord,
-                    transcript: transcript
-                })
-            });
+    private async getDynamicFeedback(word: string, score: number): Promise<GeneratedFeedback> {
+        const response = await fetch(`${API_BASE}/api/v1/pronunciation/feedback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                word,
+                score,
+                attempt_number: 1,
+                language: 'en'
+            })
+        });
 
-            if (!response.ok) throw new Error('API error');
-
-            return await response.json();
-        } catch {
-            return {};
+        if (!response.ok) {
+            throw new Error('Failed to get feedback');
         }
+
+        return await response.json();
     }
 
     /**
-     * Check if speech recognition is supported
+     * Check if speech recognition is supported (either Web Speech or server)
      */
     isSupported(): boolean {
+        return !!this.recognition || this.serverAvailable === true;
+    }
+
+    /**
+     * Check if Web Speech API is available
+     */
+    hasWebSpeech(): boolean {
         return !!this.recognition;
+    }
+
+    /**
+     * Check if using server fallback
+     */
+    isUsingServerFallback(): boolean {
+        return this.useServerFallback;
     }
 
     /**
@@ -225,6 +450,16 @@ class PronunciationService {
      */
     getIsListening(): boolean {
         return this.isListening;
+    }
+
+    /**
+     * Force use of server fallback (useful for testing)
+     */
+    setUseServerFallback(use: boolean): void {
+        this.useServerFallback = use;
+        if (use) {
+            this.checkServerAvailability();
+        }
     }
 }
 

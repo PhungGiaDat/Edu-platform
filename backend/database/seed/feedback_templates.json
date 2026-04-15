@@ -1,0 +1,172 @@
+[
+  {
+    "category": "excellent",
+    "template": "Wow! You said '{word}' like a superstar!",
+    "emoji": "🌟",
+    "weight": 2,
+    "language": "en"
+  },
+  {
+    "category": "excellent",
+    "template": "Amazing! '{word}' sounded perfect!",
+    "emoji": "🎉",
+    "weight": 2,
+    "language": "en"
+  },
+  {
+    "category": "excellent",
+    "template": "You're a pronunciation champion! '{word}' was spot on!",
+    "emoji": "🏆",
+    "weight": 1,
+    "language": "en"
+  },
+  {
+    "category": "excellent",
+    "template": "Fantastic! You nailed '{word}'!",
+    "emoji": "✨",
+    "weight": 2,
+    "language": "en"
+  },
+  {
+    "category": "excellent",
+    "template": "Super duper! '{word}' was perfect!",
+    "emoji": "🚀",
+    "weight": 1,
+    "language": "en"
+  },
+  {
+    "category": "excellent",
+    "template": "You're amazing! '{word}' sounded just right!",
+    "emoji": "💫",
+    "weight": 2,
+    "language": "en"
+  },
+  {
+    "category": "excellent",
+    "template": "Brilliant! You said '{word}' like a pro!",
+    "emoji": "⭐",
+    "weight": 1,
+    "language": "en"
+  },
+  {
+    "category": "excellent",
+    "template": "Hooray! '{word}' was absolutely wonderful!",
+    "emoji": "🎊",
+    "weight": 1,
+    "language": "en"
+  },
+
+  {
+    "category": "good",
+    "template": "Great job with '{word}'! You're getting better!",
+    "emoji": "👍",
+    "weight": 2,
+    "language": "en"
+  },
+  {
+    "category": "good",
+    "template": "Nice work on '{word}'! Keep it up!",
+    "emoji": "🌈",
+    "weight": 2,
+    "language": "en"
+  },
+  {
+    "category": "good",
+    "template": "Good effort! '{word}' is coming along nicely!",
+    "emoji": "💪",
+    "weight": 2,
+    "language": "en"
+  },
+  {
+    "category": "good",
+    "template": "You're doing well with '{word}'! Almost there!",
+    "emoji": "📈",
+    "weight": 1,
+    "language": "en"
+  },
+  {
+    "category": "good",
+    "template": "Keep going! '{word}' sounds really good!",
+    "emoji": "🎯",
+    "weight": 2,
+    "language": "en"
+  },
+  {
+    "category": "good",
+    "template": "Awesome try! '{word}' is getting better each time!",
+    "emoji": "🌻",
+    "weight": 1,
+    "language": "en"
+  },
+  {
+    "category": "good",
+    "template": "You're on the right track with '{word}'!",
+    "emoji": "🛤️",
+    "weight": 1,
+    "language": "en"
+  },
+  {
+    "category": "good",
+    "template": "Well done! '{word}' just needs a little more practice!",
+    "emoji": "🎵",
+    "weight": 1,
+    "language": "en"
+  },
+
+  {
+    "category": "needs_practice",
+    "template": "Great try with '{word}'! Let's practice together!",
+    "emoji": "💫",
+    "weight": 2,
+    "language": "en"
+  },
+  {
+    "category": "needs_practice",
+    "template": "You can do it! Let's try '{word}' again!",
+    "emoji": "🌟",
+    "weight": 2,
+    "language": "en"
+  },
+  {
+    "category": "needs_practice",
+    "template": "Practice makes perfect! '{word}' will get easier!",
+    "emoji": "🎯",
+    "weight": 2,
+    "language": "en"
+  },
+  {
+    "category": "needs_practice",
+    "template": "Keep trying, superstar! '{word}' takes time to learn!",
+    "emoji": "⭐",
+    "weight": 1,
+    "language": "en"
+  },
+  {
+    "category": "needs_practice",
+    "template": "Nice effort! Every try with '{word}' helps you improve!",
+    "emoji": "🌱",
+    "weight": 2,
+    "language": "en"
+  },
+  {
+    "category": "needs_practice",
+    "template": "You're learning! '{word}' is a tricky one, but you'll get it!",
+    "emoji": "🦋",
+    "weight": 1,
+    "language": "en"
+  },
+  {
+    "category": "needs_practice",
+    "template": "Don't give up! '{word}' will sound perfect soon!",
+    "emoji": "🌈",
+    "weight": 1,
+    "language": "en"
+  },
+  {
+    "category": "needs_practice",
+    "template": "Every practice counts! You're doing great with '{word}'!",
+    "emoji": "💪",
+    "weight": 1,
+    "language": "en"
+  }
+]

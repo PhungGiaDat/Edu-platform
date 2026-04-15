@@ -34,5 +34,10 @@ langchain-core>=0.3.0
 langchain-google-genai>=2.0.0
 google-generativeai>=0.8.0
 
+# === Speech-to-Text (Server-side fallback for Safari/Firefox) ===
+# faster-whisper uses CTranslate2 for efficient CPU inference
+# Only ~150MB RAM for 'tiny' model
+faster-whisper>=1.0.0
+
 # === Production Server ===
 gunicorn>=23.0.0

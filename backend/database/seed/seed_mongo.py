@@ -98,12 +98,61 @@ def upsert_seed_data(collection_name: str, file_path: Path, unique_key: str) -> 
     )
 
 
+def upsert_feedback_templates(file_path: Path) -> None:
+    """
+    Seed feedback templates with composite unique key (category + template).
+    This ensures we don't duplicate templates while allowing updates.
+    """
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    inserted = updated = 0
+    now = datetime.now(timezone.utc)
+
+    for doc in data:
+        # Add timestamps if not present
+        doc.setdefault("created_at", now)
+        doc.setdefault("updated_at", now)
+        doc.setdefault("is_active", True)
+
+        # Use category + template as composite unique key
+        category = doc.get("category")
+        template = doc.get("template")
+
+        if not category or not template:
+            print(f"  ⚠️  Skipping feedback template with missing category/template")
+            continue
+
+        result = db["feedback_templates"].update_one(
+            {"category": category, "template": template},
+            {"$set": doc},
+            upsert=True,
+        )
+
+        if result.upserted_id:
+            inserted += 1
+        else:
+            updated += 1
+
+    print(
+        f"  ✅ 'feedback_templates': {inserted} inserted, {updated} updated "
+        f"(total {len(data)} documents)"
+    )
+
+
 if __name__ == "__main__":
     base = Path(__file__).parent
 
     print("\n[SEED] Seeding collections...")
     upsert_seed_data("flashcards",     base / "flashcards.json",      unique_key="qr_id")
     upsert_seed_data("ar_objects",     base / "ar_objects.json",      unique_key="ar_tag")
+
+    # Seed feedback templates (for dynamic pronunciation feedback)
+    feedback_templates_path = base / "feedback_templates.json"
+    if feedback_templates_path.exists():
+        upsert_feedback_templates(feedback_templates_path)
+    else:
+        print(f"  ⏭️  'feedback_templates': file not found, skipping")
 
     # Only seed these if the files have meaningful content (non-empty arrays)
     for name, filename, key in [
@@ -132,5 +181,8 @@ if __name__ == "__main__":
     print("      Index name : flashcard_vector_index")
     print("      Collection : edu_platform.flashcards")
     print("      Field path : vector_embedding")
-    print("      Dimensions : 768")
+    print("      Dimensions : 3072  (Gemini embedding-001 produces 3072-dim vectors)")
     print("      Similarity : cosine")
+    print("")
+    print("  ⚠️  IMPORTANT: If you previously created the index with 768 dimensions,")
+    print("      you MUST delete it and recreate with 3072 dimensions!")
