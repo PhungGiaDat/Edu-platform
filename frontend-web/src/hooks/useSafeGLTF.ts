@@ -36,19 +36,49 @@ export interface SafeGLTFResult {
 }
 
 // Singleton loader instances for reuse
-let gltfLoader: GLTFLoader | null = null;
 let dracoLoader: DRACOLoader | null = null;
 
-function getGLTFLoader(): GLTFLoader {
-  if (!gltfLoader) {
-    gltfLoader = new GLTFLoader();
-    
-    // Set up DRACO decoder for compressed models
+function getDracoLoader(): DRACOLoader {
+  if (!dracoLoader) {
     dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-    gltfLoader.setDRACOLoader(dracoLoader);
   }
-  return gltfLoader;
+  return dracoLoader;
+}
+
+function createGLTFLoader(modelUrl: string): GLTFLoader {
+  const manager = new THREE.LoadingManager();
+  const baseModelUrl = new URL(modelUrl);
+
+  // Keep signed query params for GLTF external resources (textures/bin files).
+  // Supabase signed URLs commonly require this for every dependent request.
+  manager.setURLModifier((resourceUrl) => {
+    try {
+      if (!resourceUrl || resourceUrl.startsWith('data:') || resourceUrl.startsWith('blob:')) {
+        return resourceUrl;
+      }
+
+      const resolved = new URL(resourceUrl, baseModelUrl);
+      const modelHasQuery = baseModelUrl.search.length > 1;
+      const resourceHasQuery = resolved.search.length > 1;
+
+      if (
+        modelHasQuery &&
+        !resourceHasQuery &&
+        resolved.origin === baseModelUrl.origin
+      ) {
+        resolved.search = baseModelUrl.search;
+      }
+
+      return resolved.toString();
+    } catch {
+      return resourceUrl;
+    }
+  });
+
+  const loader = new GLTFLoader(manager);
+  loader.setDRACOLoader(getDracoLoader());
+  return loader;
 }
 
 // Cache for loaded models to avoid re-downloading
@@ -132,7 +162,7 @@ export function useSafeGLTF(url: string | null | undefined): SafeGLTFResult {
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
-    const loader = getGLTFLoader();
+    const loader = createGLTFLoader(url);
 
     // Load the model asynchronously
     loader.load(
@@ -236,7 +266,7 @@ export function preloadGLTFSafe(url: string): Promise<GLTF | null> {
       return;
     }
 
-    const loader = getGLTFLoader();
+    const loader = createGLTFLoader(url);
     
     loader.load(
       url,

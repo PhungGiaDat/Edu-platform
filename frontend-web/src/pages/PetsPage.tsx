@@ -329,6 +329,7 @@ export default function PetsPage() {
                                                 }
                                             >
                                                 <PetViewer3D
+                                                    key={`${displayPet.pet_id}:${displayPet.model_url}`}
                                                     pet={displayPet}
                                                     height="280px"
                                                     autoRotate={true}
