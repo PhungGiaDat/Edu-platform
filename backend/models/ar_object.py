@@ -30,6 +30,7 @@ class ARObject(Document):
     
     # Model URLs
     model_3d_url: str  # URL to .glb/.gltf 3D model
+    texture_url: Optional[str] = None  # URL to separate texture (optional)
     image_2d_url: str  # URL to 2D fallback image
     
     # Transform properties
@@ -56,6 +57,7 @@ class ARObject(Document):
                 "glb_size": 0.5,
                 "nft_base_url": "/static/assets/target/apple",
                 "model_3d_url": "/static/assets/models/apple.glb",
+                "texture_url": "/static/assets/textures/apple.png",
                 "image_2d_url": "/static/images/apple.png",
                 "position": "0 0.5 0",
                 "rotation": "0 0 0",
@@ -73,6 +75,7 @@ class ARObjectCreate(BaseModel):
     glb_size: float = 1.0
     nft_base_url: str
     model_3d_url: str
+    texture_url: Optional[str] = None
     image_2d_url: str
     position: str = "0 0 0"
     rotation: str = "0 0 0"
@@ -86,6 +89,7 @@ class ARObjectUpdate(BaseModel):
     glb_size: Optional[float] = None
     nft_base_url: Optional[str] = None
     model_3d_url: Optional[str] = None
+    texture_url: Optional[str] = None
     image_2d_url: Optional[str] = None
     position: Optional[str] = None
     rotation: Optional[str] = None
@@ -101,6 +105,7 @@ class ARObjectResponse(BaseModel):
     glb_size: float
     nft_base_url: str
     model_3d_url: str
+    texture_url: Optional[str] = None
     image_2d_url: str
     position: str
     rotation: str
@@ -125,6 +130,7 @@ class ArObjectSchema(BaseModel):
     glb_size: float
     nft_base_url: str
     model_3d_url: str
+    texture_url: Optional[str] = None
     image_2d_url: str
     position: str
     rotation: str

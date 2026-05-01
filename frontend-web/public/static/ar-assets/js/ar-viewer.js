@@ -1456,6 +1456,10 @@
                 texture.flipY = false;
                 texture.colorSpace = THREE.SRGBColorSpace;
                 
+                // Sharp pixel filtering for Cube Pets
+                texture.minFilter = THREE.NearestFilter;
+                texture.magFilter = THREE.NearestFilter;
+                
                 const mesh = modelEl.getObject3D('mesh');
                 if (!mesh) {
                     log('⚠️', 'Mesh not found on model element yet');
@@ -1466,8 +1470,14 @@
                     if (node.isMesh) {
                         log('🎨', `Applying texture to mesh node: ${node.name}`);
                         if (node.material) {
-                            node.material.map = texture;
-                            node.material.needsUpdate = true;
+                            // Support for single or multiple materials
+                            const materials = Array.isArray(node.material) ? node.material : [node.material];
+                            materials.forEach(mat => {
+                                if (mat) {
+                                    mat.map = texture;
+                                    mat.needsUpdate = true;
+                                }
+                            });
                         }
                     }
                 });
