@@ -217,11 +217,15 @@ export function useSafeGLTF(url: string | null | undefined, textureUrl?: string 
 
                 const externalDependencies = getExternalDependencies();
                 if (externalDependencies.length > 0 && !textureUrl) {
-                    console.warn('[useSafeGLTF] Legacy split-file model detected:', url, externalDependencies);
+                    console.warn('[useSafeGLTF] Legacy split-file model detected without override:', url, externalDependencies);
                     setError('Legacy split-file model detected. Re-upload as self-contained optimized GLB.');
                     setState('error');
                     setProgress(0);
                     return;
+                }
+                
+                if (externalDependencies.length > 0) {
+                    console.log('[useSafeGLTF] External dependencies detected but override is available. Proceeding...', externalDependencies);
                 }
                 
                 // If a separate textureUrl is provided, override the model's textures
@@ -242,15 +246,22 @@ export function useSafeGLTF(url: string | null | undefined, textureUrl?: string 
                         clearTimeout(textureTimeout);
                         if (signal.aborted) return;
 
+                        // Pixel-perfect sharp look for Cube Pets
+                        texture.minFilter = THREE.NearestFilter;
+                        texture.magFilter = THREE.NearestFilter;
                         texture.flipY = false; 
                         texture.colorSpace = THREE.SRGBColorSpace;
                         
                         loadedGltf.scene.traverse((child) => {
                             if (child instanceof THREE.Mesh) {
-                                if (child.material) {
-                                    child.material.map = texture;
-                                    child.material.needsUpdate = true;
-                                }
+                                // Apply to single material or array of materials
+                                const materials = Array.isArray(child.material) ? child.material : [child.material];
+                                materials.forEach(mat => {
+                                    if (mat) {
+                                        mat.map = texture;
+                                        mat.needsUpdate = true;
+                                    }
+                                });
                             }
                         });
                         
