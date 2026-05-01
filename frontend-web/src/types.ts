@@ -5,6 +5,7 @@ export type ARTarget = {
   nft_base_url: string;
   image_2d_url?: string;
   model_3d_url: string;
+  texture_url?: string;
   position?: string;
   rotation?: string;
   scale?: string;
@@ -15,6 +16,7 @@ export type ARCombo = {
   required_tags: string[];
   image_2d_url?: string;
   model_3d_url: string;
+  texture_url?: string;
   center_transform?: { position?: string; rotation?: string; scale?: string };
 };
 

@@ -32,8 +32,10 @@ interface ARContainerV2Props {
     mindUrl?: string;
     modelUrl?: string;
     imageUrl?: string;
+    textureUrl?: string;
     modelUrl2?: string;
     imageUrl2?: string;
+    textureUrl2?: string;
     /** Word label for click-to-sound on target 0 */
     word?: string;
     /** Word label for click-to-sound on target 1 */
@@ -57,8 +59,10 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     mindUrl,
     modelUrl,
     imageUrl,
+    textureUrl,
     modelUrl2,
     imageUrl2,
+    textureUrl2,
     word,
     word2,
     cardCount: _cardCount,   // accepted for API compatibility, not used internally
@@ -76,19 +80,21 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     const [isReady, setIsReady] = useState(false);
 
     const iframeRef = useRef<HTMLIFrameElement>(null);       // main iframe
-    const pipRef    = useRef<HTMLIFrameElement>(null);       // background scanner iframe (invisible)
+    const pipRef = useRef<HTMLIFrameElement>(null);       // background scanner iframe (invisible)
 
     // ========== VIEWER SRC ==========
     const getViewerSrc = useCallback(() => {
         if (!mindUrl) return null;
         const params = new URLSearchParams();
         params.set('mind', mindUrl);
-        if (modelUrl)  params.set('model',  modelUrl);
-        if (imageUrl)  params.set('image',  imageUrl);
+        if (modelUrl) params.set('model', modelUrl);
+        if (imageUrl) params.set('image', imageUrl);
+        if (textureUrl) params.set('textureUrl', textureUrl);
         if (modelUrl2) params.set('model2', modelUrl2);
         if (imageUrl2) params.set('image2', imageUrl2);
+        if (textureUrl2) params.set('textureUrl2', textureUrl2);
         // Pass words for click-to-sound in ar-viewer.js
-        if (word)  params.set('word',  word);
+        if (word) params.set('word', word);
         if (word2) params.set('word2', word2);
         // Pass combo model URL for proximity combo
         if (comboModelUrl) params.set('comboModel', comboModelUrl);
@@ -99,8 +105,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     const mainSrc = (() => {
         switch (phase) {
             case 'SCANNING': return '/ar-scanner.html';
-            case 'VIEWING':  return getViewerSrc();
-            default:         return null;
+            case 'VIEWING': return getViewerSrc();
+            default: return null;
         }
     })();
 
@@ -294,18 +300,18 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             sendToScanner('RESUME_SCANNING');
         };
 
-        eventBus.on('AR_SWITCH_TO_VIEWER'  as any, handleSwitchToViewer);
+        eventBus.on('AR_SWITCH_TO_VIEWER' as any, handleSwitchToViewer);
         eventBus.on('AR_SWITCH_TO_SCANNER' as any, handleSwitchToScanner);
-        eventBus.on('AR_SET_MODE'          as any, handleSetMode);
-        eventBus.on('AR_COMMAND'           as any, handleARCommand);
-        eventBus.on('AR_RESUME_SCAN'       as any, handleResumeScan);
+        eventBus.on('AR_SET_MODE' as any, handleSetMode);
+        eventBus.on('AR_COMMAND' as any, handleARCommand);
+        eventBus.on('AR_RESUME_SCAN' as any, handleResumeScan);
 
         return () => {
-            eventBus.off('AR_SWITCH_TO_VIEWER'  as any, handleSwitchToViewer);
+            eventBus.off('AR_SWITCH_TO_VIEWER' as any, handleSwitchToViewer);
             eventBus.off('AR_SWITCH_TO_SCANNER' as any, handleSwitchToScanner);
-            eventBus.off('AR_SET_MODE'          as any, handleSetMode);
-            eventBus.off('AR_COMMAND'           as any, handleARCommand);
-            eventBus.off('AR_RESUME_SCAN'       as any, handleResumeScan);
+            eventBus.off('AR_SET_MODE' as any, handleSetMode);
+            eventBus.off('AR_COMMAND' as any, handleARCommand);
+            eventBus.off('AR_RESUME_SCAN' as any, handleResumeScan);
         };
     }, [transitionTo, sendToMain, sendToScanner, sendTypedMessage, phase]);
 

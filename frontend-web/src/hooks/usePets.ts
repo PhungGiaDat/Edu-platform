@@ -24,6 +24,7 @@ export interface Pet {
     name: string;
     name_vi: string;
     model_url: string;
+    texture_url: string | null;
     thumbnail_url: string | null;
     category: string;
     pack_source: string;
