@@ -20,6 +20,7 @@ class ComboResponse(BaseModel):
     description: str
     required_tags: List[str]
     model_3d_url: str
+    texture_url: Optional[str] = None
     image_2d_url: str
     combo_mind_url: Optional[str] = None  # Mind file with both targets
     bonus_xp: int = 100
@@ -43,6 +44,7 @@ def _to_combo_response(combo: dict) -> ComboResponse:
         description=combo.get("description", ""),
         required_tags=combo.get("required_tags", []),
         model_3d_url=combo.get("model_3d_url", ""),
+        texture_url=combo.get("texture_url"),
         image_2d_url=combo.get("image_2d_url", ""),
         combo_mind_url=combo.get("combo_mind_url"),
         bonus_xp=combo.get("bonus_xp", combo.get("reward_xp", 100))

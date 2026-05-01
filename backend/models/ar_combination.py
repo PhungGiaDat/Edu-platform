@@ -21,6 +21,7 @@ class ArCombinationSchema(BaseModel):
     description: str = Field(..., description="Description of the combination")
     required_tags: List[str] = Field(..., min_length=2)
     model_3d_url: str
+    texture_url: Optional[str] = None
     image_2d_url: Optional[str] = None
     combo_mind_url: Optional[str] = None  # MindAR .mind file with both target images
     bonus_xp: int = Field(default=100, description="XP awarded when combo is triggered")
