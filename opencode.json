@@ -1,0 +1,44 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 10000
+  },
+  "default_agent": "orchestrator",
+  "agent": {
+    "orchestrator": {
+      "description": "Team orchestrator that coordinates SDLC agents and manages development workflow",
+      "mode": "primary",
+      "model": "github-copilot/GPT-5.2-Codex",
+      "temperature": 0.3,
+      "color": "#8E44AD"
+    }
+  },
+  "permission": {
+    "edit": "allow",
+    "bash": "allow"
+  },
+  "instructions": [
+    "./AGENTS.md",
+    "./.opencode/rules/*.md"
+  ],
+  "mcp": {
+    "ast-grep": {
+      "type": "local",
+      "command": [
+        "sh",
+        "-c",
+        "[ -f .ast-grep/sgconfig.yml ] || (mkdir -p .ast-grep && printf 'ruleDirs: []\\n' > .ast-grep/sgconfig.yml); exec uvx --from git+https://github.com/ast-grep/ast-grep-mcp ast-grep-server --config .ast-grep/sgconfig.yml"
+      ]
+    },
+    "mcpls": {
+      "type": "local",
+      "command": ["mcpls"]
+    },
+    "qmd": {
+      "type": "local",
+      "command": ["qmd", "mcp"]
+    }
+  }
+}

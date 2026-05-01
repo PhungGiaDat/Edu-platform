@@ -21,6 +21,33 @@ const PetViewer3D = lazy(() =>
     import('@/components/pets/PetViewer3D').then(m => ({ default: m.PetViewer3D }))
 );
 
+const SUPPORTED_MODEL_EXTENSIONS = new Set(['.glb', '.gltf']);
+
+function getPathExtension(pathname: string): string {
+    const lastDotIndex = pathname.lastIndexOf('.');
+    if (lastDotIndex < 0) {
+        return '';
+    }
+    return pathname.slice(lastDotIndex).toLowerCase();
+}
+
+function isRenderableModelUrl(modelUrl: string | null | undefined): boolean {
+    if (!modelUrl) {
+        return false;
+    }
+
+    try {
+        const parsed = new URL(modelUrl);
+        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+            return false;
+        }
+
+        return SUPPORTED_MODEL_EXTENSIONS.has(getPathExtension(parsed.pathname));
+    } catch {
+        return false;
+    }
+}
+
 // ─── Pet Collection Card ────────────────────────────────────────────────────
 function PetCollectionCard({ 
     pet, 
@@ -241,6 +268,7 @@ export default function PetsPage() {
 
     const unlockedCount = pets.filter(p => p.is_unlocked).length;
     const displayPet = selectedPet || activePet || pets[0];
+    const canRenderDisplayPet3D = isRenderableModelUrl(displayPet?.model_url);
 
     return (
         <div className="min-h-screen clay-bg-playful">
@@ -320,7 +348,7 @@ export default function PetsPage() {
                                 <>
                                     {/* 3D Pet Viewer */}
                                     <div className="rounded-2xl overflow-hidden mb-4 bg-gradient-to-b from-blue-100/50 to-pink-100/50">
-                                        {displayPet.model_url ? (
+                                        {canRenderDisplayPet3D ? (
                                             <Suspense
                                                 fallback={
                                                     <div className="h-64 flex items-center justify-center">
@@ -338,9 +366,20 @@ export default function PetsPage() {
                                                     background="transparent"
                                                 />
                                             </Suspense>
+                                        ) : displayPet.thumbnail_url ? (
+                                            <div className="h-64 flex items-center justify-center bg-white/30">
+                                                <img
+                                                    src={displayPet.thumbnail_url}
+                                                    alt={displayPet.name}
+                                                    className="w-full h-full object-contain"
+                                                />
+                                            </div>
                                         ) : (
-                                            <div className="h-64 flex items-center justify-center">
+                                            <div className="h-64 flex items-center justify-center flex-col gap-2 px-4 text-center">
                                                 <span className="text-7xl">{rarityConfig[displayPet.rarity].badge}</span>
+                                                <p className="text-xs font-semibold text-gray-600">
+                                                    3D preview disabled: use self-contained .glb/.gltf model_url
+                                                </p>
                                             </div>
                                         )}
                                     </div>

@@ -98,6 +98,7 @@ export interface PetViewer3DProps {
 
 interface Pet3DModelProps {
     url: string;
+    textureUrl?: string | null;
     scale: number;
     enableAnimation?: boolean;
     onLoad?: () => void;
@@ -110,14 +111,14 @@ interface Pet3DModelProps {
  * Pet3DModel - Safely loads and renders a GLTF model
  * Uses useSafeGLTF to prevent synchronous throws that crash React
  */
-function Pet3DModel({ url, scale, enableAnimation = true, onLoad, onError }: Pet3DModelProps) {
+function Pet3DModel({ url, textureUrl, scale, enableAnimation = true, onLoad, onError }: Pet3DModelProps) {
     const groupRef = useRef<THREE.Group>(null);
     const mixerRef = useRef<THREE.AnimationMixer | null>(null);
     const hasNotifiedLoad = useRef(false);
     const hasNotifiedError = useRef(false);
     
     // Use safe GLTF loading with URL pre-validation
-    const { gltf, state, error: loadError } = useSafeGLTF(url);
+    const { gltf, state, error: loadError } = useSafeGLTF(url, textureUrl);
     
     // Notify parent of errors
     useEffect(() => {
@@ -437,6 +438,7 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                     <Suspense fallback={<LoadingFallback />}>
                         <Pet3DModel
                             url={pet.model_url}
+                            textureUrl={pet.texture_url}
                             scale={scale}
                             onLoad={handleLoad}
                             onError={handleError}
@@ -451,6 +453,7 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                         <Suspense fallback={<LoadingFallback />}>
                             <Pet3DModel
                                 url={pet.model_url}
+                                textureUrl={pet.texture_url}
                                 scale={scale}
                                 onLoad={handleLoad}
                                 onError={handleError}

@@ -38,6 +38,26 @@ export interface SafeGLTFResult {
 // Singleton loader instances for reuse
 let dracoLoader: DRACOLoader | null = null;
 
+const SUPPORTED_MODEL_EXTENSIONS = new Set(['.glb', '.gltf']);
+
+function getPathExtension(pathname: string): string {
+  const lastDotIndex = pathname.lastIndexOf('.');
+  if (lastDotIndex < 0) {
+    return '';
+  }
+  return pathname.slice(lastDotIndex).toLowerCase();
+}
+
+function isSupportedModelUrl(modelUrl: string): boolean {
+  try {
+    const parsed = new URL(modelUrl);
+    const extension = getPathExtension(parsed.pathname);
+    return SUPPORTED_MODEL_EXTENSIONS.has(extension);
+  } catch {
+    return false;
+  }
+}
+
 function getDracoLoader(): DRACOLoader {
   if (!dracoLoader) {
     dracoLoader = new DRACOLoader();
@@ -46,9 +66,13 @@ function getDracoLoader(): DRACOLoader {
   return dracoLoader;
 }
 
-function createGLTFLoader(modelUrl: string): GLTFLoader {
+function createGLTFLoader(modelUrl: string): {
+  loader: GLTFLoader;
+  getExternalDependencies: () => string[];
+} {
   const manager = new THREE.LoadingManager();
   const baseModelUrl = new URL(modelUrl);
+  const externalDependencies = new Set<string>();
 
   // Keep signed query params for GLTF external resources (textures/bin files).
   // Supabase signed URLs commonly require this for every dependent request.
@@ -70,6 +94,14 @@ function createGLTFLoader(modelUrl: string): GLTFLoader {
         resolved.search = baseModelUrl.search;
       }
 
+      const isPrimaryModelRequest =
+        resolved.pathname === baseModelUrl.pathname &&
+        resolved.search === baseModelUrl.search;
+
+      if (!isPrimaryModelRequest) {
+        externalDependencies.add(resolved.toString());
+      }
+
       return resolved.toString();
     } catch {
       return resourceUrl;
@@ -78,7 +110,10 @@ function createGLTFLoader(modelUrl: string): GLTFLoader {
 
   const loader = new GLTFLoader(manager);
   loader.setDRACOLoader(getDracoLoader());
-  return loader;
+  return {
+    loader,
+    getExternalDependencies: () => Array.from(externalDependencies),
+  };
 }
 
 // Cache for loaded models to avoid re-downloading
@@ -110,7 +145,7 @@ const modelCache = new Map<string, GLTF>();
  * }
  * ```
  */
-export function useSafeGLTF(url: string | null | undefined): SafeGLTFResult {
+export function useSafeGLTF(url: string | null | undefined, textureUrl?: string | null): SafeGLTFResult {
   const [gltf, setGltf] = useState<GLTF | null>(null);
   const [state, setState] = useState<GLTFLoadingState>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -139,6 +174,13 @@ export function useSafeGLTF(url: string | null | undefined): SafeGLTFResult {
         setError('Invalid URL protocol - must be http or https');
         return;
       }
+
+      const extension = getPathExtension(parsed.pathname);
+      if (!SUPPORTED_MODEL_EXTENSIONS.has(extension)) {
+        setState('error');
+        setError('Unsupported model format. Use pipeline-generated self-contained .glb/.gltf assets.');
+        return;
+      }
     } catch {
       setState('error');
       setError('Invalid URL format');
@@ -162,25 +204,77 @@ export function useSafeGLTF(url: string | null | undefined): SafeGLTFResult {
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
-    const loader = createGLTFLoader(url);
+    const { loader, getExternalDependencies } = createGLTFLoader(url);
 
-    // Load the model asynchronously
-    loader.load(
-      url,
-      // onLoad callback
-      (loadedGltf) => {
-        if (signal.aborted) return;
-        
-        // Post-process: Removed aggressive fallback material application
-        // applyFallbackMaterials(loadedGltf.scene, url);
-        
-        // Cache the result
-        modelCache.set(url, loadedGltf);
-        
-        setGltf(loadedGltf);
-        setState('loaded');
-        setProgress(100);
-      },
+        // Load the model asynchronously
+        console.log('[useSafeGLTF] Starting load for:', url);
+        loader.load(
+            url,
+            // onLoad callback
+            (loadedGltf) => {
+                if (signal.aborted) return;
+                console.log('[useSafeGLTF] Model file loaded successfully:', url);
+
+                const externalDependencies = getExternalDependencies();
+                if (externalDependencies.length > 0 && !textureUrl) {
+                    console.warn('[useSafeGLTF] Legacy split-file model detected:', url, externalDependencies);
+                    setError('Legacy split-file model detected. Re-upload as self-contained optimized GLB.');
+                    setState('error');
+                    setProgress(0);
+                    return;
+                }
+                
+                // If a separate textureUrl is provided, override the model's textures
+                if (textureUrl) {
+                    console.log('[useSafeGLTF] Applying texture override:', textureUrl);
+                    const textureLoader = new THREE.TextureLoader();
+                    
+                    // Set a timeout for texture loading so it doesn't hang the whole model
+                    const textureTimeout = setTimeout(() => {
+                        console.warn('[useSafeGLTF] Texture load timed out, showing model without override');
+                        modelCache.set(url, loadedGltf);
+                        setGltf(loadedGltf);
+                        setState('loaded');
+                        setProgress(100);
+                    }, 5000);
+
+                    textureLoader.load(textureUrl, (texture) => {
+                        clearTimeout(textureTimeout);
+                        if (signal.aborted) return;
+
+                        texture.flipY = false; 
+                        texture.colorSpace = THREE.SRGBColorSpace;
+                        
+                        loadedGltf.scene.traverse((child) => {
+                            if (child instanceof THREE.Mesh) {
+                                if (child.material) {
+                                    child.material.map = texture;
+                                    child.material.needsUpdate = true;
+                                }
+                            }
+                        });
+                        
+                        console.log('[useSafeGLTF] Texture applied and model ready');
+                        modelCache.set(url, loadedGltf);
+                        setGltf(loadedGltf);
+                        setState('loaded');
+                        setProgress(100);
+                    }, undefined, (err) => {
+                        clearTimeout(textureTimeout);
+                        console.error('[useSafeGLTF] Failed to load separate texture:', textureUrl, err);
+                        modelCache.set(url, loadedGltf);
+                        setGltf(loadedGltf);
+                        setState('loaded');
+                        setProgress(100);
+                    });
+                } else {
+                    // Standard load for self-contained GLBs
+                    modelCache.set(url, loadedGltf);
+                    setGltf(loadedGltf);
+                    setState('loaded');
+                    setProgress(100);
+                }
+            },
       // onProgress callback
       (progressEvent) => {
         if (signal.aborted) return;
@@ -259,6 +353,11 @@ export function preloadGLTFSafe(url: string): Promise<GLTF | null> {
       return;
     }
 
+    if (!isSupportedModelUrl(url)) {
+      resolve(null);
+      return;
+    }
+
     // Check cache first
     const cached = modelCache.get(url);
     if (cached) {
@@ -266,11 +365,18 @@ export function preloadGLTFSafe(url: string): Promise<GLTF | null> {
       return;
     }
 
-    const loader = createGLTFLoader(url);
+    const { loader, getExternalDependencies } = createGLTFLoader(url);
     
     loader.load(
       url,
       (gltf) => {
+        const externalDependencies = getExternalDependencies();
+        if (externalDependencies.length > 0) {
+          console.warn('[preloadGLTFSafe] Skipping legacy split-file model:', url, externalDependencies);
+          resolve(null);
+          return;
+        }
+
         modelCache.set(url, gltf);
         resolve(gltf);
       },

@@ -49,12 +49,14 @@
     const modelUrl = params.get('model');
     const imageUrl = params.get('image');
     const modelUrl2 = params.get('model2');
+    const textureUrl = params.get('textureUrl'); // NEW: Texture for model 0
+    const textureUrl2 = params.get('textureUrl2'); // NEW: Texture for model 1
     const comboModelUrl = params.get('comboModel'); // NEW: combo model URL
     // Words for click-to-sound — stored in window globals so SET_WORD can update them too
     window._arWord0 = params.get('word') || '';
     window._arWord1 = params.get('word2') || '';
 
-    log('🔧', `Params: mind=${mindUrl}, model=${modelUrl}, word=${window._arWord0}`);
+    log('🔧', `Params: mind=${mindUrl}, model=${modelUrl}, texture=${textureUrl}, word=${window._arWord0}`);
 
     // ============ TYPED MESSAGE PROTOCOL ============
 
@@ -240,7 +242,16 @@
             assetItem.setAttribute('timeout', '15000');
             assetsEl.appendChild(assetItem);
             log('🔗', 'Setting gltf-model attribute on mode-3d-0');
-            document.getElementById('mode-3d-0').setAttribute('gltf-model', '#model-asset-0');
+            const model0El = document.getElementById('mode-3d-0');
+            model0El.setAttribute('gltf-model', '#model-asset-0');
+            
+            // Inject texture if provided
+            if (textureUrl) {
+                model0El.addEventListener('model-loaded', () => {
+                    log('🎨', 'Model 0 loaded, injecting texture:', textureUrl);
+                    loadTextureAndApply(model0El, textureUrl);
+                });
+            }
         } else {
             log('⚠️', 'No 3D model URL provided for target 0');
         }
@@ -287,7 +298,16 @@
                 }
             });
             assetsEl.appendChild(assetItem2);
-            document.getElementById('mode-3d-1').setAttribute('gltf-model', '#model-asset-1');
+            const model1El = document.getElementById('mode-3d-1');
+            model1El.setAttribute('gltf-model', '#model-asset-1');
+
+            // Inject texture if provided
+            if (textureUrl2) {
+                model1El.addEventListener('model-loaded', () => {
+                    log('🎨', 'Model 1 loaded, injecting texture:', textureUrl2);
+                    loadTextureAndApply(model1El, textureUrl2);
+                });
+            }
         } else {
             log('⚠️', 'No 3D model URL provided for target 1 (optional)');
         }
@@ -1415,6 +1435,50 @@
         audio.onended = () => {
             sendToParent('AUDIO_COMPLETE', { url });
         };
+    }
+
+    /**
+     * Helper to load an external texture and apply it to all meshes in a GLTF model
+     * This is the fix for split-file textures on Supabase
+     */
+    function loadTextureAndApply(modelEl, url) {
+        if (!url || !modelEl) return;
+
+        const loader = new THREE.TextureLoader();
+        loader.crossOrigin = 'anonymous';
+
+        loader.load(
+            url,
+            (texture) => {
+                log('✅', 'Texture loaded successfully:', url);
+                
+                // GLTF specific settings
+                texture.flipY = false;
+                texture.colorSpace = THREE.SRGBColorSpace;
+                
+                const mesh = modelEl.getObject3D('mesh');
+                if (!mesh) {
+                    log('⚠️', 'Mesh not found on model element yet');
+                    return;
+                }
+
+                mesh.traverse((node) => {
+                    if (node.isMesh) {
+                        log('🎨', `Applying texture to mesh node: ${node.name}`);
+                        if (node.material) {
+                            node.material.map = texture;
+                            node.material.needsUpdate = true;
+                        }
+                    }
+                });
+                
+                sendToParent('TEXTURE_APPLIED', { targetId: modelEl.id, url });
+            },
+            undefined,
+            (err) => {
+                log('❌', 'Texture load failed:', err);
+            }
+        );
     }
 
     // ============ MODEL LOADING ============

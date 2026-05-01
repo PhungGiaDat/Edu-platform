@@ -37,6 +37,7 @@ class PetDocument(Document):
     
     # Asset URLs (hosted on Supabase)
     model_url: str  # GLB model URL
+    texture_url: Optional[str] = None  # Separate texture URL
     thumbnail_url: Optional[str] = None  # Preview image URL
     
     # Categorization
@@ -71,6 +72,7 @@ class PetCreate(BaseModel):
     name: str
     name_vi: str
     model_url: str
+    texture_url: Optional[str] = None
     thumbnail_url: Optional[str] = None
     category: str = "character"
     pack_source: str = "kenney_blocky-characters"
@@ -85,6 +87,7 @@ class PetUpdate(BaseModel):
     name: Optional[str] = None
     name_vi: Optional[str] = None
     model_url: Optional[str] = None
+    texture_url: Optional[str] = None
     thumbnail_url: Optional[str] = None
     category: Optional[str] = None
     rarity: Optional[Literal["common", "rare", "epic", "legendary"]] = None
@@ -100,6 +103,7 @@ class PetResponse(BaseModel):
     name: str
     name_vi: str
     model_url: str
+    texture_url: Optional[str] = None
     thumbnail_url: Optional[str] = None
     category: str
     pack_source: str

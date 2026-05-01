@@ -89,6 +89,7 @@ export const useArData = (qrId: string | null) => {
         })(),
         image_2d_url: buildUrl(data.target.image_2d_url),
         model_3d_url: buildUrl(data.target.model_3d_url) || '',
+        texture_url: buildUrl(data.target.texture_url),
         position: data.target.position,
         rotation: data.target.rotation,
         scale: data.target.scale,
@@ -99,6 +100,7 @@ export const useArData = (qrId: string | null) => {
         ...rawCombo,
         image_2d_url: buildUrl(rawCombo.image_2d_url),
         model_3d_url: buildUrl(rawCombo.model_3d_url),
+        texture_url: buildUrl(rawCombo.texture_url),
       } : null;
 
       return { flashcard: data.flashcard, targets: [target], combo };
