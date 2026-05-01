@@ -219,10 +219,6 @@ export default function LearnAR() {
     }
   }, [bridge]);
 
-  // const handleBack = useCallback(() => {
-  //   navigate('/');
-  // }, [navigate]);
-
   // ========== RENDER ==========
   return (
     <div className="learn-ar-container">
@@ -261,7 +257,7 @@ export default function LearnAR() {
         )}
 
         {/* Status Overlay (Debug) */}
-        {process.env.NODE_ENV === 'development' && appState === 'AR_ACTIVE' && (
+        {import.meta.env.DEV && appState === 'AR_ACTIVE' && (
           <div className="absolute top-4 left-4 bg-black/50 text-white text-sm rounded-lg p-3 pointer-events-none">
             <div><strong>State:</strong> {appState}</div>
             <div><strong>Mode:</strong> {appMode}</div>
