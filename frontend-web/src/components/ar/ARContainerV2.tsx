@@ -2,17 +2,10 @@
  * ARContainerV2.tsx
  *
  * AR container with iframe swapping for MindAR + PiP multi-scanner.
- *
- * Phase flow:
- *   SCANNING  → full-screen ar-scanner.html
- *   LOADING   → blank (waiting for mindUrl)
- *   VIEWING   → full-screen ar-viewer.html  +  PiP ar-scanner.html (top-left, 120px)
- *
- * The PiP scanner keeps running during VIEWING so the user can scan a second
- * flashcard without leaving the AR experience.
+ * Optimized for stability: iframe is not recreated on every property change.
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { eventBus } from '@/runtime/EventBus';
 import { AREvent } from '@/core/types/AREvents';
 import {
@@ -36,13 +29,9 @@ interface ARContainerV2Props {
     modelUrl2?: string;
     imageUrl2?: string;
     textureUrl2?: string;
-    /** Word label for click-to-sound on target 0 */
     word?: string;
-    /** Word label for click-to-sound on target 1 */
     word2?: string;
-    /** Number of flashcards already loaded — kept for parent API compatibility */
     cardCount?: number;
-    /** Combo model URL to load when cards are close together */
     comboModelUrl?: string;
     onPhaseChange?: (phase: ARPhase) => void;
     onQRDetected?: (qrId: string) => void;
@@ -53,7 +42,6 @@ interface ARContainerV2Props {
     children?: React.ReactNode;
 }
 
-// ========== COMPONENT ==========
 export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     initialPhase = 'SCANNING',
     mindUrl,
@@ -65,7 +53,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     textureUrl2,
     word,
     word2,
-    cardCount: _cardCount,   // accepted for API compatibility, not used internally
     comboModelUrl,
     onPhaseChange,
     onQRDetected,
@@ -79,11 +66,40 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     const [error, setError] = useState<string | null>(null);
     const [isReady, setIsReady] = useState(false);
 
-    const iframeRef = useRef<HTMLIFrameElement>(null);       // main iframe
-    const pipRef = useRef<HTMLIFrameElement>(null);       // background scanner iframe (invisible)
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const pipRef = useRef<HTMLIFrameElement>(null);
+
+    // Refs for props to ensure handleMessage always has the latest callbacks without being recreated
+    const callbacksRef = useRef({
+        onQRDetected,
+        onTargetFound,
+        onTargetLost,
+        onModelClick,
+        onComboDetected,
+        onPhaseChange
+    });
+
+    useEffect(() => {
+        callbacksRef.current = {
+            onQRDetected,
+            onTargetFound,
+            onTargetLost,
+            onModelClick,
+            onComboDetected,
+            onPhaseChange
+        };
+    }, [onQRDetected, onTargetFound, onTargetLost, onModelClick, onComboDetected, onPhaseChange]);
+
+    const transitionTo = useCallback((newPhase: ARPhase) => {
+        if (newPhase === phase) return;
+        console.log(`[ARContainerV2] Phase: ${phase} → ${newPhase}`);
+        setPhase(newPhase);
+        callbacksRef.current.onPhaseChange?.(newPhase);
+        eventBus.emit('AR_PHASE_CHANGED' as any, { phase: newPhase });
+    }, [phase]);
 
     // ========== VIEWER SRC ==========
-    const getViewerSrc = useCallback(() => {
+    const viewerSrc = useMemo(() => {
         if (!mindUrl) return null;
         const params = new URLSearchParams();
         params.set('mind', mindUrl);
@@ -93,35 +109,19 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         if (modelUrl2) params.set('model2', modelUrl2);
         if (imageUrl2) params.set('image2', imageUrl2);
         if (textureUrl2) params.set('textureUrl2', textureUrl2);
-        // Pass words for click-to-sound in ar-viewer.js
         if (word) params.set('word', word);
         if (word2) params.set('word2', word2);
-        // Pass combo model URL for proximity combo
         if (comboModelUrl) params.set('comboModel', comboModelUrl);
         return `/ar-viewer.html?${params.toString()}`;
-    }, [mindUrl, modelUrl, imageUrl, modelUrl2, imageUrl2, word, word2, comboModelUrl]);
+    }, [mindUrl, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, comboModelUrl]);
 
-    // Main iframe src (only scanner or viewer — not both at once)
-    const mainSrc = (() => {
+    const mainSrc = useMemo(() => {
         switch (phase) {
             case 'SCANNING': return '/ar-scanner.html';
-            case 'VIEWING': return getViewerSrc();
+            case 'VIEWING': return viewerSrc;
             default: return null;
         }
-    })();
-
-    // ========== PHASE TRANSITIONS ==========
-    const transitionTo = useCallback((newPhase: ARPhase) => {
-        console.log(`[ARContainerV2] Phase: ${phase} → ${newPhase}`);
-        setPhase(newPhase);
-        onPhaseChange?.(newPhase);
-        eventBus.emit('AR_PHASE_CHANGED' as any, { phase: newPhase });
-
-        // When entering VIEWING, background scanner iframe auto-mounts (no state needed)
-        if (newPhase === 'VIEWING') {
-            // nothing extra — pipRef iframe mounts automatically when phase === 'VIEWING'
-        }
-    }, [phase, onPhaseChange]);
+    }, [phase, viewerSrc]);
 
     // ========== SEND TO IFRAME HELPERS ==========
     const sendToMain = useCallback((type: string, data: any = {}) => {
@@ -132,173 +132,130 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         pipRef.current?.contentWindow?.postMessage({ type, ...data }, '*');
     }, []);
 
-    /** Send to whichever scanner is currently active */
     const sendToScanner = useCallback((type: string, data: any = {}) => {
-        if (phase === 'SCANNING') {
-            sendToMain(type, data);
-        } else {
-            sendToPiP(type, data);
-        }
+        if (phase === 'SCANNING') sendToMain(type, data);
+        else sendToPiP(type, data);
     }, [phase, sendToMain, sendToPiP]);
 
-    // ========== SEND TYPED MESSAGE (New Protocol) ==========
     const sendTypedMessage = useCallback(<K extends ARMessageType>(
         type: K,
         payload: K extends keyof ARMessagePayloadMap ? ARMessagePayloadMap[K] : unknown
     ) => {
-        if (!iframeRef.current?.contentWindow) {
-            console.warn('[ARBridge] Iframe not ready');
-            return;
-        }
-        if (!isReady && type !== 'INITIAL_STATE') {
-            console.warn('[ARBridge] Waiting for SYSTEM_READY');
-            return;
-        }
+        if (!iframeRef.current?.contentWindow) return;
+        if (!isReady && type !== 'INITIAL_STATE') return;
         const message = createMessage(type, payload);
         iframeRef.current.contentWindow.postMessage(message, '*');
-        console.log('[ARBridge] 📤', type, payload);
     }, [isReady]);
 
     // ========== MESSAGE HANDLING ==========
-    useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-            const msg = normalizeMessage(event.data);
-            if (!msg) return;
+    const handleMessage = useCallback((event: MessageEvent) => {
+        const msg = normalizeMessage(event.data);
+        if (!msg) return;
 
-            const { type, payload } = msg as ARMessage;
+        const { type, payload } = msg as ARMessage;
+        const fromPiP = event.source === pipRef.current?.contentWindow;
 
-            // Determine which iframe sent this
-            const fromPiP = event.source === pipRef.current?.contentWindow;
-            console.log(`[ARBridge] 📥 ${fromPiP ? '[PiP]' : '[Main]'} ${type}`, payload);
+        // Use callbacks from ref to ensure stability and freshness
+        const {
+            onQRDetected: cbQR,
+            onTargetFound: cbFound,
+            onTargetLost: cbLost,
+            onModelClick: cbClick,
+            onComboDetected: cbCombo
+        } = callbacksRef.current;
 
-            switch (type) {
-                // ── Handshake ──
-                case 'SYSTEM_READY':
-                    if (!fromPiP) {
-                        setIsReady(true);
-                        eventBus.emit(AREvent.SCENE_READY, payload as any);
-                    }
-                    break;
-
-                case 'SCANNER_READY':
-                    if (!fromPiP) {
-                        setIsReady(true);
-                        eventBus.emit(AREvent.SCENE_READY, { scene: 'scanner' } as any);
-                    }
-                    break;
-
-                // ── QR detected ──
-                case 'QR_DETECTED': {
-                    const data = payload as ARMessagePayloadMap['QR_DETECTED'];
-                    console.log(`[ARBridge] 🎯 QR Detected (${fromPiP ? 'PiP' : 'Main'}):`, data.qrId);
-                    onQRDetected?.(data.qrId);
-                    eventBus.emit(AREvent.MARKER_FOUND, { markerId: data.qrId, target: null } as any);
-
-                    if (!fromPiP && phase === 'SCANNING') {
-                        // First scan from the main scanner → transition to viewer
-                        transitionTo('LOADING');
-                    }
-                    // If fromPiP (second scan during VIEWING) → just notify parent via
-                    // onQRDetected above; parent will update modelUrl2/imageUrl2 props.
-                    break;
-                }
-
-                // ── Scanner error ──
-                case 'SCANNER_ERROR': {
-                    const data = payload as ARMessagePayloadMap['SCANNER_ERROR'];
-                    if (!fromPiP) {
-                        // Fatal only when the main scanner has the error
-                        setError(data.error);
-                        transitionTo('ERROR');
-                    } else {
-                        // Background scanner error is non-fatal — log and ignore
-                        console.warn('[ARBridge] Background scanner error (non-fatal):', data.error);
-                    }
-                    break;
-                }
-
-                // ── Viewer events ──
-                case 'AR_READY':
+        switch (type) {
+            case 'SYSTEM_READY':
+            case 'SCANNER_READY':
+                if (!fromPiP) {
                     setIsReady(true);
-                    transitionTo('VIEWING');
-                    eventBus.emit(AREvent.SCENE_READY, { scene: 'viewer' } as any);
-                    break;
-
-                case 'TARGET_FOUND': {
-                    const data = payload as ARMessagePayloadMap['TARGET_FOUND'];
-                    onTargetFound?.(data.targetIndex);
-                    eventBus.emit(AREvent.MARKER_FOUND, {
-                        markerId: `target-${data.targetIndex}`,
-                        target: null
-                    } as any);
-                    break;
+                    eventBus.emit(AREvent.SCENE_READY, payload as any);
                 }
+                break;
 
-                case 'TARGET_LOST': {
-                    const data = payload as ARMessagePayloadMap['TARGET_LOST'];
-                    onTargetLost?.(data.targetIndex);
-                    eventBus.emit(AREvent.MARKER_LOST, { markerId: `target-${data.targetIndex}` } as any);
-                    break;
+            case 'QR_DETECTED': {
+                const data = payload as ARMessagePayloadMap['QR_DETECTED'];
+                cbQR?.(data.qrId);
+                eventBus.emit(AREvent.MARKER_FOUND, { markerId: data.qrId, target: null } as any);
+                if (!fromPiP && phase === 'SCANNING') {
+                    transitionTo('LOADING');
                 }
-
-                case 'MULTI_TARGET_DETECTED': {
-                    const data = payload as ARMessagePayloadMap['MULTI_TARGET_DETECTED'];
-                    eventBus.emit('MULTI_TARGET_DETECTED' as any, data);
-                    break;
-                }
-
-                case 'MODEL_CLICKED': {
-                    const data = payload as ARMessagePayloadMap['MODEL_CLICKED'] & { targetIndex?: number };
-                    onModelClick?.(data.modelId, data.targetIndex);
-                    eventBus.emit('AR_MODEL_CLICKED' as any, { modelId: data.modelId, targetIndex: data.targetIndex });
-                    break;
-                }
-
-                case 'COMBO_DETECTED': {
-                    const data = payload as ARMessagePayloadMap['COMBO_DETECTED'];
-                    onComboDetected?.(data.targets);
-                    eventBus.emit(AREvent.COMBO_ACTIVATED, {
-                        tag1: `target-${data.targets[0]}`,
-                        tag2: `target-${data.targets[1]}`
-                    } as any);
-                    break;
-                }
-
-                case 'ANIMATION_COMPLETE': {
-                    const data = payload as ARMessagePayloadMap['ANIMATION_COMPLETE'];
-                    eventBus.emit('ANIMATION_COMPLETE' as any, data);
-                    break;
-                }
-
-                case 'SYSTEM_ERROR':
-                case 'AR_ERROR' as any: {
-                    const data = payload as { error?: string; message?: string };
-                    const errorMsg = data.error || data.message || 'Unknown error';
-                    setError(errorMsg);
-                    eventBus.emit(AREvent.AR_ERROR, { error: new Error(errorMsg) } as any);
-                    break;
-                }
+                break;
             }
-        };
 
+            case 'SCANNER_ERROR': {
+                const data = payload as ARMessagePayloadMap['SCANNER_ERROR'];
+                if (!fromPiP) {
+                    setError(data.error);
+                    transitionTo('ERROR');
+                }
+                break;
+            }
+
+            case 'AR_READY':
+                setIsReady(true);
+                transitionTo('VIEWING');
+                eventBus.emit(AREvent.SCENE_READY, { scene: 'viewer' } as any);
+                break;
+
+            case 'TARGET_FOUND': {
+                const data = payload as ARMessagePayloadMap['TARGET_FOUND'];
+                cbFound?.(data.targetIndex);
+                eventBus.emit(AREvent.MARKER_FOUND, { markerId: `target-${data.targetIndex}`, target: null } as any);
+                break;
+            }
+
+            case 'TARGET_LOST': {
+                const data = payload as ARMessagePayloadMap['TARGET_LOST'];
+                cbLost?.(data.targetIndex);
+                eventBus.emit(AREvent.MARKER_LOST, { markerId: `target-${data.targetIndex}` } as any);
+                break;
+            }
+
+            case 'MODEL_CLICKED': {
+                const data = payload as ARMessagePayloadMap['MODEL_CLICKED'] & { targetIndex?: number };
+                cbClick?.(data.modelId, data.targetIndex);
+                eventBus.emit('AR_MODEL_CLICKED' as any, { modelId: data.modelId, targetIndex: data.targetIndex });
+                break;
+            }
+
+            case 'COMBO_DETECTED': {
+                const data = payload as ARMessagePayloadMap['COMBO_DETECTED'];
+                cbCombo?.(data.targets);
+                eventBus.emit(AREvent.COMBO_ACTIVATED, {
+                    tag1: `target-${data.targets[0]}`,
+                    tag2: `target-${data.targets[1]}`
+                } as any);
+                break;
+            }
+
+            case 'ANIMATION_COMPLETE':
+                eventBus.emit('ANIMATION_COMPLETE' as any, payload);
+                break;
+
+            case 'SYSTEM_ERROR':
+            case 'AR_ERROR' as any: {
+                const data = payload as { error?: string; message?: string };
+                const errorMsg = data.error || data.message || 'Unknown error';
+                setError(errorMsg);
+                eventBus.emit(AREvent.AR_ERROR, { error: new Error(errorMsg) } as any);
+                break;
+            }
+        }
+    }, [phase, transitionTo]);
+
+    useEffect(() => {
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
-    }, [phase, onQRDetected, onTargetFound, onTargetLost, onModelClick, onComboDetected, transitionTo]);
+    }, [handleMessage]);
 
-    // ========== EXTERNAL CONTROLS (EventBus) ==========
+    // ========== EXTERNAL CONTROLS ==========
     useEffect(() => {
-        const handleSwitchToViewer = (data: any) => {
-            console.log('[ARContainerV2] Switching to viewer:', data.mindUrl);
-            setTimeout(() => transitionTo('VIEWING'), 100);
-        };
+        const handleSwitchToViewer = () => setTimeout(() => transitionTo('VIEWING'), 100);
         const handleSwitchToScanner = () => transitionTo('SCANNING');
         const handleSetMode = (data: any) => sendToMain('SET_MODE', { mode: data.mode });
-        const handleARCommand = (data: { type: ARMessageType; payload: any }) => {
-            sendTypedMessage(data.type, data.payload);
-        };
-        const handleResumeScan = () => {
-            sendToScanner('RESUME_SCANNING');
-        };
+        const handleARCommand = (data: { type: ARMessageType; payload: any }) => sendTypedMessage(data.type, data.payload);
+        const handleResumeScan = () => sendToScanner('RESUME_SCANNING');
 
         eventBus.on('AR_SWITCH_TO_VIEWER' as any, handleSwitchToViewer);
         eventBus.on('AR_SWITCH_TO_SCANNER' as any, handleSwitchToScanner);
@@ -313,131 +270,57 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             eventBus.off('AR_COMMAND' as any, handleARCommand);
             eventBus.off('AR_RESUME_SCAN' as any, handleResumeScan);
         };
-    }, [transitionTo, sendToMain, sendToScanner, sendTypedMessage, phase]);
+    }, [transitionTo, sendToMain, sendToScanner, sendTypedMessage]);
 
-    // ========== AUTO TRANSITION LOADING → VIEWING ==========
+    // ========== AUTO TRANSITIONS ==========
     useEffect(() => {
         if (phase === 'LOADING' && mindUrl) {
-            console.log('[ARContainerV2] mindUrl ready → VIEWING');
             const t = setTimeout(() => transitionTo('VIEWING'), 100);
             return () => clearTimeout(t);
         }
-    }, [phase, mindUrl, transitionTo]);
-
-    useEffect(() => {
-        if (phase !== 'LOADING') return;
-        const timeoutId = window.setTimeout(() => {
-            if (!mindUrl) {
-                console.error('[ARContainerV2] LOADING timeout: missing mindUrl');
-                setError('Missing AR target data. Please rescan the flashcard.');
-                transitionTo('ERROR');
-            }
-        }, 10000);
-
-        return () => window.clearTimeout(timeoutId);
     }, [phase, mindUrl, transitionTo]);
 
     return (
         <div
             className="ar-container-v2"
             style={{
-                position: 'fixed',
-                inset: 0,
-                width: '100vw',
-                height: '100vh',
-                // @ts-ignore - dvh for mobile
-                height: '100dvh',
-                background: '#000',
-                overflow: 'hidden',
-                zIndex: 99999,
+                position: 'fixed', inset: 0, width: '100vw', height: '100vh',
+                background: '#000', overflow: 'hidden', zIndex: 99999,
             }}
         >
-            {/* ── Error state ── */}
+            {/* Error Overlay */}
             {phase === 'ERROR' && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background: '#000',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 100000,
-                        color: '#FF6B6B',
-                        fontFamily: 'Nunito, sans-serif',
-                        flexDirection: 'column',
-                    }}
-                >
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="15" y1="9" x2="9" y2="15" />
-                        <line x1="9" y1="9" x2="15" y2="15" />
-                    </svg>
+                <div style={{ position: 'absolute', inset: 0, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100000, color: '#FF6B6B', flexDirection: 'column' }}>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
                     <p style={{ marginTop: 16 }}>{error || 'An error occurred'}</p>
-                    <button
-                        onClick={() => transitionTo('SCANNING')}
-                        style={{
-                            marginTop: 24,
-                            padding: '12px 24px',
-                            background: '#4ECDC4',
-                            border: 'none',
-                            borderRadius: 20,
-                            color: '#fff',
-                            cursor: 'pointer',
-                            minHeight: 48,
-                            minWidth: 120,
-                        }}
-                    >
-                        Try Again
-                    </button>
+                    <button onClick={() => transitionTo('SCANNING')} style={{ marginTop: 24, padding: '12px 24px', background: '#4ECDC4', border: 'none', borderRadius: 20, color: '#fff', cursor: 'pointer', minHeight: 48, minWidth: 120 }}>Try Again</button>
                 </div>
             )}
 
-            {/* ── Main iframe (scanner during SCANNING, viewer during VIEWING) ── */}
+            {/* Main Iframe - Stabilized Key */}
             {mainSrc && (
                 <iframe
                     ref={iframeRef}
-                    key={`main-${phase}-${mindUrl || ''}-${modelUrl || ''}-${modelUrl2 || ''}`}
+                    key={`main-${phase}`} // ONLY use phase as key to avoid constant reload on model/image change
                     src={mainSrc}
                     allow="camera; microphone; autoplay; fullscreen"
-                    style={{
-                        position: 'absolute',
-                        inset: 0,
-                        width: '100%',
-                        height: '100%',
-                        border: 'none',
-                        zIndex: 1,
-                    }}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', zIndex: 1 }}
                 />
             )}
 
-            {/* ── Background scanner (invisible, full-size, behind main viewer) ── */}
-            {/* Always mounted during VIEWING so camera stays alive for second-card detection.
-                opacity:0 + pointerEvents:none + zIndex:0 keeps it fully hidden behind the viewer. */}
+            {/* Background Scanner */}
             {phase === 'VIEWING' && (
                 <iframe
                     ref={pipRef}
                     key="pip-scanner"
                     src="/ar-scanner.html"
                     allow="camera; microphone; autoplay"
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        border: 'none',
-                        zIndex: 0,           // behind main viewer (zIndex: 1)
-                        opacity: 0,
-                        pointerEvents: 'none',
-                    }}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', zIndex: 0, opacity: 0, pointerEvents: 'none' }}
                 />
             )}
 
-            {/* ── UI Overlays (children) ── */}
-            <div style={{ position: 'relative', zIndex: 100 }}>
-                {children}
-            </div>
+            {/* Overlays */}
+            <div style={{ position: 'relative', zIndex: 100 }}>{children}</div>
         </div>
     );
 };

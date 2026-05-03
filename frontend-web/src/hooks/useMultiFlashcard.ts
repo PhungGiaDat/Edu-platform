@@ -92,6 +92,11 @@ export function useMultiFlashcard() {
             }
 
             const data = await response.json();
+            if (!data || !data.flashcard) {
+                console.error('[MultiFlashcard] Flashcard data missing in response:', qrId);
+                return;
+            }
+
             const flashcard = data.flashcard;
             const arObject = data.ar_objects?.[0];
 
