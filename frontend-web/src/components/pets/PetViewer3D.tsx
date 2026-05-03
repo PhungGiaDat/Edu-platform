@@ -13,7 +13,7 @@
  */
 
 import React, { Suspense, useRef, useEffect, useState, ErrorInfo, Component } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Float, Environment, Center } from '@react-three/drei';
 import * as THREE from 'three';
 import { rarityConfig } from './PetCard';
@@ -198,6 +198,41 @@ function Pet3DModel({ url, textureUrl, scale, enableAnimation = true, onLoad, on
     );
 }
 
+// ========== Voxel Cube Fallback Component ==========
+
+function VoxelCubeFallback({ textureUrl, scale }: { textureUrl: string, scale: number }) {
+    const texture = useLoader(THREE.TextureLoader, textureUrl);
+    
+    useEffect(() => {
+        if (texture) {
+            texture.minFilter = THREE.NearestFilter;
+            texture.magFilter = THREE.NearestFilter;
+            texture.colorSpace = THREE.SRGBColorSpace;
+        }
+    }, [texture]);
+
+    const groupRef = useRef<THREE.Group>(null);
+    useFrame((state) => {
+        if (groupRef.current) {
+            const time = state.clock.getElapsedTime();
+            const breathe = Math.sin(time * 2) * 0.05;
+            groupRef.current.scale.setScalar(scale * (1 + breathe));
+            groupRef.current.rotation.y = time * 0.5; // Auto rotate slightly
+        }
+    });
+
+    return (
+        <group ref={groupRef}>
+            <Center>
+                <mesh castShadow receiveShadow>
+                    <boxGeometry args={[1.5, 1.5, 1.5]} />
+                    <meshStandardMaterial map={texture} />
+                </mesh>
+            </Center>
+        </group>
+    );
+}
+
 // ========== Loading Fallback Component ==========
 
 function LoadingFallback() {
@@ -353,8 +388,10 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
         }
     };
 
-    // Check if model URL is valid
-    if (!pet.model_url || !isValidModelUrl) {
+    // Check if model URL is valid for voxel fallback
+    const canRenderVoxel = !isValidModelUrl && !!pet.texture_url;
+
+    if (!isValidModelUrl && !canRenderVoxel) {
         return (
             <div
                 className="relative rounded-2xl overflow-hidden"
@@ -370,11 +407,11 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
 
     return (
         <div
-            className="relative rounded-2xl overflow-hidden"
+            className={background === 'transparent' ? 'relative w-full h-full' : 'relative rounded-2xl overflow-hidden'}
             style={{
                 height: typeof height === 'number' ? `${height}px` : height,
-                border: '3px solid rgba(255,255,255,0.2)',
-                boxShadow: `0 8px 32px ${config.glow}`,
+                border: background === 'transparent' ? 'none' : '3px solid rgba(255,255,255,0.2)',
+                boxShadow: background === 'transparent' ? 'none' : `0 8px 32px ${config.glow}`,
                 ...getBackgroundStyle(),
             }}
         >
@@ -436,13 +473,17 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                 {/* Float wrapper for bobbing animation */}
                 {disableFloat ? (
                     <Suspense fallback={<LoadingFallback />}>
-                        <Pet3DModel
-                            url={pet.model_url}
-                            textureUrl={pet.texture_url}
-                            scale={scale}
-                            onLoad={handleLoad}
-                            onError={handleError}
-                        />
+                        {canRenderVoxel ? (
+                            <VoxelCubeFallback textureUrl={pet.texture_url!} scale={scale} />
+                        ) : (
+                            <Pet3DModel
+                                url={pet.model_url}
+                                textureUrl={pet.texture_url}
+                                scale={scale}
+                                onLoad={handleLoad}
+                                onError={handleError}
+                            />
+                        )}
                     </Suspense>
                 ) : (
                     <Float
@@ -451,13 +492,17 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                         floatIntensity={0.5}
                     >
                         <Suspense fallback={<LoadingFallback />}>
-                            <Pet3DModel
-                                url={pet.model_url}
-                                textureUrl={pet.texture_url}
-                                scale={scale}
-                                onLoad={handleLoad}
-                                onError={handleError}
-                            />
+                            {canRenderVoxel ? (
+                                <VoxelCubeFallback textureUrl={pet.texture_url!} scale={scale} />
+                            ) : (
+                                <Pet3DModel
+                                    url={pet.model_url}
+                                    textureUrl={pet.texture_url}
+                                    scale={scale}
+                                    onLoad={handleLoad}
+                                    onError={handleError}
+                                />
+                            )}
                         </Suspense>
                     </Float>
                 )}
