@@ -3,6 +3,11 @@
  * AI Chat Buddy - Floating chat bubble for kids
  * 
  * Features:
+// components/AIChatBuddy.tsx
+/**
+ * AI Chat Buddy - Floating chat bubble for kids
+ * 
+ * Features:
  * - Kid-friendly learning buddy mascot
  * - 3D pet that appears behind the chat button
  * - Floating bounce animation
@@ -17,6 +22,7 @@ import { usePets } from '@/hooks/usePets';
 
 // Lazy load the 3D pet component for performance
 const Pet3D = lazy(() => import('./Gamification/Pet3D'));
+const PetViewer3D = lazy(() => import('./pets/PetViewer3D'));
 
 interface Message {
     id: string;
@@ -81,7 +87,6 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
           }
         : { type: 'bunny', stage: 'child', happiness: 80 });
     const [isOpen, setIsOpen] = useState(initialOpen);
-    const [show3D, setShow3D] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
@@ -92,17 +97,6 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-
-    // Toggle 3D pet visibility when chat opens/closes
-    useEffect(() => {
-        if (show3DPet && !isOpen) {
-            // Show 3D pet when chat is closed (pet sits behind button)
-            setShow3D(true);
-        } else {
-            // Hide 3D pet when chat is open
-            setShow3D(false);
-        }
-    }, [isOpen, show3DPet]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -133,7 +127,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
             setMessages(prev => [...prev, aiMsg]);
         } catch (error) {
             console.error("[AIChatBuddy] Chat error:", error);
-const errorMsg: Message = {
+            const errorMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'ai',
                 content: 'Oops! I ran into a problem. Please try again!'
@@ -164,58 +158,43 @@ const handleNewChat = () => {
 
 return (
         <>
-            {/* 3D Pet Container - sits behind the chat button */}
-            {show3D && show3DPet && (
+            {/* 3D Pet Trigger (only visible when chat is closed) */}
+            {!isOpen && show3DPet && (
                 <div
+                    onClick={() => setIsOpen(true)}
+                    className="fixed bottom-20 right-4 md:bottom-6 md:right-6 w-24 h-24 md:w-32 md:h-32 rounded-full cursor-pointer transform transition-all duration-300 hover:scale-110 drop-shadow-2xl animate-breathe"
                     style={{
-                        position: 'fixed',
-                        bottom: 24,
-                        right: 24,
-                        width: 100,
-                        height: 100,
-                        zIndex: 40,
-                        pointerEvents: 'none',
-                        borderRadius: '50%',
-                        overflow: 'visible',
+                        zIndex: 'var(--z-chatbot)' as any,
+                        pointerEvents: 'auto',
                     }}
+                    title="Talk to your learning buddy!"
                 >
-                    <Suspense fallback={null}>
-                        <Pet3D
-                            petType={pet.type}
-                            stage={pet.stage}
-                            mood={getMood(pet.happiness)}
-                            happiness={pet.happiness}
-                            visible={show3D}
-                        />
+                    <Suspense fallback={
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 shadow-lg flex items-center justify-center text-white text-3xl font-bold">
+                            T
+                        </div>
+                    }>
+                        {activePet?.model_url ? (
+                            <PetViewer3D 
+                                pet={activePet} 
+                                enableControls={false} 
+                                autoRotate={true}
+                                background="transparent"
+                                scale={1.2}
+                                disableFloat={true}
+                            />
+                        ) : (
+                            <Pet3D
+                                petType={pet.type}
+                                stage={pet.stage}
+                                mood={getMood(pet.happiness)}
+                                happiness={pet.happiness}
+                                visible={true}
+                            />
+                        )}
                     </Suspense>
                 </div>
             )}
-
-            {/* Floating Bubble Button */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={`
-                    fixed bottom-20 right-4 md:bottom-6 md:right-6
-                    w-16 h-16 rounded-full
-                    bg-gradient-to-br from-sky-400 to-cyan-500
-                    shadow-lg shadow-cyan-500/40
-                    flex items-center justify-center
-                    text-3xl
-                    transform transition-all duration-300
-                    hover:scale-110 hover:shadow-xl
-                    ${isOpen ? 'scale-90' : 'animate-breathe'}
-                    ${show3D ? 'bg-opacity-90' : ''}
-                `}
-                style={{
-                    zIndex: 'var(--z-chatbot)' as any,
-                    background: show3D 
-                        ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.85), rgba(6, 182, 212, 0.85))'
-                        : undefined
-                }}
-                aria-label="Open chat with learning buddy"
-            >
-                {isOpen ? 'X' : (show3D ? '' : 'T')}
-            </button>
 
 {/* Chat Window */}
             {isOpen && (
@@ -248,13 +227,22 @@ return (
                                 </span>
                             </div>
                         </div>
-                        <button
-                            onClick={handleNewChat}
-                            className="text-white/80 hover:text-white text-sm bg-white/20 px-3 py-1.5 rounded-full font-medium hover:bg-white/30 transition-colors"
-                            title="Start new conversation"
-                        >
-                            New
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleNewChat}
+                                className="text-white/80 hover:text-white text-sm bg-white/20 px-3 py-1.5 rounded-full font-medium hover:bg-white/30 transition-colors"
+                                title="Start new conversation"
+                            >
+                                New
+                            </button>
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="w-8 h-8 flex items-center justify-center text-white/80 hover:text-white bg-white/20 hover:bg-white/30 rounded-full transition-colors"
+                                aria-label="Close chat"
+                            >
+                                ✕
+                            </button>
+                        </div>
                     </div>
 
                     {/* Messages Container */}
