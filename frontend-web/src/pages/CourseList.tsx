@@ -149,8 +149,8 @@ const mockLearningPaths: LearningPath[] = [
 ];
 
 // ─── Course Card Component ──────────────────────────────────────────────────
-const CourseCard: React.FC<{ 
-    course: Course; 
+const CourseCard: React.FC<{
+    course: Course;
     onClick: () => void;
 }> = ({ course, onClick }) => {
     const progress = Math.round((course.completedLessons / course.lessonsCount) * 100);
@@ -164,7 +164,7 @@ const CourseCard: React.FC<{
     };
 
     return (
-        <div 
+        <div
             className="clay-course-card group"
             onClick={onClick}
         >
@@ -176,16 +176,16 @@ const CourseCard: React.FC<{
             )}
 
             {/* Course Thumbnail */}
-            <div 
+            <div
                 className="clay-course-thumb relative"
-                style={{ 
-                    background: `linear-gradient(135deg, ${course.color}80 0%, ${course.color}40 100%)` 
+                style={{
+                    background: `linear-gradient(135deg, ${course.color}80 0%, ${course.color}40 100%)`
                 }}
             >
                 <span className="text-6xl group-hover:scale-110 transition-transform duration-300">
                     {course.icon}
                 </span>
-                
+
                 {/* XP Badge */}
                 <div className="absolute top-3 left-3 clay-badge-yellow">
                     ⚡ {course.xpReward} XP
@@ -195,9 +195,9 @@ const CourseCard: React.FC<{
             {/* Course Content */}
             <div className="p-5">
                 <div className="flex items-center gap-2 mb-2">
-                    <span 
+                    <span
                         className="text-xs font-bold px-2 py-1 rounded-full capitalize"
-                        style={{ 
+                        style={{
                             background: levelColors[course.level].bg,
                             color: levelColors[course.level].text,
                         }}
@@ -214,7 +214,7 @@ const CourseCard: React.FC<{
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
                     {course.tags.map(tag => (
-                        <span 
+                        <span
                             key={tag}
                             className="text-xs font-semibold px-2 py-1 rounded-lg bg-gray-100 text-gray-600"
                         >
@@ -230,9 +230,9 @@ const CourseCard: React.FC<{
                         <span style={{ color: course.colorDark }}>{course.completedLessons}/{course.lessonsCount}</span>
                     </div>
                     <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-                        <div 
+                        <div
                             className="h-full rounded-full transition-all duration-500 clay-shimmer"
-                            style={{ 
+                            style={{
                                 width: `${progress}%`,
                                 background: `linear-gradient(90deg, ${course.color}, ${course.colorDark})`,
                             }}
@@ -241,9 +241,9 @@ const CourseCard: React.FC<{
                 </div>
 
                 {/* CTA Button */}
-                <button 
+                <button
                     className="w-full clay-btn clay-btn-md"
-                    style={{ 
+                    style={{
                         background: `linear-gradient(145deg, ${course.color}, ${course.colorDark})`,
                         boxShadow: `0 6px 0 ${course.colorDark}, 0 12px 24px ${course.color}40`,
                         color: '#1A2744',
@@ -262,7 +262,7 @@ const LearningPathCard: React.FC<{
     courses: Course[];
 }> = ({ path, courses }) => {
     const pathCourses = courses.filter(c => path.courses.includes(c.id));
-    
+
     return (
         <div className="clay-card-elevated p-6">
             <div className="flex items-center gap-4 mb-4">
@@ -281,9 +281,9 @@ const LearningPathCard: React.FC<{
 
             {/* Progress Bar */}
             <div className="h-4 bg-gray-100 rounded-full overflow-hidden mb-4">
-                <div 
+                <div
                     className="h-full rounded-full clay-shimmer"
-                    style={{ 
+                    style={{
                         width: `${path.progress}%`,
                         background: 'linear-gradient(90deg, #5B8DEF, #FF9F9F)',
                     }}
@@ -293,10 +293,10 @@ const LearningPathCard: React.FC<{
             {/* Course Icons */}
             <div className="flex items-center gap-3">
                 {pathCourses.map((course, index) => (
-                    <div 
+                    <div
                         key={course.id}
                         className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl border-2 border-white shadow-md"
-                        style={{ 
+                        style={{
                             background: `linear-gradient(145deg, ${course.color}, ${course.colorDark})`,
                             marginLeft: index > 0 ? '-8px' : 0,
                             zIndex: pathCourses.length - index,
@@ -356,8 +356,8 @@ export const CourseList: React.FC = () => {
     const filteredCourses = mockCourses.filter(course => {
         const matchesLevel = selectedLevel === 'all' || course.level === selectedLevel;
         const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                             course.titleVi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                             course.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+            course.titleVi.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            course.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
         return matchesLevel && matchesSearch;
     });
 
@@ -366,7 +366,7 @@ export const CourseList: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen clay-bg-playful">
+        <div className="min-h-screen clay-bg-playful pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
             {/* Decorative Background */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
                 <div className="clay-shape-circle w-96 h-96 -top-48 -right-48 opacity-40" />
@@ -381,14 +381,14 @@ export const CourseList: React.FC = () => {
                         <span>🎓</span>
                         <span>Learn English with Fun!</span>
                     </div>
-                    <h1 
+                    <h1
                         className="text-4xl md:text-5xl font-black text-gray-800 mb-4"
                         style={{ fontFamily: "'Baloo 2', sans-serif" }}
                     >
                         Course Catalog
                     </h1>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                        Explore our interactive courses designed for young learners. 
+                        Explore our interactive courses designed for young learners.
                         Learn vocabulary through AR, flashcards, and fun quizzes!
                     </p>
                 </header>
@@ -401,9 +401,9 @@ export const CourseList: React.FC = () => {
                     <h2 className="clay-section-title mb-6">Your Learning Paths</h2>
                     <div className="grid md:grid-cols-2 gap-6">
                         {mockLearningPaths.map(path => (
-                            <LearningPathCard 
-                                key={path.id} 
-                                path={path} 
+                            <LearningPathCard
+                                key={path.id}
+                                path={path}
                                 courses={mockCourses}
                             />
                         ))}
@@ -473,20 +473,20 @@ export const CourseList: React.FC = () => {
                             Ready to Start Learning?
                         </h2>
                         <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto">
-                            Join thousands of young learners who are mastering English through 
+                            Join thousands of young learners who are mastering English through
                             interactive AR experiences and fun games!
                         </p>
 
                         <div className="flex flex-wrap justify-center gap-4">
                             {isAuthenticated ? (
                                 <>
-                                    <button 
+                                    <button
                                         className="clay-cta-primary"
                                         onClick={() => navigate('/learn-ar')}
                                     >
                                         🎯 Try AR Learning
                                     </button>
-                                    <button 
+                                    <button
                                         className="clay-cta-secondary"
                                         onClick={() => navigate('/flashcards')}
                                     >
@@ -495,13 +495,13 @@ export const CourseList: React.FC = () => {
                                 </>
                             ) : (
                                 <>
-                                    <button 
+                                    <button
                                         className="clay-cta-primary"
                                         onClick={() => navigate('/register')}
                                     >
                                         🚀 Get Started Free
                                     </button>
-                                    <button 
+                                    <button
                                         className="clay-cta-secondary"
                                         onClick={() => navigate('/login')}
                                     >
@@ -515,7 +515,7 @@ export const CourseList: React.FC = () => {
                         <div className="mt-8 flex flex-col md:flex-row items-center justify-center gap-4">
                             <div className="clay-avatar-group">
                                 {[1, 2, 3, 4, 5].map(i => (
-                                    <img 
+                                    <img
                                         key={i}
                                         src={`https://api.dicebear.com/7.x/avataaars/svg?seed=student${i}`}
                                         alt={`Student ${i}`}

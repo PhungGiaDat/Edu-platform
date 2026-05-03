@@ -93,18 +93,18 @@ export const Profile: React.FC = () => {
     const levelProgress = (userStats.total_points / xpForNextLevel) * 100;
 
     return (
-        <div className="clay-bg-playful min-h-screen pb-12">
+        <div className="min-h-screen clay-bg-playful pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
             {/* Decorative background shapes */}
             <div className="pointer-events-none fixed inset-0 overflow-hidden">
-                <div 
+                <div
                     className="clay-shape-blob absolute -left-20 top-20 h-64 w-64 opacity-30"
                     style={{ background: 'linear-gradient(135deg, #FF6B6B, #FF8E8E)', animationDelay: '0s' }}
                 />
-                <div 
+                <div
                     className="clay-shape-blob absolute -right-16 top-1/3 h-48 w-48 opacity-25"
                     style={{ background: 'linear-gradient(135deg, #4ECDC4, #7EE8E0)', animationDelay: '2s' }}
                 />
-                <div 
+                <div
                     className="clay-shape-blob absolute bottom-20 left-1/4 h-56 w-56 opacity-20"
                     style={{ background: 'linear-gradient(135deg, #45B7D1, #7DD3E8)', animationDelay: '4s' }}
                 />
@@ -115,33 +115,33 @@ export const Profile: React.FC = () => {
                 <section className="clay-hero mb-8 overflow-hidden">
                     <div className="relative">
                         {/* Background pattern */}
-                        <div 
+                        <div
                             className="absolute inset-0 opacity-10"
                             style={{
                                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FF6B6B' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
                             }}
                         />
-                        
+
                         <div className="relative flex flex-col items-center gap-6 p-6 sm:flex-row sm:p-8">
                             {/* Avatar with level ring */}
                             <div className="relative">
                                 <div className="clay-progress-ring" style={{ '--progress': `${levelProgress}%` } as React.CSSProperties}>
-                                    <div 
+                                    <div
                                         className="h-28 w-28 overflow-hidden rounded-full sm:h-32 sm:w-32"
                                         style={{
                                             border: '4px solid white',
                                             boxShadow: '0 8px 24px rgba(255, 107, 107, 0.3)',
                                         }}
                                     >
-                                        <img 
-                                            src={userStats.avatar_url} 
-                                            alt="Profile" 
+                                        <img
+                                            src={userStats.avatar_url}
+                                            alt="Profile"
                                             className="h-full w-full object-cover"
                                         />
                                     </div>
                                 </div>
                                 {/* Level badge */}
-                                <div 
+                                <div
                                     className="absolute -bottom-2 left-1/2 -translate-x-1/2 transform rounded-full px-4 py-1 text-sm font-black text-white"
                                     style={{
                                         background: 'linear-gradient(135deg, #FF6B6B, #FF8E8E)',
@@ -155,28 +155,28 @@ export const Profile: React.FC = () => {
 
                             {/* User info */}
                             <div className="flex-1 text-center sm:text-left">
-                                <h1 
+                                <h1
                                     className="text-3xl font-black text-slate-800 sm:text-4xl"
                                     style={{ textShadow: '2px 2px 0px rgba(255, 107, 107, 0.2)' }}
                                 >
                                     {userStats.username}
                                 </h1>
                                 <p className="mt-1 text-lg font-bold text-slate-500">Super Star Learner ⭐</p>
-                                
+
                                 {/* XP Progress bar */}
                                 <div className="mt-4 max-w-xs sm:max-w-sm">
                                     <div className="mb-1 flex justify-between text-sm font-bold">
                                         <span className="text-slate-600">{userStats.total_points} XP</span>
                                         <span className="text-slate-400">{xpForNextLevel} XP</span>
                                     </div>
-                                    <div 
+                                    <div
                                         className="h-4 overflow-hidden rounded-full"
                                         style={{
                                             background: '#E8E8E8',
                                             boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)',
                                         }}
                                     >
-                                        <div 
+                                        <div
                                             className="h-full rounded-full transition-all duration-500"
                                             style={{
                                                 width: `${levelProgress}%`,
@@ -235,32 +235,31 @@ export const Profile: React.FC = () => {
                                     <h2 className="text-xl font-black text-slate-800">
                                         Badge Collection
                                     </h2>
-                                    <span 
+                                    <span
                                         className="rounded-full px-3 py-1 text-sm font-bold"
-                                        style={{ 
-                                            background: 'rgba(69, 183, 209, 0.2)', 
-                                            color: '#2D8BA8' 
+                                        style={{
+                                            background: 'rgba(69, 183, 209, 0.2)',
+                                            color: '#2D8BA8'
                                         }}
                                     >
                                         {earnedBadgeIds.length}/{badges.length} Earned
                                     </span>
                                 </div>
-                                
+
                                 {/* Enhanced badge grid */}
                                 <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
                                     {badges.map((badge) => {
                                         const isEarned = earnedBadgeIds.includes(badge.id);
                                         return (
-                                            <div 
+                                            <div
                                                 key={badge.id}
                                                 className="group relative flex flex-col items-center text-center"
                                             >
-                                                <div 
-                                                    className={`flex h-16 w-16 items-center justify-center rounded-2xl text-2xl transition-all duration-300 sm:h-20 sm:w-20 sm:text-3xl ${
-                                                        isEarned 
-                                                            ? 'clay-float-element' 
+                                                <div
+                                                    className={`flex h-16 w-16 items-center justify-center rounded-2xl text-2xl transition-all duration-300 sm:h-20 sm:w-20 sm:text-3xl ${isEarned
+                                                            ? 'clay-float-element'
                                                             : 'grayscale opacity-40'
-                                                    }`}
+                                                        }`}
                                                     style={isEarned ? {
                                                         background: 'linear-gradient(145deg, #FFE66D, #FFD93D)',
                                                         boxShadow: '0 8px 20px rgba(255, 217, 61, 0.4), inset 0 -3px 0 rgba(0,0,0,0.1)',
@@ -275,7 +274,7 @@ export const Profile: React.FC = () => {
                                                 <span className={`mt-2 text-xs font-bold ${isEarned ? 'text-slate-700' : 'text-slate-400'}`}>
                                                     {badge.name}
                                                 </span>
-                                                
+
                                                 {/* Tooltip */}
                                                 <div className="pointer-events-none absolute -top-12 left-1/2 z-10 -translate-x-1/2 transform whitespace-nowrap rounded-lg bg-slate-800 px-3 py-2 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
                                                     {badge.description}
@@ -294,12 +293,12 @@ export const Profile: React.FC = () => {
                                 <h2 className="mb-4 text-xl font-black text-slate-800">
                                     Learning Milestones
                                 </h2>
-                                
+
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     {milestones.map((milestone, index) => {
                                         const progress = (milestone.current / milestone.target) * 100;
                                         return (
-                                            <div 
+                                            <div
                                                 key={index}
                                                 className="rounded-2xl bg-white/60 p-4"
                                                 style={{
@@ -308,9 +307,9 @@ export const Profile: React.FC = () => {
                                                 }}
                                             >
                                                 <div className="mb-2 flex items-center gap-3">
-                                                    <span 
+                                                    <span
                                                         className="flex h-10 w-10 items-center justify-center rounded-xl text-xl"
-                                                        style={{ 
+                                                        style={{
                                                             background: `${milestone.color}20`,
                                                         }}
                                                     >
@@ -325,14 +324,14 @@ export const Profile: React.FC = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div 
+                                                <div
                                                     className="h-3 overflow-hidden rounded-full"
                                                     style={{ background: `${milestone.color}20` }}
                                                 >
-                                                    <div 
+                                                    <div
                                                         className="h-full rounded-full transition-all duration-500"
-                                                        style={{ 
-                                                            width: `${progress}%`, 
+                                                        style={{
+                                                            width: `${progress}%`,
                                                             background: milestone.color,
                                                         }}
                                                     />
@@ -349,16 +348,16 @@ export const Profile: React.FC = () => {
                             <h2 className="mb-4 text-center text-xl font-black text-slate-800">
                                 What Other Learners Say ✨
                             </h2>
-                            
+
                             <div className="grid gap-4 sm:grid-cols-3">
                                 {testimonials.map((testimonial) => (
-                                    <div 
+                                    <div
                                         key={testimonial.id}
                                         className="clay-testimonial"
                                     >
                                         <div className="mb-3 flex items-center gap-3">
-                                            <img 
-                                                src={testimonial.avatar} 
+                                            <img
+                                                src={testimonial.avatar}
                                                 alt={testimonial.name}
                                                 className="h-12 w-12 rounded-full border-3 border-white shadow-md"
                                             />
@@ -383,7 +382,7 @@ export const Profile: React.FC = () => {
                     <div className="space-y-6">
                         {/* Styled Leaderboard */}
                         <section className="clay-card-sunshine overflow-hidden p-0">
-                            <div 
+                            <div
                                 className="p-4 text-center"
                                 style={{
                                     background: 'linear-gradient(135deg, #FFD93D, #FFE66D)',
@@ -395,24 +394,22 @@ export const Profile: React.FC = () => {
                             </div>
                             <div className="divide-y divide-yellow-100">
                                 {leaderboard.map((entry, index) => (
-                                    <div 
+                                    <div
                                         key={entry.user_id}
-                                        className={`flex items-center gap-3 p-3 transition-colors hover:bg-yellow-50 ${
-                                            entry.username === username ? 'bg-yellow-50' : ''
-                                        }`}
-                                    >
-                                        <div 
-                                            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-black ${
-                                                index === 0 ? 'bg-yellow-400 text-white' :
-                                                index === 1 ? 'bg-gray-300 text-gray-600' :
-                                                index === 2 ? 'bg-orange-300 text-orange-700' :
-                                                'bg-slate-100 text-slate-500'
+                                        className={`flex items-center gap-3 p-3 transition-colors hover:bg-yellow-50 ${entry.username === username ? 'bg-yellow-50' : ''
                                             }`}
+                                    >
+                                        <div
+                                            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-black ${index === 0 ? 'bg-yellow-400 text-white' :
+                                                    index === 1 ? 'bg-gray-300 text-gray-600' :
+                                                        index === 2 ? 'bg-orange-300 text-orange-700' :
+                                                            'bg-slate-100 text-slate-500'
+                                                }`}
                                         >
                                             {index + 1}
                                         </div>
-                                        <img 
-                                            src={entry.avatar_url} 
+                                        <img
+                                            src={entry.avatar_url}
                                             alt={entry.username}
                                             className="h-10 w-10 rounded-full border-2 border-white shadow-sm"
                                         />
@@ -431,7 +428,7 @@ export const Profile: React.FC = () => {
                         </section>
 
                         {/* CTA Section */}
-                        <section 
+                        <section
                             className="relative overflow-hidden rounded-3xl p-6 text-center"
                             style={{
                                 background: 'linear-gradient(135deg, #FF6B6B, #FF8E8E)',
@@ -446,7 +443,7 @@ export const Profile: React.FC = () => {
                             <div className="pointer-events-none absolute -bottom-4 -left-4 text-6xl opacity-20">
                                 ⭐
                             </div>
-                            
+
                             <div className="relative">
                                 <h3 className="mb-2 text-xl font-black text-white">
                                     Ready for More?
@@ -466,7 +463,7 @@ export const Profile: React.FC = () => {
                         {/* Daily Challenge */}
                         <section className="clay-card-coral p-5">
                             <div className="flex items-center gap-3">
-                                <span 
+                                <span
                                     className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl"
                                     style={{
                                         background: 'rgba(255, 107, 107, 0.2)',
@@ -484,14 +481,14 @@ export const Profile: React.FC = () => {
                                     <span>Progress</span>
                                     <span>1/3</span>
                                 </div>
-                                <div 
+                                <div
                                     className="h-3 overflow-hidden rounded-full"
                                     style={{ background: 'rgba(255, 107, 107, 0.2)' }}
                                 >
-                                    <div 
+                                    <div
                                         className="h-full rounded-full"
-                                        style={{ 
-                                            width: '33%', 
+                                        style={{
+                                            width: '33%',
                                             background: 'linear-gradient(90deg, #FF6B6B, #FF8E8E)',
                                         }}
                                     />

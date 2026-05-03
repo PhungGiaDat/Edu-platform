@@ -133,12 +133,9 @@ export const LearningPathSetup: React.FC = () => {
     // Render based on current step
     return (
         <div
-            className="min-h-screen pb-24"
-            style={{
-                background: step === 'complete'
-                    ? 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 50%, #86efac 100%)'
-                    : 'linear-gradient(135deg, #fefce8 0%, #fff7ed 52%, #ecfeff 100%)',
-            }}
+            className={`min-h-screen pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300 ${
+                step === 'complete' ? 'bg-gradient-to-br from-emerald-100 to-green-300' : 'clay-bg-playful'
+            }`}
         >
             {/* Progress Indicator */}
             <div className="px-4 sm:px-6 pt-4 sm:pt-6">
@@ -488,7 +485,7 @@ const CompletionStep: React.FC<CompletionStepProps> = ({
                 }}
             >
                 <h3 className="text-green-800 font-bold mb-3 text-sm sm:text-base">Your Learning Plan:</h3>
-                
+
                 <div className="space-y-3">
                     {/* Topics */}
                     <div className="flex flex-wrap gap-2">
@@ -505,7 +502,7 @@ const CompletionStep: React.FC<CompletionStepProps> = ({
                             </span>
                         ))}
                     </div>
-                    
+
                     {/* Goals */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-green-200">
                         <div className="flex items-center gap-2">
@@ -535,7 +532,7 @@ const CompletionStep: React.FC<CompletionStepProps> = ({
                 >
                     🚀 Start Learning Now!
                 </button>
-                
+
                 <button
                     onClick={onRestart}
                     className="w-full py-3 sm:py-4 rounded-2xl font-bold text-sm sm:text-base"
