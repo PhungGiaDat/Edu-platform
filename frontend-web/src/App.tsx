@@ -156,7 +156,16 @@ const GlobalPetUnlockNotifier: React.FC = () => {
 
 const ConditionalAIChatBuddy: React.FC = () => {
   const location = useLocation();
-  if (location.pathname === '/learn-ar') return null;
+  const { isAuthenticated, isGuest } = useAuth();
+
+  // Hide on AR page (z-index conflict) and all public/unauthenticated routes
+  const publicRoutes = ['/', '/login', '/register'];
+  const isPublicRoute = publicRoutes.includes(location.pathname);
+  const isARPage = location.pathname === '/learn-ar';
+
+  if (isARPage || isPublicRoute) return null;
+  if (!isAuthenticated && !isGuest) return null;
+
   return <AIChatBuddy />;
 };
 

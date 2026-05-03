@@ -59,13 +59,16 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
         can_unlock: true,
         is_active: true,
         thumbnail_url: 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/previews/animal-penguin.png',
-        model_url: '', 
-        texture_url: 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/textures/colormap.png'
+        model_url: '',
+        texture_url: null,
     };
 
     const displayPet = activePet || defaultPet;
-    const isValidModel = !!displayPet.model_url && (displayPet.model_url.toLowerCase().endsWith('.glb') || displayPet.model_url.toLowerCase().endsWith('.gltf'));
-    const canRender3D = isValidModel || !!displayPet.texture_url;
+    // Only show 3D canvas if there's a real .glb/.gltf model — not for texture-only pets
+    const canRender3D = !!displayPet.model_url && (
+        displayPet.model_url.toLowerCase().endsWith('.glb') || 
+        displayPet.model_url.toLowerCase().endsWith('.gltf')
+    );
 
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [messages, setMessages] = useState<Message[]>([
