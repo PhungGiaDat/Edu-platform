@@ -48,19 +48,19 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
     const defaultPet: Pet = {
         pet_id: 'default-buddy',
         name: 'Learning Buddy',
+        name_vi: 'Bạn Học Tập',
         category: 'penguin',
+        pack_source: 'starter',
         rarity: 'common',
-        stage: 'child',
-        happiness: 80,
-        energy: 100,
-        hunger: 100,
+        color: '#FFFFFF',
+        animations: [],
+        unlock_condition: { type: 'free', value: 0 },
         is_unlocked: true,
         can_unlock: true,
-        xp_required: 0,
+        is_active: true,
         thumbnail_url: 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/previews/animal-penguin.png',
         model_url: '', 
-        texture_url: 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/textures/colormap.png',
-        created_at: new Date().toISOString()
+        texture_url: 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/textures/colormap.png'
     };
 
     const displayPet = activePet || defaultPet;
