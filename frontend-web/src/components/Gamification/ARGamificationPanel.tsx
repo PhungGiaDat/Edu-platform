@@ -1,8 +1,8 @@
 // src/components/Gamification/ARGamificationPanel.tsx
 // Compact gamification UI for AR view - shows pet, XP, and quick leaderboard
 
-import React, { useState, useEffect } from 'react';
-import { VirtualPet } from './VirtualPet';
+import React, { useState, useEffect, useCallback } from 'react';
+import { PetViewer3DCompact } from '@/components/pets/PetViewer3D';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePets } from '@/hooks/usePets';
 import { eventBus } from '@/runtime/EventBus';
@@ -71,17 +71,31 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
         }
     }, [showLeaderboard]);
 
-    const handleFeedPet = async () => {
+    const handleFeedPet = useCallback(async (e: React.MouseEvent) => {
+        e.stopPropagation(); // Don't trigger pet click
         try {
             await apiClient.post('/api/v1/gamification/pet/feed', { user_id: userId });
-            {
-                setPetHappiness(prev => Math.min(100, prev + 10));
-                onFeedPet?.();
-            }
+            setPetHappiness(prev => Math.min(100, prev + 10));
+            
+            // Event-driven AR communication: trigger animation in scene
+            eventBus.emit('AR_COMMAND' as any, {
+                type: 'TRIGGER_ANIMATION',
+                payload: { clip: 'happy', loop: false }
+            });
+            
+            onFeedPet?.();
         } catch (e) {
             // Optimistic update
             setPetHappiness(prev => Math.min(100, prev + 5));
         }
+    }, [userId, onFeedPet]);
+
+    const handlePetClick = () => {
+        // Event-driven pattern: Notify other components that pet was clicked
+        const petName = activePet?.name || 'Buddy';
+        eventBus.emit('PET_CHAT_OPEN' as any, { petName, word: '' });
+        
+        onPetClick?.();
     };
 
     return (
@@ -164,24 +178,45 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
                 </button>
             )}
 
-            {/* Pet (compact) — tap to open chat */}
+            {/* Pet Buddy (3D) - tap to open selector */}
             <div
-                onClick={() => {
-                    const petName = activePet?.name || 'Buddy';
-                    eventBus.emit('PET_CHAT_OPEN' as any, { petName, word: '' });
-                    onPetClick?.();
-                }}
+                onClick={handlePetClick}
+                className="relative group transition-all duration-300 hover:scale-105 active:scale-95"
                 style={{ cursor: 'pointer' }}
-                title={`Chat with ${activePet?.name || 'Buddy'}`}
+                title={`Change ${activePet?.name || 'Buddy'}`}
             >
-                <VirtualPet
-                    petType={activePet?.category as any || 'bunny'}
-                    thumbnailUrl={activePet?.thumbnail_url || undefined}
-                    happiness={petHappiness}
-                    name={activePet?.name || 'Buddy'}
-                    onFeed={handleFeedPet}
-                    compact={true}
+                {/* Happiness Badge */}
+                <div 
+                    className="absolute -top-1 -left-1 bg-pink-500 text-white rounded-full px-2 py-0.5 flex items-center gap-1 text-[10px] font-bold shadow-lg z-10 border-2 border-white"
+                    title={`Happiness: ${petHappiness}%`}
+                >
+                    ❤️ {petHappiness}
+                </div>
+
+                {/* Quick Action: Feed */}
+                <button
+                    onClick={handleFeedPet}
+                    className="absolute -bottom-1 -right-1 bg-yellow-400 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg shadow-lg z-20 border-2 border-white hover:scale-110 active:scale-90 transition-transform"
+                    title="Quick Feed"
+                >
+                    🍎
+                </button>
+
+                <div className="absolute -top-1 -right-1 bg-sky-400 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg z-10 animate-pulse border-2 border-white">
+                    ✨
+                </div>
+
+                <PetViewer3DCompact
+                    modelUrl={activePet?.model_url || ''}
+                    size={120}
+                    scale={2}
                 />
+
+                <div className="absolute bottom-0 left-0 right-0 text-center translate-y-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm whitespace-nowrap">
+                        {activePet?.name || 'Buddy'}
+                    </span>
+                </div>
             </div>
         </div>
     );
