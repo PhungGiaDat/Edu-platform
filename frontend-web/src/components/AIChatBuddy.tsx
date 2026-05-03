@@ -64,7 +64,8 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
     };
 
     const displayPet = activePet || defaultPet;
-    const canRender3D = !!displayPet.model_url && (displayPet.model_url.toLowerCase().endsWith('.glb') || displayPet.model_url.toLowerCase().endsWith('.gltf'));
+    const isValidModel = !!displayPet.model_url && (displayPet.model_url.toLowerCase().endsWith('.glb') || displayPet.model_url.toLowerCase().endsWith('.gltf'));
+    const canRender3D = isValidModel || !!displayPet.texture_url;
 
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [messages, setMessages] = useState<Message[]>([
@@ -142,37 +143,37 @@ return (
             {!isOpen && show3DPet && (
                 <div
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-20 right-4 md:bottom-6 md:right-6 w-24 h-24 md:w-32 md:h-32 rounded-full cursor-pointer transform transition-all duration-300 hover:scale-110 drop-shadow-2xl animate-breathe"
+                    className="fixed bottom-20 right-4 md:bottom-6 md:right-6 w-24 h-24 md:w-32 md:h-32 cursor-pointer transform transition-all duration-300 hover:scale-110 drop-shadow-2xl animate-breathe"
                     style={{
                         zIndex: 'var(--z-chatbot)' as any,
                         pointerEvents: 'auto',
                     }}
                     title="Talk to your learning buddy!"
                 >
-                    <Suspense fallback={
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 shadow-lg flex items-center justify-center text-white text-3xl font-bold">
-                            T
-                        </div>
-                    }>
-                        {canRender3D ? (
-                            <PetViewer3D 
-                                pet={displayPet} 
-                                enableControls={false} 
-                                autoRotate={true}
-                                background="transparent"
-                                scale={1.2}
-                                disableFloat={true}
-                            />
-                        ) : (
-                            <img
-                                src={displayPet.thumbnail_url || 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/previews/animal-penguin.png'}
-                                alt={displayPet.name || "Learning Buddy"}
-                                className="w-full h-full object-contain drop-shadow-xl"
-                            />
-                        )}
-                    </Suspense>
-                </div>
-            )}
+                <Suspense fallback={
+                    <div className="w-full h-full flex items-center justify-center text-4xl animate-bounce">🐾</div>
+                }>
+                    {canRender3D ? (
+                        <PetViewer3D 
+                            pet={displayPet} 
+                            height="100%"
+                            enableControls={false} 
+                            autoRotate={false}
+                            background="transparent"
+                            scale={1.0}
+                            disableFloat={false}
+                            showLoading={false}
+                        />
+                    ) : (
+                        <img
+                            src={displayPet.thumbnail_url || 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/previews/animal-penguin.png'}
+                            alt={displayPet.name || "Learning Buddy"}
+                            className="w-full h-full object-contain drop-shadow-xl"
+                        />
+                    )}
+                </Suspense>
+            </div>
+        )}
 
 {/* Chat Window */}
             {isOpen && (
