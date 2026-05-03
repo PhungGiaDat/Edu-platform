@@ -631,17 +631,36 @@ export default function LearnARV2() {
     // ========== HANDLERS ==========
     const handleQRDetected = useCallback((qrId: string) => {
         console.log('[LearnARV2] QR Detected:', qrId);
+        if (!qrId) return;
+        
+        // Use a functional update for detectedQrId to avoid dependency on its current value
+        setDetectedQrId(prev => {
+            if (!prev) return qrId;
+            return prev;
+        });
+
         addFlashcard(qrId);
-        if (!detectedQrId) setDetectedQrId(qrId);
         setAppState('LOADING');
         trackFlashcardView();
-        console.log('[LearnARV2] Multi-mode:', multiMode, 'Cards:', flashcardCount + 1);
-    }, [trackFlashcardView, addFlashcard, detectedQrId, multiMode, flashcardCount]);
+    }, [trackFlashcardView, addFlashcard]);
 
     const handlePhaseChange = useCallback((phase: ARPhase) => {
         console.log('[LearnARV2] Phase changed:', phase);
-        if (phase === 'VIEWING') setAppState('VIEWING');
-        else if (phase === 'ERROR') setAppState('ERROR');
+        setAppState(prev => {
+            if (phase === 'VIEWING') return 'VIEWING';
+            if (phase === 'ERROR') return 'ERROR';
+            return prev;
+        });
+    }, []);
+
+    const handleTargetFound = useCallback((idx: number) => {
+        console.log('[LearnARV2] Target found:', idx);
+        if (idx === 0) setMarkerFound(true);
+    }, []);
+
+    const handleTargetLost = useCallback((idx: number) => {
+        console.log('[LearnARV2] Target lost:', idx);
+        if (idx === 0) setMarkerFound(false);
     }, []);
 
     const handleComboDetected = useCallback(async (targets: number[]) => {
@@ -848,8 +867,8 @@ export default function LearnARV2() {
                 comboModelUrl={comboModelUrl}
                 onPhaseChange={handlePhaseChange}
                 onQRDetected={handleQRDetected}
-                onTargetFound={(idx) => { console.log('[LearnARV2] Target found:', idx); if (idx === 0) setMarkerFound(true); }}
-                onTargetLost={(idx) => { console.log('[LearnARV2] Target lost:', idx); if (idx === 0) setMarkerFound(false); }}
+                onTargetFound={handleTargetFound}
+                onTargetLost={handleTargetLost}
                 onModelClick={handleModelClick}
                 onComboDetected={handleComboDetected}
             >
