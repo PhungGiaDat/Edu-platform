@@ -17,11 +17,9 @@
 import React, { useState, useRef, useEffect, Suspense, lazy } from 'react';
 import { ChatService, RAGChatResponse } from '../services/ChatService';
 import { useAuth } from '../contexts/AuthContext';
-import type { PetType, EvolutionStage, PetMood } from './Gamification/VirtualPetEvolved';
-import { usePets } from '@/hooks/usePets';
+import { usePets, type Pet } from '@/hooks/usePets';
 
 // Lazy load the 3D pet component for performance
-const Pet3D = lazy(() => import('./Gamification/Pet3D'));
 const PetViewer3D = lazy(() => import('./pets/PetViewer3D'));
 
 interface Message {
@@ -31,61 +29,43 @@ interface Message {
     sources?: { word: string; score: number }[];
 }
 
-interface PetState {
-    type: PetType;
-    stage: EvolutionStage;
-    happiness: number;
-}
 
 interface AIChatBuddyProps {
     userId?: string;
     initialOpen?: boolean;
-    pet?: PetState;
     show3DPet?: boolean;
 }
 
-// Helper to get mood from happiness
-const getMood = (happiness: number): PetMood => {
-    if (happiness >= 80) return 'happy';
-    if (happiness >= 50) return 'content';
-    if (happiness >= 20) return 'sad';
-    return 'sleeping';
-};
 
 export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({ 
     initialOpen = false,
-    pet: petProp,
     show3DPet = true
 }) => {
     const { user } = useAuth();
     const { activePet } = usePets(user?.id || null);
 
-    // Valid pet types for 3D rendering
-    const validPetTypes: PetType[] = ['bunny', 'cat', 'dog', 'panda'];
-    
-    // Map category to a valid PetType (or default to bunny)
-    const getPetTypeFromCategory = (category: string | undefined): PetType => {
-        if (!category) return 'bunny';
-        const lowerCategory = category.toLowerCase();
-        // Map common categories to pet types
-        if (lowerCategory.includes('cat') || lowerCategory.includes('kitten')) return 'cat';
-        if (lowerCategory.includes('dog') || lowerCategory.includes('puppy')) return 'dog';
-        if (lowerCategory.includes('panda') || lowerCategory.includes('bear')) return 'panda';
-        if (lowerCategory.includes('bunny') || lowerCategory.includes('rabbit')) return 'bunny';
-        // Check if it's already a valid type
-        if (validPetTypes.includes(category as PetType)) return category as PetType;
-        // Default to bunny for any other category
-        return 'bunny';
+    // Derive pet state from the active pet (fallback to default penguin)
+    const defaultPet: Pet = {
+        pet_id: 'default-buddy',
+        name: 'Learning Buddy',
+        category: 'penguin',
+        rarity: 'common',
+        stage: 'child',
+        happiness: 80,
+        energy: 100,
+        hunger: 100,
+        is_unlocked: true,
+        can_unlock: true,
+        xp_required: 0,
+        thumbnail_url: 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/previews/animal-penguin.png',
+        model_url: '', 
+        texture_url: 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/textures/colormap.png',
+        created_at: new Date().toISOString()
     };
 
-    // Derive pet state from the active pet (fallback to prop or default)
-    const pet: PetState = petProp ?? (activePet
-        ? {
-            type: getPetTypeFromCategory(activePet.category),
-            stage: 'child' as EvolutionStage,
-            happiness: 80,
-          }
-        : { type: 'bunny', stage: 'child', happiness: 80 });
+    const displayPet = activePet || defaultPet;
+    const canRender3D = !!displayPet.model_url && (displayPet.model_url.toLowerCase().endsWith('.glb') || displayPet.model_url.toLowerCase().endsWith('.gltf'));
+
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [messages, setMessages] = useState<Message[]>([
         {
@@ -174,9 +154,9 @@ return (
                             T
                         </div>
                     }>
-                        {activePet?.model_url ? (
+                        {canRender3D ? (
                             <PetViewer3D 
-                                pet={activePet} 
+                                pet={displayPet} 
                                 enableControls={false} 
                                 autoRotate={true}
                                 background="transparent"
@@ -184,12 +164,10 @@ return (
                                 disableFloat={true}
                             />
                         ) : (
-                            <Pet3D
-                                petType={pet.type}
-                                stage={pet.stage}
-                                mood={getMood(pet.happiness)}
-                                happiness={pet.happiness}
-                                visible={true}
+                            <img
+                                src={displayPet.thumbnail_url || 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/previews/animal-penguin.png'}
+                                alt={displayPet.name || "Learning Buddy"}
+                                className="w-full h-full object-contain drop-shadow-xl"
                             />
                         )}
                     </Suspense>
