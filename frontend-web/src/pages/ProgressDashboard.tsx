@@ -33,7 +33,7 @@ export const ProgressDashboard: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 to-amber-50">
+            <div className="min-h-screen flex items-center justify-center clay-bg-playful pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
                 <div className="text-center">
                     <div className="text-5xl animate-bounce mb-4">📊</div>
                     <p className="text-sky-700 font-bold">Loading progress...</p>
@@ -44,7 +44,7 @@ export const ProgressDashboard: React.FC = () => {
 
     if (!summary) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 to-amber-50 p-4">
+            <div className="min-h-screen flex items-center justify-center clay-bg-playful p-4 pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
                 <div className="max-w-md w-full rounded-3xl border-2 border-sky-200 bg-white/90 p-6 text-center shadow-lg">
                     <div className="text-4xl mb-3">📭</div>
                     <h2 className="text-xl font-black text-slate-800 mb-2">Progress unavailable</h2>
@@ -62,12 +62,7 @@ export const ProgressDashboard: React.FC = () => {
     }
 
     return (
-        <div
-            className="min-h-screen pb-20"
-            style={{
-                background: 'linear-gradient(135deg, #f0f9ff 0%, #fff7ed 50%, #ecfeff 100%)'
-            }}
-        >
+        <div className="min-h-screen clay-bg-playful pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
             {/* Header */}
             <div 
                 className="px-4 pt-6 pb-4"

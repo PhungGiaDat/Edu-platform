@@ -49,22 +49,22 @@ function isRenderableModelUrl(modelUrl: string | null | undefined): boolean {
 }
 
 // ─── Pet Collection Card ────────────────────────────────────────────────────
-function PetCollectionCard({ 
-    pet, 
-    isActive, 
-    onSelect, 
-    onFeed, 
-    onPlay 
-}: { 
-    pet: Pet; 
-    isActive: boolean; 
+function PetCollectionCard({
+    pet,
+    isActive,
+    onSelect,
+    onFeed,
+    onPlay
+}: {
+    pet: Pet;
+    isActive: boolean;
     onSelect: () => void;
     onFeed: () => void;
     onPlay: () => void;
 }) {
     const config = rarityConfig[pet.rarity];
     const isLocked = !pet.is_unlocked;
-    
+
     const colorVariants: Record<string, string> = {
         common: 'clay-card-mint',
         rare: 'clay-card-sky',
@@ -73,10 +73,9 @@ function PetCollectionCard({
     };
 
     return (
-        <div 
-            className={`relative rounded-3xl p-4 transition-all duration-300 cursor-pointer ${
-                isLocked ? 'opacity-60' : ''
-            } ${colorVariants[pet.rarity] || 'clay-card-elevated'}`}
+        <div
+            className={`relative rounded-3xl p-4 transition-all duration-300 cursor-pointer ${isLocked ? 'opacity-60' : ''
+                } ${colorVariants[pet.rarity] || 'clay-card-elevated'}`}
             onClick={() => !isLocked && onSelect()}
             style={{
                 transform: isActive ? 'scale(1.02)' : 'scale(1)',
@@ -107,8 +106,8 @@ function PetCollectionCard({
             {/* Pet Thumbnail/3D Preview */}
             <div className="relative h-32 rounded-2xl overflow-hidden mb-3 bg-white/40">
                 {pet.thumbnail_url ? (
-                    <img 
-                        src={pet.thumbnail_url} 
+                    <img
+                        src={pet.thumbnail_url}
                         alt={pet.name}
                         className="w-full h-full object-contain"
                     />
@@ -131,13 +130,13 @@ function PetCollectionCard({
             {/* Action Buttons (only for unlocked pets) */}
             {!isLocked && (
                 <div className="flex gap-2 mt-3">
-                    <button 
+                    <button
                         onClick={(e) => { e.stopPropagation(); onFeed(); }}
                         className="flex-1 py-2 px-3 rounded-xl text-sm font-bold bg-white/60 hover:bg-white/80 transition-all"
                     >
                         🍖 Feed
                     </button>
-                    <button 
+                    <button
                         onClick={(e) => { e.stopPropagation(); onPlay(); }}
                         className="flex-1 py-2 px-3 rounded-xl text-sm font-bold bg-white/60 hover:bg-white/80 transition-all"
                     >
@@ -165,7 +164,7 @@ function StatCard({ icon, value, label, color }: { icon: string; value: number |
 // ─── Progress Bar ───────────────────────────────────────────────────────────
 function ProgressBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
     const percentage = Math.min((value / max) * 100, 100);
-    
+
     return (
         <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
@@ -173,9 +172,9 @@ function ProgressBar({ label, value, max, color }: { label: string; value: numbe
                 <span className="font-bold" style={{ color }}>{value}/{max}</span>
             </div>
             <div className="h-4 bg-gray-100 rounded-full overflow-hidden shadow-inner">
-                <div 
+                <div
                     className="h-full rounded-full transition-all duration-500 clay-shimmer"
-                    style={{ 
+                    style={{
                         width: `${percentage}%`,
                         background: `linear-gradient(90deg, ${color}, ${color}CC)`,
                     }}
@@ -204,7 +203,7 @@ export default function PetsPage() {
 
     if (authLoading) {
         return (
-            <div className="min-h-screen clay-bg-playful flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center clay-bg-playful pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
                 <div className="text-center">
                     <div className="text-6xl mb-4 clay-float-element">🐾</div>
                     <p className="font-bold text-gray-600">Loading your pets...</p>
@@ -215,7 +214,7 @@ export default function PetsPage() {
 
     if (!isAuthenticated || !userId) {
         return (
-            <div className="min-h-screen clay-bg-playful flex items-center justify-center p-6">
+            <div className="min-h-screen flex items-center justify-center clay-bg-playful p-6 pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
                 <div className="clay-card-elevated max-w-md w-full p-8 text-center">
                     <div className="text-6xl mb-4">🐣</div>
                     <h2 className="clay-section-title mb-4">Sign In to Meet Your Pets!</h2>
@@ -244,7 +243,7 @@ export default function PetsPage() {
         try {
             HapticService.success();
             SoundEffectService.play('success');
-            await apiClient.post('/api/v1/gamification/pet/feed', { 
+            await apiClient.post('/api/v1/gamification/pet/feed', {
                 user_id: userId,
                 pet_id: petId,
             });
@@ -257,7 +256,7 @@ export default function PetsPage() {
         try {
             HapticService.success();
             SoundEffectService.play('success');
-            await apiClient.post('/api/v1/gamification/pet/play', { 
+            await apiClient.post('/api/v1/gamification/pet/play', {
                 user_id: userId,
                 pet_id: petId,
             });
@@ -271,7 +270,7 @@ export default function PetsPage() {
     const canRenderDisplayPet3D = isRenderableModelUrl(displayPet?.model_url);
 
     return (
-        <div className="min-h-screen clay-bg-playful">
+        <div className="min-h-screen clay-bg-playful pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
             {/* Decorative Background Elements */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
                 <div className="clay-shape-circle w-96 h-96 -top-48 -left-48 opacity-40" />
@@ -306,7 +305,7 @@ export default function PetsPage() {
                                 <span className="clay-icon-bubble clay-icon-bubble-mint w-10 h-10 text-lg">🎯</span>
                                 Pet Gallery
                             </h2>
-                            
+
                             {isLoading ? (
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {[1, 2, 3, 4, 5, 6].map(i => (
@@ -403,13 +402,13 @@ export default function PetsPage() {
                                     {/* Action Buttons */}
                                     {displayPet.is_unlocked && (
                                         <div className="flex gap-3">
-                                            <button 
+                                            <button
                                                 onClick={() => handleFeed(displayPet.pet_id)}
                                                 className="clay-btn clay-btn-yellow clay-btn-md flex-1"
                                             >
                                                 🍖 Feed
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => handlePlay(displayPet.pet_id)}
                                                 className="clay-btn clay-btn-blue clay-btn-md flex-1"
                                             >
@@ -433,13 +432,13 @@ export default function PetsPage() {
                     <h2 className="text-2xl font-black text-gray-800 mb-2">Want More Pets?</h2>
                     <p className="text-gray-600 mb-6">Complete lessons and earn XP to unlock rare and legendary companions!</p>
                     <div className="flex flex-wrap justify-center gap-4">
-                        <button 
+                        <button
                             className="clay-cta-primary"
                             onClick={() => window.location.href = '/courses'}
                         >
                             Start Learning
                         </button>
-                        <button 
+                        <button
                             className="clay-cta-secondary"
                             onClick={() => window.location.href = '/learn-ar'}
                         >

@@ -582,7 +582,6 @@ export default function LearnARV2() {
         flashcardCount,
         activeCombo,
         comboMindUrl,
-        mode: multiMode,
         hasCombo,
         isProximityCombo,
         comboTriggered,
