@@ -27,12 +27,14 @@ import { useNavigate } from 'react-router-dom';
 import { ARContainerV2, ARPhase } from '@/components/ar/ARContainerV2';
 import ARControlPanel from '@/components/panel/ARControlPanel';
 import { ARGamificationPanel } from '@/components/Gamification/ARGamificationPanel';
+import { PetSelector } from '@/components/pets/PetSelector';
 import { RewardCelebration } from '@/components/Gamification/RewardCelebration';
 import { ErrorFriendly } from '@/components/ErrorFriendly';
 import { BreakReminder } from '@/components/BreakReminder';
 import { useArData } from '@/hooks/useArData';
 import { useQuizData } from '@/hooks/useQuizData';
 import { useGameData } from '@/hooks/useGameData';
+import { usePets } from '@/hooks/usePets';
 import { useGamification } from '@/hooks/useGamification';
 import { useMultiFlashcard } from '@/hooks/useMultiFlashcard';
 import { useSessionTimer } from '@/hooks/useSessionTimer';
@@ -508,6 +510,7 @@ export default function LearnARV2() {
 
     // Pet chat popup state
     const [petChat, setPetChat] = useState<{ petName: string; word: string } | null>(null);
+    const [isPetSelectorOpen, setIsPetSelectorOpen] = useState(false);
 
     // Track whether the AR target marker is visible (for 2D overlay)
     const [markerFound, setMarkerFound] = useState(false);
@@ -601,7 +604,10 @@ export default function LearnARV2() {
     );
 
     // Gamification
-    const { trackFlashcardView, trackComboDiscovered } = useGamification(USER_ID);
+    const { progress, trackFlashcardView, trackComboDiscovered } = useGamification(USER_ID);
+
+    // Pets
+    const { pets, unlockPet, setActivePet, recentlyUnlocked } = usePets(USER_ID);
 
     // ========== AR DATA ==========
     const mindUrl = hasCombo && comboMindUrl
@@ -997,8 +1003,23 @@ export default function LearnARV2() {
 
             {/* Gamification Panel (disabled in guest mode) */}
             {appState === 'VIEWING' && USER_ID && (
-                <ARGamificationPanel userId={USER_ID} />
+                <ARGamificationPanel 
+                    userId={USER_ID} 
+                    onPetClick={() => setIsPetSelectorOpen(true)}
+                />
             )}
+
+            {/* Pet Selector Modal */}
+            <PetSelector
+                isOpen={isPetSelectorOpen}
+                onClose={() => setIsPetSelectorOpen(false)}
+                pets={pets}
+                userXP={progress?.total_xp || 0}
+                userStreak={progress?.current_streak || 0}
+                onUnlock={unlockPet}
+                onSetActive={setActivePet}
+                recentlyUnlockedPet={recentlyUnlocked}
+            />
 
             {/* Reward Celebration Overlay */}
             <RewardCelebration autoListen={true} />
