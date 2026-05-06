@@ -20,22 +20,22 @@ export const CourseDetail: React.FC = () => {
     return (
         <div className="min-h-screen clay-bg-playful pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
             {/* Top Navigation Bar */}
-            <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b-2 border-white shadow-sm px-4 sm:px-6 py-4 flex items-center justify-between">
-                <button 
+            <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b-2 border-white shadow-sm px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <button
                     onClick={() => navigate('/courses')}
-                    className="clay-btn clay-btn-sm bg-white text-gray-600 hover:text-gray-800"
+                    className="clay-btn clay-btn-sm bg-white text-gray-600 hover:text-gray-800 w-full sm:w-auto justify-center"
                 >
                     ⬅️ Back to Courses
                 </button>
-                <div className="clay-badge clay-badge-yellow">
+                <div className="clay-badge clay-badge-yellow self-end sm:self-auto">
                     ⭐ 150 XP
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 px-4 sm:px-6 py-8">
+            <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-5 sm:gap-6 px-4 sm:px-6 py-6 sm:py-8">
                 {/* Left Sidebar: Lesson List */}
-                <aside className="w-full lg:w-80 shrink-0">
-                    <div className="clay-card-elevated p-5 sm:p-6 sticky top-24">
+                <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-24">
+                    <div className="clay-card-elevated p-5 sm:p-6 lg:max-h-[calc(100vh-8rem)] lg:overflow-auto">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="clay-icon-bubble clay-icon-bubble-mint shrink-0 w-12 h-12 text-2xl">
                                 📚
@@ -103,7 +103,7 @@ export const CourseDetail: React.FC = () => {
                 <main className="flex-1">
                     <div className="clay-card-elevated p-5 sm:p-8">
                         {/* Header for current lesson */}
-                        <div className="flex items-center gap-4 mb-6 pb-6 border-b-2 border-gray-100">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6 pb-6 border-b-2 border-gray-100">
                             <div className={`clay-icon-bubble ${currentLesson.type === 'video' ? 'clay-icon-bubble-sky' : 'clay-icon-bubble-coral'}`}>
                                 {currentLesson.type === 'video' ? '📺' : '🎤'}
                             </div>

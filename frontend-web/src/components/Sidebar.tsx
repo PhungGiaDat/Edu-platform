@@ -88,98 +88,151 @@ export const Sidebar: React.FC = () => {
 
     return (
         <>
-            {/* Desktop & Tablet Sidebar (Left) */}
-            <aside className="hidden md:flex flex-col w-24 lg:w-72 h-screen bg-[#FFFBF0] border-r-4 border-white fixed left-0 top-0 z-50 transition-all duration-300 shadow-[4px_0_24px_rgba(91,141,239,0.05)]">
-                {/* Logo Area */}
-                <div className="p-6 lg:p-8 flex items-center justify-center lg:justify-start gap-3">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-[0_4px_0_#3A8FD1] bg-gradient-to-br from-[#6EB9FF] to-[#3A8FD1]">
-                        <GraduationCapIcon className="w-7 h-7" />
-                    </div>
-                    <h1 className="hidden lg:block text-3xl font-black text-gray-800 tracking-tight" style={{ fontFamily: "'Baloo 2', sans-serif" }}>
-                        Edu<span className="text-[#6EB9FF]">AR</span>
-                    </h1>
-                </div>
-
-                {/* Main Navigation */}
-                <nav className="flex-1 px-4 space-y-3 overflow-y-auto overflow-x-hidden no-scrollbar">
-                    {navItems.map((item) => {
-                        const IconComponent = iconComponents[item.iconKey];
-                        const isActive = location.pathname === item.path;
-                        
-                        return (
-                            <Link
-                                key={item.path}
-                                to={item.path}
-                                className={`group flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-2xl font-bold transition-all min-h-[56px] relative ${
-                                    isActive
-                                        ? 'bg-white text-[#5B8DEF] border-2 border-[#6EB9FF] shadow-[0_6px_0_#6EB9FF,inset_0_1px_0_rgba(255,255,255,0.9)]'
-                                        : 'text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-[0_4px_0_#E2E8F5] border-2 border-transparent'
-                                }`}
-                            >
-                                <IconComponent className={`w-6 h-6 shrink-0 transition-transform ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                                <span className="hidden lg:block text-[17px]">{item.label}</span>
-                                
-                                {isActive && (
-                                    <div className="hidden lg:block absolute right-3 w-2 h-2 rounded-full bg-[#5B8DEF]" />
-                                )}
-                            </Link>
-                        );
-                    })}
-                </nav>
-
-                {/* Bottom Section: Progress Demo & Secondary Actions */}
-                <div className="p-4 space-y-4">
-                    {/* User Mini Progress Card (Only visible on Desktop/lg) */}
-                    {!isGuest && (
-                        <div className="hidden lg:block bg-white rounded-3xl p-4 border-2 border-white shadow-[0_8px_0_rgba(0,0,0,0.04),0_4px_16px_rgba(91,141,239,0.08)] mb-2 relative overflow-hidden">
-                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-[#FFE066] to-[#FFD93D] rounded-full opacity-20 blur-xl"></div>
-                            
-                            <div className="flex items-center gap-3 mb-3 relative z-10">
-                                <div className="w-10 h-10 bg-[#FFD93D] rounded-xl flex items-center justify-center text-xl shadow-[0_3px_0_#E5B800]">
-                                    🦊
-                                </div>
-                                <div>
-                                    <p className="font-bold text-gray-800 text-sm leading-tight">Level 5 Explorer</p>
-                                    <p className="text-xs text-gray-500 font-semibold">680 / 1000 XP</p>
-                                </div>
+            {/* Desktop Sidebar (Claymorphic Landing Panel) */}
+            <aside className="hidden md:flex flex-col w-64 h-screen bg-[#FFF7EC] border-r-4 border-white fixed left-0 top-0 z-50 shadow-[4px_0_24px_rgba(91,141,239,0.06)]">
+                <div className="h-full overflow-y-auto no-scrollbar px-4 py-6 space-y-6">
+                    {/* Brand Hero */}
+                    <section className="clay-hero rounded-3xl p-5 text-center">
+                        <div className="flex items-center justify-center gap-3 mb-3">
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-[0_4px_0_#3A8FD1] bg-gradient-to-br from-[#6EB9FF] to-[#3A8FD1]">
+                                <GraduationCapIcon className="w-7 h-7" />
                             </div>
-                            
-                            {/* XP Bar */}
-                            <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner relative z-10">
-                                <div className="h-full bg-gradient-to-r from-[#6EB9FF] to-[#B4E197] rounded-full w-[68%] relative">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent w-[200%] animate-[clay-shimmer_2s_infinite]"></div>
-                                </div>
-                            </div>
+                            <h1 className="text-2xl font-black text-gray-800" style={{ fontFamily: "'Baloo 2', sans-serif" }}>
+                                Edu<span className="text-[#6EB9FF]">AR</span>
+                            </h1>
                         </div>
-                    )}
+                        <p className="text-sm text-gray-600 font-semibold">Play. Explore. Learn English.</p>
+                    </section>
 
-                    {/* Guest Enrollment CTA (Only visible on Desktop/lg) */}
-                    {isGuest && (
-                        <div className="hidden lg:block bg-gradient-to-br from-[#FFD93D] to-[#FFCA28] rounded-3xl p-5 border-2 border-white shadow-[0_8px_0_#E5B800,0_4px_16px_rgba(255,217,61,0.3)] mb-2 text-center text-[#1A2744]">
-                            <div className="text-3xl mb-2 clay-float-element">🚀</div>
-                            <h3 className="font-black text-lg mb-1 leading-tight" style={{ fontFamily: "'Baloo 2', sans-serif" }}>Unlock AR Magic</h3>
-                            <p className="text-xs font-bold mb-3 opacity-80">Track progress & get pets!</p>
-                            <button onClick={() => navigate('/register')} className="w-full bg-white text-[#1A2744] font-black py-2 rounded-xl text-sm shadow-[0_4px_0_rgba(0,0,0,0.1)] hover:translate-y-[-2px] hover:shadow-[0_6px_0_rgba(0,0,0,0.1)] active:translate-y-[2px] active:shadow-[0_2px_0_rgba(0,0,0,0.1)] transition-all">
-                                Sign Up Free
-                            </button>
+                    {/* Quick Links */}
+                    <section className="clay-card-elevated p-4">
+                        <h2 className="text-sm font-black text-gray-800 mb-3">Quick Links</h2>
+                        <div className="flex flex-wrap gap-2">
+                            {navItems.map((item) => {
+                                const isActive = location.pathname === item.path;
+                                const IconComponent = iconComponents[item.iconKey];
+                                return (
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        className={`clay-tab flex items-center gap-2 ${isActive ? 'clay-tab-active' : ''}`}
+                                    >
+                                        <IconComponent className="w-4 h-4" />
+                                        <span className="text-xs font-bold">{item.label}</span>
+                                    </Link>
+                                );
+                            })}
+                            {!isGuest && (
+                                <button
+                                    onClick={() => navigate('/pets')}
+                                    className={`clay-tab flex items-center gap-2 ${location.pathname === '/pets' ? 'clay-tab-active' : ''}`}
+                                >
+                                    <PetIcon className="w-4 h-4" />
+                                    <span className="text-xs font-bold">My Pet</span>
+                                </button>
+                            )}
                         </div>
-                    )}
+                    </section>
 
-                    <div className="space-y-2">
-                        {!isGuest && (
+                    {/* Course Catalog Preview */}
+                    <section className="clay-card-elevated p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-sm font-black text-gray-800">Course Catalog</h2>
                             <button
-                                onClick={() => navigate('/pets')}
-                                className="w-full group flex items-center justify-center lg:justify-start gap-4 px-4 py-3 text-gray-500 hover:bg-white hover:text-[#FF9F9F] rounded-2xl font-bold min-h-[56px] transition-all border-2 border-transparent hover:border-white hover:shadow-[0_4px_0_rgba(255,159,159,0.2)]"
+                                onClick={() => navigate('/courses')}
+                                className="text-xs font-bold text-[#5B8DEF]"
                             >
-                                <PetIcon className="w-6 h-6 shrink-0 transition-transform group-hover:scale-110" />
-                                <span className="hidden lg:block text-[17px]">My Pet</span>
+                                View all
                             </button>
-                        )}
-                        <button className="w-full group flex items-center justify-center lg:justify-start gap-4 px-4 py-3 text-gray-500 hover:bg-white hover:text-gray-700 rounded-2xl font-bold min-h-[56px] transition-all border-2 border-transparent hover:border-white hover:shadow-[0_4px_0_#E2E8F5]">
-                            <SettingsIcon className="w-6 h-6 shrink-0 transition-transform group-hover:scale-110" />
-                            <span className="hidden lg:block text-[17px]">Settings</span>
+                        </div>
+                        <div className="space-y-3">
+                            {[
+                                { emoji: '🦁', title: 'Animal World', progress: 42, color: '#FFB4A2' },
+                                { emoji: '🌈', title: 'Colors & Shapes', progress: 80, color: '#A8D8FF' },
+                                { emoji: '🍕', title: 'Food & Drinks', progress: 10, color: '#A8E6CF' },
+                            ].map((course) => (
+                                <div key={course.title} className="clay-card-sunshine p-3">
+                                    <div className="flex items-center gap-3">
+                                        <div
+                                            className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+                                            style={{ background: `${course.color}55` }}
+                                        >
+                                            {course.emoji}
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="text-sm font-black text-gray-800">{course.title}</div>
+                                            <div className="h-2 bg-white/70 rounded-full overflow-hidden mt-2">
+                                                <div
+                                                    className="h-full rounded-full"
+                                                    style={{ width: `${course.progress}%`, background: course.color }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <span className="text-xs font-bold text-gray-600">{course.progress}%</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Progress Tracking Demo */}
+                    <section className="clay-card-elevated p-4">
+                        <h2 className="text-sm font-black text-gray-800 mb-3">Progress Tracker</h2>
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                            <div className="clay-stat-card">
+                                <div className="text-xl">⚡</div>
+                                <div className="clay-stat-number">680</div>
+                                <div className="clay-stat-label">XP</div>
+                            </div>
+                            <div className="clay-stat-card">
+                                <div className="text-xl">🔥</div>
+                                <div className="clay-stat-number">12</div>
+                                <div className="clay-stat-label">Streak</div>
+                            </div>
+                        </div>
+                        <div className="text-xs font-bold text-gray-600 mb-2">Weekly Goal</div>
+                        <div className="h-3 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                            <div
+                                className="h-full rounded-full clay-shimmer"
+                                style={{ width: '68%', background: 'linear-gradient(90deg, #6EB9FF, #B4E197)' }}
+                            />
+                        </div>
+                    </section>
+
+                    {/* Testimonials */}
+                    <section className="clay-card-elevated p-4">
+                        <h2 className="text-sm font-black text-gray-800 mb-3">Student Stories</h2>
+                        <div className="space-y-3">
+                            {[
+                                { name: 'Emma', quote: 'I love learning with AR!' },
+                                { name: 'Lucas', quote: 'The pets keep me motivated.' },
+                            ].map((testimonial) => (
+                                <div key={testimonial.name} className="clay-testimonial">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center">🎓</div>
+                                        <div className="text-xs font-bold text-gray-700">{testimonial.name}</div>
+                                    </div>
+                                    <p className="text-xs text-gray-600 italic">"{testimonial.quote}"</p>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Enrollment CTA */}
+                    <section className="text-center">
+                        <button
+                            onClick={() => navigate(isGuest ? '/register' : '/learn-ar')}
+                            className="clay-cta-primary w-full"
+                        >
+                            {isGuest ? '🚀 Start Free Trial' : '🎯 Jump into AR'}
                         </button>
-                    </div>
+                        <button
+                            onClick={() => navigate('/courses')}
+                            className="clay-cta-secondary w-full mt-3"
+                        >
+                            📚 Browse Courses
+                        </button>
+                    </section>
                 </div>
             </aside>
 

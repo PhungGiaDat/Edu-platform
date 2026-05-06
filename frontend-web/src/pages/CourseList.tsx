@@ -321,7 +321,7 @@ const StatsOverview: React.FC<{ courses: Course[] }> = ({ courses }) => {
     const coursesStarted = courses.filter(c => c.completedLessons > 0).length;
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
             <div className="clay-stat-card">
                 <div className="text-3xl mb-2">📚</div>
                 <div className="clay-stat-number">{courses.length}</div>
@@ -412,7 +412,7 @@ export const CourseList: React.FC = () => {
 
                 {/* Filters */}
                 <section className="mb-8">
-                    <div className="clay-card-elevated p-4 flex flex-col md:flex-row gap-4 items-center">
+                    <div className="clay-card-elevated p-4 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
                         {/* Search */}
                         <div className="flex-1 w-full">
                             <input
@@ -425,7 +425,7 @@ export const CourseList: React.FC = () => {
                         </div>
 
                         {/* Level Filter */}
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap justify-center sm:justify-start gap-2">
                             {['all', 'beginner', 'intermediate', 'advanced'].map(level => (
                                 <button
                                     key={level}

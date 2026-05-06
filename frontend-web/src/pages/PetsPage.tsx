@@ -290,7 +290,7 @@ export default function PetsPage() {
                 </header>
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-3 gap-4 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-8">
                     <StatCard icon="🐾" value={unlockedCount} label="Pets Unlocked" color="#5B8DEF" />
                     <StatCard icon="⚡" value={1250} label="Total XP" color="#FFB347" />
                     <StatCard icon="🔥" value={12} label="Day Streak" color="#FF9F9F" />
@@ -337,7 +337,7 @@ export default function PetsPage() {
 
                     {/* Right: Active Pet Showcase */}
                     <div className="lg:col-span-1">
-                        <div className="clay-pet-showcase sticky top-8">
+                        <div className="clay-pet-showcase lg:sticky lg:top-8">
                             <h2 className="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">
                                 <span className="clay-icon-bubble clay-icon-bubble-sunshine w-10 h-10 text-lg">⭐</span>
                                 Active Pet
@@ -358,7 +358,7 @@ export default function PetsPage() {
                                                 <PetViewer3D
                                                     key={`${displayPet.pet_id}:${displayPet.model_url}`}
                                                     pet={displayPet}
-                                                    height="280px"
+                                                    height="clamp(220px, 38vw, 280px)"
                                                     autoRotate={true}
                                                     enableControls={true}
                                                     scale={1.0}
@@ -366,7 +366,7 @@ export default function PetsPage() {
                                                 />
                                             </Suspense>
                                         ) : displayPet.thumbnail_url ? (
-                                            <div className="h-64 flex items-center justify-center bg-white/30">
+                                        <div className="h-56 sm:h-64 flex items-center justify-center bg-white/30">
                                                 <img
                                                     src={displayPet.thumbnail_url}
                                                     alt={displayPet.name}
@@ -374,7 +374,7 @@ export default function PetsPage() {
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="h-64 flex items-center justify-center flex-col gap-2 px-4 text-center">
+                                        <div className="h-56 sm:h-64 flex items-center justify-center flex-col gap-2 px-4 text-center">
                                                 <span className="text-7xl">{rarityConfig[displayPet.rarity].badge}</span>
                                                 <p className="text-xs font-semibold text-gray-600">
                                                     3D preview disabled: use self-contained .glb/.gltf model_url
