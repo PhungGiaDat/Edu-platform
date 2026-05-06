@@ -192,7 +192,7 @@ export const Profile: React.FC = () => {
                             </div>
 
                             {/* Quick stats */}
-                            <div className="flex gap-3 sm:flex-col">
+                            <div className="flex gap-3 flex-wrap justify-center sm:flex-col">
                                 <div className="clay-stat-card text-center" style={{ minWidth: '100px' }}>
                                     <span className="text-2xl">🔥</span>
                                     <div className="mt-1 text-2xl font-black text-orange-500">{userStats.streak_days}</div>
@@ -213,7 +213,7 @@ export const Profile: React.FC = () => {
                     {/* Left column - Badges & Stats */}
                     <div className="space-y-6 lg:col-span-2">
                         {/* Tab navigation */}
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                             <button
                                 onClick={() => setActiveTab('badges')}
                                 className={`clay-tab ${activeTab === 'badges' ? 'clay-tab-active' : ''}`}
@@ -231,7 +231,7 @@ export const Profile: React.FC = () => {
                         {/* Badges section */}
                         {activeTab === 'badges' && (
                             <section className="clay-card-sky p-6">
-                                <div className="mb-4 flex items-center justify-between">
+                                <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                     <h2 className="text-xl font-black text-slate-800">
                                         Badge Collection
                                     </h2>
@@ -344,12 +344,12 @@ export const Profile: React.FC = () => {
                         )}
 
                         {/* Testimonials Section */}
-                        <section className="clay-card-lavender p-6">
+                             <section className="clay-card-lavender p-6">
                             <h2 className="mb-4 text-center text-xl font-black text-slate-800">
                                 What Other Learners Say ✨
                             </h2>
 
-                            <div className="grid gap-4 sm:grid-cols-3">
+                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 {testimonials.map((testimonial) => (
                                     <div
                                         key={testimonial.id}

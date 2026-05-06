@@ -33,7 +33,7 @@ export const ProgressDashboard: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center clay-bg-playful pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
+            <div className="min-h-screen flex items-center justify-center clay-bg-playful p-4 pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
                 <div className="text-center">
                     <div className="text-5xl animate-bounce mb-4">📊</div>
                     <p className="text-sky-700 font-bold">Loading progress...</p>
@@ -70,14 +70,14 @@ export const ProgressDashboard: React.FC = () => {
                     background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
                 }}
             >
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                     <div>
                         <h1 className="text-2xl font-black text-white">Progress Report</h1>
                         <p className="text-white/80 text-sm">Track learning journey</p>
                     </div>
                     <button
                         onClick={() => refresh()}
-                        className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+                        className="self-start sm:self-auto p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
                         style={{ minWidth: 44, minHeight: 44 }}
                     >
                         <span className="text-xl">🔄</span>
@@ -85,7 +85,7 @@ export const ProgressDashboard: React.FC = () => {
                 </div>
                 
                 {/* View Toggle */}
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                     <button
                         onClick={() => setViewMode('overview')}
                         className={`flex-1 py-2 px-4 rounded-xl font-bold text-sm transition-all ${
