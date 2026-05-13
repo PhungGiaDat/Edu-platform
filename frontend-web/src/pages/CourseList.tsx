@@ -264,17 +264,17 @@ const LearningPathCard: React.FC<{
     const pathCourses = courses.filter(c => path.courses.includes(c.id));
 
     return (
-        <div className="clay-card-elevated p-6">
-            <div className="flex items-center gap-4 mb-4">
-                <div className="clay-icon-bubble clay-icon-bubble-sunshine">
+        <div className="clay-card-elevated h-full p-4 sm:p-5 xl:p-6">
+            <div className="mb-4 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 sm:gap-4">
+                <div className="clay-icon-bubble clay-icon-bubble-sunshine h-16 w-16 shrink-0">
                     {path.icon}
                 </div>
-                <div>
-                    <h3 className="font-black text-xl text-gray-800">{path.title}</h3>
+                <div className="min-w-0">
+                    <h3 className="truncate text-lg font-black text-gray-800 sm:text-xl">{path.title}</h3>
                     <p className="text-sm text-gray-500">{pathCourses.length} courses</p>
                 </div>
-                <div className="ml-auto text-right">
-                    <div className="text-2xl font-black" style={{ color: '#5B8DEF' }}>{path.progress}%</div>
+                <div className="shrink-0 text-right">
+                    <div className="text-xl font-black sm:text-2xl" style={{ color: '#5B8DEF' }}>{path.progress}%</div>
                     <div className="text-xs text-gray-500">completed</div>
                 </div>
             </div>
@@ -291,11 +291,11 @@ const LearningPathCard: React.FC<{
             </div>
 
             {/* Course Icons */}
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
                 {pathCourses.map((course, index) => (
                     <div
                         key={course.id}
-                        className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl border-2 border-white shadow-md"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-white text-xl shadow-md sm:h-12 sm:w-12 sm:text-2xl"
                         style={{
                             background: `linear-gradient(145deg, ${course.color}, ${course.colorDark})`,
                             marginLeft: index > 0 ? '-8px' : 0,
@@ -305,7 +305,7 @@ const LearningPathCard: React.FC<{
                         {course.icon}
                     </div>
                 ))}
-                <span className="text-sm text-gray-500 ml-2">
+                <span className="ml-1 min-w-0 text-sm text-gray-500 sm:ml-2">
                     {pathCourses.filter(c => c.completedLessons === c.lessonsCount).length} of {pathCourses.length} done
                 </span>
             </div>
@@ -321,7 +321,7 @@ const StatsOverview: React.FC<{ courses: Course[] }> = ({ courses }) => {
     const coursesStarted = courses.filter(c => c.completedLessons > 0).length;
 
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
             <div className="clay-stat-card">
                 <div className="text-3xl mb-2">📚</div>
                 <div className="clay-stat-number">{courses.length}</div>
@@ -366,7 +366,7 @@ export const CourseList: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen clay-bg-playful pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
+        <div className="min-h-screen clay-bg-playful pb-28 md:pb-10">
             {/* Decorative Background */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
                 <div className="clay-shape-circle w-96 h-96 -top-48 -right-48 opacity-40" />
@@ -374,20 +374,20 @@ export const CourseList: React.FC = () => {
                 <div className="clay-shape-circle w-80 h-80 bottom-20 right-1/4 opacity-25" />
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
+            <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
                 {/* Hero Section */}
-                <header className="text-center mb-12">
-                    <div className="inline-flex items-center gap-2 clay-badge-yellow mb-4">
+                <header className="mx-auto mb-8 max-w-4xl text-center lg:mb-10">
+                    <div className="mb-4 inline-flex items-center gap-2 clay-badge-yellow">
                         <span>🎓</span>
                         <span>Learn English with Fun!</span>
                     </div>
                     <h1
-                        className="text-4xl md:text-5xl font-black text-gray-800 mb-4"
+                        className="mb-4 text-4xl font-black text-gray-800 md:text-5xl"
                         style={{ fontFamily: "'Baloo 2', sans-serif" }}
                     >
                         Course Catalog
                     </h1>
-                    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                    <p className="mx-auto max-w-2xl text-base text-gray-600 sm:text-lg">
                         Explore our interactive courses designed for young learners.
                         Learn vocabulary through AR, flashcards, and fun quizzes!
                     </p>
@@ -397,9 +397,9 @@ export const CourseList: React.FC = () => {
                 <StatsOverview courses={mockCourses} />
 
                 {/* Learning Paths Section */}
-                <section className="mb-12">
+                <section className="mb-10 lg:mb-12">
                     <h2 className="clay-section-title mb-6">Your Learning Paths</h2>
-                    <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid gap-5 xl:grid-cols-2 xl:gap-6">
                         {mockLearningPaths.map(path => (
                             <LearningPathCard
                                 key={path.id}
@@ -412,7 +412,7 @@ export const CourseList: React.FC = () => {
 
                 {/* Filters */}
                 <section className="mb-8">
-                    <div className="clay-card-elevated p-4 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+                    <div className="clay-card-elevated flex flex-col items-stretch gap-4 p-4 lg:flex-row lg:items-center">
                         {/* Search */}
                         <div className="flex-1 w-full">
                             <input
@@ -425,7 +425,7 @@ export const CourseList: React.FC = () => {
                         </div>
 
                         {/* Level Filter */}
-                        <div className="flex flex-wrap justify-center sm:justify-start gap-2">
+                        <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
                             {['all', 'beginner', 'intermediate', 'advanced'].map(level => (
                                 <button
                                     key={level}
@@ -442,7 +442,7 @@ export const CourseList: React.FC = () => {
                 {/* Course Grid */}
                 <section className="mb-12">
                     <h2 className="clay-section-title mb-6">All Courses</h2>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6">
                         {filteredCourses.map(course => (
                             <CourseCard
                                 key={course.id}

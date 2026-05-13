@@ -99,16 +99,30 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
             {!isOpen && show3DPet && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-20 right-4 h-24 w-24 cursor-pointer border-0 bg-transparent p-0 drop-shadow-2xl transition-all duration-300 hover:scale-110 md:bottom-6 md:right-6 md:h-32 md:w-32"
+                    className="group fixed bottom-20 right-3 h-28 w-28 cursor-pointer p-0 transition-transform duration-300 hover:scale-105 md:bottom-6 md:right-6 md:h-32 md:w-32"
                     style={{
                         zIndex: 'var(--z-chatbot)',
+                        background: 'transparent',
+                        backgroundColor: 'transparent',
+                        border: 0,
+                        borderRadius: 0,
+                        boxShadow: 'none',
+                        minWidth: 0,
+                        minHeight: 0,
+                        outlineOffset: 6,
                         WebkitTapHighlightColor: 'transparent',
                     }}
                     title="Talk to Lexi"
                     aria-label="Talk to Lexi"
                 >
+                    <span className="absolute -left-28 top-2 hidden w-32 rounded-2xl border-2 border-sky-100 bg-white px-3 py-2 text-left text-xs font-black leading-tight text-slate-700 shadow-[0_10px_24px_rgba(91,141,239,0.18)] transition-transform duration-300 group-hover:-translate-y-1 sm:block">
+                        Need help?
+                        <span className="block font-bold text-sky-500">Ask Lexi!</span>
+                        <span className="absolute -right-2 top-8 h-4 w-4 rotate-45 border-r-2 border-t-2 border-sky-100 bg-white" />
+                    </span>
                     <CodexPetSprite
-                        animationState="idle"
+                        animationState="waiting"
+                        className="drop-shadow-2xl"
                         label="Lexi"
                         size="100%"
                     />
@@ -117,54 +131,57 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
 
             {isOpen && (
                 <div
-                    className="fixed right-4 flex h-[500px] w-[92vw] max-w-[380px] animate-slideUp flex-col overflow-hidden clay-card md:right-6"
+                    className="fixed right-3 flex h-[min(560px,calc(100dvh-112px))] w-[calc(100vw-1.5rem)] max-w-[410px] animate-slideUp flex-col overflow-hidden rounded-[28px] border-4 border-white/80 shadow-[0_16px_0_rgba(91,141,239,0.10),0_26px_56px_rgba(45,60,90,0.18)] md:right-6"
                     style={{
-                        bottom: 144,
+                        bottom: 112,
                         zIndex: 'var(--z-chatbot)',
                         fontFamily: "'Nunito Sans', 'Quicksand', sans-serif",
-                        background: 'var(--color-surface)',
-                        border: '3px solid var(--color-border)',
+                        background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(239,249,255,0.98) 100%)',
                     }}
                 >
-                    <div className="flex items-center justify-between bg-gradient-to-r from-sky-400 to-cyan-500 p-4">
+                    <div className="relative overflow-hidden bg-gradient-to-r from-sky-400 via-cyan-400 to-emerald-300 p-4">
+                        <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/20" />
+                        <div className="absolute bottom-0 left-12 h-14 w-14 rounded-full bg-yellow-200/25" />
+                        <div className="relative flex items-center justify-between">
                         <div className="flex min-w-0 items-center gap-3">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-md">
-                                <CodexPetSprite animationState="waving" label="Lexi" size={44} />
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/90 shadow-[0_5px_0_rgba(30,87,153,0.16)]">
+                                <CodexPetSprite animationState="waving" label="Lexi" size={52} />
                             </div>
                             <div className="min-w-0">
-                                <h3 className="truncate text-lg font-bold text-white">Lexi</h3>
-                                <span className="rounded-full bg-white/30 px-2 py-0.5 text-xs font-medium text-white">
-                                    Ready to help
+                                <h3 className="truncate text-xl font-black text-white drop-shadow-sm">Lexi</h3>
+                                <span className="rounded-full bg-white/35 px-2.5 py-1 text-xs font-black text-white">
+                                    English buddy
                                 </span>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={handleNewChat}
-                                className="rounded-full bg-white/20 px-3 py-1.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/30 hover:text-white"
+                                className="rounded-full border-2 border-white/30 bg-white/25 px-3 py-1.5 text-sm font-black text-white transition-colors hover:bg-white/35"
                                 title="Start new conversation"
                             >
                                 New
                             </button>
                             <button
                                 onClick={() => setIsOpen(false)}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white/80 transition-colors hover:bg-white/30 hover:text-white"
+                                className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white/30 bg-white/25 text-lg font-black text-white transition-colors hover:bg-white/35"
                                 aria-label="Close chat"
                             >
                                 x
                             </button>
                         </div>
+                        </div>
                     </div>
 
-                    <div className="flex-1 space-y-3 overflow-y-auto p-4" style={{ background: 'var(--color-surface-soft)' }}>
+                    <div className="flex-1 space-y-3 overflow-y-auto p-4" style={{ background: 'linear-gradient(180deg, #F8FCFF 0%, #FFF8ED 100%)' }}>
                         {messages.map((msg) => (
                             <div
                                 key={msg.id}
                                 className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
                                 {msg.role === 'ai' && (
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-                                        <CodexPetSprite animationState="idle" label="Lexi" size={30} />
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-[0_4px_0_rgba(91,141,239,0.12)]">
+                                        <CodexPetSprite animationState="idle" label="Lexi" size={38} />
                                     </div>
                                 )}
 
@@ -172,8 +189,8 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                                     <div
                                         className={`rounded-2xl p-3 text-sm font-medium ${
                                             msg.role === 'user'
-                                                ? 'rounded-br-sm bg-gradient-to-br from-amber-400 to-orange-400 text-white'
-                                                : 'rounded-bl-sm border-2 border-amber-200 bg-white text-gray-700 shadow-sm'
+                                                ? 'rounded-br-sm bg-gradient-to-br from-sky-500 to-cyan-500 text-white shadow-[0_4px_0_rgba(14,165,233,0.18)]'
+                                                : 'rounded-bl-sm border-2 border-yellow-100 bg-white text-slate-700 shadow-[0_4px_0_rgba(251,191,36,0.12)]'
                                         }`}
                                     >
                                         {msg.content}
@@ -198,7 +215,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
 
                         {isLoading && (
                             <div className="flex justify-start">
-                                <div className="rounded-2xl rounded-bl-sm border-2 border-amber-200 bg-white p-3 shadow-sm">
+                                <div className="rounded-2xl rounded-bl-sm border-2 border-yellow-100 bg-white p-3 shadow-sm">
                                     <div className="flex gap-1.5">
                                         <div className="h-2.5 w-2.5 animate-bounce rounded-full bg-sky-400" style={{ animationDelay: '0ms' }} />
                                         <div className="h-2.5 w-2.5 animate-bounce rounded-full bg-sky-400" style={{ animationDelay: '150ms' }} />
@@ -210,7 +227,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                         <div ref={messagesEndRef} />
                     </div>
 
-                    <div className="border-t-2 border-amber-200 bg-white p-3">
+                    <div className="border-t-2 border-sky-100 bg-white p-3">
                         <div className="flex gap-2">
                             <input
                                 type="text"
@@ -218,13 +235,13 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                                 onChange={(event) => setInput(event.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Ask Lexi..."
-                                className="flex-1 rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-gray-700 placeholder-gray-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                                className="min-w-0 flex-1 rounded-2xl border-2 border-sky-100 bg-sky-50/70 px-4 py-3 text-sm font-bold text-slate-700 placeholder-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
                                 disabled={isLoading}
                             />
                             <button
                                 onClick={() => void handleSend()}
                                 disabled={isLoading || !input.trim()}
-                                className="rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 px-5 font-bold text-white shadow-md shadow-amber-500/30 transition-all duration-200 hover:scale-105 hover:from-amber-500 hover:to-orange-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                                className="rounded-2xl border-0 bg-gradient-to-br from-yellow-300 to-orange-300 px-5 font-black text-slate-800 shadow-[0_5px_0_rgba(245,158,11,0.24)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                             >
                                 Send
                             </button>
