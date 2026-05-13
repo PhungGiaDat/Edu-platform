@@ -119,6 +119,10 @@ function createGLTFLoader(modelUrl: string): {
 // Cache for loaded models to avoid re-downloading
 const modelCache = new Map<string, GLTF>();
 
+function getModelCacheKey(url: string, textureUrl?: string | null): string {
+  return textureUrl ? `${url}::texture=${textureUrl}` : url;
+}
+
 
 /**
  * Safe GLTF loader that uses THREE.GLTFLoader directly
@@ -187,8 +191,10 @@ export function useSafeGLTF(url: string | null | undefined, textureUrl?: string 
       return;
     }
 
+    const cacheKey = getModelCacheKey(url, textureUrl);
+
     // Check cache first
-    const cached = modelCache.get(url);
+    const cached = modelCache.get(cacheKey);
     if (cached) {
       setGltf(cached);
       setState('loaded');
@@ -232,11 +238,12 @@ export function useSafeGLTF(url: string | null | undefined, textureUrl?: string 
                 if (textureUrl) {
                     console.log('[useSafeGLTF] Applying texture override:', textureUrl);
                     const textureLoader = new THREE.TextureLoader();
+                    textureLoader.setCrossOrigin('anonymous');
                     
                     // Set a timeout for texture loading so it doesn't hang the whole model
                     const textureTimeout = setTimeout(() => {
                         console.warn('[useSafeGLTF] Texture load timed out, showing model without override');
-                        modelCache.set(url, loadedGltf);
+                        modelCache.set(cacheKey, loadedGltf);
                         setGltf(loadedGltf);
                         setState('loaded');
                         setProgress(100);
@@ -266,21 +273,21 @@ export function useSafeGLTF(url: string | null | undefined, textureUrl?: string 
                         });
                         
                         console.log('[useSafeGLTF] Texture applied and model ready');
-                        modelCache.set(url, loadedGltf);
+                        modelCache.set(cacheKey, loadedGltf);
                         setGltf(loadedGltf);
                         setState('loaded');
                         setProgress(100);
                     }, undefined, (err) => {
                         clearTimeout(textureTimeout);
                         console.error('[useSafeGLTF] Failed to load separate texture:', textureUrl, err);
-                        modelCache.set(url, loadedGltf);
+                        modelCache.set(cacheKey, loadedGltf);
                         setGltf(loadedGltf);
                         setState('loaded');
                         setProgress(100);
                     });
                 } else {
                     // Standard load for self-contained GLBs
-                    modelCache.set(url, loadedGltf);
+                    modelCache.set(cacheKey, loadedGltf);
                     setGltf(loadedGltf);
                     setState('loaded');
                     setProgress(100);
@@ -333,16 +340,16 @@ export function useSafeGLTF(url: string | null | undefined, textureUrl?: string 
         abortControllerRef.current = null;
       }
     };
-  }, [url, retryCount]);
+  }, [url, textureUrl, retryCount]);
 
   // Retry function
   const retry = useCallback(() => {
     // Clear cache for this URL to force reload
     if (url) {
-      modelCache.delete(url);
+      modelCache.delete(getModelCacheKey(url, textureUrl));
     }
     setRetryCount((c) => c + 1);
-  }, [url]);
+  }, [url, textureUrl]);
 
   return {
     gltf,

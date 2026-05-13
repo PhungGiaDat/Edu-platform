@@ -14,6 +14,10 @@ export type { PetCardProps } from './PetCard';
 export { PetViewer3D, PetViewer3DCompact, preloadPetModel } from './PetViewer3D';
 export type { PetViewer3DProps } from './PetViewer3D';
 
+// CodexPetSprite - Codex-style atlas sprite player for Lexi
+export { CodexPetSprite } from './CodexPetSprite';
+export type { CodexPetSpriteProps, CodexPetAnimationState } from './CodexPetSprite';
+
 // PetGrid - Responsive grid with filtering and selection
 export { PetGrid } from './PetGrid';
 export type { PetGridProps } from './PetGrid';

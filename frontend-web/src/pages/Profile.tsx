@@ -110,7 +110,7 @@ export const Profile: React.FC = () => {
                 />
             </div>
 
-            <div className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6">
+            <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 xl:px-10">
                 {/* Hero Profile Section */}
                 <section className="clay-hero mb-8 overflow-hidden">
                     <div className="relative">
@@ -122,9 +122,9 @@ export const Profile: React.FC = () => {
                             }}
                         />
 
-                        <div className="relative flex flex-col items-center gap-6 p-6 sm:flex-row sm:p-8">
+                        <div className="relative grid gap-6 p-6 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:p-8 lg:grid-cols-[auto_minmax(0,1fr)_minmax(14rem,18rem)] lg:gap-8 xl:gap-10">
                             {/* Avatar with level ring */}
-                            <div className="relative">
+                            <div className="relative justify-self-center sm:justify-self-start">
                                 <div className="clay-progress-ring" style={{ '--progress': `${levelProgress}%` } as React.CSSProperties}>
                                     <div
                                         className="h-28 w-28 overflow-hidden rounded-full sm:h-32 sm:w-32"
@@ -154,7 +154,7 @@ export const Profile: React.FC = () => {
                             </div>
 
                             {/* User info */}
-                            <div className="flex-1 text-center sm:text-left">
+                            <div className="min-w-0 text-center sm:text-left">
                                 <h1
                                     className="text-3xl font-black text-slate-800 sm:text-4xl"
                                     style={{ textShadow: '2px 2px 0px rgba(255, 107, 107, 0.2)' }}
@@ -164,7 +164,7 @@ export const Profile: React.FC = () => {
                                 <p className="mt-1 text-lg font-bold text-slate-500">Super Star Learner ⭐</p>
 
                                 {/* XP Progress bar */}
-                                <div className="mt-4 max-w-xs sm:max-w-sm">
+                                <div className="mx-auto mt-4 max-w-xs sm:mx-0 sm:max-w-sm lg:max-w-lg">
                                     <div className="mb-1 flex justify-between text-sm font-bold">
                                         <span className="text-slate-600">{userStats.total_points} XP</span>
                                         <span className="text-slate-400">{xpForNextLevel} XP</span>
@@ -192,13 +192,13 @@ export const Profile: React.FC = () => {
                             </div>
 
                             {/* Quick stats */}
-                            <div className="flex gap-3 flex-wrap justify-center sm:flex-col">
-                                <div className="clay-stat-card text-center" style={{ minWidth: '100px' }}>
+                            <div className="grid w-full grid-cols-2 gap-3 sm:col-span-2 sm:grid-cols-2 lg:col-span-1 lg:grid-cols-1">
+                                <div className="clay-stat-card text-center !p-4 lg:!p-5">
                                     <span className="text-2xl">🔥</span>
                                     <div className="mt-1 text-2xl font-black text-orange-500">{userStats.streak_days}</div>
                                     <div className="text-xs font-bold text-slate-500">Day Streak</div>
                                 </div>
-                                <div className="clay-stat-card text-center" style={{ minWidth: '100px' }}>
+                                <div className="clay-stat-card text-center !p-4 lg:!p-5">
                                     <span className="text-2xl">⚡</span>
                                     <div className="mt-1 text-2xl font-black text-sky-500">{userStats.total_points}</div>
                                     <div className="text-xs font-bold text-slate-500">Total XP</div>
@@ -209,9 +209,9 @@ export const Profile: React.FC = () => {
                 </section>
 
                 {/* Main content grid */}
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-5 xl:items-start">
                     {/* Left column - Badges & Stats */}
-                    <div className="space-y-6 lg:col-span-2">
+                    <div className="min-w-0 space-y-6 xl:col-span-3">
                         {/* Tab navigation */}
                         <div className="flex flex-wrap gap-2">
                             <button
@@ -247,7 +247,7 @@ export const Profile: React.FC = () => {
                                 </div>
 
                                 {/* Enhanced badge grid */}
-                                <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
+                                <div className="grid grid-cols-3 gap-4 sm:grid-cols-6 xl:gap-5">
                                     {badges.map((badge) => {
                                         const isEarned = earnedBadgeIds.includes(badge.id);
                                         return (
@@ -349,7 +349,7 @@ export const Profile: React.FC = () => {
                                 What Other Learners Say ✨
                             </h2>
 
-                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                             <div className="grid gap-4 md:grid-cols-3">
                                 {testimonials.map((testimonial) => (
                                     <div
                                         key={testimonial.id}
@@ -379,7 +379,7 @@ export const Profile: React.FC = () => {
                     </div>
 
                     {/* Right column - Leaderboard & CTA */}
-                    <div className="space-y-6">
+                    <div className="min-w-0 space-y-6 xl:col-span-2">
                         {/* Styled Leaderboard */}
                         <section className="clay-card-sunshine overflow-hidden p-0">
                             <div
@@ -413,13 +413,13 @@ export const Profile: React.FC = () => {
                                             alt={entry.username}
                                             className="h-10 w-10 rounded-full border-2 border-white shadow-sm"
                                         />
-                                        <div className="flex-1">
+                                        <div className="min-w-0 flex-1">
                                             <div className={`font-bold ${entry.username === username ? 'text-yellow-700' : 'text-slate-700'}`}>
                                                 {entry.username}
                                                 {entry.username === username && <span className="ml-1 text-xs">(You)</span>}
                                             </div>
                                         </div>
-                                        <div className="font-bold text-yellow-600">
+                                        <div className="shrink-0 font-bold text-yellow-600">
                                             {entry.points} XP
                                         </div>
                                     </div>

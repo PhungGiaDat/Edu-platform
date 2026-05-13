@@ -1,0 +1,18 @@
+# Generated from opencode.json by scripts/migrate_opencode_to_codex.py
+# Review command availability before relying on migrated MCP servers.
+
+[agents]
+max_threads = 5
+max_depth = 3
+
+[mcp_servers.ast-grep]
+command = "sh"
+args = ["-c", "[ -f .ast-grep/sgconfig.yml ] || (mkdir -p .ast-grep && printf 'ruleDirs: []\\n' > .ast-grep/sgconfig.yml); exec uvx --from git+https://github.com/ast-grep/ast-grep-mcp ast-grep-server --config .ast-grep/sgconfig.yml"]
+
+[mcp_servers.mcpls]
+command = "mcpls"
+args = []
+
+[mcp_servers.qmd]
+command = "qmd"
+args = ["mcp"]

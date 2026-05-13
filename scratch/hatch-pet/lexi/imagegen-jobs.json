@@ -1,0 +1,478 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-05-12T13:04:04.269498+00:00",
+  "run_dir": "E:\\University\\Graduted Project\\Edu-platform\\scratch\\hatch-pet\\lexi",
+  "primary_generation_skill": "$imagegen",
+  "jobs": [
+    {
+      "id": "base",
+      "kind": "base-pet",
+      "status": "complete",
+      "prompt_file": "prompts/base-pet.md",
+      "input_images": [],
+      "output_path": "decoded/base.png",
+      "depends_on": [],
+      "generation_skill": "$imagegen",
+      "requires_grounded_generation": false,
+      "allow_prompt_only_generation": true,
+      "recording_owner": "parent",
+      "source_path": "C:\\Users\\LENOVO\\.codex\\generated_images\\019e1c44-28b3-7b23-892b-08bd1433c21b\\ig_0c6adbd2f990d740016a03255b43a08191a53e8a985e6290e8.png",
+      "source_provenance": "built-in-imagegen",
+      "source_sha256": "daaebcbd02dcad4fcd3d8a19201e7b1a7a1dce3f45062536e0c6a6c88381db5d",
+      "output_sha256": "daaebcbd02dcad4fcd3d8a19201e7b1a7a1dce3f45062536e0c6a6c88381db5d",
+      "completed_at": "2026-05-12T13:06:27.721287+00:00",
+      "metadata": {
+        "width": 1206,
+        "height": 1305,
+        "mode": "RGB",
+        "format": "PNG"
+      },
+      "canonical_reference_path": "references\\canonical-base.png"
+    },
+    {
+      "id": "idle",
+      "kind": "row-strip",
+      "status": "complete",
+      "prompt_file": "prompts/rows/idle.md",
+      "input_images": [
+        {
+          "path": "references/layout-guides/idle.png",
+          "role": "layout guide for 6 frame slots; use for spacing only, do not copy guide lines"
+        },
+        {
+          "path": "references/canonical-base.png",
+          "role": "canonical identity reference"
+        },
+        {
+          "path": "decoded/base.png",
+          "role": "approved base pet"
+        }
+      ],
+      "output_path": "decoded/idle.png",
+      "depends_on": [
+        "base"
+      ],
+      "generation_skill": "$imagegen",
+      "requires_grounded_generation": true,
+      "allow_prompt_only_generation": false,
+      "identity_reference_paths": [
+        "references/canonical-base.png",
+        "decoded/base.png"
+      ],
+      "parallelizable_after": [
+        "base"
+      ],
+      "mirror_policy": {},
+      "recording_owner": "parent",
+      "source_path": "C:\\Users\\LENOVO\\.codex\\generated_images\\019e1c44-28b3-7b23-892b-08bd1433c21b\\ig_0c6adbd2f990d740016a03264973088191a67d4bb7daf9f663.png",
+      "source_provenance": "built-in-imagegen",
+      "source_sha256": "47e4933985d48a27f338df917c673227fa26d30e91da038dc1ce1d3c962a7ca8",
+      "output_sha256": "47e4933985d48a27f338df917c673227fa26d30e91da038dc1ce1d3c962a7ca8",
+      "completed_at": "2026-05-12T13:09:53.804180+00:00",
+      "metadata": {
+        "width": 2146,
+        "height": 733,
+        "mode": "RGB",
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "running-right",
+      "kind": "row-strip",
+      "status": "complete",
+      "prompt_file": "prompts/rows/running-right.md",
+      "input_images": [
+        {
+          "path": "references/layout-guides/running-right.png",
+          "role": "layout guide for 8 frame slots; use for spacing only, do not copy guide lines"
+        },
+        {
+          "path": "references/canonical-base.png",
+          "role": "canonical identity reference"
+        },
+        {
+          "path": "decoded/base.png",
+          "role": "approved base pet"
+        }
+      ],
+      "output_path": "decoded/running-right.png",
+      "depends_on": [
+        "base"
+      ],
+      "generation_skill": "$imagegen",
+      "requires_grounded_generation": true,
+      "allow_prompt_only_generation": false,
+      "identity_reference_paths": [
+        "references/canonical-base.png",
+        "decoded/base.png"
+      ],
+      "parallelizable_after": [
+        "base"
+      ],
+      "mirror_policy": {},
+      "recording_owner": "parent",
+      "source_path": "C:\\Users\\LENOVO\\.codex\\generated_images\\019e1c44-28b3-7b23-892b-08bd1433c21b\\ig_0c6adbd2f990d740016a0326b303288191a1c541d276d54ab4.png",
+      "source_provenance": "built-in-imagegen",
+      "source_sha256": "dedb36cc134beb9675f732210a9569b022ff5492beacf4e78ab022ecce65ae79",
+      "output_sha256": "dedb36cc134beb9675f732210a9569b022ff5492beacf4e78ab022ecce65ae79",
+      "completed_at": "2026-05-12T13:11:37.916183+00:00",
+      "metadata": {
+        "width": 2048,
+        "height": 768,
+        "mode": "RGB",
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "running-left",
+      "kind": "row-strip",
+      "status": "complete",
+      "prompt_file": "prompts/rows/running-left.md",
+      "input_images": [
+        {
+          "path": "references/layout-guides/running-left.png",
+          "role": "layout guide for 8 frame slots; use for spacing only, do not copy guide lines"
+        },
+        {
+          "path": "references/canonical-base.png",
+          "role": "canonical identity reference"
+        },
+        {
+          "path": "decoded/base.png",
+          "role": "approved base pet"
+        },
+        {
+          "path": "decoded/running-right.png",
+          "role": "rightward gait reference for leftward row decision"
+        }
+      ],
+      "output_path": "decoded/running-left.png",
+      "depends_on": [
+        "base",
+        "running-right"
+      ],
+      "generation_skill": "$imagegen",
+      "requires_grounded_generation": true,
+      "allow_prompt_only_generation": false,
+      "identity_reference_paths": [
+        "references/canonical-base.png",
+        "decoded/base.png"
+      ],
+      "parallelizable_after": [
+        "base",
+        "running-right"
+      ],
+      "mirror_policy": {
+        "may_derive_from": "running-right",
+        "derivation": "horizontal-mirror",
+        "requires_explicit_approval": true,
+        "fallback_generation_skill": "$imagegen"
+      },
+      "recording_owner": "parent",
+      "source_path": "C:\\Users\\LENOVO\\.codex\\generated_images\\019e1c44-28b3-7b23-892b-08bd1433c21b\\ig_0c6adbd2f990d740016a03271d382081919c0961dbb95d233d.png",
+      "source_provenance": "built-in-imagegen",
+      "source_sha256": "98d067d5c87f85f38302dbc49973edecd7087ee58284b7bf627d72b587601dba",
+      "output_sha256": "98d067d5c87f85f38302dbc49973edecd7087ee58284b7bf627d72b587601dba",
+      "completed_at": "2026-05-12T13:13:17.079956+00:00",
+      "metadata": {
+        "width": 2048,
+        "height": 768,
+        "mode": "RGB",
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "waving",
+      "kind": "row-strip",
+      "status": "complete",
+      "prompt_file": "prompts/rows/waving.md",
+      "input_images": [
+        {
+          "path": "references/layout-guides/waving.png",
+          "role": "layout guide for 4 frame slots; use for spacing only, do not copy guide lines"
+        },
+        {
+          "path": "references/canonical-base.png",
+          "role": "canonical identity reference"
+        },
+        {
+          "path": "decoded/base.png",
+          "role": "approved base pet"
+        }
+      ],
+      "output_path": "decoded/waving.png",
+      "depends_on": [
+        "base"
+      ],
+      "generation_skill": "$imagegen",
+      "requires_grounded_generation": true,
+      "allow_prompt_only_generation": false,
+      "identity_reference_paths": [
+        "references/canonical-base.png",
+        "decoded/base.png"
+      ],
+      "parallelizable_after": [
+        "base"
+      ],
+      "mirror_policy": {},
+      "recording_owner": "parent",
+      "source_path": "C:\\Users\\LENOVO\\.codex\\generated_images\\019e1c44-28b3-7b23-892b-08bd1433c21b\\ig_0c6adbd2f990d740016a0327792ed48191a9e801a4904c3248.png",
+      "source_provenance": "built-in-imagegen",
+      "source_sha256": "a90313a85d47fa4268ba78b84770b9cf4df582207589c7797fc72baed1dfa06d",
+      "output_sha256": "a90313a85d47fa4268ba78b84770b9cf4df582207589c7797fc72baed1dfa06d",
+      "completed_at": "2026-05-12T13:14:49.726056+00:00",
+      "metadata": {
+        "width": 2172,
+        "height": 724,
+        "mode": "RGB",
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "jumping",
+      "kind": "row-strip",
+      "status": "complete",
+      "prompt_file": "prompts/rows/jumping.md",
+      "input_images": [
+        {
+          "path": "references/layout-guides/jumping.png",
+          "role": "layout guide for 5 frame slots; use for spacing only, do not copy guide lines"
+        },
+        {
+          "path": "references/canonical-base.png",
+          "role": "canonical identity reference"
+        },
+        {
+          "path": "decoded/base.png",
+          "role": "approved base pet"
+        }
+      ],
+      "output_path": "decoded/jumping.png",
+      "depends_on": [
+        "base"
+      ],
+      "generation_skill": "$imagegen",
+      "requires_grounded_generation": true,
+      "allow_prompt_only_generation": false,
+      "identity_reference_paths": [
+        "references/canonical-base.png",
+        "decoded/base.png"
+      ],
+      "parallelizable_after": [
+        "base"
+      ],
+      "mirror_policy": {},
+      "recording_owner": "parent",
+      "source_path": "C:\\Users\\LENOVO\\.codex\\generated_images\\019e1c44-28b3-7b23-892b-08bd1433c21b\\ig_0c6adbd2f990d740016a0327e038908191836c75d059157ba1.png",
+      "source_provenance": "built-in-imagegen",
+      "source_sha256": "8b3bb3f32082e06bde7168919df34472e7b5a6110ff64cf629aab2beb7e41c95",
+      "output_sha256": "8b3bb3f32082e06bde7168919df34472e7b5a6110ff64cf629aab2beb7e41c95",
+      "completed_at": "2026-05-12T13:16:31.094867+00:00",
+      "metadata": {
+        "width": 2172,
+        "height": 724,
+        "mode": "RGB",
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "failed",
+      "kind": "row-strip",
+      "status": "complete",
+      "prompt_file": "prompts/rows/failed.md",
+      "input_images": [
+        {
+          "path": "references/layout-guides/failed.png",
+          "role": "layout guide for 8 frame slots; use for spacing only, do not copy guide lines"
+        },
+        {
+          "path": "references/canonical-base.png",
+          "role": "canonical identity reference"
+        },
+        {
+          "path": "decoded/base.png",
+          "role": "approved base pet"
+        }
+      ],
+      "output_path": "decoded/failed.png",
+      "depends_on": [
+        "base"
+      ],
+      "generation_skill": "$imagegen",
+      "requires_grounded_generation": true,
+      "allow_prompt_only_generation": false,
+      "identity_reference_paths": [
+        "references/canonical-base.png",
+        "decoded/base.png"
+      ],
+      "parallelizable_after": [
+        "base"
+      ],
+      "mirror_policy": {},
+      "recording_owner": "parent",
+      "source_path": "C:\\Users\\LENOVO\\.codex\\generated_images\\019e1c44-28b3-7b23-892b-08bd1433c21b\\ig_0c6adbd2f990d740016a03286541908191911f4e378de8260f.png",
+      "source_provenance": "built-in-imagegen",
+      "source_sha256": "c4e2c1027225ae1f172b562e6b327aaa8fd87cefa93aae7c4d2cadb8dc865533",
+      "output_sha256": "c4e2c1027225ae1f172b562e6b327aaa8fd87cefa93aae7c4d2cadb8dc865533",
+      "completed_at": "2026-05-12T13:18:58.239983+00:00",
+      "metadata": {
+        "width": 2142,
+        "height": 734,
+        "mode": "RGB",
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "waiting",
+      "kind": "row-strip",
+      "status": "complete",
+      "prompt_file": "prompts/rows/waiting.md",
+      "input_images": [
+        {
+          "path": "references/layout-guides/waiting.png",
+          "role": "layout guide for 6 frame slots; use for spacing only, do not copy guide lines"
+        },
+        {
+          "path": "references/canonical-base.png",
+          "role": "canonical identity reference"
+        },
+        {
+          "path": "decoded/base.png",
+          "role": "approved base pet"
+        }
+      ],
+      "output_path": "decoded/waiting.png",
+      "depends_on": [
+        "base"
+      ],
+      "generation_skill": "$imagegen",
+      "requires_grounded_generation": true,
+      "allow_prompt_only_generation": false,
+      "identity_reference_paths": [
+        "references/canonical-base.png",
+        "decoded/base.png"
+      ],
+      "parallelizable_after": [
+        "base"
+      ],
+      "mirror_policy": {},
+      "recording_owner": "parent",
+      "source_path": "C:\\Users\\LENOVO\\.codex\\generated_images\\019e1c44-28b3-7b23-892b-08bd1433c21b\\ig_0c6adbd2f990d740016a0328d894f481919f7066867c887901.png",
+      "source_provenance": "built-in-imagegen",
+      "source_sha256": "a486ffac0f96b9fba760102688dd6ddaa77a718e58be6495ba2db61936bae250",
+      "output_sha256": "a486ffac0f96b9fba760102688dd6ddaa77a718e58be6495ba2db61936bae250",
+      "completed_at": "2026-05-12T13:20:45.314299+00:00",
+      "metadata": {
+        "width": 2141,
+        "height": 734,
+        "mode": "RGB",
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "running",
+      "kind": "row-strip",
+      "status": "complete",
+      "prompt_file": "prompts/rows/running.md",
+      "input_images": [
+        {
+          "path": "references/layout-guides/running.png",
+          "role": "layout guide for 6 frame slots; use for spacing only, do not copy guide lines"
+        },
+        {
+          "path": "references/canonical-base.png",
+          "role": "canonical identity reference"
+        },
+        {
+          "path": "decoded/base.png",
+          "role": "approved base pet"
+        }
+      ],
+      "output_path": "decoded/running.png",
+      "depends_on": [
+        "base"
+      ],
+      "generation_skill": "$imagegen",
+      "requires_grounded_generation": true,
+      "allow_prompt_only_generation": false,
+      "identity_reference_paths": [
+        "references/canonical-base.png",
+        "decoded/base.png"
+      ],
+      "parallelizable_after": [
+        "base"
+      ],
+      "mirror_policy": {},
+      "recording_owner": "parent",
+      "source_path": "C:\\Users\\LENOVO\\.codex\\generated_images\\019e1c44-28b3-7b23-892b-08bd1433c21b\\ig_0c6adbd2f990d740016a03299225208191a85d43a2dd9a5dac.png",
+      "source_provenance": "built-in-imagegen",
+      "source_sha256": "ed18215cd43f1f20be46bd916271356888111f7d0762a97f55f8516577ec44c3",
+      "output_sha256": "ed18215cd43f1f20be46bd916271356888111f7d0762a97f55f8516577ec44c3",
+      "completed_at": "2026-05-12T13:23:49.573778+00:00",
+      "metadata": {
+        "width": 2149,
+        "height": 732,
+        "mode": "RGB",
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "review",
+      "kind": "row-strip",
+      "status": "complete",
+      "prompt_file": "prompts/rows/review.md",
+      "input_images": [
+        {
+          "path": "references/layout-guides/review.png",
+          "role": "layout guide for 6 frame slots; use for spacing only, do not copy guide lines"
+        },
+        {
+          "path": "references/canonical-base.png",
+          "role": "canonical identity reference"
+        },
+        {
+          "path": "decoded/base.png",
+          "role": "approved base pet"
+        }
+      ],
+      "output_path": "decoded/review.png",
+      "depends_on": [
+        "base"
+      ],
+      "generation_skill": "$imagegen",
+      "requires_grounded_generation": true,
+      "allow_prompt_only_generation": false,
+      "identity_reference_paths": [
+        "references/canonical-base.png",
+        "decoded/base.png"
+      ],
+      "parallelizable_after": [
+        "base"
+      ],
+      "mirror_policy": {},
+      "recording_owner": "parent",
+      "source_path": "C:\\Users\\LENOVO\\.codex\\generated_images\\019e1c44-28b3-7b23-892b-08bd1433c21b\\ig_0c6adbd2f990d740016a0329fd501c8191a5b830654b0358ce.png",
+      "source_provenance": "built-in-imagegen",
+      "source_sha256": "bfe5973f4773184110a1a48621dc49bf3507bdab3631705032c49bd2d5433659",
+      "output_sha256": "bfe5973f4773184110a1a48621dc49bf3507bdab3631705032c49bd2d5433659",
+      "completed_at": "2026-05-12T13:25:31.559838+00:00",
+      "metadata": {
+        "width": 2172,
+        "height": 724,
+        "mode": "RGB",
+        "format": "PNG"
+      }
+    }
+  ],
+  "canonical_identity_reference": {
+    "path": "references\\canonical-base.png",
+    "source_job": "base",
+    "sha256": "daaebcbd02dcad4fcd3d8a19201e7b1a7a1dce3f45062536e0c6a6c88381db5d",
+    "metadata": {
+      "width": 1206,
+      "height": 1305,
+      "mode": "RGB",
+      "format": "PNG"
+    }
+  }
+}

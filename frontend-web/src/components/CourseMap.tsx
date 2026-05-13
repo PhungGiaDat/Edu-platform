@@ -98,7 +98,7 @@ const LessonNode: React.FC<{
 
     return (
         <div
-            className={`relative flex flex-col items-center ${isEven ? 'mr-auto ml-4 sm:ml-8 md:ml-16' : 'ml-auto mr-4 sm:mr-8 md:mr-16'}`}
+            className={`relative z-10 flex w-[min(46%,11rem)] flex-col items-center sm:w-[min(44%,13rem)] lg:w-[min(38%,15rem)] ${isEven ? 'mr-auto ml-4 sm:ml-8 lg:ml-[12%]' : 'ml-auto mr-4 sm:mr-8 lg:mr-[12%]'}`}
         >
             {/* Node Button */}
             <button
@@ -120,7 +120,7 @@ const LessonNode: React.FC<{
 
             {/* Lesson Title */}
             <div className={`
-                mt-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold text-center max-w-[100px] sm:max-w-[120px]
+                mt-2 w-full px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold text-center max-w-[120px] sm:max-w-[150px] lg:max-w-[170px]
                 ${lesson.status === 'locked' ? 'text-gray-400 bg-gray-100' : 'text-gray-700 bg-white/80 shadow-sm'}
             `}>
                 {lesson.title}
@@ -245,15 +245,15 @@ export const CourseMap: React.FC<CourseMapProps> = ({
     const progressPercent = Math.round((completedLessons / totalLessons) * 100);
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-amber-50 py-4 sm:py-6 px-2 sm:px-4">
+        <div className="min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-amber-50 py-4 sm:py-6 lg:py-10 px-2 sm:px-4 lg:px-8">
             {/* Header */}
-            <div className="max-w-sm sm:max-w-lg mx-auto mb-6 sm:mb-8">
-                <h1 className="text-2xl sm:text-3xl font-black text-gray-800 text-center mb-3 sm:mb-2">
+            <div className="mx-auto mb-6 max-w-sm sm:mb-8 sm:max-w-lg lg:max-w-3xl">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-800 text-center mb-3 sm:mb-2">
                     {courseName}
                 </h1>
 
                 {/* Progress Bar */}
-                <div className="bg-white rounded-full p-2 shadow-md">
+                <div className="bg-white rounded-full p-2 shadow-md lg:p-3">
                     <div className="flex items-center gap-2 sm:gap-3">
                         <div className="flex-1 h-2 sm:h-3 bg-gray-200 rounded-full overflow-hidden">
                             <div
@@ -269,15 +269,15 @@ export const CourseMap: React.FC<CourseMapProps> = ({
             </div>
 
             {/* Learning Path */}
-            <div className="max-w-sm sm:max-w-lg mx-auto relative">
+            <div className="mx-auto max-w-sm sm:max-w-lg lg:max-w-3xl xl:max-w-4xl relative">
                 {/* Decorative Path Line */}
                 <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-300 via-sky-300 to-gray-300 -translate-x-1/2 rounded-full" />
 
                 {/* Units */}
                 {units.map((unit, unitIndex) => (
-                    <div key={unit.unit_id} className="relative mb-8 sm:mb-12">
+                    <div key={unit.unit_id} className="relative mb-8 sm:mb-12 lg:mb-14">
                         {/* Unit Header */}
-                        <div className="relative z-10 bg-white rounded-2xl shadow-md p-3 sm:p-4 mb-4 sm:mb-6 mx-2 sm:mx-4">
+                        <div className="relative z-10 mx-auto mb-4 max-w-xs rounded-2xl bg-white p-3 shadow-md sm:mb-6 sm:max-w-sm sm:p-4 lg:max-w-md">
                             <h2 className="text-base sm:text-lg font-black text-gray-700 text-center">
                                 {unit.title}
                             </h2>
@@ -287,7 +287,7 @@ export const CourseMap: React.FC<CourseMapProps> = ({
                         </div>
 
                         {/* Lessons in this unit */}
-                        <div className="space-y-6 sm:space-y-8">
+                        <div className="space-y-6 sm:space-y-8 lg:space-y-10">
                             {unit.lessons.map((lesson, lessonIndex) => (
                                 <LessonNode
                                     key={lesson.lesson_id}

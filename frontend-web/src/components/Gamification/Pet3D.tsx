@@ -22,13 +22,13 @@ interface Pet3DErrorBoundaryState {
     hasError: boolean;
 }
 
-class Pet3DErrorBoundary extends Component<{ children: React.ReactNode }, Pet3DErrorBoundaryState> {
-    constructor(props: { children: React.ReactNode }) {
+class Pet3DErrorBoundary extends Component<{ children: React.ReactNode; fallback?: React.ReactNode }, Pet3DErrorBoundaryState> {
+    constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
         super(props);
         this.state = { hasError: false };
     }
 
-    static getDerivedStateFromError(_error: Error): Pet3DErrorBoundaryState {
+    static getDerivedStateFromError(): Pet3DErrorBoundaryState {
         return { hasError: true };
     }
 
@@ -38,8 +38,7 @@ class Pet3DErrorBoundary extends Component<{ children: React.ReactNode }, Pet3DE
 
     render() {
         if (this.state.hasError) {
-            // Render fallback emoji instead of crashing
-            return (
+            return this.props.fallback || (
                 <div
                     style={{
                         width: '100%',
@@ -74,6 +73,76 @@ const DEFAULT_PET_COLORS = { body: '#A8D5BA', accent: '#7FC9A5', cheek: '#FFB6C1
 // Safely get pet colors with fallback
 function getPetColors(petType: PetType | string): { body: string; accent: string; cheek: string } {
     return PET_COLORS[petType as PetType] || DEFAULT_PET_COLORS;
+}
+
+function CodexPetFallback({
+    petType,
+    mood,
+    happiness,
+    onClick,
+}: Pick<Pet3DProps, 'petType' | 'mood' | 'happiness' | 'onClick'>) {
+    const colors = getPetColors(petType);
+    const isSleeping = mood === 'sleeping';
+    const isHappy = mood === 'happy' || happiness > 70;
+
+    return (
+        <div
+            onClick={onClick}
+            className="relative flex h-full w-full items-center justify-center overflow-visible"
+            style={{ cursor: onClick ? 'pointer' : 'default' }}
+            aria-label={`${petType} companion`}
+        >
+            <div
+                className="absolute bottom-[12%] h-[14%] w-[58%] rounded-full bg-slate-900/20 blur-sm"
+                style={{ animation: 'pet3dFallbackShadow 2.8s ease-in-out infinite' }}
+            />
+            <div
+                className="relative flex h-[76%] aspect-square items-center justify-center"
+                style={{ animation: 'pet3dFallbackBob 2.8s ease-in-out infinite' }}
+            >
+                <div
+                    className="absolute inset-[15%] rounded-[34%] border-4 border-white/80 shadow-xl"
+                    style={{
+                        background: `linear-gradient(145deg, ${colors.body}, ${colors.accent})`,
+                    }}
+                />
+                <div
+                    className="absolute left-[26%] top-[32%] h-[12%] w-[12%] rounded-full bg-slate-800"
+                    style={{ transform: isSleeping ? 'scaleY(0.18)' : 'scaleY(1)' }}
+                />
+                <div
+                    className="absolute right-[26%] top-[32%] h-[12%] w-[12%] rounded-full bg-slate-800"
+                    style={{ transform: isSleeping ? 'scaleY(0.18)' : 'scaleY(1)' }}
+                />
+                <div
+                    className="absolute left-[25%] top-[49%] h-[10%] w-[10%] rounded-full opacity-70"
+                    style={{ background: colors.cheek }}
+                />
+                <div
+                    className="absolute right-[25%] top-[49%] h-[10%] w-[10%] rounded-full opacity-70"
+                    style={{ background: colors.cheek }}
+                />
+                <div
+                    className="absolute bottom-[28%] h-[7%] w-[20%] rounded-b-full border-b-4 border-slate-800"
+                    style={{ transform: isHappy ? 'scaleX(1.15)' : 'scaleX(0.75)' }}
+                />
+            </div>
+
+            <style>{`
+                @keyframes pet3dFallbackBob {
+                    0%, 100% { transform: translateY(0) scale(1); }
+                    45% { transform: translateY(-7%) scale(1.03); }
+                    70% { transform: translateY(-2%) scale(0.99); }
+                }
+
+                @keyframes pet3dFallbackShadow {
+                    0%, 100% { transform: scaleX(1); opacity: 0.2; }
+                    45% { transform: scaleX(0.78); opacity: 0.1; }
+                    70% { transform: scaleX(0.92); opacity: 0.15; }
+                }
+            `}</style>
+        </div>
+    );
 }
 
 // Scale factors for evolution stages
@@ -296,7 +365,16 @@ export const Pet3D: React.FC<Pet3DProps> = ({
     if (!visible) return null;
     
     return (
-        <Pet3DErrorBoundary>
+        <Pet3DErrorBoundary
+            fallback={
+                <CodexPetFallback
+                    petType={petType}
+                    mood={mood}
+                    happiness={happiness}
+                    onClick={onClick}
+                />
+            }
+        >
             <div
                 onClick={onClick}
                 style={{

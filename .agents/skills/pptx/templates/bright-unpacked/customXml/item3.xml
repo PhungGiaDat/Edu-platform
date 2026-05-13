@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:properties xmlns:p="http://schemas.microsoft.com/office/2006/metadata/properties" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pc="http://schemas.microsoft.com/office/infopath/2007/PartnerControls">
+  <documentManagement>
+    <_ip_UnifiedCompliancePolicyUIAction xmlns="http://schemas.microsoft.com/sharepoint/v3" xsi:nil="true"/>
+    <_ip_UnifiedCompliancePolicyProperties xmlns="http://schemas.microsoft.com/sharepoint/v3" xsi:nil="true"/>
+    <lcf76f155ced4ddcb4097134ff3c332f xmlns="d81ea301-fbfc-4718-a724-ec703239a190">
+      <Terms xmlns="http://schemas.microsoft.com/office/infopath/2007/PartnerControls"/>
+    </lcf76f155ced4ddcb4097134ff3c332f>
+  </documentManagement>
+</p:properties>
