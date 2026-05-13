@@ -74,7 +74,7 @@ function PetCollectionCard({
 
     return (
         <div
-            className={`relative rounded-3xl p-4 transition-all duration-300 cursor-pointer ${isLocked ? 'opacity-60' : ''
+            className={`relative h-full rounded-3xl p-4 transition-all duration-300 cursor-pointer ${isLocked ? 'opacity-60' : ''
                 } ${colorVariants[pet.rarity] || 'clay-card-elevated'}`}
             onClick={() => !isLocked && onSelect()}
             style={{
@@ -104,7 +104,7 @@ function PetCollectionCard({
             )}
 
             {/* Pet Thumbnail/3D Preview */}
-            <div className="relative h-32 rounded-2xl overflow-hidden mb-3 bg-white/40">
+            <div className="relative mb-3 h-28 overflow-hidden rounded-2xl bg-white/40 sm:h-32 lg:h-36">
                 {pet.thumbnail_url ? (
                     <img
                         src={pet.thumbnail_url}
@@ -129,16 +129,16 @@ function PetCollectionCard({
 
             {/* Action Buttons (only for unlocked pets) */}
             {!isLocked && (
-                <div className="flex gap-2 mt-3">
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                     <button
                         onClick={(e) => { e.stopPropagation(); onFeed(); }}
-                        className="flex-1 py-2 px-3 rounded-xl text-sm font-bold bg-white/60 hover:bg-white/80 transition-all"
+                        className="min-h-[40px] rounded-xl bg-white/60 px-3 py-2 text-sm font-bold transition-all hover:bg-white/80"
                     >
                         🍖 Feed
                     </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); onPlay(); }}
-                        className="flex-1 py-2 px-3 rounded-xl text-sm font-bold bg-white/60 hover:bg-white/80 transition-all"
+                        className="min-h-[40px] rounded-xl bg-white/60 px-3 py-2 text-sm font-bold transition-all hover:bg-white/80"
                     >
                         🎮 Play
                     </button>
@@ -278,7 +278,7 @@ export default function PetsPage() {
                 <div className="clay-shape-circle w-80 h-80 bottom-0 left-1/4 opacity-25" />
             </div>
 
-            <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
+            <div className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 xl:px-10">
                 {/* Header */}
                 <header className="text-center mb-8">
                     <h1 className="text-4xl md:text-5xl font-black text-gray-800 mb-2" style={{ fontFamily: "'Baloo 2', sans-serif" }}>
@@ -290,24 +290,24 @@ export default function PetsPage() {
                 </header>
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-8">
+                <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
                     <StatCard icon="🐾" value={unlockedCount} label="Pets Unlocked" color="#5B8DEF" />
                     <StatCard icon="⚡" value={1250} label="Total XP" color="#FFB347" />
                     <StatCard icon="🔥" value={12} label="Day Streak" color="#FF9F9F" />
                 </div>
 
                 {/* Main Content Grid */}
-                <div className="grid lg:grid-cols-3 gap-6">
+                <div className="grid gap-6 xl:grid-cols-5 xl:items-start">
                     {/* Left: Pet Collection */}
-                    <div className="lg:col-span-2">
-                        <div className="clay-card-elevated p-6">
+                    <div className="min-w-0 xl:col-span-3">
+                        <div className="clay-card-elevated p-4 sm:p-6">
                             <h2 className="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">
                                 <span className="clay-icon-bubble clay-icon-bubble-mint w-10 h-10 text-lg">🎯</span>
                                 Pet Gallery
                             </h2>
 
                             {isLoading ? (
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
                                     {[1, 2, 3, 4, 5, 6].map(i => (
                                         <div key={i} className="h-48 rounded-3xl bg-gray-100 animate-pulse" />
                                     ))}
@@ -319,7 +319,7 @@ export default function PetsPage() {
                                     <p className="text-gray-600">Complete lessons to unlock your first pet companion.</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
                                     {pets.map(pet => (
                                         <PetCollectionCard
                                             key={pet.pet_id}
@@ -336,8 +336,8 @@ export default function PetsPage() {
                     </div>
 
                     {/* Right: Active Pet Showcase */}
-                    <div className="lg:col-span-1">
-                        <div className="clay-pet-showcase lg:sticky lg:top-8">
+                    <div className="min-w-0 xl:col-span-2">
+                        <div className="clay-pet-showcase xl:sticky xl:top-8">
                             <h2 className="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">
                                 <span className="clay-icon-bubble clay-icon-bubble-sunshine w-10 h-10 text-lg">⭐</span>
                                 Active Pet
@@ -366,7 +366,7 @@ export default function PetsPage() {
                                                 />
                                             </Suspense>
                                         ) : displayPet.thumbnail_url ? (
-                                        <div className="h-56 sm:h-64 flex items-center justify-center bg-white/30">
+                                        <div className="flex h-56 items-center justify-center bg-white/30 sm:h-64 xl:h-[clamp(240px,28vw,320px)]">
                                                 <img
                                                     src={displayPet.thumbnail_url}
                                                     alt={displayPet.name}
@@ -374,7 +374,7 @@ export default function PetsPage() {
                                                 />
                                             </div>
                                         ) : (
-                                        <div className="h-56 sm:h-64 flex items-center justify-center flex-col gap-2 px-4 text-center">
+                                        <div className="flex h-56 flex-col items-center justify-center gap-2 px-4 text-center sm:h-64 xl:h-[clamp(240px,28vw,320px)]">
                                                 <span className="text-7xl">{rarityConfig[displayPet.rarity].badge}</span>
                                                 <p className="text-xs font-semibold text-gray-600">
                                                     3D preview disabled: use self-contained .glb/.gltf model_url
@@ -401,16 +401,16 @@ export default function PetsPage() {
 
                                     {/* Action Buttons */}
                                     {displayPet.is_unlocked && (
-                                        <div className="flex gap-3">
+                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2">
                                             <button
                                                 onClick={() => handleFeed(displayPet.pet_id)}
-                                                className="clay-btn clay-btn-yellow clay-btn-md flex-1"
+                                                className="clay-btn clay-btn-yellow clay-btn-md w-full"
                                             >
                                                 🍖 Feed
                                             </button>
                                             <button
                                                 onClick={() => handlePlay(displayPet.pet_id)}
-                                                className="clay-btn clay-btn-blue clay-btn-md flex-1"
+                                                className="clay-btn clay-btn-blue clay-btn-md w-full"
                                             >
                                                 🎮 Play
                                             </button>
@@ -428,7 +428,7 @@ export default function PetsPage() {
                 </div>
 
                 {/* CTA Section */}
-                <div className="mt-12 clay-card-elevated p-8 text-center">
+                <div className="mt-12 clay-card-elevated p-6 text-center sm:p-8">
                     <h2 className="text-2xl font-black text-gray-800 mb-2">Want More Pets?</h2>
                     <p className="text-gray-600 mb-6">Complete lessons and earn XP to unlock rare and legendary companions!</p>
                     <div className="flex flex-wrap justify-center gap-4">

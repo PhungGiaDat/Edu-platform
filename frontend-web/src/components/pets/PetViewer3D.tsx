@@ -13,7 +13,7 @@
  */
 
 import React, { Suspense, useRef, useEffect, useState, ErrorInfo, Component } from 'react';
-import { Canvas, useFrame, useLoader } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Float, Environment, Center } from '@react-three/drei';
 import * as THREE from 'three';
 import { rarityConfig } from './PetCard';
@@ -38,7 +38,7 @@ class CanvasErrorBoundary extends Component<CanvasErrorBoundaryProps, CanvasErro
         this.state = { hasError: false };
     }
 
-    static getDerivedStateFromError(_error: Error): CanvasErrorBoundaryState {
+    static getDerivedStateFromError(): CanvasErrorBoundaryState {
         return { hasError: true };
     }
 
@@ -104,6 +104,8 @@ interface Pet3DModelProps {
     onLoad?: () => void;
     onError?: (error: Error) => void;
 }
+
+const toCssSize = (value: string | number) => typeof value === 'number' ? `${value}px` : value;
 
 // ========== 3D Model Component ==========
 
@@ -198,41 +200,6 @@ function Pet3DModel({ url, textureUrl, scale, enableAnimation = true, onLoad, on
     );
 }
 
-// ========== Voxel Cube Fallback Component ==========
-
-function VoxelCubeFallback({ textureUrl, scale }: { textureUrl: string, scale: number }) {
-    const texture = useLoader(THREE.TextureLoader, textureUrl);
-    
-    useEffect(() => {
-        if (texture) {
-            texture.minFilter = THREE.NearestFilter;
-            texture.magFilter = THREE.NearestFilter;
-            texture.colorSpace = THREE.SRGBColorSpace;
-        }
-    }, [texture]);
-
-    const groupRef = useRef<THREE.Group>(null);
-    useFrame((state) => {
-        if (groupRef.current) {
-            const time = state.clock.getElapsedTime();
-            const breathe = Math.sin(time * 2) * 0.05;
-            groupRef.current.scale.setScalar(scale * (1 + breathe));
-            groupRef.current.rotation.y = time * 0.5; // Auto rotate slightly
-        }
-    });
-
-    return (
-        <group ref={groupRef}>
-            <Center>
-                <mesh castShadow receiveShadow>
-                    <boxGeometry args={[1.5, 1.5, 1.5]} />
-                    <meshStandardMaterial map={texture} />
-                </mesh>
-            </Center>
-        </group>
-    );
-}
-
 // ========== Loading Fallback Component ==========
 
 function LoadingFallback() {
@@ -258,40 +225,136 @@ function LoadingFallback() {
 
 // ========== Loading Overlay Component ==========
 
-const LoadingOverlay: React.FC<{ rarity?: Pet['rarity'] }> = ({ rarity: _rarity = 'common' }) => {
+const LoadingOverlay: React.FC = () => {
 
     return (
         <div
-            className="absolute inset-0 flex items-center justify-center"
+            className="absolute inset-0 z-20 flex items-center justify-center"
             style={{
-                background: 'rgba(0,0,0,0.3)',
-                backdropFilter: 'blur(4px)',
+                background: 'rgba(255,255,255,0.56)',
+                backdropFilter: 'blur(6px)',
             }}
         >
             <div className="text-center">
                 <div
                     className="w-12 h-12 mx-auto mb-3 rounded-full animate-spin"
                     style={{
-                        border: '4px solid rgba(255,255,255,0.2)',
-                        borderTopColor: 'white',
+                        border: '4px solid rgba(91,141,239,0.22)',
+                        borderTopColor: '#5B8DEF',
                     }}
                 />
-                <p
-                    className="text-white font-medium text-sm"
-                    style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
-                >
-                    Loading Pet...
+                <p className="text-slate-700 font-bold text-sm">
+                    Waking pet...
                 </p>
             </div>
         </div>
     );
 };
 
+// ========== Codex-Style Thumbnail Fallback ==========
+
+const CodexPetFallbackLayer: React.FC<{ pet: Pet; transparent?: boolean }> = ({
+    pet,
+    transparent = false,
+}) => {
+    const [thumbnailError, setThumbnailError] = React.useState(false);
+    const config = rarityConfig[pet.rarity];
+    const hasThumbnail = Boolean(pet.thumbnail_url && !thumbnailError);
+    const initial = (pet.name || 'P').trim().slice(0, 1).toUpperCase();
+
+    return (
+        <div className="absolute inset-0 overflow-hidden">
+            {!transparent && (
+                <>
+                    <div className="absolute inset-x-0 bottom-0 h-2/5 bg-white/35" />
+                    <div className="absolute left-1/2 top-1/2 h-[68%] w-[68%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/50 bg-white/35" />
+                </>
+            )}
+
+            <div className="absolute inset-0 flex items-center justify-center p-4">
+                <div className="relative flex h-full max-h-[78%] w-full max-w-[78%] items-center justify-center">
+                    {!transparent && (
+                        <div
+                            className="absolute bottom-[4%] h-[12%] w-[58%] rounded-full bg-slate-900/20 blur-sm"
+                            style={{ animation: 'codexPetShadow 2.8s ease-in-out infinite' }}
+                        />
+                    )}
+                    <div
+                        className="relative z-10 flex h-full w-full items-center justify-center"
+                        style={{ animation: 'codexPetIdleBob 2.8s ease-in-out infinite' }}
+                    >
+                        {hasThumbnail ? (
+                            <img
+                                src={pet.thumbnail_url!}
+                                alt={pet.name}
+                                className="h-full max-h-full w-full object-contain"
+                                style={{
+                                    filter: 'drop-shadow(0 18px 22px rgba(15, 23, 42, 0.24))',
+                                    imageRendering: 'auto',
+                                }}
+                                onError={() => setThumbnailError(true)}
+                            />
+                        ) : (
+                            <div
+                                className="flex aspect-square h-[72%] items-center justify-center rounded-[30%] border-4 border-white/80 text-5xl font-black text-white shadow-xl"
+                                style={{
+                                    background: config.gradientStyle,
+                                    boxShadow: `0 16px 36px ${config.glow}`,
+                                }}
+                                aria-label={pet.name}
+                            >
+                                {initial}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {!transparent && (
+                <>
+                    <div className="pointer-events-none absolute bottom-3 left-3 right-3 flex justify-center">
+                        <span className="max-w-full truncate rounded-full bg-white/90 px-4 py-1.5 text-sm font-black text-slate-800 shadow-sm">
+                            {pet.name}
+                        </span>
+                    </div>
+                    <div
+                        className="pointer-events-none absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-xl shadow-sm"
+                        style={{ filter: 'drop-shadow(0 4px 8px rgba(15, 23, 42, 0.18))' }}
+                    >
+                        {config.badge}
+                    </div>
+                </>
+            )}
+
+            <style>{`
+                @keyframes codexPetIdleBob {
+                    0%, 100% { transform: translateY(0) scale(1); }
+                    45% { transform: translateY(-7%) scale(1.03); }
+                    70% { transform: translateY(-2%) scale(0.99); }
+                }
+
+                @keyframes codexPetShadow {
+                    0%, 100% { transform: scaleX(1); opacity: 0.18; }
+                    45% { transform: scaleX(0.78); opacity: 0.1; }
+                    70% { transform: scaleX(0.92); opacity: 0.14; }
+                }
+            `}</style>
+        </div>
+    );
+};
+
 // ========== Error Display Component ==========
 
-const ErrorDisplay: React.FC<{ message: string; pet?: Pet }> = ({ message, pet }) => {
-    const [thumbnailError, setThumbnailError] = React.useState(false);
+const ErrorDisplay: React.FC<{ message: string; pet?: Pet; transparent?: boolean }> = ({
+    message,
+    pet,
+    transparent = false,
+}) => {
     const config = pet ? rarityConfig[pet.rarity] : null;
+
+    if (pet) {
+        return <CodexPetFallbackLayer pet={pet} transparent={transparent} />;
+    }
 
     return (
         <div
@@ -302,19 +365,9 @@ const ErrorDisplay: React.FC<{ message: string; pet?: Pet }> = ({ message, pet }
                     : 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
             }}
         >
-            {/* Try to show thumbnail if available */}
-            {pet?.thumbnail_url && !thumbnailError && (
-                <img
-                    src={pet.thumbnail_url}
-                    alt={pet.name}
-                    className="absolute inset-0 w-full h-full object-cover opacity-30"
-                    onError={() => setThumbnailError(true)}
-                />
-            )}
-            
             <div className="text-center text-white relative z-10">
                 <div className="text-6xl mb-3">🐾</div>
-                <p className="font-bold text-lg mb-1">{pet?.name || 'Pet'}</p>
+                <p className="font-bold text-lg mb-1">Pet</p>
                 <p className="text-sm opacity-80">3D model loading...</p>
                 {message && (
                     <p className="text-xs opacity-60 mt-2">{message}</p>
@@ -344,6 +397,11 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
     const [error, setError] = useState<string | null>(null);
     const config = rarityConfig[pet.rarity];
 
+    useEffect(() => {
+        setIsLoading(true);
+        setError(null);
+    }, [pet.pet_id, pet.model_url, pet.texture_url]);
+
     // Handle model load complete
     const handleLoad = () => {
         setIsLoading(false);
@@ -359,6 +417,7 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
             ? 'Failed to fetch 3D model'
             : err.message || 'Failed to load pet model';
         setError(friendlyMessage);
+        onLoad?.();
         _onError?.(err);
     };
 
@@ -367,11 +426,20 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
         if (!pet.model_url) return false;
         try {
             const url = new URL(pet.model_url);
-            return url.protocol === 'https:' || url.protocol === 'http:';
+            const isRemoteUrl = url.protocol === 'https:' || url.protocol === 'http:';
+            const pathname = url.pathname.toLowerCase();
+            return isRemoteUrl && (pathname.endsWith('.glb') || pathname.endsWith('.gltf'));
         } catch {
             return false;
         }
     }, [pet.model_url]);
+
+    useEffect(() => {
+        if (!isValidModelUrl) {
+            setIsLoading(false);
+            onLoad?.();
+        }
+    }, [isValidModelUrl, onLoad, pet.pet_id]);
 
     // Determine background style
     const getBackgroundStyle = (): React.CSSProperties => {
@@ -388,40 +456,40 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
         }
     };
 
-    // Check if model URL is valid for voxel fallback
-    const canRenderVoxel = !isValidModelUrl && !!pet.texture_url;
+    const viewerClassName = background === 'transparent'
+        ? 'relative h-full w-full overflow-visible'
+        : 'relative rounded-2xl overflow-hidden';
+    const viewerStyle: React.CSSProperties = {
+        height: toCssSize(height),
+        border: background === 'transparent' ? 'none' : '3px solid rgba(255,255,255,0.2)',
+        boxShadow: background === 'transparent' ? 'none' : `0 8px 32px ${config.glow}`,
+        ...getBackgroundStyle(),
+    };
 
-    if (!isValidModelUrl && !canRenderVoxel) {
+    if (!isValidModelUrl || error) {
         return (
             <div
-                className="relative rounded-2xl overflow-hidden"
-                style={{
-                    height: typeof height === 'number' ? `${height}px` : height,
-                    ...getBackgroundStyle(),
-                }}
+                className={viewerClassName}
+                style={viewerStyle}
             >
-                <ErrorDisplay message="No model available" pet={pet} />
+                <ErrorDisplay
+                    message={error || 'No model available'}
+                    pet={pet}
+                    transparent={background === 'transparent'}
+                />
             </div>
         );
     }
 
     return (
         <div
-            className={background === 'transparent' ? 'relative w-full h-full' : 'relative rounded-2xl overflow-hidden'}
-            style={{
-                height: typeof height === 'number' ? `${height}px` : height,
-                border: background === 'transparent' ? 'none' : '3px solid rgba(255,255,255,0.2)',
-                boxShadow: background === 'transparent' ? 'none' : `0 8px 32px ${config.glow}`,
-                ...getBackgroundStyle(),
-            }}
+            className={viewerClassName}
+            style={viewerStyle}
         >
             {/* Loading Overlay */}
             {showLoading && isLoading && !error && (
-                <LoadingOverlay rarity={pet.rarity} />
+                <LoadingOverlay />
             )}
-
-            {/* Error Display */}
-            {error && <ErrorDisplay message={error} pet={pet} />}
 
             {/* 3D Canvas */}
             <CanvasErrorBoundary onError={handleError}>
@@ -473,17 +541,13 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                 {/* Float wrapper for bobbing animation */}
                 {disableFloat ? (
                     <Suspense fallback={<LoadingFallback />}>
-                        {canRenderVoxel ? (
-                            <VoxelCubeFallback textureUrl={pet.texture_url!} scale={scale} />
-                        ) : (
-                            <Pet3DModel
-                                url={pet.model_url}
-                                textureUrl={pet.texture_url}
-                                scale={scale}
-                                onLoad={handleLoad}
-                                onError={handleError}
-                            />
-                        )}
+                        <Pet3DModel
+                            url={pet.model_url}
+                            textureUrl={pet.texture_url}
+                            scale={scale}
+                            onLoad={handleLoad}
+                            onError={handleError}
+                        />
                     </Suspense>
                 ) : (
                     <Float
@@ -492,17 +556,13 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                         floatIntensity={0.5}
                     >
                         <Suspense fallback={<LoadingFallback />}>
-                            {canRenderVoxel ? (
-                                <VoxelCubeFallback textureUrl={pet.texture_url!} scale={scale} />
-                            ) : (
-                                <Pet3DModel
-                                    url={pet.model_url}
-                                    textureUrl={pet.texture_url}
-                                    scale={scale}
-                                    onLoad={handleLoad}
-                                    onError={handleError}
-                                />
-                            )}
+                            <Pet3DModel
+                                url={pet.model_url}
+                                textureUrl={pet.texture_url}
+                                scale={scale}
+                                onLoad={handleLoad}
+                                onError={handleError}
+                            />
                         </Suspense>
                     </Float>
                 )}
@@ -524,35 +584,39 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
             </Canvas>
             </CanvasErrorBoundary>
 
-            {/* Pet Name Label */}
-            <div
-                className="absolute bottom-2 left-2 right-2 text-center"
-                style={{ pointerEvents: 'none' }}
-            >
-                <p
-                    className="text-white font-bold text-sm"
-                    style={{
-                        textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                        background: 'rgba(0,0,0,0.3)',
-                        padding: '4px 8px',
-                        borderRadius: '8px',
-                        display: 'inline-block',
-                    }}
-                >
-                    {pet.name}
-                </p>
-            </div>
+            {background !== 'transparent' && (
+                <>
+                    {/* Pet Name Label */}
+                    <div
+                        className="absolute bottom-2 left-2 right-2 text-center"
+                        style={{ pointerEvents: 'none' }}
+                    >
+                        <p
+                            className="text-white font-bold text-sm"
+                            style={{
+                                textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                                background: 'rgba(0,0,0,0.3)',
+                                padding: '4px 8px',
+                                borderRadius: '8px',
+                                display: 'inline-block',
+                            }}
+                        >
+                            {pet.name}
+                        </p>
+                    </div>
 
-            {/* Rarity Badge */}
-            <div
-                className="absolute top-2 right-2 text-2xl"
-                style={{
-                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
-                    pointerEvents: 'none',
-                }}
-            >
-                {config.badge}
-            </div>
+                    {/* Rarity Badge */}
+                    <div
+                        className="absolute top-2 right-2 text-2xl"
+                        style={{
+                            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
+                            pointerEvents: 'none',
+                        }}
+                    >
+                        {config.badge}
+                    </div>
+                </>
+            )}
         </div>
     );
 };
@@ -630,6 +694,7 @@ export const PetViewer3DCompact: React.FC<PetViewer3DCompactProps> = ({
 };
 
 // Preload helper for better UX - uses safe preloading
+// eslint-disable-next-line react-refresh/only-export-components
 export const preloadPetModel = (url: string) => {
     if (!url) return;
     preloadGLTFSafe(url)
