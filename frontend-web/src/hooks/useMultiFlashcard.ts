@@ -21,6 +21,7 @@ interface FlashcardData {
     word: string;
     model3dUrl: string;
     image2dUrl: string;
+    textureUrl?: string;
     mindUrl: string;
     detectedAt: number;
 }
@@ -31,7 +32,8 @@ interface ComboData {
     requiredTags: string[];
     model3dUrl: string;
     image2dUrl: string;
-    comboMindUrl?: string;
+    textureUrl?: string;
+    comboMindUrl?: string | null;
     bonusXp: number;
 }
 
@@ -71,6 +73,13 @@ export function useMultiFlashcard() {
     const comboCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const proximityComboRef = useRef<boolean>(false);
 
+    const buildUrl = useCallback((path?: string): string | undefined => {
+        if (!path) return undefined;
+        if (path.startsWith('http://') || path.startsWith('https://')) return path;
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+        return `${API_BASE}${cleanPath}`;
+    }, []);
+
     /**
      * Add a newly detected flashcard
      */
@@ -98,14 +107,15 @@ export function useMultiFlashcard() {
             }
 
             const flashcard = data.flashcard;
-            const arObject = data.ar_objects?.[0];
+            const arObject = data.target || data.ar_objects?.[0];
 
             const flashcardData: FlashcardData = {
                 qrId,
-                arTag: flashcard.ar_tag || `tag_${qrId}`,
+                arTag: arObject?.ar_tag || flashcard.ar_tag || `tag_${qrId}`,
                 word: flashcard.word || qrId,
-                model3dUrl: arObject?.model_3d_url || '',
-                image2dUrl: arObject?.image_2d_url || '',
+                model3dUrl: buildUrl(arObject?.model_3d_url) || '',
+                image2dUrl: buildUrl(arObject?.image_2d_url) || '',
+                textureUrl: buildUrl(arObject?.texture_url),
                 mindUrl: arObject?.nft_base_url || '',
                 detectedAt: Date.now()
             };
@@ -127,7 +137,7 @@ export function useMultiFlashcard() {
         } catch (error) {
             console.error('[MultiFlashcard] Error fetching flashcard:', error);
         }
-    }, [state.detectedFlashcards]);
+    }, [state.detectedFlashcards, buildUrl]);
 
     /**
      * Remove a flashcard (e.g., when target lost for extended time)
@@ -180,8 +190,7 @@ export function useMultiFlashcard() {
                 console.log('[MultiFlashcard] ✅ Combo found:', data.combo.combo_id);
 
                 // Determine combo mind URL
-                const comboMindUrl = data.combo.combo_mind_url ||
-                    '/assets/target/combo_targets.mind';
+                const comboMindUrl = buildUrl(data.combo.combo_mind_url) || null;
 
                 setState(prev => ({
                     ...prev,
@@ -189,8 +198,9 @@ export function useMultiFlashcard() {
                         comboId: data.combo.combo_id,
                         description: data.combo.description,
                         requiredTags: data.combo.required_tags,
-                        model3dUrl: data.combo.model_3d_url,
-                        image2dUrl: data.combo.image_2d_url,
+                        model3dUrl: buildUrl(data.combo.model_3d_url) || '',
+                        image2dUrl: buildUrl(data.combo.image_2d_url) || '',
+                        textureUrl: buildUrl(data.combo.texture_url),
                         comboMindUrl,
                         bonusXp: data.combo.bonus_xp || 100
                     },
@@ -211,7 +221,7 @@ export function useMultiFlashcard() {
             setState(prev => ({ ...prev, isCheckingCombo: false }));
             return null;
         }
-    }, [state.detectedFlashcards]);
+    }, [state.detectedFlashcards, buildUrl]);
 
     /**
      * Auto-check for combo when we have 2+ flashcards
