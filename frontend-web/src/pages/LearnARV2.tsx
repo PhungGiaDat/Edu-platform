@@ -613,19 +613,20 @@ export default function LearnARV2() {
         ? resolveMindUrl(comboMindUrl)
         : resolveMindUrl(arData?.targets?.[0]?.nft_base_url);
 
-    const modelUrl = hasCombo && activeCombo?.model3dUrl
-        ? activeCombo.model3dUrl
-        : arData?.targets?.[0]?.model_3d_url;
+    const modelUrl = arData?.targets?.[0]?.model_3d_url;
 
-    const imageUrl = hasCombo && activeCombo?.image2dUrl
-        ? activeCombo.image2dUrl
-        : arData?.targets?.[0]?.image_2d_url || arData?.flashcard?.image_url;
+    const imageUrl = arData?.targets?.[0]?.image_2d_url || arData?.flashcard?.image_url;
+    const textureUrl = arData?.targets?.[0]?.texture_url;
 
     const modelUrl2 = getFlashcardByIndex(1)?.model3dUrl || arData?.targets?.[1]?.model_3d_url;
     const imageUrl2 = getFlashcardByIndex(1)?.image2dUrl || arData?.targets?.[1]?.image_2d_url;
+    const textureUrl2 = getFlashcardByIndex(1)?.textureUrl || arData?.targets?.[1]?.texture_url;
     
     // Combo model URL for proximity combo replacement
     const comboModelUrl = activeCombo?.model3dUrl;
+    const comboTextureUrl = activeCombo?.textureUrl;
+    const comboPhrase = activeCombo?.description
+        || [arData?.flashcard?.word, getFlashcardByIndex(1)?.word].filter(Boolean).join(' in ');
 
     // ========== HANDLERS ==========
     const handleQRDetected = useCallback((qrId: string) => {
@@ -682,13 +683,15 @@ export default function LearnARV2() {
         const { type, payload } = data;
         switch (type) {
             case 'COMBO_PROXIMITY_DETECTED':
-                handleProximityDetected(payload); break;
+                handleProximityDetected(payload);
+                handleComboDetected(payload.targets);
+                break;
             case 'COMBO_PROXIMITY_ENDED':
                 handleProximityEnded(payload); break;
             case 'COMBO_PROXIMITY_UPDATE':
                 handleProximityUpdate(payload); break;
             case 'MULTI_TARGET_DETECTED':
-                handleComboDetected(payload.targets); break;
+                console.log('[LearnARV2] Multi-target visible:', payload.targets); break;
         }
     }, [handleProximityDetected, handleProximityEnded, handleProximityUpdate, handleComboDetected]);
 
@@ -858,12 +861,16 @@ export default function LearnARV2() {
                 mindUrl={mindUrl}
                 modelUrl={modelUrl}
                 imageUrl={imageUrl}
+                textureUrl={textureUrl}
                 modelUrl2={modelUrl2}
                 imageUrl2={imageUrl2}
+                textureUrl2={textureUrl2}
                 word={arData?.flashcard?.word}
                 word2={getFlashcardByIndex(1)?.word}
                 cardCount={flashcardCount}
                 comboModelUrl={comboModelUrl}
+                comboTextureUrl={comboTextureUrl}
+                comboPhrase={comboPhrase}
                 onPhaseChange={handlePhaseChange}
                 onQRDetected={handleQRDetected}
                 onTargetFound={handleTargetFound}

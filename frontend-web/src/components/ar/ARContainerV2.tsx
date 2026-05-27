@@ -33,6 +33,8 @@ interface ARContainerV2Props {
     word2?: string;
     cardCount?: number;
     comboModelUrl?: string;
+    comboTextureUrl?: string;
+    comboPhrase?: string;
     onPhaseChange?: (phase: ARPhase) => void;
     onQRDetected?: (qrId: string) => void;
     onTargetFound?: (targetIndex: number) => void;
@@ -53,7 +55,10 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     textureUrl2,
     word,
     word2,
+    cardCount,
     comboModelUrl,
+    comboTextureUrl,
+    comboPhrase,
     onPhaseChange,
     onQRDetected,
     onTargetFound,
@@ -111,9 +116,15 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         if (textureUrl2) params.set('textureUrl2', textureUrl2);
         if (word) params.set('word', word);
         if (word2) params.set('word2', word2);
+        if (typeof cardCount === 'number') {
+            params.set('cardCount', String(cardCount));
+            params.set('maxTrack', String(Math.max(2, Math.min(cardCount, 5))));
+        }
         if (comboModelUrl) params.set('comboModel', comboModelUrl);
+        if (comboTextureUrl) params.set('comboTextureUrl', comboTextureUrl);
+        if (comboPhrase) params.set('comboPhrase', comboPhrase);
         return `/ar-viewer.html?${params.toString()}`;
-    }, [mindUrl, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, comboModelUrl]);
+    }, [mindUrl, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, cardCount, comboModelUrl, comboTextureUrl, comboPhrase]);
 
     const mainSrc = useMemo(() => {
         switch (phase) {

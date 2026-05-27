@@ -57,7 +57,7 @@ export const useArData = (qrId: string | null) => {
   useEffect(() => {
     if (!qrId) return;
 
-    const cacheKey = `ardata:${qrId}`;
+    const cacheKey = `ardata:v2:${qrId}`;
 
     // Helper function to build full URL for backend assets
     // If backend returns full Supabase URLs (https://...), use them as-is

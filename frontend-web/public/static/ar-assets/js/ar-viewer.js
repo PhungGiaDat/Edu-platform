@@ -52,11 +52,17 @@
     const textureUrl = params.get('textureUrl'); // NEW: Texture for model 0
     const textureUrl2 = params.get('textureUrl2'); // NEW: Texture for model 1
     const comboModelUrl = params.get('comboModel'); // NEW: combo model URL
+    const comboTextureUrl = params.get('comboTextureUrl'); // Texture for combo model
+    const comboPhrase = params.get('comboPhrase') || '';
+    const maxTrack = Math.max(2, Math.min(Number(params.get('maxTrack')) || 2, 5));
+    const cardCount = Number(params.get('cardCount') || '1');
     // Words for click-to-sound — stored in window globals so SET_WORD can update them too
     window._arWord0 = params.get('word') || '';
     window._arWord1 = params.get('word2') || '';
 
     log('🔧', `Params: mind=${mindUrl}, model=${modelUrl}, texture=${textureUrl}, word=${window._arWord0}`);
+
+    log('cards', `Viewer configured for ${cardCount} detected card(s)`);
 
     // ============ TYPED MESSAGE PROTOCOL ============
 
@@ -198,7 +204,7 @@
             });
         
         // filterMinCF: higher = faster response; filterBeta: lower = smoother tracking
-        const mindArConfig = `imageTargetSrc: ${mindUrl}; maxTrack: 2; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.001`;
+        const mindArConfig = `imageTargetSrc: ${mindUrl}; maxTrack: ${maxTrack}; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.001`;
         log('⚙️', `MindAR config: ${mindArConfig}`);
         scene.setAttribute('mindar-image', mindArConfig);
         log('✅', 'MindAR attribute set on scene element');
@@ -243,6 +249,7 @@
             assetsEl.appendChild(assetItem);
             log('🔗', 'Setting gltf-model attribute on mode-3d-0');
             const model0El = document.getElementById('mode-3d-0');
+            applyTextureWhenModelReady(model0El, textureUrl);
             model0El.setAttribute('gltf-model', '#model-asset-0');
             
             // Inject texture if provided
@@ -299,6 +306,7 @@
             });
             assetsEl.appendChild(assetItem2);
             const model1El = document.getElementById('mode-3d-1');
+            applyTextureWhenModelReady(model1El, textureUrl2);
             model1El.setAttribute('gltf-model', '#model-asset-1');
 
             // Inject texture if provided
@@ -1091,10 +1099,6 @@
             comboType: 'pair'
         });
 
-        sendToParent('COMBO_DETECTED', {
-            targets: targetIndices
-        });
-
         // Start proximity checking when multiple targets are visible
         startProximityCheck();
     }
@@ -1188,6 +1192,12 @@
                     }
                 });
 
+                sendToParent('COMBO_DETECTED', {
+                    targets: [0, 1],
+                    distance: distance,
+                    phrase: getComboPhrase()
+                });
+
                 // Trigger visual feedback in scene
                 triggerComboEffects(midpoint);
                 
@@ -1221,7 +1231,21 @@
                     z: midpoint.z
                 }
             });
+            updateComboModelPosition(midpoint);
         }
+    }
+
+    function getComboPhrase() {
+        const words = [window._arWord0, window._arWord1].filter(Boolean);
+        return comboPhrase || (words.length === 2 ? `${words[0]} in ${words[1]}` : 'Combo discovered!');
+    }
+
+    function escapeAttribute(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
     }
 
     /**
@@ -1239,6 +1263,8 @@
 
         // Position at midpoint
         comboEntity.setAttribute('position', `${midpoint.x} ${midpoint.y} ${midpoint.z}`);
+
+        const phrase = escapeAttribute(getComboPhrase());
 
         // Add glowing ring effect
         comboEntity.innerHTML = `
@@ -1259,7 +1285,7 @@
                 animation__rotate="property: rotation; to: 0 0 -360; dur: 3000; easing: linear; loop: true"
             ></a-ring>
             <a-text 
-                value="✨ COMBO! ✨" 
+                value="${phrase}"
                 align="center" 
                 color="#FFFFFF"
                 scale="0.15 0.15 0.15"
@@ -1267,6 +1293,11 @@
                 animation="property: position; to: 0 0.25 0; dur: 500; easing: easeOutQuad; loop: true; dir: alternate"
             ></a-text>
         `;
+
+        const comboLabel = comboEntity.querySelector('a-text');
+        if (comboLabel) {
+            comboLabel.setAttribute('value', getComboPhrase());
+        }
 
         log('🎆', 'Combo effects triggered');
     }
@@ -1311,6 +1342,7 @@
             comboModel.setAttribute('animation', 'property: rotation; to: 0 360 0; dur: 4000; easing: linear; loop: true');
             comboModel.setAttribute('animation__spawn', 'property: scale; from: 0 0 0; to: 0.4 0.4 0.4; dur: 600; easing: easeOutBack');
             scene.appendChild(comboModel);
+            applyTextureWhenModelReady(comboModel, comboTextureUrl);
             log('✨', 'Combo model entity created');
         }
         
@@ -1320,7 +1352,8 @@
         
         // Speak combo name
         if ('speechSynthesis' in window) {
-            const comboName = 'Elephant in jungle combo!';
+            const comboWords = [window._arWord0, window._arWord1].filter(Boolean);
+            const comboName = comboPhrase || (comboWords.length === 2 ? `${comboWords[0]} in ${comboWords[1]}` : comboWords.join(' ')) || 'Combo scene';
             window.speechSynthesis.cancel();
             const utter = new SpeechSynthesisUtterance(comboName);
             utter.lang = 'en-US';
@@ -1331,6 +1364,19 @@
         }
 
         log('🎆', 'Combo model loaded at midpoint');
+    }
+
+    function updateComboModelPosition(midpoint) {
+        const position = `${midpoint.x} ${midpoint.y} ${midpoint.z}`;
+        const comboModel = document.getElementById('combo-model');
+        const comboEntity = document.getElementById('combo-effect');
+
+        if (comboModel && comboModel.getAttribute('visible') !== false) {
+            comboModel.setAttribute('position', position);
+        }
+        if (comboEntity) {
+            comboEntity.setAttribute('position', position);
+        }
     }
 
     /**
@@ -1366,11 +1412,13 @@
 
         const is3D = mode === '3D';
 
-        const mode2d = document.getElementById('mode-2d-0');
-        const mode3d = document.getElementById('mode-3d-0');
+        [0, 1].forEach((targetIndex) => {
+            const mode2d = document.getElementById(`mode-2d-${targetIndex}`);
+            const mode3d = document.getElementById(`mode-3d-${targetIndex}`);
 
-        if (mode2d) mode2d.setAttribute('visible', !is3D);
-        if (mode3d) mode3d.setAttribute('visible', is3D);
+            if (mode2d) mode2d.setAttribute('visible', !is3D);
+            if (mode3d) mode3d.setAttribute('visible', is3D);
+        });
 
         log('🔄', `Mode changed to ${mode}`);
     }
@@ -1408,6 +1456,7 @@
                 const mesh = modelEl.getObject3D('mesh');
                 if (!mesh) return;
 
+                let appliedCount = 0;
                 mesh.traverse((node) => {
                     if (node.isMesh) {
                         if (targetMesh && !node.name.includes(targetMesh)) return;
@@ -1441,11 +1490,30 @@
      * Helper to load an external texture and apply it to all meshes in a GLTF model
      * This is the fix for split-file textures on Supabase
      */
-    function loadTextureAndApply(modelEl, url) {
+    function loadTextureAndApply(modelEl, url, attempt = 0) {
         if (!url || !modelEl) return;
 
+        if (!getLoadedModelRoot(modelEl)) {
+            if (attempt < 20) {
+                setTimeout(() => loadTextureAndApply(modelEl, url, attempt + 1), 120);
+            } else {
+                log('texture', `Model root unavailable for ${modelEl.id}; texture was not applied`);
+                sendToParent('SYSTEM_ERROR', {
+                    code: 'TEXTURE_APPLY_ERROR',
+                    message: 'Loaded model root was not available for texture application',
+                    targetId: modelEl.id,
+                    url
+                });
+            }
+            return;
+        }
+
         const loader = new THREE.TextureLoader();
-        loader.crossOrigin = 'anonymous';
+        if (loader.setCrossOrigin) {
+            loader.setCrossOrigin('anonymous');
+        } else {
+            loader.crossOrigin = 'anonymous';
+        }
 
         loader.load(
             url,
@@ -1454,18 +1522,21 @@
                 
                 // GLTF specific settings
                 texture.flipY = false;
-                texture.colorSpace = THREE.SRGBColorSpace;
+                if (THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+                if (THREE.sRGBEncoding) texture.encoding = THREE.sRGBEncoding;
                 
                 // Sharp pixel filtering for Cube Pets
                 texture.minFilter = THREE.NearestFilter;
                 texture.magFilter = THREE.NearestFilter;
+                texture.needsUpdate = true;
                 
-                const mesh = modelEl.getObject3D('mesh');
+                const mesh = getLoadedModelRoot(modelEl);
                 if (!mesh) {
                     log('⚠️', 'Mesh not found on model element yet');
                     return;
                 }
 
+                let appliedCount = 0;
                 mesh.traverse((node) => {
                     if (node.isMesh) {
                         log('🎨', `Applying texture to mesh node: ${node.name}`);
@@ -1474,21 +1545,60 @@
                             const materials = Array.isArray(node.material) ? node.material : [node.material];
                             materials.forEach(mat => {
                                 if (mat) {
+                                    if (mat.color) mat.color.set(0xffffff);
                                     mat.map = texture;
+                                    mat.vertexColors = false;
+                                    mat.metalness = mat.metalness ?? 0;
+                                    mat.roughness = mat.roughness ?? 0.8;
                                     mat.needsUpdate = true;
+                                    appliedCount += 1;
                                 }
                             });
                         }
                     }
                 });
                 
-                sendToParent('TEXTURE_APPLIED', { targetId: modelEl.id, url });
+                if (appliedCount === 0) {
+                    sendToParent('SYSTEM_ERROR', {
+                        code: 'TEXTURE_APPLY_ERROR',
+                        message: 'No mesh materials were found for texture application',
+                        targetId: modelEl.id,
+                        url
+                    });
+                    return;
+                }
+
+                sendToParent('TEXTURE_APPLIED', { targetId: modelEl.id, url, materialCount: appliedCount });
             },
             undefined,
             (err) => {
                 log('❌', 'Texture load failed:', err);
             }
         );
+    }
+
+    function getLoadedModelRoot(modelEl) {
+        if (!modelEl) return null;
+        const namedRoot = modelEl.getObject3D?.('mesh')
+            || modelEl.getObject3D?.('model')
+            || modelEl.getObject3D?.('gltf-model')
+            || null;
+        if (namedRoot) return namedRoot;
+        return modelEl.object3D?.children?.length ? modelEl.object3D : null;
+    }
+
+    function applyTextureWhenModelReady(modelEl, url) {
+        if (!url || !modelEl) return;
+
+        const apply = () => {
+            log('🎨', `Applying texture to ${modelEl.id}:`, url);
+            loadTextureAndApply(modelEl, url);
+        };
+
+        modelEl.addEventListener('model-loaded', apply, { once: true });
+        if (getLoadedModelRoot(modelEl)) {
+            apply();
+        }
     }
 
     // ============ MODEL LOADING ============
