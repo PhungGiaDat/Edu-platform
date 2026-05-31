@@ -590,7 +590,8 @@ export default function LearnARV2() {
         handleProximityEnded,
         handleProximityUpdate,
         reset: resetMultiFlashcard,
-        getFlashcardByIndex
+        getFlashcardByIndex,
+        getFlashcardByTag
     } = useMultiFlashcard();
 
     // ========== DATA HOOKS ==========
@@ -613,36 +614,43 @@ export default function LearnARV2() {
         ? resolveMindUrl(comboMindUrl)
         : resolveMindUrl(arData?.targets?.[0]?.nft_base_url);
 
-    const modelUrl = arData?.targets?.[0]?.model_3d_url;
+    const comboTarget0 = hasCombo && activeCombo?.requiredTags?.[0]
+        ? getFlashcardByTag(activeCombo.requiredTags[0])
+        : null;
+    const comboTarget1 = hasCombo && activeCombo?.requiredTags?.[1]
+        ? getFlashcardByTag(activeCombo.requiredTags[1])
+        : null;
+    const fallbackTarget1 = getFlashcardByIndex(1);
 
-    const imageUrl = arData?.targets?.[0]?.image_2d_url || arData?.flashcard?.image_url;
-    const textureUrl = arData?.targets?.[0]?.texture_url;
+    const modelUrl = comboTarget0?.model3dUrl || arData?.targets?.[0]?.model_3d_url;
 
-    const modelUrl2 = getFlashcardByIndex(1)?.model3dUrl || arData?.targets?.[1]?.model_3d_url;
-    const imageUrl2 = getFlashcardByIndex(1)?.image2dUrl || arData?.targets?.[1]?.image_2d_url;
-    const textureUrl2 = getFlashcardByIndex(1)?.textureUrl || arData?.targets?.[1]?.texture_url;
+    const imageUrl = comboTarget0?.image2dUrl || arData?.targets?.[0]?.image_2d_url || arData?.flashcard?.image_url;
+    const textureUrl = comboTarget0?.textureUrl || arData?.targets?.[0]?.texture_url;
+
+    const modelUrl2 = comboTarget1?.model3dUrl || fallbackTarget1?.model3dUrl || arData?.targets?.[1]?.model_3d_url;
+    const imageUrl2 = comboTarget1?.image2dUrl || fallbackTarget1?.image2dUrl || arData?.targets?.[1]?.image_2d_url;
+    const textureUrl2 = comboTarget1?.textureUrl || fallbackTarget1?.textureUrl || arData?.targets?.[1]?.texture_url;
     
     // Combo model URL for proximity combo replacement
     const comboModelUrl = activeCombo?.model3dUrl;
     const comboTextureUrl = activeCombo?.textureUrl;
     const comboPhrase = activeCombo?.description
-        || [arData?.flashcard?.word, getFlashcardByIndex(1)?.word].filter(Boolean).join(' in ');
+        || [comboTarget0?.word || arData?.flashcard?.word, comboTarget1?.word || fallbackTarget1?.word].filter(Boolean).join(' in ');
 
     // ========== HANDLERS ==========
     const handleQRDetected = useCallback((qrId: string) => {
         console.log('[LearnARV2] QR Detected:', qrId);
         if (!qrId) return;
-        
-        // Use a functional update for detectedQrId to avoid dependency on its current value
-        setDetectedQrId(prev => {
-            if (!prev) return qrId;
-            return prev;
-        });
+
+        const isFirstQr = !detectedQrId;
+        if (isFirstQr) setDetectedQrId(qrId);
 
         addFlashcard(qrId);
-        setAppState('LOADING');
+        if (isFirstQr) {
+            setAppState('LOADING');
+        }
         trackFlashcardView();
-    }, [trackFlashcardView, addFlashcard]);
+    }, [detectedQrId, trackFlashcardView, addFlashcard]);
 
     const handlePhaseChange = useCallback((phase: ARPhase) => {
         console.log('[LearnARV2] Phase changed:', phase);
@@ -865,9 +873,9 @@ export default function LearnARV2() {
                 modelUrl2={modelUrl2}
                 imageUrl2={imageUrl2}
                 textureUrl2={textureUrl2}
-                word={arData?.flashcard?.word}
-                word2={getFlashcardByIndex(1)?.word}
-                cardCount={flashcardCount}
+                word={comboTarget0?.word || arData?.flashcard?.word}
+                word2={comboTarget1?.word || fallbackTarget1?.word}
+                cardCount={hasCombo && activeCombo?.requiredTags?.length ? activeCombo.requiredTags.length : flashcardCount}
                 comboModelUrl={comboModelUrl}
                 comboTextureUrl={comboTextureUrl}
                 comboPhrase={comboPhrase}

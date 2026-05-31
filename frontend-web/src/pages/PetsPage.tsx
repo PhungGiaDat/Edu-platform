@@ -74,7 +74,7 @@ function PetCollectionCard({
 
     return (
         <div
-            className={`relative h-full rounded-3xl p-4 transition-all duration-300 cursor-pointer ${isLocked ? 'opacity-60' : ''
+            className={`relative h-full min-w-0 cursor-pointer rounded-3xl p-3 transition-all duration-300 sm:p-4 ${isLocked ? 'opacity-60' : ''
                 } ${colorVariants[pet.rarity] || 'clay-card-elevated'}`}
             onClick={() => !isLocked && onSelect()}
             style={{
@@ -104,7 +104,7 @@ function PetCollectionCard({
             )}
 
             {/* Pet Thumbnail/3D Preview */}
-            <div className="relative mb-3 h-28 overflow-hidden rounded-2xl bg-white/40 sm:h-32 lg:h-36">
+            <div className="relative mb-3 h-24 overflow-hidden rounded-2xl bg-white/40 sm:h-32 lg:h-36">
                 {pet.thumbnail_url ? (
                     <img
                         src={pet.thumbnail_url}
@@ -119,11 +119,11 @@ function PetCollectionCard({
             </div>
 
             {/* Pet Info */}
-            <div className="text-center">
-                <h3 className="font-bold text-lg text-gray-800">{pet.name}</h3>
+            <div className="min-w-0 text-center">
+                <h3 className="truncate text-base font-bold text-gray-800 sm:text-lg">{pet.name}</h3>
                 <div className="flex items-center justify-center gap-2 mt-1">
                     <span className="text-lg">{config.badge}</span>
-                    <span className="text-sm font-semibold text-gray-600 capitalize">{pet.rarity}</span>
+                    <span className="truncate text-xs font-semibold capitalize text-gray-600 sm:text-sm">{pet.rarity}</span>
                 </div>
             </div>
 
@@ -132,13 +132,13 @@ function PetCollectionCard({
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                     <button
                         onClick={(e) => { e.stopPropagation(); onFeed(); }}
-                        className="min-h-[40px] rounded-xl bg-white/60 px-3 py-2 text-sm font-bold transition-all hover:bg-white/80"
+                        className="min-h-[44px] rounded-xl bg-white/60 px-3 py-2 text-xs font-bold transition-all hover:bg-white/80 sm:text-sm"
                     >
                         🍖 Feed
                     </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); onPlay(); }}
-                        className="min-h-[40px] rounded-xl bg-white/60 px-3 py-2 text-sm font-bold transition-all hover:bg-white/80"
+                        className="min-h-[44px] rounded-xl bg-white/60 px-3 py-2 text-xs font-bold transition-all hover:bg-white/80 sm:text-sm"
                     >
                         🎮 Play
                     </button>
@@ -203,7 +203,7 @@ export default function PetsPage() {
 
     if (authLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center clay-bg-playful pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
+            <div className="flex min-h-screen items-center justify-center overflow-x-hidden clay-bg-playful px-4 pb-28 transition-all duration-300 md:pb-8">
                 <div className="text-center">
                     <div className="text-6xl mb-4 clay-float-element">🐾</div>
                     <p className="font-bold text-gray-600">Loading your pets...</p>
@@ -214,7 +214,7 @@ export default function PetsPage() {
 
     if (!isAuthenticated || !userId) {
         return (
-            <div className="min-h-screen flex items-center justify-center clay-bg-playful p-6 pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
+            <div className="flex min-h-screen items-center justify-center overflow-x-hidden clay-bg-playful p-4 pb-28 transition-all duration-300 sm:p-6 md:pb-8">
                 <div className="clay-card-elevated max-w-md w-full p-8 text-center">
                     <div className="text-6xl mb-4">🐣</div>
                     <h2 className="clay-section-title mb-4">Sign In to Meet Your Pets!</h2>
@@ -270,7 +270,7 @@ export default function PetsPage() {
     const canRenderDisplayPet3D = isRenderableModelUrl(displayPet?.model_url);
 
     return (
-        <div className="min-h-screen clay-bg-playful pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
+        <div className="min-h-screen overflow-x-hidden clay-bg-playful pb-28 transition-all duration-300 md:pb-8">
             {/* Decorative Background Elements */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
                 <div className="clay-shape-circle w-96 h-96 -top-48 -left-48 opacity-40" />
@@ -278,19 +278,19 @@ export default function PetsPage() {
                 <div className="clay-shape-circle w-80 h-80 bottom-0 left-1/4 opacity-25" />
             </div>
 
-            <div className="relative z-10 mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 xl:px-10">
+            <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10">
                 {/* Header */}
-                <header className="text-center mb-8">
-                    <h1 className="text-4xl md:text-5xl font-black text-gray-800 mb-2" style={{ fontFamily: "'Baloo 2', sans-serif" }}>
+                <header className="mb-6 text-center sm:mb-8">
+                    <h1 className="mb-2 text-3xl font-black leading-tight text-gray-800 sm:text-4xl md:text-5xl" style={{ fontFamily: "'Baloo 2', sans-serif" }}>
                         My Pet Collection
                     </h1>
-                    <p className="text-gray-600 font-semibold">
+                    <p className="font-semibold text-gray-600">
                         {unlockedCount} of {pets.length} companions unlocked
                     </p>
                 </header>
 
                 {/* Stats Row */}
-                <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+                <div className="mb-6 grid grid-cols-1 gap-3 min-[430px]:grid-cols-3 sm:mb-8 sm:gap-4">
                     <StatCard icon="🐾" value={unlockedCount} label="Pets Unlocked" color="#5B8DEF" />
                     <StatCard icon="⚡" value={1250} label="Total XP" color="#FFB347" />
                     <StatCard icon="🔥" value={12} label="Day Streak" color="#FF9F9F" />
@@ -307,9 +307,9 @@ export default function PetsPage() {
                             </h2>
 
                             {isLoading ? (
-                                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
+                                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
                                     {[1, 2, 3, 4, 5, 6].map(i => (
-                                        <div key={i} className="h-48 rounded-3xl bg-gray-100 animate-pulse" />
+                                        <div key={i} className="h-40 animate-pulse rounded-3xl bg-gray-100 sm:h-48" />
                                     ))}
                                 </div>
                             ) : pets.length === 0 ? (
@@ -319,7 +319,7 @@ export default function PetsPage() {
                                     <p className="text-gray-600">Complete lessons to unlock your first pet companion.</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
+                                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
                                     {pets.map(pet => (
                                         <PetCollectionCard
                                             key={pet.pet_id}
@@ -350,7 +350,7 @@ export default function PetsPage() {
                                         {canRenderDisplayPet3D ? (
                                             <Suspense
                                                 fallback={
-                                                    <div className="h-64 flex items-center justify-center">
+                                                    <div className="flex h-[clamp(200px,42vw,280px)] items-center justify-center">
                                                         <div className="text-5xl clay-float-element">🐾</div>
                                                     </div>
                                                 }
@@ -358,7 +358,7 @@ export default function PetsPage() {
                                                 <PetViewer3D
                                                     key={`${displayPet.pet_id}:${displayPet.model_url}`}
                                                     pet={displayPet}
-                                                    height="clamp(220px, 38vw, 280px)"
+                                                    height="clamp(200px, 42vw, 280px)"
                                                     autoRotate={true}
                                                     enableControls={true}
                                                     scale={1.0}
@@ -366,7 +366,7 @@ export default function PetsPage() {
                                                 />
                                             </Suspense>
                                         ) : displayPet.thumbnail_url ? (
-                                        <div className="flex h-56 items-center justify-center bg-white/30 sm:h-64 xl:h-[clamp(240px,28vw,320px)]">
+                                            <div className="flex h-[clamp(200px,42vw,280px)] items-center justify-center bg-white/30">
                                                 <img
                                                     src={displayPet.thumbnail_url}
                                                     alt={displayPet.name}
@@ -374,7 +374,7 @@ export default function PetsPage() {
                                                 />
                                             </div>
                                         ) : (
-                                        <div className="flex h-56 flex-col items-center justify-center gap-2 px-4 text-center sm:h-64 xl:h-[clamp(240px,28vw,320px)]">
+                                            <div className="flex h-[clamp(200px,42vw,280px)] flex-col items-center justify-center gap-2 px-4 text-center">
                                                 <span className="text-7xl">{rarityConfig[displayPet.rarity].badge}</span>
                                                 <p className="text-xs font-semibold text-gray-600">
                                                     3D preview disabled: use self-contained .glb/.gltf model_url
@@ -428,10 +428,10 @@ export default function PetsPage() {
                 </div>
 
                 {/* CTA Section */}
-                <div className="mt-12 clay-card-elevated p-6 text-center sm:p-8">
+                <div className="mt-10 clay-card-elevated p-5 text-center sm:mt-12 sm:p-8">
                     <h2 className="text-2xl font-black text-gray-800 mb-2">Want More Pets?</h2>
                     <p className="text-gray-600 mb-6">Complete lessons and earn XP to unlock rare and legendary companions!</p>
-                    <div className="flex flex-wrap justify-center gap-4">
+                    <div className="flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
                         <button
                             className="clay-cta-primary"
                             onClick={() => window.location.href = '/courses'}

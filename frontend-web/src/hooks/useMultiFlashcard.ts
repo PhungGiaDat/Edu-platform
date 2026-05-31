@@ -359,6 +359,15 @@ export function useMultiFlashcard() {
     }, [state.detectedFlashcards]);
 
     /**
+     * Get flashcard by AR tag. This is used for combo target mapping because
+     * MindAR target indexes follow combo.required_tags order, not QR scan order.
+     */
+    const getFlashcardByTag = useCallback((arTag: string): FlashcardData | null => {
+        const flashcards = Array.from(state.detectedFlashcards.values());
+        return flashcards.find(f => f.arTag === arTag) || null;
+    }, [state.detectedFlashcards]);
+
+    /**
      * Get all ar_tags for combo checking
      */
     const getArTags = useCallback((): string[] => {
@@ -389,6 +398,7 @@ export function useMultiFlashcard() {
 
         // Helpers
         getFlashcardByIndex,
+        getFlashcardByTag,
         getArTags,
 
         // Derived

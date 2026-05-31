@@ -7,9 +7,9 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
     return (
-        <div className="min-h-screen flex" style={{ backgroundColor: 'var(--color-bg)' }}>
+        <div className="flex min-h-screen w-full min-w-0" style={{ backgroundColor: 'var(--color-bg)' }}>
             <Sidebar />
-            <main className="flex-1 md:ml-64 pb-20 md:pb-0">
+            <main className="w-full min-w-0 flex-1 pb-20 md:ml-64 md:pb-0">
                 {children}
             </main>
         </div>

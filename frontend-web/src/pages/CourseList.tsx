@@ -165,7 +165,7 @@ const CourseCard: React.FC<{
 
     return (
         <div
-            className="clay-course-card group"
+            className="clay-course-card group min-w-0"
             onClick={onClick}
         >
             {/* Completion Ribbon */}
@@ -182,7 +182,7 @@ const CourseCard: React.FC<{
                     background: `linear-gradient(135deg, ${course.color}80 0%, ${course.color}40 100%)`
                 }}
             >
-                <span className="text-6xl group-hover:scale-110 transition-transform duration-300">
+                <span className="text-5xl transition-transform duration-300 group-hover:scale-110 sm:text-6xl">
                     {course.icon}
                 </span>
 
@@ -193,8 +193,8 @@ const CourseCard: React.FC<{
             </div>
 
             {/* Course Content */}
-            <div className="p-5">
-                <div className="flex items-center gap-2 mb-2">
+            <div className="min-w-0 p-4 sm:p-5">
+                <div className="mb-2 flex min-w-0 flex-wrap items-center gap-2">
                     <span
                         className="text-xs font-bold px-2 py-1 rounded-full capitalize"
                         style={{
@@ -207,7 +207,7 @@ const CourseCard: React.FC<{
                     <span className="text-xs text-gray-500">• {course.duration}</span>
                 </div>
 
-                <h3 className="font-black text-lg text-gray-800 mb-1">{course.title}</h3>
+                <h3 className="mb-1 text-lg font-black leading-tight text-gray-800">{course.title}</h3>
                 <p className="text-sm text-gray-500 mb-1">{course.titleVi}</p>
                 <p className="text-sm text-gray-600 mb-4 line-clamp-2">{course.description}</p>
 
@@ -321,7 +321,7 @@ const StatsOverview: React.FC<{ courses: Course[] }> = ({ courses }) => {
     const coursesStarted = courses.filter(c => c.completedLessons > 0).length;
 
     return (
-        <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             <div className="clay-stat-card">
                 <div className="text-3xl mb-2">📚</div>
                 <div className="clay-stat-number">{courses.length}</div>
@@ -366,7 +366,7 @@ export const CourseList: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen clay-bg-playful pb-28 md:pb-10">
+        <div className="min-h-screen overflow-x-hidden clay-bg-playful pb-28 md:pb-10">
             {/* Decorative Background */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
                 <div className="clay-shape-circle w-96 h-96 -top-48 -right-48 opacity-40" />
@@ -374,20 +374,20 @@ export const CourseList: React.FC = () => {
                 <div className="clay-shape-circle w-80 h-80 bottom-20 right-1/4 opacity-25" />
             </div>
 
-            <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
+            <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:px-10">
                 {/* Hero Section */}
-                <header className="mx-auto mb-8 max-w-4xl text-center lg:mb-10">
+                <header className="mx-auto mb-6 max-w-4xl text-center sm:mb-8 lg:mb-10">
                     <div className="mb-4 inline-flex items-center gap-2 clay-badge-yellow">
                         <span>🎓</span>
                         <span>Learn English with Fun!</span>
                     </div>
                     <h1
-                        className="mb-4 text-4xl font-black text-gray-800 md:text-5xl"
+                        className="mb-3 text-3xl font-black leading-tight text-gray-800 sm:text-4xl md:text-5xl"
                         style={{ fontFamily: "'Baloo 2', sans-serif" }}
                     >
                         Course Catalog
                     </h1>
-                    <p className="mx-auto max-w-2xl text-base text-gray-600 sm:text-lg">
+                    <p className="mx-auto max-w-2xl text-base leading-relaxed text-gray-600 sm:text-lg">
                         Explore our interactive courses designed for young learners.
                         Learn vocabulary through AR, flashcards, and fun quizzes!
                     </p>
@@ -399,7 +399,7 @@ export const CourseList: React.FC = () => {
                 {/* Learning Paths Section */}
                 <section className="mb-10 lg:mb-12">
                     <h2 className="clay-section-title mb-6">Your Learning Paths</h2>
-                    <div className="grid gap-5 xl:grid-cols-2 xl:gap-6">
+                    <div className="grid min-w-0 gap-5 xl:grid-cols-2 xl:gap-6">
                         {mockLearningPaths.map(path => (
                             <LearningPathCard
                                 key={path.id}
@@ -414,7 +414,7 @@ export const CourseList: React.FC = () => {
                 <section className="mb-8">
                     <div className="clay-card-elevated flex flex-col items-stretch gap-4 p-4 lg:flex-row lg:items-center">
                         {/* Search */}
-                        <div className="flex-1 w-full">
+                        <div className="w-full min-w-0 flex-1">
                             <input
                                 type="text"
                                 placeholder="🔍 Search courses..."
@@ -425,7 +425,7 @@ export const CourseList: React.FC = () => {
                         </div>
 
                         {/* Level Filter */}
-                        <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
+                        <div className="flex min-w-0 flex-wrap justify-center gap-2 lg:justify-start">
                             {['all', 'beginner', 'intermediate', 'advanced'].map(level => (
                                 <button
                                     key={level}
@@ -442,7 +442,7 @@ export const CourseList: React.FC = () => {
                 {/* Course Grid */}
                 <section className="mb-12">
                     <h2 className="clay-section-title mb-6">All Courses</h2>
-                    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6">
+                    <div className="grid min-w-0 gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6">
                         {filteredCourses.map(course => (
                             <CourseCard
                                 key={course.id}
@@ -462,22 +462,22 @@ export const CourseList: React.FC = () => {
                 </section>
 
                 {/* CTA Section */}
-                <section className="clay-hero rounded-3xl p-8 md:p-12 text-center relative overflow-hidden">
+                <section className="clay-hero relative overflow-hidden rounded-3xl p-5 text-center sm:p-8 md:p-12">
                     {/* Floating Elements */}
                     <div className="absolute top-4 left-8 text-5xl clay-float-element opacity-60">📚</div>
                     <div className="absolute bottom-8 right-12 text-4xl clay-float-element opacity-60" style={{ animationDelay: '-2s' }}>🌟</div>
                     <div className="absolute top-1/2 right-8 text-3xl clay-float-element opacity-50" style={{ animationDelay: '-4s' }}>🚀</div>
 
                     <div className="relative z-10">
-                        <h2 className="text-3xl md:text-4xl font-black text-gray-800 mb-4">
+                        <h2 className="mb-4 text-2xl font-black leading-tight text-gray-800 sm:text-3xl md:text-4xl">
                             Ready to Start Learning?
                         </h2>
-                        <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto">
+                        <p className="mx-auto mb-8 max-w-xl text-base leading-relaxed text-gray-600 sm:text-lg">
                             Join thousands of young learners who are mastering English through
                             interactive AR experiences and fun games!
                         </p>
 
-                        <div className="flex flex-wrap justify-center gap-4">
+                        <div className="flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
                             {isAuthenticated ? (
                                 <>
                                     <button
@@ -512,7 +512,7 @@ export const CourseList: React.FC = () => {
                         </div>
 
                         {/* Social Proof */}
-                        <div className="mt-8 flex flex-col md:flex-row items-center justify-center gap-4">
+                        <div className="mt-8 flex flex-col items-center justify-center gap-4 md:flex-row">
                             <div className="clay-avatar-group">
                                 {[1, 2, 3, 4, 5].map(i => (
                                     <img

@@ -99,7 +99,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
             {!isOpen && show3DPet && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="group fixed bottom-20 right-3 h-28 w-28 cursor-pointer p-0 transition-transform duration-300 hover:scale-105 md:bottom-6 md:right-6 md:h-32 md:w-32"
+                    className="group fixed bottom-[calc(env(safe-area-inset-bottom)+6.75rem)] right-2 h-24 w-24 cursor-pointer p-0 transition-transform duration-300 hover:scale-105 sm:right-4 sm:h-28 sm:w-28 md:bottom-6 md:right-6 md:h-32 md:w-32"
                     style={{
                         zIndex: 'var(--z-chatbot)',
                         background: 'transparent',
@@ -131,49 +131,48 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
 
             {isOpen && (
                 <div
-                    className="fixed right-3 flex h-[min(560px,calc(100dvh-112px))] w-[calc(100vw-1.5rem)] max-w-[410px] animate-slideUp flex-col overflow-hidden rounded-[28px] border-4 border-white/80 shadow-[0_16px_0_rgba(91,141,239,0.10),0_26px_56px_rgba(45,60,90,0.18)] md:right-6"
+                    className="fixed inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] flex h-[min(620px,calc(100dvh-1rem))] max-h-[calc(100dvh-1rem)] max-w-none animate-slideUp flex-col overflow-hidden rounded-[24px] border-4 border-white/80 shadow-[0_16px_0_rgba(91,141,239,0.10),0_26px_56px_rgba(45,60,90,0.18)] sm:inset-x-4 md:inset-x-auto md:bottom-6 md:right-6 md:h-[min(560px,calc(100dvh-3rem))] md:w-[410px] md:max-w-[410px] md:rounded-[28px]"
                     style={{
-                        bottom: 112,
                         zIndex: 'var(--z-chatbot)',
                         fontFamily: "'Nunito Sans', 'Quicksand', sans-serif",
                         background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(239,249,255,0.98) 100%)',
                     }}
                 >
-                    <div className="relative overflow-hidden bg-gradient-to-r from-sky-400 via-cyan-400 to-emerald-300 p-4">
+                    <div className="relative overflow-hidden bg-gradient-to-r from-sky-400 via-cyan-400 to-emerald-300 p-3 sm:p-4">
                         <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/20" />
                         <div className="absolute bottom-0 left-12 h-14 w-14 rounded-full bg-yellow-200/25" />
                         <div className="relative flex items-center justify-between">
-                        <div className="flex min-w-0 items-center gap-3">
-                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/90 shadow-[0_5px_0_rgba(30,87,153,0.16)]">
-                                <CodexPetSprite animationState="waving" label="Lexi" size={52} />
+                            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/90 shadow-[0_5px_0_rgba(30,87,153,0.16)] sm:h-14 sm:w-14">
+                                    <CodexPetSprite animationState="waving" label="Lexi" size={52} />
+                                </div>
+                                <div className="min-w-0">
+                                    <h3 className="truncate text-lg font-black text-white drop-shadow-sm sm:text-xl">Lexi</h3>
+                                    <span className="rounded-full bg-white/35 px-2.5 py-1 text-xs font-black text-white">
+                                        English buddy
+                                    </span>
+                                </div>
                             </div>
-                            <div className="min-w-0">
-                                <h3 className="truncate text-xl font-black text-white drop-shadow-sm">Lexi</h3>
-                                <span className="rounded-full bg-white/35 px-2.5 py-1 text-xs font-black text-white">
-                                    English buddy
-                                </span>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleNewChat}
+                                    className="min-h-[44px] rounded-full border-2 border-white/30 bg-white/25 px-3 py-1.5 text-sm font-black text-white transition-colors hover:bg-white/35"
+                                    title="Start new conversation"
+                                >
+                                    New
+                                </button>
+                                <button
+                                    onClick={() => setIsOpen(false)}
+                                    className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-white/30 bg-white/25 text-lg font-black text-white transition-colors hover:bg-white/35"
+                                    aria-label="Close chat"
+                                >
+                                    x
+                                </button>
                             </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={handleNewChat}
-                                className="rounded-full border-2 border-white/30 bg-white/25 px-3 py-1.5 text-sm font-black text-white transition-colors hover:bg-white/35"
-                                title="Start new conversation"
-                            >
-                                New
-                            </button>
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white/30 bg-white/25 text-lg font-black text-white transition-colors hover:bg-white/35"
-                                aria-label="Close chat"
-                            >
-                                x
-                            </button>
-                        </div>
                         </div>
                     </div>
 
-                    <div className="flex-1 space-y-3 overflow-y-auto p-4" style={{ background: 'linear-gradient(180deg, #F8FCFF 0%, #FFF8ED 100%)' }}>
+                    <div className="flex-1 space-y-3 overflow-y-auto p-3 sm:p-4" style={{ background: 'linear-gradient(180deg, #F8FCFF 0%, #FFF8ED 100%)' }}>
                         {messages.map((msg) => (
                             <div
                                 key={msg.id}
@@ -185,7 +184,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                                     </div>
                                 )}
 
-                                <div className="max-w-[80%]">
+                                <div className="max-w-[85%] sm:max-w-[80%]">
                                     <div
                                         className={`rounded-2xl p-3 text-sm font-medium ${
                                             msg.role === 'user'
@@ -228,20 +227,20 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                     </div>
 
                     <div className="border-t-2 border-sky-100 bg-white p-3">
-                        <div className="flex gap-2">
+                        <div className="flex items-end gap-2">
                             <input
                                 type="text"
                                 value={input}
                                 onChange={(event) => setInput(event.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Ask Lexi..."
-                                className="min-w-0 flex-1 rounded-2xl border-2 border-sky-100 bg-sky-50/70 px-4 py-3 text-sm font-bold text-slate-700 placeholder-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                                className="min-h-[44px] min-w-0 flex-1 rounded-2xl border-2 border-sky-100 bg-sky-50/70 px-4 py-3 text-sm font-bold text-slate-700 placeholder-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
                                 disabled={isLoading}
                             />
                             <button
                                 onClick={() => void handleSend()}
                                 disabled={isLoading || !input.trim()}
-                                className="rounded-2xl border-0 bg-gradient-to-br from-yellow-300 to-orange-300 px-5 font-black text-slate-800 shadow-[0_5px_0_rgba(245,158,11,0.24)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                                className="min-h-[44px] shrink-0 rounded-2xl border-0 bg-gradient-to-br from-yellow-300 to-orange-300 px-4 font-black text-slate-800 shadow-[0_5px_0_rgba(245,158,11,0.24)] transition-all duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:px-5"
                             >
                                 Send
                             </button>

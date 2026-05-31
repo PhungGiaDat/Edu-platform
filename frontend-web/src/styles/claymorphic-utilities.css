@@ -778,6 +778,53 @@
   color: #A0AEC0;
 }
 
+@media (max-width: 640px) {
+  .clay-stat-card {
+    min-width: 0;
+    border-radius: 20px;
+    padding: 16px;
+  }
+
+  .clay-stat-number {
+    font-size: 2rem;
+    line-height: 1;
+    overflow-wrap: anywhere;
+  }
+
+  .clay-stat-label {
+    font-size: 0.78rem;
+    line-height: 1.2;
+  }
+
+  .clay-course-card {
+    min-width: 0;
+  }
+
+  .clay-course-thumb {
+    height: 128px;
+  }
+
+  .clay-tab {
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+
+  .clay-cta-primary,
+  .clay-cta-secondary {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+    padding: 14px 20px;
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  .clay-pet-showcase {
+    border-radius: 24px;
+    padding: 16px;
+  }
+}
+
 /* Ribbon/Banner */
 .clay-ribbon {
   position: absolute;

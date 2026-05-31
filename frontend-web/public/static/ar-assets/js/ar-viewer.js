@@ -64,6 +64,40 @@
 
     log('cards', `Viewer configured for ${cardCount} detected card(s)`);
 
+    function getLocalModelFallbackUrl(url) {
+        if (!url) return null;
+        try {
+            const parsed = new URL(url, window.location.origin);
+            const marker = '/storage/v1/object/public/AR_models/';
+            const markerIndex = parsed.pathname.indexOf(marker);
+            if (markerIndex === -1) return null;
+
+            const storagePath = decodeURIComponent(parsed.pathname.slice(markerIndex + marker.length));
+            if (storagePath.startsWith('models/')) {
+                return `/assets/${storagePath}`;
+            }
+            if (storagePath.startsWith('assets/models/')) {
+                return `/${storagePath}`;
+            }
+            return null;
+        } catch {
+            return null;
+        }
+    }
+
+    function retryModelWithFallback(assetItem, modelEl, originalUrl, label) {
+        const fallbackUrl = getLocalModelFallbackUrl(originalUrl);
+        if (!fallbackUrl || assetItem.dataset.fallbackTried === 'true') return false;
+
+        assetItem.dataset.fallbackTried = 'true';
+        log('retry', `${label} failed from Supabase, retrying local asset: ${fallbackUrl}`);
+        assetItem.setAttribute('src', fallbackUrl);
+        if (modelEl) {
+            modelEl.setAttribute('gltf-model', fallbackUrl);
+        }
+        return true;
+    }
+
     // ============ TYPED MESSAGE PROTOCOL ============
 
     /**
@@ -226,6 +260,7 @@
             assetItem.setAttribute('id', 'model-asset-0');
             assetItem.setAttribute('src', modelUrl);
             assetItem.setAttribute('crossorigin', 'anonymous');
+            const model0El = document.getElementById('mode-3d-0');
             // Update loading text on load events
             assetItem.addEventListener('loaded', () => {
                 log('✅', 'Model 0 loaded successfully');
@@ -233,6 +268,9 @@
             });
             assetItem.addEventListener('error', (e) => {
                 log('❌', 'Model 0 load error:', e);
+                if (retryModelWithFallback(assetItem, model0El, modelUrl, 'Model 0')) {
+                    return;
+                }
                 if (loadText) loadText.textContent = 'Model unavailable, continuing...';
                 sendToParent('SYSTEM_ERROR', {
                     code: 'MODEL_LOAD_ERROR',
@@ -248,7 +286,6 @@
             assetItem.setAttribute('timeout', '15000');
             assetsEl.appendChild(assetItem);
             log('🔗', 'Setting gltf-model attribute on mode-3d-0');
-            const model0El = document.getElementById('mode-3d-0');
             applyTextureWhenModelReady(model0El, textureUrl);
             model0El.setAttribute('gltf-model', '#model-asset-0');
             
@@ -288,11 +325,15 @@
             assetItem2.setAttribute('src', modelUrl2);
             assetItem2.setAttribute('crossorigin', 'anonymous');
             assetItem2.setAttribute('timeout', '15000');
+            const model1El = document.getElementById('mode-3d-1');
             assetItem2.addEventListener('loaded', () => {
                 log('✅', 'Model 1 loaded successfully');
             });
             assetItem2.addEventListener('error', (e) => {
                 log('❌', 'Model 1 load error:', e);
+                if (retryModelWithFallback(assetItem2, model1El, modelUrl2, 'Model 1')) {
+                    return;
+                }
                 sendToParent('SYSTEM_ERROR', {
                     code: 'MODEL_LOAD_ERROR',
                     message: 'Failed to load 3D model 1',
@@ -305,7 +346,6 @@
                 }
             });
             assetsEl.appendChild(assetItem2);
-            const model1El = document.getElementById('mode-3d-1');
             applyTextureWhenModelReady(model1El, textureUrl2);
             model1El.setAttribute('gltf-model', '#model-asset-1');
 
@@ -1337,7 +1377,7 @@
         if (!comboModel) {
             comboModel = document.createElement('a-entity');
             comboModel.id = 'combo-model';
-            comboModel.setAttribute('gltf-model', comboModelUrl);
+            comboModel.setAttribute('gltf-model', getLocalModelFallbackUrl(comboModelUrl) || comboModelUrl);
             comboModel.setAttribute('scale', '0.4 0.4 0.4'); // Bigger for impact!
             comboModel.setAttribute('animation', 'property: rotation; to: 0 360 0; dur: 4000; easing: linear; loop: true');
             comboModel.setAttribute('animation__spawn', 'property: scale; from: 0 0 0; to: 0.4 0.4 0.4; dur: 600; easing: easeOutBack');
