@@ -93,7 +93,7 @@ export const Profile: React.FC = () => {
     const levelProgress = (userStats.total_points / xpForNextLevel) * 100;
 
     return (
-        <div className="min-h-screen clay-bg-playful pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
+        <div className="min-h-screen overflow-x-hidden clay-bg-playful pb-24 transition-all duration-300 md:pb-8">
             {/* Decorative background shapes */}
             <div className="pointer-events-none fixed inset-0 overflow-hidden">
                 <div
@@ -110,9 +110,9 @@ export const Profile: React.FC = () => {
                 />
             </div>
 
-            <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 xl:px-10">
+            <div className="relative mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8 xl:px-10">
                 {/* Hero Profile Section */}
-                <section className="clay-hero mb-8 overflow-hidden">
+                <section className="clay-hero mb-6 overflow-hidden sm:mb-8">
                     <div className="relative">
                         {/* Background pattern */}
                         <div
@@ -122,7 +122,7 @@ export const Profile: React.FC = () => {
                             }}
                         />
 
-                        <div className="relative grid gap-6 p-6 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:p-8 lg:grid-cols-[auto_minmax(0,1fr)_minmax(14rem,18rem)] lg:gap-8 xl:gap-10">
+                        <div className="relative grid min-w-0 gap-6 p-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:p-8 lg:grid-cols-[auto_minmax(0,1fr)_minmax(14rem,18rem)] lg:gap-8 xl:gap-10">
                             {/* Avatar with level ring */}
                             <div className="relative justify-self-center sm:justify-self-start">
                                 <div className="clay-progress-ring" style={{ '--progress': `${levelProgress}%` } as React.CSSProperties}>
@@ -156,7 +156,7 @@ export const Profile: React.FC = () => {
                             {/* User info */}
                             <div className="min-w-0 text-center sm:text-left">
                                 <h1
-                                    className="text-3xl font-black text-slate-800 sm:text-4xl"
+                                    className="break-words text-3xl font-black leading-tight text-slate-800 sm:text-4xl"
                                     style={{ textShadow: '2px 2px 0px rgba(255, 107, 107, 0.2)' }}
                                 >
                                     {userStats.username}
@@ -213,7 +213,7 @@ export const Profile: React.FC = () => {
                     {/* Left column - Badges & Stats */}
                     <div className="min-w-0 space-y-6 xl:col-span-3">
                         {/* Tab navigation */}
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex min-w-0 flex-wrap gap-2">
                             <button
                                 onClick={() => setActiveTab('badges')}
                                 className={`clay-tab ${activeTab === 'badges' ? 'clay-tab-active' : ''}`}
@@ -230,7 +230,7 @@ export const Profile: React.FC = () => {
 
                         {/* Badges section */}
                         {activeTab === 'badges' && (
-                            <section className="clay-card-sky p-6">
+                            <section className="clay-card-sky p-4 sm:p-6">
                                 <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                     <h2 className="text-xl font-black text-slate-800">
                                         Badge Collection
@@ -247,13 +247,14 @@ export const Profile: React.FC = () => {
                                 </div>
 
                                 {/* Enhanced badge grid */}
-                                <div className="grid grid-cols-3 gap-4 sm:grid-cols-6 xl:gap-5">
+                                <div className="grid grid-cols-3 gap-3 sm:grid-cols-6 sm:gap-4 xl:gap-5">
                                     {badges.map((badge) => {
                                         const isEarned = earnedBadgeIds.includes(badge.id);
                                         return (
                                             <div
                                                 key={badge.id}
                                                 className="group relative flex flex-col items-center text-center"
+                                                title={badge.description}
                                             >
                                                 <div
                                                     className={`flex h-16 w-16 items-center justify-center rounded-2xl text-2xl transition-all duration-300 sm:h-20 sm:w-20 sm:text-3xl ${isEarned
@@ -276,7 +277,7 @@ export const Profile: React.FC = () => {
                                                 </span>
 
                                                 {/* Tooltip */}
-                                                <div className="pointer-events-none absolute -top-12 left-1/2 z-10 -translate-x-1/2 transform whitespace-nowrap rounded-lg bg-slate-800 px-3 py-2 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                                <div className="pointer-events-none absolute -top-12 left-1/2 z-10 hidden -translate-x-1/2 transform whitespace-nowrap rounded-lg bg-slate-800 px-3 py-2 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 sm:block">
                                                     {badge.description}
                                                     <div className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 transform bg-slate-800" />
                                                 </div>
@@ -289,7 +290,7 @@ export const Profile: React.FC = () => {
 
                         {/* Stats/Progress section */}
                         {activeTab === 'stats' && (
-                            <section className="clay-card-mint p-6">
+                            <section className="clay-card-mint p-4 sm:p-6">
                                 <h2 className="mb-4 text-xl font-black text-slate-800">
                                     Learning Milestones
                                 </h2>
@@ -344,25 +345,25 @@ export const Profile: React.FC = () => {
                         )}
 
                         {/* Testimonials Section */}
-                             <section className="clay-card-lavender p-6">
+                        <section className="clay-card-lavender p-4 sm:p-6">
                             <h2 className="mb-4 text-center text-xl font-black text-slate-800">
                                 What Other Learners Say ✨
                             </h2>
 
-                             <div className="grid gap-4 md:grid-cols-3">
+                            <div className="grid gap-4 lg:grid-cols-3">
                                 {testimonials.map((testimonial) => (
                                     <div
                                         key={testimonial.id}
                                         className="clay-testimonial"
                                     >
-                                        <div className="mb-3 flex items-center gap-3">
+                                        <div className="mb-3 flex min-w-0 items-center gap-3">
                                             <img
                                                 src={testimonial.avatar}
                                                 alt={testimonial.name}
                                                 className="h-12 w-12 rounded-full border-3 border-white shadow-md"
                                             />
-                                            <div>
-                                                <div className="font-bold text-slate-800">{testimonial.name}</div>
+                                            <div className="min-w-0">
+                                                <div className="truncate font-bold text-slate-800">{testimonial.name}</div>
                                                 <div className="text-xs text-slate-500">Age {testimonial.age}</div>
                                             </div>
                                         </div>
@@ -396,7 +397,7 @@ export const Profile: React.FC = () => {
                                 {leaderboard.map((entry, index) => (
                                     <div
                                         key={entry.user_id}
-                                        className={`flex items-center gap-3 p-3 transition-colors hover:bg-yellow-50 ${entry.username === username ? 'bg-yellow-50' : ''
+                                        className={`flex min-w-0 items-center gap-3 p-3 transition-colors hover:bg-yellow-50 ${entry.username === username ? 'bg-yellow-50' : ''
                                             }`}
                                     >
                                         <div
@@ -414,12 +415,12 @@ export const Profile: React.FC = () => {
                                             className="h-10 w-10 rounded-full border-2 border-white shadow-sm"
                                         />
                                         <div className="min-w-0 flex-1">
-                                            <div className={`font-bold ${entry.username === username ? 'text-yellow-700' : 'text-slate-700'}`}>
+                                            <div className={`truncate font-bold ${entry.username === username ? 'text-yellow-700' : 'text-slate-700'}`}>
                                                 {entry.username}
                                                 {entry.username === username && <span className="ml-1 text-xs">(You)</span>}
                                             </div>
                                         </div>
-                                        <div className="shrink-0 font-bold text-yellow-600">
+                                        <div className="shrink-0 whitespace-nowrap text-sm font-bold text-yellow-600 sm:text-base">
                                             {entry.points} XP
                                         </div>
                                     </div>

@@ -211,12 +211,7 @@ body {
   min-height: 100vh;
   background-color: var(--color-bg);
   color: var(--color-text);
-}
-
-/* Only apply flex layout when NOT in AR mode */
-body:not(:has(.learn-ar-container)) {
-  display: flex;
-  place-items: center;
+  display: block;
 }
 
 h1 {
