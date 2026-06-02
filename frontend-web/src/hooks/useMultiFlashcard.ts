@@ -72,6 +72,11 @@ export function useMultiFlashcard() {
 
     const comboCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const proximityComboRef = useRef<boolean>(false);
+    const stateRef = useRef(state);
+
+    useEffect(() => {
+        stateRef.current = state;
+    }, [state]);
 
     const buildUrl = useCallback((path?: string): string | undefined => {
         if (!path) return undefined;
@@ -83,11 +88,12 @@ export function useMultiFlashcard() {
     /**
      * Add a newly detected flashcard
      */
-    const addFlashcard = useCallback(async (qrId: string) => {
+    const addFlashcard = useCallback(async (qrId: string): Promise<FlashcardData | null> => {
         // Skip if already detected
-        if (state.detectedFlashcards.has(qrId)) {
+        const existing = stateRef.current.detectedFlashcards.get(qrId);
+        if (existing) {
             console.log('[MultiFlashcard] QR already detected:', qrId);
-            return;
+            return existing;
         }
 
         console.log('[MultiFlashcard] 📱 New QR detected:', qrId);
@@ -97,13 +103,13 @@ export function useMultiFlashcard() {
             const response = await fetch(`${API_BASE}/api/v1/flashcard/${qrId}`);
             if (!response.ok) {
                 console.error('[MultiFlashcard] Failed to fetch flashcard:', qrId);
-                return;
+                return null;
             }
 
             const data = await response.json();
             if (!data || !data.flashcard) {
                 console.error('[MultiFlashcard] Flashcard data missing in response:', qrId);
-                return;
+                return null;
             }
 
             const flashcard = data.flashcard;
@@ -121,6 +127,8 @@ export function useMultiFlashcard() {
             };
 
             setState(prev => {
+                if (prev.detectedFlashcards.has(qrId)) return prev;
+
                 const newMap = new Map(prev.detectedFlashcards);
                 newMap.set(qrId, flashcardData);
 
@@ -134,10 +142,13 @@ export function useMultiFlashcard() {
                 };
             });
 
+            return flashcardData;
+
         } catch (error) {
             console.error('[MultiFlashcard] Error fetching flashcard:', error);
+            return null;
         }
-    }, [state.detectedFlashcards, buildUrl]);
+    }, [buildUrl]);
 
     /**
      * Remove a flashcard (e.g., when target lost for extended time)
@@ -175,7 +186,7 @@ export function useMultiFlashcard() {
 
         try {
             const response = await fetch(
-                `${API_BASE}/api/v1/combos/check?tags=${arTags.join(',')}`
+                `${API_BASE}/api/v1/combos/check?tags=${encodeURIComponent(arTags.join(','))}`
             );
 
             if (!response.ok) {

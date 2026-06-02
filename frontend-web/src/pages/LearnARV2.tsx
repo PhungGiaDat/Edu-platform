@@ -501,6 +501,7 @@ export default function LearnARV2() {
     const [displayMode, setDisplayMode] = useState<DisplayMode>('3D');
     const [appMode, setAppMode] = useState<AppMode>('LEARNING');
     const [detectedQrId, setDetectedQrId] = useState<string | null>(null);
+    const [committedComboId, setCommittedComboId] = useState<string | null>(null);
     const [, setIsComboActive] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showBreakReminder, setShowBreakReminder] = useState(false);
@@ -514,6 +515,9 @@ export default function LearnARV2() {
 
     // Track whether the AR target marker is visible (for 2D overlay)
     const [markerFound, setMarkerFound] = useState(false);
+    const detectedQrIdRef = useRef<string | null>(null);
+    const qrGateRef = useRef<Map<string, number>>(new Map());
+    const lastTargetEventRef = useRef(0);
 
     // Session ID returned from backend when we POST /sessions/start
     const sessionIdRef = useRef<string | null>(null);
@@ -610,17 +614,54 @@ export default function LearnARV2() {
     const { pets, unlockPet, setActivePet, recentlyUnlocked } = usePets(USER_ID);
 
     // ========== AR DATA ==========
-    const mindUrl = hasCombo && comboMindUrl
+    useEffect(() => {
+        detectedQrIdRef.current = detectedQrId;
+    }, [detectedQrId]);
+
+    useEffect(() => {
+        if (!hasCombo || !activeCombo || !comboMindUrl || flashcardCount < 2) return;
+        if (committedComboId === activeCombo.comboId) return;
+
+        let cancelled = false;
+        let timeoutId: number | undefined;
+
+        const commitWhenTrackingSettles = () => {
+            const msSinceTargetEvent = Date.now() - lastTargetEventRef.current;
+            if (msSinceTargetEvent < 900) {
+                timeoutId = window.setTimeout(commitWhenTrackingSettles, 900 - msSinceTargetEvent);
+                return;
+            }
+            if (!cancelled) {
+                console.log('[LearnARV2] Committing combo viewer:', activeCombo.comboId);
+                setCommittedComboId(activeCombo.comboId);
+            }
+        };
+
+        timeoutId = window.setTimeout(commitWhenTrackingSettles, 700);
+        return () => {
+            cancelled = true;
+            if (timeoutId) window.clearTimeout(timeoutId);
+        };
+    }, [hasCombo, activeCombo, comboMindUrl, flashcardCount, committedComboId]);
+
+    const isComboViewer = Boolean(
+        committedComboId &&
+        hasCombo &&
+        activeCombo?.comboId === committedComboId &&
+        comboMindUrl
+    );
+
+    const mindUrl = isComboViewer && comboMindUrl
         ? resolveMindUrl(comboMindUrl)
         : resolveMindUrl(arData?.targets?.[0]?.nft_base_url);
 
-    const comboTarget0 = hasCombo && activeCombo?.requiredTags?.[0]
+    const comboTarget0 = isComboViewer && activeCombo?.requiredTags?.[0]
         ? getFlashcardByTag(activeCombo.requiredTags[0])
         : null;
-    const comboTarget1 = hasCombo && activeCombo?.requiredTags?.[1]
+    const comboTarget1 = isComboViewer && activeCombo?.requiredTags?.[1]
         ? getFlashcardByTag(activeCombo.requiredTags[1])
         : null;
-    const fallbackTarget1 = getFlashcardByIndex(1);
+    const fallbackTarget1 = isComboViewer ? getFlashcardByIndex(1) : null;
 
     const modelUrl = comboTarget0?.model3dUrl || arData?.targets?.[0]?.model_3d_url;
 
@@ -632,9 +673,9 @@ export default function LearnARV2() {
     const textureUrl2 = comboTarget1?.textureUrl || fallbackTarget1?.textureUrl || arData?.targets?.[1]?.texture_url;
     
     // Combo model URL for proximity combo replacement
-    const comboModelUrl = activeCombo?.model3dUrl;
-    const comboTextureUrl = activeCombo?.textureUrl;
-    const comboPhrase = activeCombo?.description
+    const comboModelUrl = isComboViewer ? activeCombo?.model3dUrl : undefined;
+    const comboTextureUrl = isComboViewer ? activeCombo?.textureUrl : undefined;
+    const comboPhrase = isComboViewer && activeCombo?.description
         || [comboTarget0?.word || arData?.flashcard?.word, comboTarget1?.word || fallbackTarget1?.word].filter(Boolean).join(' in ');
 
     // ========== HANDLERS ==========
@@ -642,15 +683,30 @@ export default function LearnARV2() {
         console.log('[LearnARV2] QR Detected:', qrId);
         if (!qrId) return;
 
-        const isFirstQr = !detectedQrId;
-        if (isFirstQr) setDetectedQrId(qrId);
-
-        addFlashcard(qrId);
-        if (isFirstQr) {
-            setAppState('LOADING');
+        const now = Date.now();
+        const lastSeenAt = qrGateRef.current.get(qrId) || 0;
+        if (now - lastSeenAt < 2500) {
+            console.log('[LearnARV2] QR ignored during cooldown:', qrId);
+            return;
         }
-        trackFlashcardView();
-    }, [detectedQrId, trackFlashcardView, addFlashcard]);
+        qrGateRef.current.set(qrId, now);
+
+        const isFirstQr = !detectedQrIdRef.current;
+        void addFlashcard(qrId).then((flashcardData) => {
+            if (!flashcardData) {
+                console.warn('[LearnARV2] Ignoring QR without validated flashcard data:', qrId);
+                return;
+            }
+
+            if (isFirstQr && !detectedQrIdRef.current) {
+                detectedQrIdRef.current = qrId;
+                setDetectedQrId(qrId);
+                setAppState('LOADING');
+            }
+
+            trackFlashcardView();
+        });
+    }, [trackFlashcardView, addFlashcard]);
 
     const handlePhaseChange = useCallback((phase: ARPhase) => {
         console.log('[LearnARV2] Phase changed:', phase);
@@ -663,11 +719,13 @@ export default function LearnARV2() {
 
     const handleTargetFound = useCallback((idx: number) => {
         console.log('[LearnARV2] Target found:', idx);
+        lastTargetEventRef.current = Date.now();
         if (idx === 0) setMarkerFound(true);
     }, []);
 
     const handleTargetLost = useCallback((idx: number) => {
         console.log('[LearnARV2] Target lost:', idx);
+        lastTargetEventRef.current = Date.now();
         if (idx === 0) setMarkerFound(false);
     }, []);
 
@@ -875,7 +933,7 @@ export default function LearnARV2() {
                 textureUrl2={textureUrl2}
                 word={comboTarget0?.word || arData?.flashcard?.word}
                 word2={comboTarget1?.word || fallbackTarget1?.word}
-                cardCount={hasCombo && activeCombo?.requiredTags?.length ? activeCombo.requiredTags.length : flashcardCount}
+                cardCount={isComboViewer && activeCombo?.requiredTags?.length ? activeCombo.requiredTags.length : 1}
                 comboModelUrl={comboModelUrl}
                 comboTextureUrl={comboTextureUrl}
                 comboPhrase={comboPhrase}
