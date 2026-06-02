@@ -93,9 +93,9 @@ export const Profile: React.FC = () => {
     const levelProgress = (userStats.total_points / xpForNextLevel) * 100;
 
     return (
-        <div className="min-h-screen overflow-x-hidden clay-bg-playful pb-24 transition-all duration-300 md:pb-8">
+        <div className="min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden clay-bg-playful pb-24 transition-all duration-300 md:pb-8">
             {/* Decorative background shapes */}
-            <div className="pointer-events-none fixed inset-0 overflow-hidden">
+            <div className="pointer-events-none fixed inset-0 hidden overflow-hidden sm:block">
                 <div
                     className="clay-shape-blob absolute -left-20 top-20 h-64 w-64 opacity-30"
                     style={{ background: 'linear-gradient(135deg, #FF6B6B, #FF8E8E)', animationDelay: '0s' }}
@@ -110,7 +110,7 @@ export const Profile: React.FC = () => {
                 />
             </div>
 
-            <div className="relative mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8 xl:px-10">
+            <div className="relative mx-auto w-full max-w-7xl min-w-0 px-4 py-5 sm:px-6 sm:py-8 lg:px-8 xl:px-10">
                 {/* Hero Profile Section */}
                 <section className="clay-hero mb-6 overflow-hidden sm:mb-8">
                     <div className="relative">

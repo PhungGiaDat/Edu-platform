@@ -10,12 +10,6 @@ body,
   height: 100%;
   overflow: hidden;
 } */
-/* Ensure navbar always on top */
-nav {
-  position: relative;
-  z-index: 50 !important;
-}
-
 /* Fullscreen button should be visible */
 button[class*="fullscreen"],
 .fullscreen-button {

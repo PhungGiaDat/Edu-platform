@@ -35,6 +35,8 @@
     let isReady = false;
     const activeTargets = new Map();
     const COMBO_THRESHOLD = 2;
+    const targetLostTimers = new Map();
+    const TARGET_LOST_GRACE_MS = 900;
 
     // Proximity detection settings
     let PROXIMITY_THRESHOLD = 0.5; // Distance in 3D units to trigger combo
@@ -64,38 +66,13 @@
 
     log('cards', `Viewer configured for ${cardCount} detected card(s)`);
 
-    function getLocalModelFallbackUrl(url) {
-        if (!url) return null;
-        try {
-            const parsed = new URL(url, window.location.origin);
-            const marker = '/storage/v1/object/public/AR_models/';
-            const markerIndex = parsed.pathname.indexOf(marker);
-            if (markerIndex === -1) return null;
-
-            const storagePath = decodeURIComponent(parsed.pathname.slice(markerIndex + marker.length));
-            if (storagePath.startsWith('models/')) {
-                return `/assets/${storagePath}`;
-            }
-            if (storagePath.startsWith('assets/models/')) {
-                return `/${storagePath}`;
-            }
-            return null;
-        } catch {
-            return null;
-        }
-    }
-
     function retryModelWithFallback(assetItem, modelEl, originalUrl, label) {
-        const fallbackUrl = getLocalModelFallbackUrl(originalUrl);
-        if (!fallbackUrl || assetItem.dataset.fallbackTried === 'true') return false;
-
-        assetItem.dataset.fallbackTried = 'true';
-        log('retry', `${label} failed from Supabase, retrying local asset: ${fallbackUrl}`);
-        assetItem.setAttribute('src', fallbackUrl);
-        if (modelEl) {
-            modelEl.setAttribute('gltf-model', fallbackUrl);
-        }
-        return true;
+        log('fallback', `${label} failed from source URL. Local model fallback is disabled; verify the Supabase object URL and CORS.`, {
+            originalUrl,
+            targetId: modelEl?.id,
+            assetId: assetItem?.id
+        });
+        return false;
     }
 
     // ============ TYPED MESSAGE PROTOCOL ============
@@ -391,7 +368,7 @@
 
             // Also send AR_READY for backwards compatibility
             sendToParent('AR_READY', {
-                targetCount: 2
+                targetCount: Math.max(1, Math.min(cardCount || 1, maxTrack))
             });
         });
 
@@ -451,6 +428,11 @@
             target.addEventListener('targetFound', () => {
                 log('🎯', `✨ TARGET ${index} FOUND! Image detected by MindAR`);
                 log('🎯', `Target ${index} is now being tracked`);
+                const lostTimer = targetLostTimers.get(index);
+                if (lostTimer) {
+                    clearTimeout(lostTimer);
+                    targetLostTimers.delete(index);
+                }
                 activeTargets.set(index, {
                     element: target,
                     timestamp: Date.now()
@@ -466,16 +448,26 @@
 
             target.addEventListener('targetLost', () => {
                 log('👋', `Target ${index} lost - image no longer detected`);
-                activeTargets.delete(index);
+                const existingTimer = targetLostTimers.get(index);
+                if (existingTimer) clearTimeout(existingTimer);
 
-                sendToParent('TARGET_LOST', {
-                    targetIndex: index
-                });
+                const timer = setTimeout(() => {
+                    targetLostTimers.delete(index);
+                    if (!activeTargets.has(index)) return;
 
-                // Stop proximity checking if not enough targets
-                if (activeTargets.size < COMBO_THRESHOLD) {
-                    stopProximityCheck();
-                }
+                    activeTargets.delete(index);
+
+                    sendToParent('TARGET_LOST', {
+                        targetIndex: index
+                    });
+
+                    // Stop proximity checking if not enough targets after the grace period
+                    if (activeTargets.size < COMBO_THRESHOLD) {
+                        stopProximityCheck();
+                    }
+                }, TARGET_LOST_GRACE_MS);
+
+                targetLostTimers.set(index, timer);
             });
         });
 
@@ -1377,7 +1369,7 @@
         if (!comboModel) {
             comboModel = document.createElement('a-entity');
             comboModel.id = 'combo-model';
-            comboModel.setAttribute('gltf-model', getLocalModelFallbackUrl(comboModelUrl) || comboModelUrl);
+            comboModel.setAttribute('gltf-model', comboModelUrl);
             comboModel.setAttribute('scale', '0.4 0.4 0.4'); // Bigger for impact!
             comboModel.setAttribute('animation', 'property: rotation; to: 0 360 0; dur: 4000; easing: linear; loop: true');
             comboModel.setAttribute('animation__spawn', 'property: scale; from: 0 0 0; to: 0.4 0.4 0.4; dur: 600; easing: easeOutBack');
@@ -1613,6 +1605,12 @@
             undefined,
             (err) => {
                 log('❌', 'Texture load failed:', err);
+                sendToParent('SYSTEM_ERROR', {
+                    code: 'TEXTURE_LOAD_ERROR',
+                    message: 'Failed to load external texture',
+                    targetId: modelEl.id,
+                    url
+                });
             }
         );
     }

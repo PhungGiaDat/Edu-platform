@@ -270,15 +270,15 @@ export default function PetsPage() {
     const canRenderDisplayPet3D = isRenderableModelUrl(displayPet?.model_url);
 
     return (
-        <div className="min-h-screen overflow-x-hidden clay-bg-playful pb-28 transition-all duration-300 md:pb-8">
+        <div className="min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden clay-bg-playful pb-28 transition-all duration-300 md:pb-8">
             {/* Decorative Background Elements */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+            <div className="pointer-events-none fixed inset-0 hidden overflow-hidden sm:block">
                 <div className="clay-shape-circle w-96 h-96 -top-48 -left-48 opacity-40" />
                 <div className="clay-shape-circle w-64 h-64 top-1/4 right-0 opacity-30" />
                 <div className="clay-shape-circle w-80 h-80 bottom-0 left-1/4 opacity-25" />
             </div>
 
-            <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10">
+            <div className="relative z-10 mx-auto w-full max-w-7xl min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10">
                 {/* Header */}
                 <header className="mb-6 text-center sm:mb-8">
                     <h1 className="mb-2 text-3xl font-black leading-tight text-gray-800 sm:text-4xl md:text-5xl" style={{ fontFamily: "'Baloo 2', sans-serif" }}>
@@ -290,7 +290,7 @@ export default function PetsPage() {
                 </header>
 
                 {/* Stats Row */}
-                <div className="mb-6 grid grid-cols-1 gap-3 min-[430px]:grid-cols-3 sm:mb-8 sm:gap-4">
+                <div className="mb-6 grid min-w-0 grid-cols-2 gap-3 sm:mb-8 sm:grid-cols-3 sm:gap-4">
                     <StatCard icon="🐾" value={unlockedCount} label="Pets Unlocked" color="#5B8DEF" />
                     <StatCard icon="⚡" value={1250} label="Total XP" color="#FFB347" />
                     <StatCard icon="🔥" value={12} label="Day Streak" color="#FF9F9F" />

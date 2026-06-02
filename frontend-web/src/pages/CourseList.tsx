@@ -366,15 +366,15 @@ export const CourseList: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen overflow-x-hidden clay-bg-playful pb-28 md:pb-10">
+        <div className="min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden clay-bg-playful pb-28 md:pb-10">
             {/* Decorative Background */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+            <div className="pointer-events-none fixed inset-0 hidden overflow-hidden sm:block">
                 <div className="clay-shape-circle w-96 h-96 -top-48 -right-48 opacity-40" />
                 <div className="clay-shape-circle w-64 h-64 top-1/3 -left-32 opacity-30" />
                 <div className="clay-shape-circle w-80 h-80 bottom-20 right-1/4 opacity-25" />
             </div>
 
-            <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:px-10">
+            <div className="relative z-10 mx-auto w-full max-w-7xl min-w-0 px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:px-10">
                 {/* Hero Section */}
                 <header className="mx-auto mb-6 max-w-4xl text-center sm:mb-8 lg:mb-10">
                     <div className="mb-4 inline-flex items-center gap-2 clay-badge-yellow">

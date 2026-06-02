@@ -237,7 +237,7 @@ export const Sidebar: React.FC = () => {
             </aside>
 
             {/* Mobile Bottom Navigation (Floating Pill Style) */}
-            <nav className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-3 right-3 z-50 pointer-events-none sm:left-4 sm:right-4 md:hidden">
+            <nav className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-3 right-3 z-50 max-w-[calc(100vw-1.5rem)] pointer-events-none sm:left-4 sm:right-4 sm:max-w-[calc(100vw-2rem)] md:hidden">
                 <div className="bg-white/90 backdrop-blur-md border-2 border-white shadow-[0_8px_32px_rgba(91,141,239,0.15),0_4px_0_rgba(0,0,0,0.05)] rounded-[32px] p-2 flex justify-around items-center h-[72px] pointer-events-auto relative">
                     {navItems.map((item) => {
                         const IconComponent = iconComponents[item.iconKey];

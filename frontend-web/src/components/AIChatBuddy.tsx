@@ -99,7 +99,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
             {!isOpen && show3DPet && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="group fixed bottom-[calc(env(safe-area-inset-bottom)+6.75rem)] right-2 h-24 w-24 cursor-pointer p-0 transition-transform duration-300 hover:scale-105 sm:right-4 sm:h-28 sm:w-28 md:bottom-6 md:right-6 md:h-32 md:w-32"
+                    className="group fixed bottom-[calc(env(safe-area-inset-bottom)+6.25rem)] right-3 h-20 w-20 cursor-pointer p-0 transition-transform duration-300 hover:scale-105 sm:right-4 sm:h-24 sm:w-24 md:bottom-6 md:right-6 md:h-32 md:w-32"
                     style={{
                         zIndex: 'var(--z-chatbot)',
                         background: 'transparent',
@@ -131,7 +131,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
 
             {isOpen && (
                 <div
-                    className="fixed inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] flex h-[min(620px,calc(100dvh-1rem))] max-h-[calc(100dvh-1rem)] max-w-none animate-slideUp flex-col overflow-hidden rounded-[24px] border-4 border-white/80 shadow-[0_16px_0_rgba(91,141,239,0.10),0_26px_56px_rgba(45,60,90,0.18)] sm:inset-x-4 md:inset-x-auto md:bottom-6 md:right-6 md:h-[min(560px,calc(100dvh-3rem))] md:w-[410px] md:max-w-[410px] md:rounded-[28px]"
+                    className="fixed inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] flex h-[min(620px,calc(100dvh-env(safe-area-inset-bottom)-1rem))] max-h-[calc(100dvh-env(safe-area-inset-bottom)-1rem)] max-w-none animate-slideUp flex-col overflow-hidden rounded-[24px] border-4 border-white/80 shadow-[0_16px_0_rgba(91,141,239,0.10),0_26px_56px_rgba(45,60,90,0.18)] sm:inset-x-4 md:inset-x-auto md:bottom-6 md:right-6 md:h-[min(560px,calc(100dvh-3rem))] md:w-[410px] md:max-w-[410px] md:rounded-[28px]"
                     style={{
                         zIndex: 'var(--z-chatbot)',
                         fontFamily: "'Nunito Sans', 'Quicksand', sans-serif",

@@ -10,8 +10,16 @@ body,
   margin: 0;
   padding: 0;
   width: 100%;
+  max-width: 100vw;
+  min-width: 0;
   height: 100%;
   overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 /* ========== Design System: EduAR Kids — Claymorphism ==========
@@ -208,6 +216,7 @@ a:hover {
 body {
   margin: 0;
   min-width: 320px;
+  max-width: 100vw;
   min-height: 100vh;
   background-color: var(--color-bg);
   color: var(--color-text);
