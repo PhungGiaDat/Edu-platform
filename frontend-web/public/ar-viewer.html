@@ -38,11 +38,34 @@
         <style>@keyframes arSpin{to{transform:rotate(360deg)}}</style>
     </div>
 
-    <!-- A-Frame Scene - MindAR handles camera video layer automatically -->
-    <a-scene id="ar-scene"
-        mindar-image="imageTargetSrc: ; maxTrack: 2; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.001"
-        color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true" embedded
-        vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var mindUrl = params.get('mind') || '';
+            var maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));
+            var config = [
+                'imageTargetSrc: ' + mindUrl,
+                'maxTrack: ' + maxTrack,
+                'uiLoading: no',
+                'uiScanning: no',
+                'uiError: no',
+                'filterMinCF: 0.001',
+                'filterBeta: 0.001'
+            ].join('; ');
+            var escapedConfig = config
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+
+            window.__AR_VIEWER_INITIAL_MINDAR_CONFIG__ = config;
+            document.write(
+                '<a-scene id="ar-scene" mindar-image="' + escapedConfig + '"' +
+                ' color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true" embedded' +
+                ' vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">'
+            );
+        })();
+    </script>
 
         <!-- Timeout raised to 15s so models load over slow Render cold-start -->
         <a-assets timeout="15000">
