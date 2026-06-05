@@ -93,6 +93,30 @@
         }
     }
 
+    function sendTrackingState(reason) {
+        sendToParent('AR_TRACKING_STATE', {
+            reason,
+            target0: activeTargets.has(0),
+            target1: activeTargets.has(1),
+            both: activeTargets.has(0) && activeTargets.has(1),
+            activeTargets: Array.from(activeTargets.keys())
+        });
+    }
+
+    function sendDebug(label, details) {
+        sendToParent('AR_DEBUG', {
+            label,
+            details: details || {},
+            phase: isReady ? 'ready' : 'initializing',
+            cardCount,
+            maxTrack,
+            hasMindUrl: Boolean(mindUrl),
+            hasModel0: Boolean(modelUrl),
+            hasModel1: Boolean(modelUrl2),
+            hasComboModel: Boolean(comboModelUrl)
+        });
+    }
+
     /**
      * Handle typed message from parent
      */
@@ -180,6 +204,16 @@
         log('🌐', `window.location.href=${window.location.href}`);
         log('🔍', `URL params count: ${Array.from(params.keys()).length}`);
 
+        sendDebug('VIEWER_INIT', {
+            mindUrl,
+            modelUrl,
+            modelUrl2,
+            textureUrl,
+            textureUrl2,
+            comboModelUrl,
+            search: window.location.search
+        });
+
         if (!mindUrl) {
             log('❌', 'No mind file specified!');
             setLoadingText('❌ No mind file specified');
@@ -217,8 +251,17 @@
         // filterMinCF: higher = faster response; filterBeta: lower = smoother tracking
         const mindArConfig = `imageTargetSrc: ${mindUrl}; maxTrack: ${maxTrack}; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.001`;
         log('⚙️', `MindAR config: ${mindArConfig}`);
-        scene.setAttribute('mindar-image', mindArConfig);
-        log('✅', 'MindAR attribute set on scene element');
+        if (!scene.getAttribute('mindar-image')) {
+            scene.setAttribute('mindar-image', mindArConfig);
+            log('✅', 'MindAR attribute set on scene element');
+        } else {
+            log('✅', 'MindAR attribute was already present before A-Frame initialization');
+        }
+
+        sendDebug('MINDAR_CONFIG_ACTIVE', {
+            expectedConfig: mindArConfig,
+            activeConfig: scene.getAttribute('mindar-image')
+        });
 
         const assetsEl = document.querySelector('a-assets') || document.createElement('a-assets');
         if (!document.querySelector('a-assets')) {
@@ -350,6 +393,9 @@
             log('✅', '🎉 AR READY EVENT FIRED - MindAR initialized successfully!');
             log('✅', 'Camera and tracking are now active');
             isReady = true;
+            sendDebug('MINDAR_READY', {
+                targetCount: Math.max(1, Math.min(cardCount || 1, maxTrack))
+            });
             hideLoadingOverlay();
 
             // Hide the custom loading overlay
@@ -419,6 +465,12 @@
         log('🎯', 'Setting up target tracking listeners for target-0 and target-1');
         ['target-0', 'target-1'].forEach((id, index) => {
             const target = document.getElementById(id);
+            sendDebug('TARGET_LOOKUP', {
+                targetId: id,
+                targetIndex: index,
+                exists: Boolean(target),
+                attr: target ? target.getAttribute('mindar-image-target') : null
+            });
             if (!target) {
                 log('⚠️', `Target element ${id} not found in DOM`);
                 return;
@@ -442,6 +494,7 @@
                     targetIndex: index,
                     confidence: 1.0
                 });
+                sendTrackingState(`target-${index}-found`);
 
                 checkMultiTarget();
             });
@@ -460,6 +513,7 @@
                     sendToParent('TARGET_LOST', {
                         targetIndex: index
                     });
+                    sendTrackingState(`target-${index}-lost`);
 
                     // Stop proximity checking if not enough targets after the grace period
                     if (activeTargets.size < COMBO_THRESHOLD) {
@@ -1751,3 +1805,4 @@
     // ============ START ============
     init();
 })();
+

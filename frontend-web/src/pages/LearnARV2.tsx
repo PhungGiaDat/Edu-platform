@@ -758,6 +758,8 @@ export default function LearnARV2() {
                 handleProximityUpdate(payload); break;
             case 'MULTI_TARGET_DETECTED':
                 console.log('[LearnARV2] Multi-target visible:', payload.targets); break;
+            case 'AR_TRACKING_STATE':
+                console.log('[LearnARV2] AR tracking state:', payload); break;
         }
     }, [handleProximityDetected, handleProximityEnded, handleProximityUpdate, handleComboDetected]);
 

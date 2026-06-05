@@ -248,7 +248,10 @@
                     'SCANNER_READY', 'QR_DETECTED', 'SCANNER_ERROR',
                     'AR_READY', 'TARGET_FOUND', 'TARGET_LOST',
                     'SYSTEM_READY', 'SYSTEM_ERROR', 'AR_ERROR',
-                    'MULTI_TARGET_DETECTED', 'MODEL_CLICKED',
+                    'MULTI_TARGET_DETECTED', 'AR_TRACKING_STATE',
+                    'COMBO_PROXIMITY_DETECTED', 'COMBO_PROXIMITY_UPDATE',
+                    'COMBO_PROXIMITY_ENDED', 'COMBO_DETECTED',
+                    'TEXTURE_APPLIED', 'MODEL_CLICKED', 'AR_DEBUG',
                 ];
                 if (arTypes.includes(typeStr)) {
                     const payload = JSON.stringify(data, null, 1);
