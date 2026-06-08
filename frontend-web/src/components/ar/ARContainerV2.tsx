@@ -35,6 +35,8 @@ interface ARContainerV2Props {
     comboModelUrl?: string;
     comboTextureUrl?: string;
     comboPhrase?: string;
+    enableBackgroundScanner?: boolean;
+    deferQrTransition?: boolean;
     onPhaseChange?: (phase: ARPhase) => void;
     onQRDetected?: (qrId: string) => void;
     onTargetFound?: (targetIndex: number) => void;
@@ -59,6 +61,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     comboModelUrl,
     comboTextureUrl,
     comboPhrase,
+    enableBackgroundScanner = false,
+    deferQrTransition = false,
     onPhaseChange,
     onQRDetected,
     onTargetFound,
@@ -188,7 +192,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 const data = payload as ARMessagePayloadMap['QR_DETECTED'];
                 cbQR?.(data.qrId);
                 eventBus.emit(AREvent.MARKER_FOUND, { markerId: data.qrId, target: null } as any);
-                if (!fromPiP && phase === 'SCANNING') {
+                if (!fromPiP && phase === 'SCANNING' && !deferQrTransition) {
                     transitionTo('LOADING');
                 }
                 break;
@@ -253,7 +257,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 break;
             }
         }
-    }, [phase, transitionTo]);
+    }, [phase, transitionTo, deferQrTransition]);
 
     useEffect(() => {
         window.addEventListener('message', handleMessage);
@@ -320,7 +324,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             )}
 
             {/* Background Scanner */}
-            {phase === 'VIEWING' && (
+            {enableBackgroundScanner && phase === 'VIEWING' && (
                 <iframe
                     ref={pipRef}
                     key="pip-scanner"

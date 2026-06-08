@@ -502,6 +502,7 @@ export default function LearnARV2() {
     const [appMode, setAppMode] = useState<AppMode>('LEARNING');
     const [detectedQrId, setDetectedQrId] = useState<string | null>(null);
     const [committedComboId, setCommittedComboId] = useState<string | null>(null);
+    const [isAddingCard, setIsAddingCard] = useState(false);
     const [, setIsComboActive] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showBreakReminder, setShowBreakReminder] = useState(false);
@@ -516,6 +517,7 @@ export default function LearnARV2() {
     // Track whether the AR target marker is visible (for 2D overlay)
     const [markerFound, setMarkerFound] = useState(false);
     const detectedQrIdRef = useRef<string | null>(null);
+    const isAddingCardRef = useRef(false);
     const qrGateRef = useRef<Map<string, number>>(new Map());
     const lastTargetEventRef = useRef(0);
 
@@ -619,6 +621,10 @@ export default function LearnARV2() {
     }, [detectedQrId]);
 
     useEffect(() => {
+        isAddingCardRef.current = isAddingCard;
+    }, [isAddingCard]);
+
+    useEffect(() => {
         if (!hasCombo || !activeCombo || !comboMindUrl || flashcardCount < 2) return;
         if (committedComboId === activeCombo.comboId) return;
 
@@ -650,6 +656,15 @@ export default function LearnARV2() {
         activeCombo?.comboId === committedComboId &&
         comboMindUrl
     );
+
+    useEffect(() => {
+        if (!isAddingCard || !isComboViewer) return;
+        setIsAddingCard(false);
+        setAppState('VIEWING');
+        window.setTimeout(() => {
+            eventBus.emit('AR_SWITCH_TO_VIEWER' as any, {});
+        }, 100);
+    }, [isAddingCard, isComboViewer]);
 
     const mindUrl = isComboViewer && comboMindUrl
         ? resolveMindUrl(comboMindUrl)
@@ -692,6 +707,7 @@ export default function LearnARV2() {
         qrGateRef.current.set(qrId, now);
 
         const isFirstQr = !detectedQrIdRef.current;
+        const isControlledAdd = isAddingCardRef.current;
         void addFlashcard(qrId).then((flashcardData) => {
             if (!flashcardData) {
                 console.warn('[LearnARV2] Ignoring QR without validated flashcard data:', qrId);
@@ -702,15 +718,34 @@ export default function LearnARV2() {
                 detectedQrIdRef.current = qrId;
                 setDetectedQrId(qrId);
                 setAppState('LOADING');
+            } else if (isControlledAdd) {
+                setAppState('SCANNING');
             }
 
             trackFlashcardView();
         });
     }, [trackFlashcardView, addFlashcard]);
 
+    const handleAddCardScan = useCallback(() => {
+        HapticService.tap();
+        SoundEffectService.play('tap');
+        setIsAddingCard(true);
+        setMarkerFound(false);
+        setAppState('SCANNING');
+        eventBus.emit('AR_SWITCH_TO_SCANNER' as any, {});
+    }, []);
+
+    const handleCancelAddCardScan = useCallback(() => {
+        HapticService.tap();
+        setIsAddingCard(false);
+        setAppState('VIEWING');
+        eventBus.emit('AR_SWITCH_TO_VIEWER' as any, {});
+    }, []);
+
     const handlePhaseChange = useCallback((phase: ARPhase) => {
         console.log('[LearnARV2] Phase changed:', phase);
         setAppState(prev => {
+            if (phase === 'SCANNING') return 'SCANNING';
             if (phase === 'VIEWING') return 'VIEWING';
             if (phase === 'ERROR') return 'ERROR';
             return prev;
@@ -939,6 +974,8 @@ export default function LearnARV2() {
                 comboModelUrl={comboModelUrl}
                 comboTextureUrl={comboTextureUrl}
                 comboPhrase={comboPhrase}
+                enableBackgroundScanner={false}
+                deferQrTransition={isAddingCard}
                 onPhaseChange={handlePhaseChange}
                 onQRDetected={handleQRDetected}
                 onTargetFound={handleTargetFound}
@@ -954,6 +991,69 @@ export default function LearnARV2() {
                         onDisplayModeToggle={() => handleDisplayModeChange(displayMode === '2D' ? '3D' : '2D')}
                         onAppModeSwitch={handleAppModeChange}
                     />
+                )}
+                {appState === 'VIEWING' && !isComboViewer && flashcardCount < 2 && (
+                    <button
+                        type="button"
+                        onClick={handleAddCardScan}
+                        style={{
+                            position: 'fixed',
+                            right: 16,
+                            bottom: 'max(104px, calc(env(safe-area-inset-bottom) + 88px))',
+                            zIndex: 100004,
+                            minHeight: 48,
+                            padding: '10px 16px',
+                            borderRadius: 24,
+                            border: '3px solid rgba(255,255,255,0.9)',
+                            background: 'linear-gradient(135deg,#22c55e,#14b8a6)',
+                            color: '#fff',
+                            fontWeight: 900,
+                            fontSize: 14,
+                            boxShadow: '0 8px 24px rgba(20,184,166,0.35)',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        + Add card
+                    </button>
+                )}
+                {isAddingCard && (
+                    <div
+                        style={{
+                            position: 'fixed',
+                            top: 'max(92px, env(safe-area-inset-top))',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            zIndex: 100004,
+                            width: 'min(92vw, 360px)',
+                            padding: '10px 14px',
+                            borderRadius: 18,
+                            background: 'rgba(15,23,42,0.82)',
+                            color: '#fff',
+                            fontWeight: 800,
+                            fontSize: 14,
+                            textAlign: 'center',
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+                        }}
+                    >
+                        <div>Scan the second flashcard QR</div>
+                        <button
+                            type="button"
+                            onClick={handleCancelAddCardScan}
+                            style={{
+                                marginTop: 8,
+                                minHeight: 36,
+                                padding: '6px 14px',
+                                borderRadius: 18,
+                                border: '1px solid rgba(255,255,255,0.5)',
+                                background: 'rgba(255,255,255,0.16)',
+                                color: '#fff',
+                                fontWeight: 800,
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Cancel
+                        </button>
+                    </div>
                 )}
             </ARContainerV2>
 
