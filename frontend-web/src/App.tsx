@@ -4,6 +4,7 @@ import FlashcardPage from "./pages/FlashcardPage";
 import LearnARV2 from "./pages/LearnARV2";
 import { CourseList } from "./pages/CourseList";
 import { CourseDetail } from "./pages/CourseDetail";
+import { LessonPlayer } from "./pages/LessonPlayer";
 import { Profile } from "./pages/Profile";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
@@ -230,6 +231,7 @@ const App = () => {
         <Route path="/learn-ar" element={<RequireLearnerAccess><LearnARV2 /></RequireLearnerAccess>} />
         <Route path="/courses" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/:id" element={<RequireLearnerAccess><Layout><CourseDetail /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/:courseId/lessons/:lessonId" element={<RequireLearnerAccess><Layout><LessonPlayer /></Layout></RequireLearnerAccess>} />
         <Route path="/profile" element={<RequireUserAuth><Layout><Profile /></Layout></RequireUserAuth>} />
         <Route path="/progress" element={<RequireUserAuth><Layout><ProgressDashboard /></Layout></RequireUserAuth>} />
         <Route path="/learning-path" element={<RequireUserAuth><Layout><LearningPathSetup /></Layout></RequireUserAuth>} />

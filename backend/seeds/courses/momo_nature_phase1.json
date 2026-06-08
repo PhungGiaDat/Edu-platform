@@ -1,0 +1,864 @@
+{
+  "course_id": "momo-nature-english-5-7",
+  "title": "Bé Gấu Momo Học Tiếng Anh Cùng Thiên Nhiên",
+  "description": "Bài học ngắn, vui, nhiều hình ảnh và âm thanh cho bé 5-7 tuổi.",
+  "subtitle_vi": "Video ngắn, từ mới bằng hình, trò chơi và phần thưởng.",
+  "theme": "Animals and Nature",
+  "age_range": "5-7",
+  "level": "beginner",
+  "description_vi": "Bé nghe, chạm, chọn hình và nhận sticker cùng Momo. Mỗi bài học thật ngắn để bé không phải đọc nhiều.",
+  "thumbnail_url": null,
+  "thumbnail": {
+    "bucket": "learnar-assets",
+    "path": "courses/momo-nature-english-5-7/images/course-cover.png",
+    "type": "image",
+    "status": "pending"
+  },
+  "is_published": true,
+  "lessons": [
+    {
+      "id": "meet-the-elephant",
+      "lesson_id": "meet-the-elephant",
+      "title": "Meet the Elephant",
+      "description": "Nghe và chạm vào hình con voi.",
+      "video": {
+        "title": "Momo meets an elephant",
+        "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/meet-the-elephant/video.mp4",
+        "duration_seconds": 90,
+        "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/meet-the-elephant/thumb.png"
+      },
+      "content": null,
+      "title_vi": "Gặp bạn voi",
+      "order": 1,
+      "is_completed": false,
+      "duration_minutes": 5,
+      "videoLesson": {
+        "title": "Momo meets an elephant",
+        "duration_seconds": 90,
+        "video": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/video.mp4",
+          "type": "video",
+          "status": "pending"
+        },
+        "thumbnail": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/thumb.png",
+          "type": "image",
+          "status": "pending"
+        },
+        "scenes": [
+          {
+            "scene_id": "elephant-scene-1",
+            "order": 1,
+            "duration_seconds": 20,
+            "visual_prompt": "Momo waves near a river. A cute elephant appears.",
+            "narration_vi": "Momo thấy một bạn voi thật to.",
+            "audio_text_en": "Hello elephant!",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/river-elephant.png",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "scene_id": "elephant-scene-2",
+            "order": 2,
+            "duration_seconds": 25,
+            "visual_prompt": "The elephant lifts its trunk and splashes water.",
+            "narration_vi": "Voi có cái vòi dài. Bé cùng nói nào.",
+            "audio_text_en": "Elephant. Big elephant.",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/trunk.png",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "scene_id": "elephant-scene-3",
+            "order": 3,
+            "duration_seconds": 25,
+            "visual_prompt": "Momo points to elephant ears, trunk, and water.",
+            "narration_vi": "Bé nhìn, nghe, rồi chạm vào hình đúng.",
+            "audio_text_en": "Ear. Trunk. Water.",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/parts.png",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ]
+      },
+      "vocabulary": [
+        {
+          "word_en": "elephant",
+          "word_vi": "con voi",
+          "emoji": "🐘",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/vocab/elephant.png",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/audio/elephant.mp3",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/stickers/elephant-star.png",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "The elephant is big."
+        },
+        {
+          "word_en": "trunk",
+          "word_vi": "cái vòi",
+          "emoji": "〰️",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/vocab/trunk.png",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/audio/trunk.mp3",
+            "type": "audio",
+            "status": "pending"
+          },
+          "simple_sentence": "The trunk is long."
+        },
+        {
+          "word_en": "water",
+          "word_vi": "nước",
+          "emoji": "💧",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/vocab/water.png",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/audio/water.mp3",
+            "type": "audio",
+            "status": "pending"
+          },
+          "simple_sentence": "Water is blue."
+        }
+      ],
+      "activity": {
+        "activity_id": "tap-elephant-parts",
+        "type": "tap_image",
+        "instruction_vi": "Chạm vào con voi.",
+        "prompt_audio_text": "Tap the elephant.",
+        "items": [
+          {
+            "id": "elephant",
+            "label": "elephant",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/vocab/elephant.png",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "water",
+            "label": "water",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/vocab/water.png",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Giỏi lắm! Bé tìm đúng rồi!"
+      },
+      "quiz": [
+        {
+          "question_id": "q-elephant-1",
+          "type": "image_choice",
+          "prompt_vi": "Hình nào là elephant?",
+          "questionAudioText": "Which picture is elephant?",
+          "options": [
+            {
+              "option_id": "elephant",
+              "label": "elephant",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/elephant.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "water",
+              "label": "water",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/water.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "tree",
+              "label": "tree",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/tree.png",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "elephant",
+          "feedbackCorrect": "Yay! Elephant!",
+          "feedbackIncorrect": "Thử lại nhé, bé sắp đúng rồi!"
+        },
+        {
+          "question_id": "q-elephant-2",
+          "type": "word_choice",
+          "prompt_vi": "Cái vòi tiếng Anh là gì?",
+          "questionAudioText": "What is cái vòi in English?",
+          "options": [
+            { "option_id": "trunk", "label": "trunk" },
+            { "option_id": "leaf", "label": "leaf" },
+            { "option_id": "sun", "label": "sun" }
+          ],
+          "correctOptionId": "trunk",
+          "feedbackCorrect": "Đúng rồi! Trunk!",
+          "feedbackIncorrect": "Không sao, nghe lại nào!"
+        },
+        {
+          "question_id": "q-elephant-3",
+          "type": "image_choice",
+          "prompt_vi": "Chọn water.",
+          "questionAudioText": "Choose water.",
+          "options": [
+            {
+              "option_id": "water",
+              "label": "water",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/water.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "elephant",
+              "label": "elephant",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/elephant.png",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "water",
+          "feedbackCorrect": "Splash! Đúng là water!",
+          "feedbackIncorrect": "Gần đúng rồi, bé thử lại nhé!"
+        }
+      ],
+      "reward": {
+        "xp": 80,
+        "sticker": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/rewards/elephant-helper.png",
+          "type": "sticker",
+          "status": "pending"
+        },
+        "badgeTitle": "Elephant Friend",
+        "message_vi": "Bé đã kết bạn với voi!"
+      },
+      "arReference": null
+    },
+    {
+      "id": "the-green-tree",
+      "lesson_id": "the-green-tree",
+      "title": "The Green Tree",
+      "description": "Chạm vào cây, lá và mặt trời.",
+      "video": {
+        "title": "Momo finds a green tree",
+        "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/the-green-tree/video.mp4",
+        "duration_seconds": 75,
+        "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/the-green-tree/thumb.png"
+      },
+      "content": null,
+      "title_vi": "Cây xanh",
+      "order": 2,
+      "is_completed": false,
+      "duration_minutes": 4,
+      "videoLesson": {
+        "title": "Momo finds a green tree",
+        "duration_seconds": 75,
+        "video": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/video.mp4",
+          "type": "video",
+          "status": "pending"
+        },
+        "thumbnail": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/thumb.png",
+          "type": "image",
+          "status": "pending"
+        },
+        "scenes": [
+          {
+            "scene_id": "tree-scene-1",
+            "order": 1,
+            "duration_seconds": 20,
+            "visual_prompt": "Momo sits under a friendly green tree.",
+            "narration_vi": "Momo ngồi dưới một cây xanh.",
+            "audio_text_en": "Green tree.",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/green-tree.png",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "scene_id": "tree-scene-2",
+            "order": 2,
+            "duration_seconds": 25,
+            "visual_prompt": "Leaves move in the wind. The sun shines.",
+            "narration_vi": "Lá cây bay nhẹ, mặt trời sáng vàng.",
+            "audio_text_en": "Leaf. Sun. Tree.",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/leaves-sun.png",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ]
+      },
+      "vocabulary": [
+        {
+          "word_en": "tree",
+          "word_vi": "cây",
+          "emoji": "🌳",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/vocab/tree.png",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/audio/tree.mp3",
+            "type": "audio",
+            "status": "pending"
+          },
+          "simple_sentence": "The tree is green."
+        },
+        {
+          "word_en": "leaf",
+          "word_vi": "lá cây",
+          "emoji": "🍃",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/vocab/leaf.png",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/audio/leaf.mp3",
+            "type": "audio",
+            "status": "pending"
+          },
+          "simple_sentence": "The leaf is small."
+        },
+        {
+          "word_en": "sun",
+          "word_vi": "mặt trời",
+          "emoji": "☀️",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/vocab/sun.png",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/audio/sun.mp3",
+            "type": "audio",
+            "status": "pending"
+          },
+          "simple_sentence": "The sun is bright."
+        }
+      ],
+      "activity": {
+        "activity_id": "match-tree-leaf",
+        "type": "match_picture",
+        "instruction_vi": "Nối từ với hình đúng.",
+        "prompt_audio_text": "Match the word and picture.",
+        "items": [
+          {
+            "id": "tree",
+            "label": "tree",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/vocab/tree.png",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "leaf",
+            "label": "leaf",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/vocab/leaf.png",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "sun",
+            "label": "sun",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/vocab/sun.png",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Tuyệt vời! Bé ghép rất giỏi!"
+      },
+      "quiz": [
+        {
+          "question_id": "q-tree-1",
+          "type": "image_choice",
+          "prompt_vi": "Chọn tree.",
+          "questionAudioText": "Choose tree.",
+          "options": [
+            {
+              "option_id": "tree",
+              "label": "tree",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/tree.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "sun",
+              "label": "sun",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/sun.png",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "tree",
+          "feedbackCorrect": "Đúng rồi! Tree!",
+          "feedbackIncorrect": "Thử lại nhé, bé làm được mà!"
+        },
+        {
+          "question_id": "q-tree-2",
+          "type": "word_choice",
+          "prompt_vi": "Leaf nghĩa là gì?",
+          "questionAudioText": "What is leaf?",
+          "options": [
+            { "option_id": "leaf", "label": "lá cây" },
+            { "option_id": "water", "label": "nước" },
+            { "option_id": "elephant", "label": "con voi" }
+          ],
+          "correctOptionId": "leaf",
+          "feedbackCorrect": "Hay quá! Leaf là lá cây!",
+          "feedbackIncorrect": "Gần đúng rồi. Mình nghe lại nào!"
+        },
+        {
+          "question_id": "q-tree-3",
+          "type": "image_choice",
+          "prompt_vi": "Hình nào là sun?",
+          "questionAudioText": "Which picture is sun?",
+          "options": [
+            {
+              "option_id": "sun",
+              "label": "sun",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/sun.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "leaf",
+              "label": "leaf",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/leaf.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "tree",
+              "label": "tree",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/tree.png",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "sun",
+          "feedbackCorrect": "Sun sáng quá! Đúng rồi!",
+          "feedbackIncorrect": "Không sao, bé chọn lại nhé!"
+        }
+      ],
+      "reward": {
+        "xp": 70,
+        "sticker": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/rewards/tree-star.png",
+          "type": "sticker",
+          "status": "pending"
+        },
+        "badgeTitle": "Green Tree Star",
+        "message_vi": "Bé đã chạm vào cây xanh!"
+      },
+      "arReference": null
+    },
+    {
+      "id": "animal-nature-review",
+      "lesson_id": "animal-nature-review",
+      "title": "Animal and Nature Review",
+      "description": "Ôn lại các từ bằng hình và âm thanh.",
+      "video": {
+        "title": "Momo reviews nature words",
+        "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/animal-nature-review/video.mp4",
+        "duration_seconds": 100,
+        "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/animal-nature-review/thumb.png"
+      },
+      "content": null,
+      "title_vi": "Ôn lại động vật và thiên nhiên",
+      "order": 3,
+      "is_completed": false,
+      "duration_minutes": 6,
+      "videoLesson": {
+        "title": "Momo reviews nature words",
+        "duration_seconds": 100,
+        "video": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/animal-nature-review/video.mp4",
+          "type": "video",
+          "status": "pending"
+        },
+        "thumbnail": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/animal-nature-review/thumb.png",
+          "type": "image",
+          "status": "pending"
+        },
+        "scenes": [
+          {
+            "scene_id": "review-scene-1",
+            "order": 1,
+            "duration_seconds": 25,
+            "visual_prompt": "Momo, elephant, tree, sun, and water appear as stickers.",
+            "narration_vi": "Cùng Momo ôn lại các từ đã học.",
+            "audio_text_en": "Elephant. Tree. Leaf. Sun. Water.",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/animal-nature-review/scenes/review-board.png",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "scene_id": "review-scene-2",
+            "order": 2,
+            "duration_seconds": 25,
+            "visual_prompt": "Children tap big colorful nature pictures.",
+            "narration_vi": "Bé nghe và chạm vào hình đúng.",
+            "audio_text_en": "Listen and tap.",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/animal-nature-review/scenes/tap-game.png",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ]
+      },
+      "vocabulary": [
+        {
+          "word_en": "elephant",
+          "word_vi": "con voi",
+          "emoji": "🐘",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/vocab/elephant.png",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/audio/elephant.mp3",
+            "type": "audio",
+            "status": "pending"
+          },
+          "simple_sentence": "Elephant is big."
+        },
+        {
+          "word_en": "tree",
+          "word_vi": "cây",
+          "emoji": "🌳",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/vocab/tree.png",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/audio/tree.mp3",
+            "type": "audio",
+            "status": "pending"
+          },
+          "simple_sentence": "Tree is green."
+        },
+        {
+          "word_en": "leaf",
+          "word_vi": "lá cây",
+          "emoji": "🍃",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/vocab/leaf.png",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/audio/leaf.mp3",
+            "type": "audio",
+            "status": "pending"
+          },
+          "simple_sentence": "Leaf is small."
+        },
+        {
+          "word_en": "sun",
+          "word_vi": "mặt trời",
+          "emoji": "☀️",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/vocab/sun.png",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/audio/sun.mp3",
+            "type": "audio",
+            "status": "pending"
+          },
+          "simple_sentence": "Sun is bright."
+        },
+        {
+          "word_en": "water",
+          "word_vi": "nước",
+          "emoji": "💧",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/vocab/water.png",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/audio/water.mp3",
+            "type": "audio",
+            "status": "pending"
+          },
+          "simple_sentence": "Water is blue."
+        }
+      ],
+      "activity": {
+        "activity_id": "choose-nature-sound",
+        "type": "choose_sound",
+        "instruction_vi": "Nghe từ và chọn hình.",
+        "prompt_audio_text": "Listen and choose.",
+        "items": [
+          {
+            "id": "elephant",
+            "label": "elephant",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/vocab/elephant.png",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "tree",
+            "label": "tree",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/vocab/tree.png",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "water",
+            "label": "water",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/vocab/water.png",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Momo vui quá! Bé nhớ rất tốt!"
+      },
+      "quiz": [
+        {
+          "question_id": "q-review-1",
+          "type": "image_choice",
+          "prompt_vi": "Chọn elephant.",
+          "questionAudioText": "Choose elephant.",
+          "options": [
+            {
+              "option_id": "elephant",
+              "label": "elephant",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/elephant.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "tree",
+              "label": "tree",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/tree.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "sun",
+              "label": "sun",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/sun.png",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "elephant",
+          "feedbackCorrect": "Đúng rồi, bạn voi đây!",
+          "feedbackIncorrect": "Bé thử lại nhé!"
+        },
+        {
+          "question_id": "q-review-2",
+          "type": "image_choice",
+          "prompt_vi": "Chọn tree.",
+          "questionAudioText": "Choose tree.",
+          "options": [
+            {
+              "option_id": "leaf",
+              "label": "leaf",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/leaf.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "tree",
+              "label": "tree",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/tree.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "water",
+              "label": "water",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/vocab/water.png",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "tree",
+          "feedbackCorrect": "Đúng rồi! Tree!",
+          "feedbackIncorrect": "Không sao, thử tiếp nào!"
+        },
+        {
+          "question_id": "q-review-3",
+          "type": "word_choice",
+          "prompt_vi": "Water là gì?",
+          "questionAudioText": "What is water?",
+          "options": [
+            { "option_id": "water", "label": "nước" },
+            { "option_id": "sun", "label": "mặt trời" },
+            { "option_id": "leaf", "label": "lá cây" }
+          ],
+          "correctOptionId": "water",
+          "feedbackCorrect": "Splash! Bé đúng rồi!",
+          "feedbackIncorrect": "Gần đúng rồi, Momo cho bé thử lại!"
+        },
+        {
+          "question_id": "q-review-4",
+          "type": "word_choice",
+          "prompt_vi": "Sun là gì?",
+          "questionAudioText": "What is sun?",
+          "options": [
+            { "option_id": "sun", "label": "mặt trời" },
+            { "option_id": "tree", "label": "cây" },
+            { "option_id": "elephant", "label": "con voi" }
+          ],
+          "correctOptionId": "sun",
+          "feedbackCorrect": "Mặt trời sáng rồi! Đúng!",
+          "feedbackIncorrect": "Thử lại lần nữa nhé!"
+        }
+      ],
+      "reward": {
+        "xp": 100,
+        "sticker": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/rewards/momo-nature-hero.png",
+          "type": "sticker",
+          "status": "pending"
+        },
+        "badgeTitle": "Nature Hero",
+        "message_vi": "Bé đã hoàn thành chuyến đi thiên nhiên!"
+      },
+      "arReference": null
+    }
+  ]
+}

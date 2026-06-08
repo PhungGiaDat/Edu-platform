@@ -1,48 +1,42 @@
-import axios from 'axios';
+import { apiClient } from './apiClient';
+import type { Course, Lesson, QuizSubmitResult } from '@/types/course';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+export type { Course, Lesson, QuizSubmitResult } from '@/types/course';
 
-export interface Lesson {
-    id: string;
-    title: string;
-    description: string;
-    video?: {
-        title: string;
-        url: string;
-        duration_seconds: number;
-        thumbnail_url?: string;
-    };
-    content?: string;
-    order: number;
-    is_completed: boolean;
-}
+export const courseService = {
+  listCourses: (): Promise<Course[]> => apiClient.get('/api/v1/courses'),
 
-export interface Course {
-    title: string;
-    description: string;
-    level: string;
-    thumbnail_url?: string;
-    lessons: Lesson[];
-    is_published: boolean;
-}
+  getCourse: (courseId: string): Promise<Course> =>
+    apiClient.get(`/api/v1/courses/${courseId}`),
 
-export const CourseService = {
-    async getCourses(skip = 0, limit = 20): Promise<Course[]> {
-        const response = await axios.get(`${API_URL}/courses`, {
-            params: { skip, limit }
-        });
-        return response.data;
-    },
+  getLesson: (courseId: string, lessonId: string): Promise<Lesson> =>
+    apiClient.get(`/api/v1/courses/${courseId}/lessons/${lessonId}`),
 
-    async getCourseById(courseId: string): Promise<Course> {
-        const response = await axios.get(`${API_URL}/courses/${courseId}`);
-        return response.data;
-    },
+  generateSampleCourse: (): Promise<Course> =>
+    apiClient.post('/api/v1/courses/generate', {}),
 
-    async completeLesson(courseId: string, lessonId: string, userId: string): Promise<boolean> {
-        const response = await axios.post(`${API_URL}/courses/${courseId}/lessons/${lessonId}/complete`, null, {
-            params: { user_id: userId }
-        });
-        return response.data.status === 'success';
-    }
+  startCourse: (courseId: string, userId: string) =>
+    apiClient.post(`/api/v1/courses/${courseId}/start`, { user_id: userId }),
+
+  completeLesson: (courseId: string, lessonId: string, userId: string) =>
+    apiClient.post(`/api/v1/lessons/${lessonId}/complete`, {
+      user_id: userId,
+      course_id: courseId,
+    }),
+
+  submitQuiz: (
+    courseId: string,
+    lessonId: string,
+    answers: Record<string, string>,
+    userId: string
+  ): Promise<QuizSubmitResult> =>
+    apiClient.post(`/api/v1/quizzes/${lessonId}/submit`, {
+      user_id: userId,
+      course_id: courseId,
+      lesson_id: lessonId,
+      answers,
+    }),
+
+  getProgress: (userId: string) =>
+    apiClient.get(`/api/v1/users/${userId}/progress`),
 };

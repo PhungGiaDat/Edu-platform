@@ -282,9 +282,20 @@ export default function PetsPage() {
     };
 
     const handleFeed = async (petId: string) => {
+        HapticService.success();
+        SoundEffectService.play('success');
+        setViewerInteraction('feed');
+        setViewerInteractionKey(prev => prev + 1);
+        setPetCare(prev => ({
+            ...prev,
+            happiness: Math.min(100, prev.happiness + 8),
+            hunger: Math.min(100, prev.hunger + 16),
+            mood: 'happy',
+            last_action: 'feed',
+        }));
+        window.setTimeout(() => setViewerInteraction('idle'), 1300);
+
         try {
-            HapticService.success();
-            SoundEffectService.play('success');
             const result = await apiClient.post('/api/v1/gamification/pet/feed', {
                 user_id: userId,
                 pet_id: petId,
@@ -297,18 +308,26 @@ export default function PetsPage() {
                 mood: result.mood ?? 'happy',
                 last_action: 'feed',
             }));
-            setViewerInteraction('feed');
-            setViewerInteractionKey(prev => prev + 1);
-            window.setTimeout(() => setViewerInteraction('idle'), 1300);
         } catch (error) {
             console.error('Feed error:', error);
         }
     };
 
     const handlePlay = async (petId: string) => {
+        HapticService.success();
+        SoundEffectService.play('success');
+        setViewerInteraction('play');
+        setViewerInteractionKey(prev => prev + 1);
+        setPetCare(prev => ({
+            ...prev,
+            happiness: Math.min(100, prev.happiness + 10),
+            energy: Math.max(0, prev.energy - 8),
+            mood: 'happy',
+            last_action: 'play',
+        }));
+        window.setTimeout(() => setViewerInteraction('idle'), 1300);
+
         try {
-            HapticService.success();
-            SoundEffectService.play('success');
             const result = await apiClient.post('/api/v1/gamification/pet/play', {
                 user_id: userId,
                 pet_id: petId,
@@ -321,9 +340,6 @@ export default function PetsPage() {
                 mood: result.mood ?? 'happy',
                 last_action: 'play',
             }));
-            setViewerInteraction('play');
-            setViewerInteractionKey(prev => prev + 1);
-            window.setTimeout(() => setViewerInteraction('idle'), 1300);
         } catch (error) {
             console.error('Play error:', error);
         }
@@ -334,7 +350,7 @@ export default function PetsPage() {
     const canRenderDisplayPet3D = isRenderableModelUrl(displayPet?.model_url);
 
     return (
-        <div className="min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden clay-bg-playful pb-28 transition-all duration-300 md:pb-8">
+        <div className="min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden clay-bg-playful pb-[calc(env(safe-area-inset-bottom)+13rem)] transition-all duration-300 md:pb-8">
             {/* Decorative Background Elements */}
             <div className="pointer-events-none fixed inset-0 hidden overflow-hidden sm:block">
                 <div className="clay-shape-circle w-96 h-96 -top-48 -left-48 opacity-40" />
@@ -422,7 +438,7 @@ export default function PetsPage() {
                                                 <PetViewer3D
                                                     key={`${displayPet.pet_id}:${displayPet.model_url}`}
                                                     pet={displayPet}
-                                                    height="clamp(200px, 42vw, 280px)"
+                                                    height="clamp(180px, 52vw, 260px)"
                                                     autoRotate={true}
                                                     enableControls={true}
                                                     scale={1.0}
@@ -433,7 +449,7 @@ export default function PetsPage() {
                                                 />
                                             </Suspense>
                                         ) : displayPet.thumbnail_url ? (
-                                            <div className="flex h-[clamp(200px,42vw,280px)] items-center justify-center bg-white/30">
+                                            <div className="flex h-[clamp(180px,52vw,260px)] items-center justify-center bg-white/30">
                                                 <img
                                                     src={displayPet.thumbnail_url}
                                                     alt={displayPet.name}
@@ -441,7 +457,7 @@ export default function PetsPage() {
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="flex h-[clamp(200px,42vw,280px)] flex-col items-center justify-center gap-2 px-4 text-center">
+                                            <div className="flex h-[clamp(180px,52vw,260px)] flex-col items-center justify-center gap-2 px-4 text-center">
                                                 <span className="text-7xl">{rarityConfig[displayPet.rarity].badge}</span>
                                                 <p className="text-xs font-semibold text-gray-600">
                                                     3D preview disabled: use self-contained .glb/.gltf model_url
