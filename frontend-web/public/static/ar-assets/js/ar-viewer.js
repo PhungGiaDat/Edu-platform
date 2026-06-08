@@ -340,17 +340,31 @@
 
         if (modelUrl2) {
             log('📦', 'Loading 3D model 1:', modelUrl2);
-            const assetItem2 = document.createElement('a-asset-item');
+            let assetItem2 = null;
+            const secondaryModelIsOptional = Boolean(comboModelUrl);
+            const model1El = document.getElementById('mode-3d-1');
+            assetItem2 = document.createElement('a-asset-item');
             assetItem2.setAttribute('id', 'model-asset-1');
             assetItem2.setAttribute('src', modelUrl2);
             assetItem2.setAttribute('crossorigin', 'anonymous');
             assetItem2.setAttribute('timeout', '15000');
-            const model1El = document.getElementById('mode-3d-1');
             assetItem2.addEventListener('loaded', () => {
                 log('✅', 'Model 1 loaded successfully');
             });
             assetItem2.addEventListener('error', (e) => {
                 log('❌', 'Model 1 load error:', e);
+                if (model1El) {
+                    model1El.dataset.modelLoadFailed = 'true';
+                    model1El.setAttribute('visible', 'false');
+                }
+                if (secondaryModelIsOptional) {
+                    sendDebug('SECONDARY_MODEL_SKIPPED', {
+                        reason: 'model-1-load-error',
+                        url: modelUrl2,
+                        comboModelUrl
+                    });
+                    return;
+                }
                 if (retryModelWithFallback(assetItem2, model1El, modelUrl2, 'Model 1')) {
                     return;
                 }
@@ -365,9 +379,27 @@
                     setTimeout(() => { overlay.style.display = 'none'; }, 400);
                 }
             });
-            assetsEl.appendChild(assetItem2);
+            if (secondaryModelIsOptional) {
+                model1El.addEventListener('model-error', (e) => {
+                    log('Model 1 entity load error:', e);
+                    model1El.dataset.modelLoadFailed = 'true';
+                    model1El.setAttribute('visible', 'false');
+                    sendDebug('SECONDARY_MODEL_SKIPPED', {
+                        reason: 'model-1-entity-error',
+                        url: modelUrl2,
+                        comboModelUrl
+                    });
+                });
+                model1El.setAttribute('gltf-model', modelUrl2);
+                sendDebug('SECONDARY_MODEL_OPTIONAL', {
+                    url: modelUrl2,
+                    comboModelUrl
+                });
+            } else {
+                assetsEl.appendChild(assetItem2);
+                model1El.setAttribute('gltf-model', '#model-asset-1');
+            }
             applyTextureWhenModelReady(model1El, textureUrl2);
-            model1El.setAttribute('gltf-model', '#model-asset-1');
 
             // Inject texture if provided
             if (textureUrl2) {
@@ -1481,7 +1513,7 @@
             model0.setAttribute('visible', 'true');
             log('🔄', 'Model 0 restored');
         }
-        if (model1) {
+        if (model1 && model1.dataset.modelLoadFailed !== 'true') {
             model1.setAttribute('visible', 'true');
             log('🔄', 'Model 1 restored');
         }

@@ -801,7 +801,8 @@
   }
 
   .clay-course-thumb {
-    height: 128px;
+    height: 112px;
+    font-size: 2.75rem;
   }
 
   .clay-tab {

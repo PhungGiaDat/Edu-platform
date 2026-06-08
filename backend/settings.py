@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     # ========== Static Files ==========
     STATIC_DIR: Path = BASE_DIR / "static"
     UPLOAD_DIR: Path = BASE_DIR / "uploads"
+    LEARNAR_ASSETS_BUCKET: str = "learnar-assets"
     
     # ========== Server ==========
     HOST: str = "0.0.0.0"

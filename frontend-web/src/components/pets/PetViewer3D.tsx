@@ -324,6 +324,25 @@ const LoadingOverlay: React.FC = () => {
     );
 };
 
+const CareReaction: React.FC<{
+    interaction: PetViewerInteraction;
+    interactionKey: number;
+}> = ({ interaction, interactionKey }) => {
+    if (interaction === 'idle') return null;
+
+    return (
+        <div
+            key={`${interaction}-${interactionKey}`}
+            className="pointer-events-none absolute left-1/2 top-5 z-30 -translate-x-1/2 rounded-full bg-white/95 px-4 py-1.5 text-sm font-black text-slate-700 shadow-[0_8px_22px_rgba(91,141,239,0.22)]"
+            style={{
+                animation: 'petCareReaction 1.1s ease-out both',
+            }}
+        >
+            {interaction === 'feed' ? 'Yum!' : 'Yay!'}
+        </div>
+    );
+};
+
 // ========== Codex-Style Thumbnail Fallback ==========
 
 const CodexPetFallbackLayer: React.FC<{ pet: Pet; transparent?: boolean }> = ({
@@ -553,6 +572,14 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                     pet={pet}
                     transparent={background === 'transparent'}
                 />
+                <CareReaction interaction={interaction} interactionKey={interactionKey} />
+                <style>{`
+                    @keyframes petCareReaction {
+                        0% { opacity: 0; transform: translate(-50%, 12px) scale(0.85); }
+                        20% { opacity: 1; transform: translate(-50%, 0) scale(1.05); }
+                        100% { opacity: 0; transform: translate(-50%, -34px) scale(1); }
+                    }
+                `}</style>
             </div>
         );
     }
@@ -666,20 +693,10 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
             </Canvas>
             </CanvasErrorBoundary>
 
+            <CareReaction interaction={interaction} interactionKey={interactionKey} />
+
             {background !== 'transparent' && (
                 <>
-                    {interaction !== 'idle' && (
-                        <div
-                            key={`${interaction}-${interactionKey}`}
-                            className="pointer-events-none absolute left-1/2 top-5 z-30 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 text-sm font-black text-slate-700 shadow-lg"
-                            style={{
-                                animation: 'petCareReaction 1.1s ease-out both',
-                            }}
-                        >
-                            {interaction === 'feed' ? 'Yum!' : 'Yay!'}
-                        </div>
-                    )}
-
                     {/* Pet Name Label */}
                     <div
                         className="absolute bottom-2 left-2 right-2 text-center"

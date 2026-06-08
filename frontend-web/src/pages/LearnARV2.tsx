@@ -683,12 +683,15 @@ export default function LearnARV2() {
     const imageUrl = comboTarget0?.image2dUrl || arData?.targets?.[0]?.image_2d_url || arData?.flashcard?.image_url;
     const textureUrl = comboTarget0?.textureUrl || arData?.targets?.[0]?.texture_url;
 
-    const modelUrl2 = comboTarget1?.model3dUrl || fallbackTarget1?.model3dUrl || arData?.targets?.[1]?.model_3d_url;
+    const comboModelUrl = isComboViewer ? activeCombo?.model3dUrl : undefined;
+    const shouldLoadIndividualModel2 = !(isComboViewer && comboModelUrl);
+    const modelUrl2 = shouldLoadIndividualModel2
+        ? comboTarget1?.model3dUrl || fallbackTarget1?.model3dUrl || arData?.targets?.[1]?.model_3d_url
+        : undefined;
     const imageUrl2 = comboTarget1?.image2dUrl || fallbackTarget1?.image2dUrl || arData?.targets?.[1]?.image_2d_url;
     const textureUrl2 = comboTarget1?.textureUrl || fallbackTarget1?.textureUrl || arData?.targets?.[1]?.texture_url;
     
     // Combo model URL for proximity combo replacement
-    const comboModelUrl = isComboViewer ? activeCombo?.model3dUrl : undefined;
     const comboTextureUrl = isComboViewer ? activeCombo?.textureUrl : undefined;
     const comboPhrase = isComboViewer && activeCombo?.description
         || [comboTarget0?.word || arData?.flashcard?.word, comboTarget1?.word || fallbackTarget1?.word].filter(Boolean).join(' in ');
