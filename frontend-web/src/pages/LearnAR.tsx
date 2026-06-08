@@ -88,7 +88,8 @@ export default function LearnAR() {
   // ========== DATA FETCHING ==========
   const { arData, isLoading, error: dataError } = useArData(detectedQrId);
   const { quizData, isLoading: quizLoading, error: quizError } = useQuizData(
-    appMode === 'QUIZ' ? detectedQrId : null
+    appMode === 'QUIZ' ? detectedQrId : null,
+    appMode === 'QUIZ' ? selectedDifficulty : null
   );
   const { gameData, isLoading: gameLoading, error: gameError } = useGameData(
     appMode === 'GAME' ? detectedQrId : null,

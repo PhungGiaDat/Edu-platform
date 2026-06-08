@@ -1,7 +1,7 @@
 // src/hooks/useQuizData.ts
 
 import { useState, useEffect } from 'react';
-import type { QuizSessionData } from '../types';
+import type { GameDifficulty, QuizSessionData } from '../types';
 import { getApiBase } from '../config';
 
 const API_BASE = getApiBase();
@@ -28,7 +28,10 @@ function setCache(key: string, data: unknown): void {
  * Hook to fetch quiz questions from backend.
  * Serves cached data instantly (<10 min TTL), then revalidates in background.
  */
-export function useQuizData(qrId: string | null) {
+export function useQuizData(
+  qrId: string | null,
+  difficulty: GameDifficulty | null = null
+) {
   const [quizData, setQuizData] = useState<QuizSessionData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,13 +42,17 @@ export function useQuizData(qrId: string | null) {
       return;
     }
 
-    const cacheKey = `quiz:${qrId}`;
+    const params = new URLSearchParams();
+    if (difficulty) params.append('difficulty', difficulty);
+    const queryString = params.toString();
+    const url = `${API_BASE}/api/v1/quiz/${qrId}${queryString ? `?${queryString}` : ''}`;
+    const cacheKey = `quiz:${qrId}:${difficulty ?? ''}`;
 
     const fetchQuizData = async (showLoading: boolean) => {
       if (showLoading) { setIsLoading(true); setError(null); }
 
       try {
-        const response = await fetch(`${API_BASE}/api/v1/quiz/${qrId}`);
+        const response = await fetch(url, { cache: 'no-store' });
 
         if (!response.ok) {
           if (response.status === 404) {
@@ -75,7 +82,7 @@ export function useQuizData(qrId: string | null) {
     } else {
       fetchQuizData(true);
     }
-  }, [qrId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [qrId, difficulty]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { quizData, isLoading, error };
 }

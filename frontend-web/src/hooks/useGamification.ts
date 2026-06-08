@@ -23,10 +23,19 @@ export interface Badge {
 }
 
 export interface VirtualPet {
-    type: 'bunny' | 'panda' | 'dog' | 'cat';
+    type: string;
     happiness: number; // 0-100
+    hunger?: number; // 0-100, higher means more hungry
+    energy?: number; // 0-100
+    mood?: 'happy' | 'content' | 'hungry' | 'sad' | 'sleeping' | 'tired';
     last_fed: string;
+    last_played?: string;
+    last_action?: 'idle' | 'feed' | 'play';
+    animation_clip?: string;
+    needs_attention?: boolean;
     outfit?: string;
+    stage?: string;
+    xp_earned?: number;
 }
 
 export interface Sticker {
@@ -181,7 +190,7 @@ export function useGamification(userId: string | null) {
     }, []);
 
     // Feed virtual pet
-    const feedPet = useCallback(async (): Promise<{ success: boolean; happiness: number; evolved?: boolean; stage?: string }> => {
+    const feedPet = useCallback(async (): Promise<{ success: boolean; happiness: number; mood?: string; evolved?: boolean; stage?: string }> => {
         if (!userId) return { success: false, happiness: 0 };
 
         try {
@@ -192,7 +201,14 @@ export function useGamification(userId: string | null) {
             // Trigger happy animation in AR
             eventBus.emit('AR_COMMAND' as any, {
                 type: 'TRIGGER_ANIMATION',
-                payload: { clip: 'happy', loop: false }
+                payload: { clip: result.animation_clip || 'feed', loop: false, mood: result.mood }
+            });
+            eventBus.emit('PET_CARE_ACTION' as any, {
+                action: 'feed',
+                mood: result.mood,
+                happiness: result.happiness,
+                hunger: result.hunger,
+                energy: result.energy,
             });
 
             // Check for evolution
@@ -201,7 +217,7 @@ export function useGamification(userId: string | null) {
             }
 
             await fetchProgress();
-            return { success: true, happiness: result.happiness, evolved: result.evolved, stage: result.stage };
+            return { success: true, happiness: result.happiness, mood: result.mood, evolved: result.evolved, stage: result.stage };
         } catch (err) {
             console.error('[useGamification] Feed pet error:', err);
             return { success: false, happiness: 0 };
@@ -209,7 +225,7 @@ export function useGamification(userId: string | null) {
     }, [userId, fetchProgress]);
 
     // Play with virtual pet
-    const playPet = useCallback(async (): Promise<{ success: boolean; happiness: number; evolved?: boolean; stage?: string }> => {
+    const playPet = useCallback(async (): Promise<{ success: boolean; happiness: number; mood?: string; evolved?: boolean; stage?: string }> => {
         if (!userId) return { success: false, happiness: 0 };
 
         try {
@@ -220,7 +236,14 @@ export function useGamification(userId: string | null) {
             // Trigger play animation in AR
             eventBus.emit('AR_COMMAND' as any, {
                 type: 'TRIGGER_ANIMATION',
-                payload: { clip: 'play', loop: false }
+                payload: { clip: result.animation_clip || 'play', loop: false, mood: result.mood }
+            });
+            eventBus.emit('PET_CARE_ACTION' as any, {
+                action: 'play',
+                mood: result.mood,
+                happiness: result.happiness,
+                hunger: result.hunger,
+                energy: result.energy,
             });
 
             // Check for evolution
@@ -229,7 +252,7 @@ export function useGamification(userId: string | null) {
             }
 
             await fetchProgress();
-            return { success: true, happiness: result.happiness, evolved: result.evolved, stage: result.stage };
+            return { success: true, happiness: result.happiness, mood: result.mood, evolved: result.evolved, stage: result.stage };
         } catch (err) {
             console.error('[useGamification] Play pet error:', err);
             return { success: false, happiness: 0 };

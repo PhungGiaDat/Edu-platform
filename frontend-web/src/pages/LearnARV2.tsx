@@ -602,7 +602,7 @@ export default function LearnARV2() {
 
     // ========== DATA HOOKS ==========
     const { arData, error: arError } = useArData(detectedQrId);
-    const { quizData } = useQuizData(detectedQrId);
+    const { quizData } = useQuizData(detectedQrId, selectedDifficulty);
     const { gameData } = useGameData(
         detectedQrId,
         selectedDifficulty,

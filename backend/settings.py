@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     # ========== AI Services (Optional) ==========
     OPENAI_API_KEY: Optional[str] = None
     GOOGLE_API_KEY: Optional[str] = None
+    AI_DYNAMIC_CONTENT_ENABLED: bool = True
+    AI_CONTENT_TIMEOUT_SECONDS: float = 8.0
+    AI_CONTENT_RETRIES: int = 2
     
     # ========== Pydantic Settings Config ==========
     model_config = SettingsConfigDict(

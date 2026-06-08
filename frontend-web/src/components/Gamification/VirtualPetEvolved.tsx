@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { HapticService } from '../../services/HapticService';
 import { SoundEffectService } from '../../services/SoundEffectService';
 
-export type PetType = 'bunny' | 'cat' | 'dog' | 'panda';
+export type PetType = string;
 export type PetMood = 'happy' | 'content' | 'sad' | 'sleeping';
 export type EvolutionStage = 'baby' | 'child' | 'teen' | 'adult';
 export type OutfitId = 'none' | 'crown' | 'wizard_hat' | 'superhero_cape' | 'party_hat' | 'glasses' | 'bowtie';
@@ -29,7 +29,7 @@ interface VirtualPetEvolvedProps {
 }
 
 // Pet emojis by type, mood, and evolution stage
-const PET_VISUALS: Record<PetType, Record<EvolutionStage, Record<PetMood, string>>> = {
+const PET_VISUALS: Record<string, Record<EvolutionStage, Record<PetMood, string>>> = {
     bunny: {
         baby: { happy: '🐣', content: '🥚', sad: '😢', sleeping: '💤' },
         child: { happy: '🐰', content: '🐇', sad: '😿', sleeping: '😴' },
@@ -80,6 +80,13 @@ const STAGE_LABELS: Record<EvolutionStage, string> = {
     child: 'Little',
     teen: 'Growing',
     adult: 'Super',
+};
+
+const DEFAULT_PET_VISUALS: Record<EvolutionStage, Record<PetMood, string>> = {
+    baby: { happy: 'Pet', content: 'Pet', sad: 'Pet', sleeping: 'Zzz' },
+    child: { happy: 'Pet', content: 'Pet', sad: 'Pet', sleeping: 'Zzz' },
+    teen: { happy: 'Pet', content: 'Pet', sad: 'Pet', sleeping: 'Zzz' },
+    adult: { happy: 'Pet', content: 'Pet', sad: 'Pet', sleeping: 'Zzz' },
 };
 
 // Helper to get stage from XP
@@ -134,7 +141,8 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
     
     const mood = getMood(pet.happiness);
     const stage = pet.stage || getEvolutionStage(pet.xpEarned || 0);
-    const petEmoji = PET_VISUALS[pet.type]?.[stage]?.[mood] || '🐾';
+    const petVisuals = PET_VISUALS[pet.type] || DEFAULT_PET_VISUALS;
+    const petEmoji = petVisuals[stage]?.[mood] || DEFAULT_PET_VISUALS[stage][mood];
     const outfit = pet.outfit || 'none';
     const outfitEmoji = OUTFIT_VISUALS[outfit]?.emoji || '';
     const evolutionProgress = getEvolutionProgress(pet.xpEarned || 0);

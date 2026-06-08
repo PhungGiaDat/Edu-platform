@@ -54,7 +54,7 @@ export function useGameData(
       if (showLoading) { setIsLoading(true); setError(null); }
 
       try {
-        const response = await fetch(url);
+        const response = await fetch(url, { cache: 'no-store' });
 
         if (!response.ok) {
           if (response.status === 404) {

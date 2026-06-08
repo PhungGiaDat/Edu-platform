@@ -13,6 +13,78 @@ class GamificationService:
     def __init__(self):
         self.repo = get_gamification_repository()
 
+    def _clamp(self, value: int, minimum: int = 0, maximum: int = 100) -> int:
+        return max(minimum, min(maximum, int(value)))
+
+    def _parse_dt(self, value: Any) -> datetime | None:
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, str):
+            try:
+                return datetime.fromisoformat(value.replace("Z", "+00:00")).replace(tzinfo=None)
+            except ValueError:
+                return None
+        return None
+
+    def _default_pet(self) -> Dict[str, Any]:
+        now = datetime.utcnow()
+        return {
+            "type": "bunny",
+            "happiness": 50,
+            "hunger": 45,
+            "energy": 70,
+            "mood": "content",
+            "last_fed": None,
+            "last_played": None,
+            "last_care_at": now,
+            "last_mood_update": now,
+            "outfit": "none",
+            "xp_earned": 0,
+            "stage": "baby",
+            "last_action": "idle",
+            "animation_clip": "idle",
+        }
+
+    def _mood_from_stats(self, hunger: int, energy: int, happiness: int) -> str:
+        if energy <= 15:
+            return "sleeping"
+        if hunger >= 75:
+            return "hungry"
+        if happiness <= 25:
+            return "sad"
+        if happiness >= 80 and hunger <= 50:
+            return "happy"
+        return "content"
+
+    def _hydrate_pet_state(self, pet: Dict[str, Any] | None) -> Dict[str, Any]:
+        hydrated = self._default_pet()
+        if pet:
+            hydrated.update(pet)
+
+        now = datetime.utcnow()
+        last_update = self._parse_dt(hydrated.get("last_mood_update")) or self._parse_dt(hydrated.get("last_care_at")) or now
+        elapsed_hours = max(0, (now - last_update).total_seconds() / 3600)
+
+        if elapsed_hours >= 0.25:
+            hunger = self._clamp(hydrated.get("hunger", 45) + int(elapsed_hours * 6))
+            happiness = self._clamp(hydrated.get("happiness", 50) - int(elapsed_hours * 3))
+            energy = self._clamp(hydrated.get("energy", 70) + int(elapsed_hours * 4))
+            hydrated.update({
+                "hunger": hunger,
+                "happiness": happiness,
+                "energy": energy,
+                "last_mood_update": now,
+            })
+
+        hydrated["mood"] = self._mood_from_stats(
+            self._clamp(hydrated.get("hunger", 45)),
+            self._clamp(hydrated.get("energy", 70)),
+            self._clamp(hydrated.get("happiness", 50)),
+        )
+        hydrated["needs_attention"] = hydrated["mood"] in {"hungry", "sad", "sleeping"}
+        hydrated["animation_clip"] = hydrated.get("animation_clip") or hydrated["mood"]
+        return hydrated
+
     async def award_points(self, user_id: str, points: int, reason: str) -> Dict[str, Any]:
         """Award points for an action"""
         logger.info(f"Awarding {points} points to {user_id} for {reason}")
@@ -150,9 +222,11 @@ class GamificationService:
                 "streak_days": 0,
                 "longest_streak": 0,
                 "daily_progress": [],
+                "pet": self._default_pet(),
             }
         if "user_id" not in stats:
             stats["user_id"] = user_id
+        stats["pet"] = self._hydrate_pet_state(stats.get("pet"))
         return stats
 
     async def get_leaderboard(self) -> List[Dict[str, Any]]:
@@ -164,14 +238,10 @@ class GamificationService:
     async def get_pet(self, user_id: str) -> Dict[str, Any]:
         """Get user's virtual pet"""
         pet = await self.repo.get_pet(user_id)
-        if not pet:
-            # Create default pet
-            pet = {
-                "type": "bunny",
-                "happiness": 50,
-                "last_fed": None
-            }
-        return pet
+        hydrated = self._hydrate_pet_state(pet)
+        if pet and (hydrated.get("last_mood_update") != pet.get("last_mood_update") or hydrated.get("mood") != pet.get("mood")):
+            await self.repo.update_pet(user_id, hydrated)
+        return hydrated
     
     async def feed_pet(self, user_id: str) -> Dict[str, Any]:
         """
@@ -179,7 +249,7 @@ class GamificationService:
         Returns updated pet state.
         """
         result = await self.repo.feed_pet(user_id, happiness_boost=10)
-        pet = result.get("pet", {})
+        pet = self._hydrate_pet_state(result.get("pet", {}))
         
         # Award XP for caring for pet
         await self.repo.update_points(user_id, 5)  # Small XP reward
@@ -195,6 +265,7 @@ class GamificationService:
         
         if new_stage != old_stage:
             await self.repo.update_pet_stage(user_id, new_stage)
+            pet["stage"] = new_stage
             evolved = True
             logger.info(f"Pet evolved to {new_stage} for user {user_id}")
         
@@ -202,7 +273,12 @@ class GamificationService:
         
         return {
             "success": True,
-            "happiness": min(100, pet.get("happiness", 50) + 10),
+            "happiness": pet.get("happiness", 60),
+            "hunger": pet.get("hunger", 10),
+            "energy": pet.get("energy", 75),
+            "mood": pet.get("mood", "happy"),
+            "last_action": "feed",
+            "animation_clip": "feed",
             "pet_type": pet.get("type", "bunny"),
             "xp_earned": 5,
             "pet_xp": pet_xp,
@@ -212,17 +288,24 @@ class GamificationService:
     
     async def choose_pet(self, user_id: str, pet_type: str) -> Dict[str, Any]:
         """Choose/change pet type"""
-        valid_types = ["bunny", "panda", "dog", "cat"]
-        if pet_type not in valid_types:
-            return {"success": False, "error": f"Invalid pet type. Choose from: {valid_types}"}
+        if not pet_type or not pet_type.strip():
+            return {"success": False, "error": "Pet type is required"}
         
         pet_data = {
-            "type": pet_type,
+            "type": pet_type.strip(),
             "happiness": 50,
+            "hunger": 45,
+            "energy": 70,
+            "mood": "content",
             "last_fed": None,
+            "last_played": None,
+            "last_care_at": datetime.utcnow(),
+            "last_mood_update": datetime.utcnow(),
             "outfit": "none",
             "xp_earned": 0,
-            "stage": "baby"
+            "stage": "baby",
+            "last_action": "idle",
+            "animation_clip": "idle",
         }
         await self.repo.update_pet(user_id, pet_data)
         
@@ -234,7 +317,7 @@ class GamificationService:
         Returns updated pet state.
         """
         result = await self.repo.play_pet(user_id, happiness_boost=15)
-        pet = result.get("pet", {})
+        pet = self._hydrate_pet_state(result.get("pet", {}))
         
         # Award XP for playing
         await self.repo.update_points(user_id, 8)
@@ -247,13 +330,19 @@ class GamificationService:
         new_stage = self._get_evolution_stage(pet_xp)
         if new_stage != pet.get("stage", "baby"):
             await self.repo.update_pet_stage(user_id, new_stage)
+            pet["stage"] = new_stage
             logger.info(f"Pet evolved to {new_stage} for user {user_id}")
         
         logger.info(f"Played with pet for user {user_id}, happiness: {pet.get('happiness')}")
         
         return {
             "success": True,
-            "happiness": min(100, pet.get("happiness", 50) + 15),
+            "happiness": pet.get("happiness", 65),
+            "hunger": pet.get("hunger", 55),
+            "energy": pet.get("energy", 55),
+            "mood": pet.get("mood", "happy"),
+            "last_action": "play",
+            "animation_clip": "play",
             "pet_type": pet.get("type", "bunny"),
             "xp_earned": 8,
             "pet_xp": pet_xp,
