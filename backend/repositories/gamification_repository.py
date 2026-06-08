@@ -76,6 +76,29 @@ class GamificationRepository(BaseRepository):
     
     # ========== PET METHODS ==========
     
+    def _default_pet(self) -> Dict[str, Any]:
+        now = datetime.utcnow()
+        return {
+            "type": "bunny",
+            "happiness": 50,
+            "hunger": 45,
+            "energy": 70,
+            "mood": "content",
+            "last_fed": None,
+            "last_played": None,
+            "last_care_at": now,
+            "last_mood_update": now,
+            "outfit": "none",
+            "xp_earned": 0,
+            "stage": "baby",
+        }
+
+    def _merge_pet_defaults(self, pet: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        merged = self._default_pet()
+        if pet:
+            merged.update(pet)
+        return merged
+
     async def get_pet(self, user_id: str) -> Optional[Dict[str, Any]]:
         """Get user's virtual pet data"""
         user = await self.find_one({"user_id": user_id})
@@ -93,20 +116,69 @@ class GamificationRepository(BaseRepository):
     async def feed_pet(self, user_id: str, happiness_boost: int = 10) -> Dict[str, Any]:
         """Feed pet and increase happiness"""
         user = await self.find_one({"user_id": user_id})
-        current_happiness = 50  # default
+        pet_data = self._merge_pet_defaults(user.get("pet") if user else None)
+        now = datetime.utcnow()
         
-        if user and user.get("pet"):
-            current_happiness = user["pet"].get("happiness", 50)
-        
-        new_happiness = min(100, current_happiness + happiness_boost)
-        
-        pet_data = {
-            "type": user.get("pet", {}).get("type", "bunny"),
-            "happiness": new_happiness,
-            "last_fed": datetime.utcnow()
-        }
+        pet_data.update({
+            "happiness": min(100, pet_data.get("happiness", 50) + happiness_boost),
+            "hunger": max(0, pet_data.get("hunger", 45) - 35),
+            "energy": min(100, pet_data.get("energy", 70) + 5),
+            "mood": "happy",
+            "last_fed": now,
+            "last_care_at": now,
+            "last_mood_update": now,
+            "last_action": "feed",
+            "animation_clip": "feed",
+        })
         
         return await self.update_pet(user_id, pet_data)
+
+    async def play_pet(self, user_id: str, happiness_boost: int = 15) -> Dict[str, Any]:
+        """Play with pet and update care state."""
+        user = await self.find_one({"user_id": user_id})
+        pet_data = self._merge_pet_defaults(user.get("pet") if user else None)
+        now = datetime.utcnow()
+
+        pet_data.update({
+            "happiness": min(100, pet_data.get("happiness", 50) + happiness_boost),
+            "hunger": min(100, pet_data.get("hunger", 45) + 10),
+            "energy": max(0, pet_data.get("energy", 70) - 15),
+            "mood": "happy" if pet_data.get("energy", 70) > 20 else "tired",
+            "last_played": now,
+            "last_care_at": now,
+            "last_mood_update": now,
+            "last_action": "play",
+            "animation_clip": "play",
+        })
+
+        return await self.update_pet(user_id, pet_data)
+
+    async def update_pet_xp(self, user_id: str, pet_xp: int) -> Dict[str, Any]:
+        """Update pet XP while preserving the rest of the nested pet document."""
+        return await self.collection.find_one_and_update(
+            {"user_id": user_id},
+            {"$set": {"pet.xp_earned": pet_xp}},
+            upsert=True,
+            return_document=True
+        )
+
+    async def update_pet_stage(self, user_id: str, stage: str) -> Dict[str, Any]:
+        """Update pet evolution stage."""
+        return await self.collection.find_one_and_update(
+            {"user_id": user_id},
+            {"$set": {"pet.stage": stage}},
+            upsert=True,
+            return_document=True
+        )
+
+    async def update_pet_outfit(self, user_id: str, outfit: str) -> Dict[str, Any]:
+        """Update pet outfit."""
+        return await self.collection.find_one_and_update(
+            {"user_id": user_id},
+            {"$set": {"pet.outfit": outfit}},
+            upsert=True,
+            return_document=True
+        )
     
     # ========== STICKER METHODS ==========
     

@@ -15,7 +15,7 @@ class MemoryPair(BaseModel):
 
 class GameChallenge(BaseModel):
     """Single game challenge schema"""
-    game_type: Literal["drag_match", "catch_word", "word_scramble", "memory_match"]
+    game_type: Literal["drag_match", "catch_word", "word_scramble", "memory_match", "coloring", "pronunciation"]
     flashcard_qr_id: str
     difficulty: Literal["easy", "medium", "hard"]
     question: str

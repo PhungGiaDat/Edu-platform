@@ -20,6 +20,9 @@ import { rarityConfig } from './PetCard';
 import type { Pet } from '@/hooks/usePets';
 import { useSafeGLTF, preloadGLTFSafe } from '@/hooks/useSafeGLTF';
 
+export type PetViewerMood = 'happy' | 'content' | 'hungry' | 'sad' | 'sleeping' | 'tired';
+export type PetViewerInteraction = 'idle' | 'feed' | 'play';
+
 // ========== Props Interfaces ==========
 
 // Error Boundary for Canvas errors
@@ -94,6 +97,12 @@ export interface PetViewer3DProps {
     disableFloat?: boolean;
     /** Scale multiplier for the model */
     scale?: number;
+    /** Current care mood for procedural emotion fallback */
+    mood?: PetViewerMood;
+    /** Current interaction to play as a baked clip or procedural fallback */
+    interaction?: PetViewerInteraction;
+    /** Increment this value to replay a one-shot interaction */
+    interactionKey?: number;
 }
 
 interface Pet3DModelProps {
@@ -101,6 +110,9 @@ interface Pet3DModelProps {
     textureUrl?: string | null;
     scale: number;
     enableAnimation?: boolean;
+    mood?: PetViewerMood;
+    interaction?: PetViewerInteraction;
+    interactionKey?: number;
     onLoad?: () => void;
     onError?: (error: Error) => void;
 }
@@ -113,9 +125,21 @@ const toCssSize = (value: string | number) => typeof value === 'number' ? `${val
  * Pet3DModel - Safely loads and renders a GLTF model
  * Uses useSafeGLTF to prevent synchronous throws that crash React
  */
-function Pet3DModel({ url, textureUrl, scale, enableAnimation = true, onLoad, onError }: Pet3DModelProps) {
+function Pet3DModel({
+    url,
+    textureUrl,
+    scale,
+    enableAnimation = true,
+    mood = 'content',
+    interaction = 'idle',
+    interactionKey = 0,
+    onLoad,
+    onError
+}: Pet3DModelProps) {
     const groupRef = useRef<THREE.Group>(null);
     const mixerRef = useRef<THREE.AnimationMixer | null>(null);
+    const activeActionRef = useRef<THREE.AnimationAction | null>(null);
+    const reactionStartedAtRef = useRef(0);
     const hasNotifiedLoad = useRef(false);
     const hasNotifiedError = useRef(false);
     
@@ -141,6 +165,29 @@ function Pet3DModel({ url, textureUrl, scale, enableAnimation = true, onLoad, on
         return cloned;
     }, [gltf?.scene]);
 
+    const selectClip = React.useCallback((animations: THREE.AnimationClip[]) => {
+        if (!animations.length) return null;
+
+        const preferredNames = interaction === 'feed'
+            ? ['feed', 'eat', 'happy', 'celebrate', 'idle']
+            : interaction === 'play'
+                ? ['play', 'jump', 'happy', 'celebrate', 'idle']
+                : mood === 'hungry'
+                    ? ['hungry', 'sad', 'idle']
+                    : mood === 'sleeping' || mood === 'tired'
+                        ? ['sleep', 'sleeping', 'idle']
+                        : mood === 'happy'
+                            ? ['happy', 'idle']
+                            : ['idle', 'happy'];
+
+        for (const name of preferredNames) {
+            const clip = animations.find(animation => animation.name.toLowerCase().includes(name));
+            if (clip) return clip;
+        }
+
+        return animations[0];
+    }, [interaction, mood]);
+
     // Set up animations if available
     useEffect(() => {
         if (!clonedScene || !gltf?.animations) return;
@@ -149,8 +196,12 @@ function Pet3DModel({ url, textureUrl, scale, enableAnimation = true, onLoad, on
         
         if (animations.length > 0 && enableAnimation) {
             mixerRef.current = new THREE.AnimationMixer(clonedScene);
-            const action = mixerRef.current.clipAction(animations[0]);
+            const action = mixerRef.current.clipAction(selectClip(animations) || animations[0]);
+            action.reset();
+            action.setLoop(interaction === 'idle' ? THREE.LoopRepeat : THREE.LoopOnce, interaction === 'idle' ? Infinity : 1);
+            action.clampWhenFinished = interaction !== 'idle';
             action.play();
+            activeActionRef.current = action;
         }
 
         // Notify parent that model is loaded (only once)
@@ -161,17 +212,39 @@ function Pet3DModel({ url, textureUrl, scale, enableAnimation = true, onLoad, on
 
         return () => {
             mixerRef.current?.stopAllAction();
+            activeActionRef.current = null;
         };
-    }, [clonedScene, gltf?.animations, enableAnimation, onLoad]);
+    }, [clonedScene, gltf?.animations, enableAnimation, interaction, interactionKey, onLoad, selectClip]);
+
+    useEffect(() => {
+        reactionStartedAtRef.current = performance.now();
+    }, [interaction, interactionKey]);
 
     // Update animation mixer
-    useFrame((_, delta) => {
+    useFrame((frameState, delta) => {
         mixerRef.current?.update(delta);
 
-        // Add subtle breathing animation if no built-in animations
-        if (groupRef.current && (!gltf?.animations || gltf.animations.length === 0)) {
-            const breathe = Math.sin(Date.now() * 0.002) * 0.02;
-            groupRef.current.scale.setScalar(scale * (1 + breathe));
+        // Add emotion/interaction fallback if no matching baked animation exists.
+        if (groupRef.current) {
+            const elapsed = frameState.clock.elapsedTime;
+            const reactionAge = (performance.now() - reactionStartedAtRef.current) / 1000;
+            const hasBakedClips = Boolean(gltf?.animations && gltf.animations.length > 0);
+            const shouldProceduralReact = !hasBakedClips || reactionAge < 1.2;
+            const breathe = Math.sin(elapsed * 2) * 0.02;
+            const hungryDroop = mood === 'hungry' || mood === 'sad' ? -0.05 : 0;
+            const sleepySquash = mood === 'sleeping' || mood === 'tired' ? -0.04 : 0;
+            const feedPop = interaction === 'feed' && shouldProceduralReact
+                ? Math.sin(Math.min(reactionAge, 1) * Math.PI) * 0.16
+                : 0;
+            const playJump = interaction === 'play' && shouldProceduralReact
+                ? Math.abs(Math.sin(Math.min(reactionAge * 2, 1) * Math.PI)) * 0.28
+                : 0;
+
+            groupRef.current.scale.setScalar(1 + breathe + feedPop + sleepySquash);
+            groupRef.current.position.y = hungryDroop + playJump;
+            groupRef.current.rotation.z = interaction === 'play' && shouldProceduralReact
+                ? Math.sin(reactionAge * 18) * 0.12
+                : 0;
         }
     });
 
@@ -392,6 +465,9 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
     backgroundColor,
     disableFloat = false,
     scale = 1.2,
+    mood = 'content',
+    interaction = 'idle',
+    interactionKey = 0,
 }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -545,6 +621,9 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                             url={pet.model_url}
                             textureUrl={pet.texture_url}
                             scale={scale}
+                            mood={mood}
+                            interaction={interaction}
+                            interactionKey={interactionKey}
                             onLoad={handleLoad}
                             onError={handleError}
                         />
@@ -560,6 +639,9 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                                 url={pet.model_url}
                                 textureUrl={pet.texture_url}
                                 scale={scale}
+                                mood={mood}
+                                interaction={interaction}
+                                interactionKey={interactionKey}
                                 onLoad={handleLoad}
                                 onError={handleError}
                             />
@@ -586,6 +668,18 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
 
             {background !== 'transparent' && (
                 <>
+                    {interaction !== 'idle' && (
+                        <div
+                            key={`${interaction}-${interactionKey}`}
+                            className="pointer-events-none absolute left-1/2 top-5 z-30 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 text-sm font-black text-slate-700 shadow-lg"
+                            style={{
+                                animation: 'petCareReaction 1.1s ease-out both',
+                            }}
+                        >
+                            {interaction === 'feed' ? 'Yum!' : 'Yay!'}
+                        </div>
+                    )}
+
                     {/* Pet Name Label */}
                     <div
                         className="absolute bottom-2 left-2 right-2 text-center"
@@ -617,6 +711,14 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
                     </div>
                 </>
             )}
+
+            <style>{`
+                @keyframes petCareReaction {
+                    0% { opacity: 0; transform: translate(-50%, 12px) scale(0.85); }
+                    20% { opacity: 1; transform: translate(-50%, 0) scale(1.05); }
+                    100% { opacity: 0; transform: translate(-50%, -34px) scale(1); }
+                }
+            `}</style>
         </div>
     );
 };

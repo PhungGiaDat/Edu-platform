@@ -8,18 +8,27 @@
  * - Vibrant, engaging colors for educational platform
  */
 
-import React, { Suspense, lazy, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { usePets, type Pet } from '@/hooks/usePets';
 import { apiClient } from '@/services/apiClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { HapticService } from '@/services/HapticService';
 import { SoundEffectService } from '@/services/SoundEffectService';
 import { rarityConfig } from '@/components/pets/PetCard';
+import type { PetViewerInteraction, PetViewerMood } from '@/components/pets/PetViewer3D';
 
 // Lazy-load the heavy 3D viewer
 const PetViewer3D = lazy(() =>
     import('@/components/pets/PetViewer3D').then(m => ({ default: m.PetViewer3D }))
 );
+
+interface PetCareState {
+    happiness: number;
+    hunger: number;
+    energy: number;
+    mood: PetViewerMood;
+    last_action: PetViewerInteraction;
+}
 
 const SUPPORTED_MODEL_EXTENSIONS = new Set(['.glb', '.gltf']);
 
@@ -190,6 +199,15 @@ export default function PetsPage() {
     const userId = user?.id ?? null;
     const { pets, activePet, setActivePet, isLoading } = usePets(userId);
     const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+    const [petCare, setPetCare] = useState<PetCareState>({
+        happiness: 50,
+        hunger: 45,
+        energy: 70,
+        mood: 'content',
+        last_action: 'idle',
+    });
+    const [viewerInteraction, setViewerInteraction] = useState<PetViewerInteraction>('idle');
+    const [viewerInteractionKey, setViewerInteractionKey] = useState(0);
 
     // Initialize selected pet
     React.useEffect(() => {
@@ -200,6 +218,30 @@ export default function PetsPage() {
             setSelectedPet(firstUnlocked || pets[0]);
         }
     }, [activePet, pets, selectedPet]);
+
+    useEffect(() => {
+        if (!userId) return;
+
+        let isMounted = true;
+        apiClient.get(`/api/v1/gamification/pet/${userId}`)
+            .then((pet) => {
+                if (!isMounted) return;
+                setPetCare({
+                    happiness: pet.happiness ?? 50,
+                    hunger: pet.hunger ?? 45,
+                    energy: pet.energy ?? 70,
+                    mood: pet.mood ?? 'content',
+                    last_action: pet.last_action ?? 'idle',
+                });
+            })
+            .catch((error) => {
+                console.warn('[PetsPage] Pet care state unavailable:', error);
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [userId]);
 
     if (authLoading) {
         return (
@@ -243,10 +285,21 @@ export default function PetsPage() {
         try {
             HapticService.success();
             SoundEffectService.play('success');
-            await apiClient.post('/api/v1/gamification/pet/feed', {
+            const result = await apiClient.post('/api/v1/gamification/pet/feed', {
                 user_id: userId,
                 pet_id: petId,
             });
+            setPetCare(prev => ({
+                ...prev,
+                happiness: result.happiness ?? prev.happiness,
+                hunger: result.hunger ?? prev.hunger,
+                energy: result.energy ?? prev.energy,
+                mood: result.mood ?? 'happy',
+                last_action: 'feed',
+            }));
+            setViewerInteraction('feed');
+            setViewerInteractionKey(prev => prev + 1);
+            window.setTimeout(() => setViewerInteraction('idle'), 1300);
         } catch (error) {
             console.error('Feed error:', error);
         }
@@ -256,10 +309,21 @@ export default function PetsPage() {
         try {
             HapticService.success();
             SoundEffectService.play('success');
-            await apiClient.post('/api/v1/gamification/pet/play', {
+            const result = await apiClient.post('/api/v1/gamification/pet/play', {
                 user_id: userId,
                 pet_id: petId,
             });
+            setPetCare(prev => ({
+                ...prev,
+                happiness: result.happiness ?? prev.happiness,
+                hunger: result.hunger ?? prev.hunger,
+                energy: result.energy ?? prev.energy,
+                mood: result.mood ?? 'happy',
+                last_action: 'play',
+            }));
+            setViewerInteraction('play');
+            setViewerInteractionKey(prev => prev + 1);
+            window.setTimeout(() => setViewerInteraction('idle'), 1300);
         } catch (error) {
             console.error('Play error:', error);
         }
@@ -363,6 +427,9 @@ export default function PetsPage() {
                                                     enableControls={true}
                                                     scale={1.0}
                                                     background="transparent"
+                                                    mood={petCare.mood}
+                                                    interaction={viewerInteraction}
+                                                    interactionKey={viewerInteractionKey}
                                                 />
                                             </Suspense>
                                         ) : displayPet.thumbnail_url ? (
@@ -394,9 +461,15 @@ export default function PetsPage() {
 
                                     {/* Pet Stats */}
                                     <div className="space-y-3 mb-4">
-                                        <ProgressBar label="Happiness" value={80} max={100} color="#5B8DEF" />
-                                        <ProgressBar label="Energy" value={65} max={100} color="#7BC67E" />
-                                        <ProgressBar label="Hunger" value={50} max={100} color="#FFB347" />
+                                        <ProgressBar label="Happiness" value={petCare.happiness} max={100} color="#5B8DEF" />
+                                        <ProgressBar label="Energy" value={petCare.energy} max={100} color="#7BC67E" />
+                                        <ProgressBar label="Hunger" value={petCare.hunger} max={100} color="#FFB347" />
+                                    </div>
+
+                                    <div className="mb-4 text-center">
+                                        <span className="inline-flex rounded-full bg-white/80 px-4 py-2 text-sm font-black capitalize text-slate-700 shadow-sm">
+                                            Mood: {petCare.mood}
+                                        </span>
                                     </div>
 
                                     {/* Action Buttons */}

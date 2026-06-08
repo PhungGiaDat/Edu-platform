@@ -2,7 +2,7 @@
 """
 Quiz API Router - Thin controller layer
 """
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Query
 from core.base_router import create_router
 from services import QuizService, get_quiz_service
 from models import QuizSessionSchema
@@ -20,6 +20,7 @@ router = create_router(
 @router.get("/{qr_id}", response_model=QuizSessionSchema)
 async def get_quiz_by_flashcard(
     qr_id: str,
+    difficulty: str | None = Query(None, description="Difficulty filter"),
     service: QuizService = Depends(get_quiz_service)
 ):
     """
@@ -31,9 +32,9 @@ async def get_quiz_by_flashcard(
     Returns:
         Quiz session with questions and configuration
     """
-    logger.info(f"[API] GET /quiz/{qr_id}")
+    logger.info(f"[API] GET /quiz/{qr_id}?difficulty={difficulty}")
     
-    result = await service.get_quiz_by_flashcard(qr_id)
+    result = await service.get_quiz_by_flashcard(qr_id, difficulty)
     
     if not result:
         raise HTTPException(

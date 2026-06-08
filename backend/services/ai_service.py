@@ -2,13 +2,15 @@
 AI Service - Business logic for AI-powered features using LangChain Core
 Uses langchain-core and langchain-google-genai (no full langchain dependency)
 """
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from google import genai as google_genai
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from settings import settings
 import logging
+import json
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +43,62 @@ Hãy trả lời câu hỏi của bé dựa trên context trên."""
     # Gemini embedding model (3072 dimensions — matches Atlas Vector Search index)
     EMBEDDING_MODEL = "models/gemini-embedding-001"
 
+    KID_CONTENT_SYSTEM_PROMPT = """
+You create safe English-learning activities for children ages 5-10.
+Rules:
+- Use warm, simple language.
+- Keep questions short.
+- Never include scary, violent, unsafe, adult, political, medical, or private-data content.
+- Use the provided vocabulary word only; do not invent facts that are not needed.
+- Return only valid JSON. No markdown.
+"""
+
+    GAME_CONTENT_MANIFEST = {
+        "age_range": "5-10",
+        "supported_game_types": ["drag_match", "catch_word", "word_scramble", "memory_match"],
+        "difficulty": {
+            "easy": "short words, obvious clues, no timer pressure",
+            "medium": "simple meaning clues and friendly distractors",
+            "hard": "slightly more thinking, still kid-safe and vocabulary-focused",
+        },
+        "challenge_schema": {
+            "game_type": "drag_match | catch_word | word_scramble | memory_match",
+            "flashcard_qr_id": "string",
+            "difficulty": "easy | medium | hard",
+            "question": "string",
+            "image_url": "string or null",
+            "correct_answer": "string or null",
+            "choices": "array of 3-4 strings or null",
+            "scrambled_word": "string or null",
+            "pairs": "array of memory pair objects or null",
+            "hint": "string",
+            "encouragement_wrong": "string",
+            "celebration_right": "string",
+            "time_limit": "integer seconds or null",
+            "stars_reward": "integer 1-3",
+            "game_config": "object or null",
+        },
+    }
+
+    QUIZ_CONTENT_MANIFEST = {
+        "age_range": "5-10",
+        "question_types": ["multiple_choice", "true_false"],
+        "difficulty": {
+            "easy": "recognition and translation",
+            "medium": "meaning and category",
+            "hard": "short scenario or clue",
+        },
+        "question_schema": {
+            "id": "string",
+            "type": "multiple_choice | true_false",
+            "question_text": "string",
+            "image_url": "string or null",
+            "options": "array of strings",
+            "correct_answer": "string",
+            "explanation": "string",
+        },
+    }
+
     def __init__(self):
         self.repo = get_ai_repository()
         self._embedding_model = self.EMBEDDING_MODEL
@@ -60,6 +118,128 @@ Hãy trả lời câu hỏi của bé dựa trên context trên."""
             self._genai_client = None
             self.llm = None
             self.output_parser = None
+
+    def _extract_json(self, response: str) -> Any:
+        """Extract JSON from model text that may include fences."""
+        text = response.strip()
+        if text.startswith("```"):
+            text = re.sub(r"^```(?:json)?", "", text).strip()
+            text = re.sub(r"```$", "", text).strip()
+
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            match = re.search(r"(\{.*\}|\[.*\])", text, re.DOTALL)
+            if not match:
+                raise
+            return json.loads(match.group(1))
+
+    def _translation_value(self, translation: Any, fallback: str = "") -> str:
+        if isinstance(translation, dict):
+            return translation.get("vi") or translation.get("en") or next(iter(translation.values()), fallback)
+        if isinstance(translation, str):
+            return translation
+        return fallback
+
+    async def generate_quiz_from_manifest(
+        self,
+        flashcard: Dict[str, Any],
+        difficulty: str = "easy",
+        num_questions: int = 3,
+    ) -> List[Dict[str, Any]]:
+        """Generate quiz questions constrained by the quiz manifest."""
+        if not self.llm:
+            raise RuntimeError("AI service is not configured")
+
+        word = flashcard.get("word", "")
+        translation = self._translation_value(flashcard.get("translation"), word)
+        category = flashcard.get("category", "general")
+        definition = flashcard.get("definition") or ""
+        image_url = flashcard.get("image_url")
+
+        prompt_text = f"""
+{self.KID_CONTENT_SYSTEM_PROMPT}
+
+Manifest:
+{json.dumps(self.QUIZ_CONTENT_MANIFEST, ensure_ascii=False)}
+
+Flashcard:
+{json.dumps({
+    "qr_id": flashcard.get("qr_id"),
+    "word": word,
+    "translation": translation,
+    "category": category,
+    "definition": definition,
+    "image_url": image_url,
+}, ensure_ascii=False)}
+
+Task:
+Generate exactly {num_questions} quiz questions at difficulty "{difficulty}".
+Use the flashcard image_url when it helps.
+Return only a JSON array matching the manifest question_schema.
+"""
+
+        prompt = PromptTemplate.from_template("{question}")
+        chain = prompt | self.llm | self.output_parser
+        response = await chain.ainvoke({"question": prompt_text})
+        data = self._extract_json(response)
+        if not isinstance(data, list):
+            raise ValueError("Quiz generation did not return a JSON array")
+        return data
+
+    async def generate_game_challenges_from_manifest(
+        self,
+        flashcard: Dict[str, Any],
+        game_type: Optional[str] = None,
+        difficulty: str = "easy",
+        num_challenges: int = 3,
+    ) -> List[Dict[str, Any]]:
+        """Generate game challenges constrained by the frontend-supported manifest."""
+        if not self.llm:
+            raise RuntimeError("AI service is not configured")
+
+        requested_game_type = game_type or "drag_match"
+        if requested_game_type not in self.GAME_CONTENT_MANIFEST["supported_game_types"]:
+            requested_game_type = "drag_match"
+
+        word = flashcard.get("word", "")
+        translation = self._translation_value(flashcard.get("translation"), word)
+        category = flashcard.get("category", "general")
+        definition = flashcard.get("definition") or ""
+        image_url = flashcard.get("image_url")
+
+        prompt_text = f"""
+{self.KID_CONTENT_SYSTEM_PROMPT}
+
+Manifest:
+{json.dumps(self.GAME_CONTENT_MANIFEST, ensure_ascii=False)}
+
+Flashcard:
+{json.dumps({
+    "qr_id": flashcard.get("qr_id"),
+    "word": word,
+    "translation": translation,
+    "category": category,
+    "definition": definition,
+    "image_url": image_url,
+}, ensure_ascii=False)}
+
+Task:
+Generate exactly {num_challenges} "{requested_game_type}" challenges at difficulty "{difficulty}".
+Every challenge must use flashcard_qr_id "{flashcard.get("qr_id")}".
+For drag_match and catch_word, include correct_answer and 3-4 choices.
+For word_scramble, include scrambled_word and correct_answer.
+For memory_match, include pairs with matching image/word pair ids.
+Return only a JSON array matching the manifest challenge_schema.
+"""
+
+        prompt = PromptTemplate.from_template("{question}")
+        chain = prompt | self.llm | self.output_parser
+        response = await chain.ainvoke({"question": prompt_text})
+        data = self._extract_json(response)
+        if not isinstance(data, list):
+            raise ValueError("Game generation did not return a JSON array")
+        return data
 
     async def generate_embedding(self, text: str) -> List[float]:
         """

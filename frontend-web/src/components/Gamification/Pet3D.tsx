@@ -59,20 +59,27 @@ class Pet3DErrorBoundary extends Component<{ children: React.ReactNode; fallback
     }
 }
 
-// Color palettes for different pet types
-const PET_COLORS: Record<PetType, { body: string; accent: string; cheek: string }> = {
-    bunny: { body: '#F5F5F5', accent: '#FFB6C1', cheek: '#FFB6C1' },
-    cat: { body: '#FFA500', accent: '#FF8C00', cheek: '#FFB6C1' },
-    dog: { body: '#D2691E', accent: '#8B4513', cheek: '#FFB6C1' },
-    panda: { body: '#FFFFFF', accent: '#000000', cheek: '#FFB6C1' },
-};
+const GENERATED_PET_PALETTES = [
+    { body: '#A8D5BA', accent: '#7FC9A5', cheek: '#FFB6C1' },
+    { body: '#BDE0FE', accent: '#5B8DEF', cheek: '#FFC8DD' },
+    { body: '#FFE066', accent: '#FFB347', cheek: '#FF9F9F' },
+    { body: '#CDB4DB', accent: '#8E7CC3', cheek: '#FFAFCC' },
+    { body: '#95D5B2', accent: '#40916C', cheek: '#FFD6A5' },
+    { body: '#FFD6A5', accent: '#FB8500', cheek: '#FFAFCC' },
+];
 
-// Default colors for unknown pet types (fallback to prevent crashes)
-const DEFAULT_PET_COLORS = { body: '#A8D5BA', accent: '#7FC9A5', cheek: '#FFB6C1' };
+function paletteIndexFromPetType(petType: PetType | string): number {
+    const text = String(petType || 'pet');
+    let hash = 0;
+    for (let index = 0; index < text.length; index += 1) {
+        hash = (hash * 31 + text.charCodeAt(index)) >>> 0;
+    }
+    return hash % GENERATED_PET_PALETTES.length;
+}
 
-// Safely get pet colors with fallback
+// Safely generate stable fallback colors for any Mongo pet id/type.
 function getPetColors(petType: PetType | string): { body: string; accent: string; cheek: string } {
-    return PET_COLORS[petType as PetType] || DEFAULT_PET_COLORS;
+    return GENERATED_PET_PALETTES[paletteIndexFromPetType(petType)];
 }
 
 function CodexPetFallback({
