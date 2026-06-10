@@ -126,3 +126,24 @@ export interface QuizSubmitResult {
   feedback: Array<{ question_id: string; correct: boolean; message: string }>;
   reward?: Reward | null;
 }
+
+export interface LessonProgress {
+  lesson_id: string;
+  status: 'not_started' | 'started' | 'completed';
+  best_score: number;
+  attempts: number;
+  completed_at?: string | null;
+}
+
+export interface UserProgress {
+  user_id: string;
+  course_id: string;
+  status: 'started' | 'completed';
+  current_lesson_id?: string | null;
+  completed_lessons: string[];
+  lesson_progress: LessonProgress[];
+  total_xp: number;
+  rewards: Reward[];
+  started_at?: string;
+  updated_at?: string;
+}

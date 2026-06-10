@@ -1,7 +1,7 @@
 import { apiClient } from './apiClient';
-import type { Course, Lesson, QuizSubmitResult } from '@/types/course';
+import type { Course, Lesson, QuizSubmitResult, UserProgress } from '@/types/course';
 
-export type { Course, Lesson, QuizSubmitResult } from '@/types/course';
+export type { Course, Lesson, QuizSubmitResult, UserProgress } from '@/types/course';
 
 export const courseService = {
   listCourses: (): Promise<Course[]> => apiClient.get('/api/v1/courses'),
@@ -37,6 +37,6 @@ export const courseService = {
       answers,
     }),
 
-  getProgress: (userId: string) =>
+  getProgress: (userId: string): Promise<UserProgress[]> =>
     apiClient.get(`/api/v1/users/${userId}/progress`),
 };

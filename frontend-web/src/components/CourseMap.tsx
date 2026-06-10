@@ -1,24 +1,13 @@
-// components/CourseMap.tsx
-/**
- * Learning Path Course Map - Duolingo-inspired
- * 
- * Features:
- * - Visual node-based learning path
- * - Node states: completed, available, locked
- * - Progress tracking with XP rewards
- * - Decorative path with dots connecting nodes
- */
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Types
 interface Lesson {
     lesson_id: string;
     title: string;
     status: 'completed' | 'available' | 'locked';
-    type: 'flashcard' | 'quiz' | 'ar_session';
+    type: 'flashcard' | 'quiz' | 'ar_session' | 'lesson';
     xp_reward: number;
-    icon: string;
+    icon?: string;
 }
 
 interface Unit {
@@ -32,37 +21,6 @@ interface CourseMapProps {
     units?: Unit[];
 }
 
-// Mock data for demo
-const mockUnits: Unit[] = [
-    {
-        unit_id: 'unit_1',
-        title: 'Animal World',
-        lessons: [
-            { lesson_id: 'l1', title: 'Farm Friends', status: 'completed', type: 'flashcard', xp_reward: 50, icon: '🐔' },
-            { lesson_id: 'l2', title: 'Green Jungle', status: 'completed', type: 'quiz', xp_reward: 100, icon: '🦁' },
-            { lesson_id: 'l3', title: 'Deep Ocean', status: 'available', type: 'flashcard', xp_reward: 75, icon: '🐳' },
-            { lesson_id: 'l4', title: 'AR: Discover Animals', status: 'locked', type: 'ar_session', xp_reward: 150, icon: '📱' },
-        ]
-    },
-    {
-        unit_id: 'unit_2',
-        title: 'Colors & Shapes',
-        lessons: [
-            { lesson_id: 'l5', title: 'Rainbow Colors', status: 'locked', type: 'flashcard', xp_reward: 50, icon: '🌈' },
-            { lesson_id: 'l6', title: 'Fun Geometry', status: 'locked', type: 'quiz', xp_reward: 100, icon: '🔷' },
-        ]
-    },
-    {
-        unit_id: 'unit_3',
-        title: 'Family & Friends',
-        lessons: [
-            { lesson_id: 'l7', title: 'My Family', status: 'locked', type: 'flashcard', xp_reward: 50, icon: '👨‍👩‍👧' },
-            { lesson_id: 'l8', title: 'Close Friends', status: 'locked', type: 'quiz', xp_reward: 100, icon: '🤝' },
-        ]
-    },
-];
-
-// Lesson Node Component
 const LessonNode: React.FC<{
     lesson: Lesson;
     index: number;
@@ -70,73 +28,34 @@ const LessonNode: React.FC<{
 }> = ({ lesson, index, onSelect }) => {
     const isEven = index % 2 === 0;
 
-    const getNodeStyle = () => {
-        switch (lesson.status) {
-            case 'completed':
-                return 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/30 ring-4 ring-amber-200';
-            case 'available':
-                return 'bg-gradient-to-br from-cyan-400 to-sky-500 shadow-lg shadow-cyan-500/30 ring-4 ring-cyan-200 animate-pulse';
-            case 'locked':
-                return 'bg-gray-300 shadow-md';
-            default:
-                return 'bg-gray-300';
-        }
-    };
-
-    const getStatusIcon = () => {
-        switch (lesson.status) {
-            case 'completed':
-                return <span className="absolute -top-1 -right-1 text-2xl">⭐</span>;
-            case 'available':
-                return <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-ping"></span>;
-            case 'locked':
-                return <span className="absolute inset-0 flex items-center justify-center text-2xl opacity-50">🔒</span>;
-            default:
-                return null;
-        }
-    };
+    const nodeStyle = {
+        completed: 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/30 ring-4 ring-amber-200',
+        available: 'bg-gradient-to-br from-cyan-400 to-sky-500 shadow-lg shadow-cyan-500/30 ring-4 ring-cyan-200',
+        locked: 'bg-gray-300 shadow-md',
+    }[lesson.status];
 
     return (
-        <div
-            className={`relative z-10 flex w-[min(46%,11rem)] flex-col items-center sm:w-[min(44%,13rem)] lg:w-[min(38%,15rem)] ${isEven ? 'mr-auto ml-4 sm:ml-8 lg:ml-[12%]' : 'ml-auto mr-4 sm:mr-8 lg:mr-[12%]'}`}
-        >
-            {/* Node Button */}
+        <div className={`relative z-10 flex w-[min(46%,11rem)] flex-col items-center sm:w-[min(44%,13rem)] lg:w-[min(38%,15rem)] ${isEven ? 'ml-4 mr-auto sm:ml-8 lg:ml-[12%]' : 'ml-auto mr-4 sm:mr-8 lg:mr-[12%]'}`}>
             <button
                 onClick={() => lesson.status !== 'locked' && onSelect(lesson)}
                 disabled={lesson.status === 'locked'}
-                className={`
-                    relative w-16 h-16 sm:w-20 sm:h-20 rounded-full
-                    flex items-center justify-center
-                    text-3xl sm:text-4xl
-                    transform transition-all duration-300
-                    touch-target
-                    ${lesson.status !== 'locked' ? 'hover:scale-110 cursor-pointer active:scale-95' : 'cursor-not-allowed'}
-                    ${getNodeStyle()}
-                `}
+                className={`touch-target relative flex h-16 w-16 items-center justify-center rounded-full text-3xl transition-all duration-300 sm:h-20 sm:w-20 sm:text-4xl ${lesson.status !== 'locked' ? 'cursor-pointer hover:scale-110 active:scale-95' : 'cursor-not-allowed'} ${nodeStyle}`}
             >
-                {lesson.status !== 'locked' && lesson.icon}
-                {getStatusIcon()}
+                {lesson.status === 'locked' ? '🔒' : lesson.icon || '📚'}
+                {lesson.status === 'completed' && <span className="absolute -right-1 -top-1 text-2xl">⭐</span>}
             </button>
 
-            {/* Lesson Title */}
-            <div className={`
-                mt-2 w-full px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold text-center max-w-[120px] sm:max-w-[150px] lg:max-w-[170px]
-                ${lesson.status === 'locked' ? 'text-gray-400 bg-gray-100' : 'text-gray-700 bg-white/80 shadow-sm'}
-            `}>
+            <div className={`mt-2 w-full max-w-[120px] rounded-full px-2 py-1 text-center text-xs font-bold sm:max-w-[150px] sm:px-3 sm:text-sm lg:max-w-[170px] ${lesson.status === 'locked' ? 'bg-gray-100 text-gray-400' : 'bg-white/80 text-gray-700 shadow-sm'}`}>
                 {lesson.title}
             </div>
 
-            {/* XP Reward */}
             {lesson.status !== 'locked' && (
-                <span className="mt-1 text-xs font-bold text-amber-600">
-                    +{lesson.xp_reward} XP
-                </span>
+                <span className="mt-1 text-xs font-bold text-amber-600">+{lesson.xp_reward} XP</span>
             )}
         </div>
     );
 };
 
-// Lesson Detail Modal
 const LessonModal: React.FC<{
     lesson: Lesson | null;
     onClose: () => void;
@@ -144,164 +63,117 @@ const LessonModal: React.FC<{
 }> = ({ lesson, onClose, onStart }) => {
     if (!lesson) return null;
 
-    const getTypeLabel = () => {
-        switch (lesson.type) {
-            case 'flashcard': return '📚 Flashcards';
-            case 'quiz': return '❓ Quiz';
-            case 'ar_session': return '📱 AR Mode';
-            default: return lesson.type;
-        }
-    };
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50">
-            <div
-                className="bg-white rounded-3xl shadow-2xl max-w-xs sm:max-w-sm w-full p-4 sm:p-6 animate-slideUp max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-            >
-                {/* Close Button */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4">
+            <div className="relative max-h-[90vh] w-full max-w-xs overflow-y-auto rounded-3xl bg-white p-4 shadow-2xl sm:max-w-sm sm:p-6">
                 <button
                     onClick={onClose}
-                    className="absolute top-3 sm:top-4 right-3 sm:right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    className="absolute right-3 top-3 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 sm:right-4 sm:top-4"
                 >
-                    ✕
+                    ×
                 </button>
-
-                {/* Icon */}
-                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-4xl sm:text-5xl shadow-lg">
-                    {lesson.icon}
+                <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-4xl shadow-lg sm:mb-4 sm:h-20 sm:w-20 sm:text-5xl">
+                    {lesson.icon || '📚'}
                 </div>
-
-                {/* Title */}
-                <h2 className="text-xl sm:text-2xl font-black text-center text-gray-800 mb-2">
-                    {lesson.title}
-                </h2>
-
-                {/* Type Badge */}
-                <div className="flex justify-center mb-3 sm:mb-4">
-                    <span className="bg-sky-100 text-sky-600 px-3 py-1 rounded-full text-xs sm:text-sm font-bold">
-                        {getTypeLabel()}
-                    </span>
-                </div>
-
-                {/* XP Reward */}
-                <div className="text-center mb-4 sm:mb-6">
-                    <span className="text-amber-500 font-bold text-base sm:text-lg">
-                        ⚡ +{lesson.xp_reward} XP
-                    </span>
-                </div>
-
-                {/* Start Button */}
+                <h2 className="mb-2 text-center text-xl font-black text-gray-800 sm:text-2xl">{lesson.title}</h2>
+                <div className="mb-4 text-center text-amber-500 font-bold sm:mb-6">⚡ +{lesson.xp_reward} XP</div>
                 <button
                     onClick={onStart}
-                    className="w-full bg-gradient-to-r from-amber-400 to-orange-500 
-                             text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-2xl
-                             shadow-lg shadow-amber-500/30
-                             border-b-4 border-orange-600
-                             hover:shadow-xl hover:from-amber-500 hover:to-orange-600
-                             active:border-b-0 active:translate-y-1
-                             transition-all duration-200 min-h-[48px]"
+                    className="min-h-[48px] w-full rounded-2xl border-b-4 border-orange-600 bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-3 font-bold text-white shadow-lg shadow-amber-500/30 transition-all duration-200 hover:from-amber-500 hover:to-orange-600 active:translate-y-1 active:border-b-0 sm:px-6 sm:py-4"
                 >
-                    BẮT ĐẦU HỌC 🚀
+                    Start Lesson
                 </button>
             </div>
         </div>
     );
 };
 
-// Main CourseMap Component
 export const CourseMap: React.FC<CourseMapProps> = ({
-    courseName = "Tiếng Anh vỡ lòng",
-    units = mockUnits
+    courseName = 'Learning Path',
+    units = [],
 }) => {
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const navigate = useNavigate();
 
+    const { totalLessons, completedLessons, progressPercent } = useMemo(() => {
+        const total = units.reduce((acc, unit) => acc + unit.lessons.length, 0);
+        const completed = units.reduce((acc, unit) => acc + unit.lessons.filter(lesson => lesson.status === 'completed').length, 0);
+        return {
+            totalLessons: total,
+            completedLessons: completed,
+            progressPercent: total > 0 ? Math.round((completed / total) * 100) : 0,
+        };
+    }, [units]);
+
     const handleStartLesson = () => {
         if (!selectedLesson) return;
 
-        // Navigate based on lesson type
-        switch (selectedLesson.type) {
-            case 'flashcard':
-                navigate('/flashcards');
-                break;
-            case 'ar_session':
-                navigate('/learn-ar');
-                break;
-            case 'quiz':
-                navigate('/courses');
-                break;
-            default:
-                navigate('/courses');
+        if (selectedLesson.type === 'ar_session') {
+            navigate('/learn-ar');
+        } else if (selectedLesson.type === 'flashcard') {
+            navigate('/flashcards');
+        } else {
+            navigate('/courses');
         }
         setSelectedLesson(null);
     };
 
-    // Calculate progress
-    const totalLessons = units.reduce((acc, unit) => acc + unit.lessons.length, 0);
-    const completedLessons = units.reduce((acc, unit) =>
-        acc + unit.lessons.filter(l => l.status === 'completed').length, 0
-    );
-    const progressPercent = Math.round((completedLessons / totalLessons) * 100);
-
     return (
-        <div className="min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-amber-50 py-4 sm:py-6 lg:py-10 px-2 sm:px-4 lg:px-8">
-            {/* Header */}
+        <div className="min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-amber-50 px-2 py-4 sm:px-4 sm:py-6 lg:px-8 lg:py-10">
             <div className="mx-auto mb-6 max-w-sm sm:mb-8 sm:max-w-lg lg:max-w-3xl">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-800 text-center mb-3 sm:mb-2">
+                <h1 className="mb-3 text-center text-2xl font-black text-gray-800 sm:mb-2 sm:text-3xl lg:text-4xl">
                     {courseName}
                 </h1>
-
-                {/* Progress Bar */}
-                <div className="bg-white rounded-full p-2 shadow-md lg:p-3">
+                <div className="rounded-full bg-white p-2 shadow-md lg:p-3">
                     <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="flex-1 h-2 sm:h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-200 sm:h-3">
                             <div
-                                className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-500"
+                                className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
                                 style={{ width: `${progressPercent}%` }}
                             />
                         </div>
-                        <span className="text-xs sm:text-sm font-bold text-gray-600 whitespace-nowrap">
+                        <span className="whitespace-nowrap text-xs font-bold text-gray-600 sm:text-sm">
                             {completedLessons}/{totalLessons}
                         </span>
                     </div>
                 </div>
             </div>
 
-            {/* Learning Path */}
-            <div className="mx-auto max-w-sm sm:max-w-lg lg:max-w-3xl xl:max-w-4xl relative">
-                {/* Decorative Path Line */}
-                <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-300 via-sky-300 to-gray-300 -translate-x-1/2 rounded-full" />
-
-                {/* Units */}
-                {units.map((unit, unitIndex) => (
-                    <div key={unit.unit_id} className="relative mb-8 sm:mb-12 lg:mb-14">
-                        {/* Unit Header */}
-                        <div className="relative z-10 mx-auto mb-4 max-w-xs rounded-2xl bg-white p-3 shadow-md sm:mb-6 sm:max-w-sm sm:p-4 lg:max-w-md">
-                            <h2 className="text-base sm:text-lg font-black text-gray-700 text-center">
-                                {unit.title}
-                            </h2>
-                            <p className="text-xs sm:text-sm text-gray-500 text-center">
-                                {unit.lessons.filter(l => l.status === 'completed').length}/{unit.lessons.length} bài đã hoàn thành
-                            </p>
-                        </div>
-
-                        {/* Lessons in this unit */}
-                        <div className="space-y-6 sm:space-y-8 lg:space-y-10">
-                            {unit.lessons.map((lesson, lessonIndex) => (
-                                <LessonNode
-                                    key={lesson.lesson_id}
-                                    lesson={lesson}
-                                    index={unitIndex * 10 + lessonIndex}
-                                    onSelect={setSelectedLesson}
-                                />
-                            ))}
-                        </div>
+            <div className="relative mx-auto max-w-sm sm:max-w-lg lg:max-w-3xl xl:max-w-4xl">
+                {units.length === 0 ? (
+                    <div className="relative z-10 rounded-3xl bg-white p-6 text-center shadow-md">
+                        <h2 className="text-xl font-black text-gray-800">No learning path loaded</h2>
+                        <p className="mt-2 text-sm font-bold text-gray-500">
+                            Pass MongoDB-backed units into CourseMap before rendering lessons.
+                        </p>
                     </div>
-                ))}
+                ) : (
+                    <>
+                        <div className="absolute bottom-0 left-1/2 top-0 w-1 -translate-x-1/2 rounded-full bg-gradient-to-b from-amber-300 via-sky-300 to-gray-300" />
+                        {units.map((unit, unitIndex) => (
+                            <div key={unit.unit_id} className="relative mb-8 sm:mb-12 lg:mb-14">
+                                <div className="relative z-10 mx-auto mb-4 max-w-xs rounded-2xl bg-white p-3 shadow-md sm:mb-6 sm:max-w-sm sm:p-4 lg:max-w-md">
+                                    <h2 className="text-center text-base font-black text-gray-700 sm:text-lg">{unit.title}</h2>
+                                    <p className="text-center text-xs text-gray-500 sm:text-sm">
+                                        {unit.lessons.filter(lesson => lesson.status === 'completed').length}/{unit.lessons.length} completed
+                                    </p>
+                                </div>
+                                <div className="space-y-6 sm:space-y-8 lg:space-y-10">
+                                    {unit.lessons.map((lesson, lessonIndex) => (
+                                        <LessonNode
+                                            key={lesson.lesson_id}
+                                            lesson={lesson}
+                                            index={unitIndex * 10 + lessonIndex}
+                                            onSelect={setSelectedLesson}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </>
+                )}
             </div>
 
-            {/* Lesson Detail Modal */}
             {selectedLesson && (
                 <LessonModal
                     lesson={selectedLesson}
