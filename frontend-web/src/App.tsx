@@ -230,6 +230,8 @@ const App = () => {
         <Route path="/flashcards" element={<RequireUserAuth><Layout><FlashcardPage /></Layout></RequireUserAuth>} />
         <Route path="/learn-ar" element={<RequireLearnerAccess><LearnARV2 /></RequireLearnerAccess>} />
         <Route path="/courses" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/animals" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/level/:level" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/:id" element={<RequireLearnerAccess><Layout><CourseDetail /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/:courseId/lessons/:lessonId" element={<RequireLearnerAccess><Layout><LessonPlayer /></Layout></RequireLearnerAccess>} />
         <Route path="/profile" element={<RequireUserAuth><Layout><Profile /></Layout></RequireUserAuth>} />
