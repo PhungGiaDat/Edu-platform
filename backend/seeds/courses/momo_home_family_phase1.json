@@ -2364,5 +2364,46 @@
       },
       "arReference": null
     }
-  ]
+  ],
+  "catalogPreview": [
+    {
+      "label": "Sections",
+      "value": "6",
+      "color": "emerald"
+    },
+    {
+      "label": "Home words",
+      "value": "19",
+      "color": "sky"
+    },
+    {
+      "label": "Speaking tests",
+      "value": "6",
+      "color": "violet"
+    },
+    {
+      "label": "Reward XP",
+      "value": "480",
+      "color": "rose"
+    }
+  ],
+  "studentTestimonials": [
+    {
+      "name": "Linh, 5",
+      "role": "Young learner",
+      "quote": "Con n?i apple v? happy r?t vui!",
+      "avatar": "L"
+    },
+    {
+      "name": "Ba c?a Bin",
+      "role": "Parent",
+      "quote": "N?i dung g?n g?i trong nh? n?n b? nh? nhanh.",
+      "avatar": "B"
+    }
+  ],
+  "enrollmentCta": {
+    "headline": "H?c ti?ng Anh trong ng?i nh? nh?",
+    "body": "T? gia ??nh, ?? v?t, m?n ?n v? c?m x?c ???c h?c b?ng h?nh, ?m thanh v? tr? ch?i.",
+    "buttonLabel": "B?t ??u v?i ng?i nh?"
+  }
 }

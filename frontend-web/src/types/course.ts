@@ -103,6 +103,25 @@ export interface Reward {
   message_vi: string;
 }
 
+export interface CourseCatalogPreview {
+  label: string;
+  value: string;
+  color: string;
+}
+
+export interface StudentTestimonial {
+  name: string;
+  role: string;
+  quote: string;
+  avatar: string;
+}
+
+export interface EnrollmentCTA {
+  headline: string;
+  body: string;
+  buttonLabel: string;
+}
+
 export interface Lesson {
   id?: string;
   lesson_id: string;
@@ -135,6 +154,9 @@ export interface Course {
   level: 'beginner' | 'intermediate' | 'advanced';
   description_vi: string;
   thumbnail?: AssetReference | null;
+  catalogPreview: CourseCatalogPreview[];
+  studentTestimonials: StudentTestimonial[];
+  enrollmentCta?: EnrollmentCTA | null;
   lessons: Lesson[];
   is_published: boolean;
 }
