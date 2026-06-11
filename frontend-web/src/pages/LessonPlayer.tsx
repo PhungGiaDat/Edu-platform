@@ -6,6 +6,7 @@ import {
     AssetTile,
     ImageQuiz,
     PronunciationCard,
+    ReadAloudStoryCard,
     RewardPopup,
     SectionGameCard,
     VideoScenePreview,
@@ -107,6 +108,12 @@ export const LessonPlayer: React.FC = () => {
                 label: 'Words',
                 title: 'New words',
                 content: <VocabularyCards items={lesson.vocabulary} />,
+            },
+            lesson.readAloudStory && {
+                id: 'read',
+                label: 'Read',
+                title: 'Read-aloud story',
+                content: <ReadAloudStoryCard story={lesson.readAloudStory} />,
             },
             lesson.pronunciation && {
                 id: 'say',

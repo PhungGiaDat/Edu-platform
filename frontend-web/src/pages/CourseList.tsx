@@ -30,6 +30,12 @@ const levelIcon: Record<string, string> = {
     advanced: '🏆',
 };
 
+const categoryFallback: Record<string, { title: string; icon: string }> = {
+    nature: { title: 'Thiên nhiên', icon: 'Nature' },
+    home_family: { title: 'Gia đình', icon: 'Home' },
+    school_food: { title: 'Trường học', icon: 'School' },
+};
+
 const getLearnerId = (userId?: string | null, isGuest?: boolean) => (
     userId || (isGuest ? 'guest-learner' : null)
 );
@@ -93,10 +99,49 @@ const buildLevelPath = (
     };
 };
 
+const buildCategoryPath = (
+    categoryKey: string,
+    courses: Course[],
+    progressByCourse: Map<string, UserProgress>,
+): PathFilter | null => {
+    const pathCourses = courses.filter(course => (course.category_key || course.level) === categoryKey);
+    if (pathCourses.length === 0) return null;
+
+    const totals = pathCourses.reduce(
+        (acc, course) => {
+            const courseProgress = getCourseProgress(course, progressByCourse.get(course.course_id));
+            return {
+                completedCourses: acc.completedCourses + (courseProgress.progressPercent >= 100 ? 1 : 0),
+                completedLessons: acc.completedLessons + courseProgress.completedLessons,
+                totalLessons: acc.totalLessons + courseProgress.totalLessons,
+            };
+        },
+        { completedCourses: 0, completedLessons: 0, totalLessons: 0 },
+    );
+
+    const first = pathCourses[0];
+    const fallback = categoryFallback[categoryKey] || { title: first.category_label || categoryKey, icon: first.category_icon || 'Learn' };
+    const progressPercent = totals.totalLessons > 0
+        ? Math.round((totals.completedLessons / totals.totalLessons) * 100)
+        : 0;
+
+    return {
+        key: categoryKey,
+        title: first.category_label || fallback.title,
+        subtitle: `${pathCourses.length} course${pathCourses.length === 1 ? '' : 's'}`,
+        icon: first.category_icon || fallback.icon,
+        courses: pathCourses,
+        completedCourses: totals.completedCourses,
+        completedLessons: totals.completedLessons,
+        totalLessons: totals.totalLessons,
+        progressPercent,
+    };
+};
+
 export const CourseList: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { level, pathId } = useParams();
+    const { level, pathId, category } = useParams();
     const { user, isGuest } = useAuth();
     const learnerId = getLearnerId(user?.id, isGuest);
     const [courses, setCourses] = useState<Course[]>([]);
@@ -105,7 +150,7 @@ export const CourseList: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
 
-    const activeFilter = level || pathId || (location.pathname.endsWith('/animals') ? 'animals' : null);
+    const activeFilter = category || level || pathId || (location.pathname.endsWith('/animals') ? 'animals' : null);
 
     const loadCourses = async () => {
         setIsLoading(true);
@@ -136,6 +181,12 @@ export const CourseList: React.FC = () => {
     );
 
     const learningPaths = useMemo(() => {
+        const categoryKeys = Array.from(new Set(courses.map(course => course.category_key || course.level))).sort();
+        const categoryPaths = categoryKeys
+            .map(categoryKey => buildCategoryPath(categoryKey, courses, progressByCourse))
+            .filter((path): path is PathFilter => Boolean(path));
+        if (categoryPaths.length > 0) return categoryPaths;
+
         const levels = Array.from(new Set(courses.map(course => course.level))).sort();
         return levels
             .map(pathLevel => buildLevelPath(pathLevel, courses, progressByCourse))
@@ -145,6 +196,9 @@ export const CourseList: React.FC = () => {
     const filteredCourses = useMemo(() => {
         if (!activeFilter) return courses;
         if (activeFilter === 'animals') return courses.filter(isAnimalNatureCourse);
+        if (courses.some(course => course.category_key === activeFilter)) {
+            return courses.filter(course => course.category_key === activeFilter);
+        }
         if (['beginner', 'intermediate', 'advanced'].includes(activeFilter)) {
             return courses.filter(course => course.level === activeFilter);
         }
@@ -153,6 +207,8 @@ export const CourseList: React.FC = () => {
 
     const pageTitle = activeFilter === 'animals'
         ? 'Animals and Nature'
+        : activeFilter && courses.some(course => course.category_key === activeFilter)
+            ? courses.find(course => course.category_key === activeFilter)?.category_label || activeFilter
         : activeFilter && ['beginner', 'intermediate', 'advanced'].includes(activeFilter)
             ? levelLabel[activeFilter] || activeFilter
             : 'Course Catalog';
@@ -230,7 +286,7 @@ export const CourseList: React.FC = () => {
                             {learningPaths.map(path => (
                                 <button
                                     key={path.key}
-                                    onClick={() => navigate(`/courses/level/${path.key}`)}
+                                    onClick={() => navigate(`/courses/category/${path.key}`)}
                                     className="group min-w-0 rounded-[32px] border-4 border-white bg-white p-5 text-left shadow-[0_10px_0_rgba(91,141,239,0.12)] transition-transform hover:-translate-y-1"
                                 >
                                     <div className="grid min-w-0 grid-cols-[72px_minmax(0,1fr)_auto] gap-4">

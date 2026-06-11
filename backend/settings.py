@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     STATIC_DIR: Path = BASE_DIR / "static"
     UPLOAD_DIR: Path = BASE_DIR / "uploads"
     LEARNAR_ASSETS_BUCKET: str = "learnar-assets"
+    SUPABASE_URL: Optional[str] = None
+    SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
     
     # ========== Server ==========
     HOST: str = "0.0.0.0"
