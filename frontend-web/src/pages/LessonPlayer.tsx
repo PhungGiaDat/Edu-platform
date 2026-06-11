@@ -5,7 +5,9 @@ import {
     ActivityCard,
     AssetTile,
     ImageQuiz,
+    PronunciationCard,
     RewardPopup,
+    SectionGameCard,
     VideoScenePreview,
     VocabularyCards,
 } from '@/components/courses/CourseLearningBlocks';
@@ -91,7 +93,7 @@ export const LessonPlayer: React.FC = () => {
                 <header className="mb-6 rounded-[32px] border-4 border-white bg-white/85 p-5 shadow-[0_10px_0_rgba(91,141,239,0.12)]">
                     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
                         <div>
-                            <p className="text-sm font-black text-sky-600">Lesson {lesson.order} • {lesson.duration_minutes} min</p>
+                            <p className="text-sm font-black text-sky-600">Section {lesson.order} - {lesson.duration_minutes} min</p>
                             <h1 className="mt-1 text-3xl font-black leading-tight text-slate-800 sm:text-4xl">{lesson.title}</h1>
                             <p className="mt-2 text-lg font-bold text-slate-500">{lesson.title_vi || lesson.description}</p>
                         </div>
@@ -103,17 +105,19 @@ export const LessonPlayer: React.FC = () => {
                     {lesson.videoLesson && <section className="rounded-[28px] border-4 border-white bg-slate-950 p-4 text-white shadow-[0_8px_0_rgba(15,23,42,0.16)]">
                         <div className="flex aspect-video items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-emerald-300 text-center">
                             <div>
-                                <div className="text-6xl">▶️</div>
+                                <div className="text-5xl font-black">Play</div>
                                 <p className="mt-2 text-xl font-black">{lesson.videoLesson.title}</p>
                                 <p className="text-sm font-bold opacity-80">
-                                    {lesson.videoLesson.duration_seconds}s • {lesson.videoLesson.video.status}
+                                    {lesson.videoLesson.duration_seconds}s - {lesson.videoLesson.video.status}
                                 </p>
                             </div>
                         </div>
                     </section>}
 
                     {lesson.videoLesson && <VideoScenePreview scenes={lesson.videoLesson.scenes} />}
+                    {lesson.game && <SectionGameCard game={lesson.game} />}
                     <VocabularyCards items={lesson.vocabulary} />
+                    {lesson.pronunciation && <PronunciationCard task={lesson.pronunciation} />}
                     {lesson.activity && <ActivityCard activity={lesson.activity} />}
 
                     {lesson.arReference && (

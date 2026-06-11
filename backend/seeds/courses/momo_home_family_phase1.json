@@ -1,91 +1,91 @@
 {
-  "course_id": "momo-nature-english-5-7",
-  "title": "B? G?u Momo H?c Ti?ng Anh C?ng Thi?n Nhi?n",
+  "course_id": "momo-home-family-english-5-7",
+  "title": "B? G?u Momo H?c Ti?ng Anh Trong Ng?i Nh? Nh?",
   "description": "Short visual English course for children aged 5-7.",
-  "subtitle_vi": "H?c t? thi?n nhi?n qua video, tr? ch?i v? ph?t ?m.",
-  "theme": "Animals and Nature",
+  "subtitle_vi": "H?c t? gia ??nh, ?? v?t v? c?m x?c trong nh?.",
+  "theme": "Home, Family and Feelings",
   "age_range": "5-7",
   "level": "beginner",
   "description_vi": "M?i ph?n h?c c? video ng?n, tr? ch?i, luy?n ph?t ?m, ho?t ??ng h?nh ?nh, quiz v? sticker th??ng.",
   "thumbnail_url": null,
   "thumbnail": {
     "bucket": "learnar-assets",
-    "path": "courses/momo-nature-english-5-7/images/course-cover.png",
+    "path": "courses/momo-home-family-english-5-7/images/course-cover.png",
     "type": "image",
     "status": "pending"
   },
   "is_published": true,
   "lessons": [
     {
-      "id": "meet-the-elephant",
-      "lesson_id": "meet-the-elephant",
-      "title": "Meet the Elephant",
-      "description": "Nghe v? ch?m v?o h?nh con voi.",
+      "id": "hello-family",
+      "lesson_id": "hello-family",
+      "title": "Hello Family",
+      "description": "B? h?c c?c th?nh vi?n gia ??nh.",
       "video": {
-        "title": "Meet the Elephant",
-        "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/meet-the-elephant/video.mp4",
+        "title": "Hello Family",
+        "url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/hello-family/video.mp4",
         "duration_seconds": 90,
-        "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/meet-the-elephant/thumb.png"
+        "thumbnail_url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/hello-family/thumb.png"
       },
       "content": null,
-      "title_vi": "G?p b?n voi",
+      "title_vi": "Ch?o gia ??nh",
       "order": 1,
       "is_completed": false,
       "duration_minutes": 5,
       "videoLesson": {
-        "title": "Meet the Elephant",
+        "title": "Hello Family",
         "duration_seconds": 90,
         "video": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/video.mp4",
+          "path": "courses/momo-home-family-english-5-7/lessons/hello-family/video.mp4",
           "type": "video",
           "status": "pending"
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/thumb.png",
+          "path": "courses/momo-home-family-english-5-7/lessons/hello-family/thumb.png",
           "type": "image",
           "status": "pending"
         },
         "scenes": [
           {
-            "scene_id": "meet-the-elephant-scene-1",
+            "scene_id": "hello-family-scene-1",
             "order": 1,
             "duration_seconds": 24,
-            "visual_prompt": "Cute classroom style scene for Elephant.",
-            "narration_vi": "Momo nh?n th?y con voi.",
-            "audio_text_en": "Look! Elephant!",
+            "visual_prompt": "Cute classroom style scene for Mom.",
+            "narration_vi": "Momo nh?n th?y m?.",
+            "audio_text_en": "Look! Mom!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-1.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
-            "scene_id": "meet-the-elephant-scene-2",
+            "scene_id": "hello-family-scene-2",
             "order": 2,
             "duration_seconds": 24,
-            "visual_prompt": "Bright picture story for Big.",
-            "narration_vi": "B? nghe v? n?i Big.",
-            "audio_text_en": "Say Big with Momo.",
+            "visual_prompt": "Bright picture story for Dad.",
+            "narration_vi": "B? nghe v? n?i Dad.",
+            "audio_text_en": "Say Dad with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-2.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
-            "scene_id": "meet-the-elephant-scene-3",
+            "scene_id": "hello-family-scene-3",
             "order": 3,
             "duration_seconds": 24,
-            "visual_prompt": "Happy reward scene with Trunk.",
+            "visual_prompt": "Happy reward scene with Baby.",
             "narration_vi": "Momo v? tay khen b?.",
-            "audio_text_en": "Good job! Trunk!",
+            "audio_text_en": "Good job! Baby!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-3.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -94,110 +94,110 @@
       },
       "vocabulary": [
         {
-          "word_en": "Elephant",
-          "word_vi": "con voi",
-          "emoji": "elephant",
+          "word_en": "Mom",
+          "word_vi": "m?",
+          "emoji": "mom",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/audio/elephant.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/audio/mom.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/stickers/elephant.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/stickers/mom.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The elephant is big."
+          "simple_sentence": "Mom is kind."
         },
         {
-          "word_en": "Big",
-          "word_vi": "to",
-          "emoji": "big",
+          "word_en": "Dad",
+          "word_vi": "ba",
+          "emoji": "dad",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/audio/big.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/audio/dad.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/stickers/big.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/stickers/dad.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "It is big."
+          "simple_sentence": "Dad is happy."
         },
         {
-          "word_en": "Trunk",
-          "word_vi": "c?i v?i",
-          "emoji": "trunk",
+          "word_en": "Baby",
+          "word_vi": "em b?",
+          "emoji": "baby",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/audio/trunk.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/audio/baby.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/stickers/trunk.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/stickers/baby.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The trunk is long."
+          "simple_sentence": "The baby smiles."
         }
       ],
       "game": {
-        "game_id": "meet-the-elephant-quick-game",
+        "game_id": "hello-family-quick-game",
         "type": "listen_and_tap",
         "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
-        "prompt_audio_text": "Tap elephant.",
+        "prompt_audio_text": "Tap mom.",
         "items": [
           {
             "id": "game-1",
-            "label": "Elephant",
+            "label": "Mom",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/games/elephant.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/games/mom.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "game-2",
-            "label": "Big",
+            "label": "Dad",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/games/big.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/games/dad.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "game-3",
-            "label": "Trunk",
+            "label": "Baby",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/games/trunk.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/games/baby.png",
               "type": "image",
               "status": "pending"
             }
@@ -206,17 +206,17 @@
         "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
       },
       "pronunciation": {
-        "task_id": "meet-the-elephant-say",
+        "task_id": "hello-family-say",
         "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
-        "prompt_audio_text": "Elephant, Big, Trunk",
+        "prompt_audio_text": "Mom, Dad, Baby",
         "target_words": [
-          "Elephant",
-          "Big",
-          "Trunk"
+          "Mom",
+          "Dad",
+          "Baby"
         ],
         "audio": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/audio/pronunciation.mp3",
+          "path": "courses/momo-home-family-english-5-7/lessons/hello-family/audio/pronunciation.mp3",
           "type": "audio",
           "status": "pending"
         },
@@ -224,37 +224,37 @@
         "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
       },
       "activity": {
-        "activity_id": "meet-the-elephant-activity",
+        "activity_id": "hello-family-activity",
         "type": "match_picture",
         "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
-        "prompt_audio_text": "Find Elephant and Big.",
+        "prompt_audio_text": "Find Mom and Dad.",
         "items": [
           {
             "id": "activity-1",
-            "label": "Elephant",
+            "label": "Mom",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/activities/elephant.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/activities/mom.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "activity-2",
-            "label": "Big",
+            "label": "Dad",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/activities/big.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/activities/dad.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "activity-3",
-            "label": "Trunk",
+            "label": "Baby",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/activities/trunk.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/activities/baby.png",
               "type": "image",
               "status": "pending"
             }
@@ -264,125 +264,125 @@
       },
       "quiz": [
         {
-          "question_id": "meet-the-elephant-q1",
+          "question_id": "hello-family-q1",
           "type": "image_choice",
-          "prompt_vi": "Con nghe t? n?o?",
-          "questionAudioText": "Tap elephant.",
+          "prompt_vi": "Con ch?n mom.",
+          "questionAudioText": "Tap mom.",
           "options": [
             {
-              "option_id": "meet-the-elephant-q1-1",
-              "label": "Elephant",
+              "option_id": "hello-family-q1-1",
+              "label": "Mom",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q1-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "meet-the-elephant-q1-2",
-              "label": "Tree",
+              "option_id": "hello-family-q1-2",
+              "label": "Dog",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q1-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "meet-the-elephant-q1-3",
-              "label": "Sun",
+              "option_id": "hello-family-q1-3",
+              "label": "Cup",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q1-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "meet-the-elephant-q1-1",
+          "correctOptionId": "hello-family-q1-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         },
         {
-          "question_id": "meet-the-elephant-q2",
+          "question_id": "hello-family-q2",
           "type": "image_choice",
-          "prompt_vi": "C?i v?i l? t? n?o?",
-          "questionAudioText": "Find trunk.",
+          "prompt_vi": "Dad l? ai?",
+          "questionAudioText": "Dad.",
           "options": [
             {
-              "option_id": "meet-the-elephant-q2-1",
-              "label": "Ear",
+              "option_id": "hello-family-q2-1",
+              "label": "ba",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q2-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "meet-the-elephant-q2-2",
-              "label": "Trunk",
+              "option_id": "hello-family-q2-2",
+              "label": "m?",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q2-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "meet-the-elephant-q2-3",
-              "label": "Leaf",
+              "option_id": "hello-family-q2-3",
+              "label": "b?",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q2-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "meet-the-elephant-q2-2",
+          "correctOptionId": "hello-family-q2-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         },
         {
-          "question_id": "meet-the-elephant-q3",
+          "question_id": "hello-family-q3",
           "type": "image_choice",
-          "prompt_vi": "Big ngh?a l? g??",
-          "questionAudioText": "Big.",
+          "prompt_vi": "Baby ngh?a l? g??",
+          "questionAudioText": "Baby.",
           "options": [
             {
-              "option_id": "meet-the-elephant-q3-1",
-              "label": "nh?",
+              "option_id": "hello-family-q3-1",
+              "label": "em b?",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q3-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "meet-the-elephant-q3-2",
-              "label": "to",
+              "option_id": "hello-family-q3-2",
+              "label": "b?n",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q3-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "meet-the-elephant-q3-3",
-              "label": "xanh",
+              "option_id": "hello-family-q3-3",
+              "label": "c?a",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q3-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "meet-the-elephant-q3-2",
+          "correctOptionId": "hello-family-q3-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         }
@@ -391,85 +391,85 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/rewards/sticker.png",
+          "path": "courses/momo-home-family-english-5-7/lessons/hello-family/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
-        "badgeTitle": "Elephant Star",
+        "badgeTitle": "Family Hello",
         "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
       },
       "arReference": null
     },
     {
-      "id": "the-green-tree",
-      "lesson_id": "the-green-tree",
-      "title": "The Green Tree",
-      "description": "B? h?c v? c?y v? l?.",
+      "id": "my-room",
+      "lesson_id": "my-room",
+      "title": "My Room",
+      "description": "B? h?c ?? v?t trong ph?ng.",
       "video": {
-        "title": "The Green Tree",
-        "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/the-green-tree/video.mp4",
+        "title": "My Room",
+        "url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/my-room/video.mp4",
         "duration_seconds": 90,
-        "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/the-green-tree/thumb.png"
+        "thumbnail_url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/my-room/thumb.png"
       },
       "content": null,
-      "title_vi": "C?y xanh",
+      "title_vi": "Ph?ng c?a b?",
       "order": 2,
       "is_completed": false,
       "duration_minutes": 5,
       "videoLesson": {
-        "title": "The Green Tree",
+        "title": "My Room",
         "duration_seconds": 90,
         "video": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/video.mp4",
+          "path": "courses/momo-home-family-english-5-7/lessons/my-room/video.mp4",
           "type": "video",
           "status": "pending"
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/thumb.png",
+          "path": "courses/momo-home-family-english-5-7/lessons/my-room/thumb.png",
           "type": "image",
           "status": "pending"
         },
         "scenes": [
           {
-            "scene_id": "the-green-tree-scene-1",
+            "scene_id": "my-room-scene-1",
             "order": 1,
             "duration_seconds": 24,
-            "visual_prompt": "Cute classroom style scene for Tree.",
-            "narration_vi": "Momo nh?n th?y c?y.",
-            "audio_text_en": "Look! Tree!",
+            "visual_prompt": "Cute classroom style scene for Bed.",
+            "narration_vi": "Momo nh?n th?y gi??ng.",
+            "audio_text_en": "Look! Bed!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-1.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
-            "scene_id": "the-green-tree-scene-2",
+            "scene_id": "my-room-scene-2",
             "order": 2,
             "duration_seconds": 24,
-            "visual_prompt": "Bright picture story for Leaf.",
-            "narration_vi": "B? nghe v? n?i Leaf.",
-            "audio_text_en": "Say Leaf with Momo.",
+            "visual_prompt": "Bright picture story for Chair.",
+            "narration_vi": "B? nghe v? n?i Chair.",
+            "audio_text_en": "Say Chair with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-2.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
-            "scene_id": "the-green-tree-scene-3",
+            "scene_id": "my-room-scene-3",
             "order": 3,
             "duration_seconds": 24,
-            "visual_prompt": "Happy reward scene with Green.",
+            "visual_prompt": "Happy reward scene with Toy.",
             "narration_vi": "Momo v? tay khen b?.",
-            "audio_text_en": "Good job! Green!",
+            "audio_text_en": "Good job! Toy!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-3.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -478,110 +478,110 @@
       },
       "vocabulary": [
         {
-          "word_en": "Tree",
-          "word_vi": "c?y",
-          "emoji": "tree",
+          "word_en": "Bed",
+          "word_vi": "gi??ng",
+          "emoji": "bed",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/tree.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/bed.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/audio/tree.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/audio/bed.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/stickers/tree.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/stickers/bed.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The tree is green."
+          "simple_sentence": "The bed is soft."
         },
         {
-          "word_en": "Leaf",
-          "word_vi": "chi?c l?",
-          "emoji": "leaf",
+          "word_en": "Chair",
+          "word_vi": "gh?",
+          "emoji": "chair",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/leaf.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/chair.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/audio/leaf.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/audio/chair.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/stickers/leaf.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/stickers/chair.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "A leaf is small."
+          "simple_sentence": "Sit on the chair."
         },
         {
-          "word_en": "Green",
-          "word_vi": "m?u xanh l?",
-          "emoji": "green",
+          "word_en": "Toy",
+          "word_vi": "?? ch?i",
+          "emoji": "toy",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/green.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/toy.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/audio/green.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/audio/toy.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/stickers/green.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/stickers/toy.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "It is green."
+          "simple_sentence": "I like my toy."
         }
       ],
       "game": {
-        "game_id": "the-green-tree-quick-game",
+        "game_id": "my-room-quick-game",
         "type": "listen_and_tap",
         "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
-        "prompt_audio_text": "Tap tree.",
+        "prompt_audio_text": "Tap bed.",
         "items": [
           {
             "id": "game-1",
-            "label": "Tree",
+            "label": "Bed",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/games/tree.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/games/bed.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "game-2",
-            "label": "Leaf",
+            "label": "Chair",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/games/leaf.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/games/chair.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "game-3",
-            "label": "Green",
+            "label": "Toy",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/games/green.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/games/toy.png",
               "type": "image",
               "status": "pending"
             }
@@ -590,17 +590,17 @@
         "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
       },
       "pronunciation": {
-        "task_id": "the-green-tree-say",
+        "task_id": "my-room-say",
         "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
-        "prompt_audio_text": "Tree, Leaf, Green",
+        "prompt_audio_text": "Bed, Chair, Toy",
         "target_words": [
-          "Tree",
-          "Leaf",
-          "Green"
+          "Bed",
+          "Chair",
+          "Toy"
         ],
         "audio": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/audio/pronunciation.mp3",
+          "path": "courses/momo-home-family-english-5-7/lessons/my-room/audio/pronunciation.mp3",
           "type": "audio",
           "status": "pending"
         },
@@ -608,37 +608,37 @@
         "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
       },
       "activity": {
-        "activity_id": "the-green-tree-activity",
+        "activity_id": "my-room-activity",
         "type": "match_picture",
         "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
-        "prompt_audio_text": "Find Tree and Leaf.",
+        "prompt_audio_text": "Find Bed and Chair.",
         "items": [
           {
             "id": "activity-1",
-            "label": "Tree",
+            "label": "Bed",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/activities/tree.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/activities/bed.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "activity-2",
-            "label": "Leaf",
+            "label": "Chair",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/activities/leaf.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/activities/chair.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "activity-3",
-            "label": "Green",
+            "label": "Toy",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/activities/green.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/activities/toy.png",
               "type": "image",
               "status": "pending"
             }
@@ -648,125 +648,125 @@
       },
       "quiz": [
         {
-          "question_id": "the-green-tree-q1",
+          "question_id": "my-room-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n c?y nh?.",
-          "questionAudioText": "Tap tree.",
+          "prompt_vi": "Con ch?n bed.",
+          "questionAudioText": "Tap bed.",
           "options": [
             {
-              "option_id": "the-green-tree-q1-1",
+              "option_id": "my-room-q1-1",
+              "label": "Bed",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q1-1.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "my-room-q1-2",
               "label": "Tree",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q1-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "the-green-tree-q1-2",
-              "label": "Elephant",
+              "option_id": "my-room-q1-3",
+              "label": "Sun",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q1-2.png",
-                "type": "image",
-                "status": "pending"
-              }
-            },
-            {
-              "option_id": "the-green-tree-q1-3",
-              "label": "River",
-              "image": {
-                "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q1-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "the-green-tree-q1-1",
+          "correctOptionId": "my-room-q1-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         },
         {
-          "question_id": "the-green-tree-q2",
+          "question_id": "my-room-q2",
           "type": "image_choice",
-          "prompt_vi": "Green l? m?u g??",
-          "questionAudioText": "Find green.",
+          "prompt_vi": "Chair l? g??",
+          "questionAudioText": "Chair.",
           "options": [
             {
-              "option_id": "the-green-tree-q2-1",
-              "label": "??",
+              "option_id": "my-room-q2-1",
+              "label": "gh?",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q2-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "the-green-tree-q2-2",
-              "label": "xanh l?",
+              "option_id": "my-room-q2-2",
+              "label": "b?ng",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q2-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "the-green-tree-q2-3",
-              "label": "v?ng",
+              "option_id": "my-room-q2-3",
+              "label": "m?o",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q2-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "the-green-tree-q2-2",
+          "correctOptionId": "my-room-q2-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         },
         {
-          "question_id": "the-green-tree-q3",
+          "question_id": "my-room-q3",
           "type": "image_choice",
-          "prompt_vi": "Leaf l? g??",
-          "questionAudioText": "Leaf.",
+          "prompt_vi": "Toy ngh?a l? g??",
+          "questionAudioText": "Toy.",
           "options": [
             {
-              "option_id": "the-green-tree-q3-1",
-              "label": "l?",
+              "option_id": "my-room-q3-1",
+              "label": "?? ch?i",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q3-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "the-green-tree-q3-2",
-              "label": "voi",
+              "option_id": "my-room-q3-2",
+              "label": "c?y",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q3-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "the-green-tree-q3-3",
+              "option_id": "my-room-q3-3",
               "label": "n??c",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q3-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "the-green-tree-q3-1",
+          "correctOptionId": "my-room-q3-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         }
@@ -775,85 +775,85 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/rewards/sticker.png",
+          "path": "courses/momo-home-family-english-5-7/lessons/my-room/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
-        "badgeTitle": "Tree Helper",
+        "badgeTitle": "Room Explorer",
         "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
       },
       "arReference": null
     },
     {
-      "id": "splashing-river",
-      "lesson_id": "splashing-river",
-      "title": "Splashing River",
-      "description": "Nghe ?m thanh n??c v? h?c t? m?i.",
+      "id": "snack-time",
+      "lesson_id": "snack-time",
+      "title": "Snack Time",
+      "description": "B? h?c m?n ?n d? nh?.",
       "video": {
-        "title": "Splashing River",
-        "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/splashing-river/video.mp4",
+        "title": "Snack Time",
+        "url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/snack-time/video.mp4",
         "duration_seconds": 90,
-        "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/splashing-river/thumb.png"
+        "thumbnail_url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/snack-time/thumb.png"
       },
       "content": null,
-      "title_vi": "D?ng s?ng vui",
+      "title_vi": "Gi? ?n nh?",
       "order": 3,
       "is_completed": false,
       "duration_minutes": 5,
       "videoLesson": {
-        "title": "Splashing River",
+        "title": "Snack Time",
         "duration_seconds": 90,
         "video": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/splashing-river/video.mp4",
+          "path": "courses/momo-home-family-english-5-7/lessons/snack-time/video.mp4",
           "type": "video",
           "status": "pending"
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/splashing-river/thumb.png",
+          "path": "courses/momo-home-family-english-5-7/lessons/snack-time/thumb.png",
           "type": "image",
           "status": "pending"
         },
         "scenes": [
           {
-            "scene_id": "splashing-river-scene-1",
+            "scene_id": "snack-time-scene-1",
             "order": 1,
             "duration_seconds": 24,
-            "visual_prompt": "Cute classroom style scene for River.",
-            "narration_vi": "Momo nh?n th?y d?ng s?ng.",
-            "audio_text_en": "Look! River!",
+            "visual_prompt": "Cute classroom style scene for Apple.",
+            "narration_vi": "Momo nh?n th?y qu? t?o.",
+            "audio_text_en": "Look! Apple!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-1.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
-            "scene_id": "splashing-river-scene-2",
+            "scene_id": "snack-time-scene-2",
             "order": 2,
             "duration_seconds": 24,
-            "visual_prompt": "Bright picture story for Water.",
-            "narration_vi": "B? nghe v? n?i Water.",
-            "audio_text_en": "Say Water with Momo.",
+            "visual_prompt": "Bright picture story for Milk.",
+            "narration_vi": "B? nghe v? n?i Milk.",
+            "audio_text_en": "Say Milk with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-2.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
-            "scene_id": "splashing-river-scene-3",
+            "scene_id": "snack-time-scene-3",
             "order": 3,
             "duration_seconds": 24,
-            "visual_prompt": "Happy reward scene with Blue.",
+            "visual_prompt": "Happy reward scene with Cookie.",
             "narration_vi": "Momo v? tay khen b?.",
-            "audio_text_en": "Good job! Blue!",
+            "audio_text_en": "Good job! Cookie!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-3.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -862,110 +862,110 @@
       },
       "vocabulary": [
         {
-          "word_en": "River",
-          "word_vi": "d?ng s?ng",
-          "emoji": "river",
+          "word_en": "Apple",
+          "word_vi": "qu? t?o",
+          "emoji": "apple",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/river.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/apple.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/audio/river.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/audio/apple.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/stickers/river.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/stickers/apple.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The river is blue."
+          "simple_sentence": "The apple is red."
         },
         {
-          "word_en": "Water",
-          "word_vi": "n??c",
-          "emoji": "water",
+          "word_en": "Milk",
+          "word_vi": "s?a",
+          "emoji": "milk",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/water.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/milk.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/audio/water.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/audio/milk.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/stickers/water.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/stickers/milk.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "Water is cool."
+          "simple_sentence": "Milk is white."
         },
         {
-          "word_en": "Blue",
-          "word_vi": "m?u xanh d??ng",
-          "emoji": "blue",
+          "word_en": "Cookie",
+          "word_vi": "b?nh quy",
+          "emoji": "cookie",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/blue.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/cookie.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/audio/blue.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/audio/cookie.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/stickers/blue.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/stickers/cookie.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The water is blue."
+          "simple_sentence": "The cookie is yummy."
         }
       ],
       "game": {
-        "game_id": "splashing-river-quick-game",
+        "game_id": "snack-time-quick-game",
         "type": "listen_and_tap",
         "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
-        "prompt_audio_text": "Tap river.",
+        "prompt_audio_text": "Tap apple.",
         "items": [
           {
             "id": "game-1",
-            "label": "River",
+            "label": "Apple",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/games/river.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/games/apple.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "game-2",
-            "label": "Water",
+            "label": "Milk",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/games/water.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/games/milk.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "game-3",
-            "label": "Blue",
+            "label": "Cookie",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/games/blue.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/games/cookie.png",
               "type": "image",
               "status": "pending"
             }
@@ -974,17 +974,17 @@
         "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
       },
       "pronunciation": {
-        "task_id": "splashing-river-say",
+        "task_id": "snack-time-say",
         "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
-        "prompt_audio_text": "River, Water, Blue",
+        "prompt_audio_text": "Apple, Milk, Cookie",
         "target_words": [
-          "River",
-          "Water",
-          "Blue"
+          "Apple",
+          "Milk",
+          "Cookie"
         ],
         "audio": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/splashing-river/audio/pronunciation.mp3",
+          "path": "courses/momo-home-family-english-5-7/lessons/snack-time/audio/pronunciation.mp3",
           "type": "audio",
           "status": "pending"
         },
@@ -992,37 +992,37 @@
         "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
       },
       "activity": {
-        "activity_id": "splashing-river-activity",
+        "activity_id": "snack-time-activity",
         "type": "match_picture",
         "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
-        "prompt_audio_text": "Find River and Water.",
+        "prompt_audio_text": "Find Apple and Milk.",
         "items": [
           {
             "id": "activity-1",
-            "label": "River",
+            "label": "Apple",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/activities/river.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/activities/apple.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "activity-2",
-            "label": "Water",
+            "label": "Milk",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/activities/water.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/activities/milk.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "activity-3",
-            "label": "Blue",
+            "label": "Cookie",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/activities/blue.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/activities/cookie.png",
               "type": "image",
               "status": "pending"
             }
@@ -1032,125 +1032,125 @@
       },
       "quiz": [
         {
-          "question_id": "splashing-river-q1",
+          "question_id": "snack-time-q1",
           "type": "image_choice",
-          "prompt_vi": "Con th?y river ? ??u?",
-          "questionAudioText": "Tap river.",
+          "prompt_vi": "Con ch?n apple.",
+          "questionAudioText": "Tap apple.",
           "options": [
             {
-              "option_id": "splashing-river-q1-1",
-              "label": "Tree",
+              "option_id": "snack-time-q1-1",
+              "label": "Apple",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q1-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "splashing-river-q1-2",
-              "label": "River",
+              "option_id": "snack-time-q1-2",
+              "label": "Chair",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q1-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "splashing-river-q1-3",
+              "option_id": "snack-time-q1-3",
               "label": "Bird",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q1-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "splashing-river-q1-2",
+          "correctOptionId": "snack-time-q1-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         },
         {
-          "question_id": "splashing-river-q2",
+          "question_id": "snack-time-q2",
           "type": "image_choice",
-          "prompt_vi": "Water ngh?a l? g??",
-          "questionAudioText": "Water.",
+          "prompt_vi": "Milk l? g??",
+          "questionAudioText": "Milk.",
           "options": [
             {
-              "option_id": "splashing-river-q2-1",
+              "option_id": "snack-time-q2-1",
+              "label": "s?a",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q2-1.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "snack-time-q2-2",
               "label": "n??c",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "splashing-river-q2-2",
+              "option_id": "snack-time-q2-3",
               "label": "l?",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-2.png",
-                "type": "image",
-                "status": "pending"
-              }
-            },
-            {
-              "option_id": "splashing-river-q2-3",
-              "label": "m?y",
-              "image": {
-                "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "splashing-river-q2-1",
+          "correctOptionId": "snack-time-q2-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         },
         {
-          "question_id": "splashing-river-q3",
+          "question_id": "snack-time-q3",
           "type": "image_choice",
-          "prompt_vi": "Blue l? m?u n?o?",
-          "questionAudioText": "Blue.",
+          "prompt_vi": "Cookie l? m?n n?o?",
+          "questionAudioText": "Cookie.",
           "options": [
             {
-              "option_id": "splashing-river-q3-1",
-              "label": "xanh d??ng",
+              "option_id": "snack-time-q3-1",
+              "label": "b?nh quy",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "splashing-river-q3-2",
-              "label": "xanh l?",
+              "option_id": "snack-time-q3-2",
+              "label": "m?t tr?i",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "splashing-river-q3-3",
-              "label": "h?ng",
+              "option_id": "snack-time-q3-3",
+              "label": "gi??ng",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "splashing-river-q3-1",
+          "correctOptionId": "snack-time-q3-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         }
@@ -1159,85 +1159,85 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/splashing-river/rewards/sticker.png",
+          "path": "courses/momo-home-family-english-5-7/lessons/snack-time/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
-        "badgeTitle": "River Friend",
+        "badgeTitle": "Snack Star",
         "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
       },
       "arReference": null
     },
     {
-      "id": "little-bird",
-      "lesson_id": "little-bird",
-      "title": "Little Bird",
-      "description": "B? nghe ti?ng chim v? n?i t? bird.",
+      "id": "clean-hands",
+      "lesson_id": "clean-hands",
+      "title": "Clean Hands",
+      "description": "B? h?c t? cho th?i quen t?t.",
       "video": {
-        "title": "Little Bird",
-        "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/little-bird/video.mp4",
+        "title": "Clean Hands",
+        "url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/clean-hands/video.mp4",
         "duration_seconds": 90,
-        "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/little-bird/thumb.png"
+        "thumbnail_url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/clean-hands/thumb.png"
       },
       "content": null,
-      "title_vi": "Chim nh?",
+      "title_vi": "R?a tay s?ch",
       "order": 4,
       "is_completed": false,
       "duration_minutes": 5,
       "videoLesson": {
-        "title": "Little Bird",
+        "title": "Clean Hands",
         "duration_seconds": 90,
         "video": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/little-bird/video.mp4",
+          "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/video.mp4",
           "type": "video",
           "status": "pending"
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/little-bird/thumb.png",
+          "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/thumb.png",
           "type": "image",
           "status": "pending"
         },
         "scenes": [
           {
-            "scene_id": "little-bird-scene-1",
+            "scene_id": "clean-hands-scene-1",
             "order": 1,
             "duration_seconds": 24,
-            "visual_prompt": "Cute classroom style scene for Bird.",
-            "narration_vi": "Momo nh?n th?y con chim.",
-            "audio_text_en": "Look! Bird!",
+            "visual_prompt": "Cute classroom style scene for Hand.",
+            "narration_vi": "Momo nh?n th?y b?n tay.",
+            "audio_text_en": "Look! Hand!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-1.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
-            "scene_id": "little-bird-scene-2",
+            "scene_id": "clean-hands-scene-2",
             "order": 2,
             "duration_seconds": 24,
-            "visual_prompt": "Bright picture story for Fly.",
-            "narration_vi": "B? nghe v? n?i Fly.",
-            "audio_text_en": "Say Fly with Momo.",
+            "visual_prompt": "Bright picture story for Soap.",
+            "narration_vi": "B? nghe v? n?i Soap.",
+            "audio_text_en": "Say Soap with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-2.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
-            "scene_id": "little-bird-scene-3",
+            "scene_id": "clean-hands-scene-3",
             "order": 3,
             "duration_seconds": 24,
-            "visual_prompt": "Happy reward scene with Small.",
+            "visual_prompt": "Happy reward scene with Clean.",
             "narration_vi": "Momo v? tay khen b?.",
-            "audio_text_en": "Good job! Small!",
+            "audio_text_en": "Good job! Clean!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-3.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -1246,110 +1246,110 @@
       },
       "vocabulary": [
         {
-          "word_en": "Bird",
-          "word_vi": "con chim",
-          "emoji": "bird",
+          "word_en": "Hand",
+          "word_vi": "b?n tay",
+          "emoji": "hand",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/bird.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/hand.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/audio/bird.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/audio/hand.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/stickers/bird.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/stickers/hand.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The bird can fly."
+          "simple_sentence": "Wash your hands."
         },
         {
-          "word_en": "Fly",
-          "word_vi": "bay",
-          "emoji": "fly",
+          "word_en": "Soap",
+          "word_vi": "x? ph?ng",
+          "emoji": "soap",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/fly.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/soap.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/audio/fly.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/audio/soap.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/stickers/fly.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/stickers/soap.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "Birds fly."
+          "simple_sentence": "Use soap."
         },
         {
-          "word_en": "Small",
-          "word_vi": "nh?",
-          "emoji": "small",
+          "word_en": "Clean",
+          "word_vi": "s?ch",
+          "emoji": "clean",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/small.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/clean.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/audio/small.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/audio/clean.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/stickers/small.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/stickers/clean.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The bird is small."
+          "simple_sentence": "My hands are clean."
         }
       ],
       "game": {
-        "game_id": "little-bird-quick-game",
+        "game_id": "clean-hands-quick-game",
         "type": "listen_and_tap",
         "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
-        "prompt_audio_text": "Tap bird.",
+        "prompt_audio_text": "Tap soap.",
         "items": [
           {
             "id": "game-1",
-            "label": "Bird",
+            "label": "Hand",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/games/bird.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/games/hand.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "game-2",
-            "label": "Fly",
+            "label": "Soap",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/games/fly.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/games/soap.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "game-3",
-            "label": "Small",
+            "label": "Clean",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/games/small.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/games/clean.png",
               "type": "image",
               "status": "pending"
             }
@@ -1358,17 +1358,17 @@
         "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
       },
       "pronunciation": {
-        "task_id": "little-bird-say",
+        "task_id": "clean-hands-say",
         "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
-        "prompt_audio_text": "Bird, Fly, Small",
+        "prompt_audio_text": "Hand, Soap, Clean",
         "target_words": [
-          "Bird",
-          "Fly",
-          "Small"
+          "Hand",
+          "Soap",
+          "Clean"
         ],
         "audio": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/little-bird/audio/pronunciation.mp3",
+          "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/audio/pronunciation.mp3",
           "type": "audio",
           "status": "pending"
         },
@@ -1376,37 +1376,37 @@
         "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
       },
       "activity": {
-        "activity_id": "little-bird-activity",
+        "activity_id": "clean-hands-activity",
         "type": "match_picture",
         "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
-        "prompt_audio_text": "Find Bird and Fly.",
+        "prompt_audio_text": "Find Hand and Soap.",
         "items": [
           {
             "id": "activity-1",
-            "label": "Bird",
+            "label": "Hand",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/activities/bird.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/activities/hand.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "activity-2",
-            "label": "Fly",
+            "label": "Soap",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/activities/fly.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/activities/soap.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "activity-3",
-            "label": "Small",
+            "label": "Clean",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/activities/small.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/activities/clean.png",
               "type": "image",
               "status": "pending"
             }
@@ -1416,125 +1416,125 @@
       },
       "quiz": [
         {
-          "question_id": "little-bird-q1",
+          "question_id": "clean-hands-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n bird.",
-          "questionAudioText": "Tap bird.",
+          "prompt_vi": "Con ch?n soap.",
+          "questionAudioText": "Tap soap.",
           "options": [
             {
-              "option_id": "little-bird-q1-1",
-              "label": "Bird",
+              "option_id": "clean-hands-q1-1",
+              "label": "Soap",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q1-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "little-bird-q1-2",
-              "label": "Tree",
+              "option_id": "clean-hands-q1-2",
+              "label": "Toy",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q1-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "little-bird-q1-3",
-              "label": "Water",
+              "option_id": "clean-hands-q1-3",
+              "label": "Sun",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q1-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "little-bird-q1-1",
+          "correctOptionId": "clean-hands-q1-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         },
         {
-          "question_id": "little-bird-q2",
+          "question_id": "clean-hands-q2",
           "type": "image_choice",
-          "prompt_vi": "Fly ngh?a l? g??",
-          "questionAudioText": "Fly.",
+          "prompt_vi": "Hand ngh?a l? g??",
+          "questionAudioText": "Hand.",
           "options": [
             {
-              "option_id": "little-bird-q2-1",
-              "label": "ng?",
+              "option_id": "clean-hands-q2-1",
+              "label": "b?n tay",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "little-bird-q2-2",
-              "label": "bay",
+              "option_id": "clean-hands-q2-2",
+              "label": "c?i gh?",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "little-bird-q2-3",
-              "label": "?n",
+              "option_id": "clean-hands-q2-3",
+              "label": "em b?",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "little-bird-q2-2",
+          "correctOptionId": "clean-hands-q2-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         },
         {
-          "question_id": "little-bird-q3",
+          "question_id": "clean-hands-q3",
           "type": "image_choice",
-          "prompt_vi": "Small l? g??",
-          "questionAudioText": "Small.",
+          "prompt_vi": "Clean l? g??",
+          "questionAudioText": "Clean.",
           "options": [
             {
-              "option_id": "little-bird-q3-1",
-              "label": "nh?",
+              "option_id": "clean-hands-q3-1",
+              "label": "s?ch",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q3-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "little-bird-q3-2",
+              "option_id": "clean-hands-q3-2",
+              "label": "b?n",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q3-2.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "clean-hands-q3-3",
               "label": "to",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q3-2.png",
-                "type": "image",
-                "status": "pending"
-              }
-            },
-            {
-              "option_id": "little-bird-q3-3",
-              "label": "cao",
-              "image": {
-                "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q3-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "little-bird-q3-1",
+          "correctOptionId": "clean-hands-q3-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         }
@@ -1543,85 +1543,85 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/little-bird/rewards/sticker.png",
+          "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
-        "badgeTitle": "Bird Singer",
+        "badgeTitle": "Clean Hero",
         "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
       },
       "arReference": null
     },
     {
-      "id": "sunny-sky",
-      "lesson_id": "sunny-sky",
-      "title": "Sunny Sky",
-      "description": "B? h?c sun, sky, yellow.",
+      "id": "happy-feelings",
+      "lesson_id": "happy-feelings",
+      "title": "Happy Feelings",
+      "description": "B? h?c c?m x?c ??n gi?n.",
       "video": {
-        "title": "Sunny Sky",
-        "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/sunny-sky/video.mp4",
+        "title": "Happy Feelings",
+        "url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/happy-feelings/video.mp4",
         "duration_seconds": 90,
-        "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/sunny-sky/thumb.png"
+        "thumbnail_url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/happy-feelings/thumb.png"
       },
       "content": null,
-      "title_vi": "B?u tr?i n?ng",
+      "title_vi": "C?m x?c vui",
       "order": 5,
       "is_completed": false,
       "duration_minutes": 5,
       "videoLesson": {
-        "title": "Sunny Sky",
+        "title": "Happy Feelings",
         "duration_seconds": 90,
         "video": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/video.mp4",
+          "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/video.mp4",
           "type": "video",
           "status": "pending"
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/thumb.png",
+          "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/thumb.png",
           "type": "image",
           "status": "pending"
         },
         "scenes": [
           {
-            "scene_id": "sunny-sky-scene-1",
+            "scene_id": "happy-feelings-scene-1",
             "order": 1,
             "duration_seconds": 24,
-            "visual_prompt": "Cute classroom style scene for Sun.",
-            "narration_vi": "Momo nh?n th?y m?t tr?i.",
-            "audio_text_en": "Look! Sun!",
+            "visual_prompt": "Cute classroom style scene for Happy.",
+            "narration_vi": "Momo nh?n th?y vui.",
+            "audio_text_en": "Look! Happy!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-1.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
-            "scene_id": "sunny-sky-scene-2",
+            "scene_id": "happy-feelings-scene-2",
             "order": 2,
             "duration_seconds": 24,
-            "visual_prompt": "Bright picture story for Sky.",
-            "narration_vi": "B? nghe v? n?i Sky.",
-            "audio_text_en": "Say Sky with Momo.",
+            "visual_prompt": "Bright picture story for Sad.",
+            "narration_vi": "B? nghe v? n?i Sad.",
+            "audio_text_en": "Say Sad with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-2.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
-            "scene_id": "sunny-sky-scene-3",
+            "scene_id": "happy-feelings-scene-3",
             "order": 3,
             "duration_seconds": 24,
-            "visual_prompt": "Happy reward scene with Yellow.",
+            "visual_prompt": "Happy reward scene with Smile.",
             "narration_vi": "Momo v? tay khen b?.",
-            "audio_text_en": "Good job! Yellow!",
+            "audio_text_en": "Good job! Smile!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-3.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -1630,110 +1630,110 @@
       },
       "vocabulary": [
         {
-          "word_en": "Sun",
-          "word_vi": "m?t tr?i",
-          "emoji": "sun",
+          "word_en": "Happy",
+          "word_vi": "vui",
+          "emoji": "happy",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/sun.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/happy.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/audio/sun.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/audio/happy.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/stickers/sun.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/stickers/happy.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The sun is bright."
+          "simple_sentence": "I am happy."
         },
         {
-          "word_en": "Sky",
-          "word_vi": "b?u tr?i",
-          "emoji": "sky",
+          "word_en": "Sad",
+          "word_vi": "bu?n",
+          "emoji": "sad",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/sky.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/sad.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/audio/sky.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/audio/sad.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/stickers/sky.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/stickers/sad.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The sky is blue."
+          "simple_sentence": "I feel sad."
         },
         {
-          "word_en": "Yellow",
-          "word_vi": "m?u v?ng",
-          "emoji": "yellow",
+          "word_en": "Smile",
+          "word_vi": "m?m c??i",
+          "emoji": "smile",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/yellow.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/smile.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/audio/yellow.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/audio/smile.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/stickers/yellow.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/stickers/smile.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The sun is yellow."
+          "simple_sentence": "Please smile."
         }
       ],
       "game": {
-        "game_id": "sunny-sky-quick-game",
+        "game_id": "happy-feelings-quick-game",
         "type": "listen_and_tap",
         "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
-        "prompt_audio_text": "Tap sun.",
+        "prompt_audio_text": "Tap happy.",
         "items": [
           {
             "id": "game-1",
-            "label": "Sun",
+            "label": "Happy",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/games/sun.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/games/happy.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "game-2",
-            "label": "Sky",
+            "label": "Sad",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/games/sky.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/games/sad.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "game-3",
-            "label": "Yellow",
+            "label": "Smile",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/games/yellow.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/games/smile.png",
               "type": "image",
               "status": "pending"
             }
@@ -1742,17 +1742,17 @@
         "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
       },
       "pronunciation": {
-        "task_id": "sunny-sky-say",
+        "task_id": "happy-feelings-say",
         "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
-        "prompt_audio_text": "Sun, Sky, Yellow",
+        "prompt_audio_text": "Happy, Sad, Smile",
         "target_words": [
-          "Sun",
-          "Sky",
-          "Yellow"
+          "Happy",
+          "Sad",
+          "Smile"
         ],
         "audio": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/audio/pronunciation.mp3",
+          "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/audio/pronunciation.mp3",
           "type": "audio",
           "status": "pending"
         },
@@ -1760,37 +1760,37 @@
         "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
       },
       "activity": {
-        "activity_id": "sunny-sky-activity",
+        "activity_id": "happy-feelings-activity",
         "type": "match_picture",
         "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
-        "prompt_audio_text": "Find Sun and Sky.",
+        "prompt_audio_text": "Find Happy and Sad.",
         "items": [
           {
             "id": "activity-1",
-            "label": "Sun",
+            "label": "Happy",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/activities/sun.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/activities/happy.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "activity-2",
-            "label": "Sky",
+            "label": "Sad",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/activities/sky.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/activities/sad.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "activity-3",
-            "label": "Yellow",
+            "label": "Smile",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/activities/yellow.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/activities/smile.png",
               "type": "image",
               "status": "pending"
             }
@@ -1800,125 +1800,125 @@
       },
       "quiz": [
         {
-          "question_id": "sunny-sky-q1",
+          "question_id": "happy-feelings-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n sun.",
-          "questionAudioText": "Tap sun.",
+          "prompt_vi": "Con ch?n happy.",
+          "questionAudioText": "Tap happy.",
           "options": [
             {
-              "option_id": "sunny-sky-q1-1",
-              "label": "Sun",
+              "option_id": "happy-feelings-q1-1",
+              "label": "Happy",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q1-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "sunny-sky-q1-2",
-              "label": "Bird",
+              "option_id": "happy-feelings-q1-2",
+              "label": "Bed",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q1-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "sunny-sky-q1-3",
-              "label": "Leaf",
+              "option_id": "happy-feelings-q1-3",
+              "label": "Milk",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q1-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "sunny-sky-q1-1",
+          "correctOptionId": "happy-feelings-q1-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         },
         {
-          "question_id": "sunny-sky-q2",
+          "question_id": "happy-feelings-q2",
           "type": "image_choice",
-          "prompt_vi": "Sky l? g??",
-          "questionAudioText": "Sky.",
+          "prompt_vi": "Sad l? g??",
+          "questionAudioText": "Sad.",
           "options": [
             {
-              "option_id": "sunny-sky-q2-1",
-              "label": "b?u tr?i",
+              "option_id": "happy-feelings-q2-1",
+              "label": "bu?n",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "sunny-sky-q2-2",
-              "label": "d?ng s?ng",
+              "option_id": "happy-feelings-q2-2",
+              "label": "vui",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "sunny-sky-q2-3",
-              "label": "c?y",
+              "option_id": "happy-feelings-q2-3",
+              "label": "s?ch",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "sunny-sky-q2-1",
+          "correctOptionId": "happy-feelings-q2-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         },
         {
-          "question_id": "sunny-sky-q3",
+          "question_id": "happy-feelings-q3",
           "type": "image_choice",
-          "prompt_vi": "Yellow l? m?u n?o?",
-          "questionAudioText": "Yellow.",
+          "prompt_vi": "Smile ngh?a l? g??",
+          "questionAudioText": "Smile.",
           "options": [
             {
-              "option_id": "sunny-sky-q3-1",
-              "label": "v?ng",
+              "option_id": "happy-feelings-q3-1",
+              "label": "m?m c??i",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "sunny-sky-q3-2",
-              "label": "xanh",
+              "option_id": "happy-feelings-q3-2",
+              "label": "bay",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "sunny-sky-q3-3",
-              "label": "?en",
+              "option_id": "happy-feelings-q3-3",
+              "label": "ng?",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "sunny-sky-q3-1",
+          "correctOptionId": "happy-feelings-q3-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         }
@@ -1927,85 +1927,85 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/rewards/sticker.png",
+          "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
-        "badgeTitle": "Sunny Smile",
+        "badgeTitle": "Feeling Friend",
         "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
       },
       "arReference": null
     },
     {
-      "id": "nature-review",
-      "lesson_id": "nature-review",
-      "title": "Nature Review",
-      "description": "B? ?n l?i t? ?? h?c.",
+      "id": "home-review",
+      "lesson_id": "home-review",
+      "title": "Home Review",
+      "description": "B? ?n t? v? gia ??nh v? ng?i nh?.",
       "video": {
-        "title": "Nature Review",
-        "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/nature-review/video.mp4",
+        "title": "Home Review",
+        "url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/home-review/video.mp4",
         "duration_seconds": 90,
-        "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/nature-review/thumb.png"
+        "thumbnail_url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/home-review/thumb.png"
       },
       "content": null,
-      "title_vi": "?n thi?n nhi?n",
+      "title_vi": "?n ? nh?",
       "order": 6,
       "is_completed": false,
       "duration_minutes": 5,
       "videoLesson": {
-        "title": "Nature Review",
+        "title": "Home Review",
         "duration_seconds": 90,
         "video": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/nature-review/video.mp4",
+          "path": "courses/momo-home-family-english-5-7/lessons/home-review/video.mp4",
           "type": "video",
           "status": "pending"
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/nature-review/thumb.png",
+          "path": "courses/momo-home-family-english-5-7/lessons/home-review/thumb.png",
           "type": "image",
           "status": "pending"
         },
         "scenes": [
           {
-            "scene_id": "nature-review-scene-1",
+            "scene_id": "home-review-scene-1",
             "order": 1,
             "duration_seconds": 24,
-            "visual_prompt": "Cute classroom style scene for Elephant.",
-            "narration_vi": "Momo nh?n th?y con voi.",
-            "audio_text_en": "Look! Elephant!",
+            "visual_prompt": "Cute classroom style scene for Mom.",
+            "narration_vi": "Momo nh?n th?y m?.",
+            "audio_text_en": "Look! Mom!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-1.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
-            "scene_id": "nature-review-scene-2",
+            "scene_id": "home-review-scene-2",
             "order": 2,
             "duration_seconds": 24,
-            "visual_prompt": "Bright picture story for Tree.",
-            "narration_vi": "B? nghe v? n?i Tree.",
-            "audio_text_en": "Say Tree with Momo.",
+            "visual_prompt": "Bright picture story for Bed.",
+            "narration_vi": "B? nghe v? n?i Bed.",
+            "audio_text_en": "Say Bed with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-2.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
-            "scene_id": "nature-review-scene-3",
+            "scene_id": "home-review-scene-3",
             "order": 3,
             "duration_seconds": 24,
-            "visual_prompt": "Happy reward scene with Bird.",
+            "visual_prompt": "Happy reward scene with Apple.",
             "narration_vi": "Momo v? tay khen b?.",
-            "audio_text_en": "Good job! Bird!",
+            "audio_text_en": "Good job! Apple!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-3.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -2014,144 +2014,144 @@
       },
       "vocabulary": [
         {
-          "word_en": "Elephant",
-          "word_vi": "con voi",
-          "emoji": "elephant",
+          "word_en": "Mom",
+          "word_vi": "m?",
+          "emoji": "mom",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/elephant.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/vocabulary/mom.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/audio/elephant.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/audio/mom.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/elephant.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/stickers/mom.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The elephant is big."
+          "simple_sentence": "Mom is kind."
         },
         {
-          "word_en": "Tree",
-          "word_vi": "c?y",
-          "emoji": "tree",
+          "word_en": "Bed",
+          "word_vi": "gi??ng",
+          "emoji": "bed",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/tree.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/vocabulary/bed.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/audio/tree.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/audio/bed.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/tree.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/stickers/bed.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The tree is green."
+          "simple_sentence": "The bed is soft."
         },
         {
-          "word_en": "Bird",
-          "word_vi": "con chim",
-          "emoji": "bird",
+          "word_en": "Apple",
+          "word_vi": "qu? t?o",
+          "emoji": "apple",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/bird.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/vocabulary/apple.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/audio/bird.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/audio/apple.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/bird.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/stickers/apple.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The bird can fly."
+          "simple_sentence": "The apple is red."
         },
         {
-          "word_en": "Sun",
-          "word_vi": "m?t tr?i",
-          "emoji": "sun",
+          "word_en": "Happy",
+          "word_vi": "vui",
+          "emoji": "happy",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/sun.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/vocabulary/happy.png",
             "type": "image",
             "status": "pending"
           },
           "audio": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/audio/sun.mp3",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/audio/happy.mp3",
             "type": "audio",
             "status": "pending"
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/sun.png",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/stickers/happy.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "The sun is yellow."
+          "simple_sentence": "I am happy."
         }
       ],
       "game": {
-        "game_id": "nature-review-quick-game",
+        "game_id": "home-review-quick-game",
         "type": "listen_and_tap",
         "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
-        "prompt_audio_text": "Tap tree.",
+        "prompt_audio_text": "Tap apple.",
         "items": [
           {
             "id": "game-1",
-            "label": "Elephant",
+            "label": "Mom",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/elephant.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/games/mom.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "game-2",
-            "label": "Tree",
+            "label": "Bed",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/tree.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/games/bed.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "game-3",
-            "label": "Bird",
+            "label": "Apple",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/bird.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/games/apple.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "game-4",
-            "label": "Sun",
+            "label": "Happy",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/sun.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/games/happy.png",
               "type": "image",
               "status": "pending"
             }
@@ -2160,17 +2160,17 @@
         "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
       },
       "pronunciation": {
-        "task_id": "nature-review-say",
+        "task_id": "home-review-say",
         "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
-        "prompt_audio_text": "Elephant, Tree, Bird",
+        "prompt_audio_text": "Mom, Bed, Apple",
         "target_words": [
-          "Elephant",
-          "Tree",
-          "Bird"
+          "Mom",
+          "Bed",
+          "Apple"
         ],
         "audio": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/nature-review/audio/pronunciation.mp3",
+          "path": "courses/momo-home-family-english-5-7/lessons/home-review/audio/pronunciation.mp3",
           "type": "audio",
           "status": "pending"
         },
@@ -2178,47 +2178,47 @@
         "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
       },
       "activity": {
-        "activity_id": "nature-review-activity",
+        "activity_id": "home-review-activity",
         "type": "match_picture",
         "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
-        "prompt_audio_text": "Find Elephant and Tree.",
+        "prompt_audio_text": "Find Mom and Bed.",
         "items": [
           {
             "id": "activity-1",
-            "label": "Elephant",
+            "label": "Mom",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/elephant.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/activities/mom.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "activity-2",
-            "label": "Tree",
+            "label": "Bed",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/tree.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/activities/bed.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "activity-3",
-            "label": "Bird",
+            "label": "Apple",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/bird.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/activities/apple.png",
               "type": "image",
               "status": "pending"
             }
           },
           {
             "id": "activity-4",
-            "label": "Sun",
+            "label": "Happy",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/sun.png",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/activities/happy.png",
               "type": "image",
               "status": "pending"
             }
@@ -2228,125 +2228,125 @@
       },
       "quiz": [
         {
-          "question_id": "nature-review-q1",
+          "question_id": "home-review-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n elephant.",
-          "questionAudioText": "Tap elephant.",
+          "prompt_vi": "Con ch?n mom.",
+          "questionAudioText": "Tap mom.",
           "options": [
             {
-              "option_id": "nature-review-q1-1",
-              "label": "Elephant",
+              "option_id": "home-review-q1-1",
+              "label": "Mom",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q1-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "nature-review-q1-2",
-              "label": "Sun",
+              "option_id": "home-review-q1-2",
+              "label": "Chair",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q1-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "nature-review-q1-3",
-              "label": "Leaf",
+              "option_id": "home-review-q1-3",
+              "label": "Soap",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q1-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "nature-review-q1-1",
+          "correctOptionId": "home-review-q1-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         },
         {
-          "question_id": "nature-review-q2",
+          "question_id": "home-review-q2",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n tree.",
-          "questionAudioText": "Tap tree.",
+          "prompt_vi": "Con ch?n apple.",
+          "questionAudioText": "Tap apple.",
           "options": [
             {
-              "option_id": "nature-review-q2-1",
-              "label": "Water",
+              "option_id": "home-review-q2-1",
+              "label": "Toy",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q2-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "nature-review-q2-2",
-              "label": "Tree",
+              "option_id": "home-review-q2-2",
+              "label": "Apple",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q2-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "nature-review-q2-3",
-              "label": "Bird",
+              "option_id": "home-review-q2-3",
+              "label": "Bed",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q2-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "nature-review-q2-2",
+          "correctOptionId": "home-review-q2-2",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         },
         {
-          "question_id": "nature-review-q3",
+          "question_id": "home-review-q3",
           "type": "image_choice",
-          "prompt_vi": "Bird l?m g??",
-          "questionAudioText": "Birds fly.",
+          "prompt_vi": "Happy l? g??",
+          "questionAudioText": "Happy.",
           "options": [
             {
-              "option_id": "nature-review-q3-1",
-              "label": "fly",
+              "option_id": "home-review-q3-1",
+              "label": "vui",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q3-1.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "nature-review-q3-2",
-              "label": "swim",
+              "option_id": "home-review-q3-2",
+              "label": "bu?n",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q3-2.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
-              "option_id": "nature-review-q3-3",
-              "label": "sleep",
+              "option_id": "home-review-q3-3",
+              "label": "s?ch",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q3-3.png",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "nature-review-q3-1",
+          "correctOptionId": "home-review-q3-1",
           "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
           "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
         }
@@ -2355,11 +2355,11 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/nature-review/rewards/sticker.png",
+          "path": "courses/momo-home-family-english-5-7/lessons/home-review/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
-        "badgeTitle": "Nature Champion",
+        "badgeTitle": "Home Champion",
         "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
       },
       "arReference": null

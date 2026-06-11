@@ -109,6 +109,8 @@ export const CourseDetail: React.FC = () => {
                                         <div className="mt-2 flex flex-wrap gap-2 text-xs font-black">
                                             <span className="rounded-full bg-yellow-50 px-3 py-1 text-yellow-700">{lesson.duration_minutes} min</span>
                                             <span className="rounded-full bg-sky-50 px-3 py-1 text-sky-700">{lesson.vocabulary.length} words</span>
+                                            {lesson.pronunciation && <span className="rounded-full bg-violet-50 px-3 py-1 text-violet-700">say</span>}
+                                            {lesson.game && <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700">game</span>}
                                             <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">{lesson.quiz.length} quiz</span>
                                         </div>
                                     </div>
