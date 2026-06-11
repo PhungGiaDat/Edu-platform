@@ -121,6 +121,25 @@ class Reward(BaseModel):
     message_vi: str
 
 
+class CourseCatalogPreview(BaseModel):
+    label: str
+    value: str
+    color: str = "sky"
+
+
+class StudentTestimonial(BaseModel):
+    name: str
+    role: str
+    quote: str
+    avatar: str = ""
+
+
+class EnrollmentCTA(BaseModel):
+    headline: str
+    body: str
+    buttonLabel: str = "Bat dau hoc"
+
+
 class Lesson(BaseModel):
     # Legacy/simple course fields kept for existing MongoDB documents.
     id: str = Field(default_factory=lambda: str(ObjectId()))
@@ -161,6 +180,9 @@ class CourseSchema(BaseModel):
     level: Literal["beginner", "intermediate", "advanced"] = "beginner"
     description_vi: str = ""
     thumbnail: Optional[AssetReference] = None
+    catalogPreview: List[CourseCatalogPreview] = Field(default_factory=list)
+    studentTestimonials: List[StudentTestimonial] = Field(default_factory=list)
+    enrollmentCta: Optional[EnrollmentCTA] = None
     lessons: List[Lesson] = Field(default_factory=list)
     is_published: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)

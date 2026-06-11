@@ -2364,5 +2364,46 @@
       },
       "arReference": null
     }
-  ]
+  ],
+  "catalogPreview": [
+    {
+      "label": "Sections",
+      "value": "6",
+      "color": "sky"
+    },
+    {
+      "label": "Mini games",
+      "value": "6",
+      "color": "amber"
+    },
+    {
+      "label": "Speaking tests",
+      "value": "6",
+      "color": "violet"
+    },
+    {
+      "label": "Reward XP",
+      "value": "480",
+      "color": "rose"
+    }
+  ],
+  "studentTestimonials": [
+    {
+      "name": "Minh, 6",
+      "role": "Young learner",
+      "quote": "Con th?ch ch?m v?o h?nh v? n?i elephant!",
+      "avatar": "M"
+    },
+    {
+      "name": "M? c?a An",
+      "role": "Parent",
+      "quote": "B?i ng?n, nhi?u h?nh, b? ch?u h?c m?i ng?y.",
+      "avatar": "A"
+    }
+  ],
+  "enrollmentCta": {
+    "headline": "C?ng Momo kh?m ph? thi?n nhi?n h?m nay",
+    "body": "M?i ph?n h?c ch? v?i ph?t: xem, ch?i, n?i, ch?n ??p ?n v? nh?n sticker.",
+    "buttonLabel": "B?t ??u v?i thi?n nhi?n"
+  }
 }
