@@ -12,7 +12,7 @@ import certifi
 import motor.motor_asyncio
 from dotenv import load_dotenv
 
-from services.course_service import load_course_seed
+from services.course_service import load_all_course_seeds, load_course_seed
 from settings import settings
 
 
@@ -28,14 +28,15 @@ async def main() -> None:
     )
     db = client[settings.MONGO_DB]
     seed_name = sys.argv[1] if len(sys.argv) > 1 else None
-    course = load_course_seed(seed_name)
-    result = await db.courses.update_one(
-        {"course_id": course["course_id"]},
-        {"$set": course},
-        upsert=True,
-    )
-    action = "inserted" if result.upserted_id else "updated"
-    print(f"{action}: {course['course_id']}")
+    courses = load_all_course_seeds() if seed_name in (None, "all") else [load_course_seed(seed_name)]
+    for course in courses:
+        result = await db.courses.update_one(
+            {"course_id": course["course_id"]},
+            {"$set": course},
+            upsert=True,
+        )
+        action = "inserted" if result.upserted_id else "updated"
+        print(f"{action}: {course['course_id']}")
     client.close()
 
 

@@ -37,6 +37,8 @@ def _validate_phase1_course(course: CourseSchema) -> None:
         raise ValueError("Phase 1 courses must target age range 5-7")
     if not course.thumbnail:
         raise ValueError("Phase 1 courses require a thumbnail asset reference")
+    if not 5 <= len(course.lessons) <= 8:
+        raise ValueError("Phase 1 demo courses require 5-8 sections")
 
     for lesson in course.lessons:
         if not 3 <= lesson.duration_minutes <= 7:
@@ -49,6 +51,10 @@ def _validate_phase1_course(course: CourseSchema) -> None:
             raise ValueError(f"Lesson {lesson.lesson_id} requires 3-5 vocabulary words")
         if not lesson.activity:
             raise ValueError(f"Lesson {lesson.lesson_id} requires an activity")
+        if not lesson.game:
+            raise ValueError(f"Lesson {lesson.lesson_id} requires a section game")
+        if not lesson.pronunciation:
+            raise ValueError(f"Lesson {lesson.lesson_id} requires a pronunciation task")
         if not 3 <= len(lesson.quiz) <= 5:
             raise ValueError(f"Lesson {lesson.lesson_id} requires 3-5 quiz questions")
         if not lesson.reward:
@@ -72,6 +78,10 @@ def load_course_seed(seed_name: Optional[str] = None) -> Dict[str, Any]:
     with _seed_path(seed_name).open("r", encoding="utf-8") as file:
         payload = json.load(file)
     return validate_course_payload(payload)
+
+
+def load_all_course_seeds() -> List[Dict[str, Any]]:
+    return [load_course_seed(path.name) for path in sorted(SEED_DIR.glob("*.json"))]
 
 
 class CourseService:

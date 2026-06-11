@@ -78,6 +78,25 @@ class Activity(BaseModel):
     feedback_positive_vi: str
 
 
+class PronunciationTask(BaseModel):
+    task_id: str
+    instruction_vi: str
+    prompt_audio_text: str
+    target_words: List[str] = Field(min_length=1, max_length=5)
+    audio: AssetReference
+    pass_score: int = Field(default=70, ge=50, le=100)
+    feedback_positive_vi: str
+
+
+class SectionGame(BaseModel):
+    game_id: str
+    type: Literal["listen_and_tap", "picture_match", "memory_match", "find_picture"]
+    instruction_vi: str
+    prompt_audio_text: str
+    items: List[Dict[str, Any]] = Field(default_factory=list)
+    feedback_positive_vi: str
+
+
 class QuizOption(BaseModel):
     option_id: str
     label: str
@@ -119,6 +138,8 @@ class Lesson(BaseModel):
     duration_minutes: int = Field(default=3, ge=3, le=7)
     videoLesson: Optional[VideoLesson] = None
     vocabulary: List[VocabularyItem] = Field(default_factory=list)
+    game: Optional[SectionGame] = None
+    pronunciation: Optional[PronunciationTask] = None
     activity: Optional[Activity] = None
     quiz: List[QuizQuestion] = Field(default_factory=list)
     reward: Optional[Reward] = None

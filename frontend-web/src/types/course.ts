@@ -60,6 +60,25 @@ export interface Activity {
   feedback_positive_vi: string;
 }
 
+export interface PronunciationTask {
+  task_id: string;
+  instruction_vi: string;
+  prompt_audio_text: string;
+  target_words: string[];
+  audio: AssetReference;
+  pass_score: number;
+  feedback_positive_vi: string;
+}
+
+export interface SectionGame {
+  game_id: string;
+  type: 'listen_and_tap' | 'picture_match' | 'memory_match' | 'find_picture';
+  instruction_vi: string;
+  prompt_audio_text: string;
+  items: Array<Record<string, unknown>>;
+  feedback_positive_vi: string;
+}
+
 export interface QuizOption {
   option_id: string;
   label: string;
@@ -97,6 +116,8 @@ export interface Lesson {
   duration_minutes: number;
   videoLesson?: VideoLesson | null;
   vocabulary: VocabularyItem[];
+  game?: SectionGame | null;
+  pronunciation?: PronunciationTask | null;
   activity?: Activity | null;
   quiz: QuizQuestion[];
   reward?: Reward | null;
