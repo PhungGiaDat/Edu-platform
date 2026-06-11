@@ -4,6 +4,7 @@ import type {
   AssetReference,
   PronunciationTask,
   QuizQuestion,
+  ReadAloudStory,
   Reward,
   SectionGame,
   VideoScene,
@@ -102,6 +103,37 @@ export const PronunciationCard: React.FC<{ task: PronunciationTask }> = ({ task 
     </div>
     <p className="mt-4 rounded-2xl bg-white/75 px-4 py-3 text-center font-black text-violet-700">
       {task.feedback_positive_vi}
+    </p>
+  </section>
+);
+
+export const ReadAloudStoryCard: React.FC<{ story: ReadAloudStory }> = ({ story }) => (
+  <section className="rounded-[28px] border-4 border-white bg-gradient-to-br from-rose-100 via-white to-yellow-100 p-5 shadow-[0_8px_0_rgba(244,114,182,0.16)]">
+    <div className="mb-4">
+      <h2 className="text-2xl font-black text-slate-800">{story.title}</h2>
+      <p className="font-bold text-slate-600">{story.instruction_vi}</p>
+    </div>
+    <div className="grid gap-3 lg:grid-cols-2">
+      {story.pages.map(page => (
+        <article key={page.page_id} className="rounded-3xl border-4 border-white bg-white/90 p-4 shadow-[0_6px_0_rgba(15,23,42,0.08)]">
+          <AssetTile asset={page.image} label={`Page ${page.order}`} emoji="read" className="mb-3" />
+          <p className="text-xl font-black text-slate-800">{page.text_en}</p>
+          <p className="mt-1 font-bold text-slate-500">{page.text_vi}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {page.highlighted_words.map(word => (
+              <span key={word} className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-black text-amber-700">
+                {word}
+              </span>
+            ))}
+          </div>
+          <div className="mt-3 max-w-full truncate rounded-full bg-sky-50 px-3 py-2 text-xs font-bold text-sky-700">
+            audio: {page.audio.status} / {page.audio.path}
+          </div>
+        </article>
+      ))}
+    </div>
+    <p className="mt-4 rounded-2xl bg-white/75 px-4 py-3 text-center font-black text-rose-700">
+      {story.feedback_positive_vi}
     </p>
   </section>
 );

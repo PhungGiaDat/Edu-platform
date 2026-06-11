@@ -26,6 +26,12 @@ class AssetReference(BaseModel):
     status: AssetStatus = "pending"
 
 
+class GeneratedMedia(BaseModel):
+    asset: AssetReference
+    source: Literal["generated", "uploaded", "placeholder"] = "placeholder"
+    prompt: Optional[str] = None
+
+
 class VideoSchema(BaseModel):
     title: str
     url: str
@@ -97,6 +103,24 @@ class SectionGame(BaseModel):
     feedback_positive_vi: str
 
 
+class ReadAloudPage(BaseModel):
+    page_id: str
+    order: int
+    text_en: str
+    text_vi: str
+    highlighted_words: List[str] = Field(default_factory=list)
+    image: AssetReference
+    audio: AssetReference
+
+
+class ReadAloudStory(BaseModel):
+    story_id: str
+    title: str
+    instruction_vi: str
+    pages: List[ReadAloudPage] = Field(min_length=2, max_length=6)
+    feedback_positive_vi: str
+
+
 class QuizOption(BaseModel):
     option_id: str
     label: str
@@ -158,11 +182,13 @@ class Lesson(BaseModel):
     videoLesson: Optional[VideoLesson] = None
     vocabulary: List[VocabularyItem] = Field(default_factory=list)
     game: Optional[SectionGame] = None
+    readAloudStory: Optional[ReadAloudStory] = None
     pronunciation: Optional[PronunciationTask] = None
     activity: Optional[Activity] = None
     quiz: List[QuizQuestion] = Field(default_factory=list)
     reward: Optional[Reward] = None
     arReference: Optional[ARReference] = None
+    generatedMedia: List[GeneratedMedia] = Field(default_factory=list)
 
 
 class LessonSchema(Lesson):
@@ -176,6 +202,9 @@ class CourseSchema(BaseModel):
     thumbnail_url: Optional[str] = None
     subtitle_vi: str = ""
     theme: str = ""
+    category_key: str = ""
+    category_label: str = ""
+    category_icon: str = ""
     age_range: str = "5-7"
     level: Literal["beginner", "intermediate", "advanced"] = "beginner"
     description_vi: str = ""

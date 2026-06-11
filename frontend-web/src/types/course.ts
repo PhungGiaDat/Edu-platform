@@ -8,6 +8,12 @@ export interface AssetReference {
   status: AssetStatus;
 }
 
+export interface GeneratedMedia {
+  asset: AssetReference;
+  source: 'generated' | 'uploaded' | 'placeholder';
+  prompt?: string | null;
+}
+
 export interface ARReference {
   ar_tag: string;
   flashcard_qr_id?: string | null;
@@ -79,6 +85,24 @@ export interface SectionGame {
   feedback_positive_vi: string;
 }
 
+export interface ReadAloudPage {
+  page_id: string;
+  order: number;
+  text_en: string;
+  text_vi: string;
+  highlighted_words: string[];
+  image: AssetReference;
+  audio: AssetReference;
+}
+
+export interface ReadAloudStory {
+  story_id: string;
+  title: string;
+  instruction_vi: string;
+  pages: ReadAloudPage[];
+  feedback_positive_vi: string;
+}
+
 export interface QuizOption {
   option_id: string;
   label: string;
@@ -136,11 +160,13 @@ export interface Lesson {
   videoLesson?: VideoLesson | null;
   vocabulary: VocabularyItem[];
   game?: SectionGame | null;
+  readAloudStory?: ReadAloudStory | null;
   pronunciation?: PronunciationTask | null;
   activity?: Activity | null;
   quiz: QuizQuestion[];
   reward?: Reward | null;
   arReference?: ARReference | null;
+  generatedMedia: GeneratedMedia[];
 }
 
 export interface Course {
@@ -150,6 +176,9 @@ export interface Course {
   thumbnail_url?: string | null;
   subtitle_vi: string;
   theme: string;
+  category_key: string;
+  category_label: string;
+  category_icon: string;
   age_range: string;
   level: 'beginner' | 'intermediate' | 'advanced';
   description_vi: string;

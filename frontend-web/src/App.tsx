@@ -232,6 +232,7 @@ const App = () => {
         <Route path="/courses" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/animals" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/level/:level" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/category/:category" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/:id" element={<RequireLearnerAccess><Layout><CourseDetail /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/:courseId/lessons/:lessonId" element={<RequireLearnerAccess><Layout><LessonPlayer /></Layout></RequireLearnerAccess>} />
         <Route path="/profile" element={<RequireUserAuth><Layout><Profile /></Layout></RequireUserAuth>} />

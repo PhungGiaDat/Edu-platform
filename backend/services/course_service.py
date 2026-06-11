@@ -53,6 +53,8 @@ def _validate_phase1_course(course: CourseSchema) -> None:
             raise ValueError(f"Lesson {lesson.lesson_id} requires an activity")
         if not lesson.game:
             raise ValueError(f"Lesson {lesson.lesson_id} requires a section game")
+        if not lesson.readAloudStory:
+            raise ValueError(f"Lesson {lesson.lesson_id} requires a read-aloud story")
         if not lesson.pronunciation:
             raise ValueError(f"Lesson {lesson.lesson_id} requires a pronunciation task")
         if not 3 <= len(lesson.quiz) <= 5:
