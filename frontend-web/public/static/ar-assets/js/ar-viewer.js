@@ -51,9 +51,11 @@
     const modelUrl = params.get('model');
     const imageUrl = params.get('image');
     const modelUrl2 = params.get('model2');
+    const imageUrl2 = params.get('image2');
     const textureUrl = params.get('textureUrl'); // NEW: Texture for model 0
     const textureUrl2 = params.get('textureUrl2'); // NEW: Texture for model 1
     const comboModelUrl = params.get('comboModel'); // NEW: combo model URL
+    const comboImageUrl = params.get('comboImage'); // 2D layered fallback for combo scene
     const comboTextureUrl = params.get('comboTextureUrl'); // Texture for combo model
     const comboPhrase = params.get('comboPhrase') || '';
     const maxTrack = Math.max(2, Math.min(Number(params.get('maxTrack')) || 2, 5));
@@ -208,9 +210,12 @@
             mindUrl,
             modelUrl,
             modelUrl2,
+            imageUrl,
+            imageUrl2,
             textureUrl,
             textureUrl2,
             comboModelUrl,
+            comboImageUrl,
             search: window.location.search
         });
 
@@ -336,6 +341,43 @@
             document.getElementById('mode-2d-0').setAttribute('src', '#img-asset-0');
         } else {
             log('⚠️', 'No 2D image URL provided for target 0');
+        }
+
+        if (imageUrl2) {
+            log('🖼️', 'Loading 2D image 1:', imageUrl2);
+            const imgAsset2 = document.createElement('img');
+            imgAsset2.setAttribute('id', 'img-asset-1');
+            imgAsset2.setAttribute('src', imageUrl2);
+            imgAsset2.setAttribute('crossorigin', 'anonymous');
+            imgAsset2.addEventListener('load', () => {
+                log('✅', '2D image 1 loaded successfully');
+            });
+            imgAsset2.addEventListener('error', (e) => {
+                log('❌', '2D image 1 load error:', e);
+            });
+            assetsEl.appendChild(imgAsset2);
+            document.getElementById('mode-2d-1').setAttribute('src', '#img-asset-1');
+        } else {
+            log('⚠️', 'No 2D image URL provided for target 1');
+        }
+
+        if (comboImageUrl) {
+            log('combo', 'Loading combo fallback image:', comboImageUrl);
+            const comboImgAsset = document.createElement('img');
+            comboImgAsset.setAttribute('id', 'img-asset-combo');
+            comboImgAsset.setAttribute('src', comboImageUrl);
+            comboImgAsset.setAttribute('crossorigin', 'anonymous');
+            comboImgAsset.addEventListener('load', () => {
+                log('combo', 'Combo fallback image loaded successfully');
+                sendDebug('COMBO_IMAGE_READY', { url: comboImageUrl });
+            });
+            comboImgAsset.addEventListener('error', (e) => {
+                log('combo', 'Combo fallback image load error:', e);
+                sendDebug('COMBO_IMAGE_ERROR', { url: comboImageUrl });
+            });
+            assetsEl.appendChild(comboImgAsset);
+        } else {
+            log('combo', 'No combo fallback image URL provided');
         }
 
         if (modelUrl2) {
@@ -1434,9 +1476,39 @@
     /**
      * Load combo model at midpoint and hide individual models
      */
+    function showComboImageFallback(midpoint, reason) {
+        if (!comboImageUrl) {
+            sendDebug('COMBO_IMAGE_FALLBACK_MISSING', { reason });
+            return false;
+        }
+
+        const model0 = document.getElementById('mode-3d-0');
+        const model1 = document.getElementById('mode-3d-1');
+        if (model0) model0.setAttribute('visible', 'false');
+        if (model1) model1.setAttribute('visible', 'false');
+
+        let comboImage = document.getElementById('combo-image-scene');
+        if (!comboImage) {
+            comboImage = document.createElement('a-image');
+            comboImage.id = 'combo-image-scene';
+            comboImage.setAttribute('src', '#img-asset-combo');
+            comboImage.setAttribute('width', '1.25');
+            comboImage.setAttribute('height', '0.85');
+            comboImage.setAttribute('look-at', '[camera]');
+            comboImage.setAttribute('animation__spawn', 'property: scale; from: 0.2 0.2 0.2; to: 1 1 1; dur: 500; easing: easeOutBack');
+            scene.appendChild(comboImage);
+        }
+
+        comboImage.setAttribute('position', `${midpoint.x} ${midpoint.y + 0.08} ${midpoint.z}`);
+        comboImage.setAttribute('visible', 'true');
+        sendDebug('COMBO_IMAGE_FALLBACK_SHOWN', { reason, url: comboImageUrl });
+        return true;
+    }
+
     function loadComboModel(midpoint) {
         // Only load combo model if we have a combo model URL
         if (!comboModelUrl) {
+            showComboImageFallback(midpoint, 'no-combo-model-url');
             log('⚠️', 'No combo model URL provided, skipping combo model load');
             return;
         }
@@ -1459,6 +1531,11 @@
             comboModel.setAttribute('scale', '0.4 0.4 0.4'); // Bigger for impact!
             comboModel.setAttribute('animation', 'property: rotation; to: 0 360 0; dur: 4000; easing: linear; loop: true');
             comboModel.setAttribute('animation__spawn', 'property: scale; from: 0 0 0; to: 0.4 0.4 0.4; dur: 600; easing: easeOutBack');
+            comboModel.addEventListener('model-error', (event) => {
+                log('combo', 'Combo model entity load error:', event);
+                comboModel.setAttribute('visible', 'false');
+                showComboImageFallback(midpoint, 'combo-model-error');
+            });
             scene.appendChild(comboModel);
             applyTextureWhenModelReady(comboModel, comboTextureUrl);
             log('✨', 'Combo model entity created');
@@ -1487,10 +1564,14 @@
     function updateComboModelPosition(midpoint) {
         const position = `${midpoint.x} ${midpoint.y} ${midpoint.z}`;
         const comboModel = document.getElementById('combo-model');
+        const comboImage = document.getElementById('combo-image-scene');
         const comboEntity = document.getElementById('combo-effect');
 
         if (comboModel && comboModel.getAttribute('visible') !== false) {
             comboModel.setAttribute('position', position);
+        }
+        if (comboImage && comboImage.getAttribute('visible') !== false) {
+            comboImage.setAttribute('position', `${midpoint.x} ${midpoint.y + 0.08} ${midpoint.z}`);
         }
         if (comboEntity) {
             comboEntity.setAttribute('position', position);
@@ -1502,12 +1583,17 @@
      */
     function removeComboModel() {
         const comboModel = document.getElementById('combo-model');
+        const comboImage = document.getElementById('combo-image-scene');
         const model0 = document.getElementById('mode-3d-0');
         const model1 = document.getElementById('mode-3d-1');
         
         if (comboModel) {
             comboModel.setAttribute('visible', 'false');
             log('🧹', 'Combo model hidden');
+        }
+        if (comboImage) {
+            comboImage.setAttribute('visible', 'false');
+            log('combo', 'Combo image fallback hidden');
         }
         if (model0) {
             model0.setAttribute('visible', 'true');
