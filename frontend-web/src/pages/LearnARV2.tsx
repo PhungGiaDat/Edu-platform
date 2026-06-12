@@ -684,10 +684,8 @@ export default function LearnARV2() {
     const textureUrl = comboTarget0?.textureUrl || arData?.targets?.[0]?.texture_url;
 
     const comboModelUrl = isComboViewer ? activeCombo?.model3dUrl : undefined;
-    const shouldLoadIndividualModel2 = !(isComboViewer && comboModelUrl);
-    const modelUrl2 = shouldLoadIndividualModel2
-        ? comboTarget1?.model3dUrl || fallbackTarget1?.model3dUrl || arData?.targets?.[1]?.model_3d_url
-        : undefined;
+    const comboImageUrl = isComboViewer ? activeCombo?.image2dUrl : undefined;
+    const modelUrl2 = comboTarget1?.model3dUrl || fallbackTarget1?.model3dUrl || arData?.targets?.[1]?.model_3d_url;
     const imageUrl2 = comboTarget1?.image2dUrl || fallbackTarget1?.image2dUrl || arData?.targets?.[1]?.image_2d_url;
     const textureUrl2 = comboTarget1?.textureUrl || fallbackTarget1?.textureUrl || arData?.targets?.[1]?.texture_url;
     
@@ -838,6 +836,14 @@ export default function LearnARV2() {
         eventBus.emit('AR_SET_MODE' as any, { mode });
     }, []);
 
+    useEffect(() => {
+        if (appState !== 'VIEWING') return;
+        const timers = [120, 600, 1200].map(delay => window.setTimeout(() => {
+            eventBus.emit('AR_SET_MODE' as any, { mode: displayMode });
+        }, delay));
+        return () => timers.forEach(window.clearTimeout);
+    }, [appState, displayMode, mindUrl]);
+
     const handleAppModeChange = useCallback((mode: AppMode) => {
         setAppMode(mode);
         if (mode === 'QUIZ') {
@@ -975,6 +981,7 @@ export default function LearnARV2() {
                 word2={comboTarget1?.word || fallbackTarget1?.word}
                 cardCount={isComboViewer && activeCombo?.requiredTags?.length ? activeCombo.requiredTags.length : 1}
                 comboModelUrl={comboModelUrl}
+                comboImageUrl={comboImageUrl}
                 comboTextureUrl={comboTextureUrl}
                 comboPhrase={comboPhrase}
                 enableBackgroundScanner={false}
