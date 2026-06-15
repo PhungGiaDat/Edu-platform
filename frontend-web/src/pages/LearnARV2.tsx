@@ -486,6 +486,19 @@ export default function LearnARV2() {
     const { user, token, isGuest, isAuthenticated, isLoading: authLoading } = useAuth();
     const navigate = useNavigate();
 
+    const emitMobileDebug = useCallback((label: string, details: Record<string, unknown> = {}) => {
+        window.postMessage({
+            type: 'AR_DEBUG',
+            payload: {
+                label,
+                details,
+                source: 'learn-ar-page'
+            },
+            timestamp: Date.now(),
+            origin: 'parent'
+        }, '*');
+    }, []);
+
     // Redirect to login if not authenticated (after auth finishes loading)
     useEffect(() => {
         if (!authLoading && !isAuthenticated && !isGuest) {
@@ -694,6 +707,62 @@ export default function LearnARV2() {
     const comboPhrase = isComboViewer && activeCombo?.description
         || [comboTarget0?.word || arData?.flashcard?.word, comboTarget1?.word || fallbackTarget1?.word].filter(Boolean).join(' in ');
 
+    useEffect(() => {
+        emitMobileDebug('LEARNAR_VIEWER_INPUTS', {
+            appState,
+            isAddingCard,
+            isComboViewer,
+            flashcardCount,
+            displayMode,
+            detectedQrId,
+            mindUrl,
+            activeCombo: activeCombo ? {
+                comboId: activeCombo.comboId,
+                requiredTags: activeCombo.requiredTags,
+                model3dUrl: activeCombo.model3dUrl,
+                image2dUrl: activeCombo.image2dUrl,
+                comboMindUrl: activeCombo.comboMindUrl,
+                textureUrl: activeCombo.textureUrl
+            } : null,
+            target0: comboTarget0 ? {
+                qrId: comboTarget0.qrId,
+                arTag: comboTarget0.arTag,
+                word: comboTarget0.word,
+                model3dUrl: comboTarget0.model3dUrl,
+                image2dUrl: comboTarget0.image2dUrl,
+                textureUrl: comboTarget0.textureUrl
+            } : null,
+            target1: comboTarget1 ? {
+                qrId: comboTarget1.qrId,
+                arTag: comboTarget1.arTag,
+                word: comboTarget1.word,
+                model3dUrl: comboTarget1.model3dUrl,
+                image2dUrl: comboTarget1.image2dUrl,
+                textureUrl: comboTarget1.textureUrl
+            } : null,
+            fallbackTarget1: fallbackTarget1 ? {
+                qrId: fallbackTarget1.qrId,
+                arTag: fallbackTarget1.arTag,
+                word: fallbackTarget1.word,
+                model3dUrl: fallbackTarget1.model3dUrl,
+                image2dUrl: fallbackTarget1.image2dUrl,
+                textureUrl: fallbackTarget1.textureUrl
+            } : null,
+            viewerProps: {
+                modelUrl,
+                imageUrl,
+                textureUrl,
+                modelUrl2,
+                imageUrl2,
+                textureUrl2,
+                comboModelUrl,
+                comboImageUrl,
+                comboTextureUrl,
+                comboPhrase
+            }
+        });
+    }, [emitMobileDebug, appState, isAddingCard, isComboViewer, flashcardCount, displayMode, detectedQrId, mindUrl, activeCombo, comboTarget0, comboTarget1, fallbackTarget1, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+
     // ========== HANDLERS ==========
     const handleQRDetected = useCallback((qrId: string) => {
         console.log('[LearnARV2] QR Detected:', qrId);
@@ -711,9 +780,30 @@ export default function LearnARV2() {
         const isControlledAdd = isAddingCardRef.current;
         void addFlashcard(qrId).then((flashcardData) => {
             if (!flashcardData) {
+                emitMobileDebug('LEARNAR_QR_REJECTED', {
+                    qrId,
+                    isFirstQr,
+                    isControlledAdd,
+                    detectedQrId: detectedQrIdRef.current
+                });
                 console.warn('[LearnARV2] Ignoring QR without validated flashcard data:', qrId);
                 return;
             }
+
+            emitMobileDebug('LEARNAR_QR_VALIDATED', {
+                qrId,
+                isFirstQr,
+                isControlledAdd,
+                detectedQrIdBefore: detectedQrIdRef.current,
+                flashcard: {
+                    qrId: flashcardData.qrId,
+                    arTag: flashcardData.arTag,
+                    word: flashcardData.word,
+                    model3dUrl: flashcardData.model3dUrl,
+                    image2dUrl: flashcardData.image2dUrl,
+                    textureUrl: flashcardData.textureUrl
+                }
+            });
 
             if (isFirstQr && !detectedQrIdRef.current) {
                 detectedQrIdRef.current = qrId;

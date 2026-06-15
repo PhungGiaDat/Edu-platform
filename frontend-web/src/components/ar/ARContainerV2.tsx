@@ -80,6 +80,20 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const pipRef = useRef<HTMLIFrameElement>(null);
 
+    const emitDebug = useCallback((label: string, details: Record<string, unknown> = {}) => {
+        window.postMessage({
+            type: 'AR_DEBUG',
+            payload: {
+                label,
+                details,
+                source: 'react-parent',
+                phase
+            },
+            timestamp: Date.now(),
+            origin: 'parent'
+        }, '*');
+    }, [phase]);
+
     // Refs for props to ensure handleMessage always has the latest callbacks without being recreated
     const callbacksRef = useRef({
         onQRDetected,
@@ -132,6 +146,26 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         if (comboPhrase) params.set('comboPhrase', comboPhrase);
         return `/ar-viewer.html?${params.toString()}`;
     }, [mindUrl, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+
+    useEffect(() => {
+        emitDebug('PARENT_VIEWER_SRC_READY', {
+            hasViewerSrc: Boolean(viewerSrc),
+            mindUrl,
+            modelUrl,
+            imageUrl,
+            textureUrl,
+            modelUrl2,
+            imageUrl2,
+            textureUrl2,
+            word,
+            word2,
+            cardCount,
+            comboModelUrl,
+            comboImageUrl,
+            comboTextureUrl,
+            comboPhrase
+        });
+    }, [emitDebug, viewerSrc, mindUrl, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
 
     const mainSrc = useMemo(() => {
         switch (phase) {
@@ -193,6 +227,12 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
             case 'QR_DETECTED': {
                 const data = payload as ARMessagePayloadMap['QR_DETECTED'];
+                emitDebug('PARENT_QR_DETECTED', {
+                    qrId: data.qrId,
+                    fromPiP,
+                    phase,
+                    deferQrTransition
+                });
                 cbQR?.(data.qrId);
                 eventBus.emit(AREvent.MARKER_FOUND, { markerId: data.qrId, target: null } as any);
                 if (!fromPiP && phase === 'SCANNING' && !deferQrTransition) {
@@ -211,6 +251,12 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             }
 
             case 'AR_READY':
+                emitDebug('PARENT_AR_READY', {
+                    payload,
+                    fromPiP,
+                    phase,
+                    viewerSrc
+                });
                 setIsReady(true);
                 transitionTo('VIEWING');
                 eventBus.emit(AREvent.SCENE_READY, { scene: 'viewer' } as any);
@@ -218,6 +264,11 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
             case 'TARGET_FOUND': {
                 const data = payload as ARMessagePayloadMap['TARGET_FOUND'];
+                emitDebug('PARENT_TARGET_FOUND', {
+                    targetIndex: data.targetIndex,
+                    fromPiP,
+                    phase
+                });
                 cbFound?.(data.targetIndex);
                 eventBus.emit(AREvent.MARKER_FOUND, { markerId: `target-${data.targetIndex}`, target: null } as any);
                 break;
@@ -225,6 +276,11 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
             case 'TARGET_LOST': {
                 const data = payload as ARMessagePayloadMap['TARGET_LOST'];
+                emitDebug('PARENT_TARGET_LOST', {
+                    targetIndex: data.targetIndex,
+                    fromPiP,
+                    phase
+                });
                 cbLost?.(data.targetIndex);
                 eventBus.emit(AREvent.MARKER_LOST, { markerId: `target-${data.targetIndex}` } as any);
                 break;
@@ -255,12 +311,18 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             case 'AR_ERROR' as any: {
                 const data = payload as { error?: string; message?: string };
                 const errorMsg = data.error || data.message || 'Unknown error';
+                emitDebug('PARENT_SYSTEM_ERROR', {
+                    errorMsg,
+                    payload,
+                    fromPiP,
+                    phase
+                });
                 setError(errorMsg);
                 eventBus.emit(AREvent.AR_ERROR, { error: new Error(errorMsg) } as any);
                 break;
             }
         }
-    }, [phase, transitionTo, deferQrTransition]);
+    }, [phase, transitionTo, deferQrTransition, emitDebug, viewerSrc]);
 
     useEffect(() => {
         window.addEventListener('message', handleMessage);

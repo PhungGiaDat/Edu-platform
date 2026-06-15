@@ -119,6 +119,40 @@
         });
     }
 
+    function getElementDebugState(id) {
+        const el = document.getElementById(id);
+        if (!el) return { id, exists: false };
+        const object3D = el.object3D || {};
+        return {
+            id,
+            exists: true,
+            visibleAttr: el.getAttribute('visible'),
+            objectVisible: object3D.visible,
+            gltfModel: el.getAttribute('gltf-model'),
+            src: el.getAttribute('src'),
+            position: el.getAttribute('position'),
+            scale: el.getAttribute('scale'),
+            modelLoadFailed: el.dataset?.modelLoadFailed || null,
+            hasMesh: Boolean(el.getObject3D && el.getObject3D('mesh'))
+        };
+    }
+
+    function sendRenderSnapshot(label, details) {
+        sendDebug(label, {
+            currentMode,
+            activeTargets: Array.from(activeTargets.keys()),
+            target0: getElementDebugState('target-0'),
+            target1: getElementDebugState('target-1'),
+            mode2d0: getElementDebugState('mode-2d-0'),
+            mode3d0: getElementDebugState('mode-3d-0'),
+            mode2d1: getElementDebugState('mode-2d-1'),
+            mode3d1: getElementDebugState('mode-3d-1'),
+            comboModel: getElementDebugState('combo-model'),
+            comboImage: getElementDebugState('combo-image-scene'),
+            details: details || {}
+        });
+    }
+
     /**
      * Handle typed message from parent
      */
@@ -289,10 +323,12 @@
             // Update loading text on load events
             assetItem.addEventListener('loaded', () => {
                 log('✅', 'Model 0 loaded successfully');
+                sendDebug('MODEL_ASSET_0_LOADED', { url: modelUrl });
                 if (loadText) loadText.textContent = 'Model ready! Starting AR...';
             });
             assetItem.addEventListener('error', (e) => {
                 log('❌', 'Model 0 load error:', e);
+                sendDebug('MODEL_ASSET_0_ERROR', { url: modelUrl, message: e?.message || String(e) });
                 if (retryModelWithFallback(assetItem, model0El, modelUrl, 'Model 0')) {
                     return;
                 }
@@ -312,6 +348,12 @@
             assetsEl.appendChild(assetItem);
             log('🔗', 'Setting gltf-model attribute on mode-3d-0');
             applyTextureWhenModelReady(model0El, textureUrl);
+            model0El.addEventListener('model-loaded', () => {
+                sendRenderSnapshot('MODEL_ENTITY_0_LOADED', { url: modelUrl });
+            });
+            model0El.addEventListener('model-error', (e) => {
+                sendRenderSnapshot('MODEL_ENTITY_0_ERROR', { url: modelUrl, message: e?.message || String(e) });
+            });
             model0El.setAttribute('gltf-model', '#model-asset-0');
             
             // Inject texture if provided
@@ -337,6 +379,12 @@
             imgAsset.addEventListener('error', (e) => {
                 log('❌', '2D image 0 load error:', e);
             });
+            imgAsset.addEventListener('load', () => {
+                sendDebug('IMAGE_ASSET_0_LOADED', { url: imageUrl });
+            });
+            imgAsset.addEventListener('error', (e) => {
+                sendDebug('IMAGE_ASSET_0_ERROR', { url: imageUrl, message: e?.message || String(e) });
+            });
             assetsEl.appendChild(imgAsset);
             document.getElementById('mode-2d-0').setAttribute('src', '#img-asset-0');
         } else {
@@ -354,6 +402,12 @@
             });
             imgAsset2.addEventListener('error', (e) => {
                 log('❌', '2D image 1 load error:', e);
+            });
+            imgAsset2.addEventListener('load', () => {
+                sendDebug('IMAGE_ASSET_1_LOADED', { url: imageUrl2 });
+            });
+            imgAsset2.addEventListener('error', (e) => {
+                sendDebug('IMAGE_ASSET_1_ERROR', { url: imageUrl2, message: e?.message || String(e) });
             });
             assetsEl.appendChild(imgAsset2);
             document.getElementById('mode-2d-1').setAttribute('src', '#img-asset-1');
@@ -391,6 +445,16 @@
             assetItem2.setAttribute('crossorigin', 'anonymous');
             assetItem2.setAttribute('timeout', '15000');
             assetItem2.addEventListener('loaded', () => {
+                sendDebug('MODEL_ASSET_1_LOADED', { url: modelUrl2 });
+            });
+            assetItem2.addEventListener('error', (e) => {
+                sendDebug('MODEL_ASSET_1_ERROR', {
+                    url: modelUrl2,
+                    optional: secondaryModelIsOptional,
+                    message: e?.message || String(e)
+                });
+            });
+            assetItem2.addEventListener('loaded', () => {
                 log('✅', 'Model 1 loaded successfully');
             });
             assetItem2.addEventListener('error', (e) => {
@@ -426,11 +490,15 @@
                     log('Model 1 entity load error:', e);
                     model1El.dataset.modelLoadFailed = 'true';
                     model1El.setAttribute('visible', 'false');
+                    sendRenderSnapshot('MODEL_ENTITY_1_ERROR', { url: modelUrl2, optional: true, message: e?.message || String(e) });
                     sendDebug('SECONDARY_MODEL_SKIPPED', {
                         reason: 'model-1-entity-error',
                         url: modelUrl2,
                         comboModelUrl
                     });
+                });
+                model1El.addEventListener('model-loaded', () => {
+                    sendRenderSnapshot('MODEL_ENTITY_1_LOADED', { url: modelUrl2, optional: true });
                 });
                 model1El.setAttribute('gltf-model', modelUrl2);
                 sendDebug('SECONDARY_MODEL_OPTIONAL', {
@@ -439,6 +507,12 @@
                 });
             } else {
                 assetsEl.appendChild(assetItem2);
+                model1El.addEventListener('model-loaded', () => {
+                    sendRenderSnapshot('MODEL_ENTITY_1_LOADED', { url: modelUrl2, optional: false });
+                });
+                model1El.addEventListener('model-error', (e) => {
+                    sendRenderSnapshot('MODEL_ENTITY_1_ERROR', { url: modelUrl2, optional: false, message: e?.message || String(e) });
+                });
                 model1El.setAttribute('gltf-model', '#model-asset-1');
             }
             applyTextureWhenModelReady(model1El, textureUrl2);
@@ -569,6 +643,11 @@
                     confidence: 1.0
                 });
                 sendTrackingState(`target-${index}-found`);
+                sendRenderSnapshot('TARGET_RENDER_STATE_FOUND', {
+                    targetIndex: index,
+                    content2dId: `mode-2d-${index}`,
+                    content3dId: `mode-3d-${index}`
+                });
 
                 checkMultiTarget();
             });
@@ -588,6 +667,7 @@
                         targetIndex: index
                     });
                     sendTrackingState(`target-${index}-lost`);
+                    sendRenderSnapshot('TARGET_RENDER_STATE_LOST', { targetIndex: index });
 
                     // Stop proximity checking if not enough targets after the grace period
                     if (activeTargets.size < COMBO_THRESHOLD) {
@@ -1502,6 +1582,7 @@
         comboImage.setAttribute('position', `${midpoint.x} ${midpoint.y + 0.08} ${midpoint.z}`);
         comboImage.setAttribute('visible', 'true');
         sendDebug('COMBO_IMAGE_FALLBACK_SHOWN', { reason, url: comboImageUrl });
+        sendRenderSnapshot('COMBO_IMAGE_FALLBACK_RENDER_STATE', { reason, url: comboImageUrl });
         return true;
     }
 
@@ -1515,6 +1596,13 @@
 
         log('🎆', 'Loading combo model!');
         
+        sendRenderSnapshot('COMBO_LOAD_START', {
+            comboModelUrl,
+            comboImageUrl,
+            comboTextureUrl,
+            midpoint
+        });
+
         // Fade out individual models
         const model0 = document.getElementById('mode-3d-0');
         const model1 = document.getElementById('mode-3d-1');
@@ -1538,12 +1626,16 @@
             });
             scene.appendChild(comboModel);
             applyTextureWhenModelReady(comboModel, comboTextureUrl);
+            comboModel.addEventListener('model-loaded', () => {
+                sendRenderSnapshot('COMBO_MODEL_LOADED', { comboModelUrl });
+            });
             log('✨', 'Combo model entity created');
         }
         
         // Position at midpoint
         comboModel.setAttribute('position', `${midpoint.x} ${midpoint.y} ${midpoint.z}`);
         comboModel.setAttribute('visible', 'true');
+        sendRenderSnapshot('COMBO_MODEL_VISIBLE', { comboModelUrl, midpoint });
         
         // Speak combo name
         if ('speechSynthesis' in window) {
@@ -1595,6 +1687,7 @@
             comboImage.setAttribute('visible', 'false');
             log('combo', 'Combo image fallback hidden');
         }
+        sendRenderSnapshot('COMBO_REMOVED_RESTORE_STATE', {});
         if (model0) {
             model0.setAttribute('visible', 'true');
             log('🔄', 'Model 0 restored');
@@ -1615,6 +1708,7 @@
         }
 
         const is3D = mode === '3D';
+        setTimeout(() => sendRenderSnapshot('MODE_APPLIED', { mode }), 0);
 
         [0, 1].forEach((targetIndex) => {
             const mode2d = document.getElementById(`mode-2d-${targetIndex}`);
