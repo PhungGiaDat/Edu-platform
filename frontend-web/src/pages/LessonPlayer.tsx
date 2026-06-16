@@ -13,6 +13,8 @@ import {
     VocabularyCards,
 } from '@/components/courses/CourseLearningBlocks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
+import { cleanText, lessonTitle } from '@/lib/courseLocale';
 import { courseService } from '@/services/CourseService';
 import type { Lesson, QuizSubmitResult, Reward } from '@/types/course';
 
@@ -22,6 +24,7 @@ export const LessonPlayer: React.FC = () => {
     const { courseId, lessonId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { locale, t } = useLocale();
     const [lesson, setLesson] = useState<Lesson | null>(null);
     const [answers, setAnswers] = useState<Record<string, string>>({});
     const [result, setResult] = useState<QuizSubmitResult | null>(null);
@@ -42,7 +45,7 @@ export const LessonPlayer: React.FC = () => {
             .then(setLesson)
             .catch(err => {
                 console.error('[LessonPlayer] load error:', err);
-                setError('Chua tai duoc bai hoc.');
+                setError(t('lessonNotFound'));
             })
             .finally(() => setIsLoading(false));
     }, [courseId, lessonId]);
@@ -64,7 +67,7 @@ export const LessonPlayer: React.FC = () => {
             }
         } catch (err) {
             console.error('[LessonPlayer] submit error:', err);
-            setError('Quiz chua gui duoc. Be thu lai nhe!');
+            setError(t('lessonNotFound'));
         } finally {
             setIsSubmitting(false);
         }
@@ -76,13 +79,13 @@ export const LessonPlayer: React.FC = () => {
             {
                 id: 'video',
                 label: 'Watch',
-                title: lesson.videoLesson?.title || lesson.title,
+                title: cleanText(lesson.videoLesson?.title, lessonTitle(lesson, locale)),
                 content: lesson.videoLesson ? (
                     <section className="rounded-[32px] border-4 border-white bg-slate-950 p-4 text-white shadow-[0_8px_0_rgba(15,23,42,0.16)]">
                         <div className="flex aspect-video items-center justify-center rounded-3xl bg-gradient-to-br from-[#5B8DEF] via-[#6EE7B7] to-[#FFD93D] text-center">
                             <div className="px-4">
                                 <div className="text-5xl font-black">Play</div>
-                                <p className="mt-3 text-2xl font-black">{lesson.videoLesson.title}</p>
+                                <p className="mt-3 text-2xl font-black">{cleanText(lesson.videoLesson.title, lessonTitle(lesson, locale))}</p>
                                 <p className="mt-1 text-sm font-bold opacity-85">
                                     {lesson.videoLesson.duration_seconds}s - {lesson.videoLesson.video.status}
                                 </p>
@@ -94,37 +97,37 @@ export const LessonPlayer: React.FC = () => {
             lesson.videoLesson && {
                 id: 'story',
                 label: 'Story',
-                title: 'Short video story',
+                title: locale === 'vi' ? 'Cau chuyen ngan' : 'Short video story',
                 content: <VideoScenePreview scenes={lesson.videoLesson.scenes} />,
             },
             lesson.game && {
                 id: 'game',
                 label: 'Game',
-                title: 'Check after video',
+                title: locale === 'vi' ? 'Kiem tra sau video' : 'Check after video',
                 content: <SectionGameCard game={lesson.game} />,
             },
             {
                 id: 'words',
                 label: 'Words',
-                title: 'New words',
+                title: locale === 'vi' ? 'Tu moi' : 'New words',
                 content: <VocabularyCards items={lesson.vocabulary} />,
             },
             lesson.readAloudStory && {
                 id: 'read',
                 label: 'Read',
-                title: 'Read-aloud story',
+                title: locale === 'vi' ? 'Truyen doc thanh tieng' : 'Read-aloud story',
                 content: <ReadAloudStoryCard story={lesson.readAloudStory} />,
             },
             lesson.pronunciation && {
                 id: 'say',
                 label: 'Say',
-                title: 'Pronunciation test',
+                title: locale === 'vi' ? 'Luyen phat am' : 'Pronunciation test',
                 content: <PronunciationCard task={lesson.pronunciation} />,
             },
             lesson.activity && {
                 id: 'activity',
                 label: 'Do',
-                title: 'Picture activity',
+                title: locale === 'vi' ? 'Hoat dong hinh anh' : 'Picture activity',
                 content: <ActivityCard activity={lesson.activity} />,
             },
             lesson.arReference && {
@@ -146,7 +149,7 @@ export const LessonPlayer: React.FC = () => {
             {
                 id: 'quiz',
                 label: 'Quiz',
-                title: 'Fun quiz',
+                title: locale === 'vi' ? 'Quiz vui' : 'Fun quiz',
                 content: (
                     <ImageQuiz
                         questions={lesson.quiz}
@@ -161,19 +164,21 @@ export const LessonPlayer: React.FC = () => {
             {
                 id: 'finish',
                 label: 'Finish',
-                title: 'Earn reward',
+                title: locale === 'vi' ? 'Nhan phan thuong' : 'Earn reward',
                 content: (
                     <section className="rounded-[32px] border-4 border-white bg-gradient-to-br from-yellow-100 via-white to-sky-100 p-6 text-center shadow-[0_8px_0_rgba(91,141,239,0.12)]">
                         <AssetTile asset={lesson.reward?.sticker} label={lesson.reward?.badgeTitle || 'Reward'} emoji="reward" className="mx-auto max-w-sm" />
-                        <p className="mt-4 text-3xl font-black text-slate-800">Ready for your reward?</p>
+                        <p className="mt-4 text-3xl font-black text-slate-800">{t('readyReward')}</p>
                         <p className="mt-2 font-bold text-slate-500">
-                            Answer the quiz, then finish this section.
+                            {t('finishPrompt')}
                         </p>
                         {result && (
                             <div className="mx-auto mt-4 max-w-sm rounded-3xl bg-white px-5 py-4 shadow-sm">
                                 <p className="text-3xl font-black text-slate-800">{result.score}%</p>
                                 <p className="font-bold text-slate-600">
-                                    {result.passed ? 'Gioi qua! Be da qua bai quiz.' : 'Tot lam! Be thu lai de lay phan thuong nhe.'}
+                                    {result.passed
+                                        ? (locale === 'vi' ? 'Gioi qua! Ban da qua bai quiz.' : 'Great job! You passed the quiz.')
+                                        : (locale === 'vi' ? 'Tot lam! Hay thu lai de nhan phan thuong.' : 'Nice try! Try again to earn the reward.')}
                                 </p>
                             </div>
                         )}
@@ -181,17 +186,17 @@ export const LessonPlayer: React.FC = () => {
                 ),
             },
         ].filter(Boolean) as Array<{ id: string; label: string; title: string; content: React.ReactNode }>;
-    }, [answers, lesson, result]);
+    }, [answers, lesson, locale, result, t]);
 
     if (isLoading) {
-        return <div className="min-h-screen clay-bg-playful p-6 text-center text-xl font-black text-slate-700">Dang mo bai hoc...</div>;
+        return <div className="min-h-screen clay-bg-playful p-6 text-center text-xl font-black text-slate-700">{t('loadingLesson')}</div>;
     }
 
     if (!lesson || error) {
         return (
             <div className="min-h-screen clay-bg-playful p-6 text-center">
-                <p className="text-xl font-black text-rose-600">{error || 'Khong co bai hoc.'}</p>
-                <button type="button" onClick={() => navigate('/courses')} className="clay-cta-primary mt-4">Ve Course Catalog</button>
+                <p className="text-xl font-black text-rose-600">{error || t('lessonNotFound')}</p>
+                <button type="button" onClick={() => navigate('/courses')} className="clay-cta-primary mt-4">{t('backToAllPaths')}</button>
             </div>
         );
     }
@@ -207,10 +212,10 @@ export const LessonPlayer: React.FC = () => {
             <div className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-1 flex-col px-4 py-4 sm:px-6 lg:px-8">
                 <div className="mb-4 flex items-center justify-between gap-3">
                     <button type="button" onClick={() => navigate(`/courses/${courseId}`)} className="clay-btn clay-btn-sm bg-white text-slate-700">
-                        Back
+                        {t('back')}
                     </button>
                     <div className="rounded-full bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-sm">
-                        Section {lesson.order} - {progress}%
+                        {t('sections')} {lesson.order} - {progress}%
                     </div>
                 </div>
 
@@ -218,7 +223,7 @@ export const LessonPlayer: React.FC = () => {
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0">
                             <p className="text-sm font-black text-sky-600">{currentStep.label}</p>
-                            <h1 className="text-2xl font-black leading-tight text-slate-800 sm:text-4xl">{lesson.title}</h1>
+                            <h1 className="text-2xl font-black leading-tight text-slate-800 sm:text-4xl">{lessonTitle(lesson, locale)}</h1>
                             <p className="font-bold text-slate-500">{currentStep.title}</p>
                         </div>
                         <div className="h-3 overflow-hidden rounded-full bg-slate-100 sm:w-56">
@@ -252,7 +257,7 @@ export const LessonPlayer: React.FC = () => {
                         disabled={activeStep === 0}
                         className="clay-btn justify-center bg-white text-slate-700 disabled:opacity-50"
                     >
-                        Previous
+                        {t('previous')}
                     </button>
                     {isFinishStep ? (
                         <button
@@ -261,7 +266,7 @@ export const LessonPlayer: React.FC = () => {
                             disabled={!allAnswered || isSubmitting}
                             className="clay-cta-primary justify-center disabled:opacity-60"
                         >
-                            {isSubmitting ? 'Dang cham diem...' : 'Hoan thanh'}
+                            {isSubmitting ? t('grading') : t('finish')}
                         </button>
                     ) : (
                         <button
@@ -270,7 +275,7 @@ export const LessonPlayer: React.FC = () => {
                             disabled={!canGoNext}
                             className="clay-cta-primary justify-center disabled:opacity-60"
                         >
-                            Next
+                            {t('next')}
                         </button>
                     )}
                 </footer>
