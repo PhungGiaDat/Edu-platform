@@ -6,6 +6,19 @@ import { getApiBase } from '../config';
 import { eventBus } from '@/runtime/EventBus';
 
 const API_BASE = getApiBase();
+const PALM_TREE_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb';
+const PALM_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg';
+
+function normalizeArAssetUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+  const lower = url.toLowerCase();
+  if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return PALM_TREE_MODEL_URL;
+  if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return PALM_IMAGE_URL;
+  if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
+  if (lower.endsWith('/cute_elephant_jungle.glb')) return '/assets/models/combos/cute_elephant_jungle.glb';
+  if (lower.endsWith('/elephant_tree_combo_layered.png')) return '/assets/model2D/elephant_tree_combo_layered.png';
+  return url;
+}
 
 // ── localStorage cache helpers ──────────────────────────────────────────────
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
@@ -57,17 +70,20 @@ export const useArData = (qrId: string | null) => {
   useEffect(() => {
     if (!qrId) return;
 
-    const cacheKey = `ardata:v3:${qrId}`;
+    const cacheKey = `ardata:v4:${qrId}`;
 
     // Helper function to build full URL for backend assets
     // If backend returns full Supabase URLs (https://...), use them as-is
     // Otherwise fall back to API_BASE for legacy relative paths
     const buildUrl = (path: string | undefined): string | undefined => {
       if (!path) return undefined;
+      const normalized = normalizeArAssetUrl(path);
+      if (!normalized) return undefined;
+      if (normalized.startsWith('/assets/')) return normalized;
       // Use full URLs directly (Supabase storage URLs from backend)
-      if (path.startsWith('http://') || path.startsWith('https://')) return path;
+      if (normalized.startsWith('http://') || normalized.startsWith('https://')) return normalized;
       // Fallback: prepend API_BASE for relative paths (legacy support)
-      const cleanPath = path.startsWith('/') ? path : `/${path}`;
+      const cleanPath = normalized.startsWith('/') ? normalized : `/${normalized}`;
       return `${API_BASE}${cleanPath}`;
     };
 
