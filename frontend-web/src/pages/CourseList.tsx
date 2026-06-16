@@ -34,16 +34,89 @@ const levelLabel: Record<Locale, Record<string, string>> = {
         advanced: 'Brave Challenger',
     },
     vi: {
-        beginner: 'Lo trinh bat dau',
-        intermediate: 'Nha tham hiem nho',
-        advanced: 'Thu thach dung cam',
+        beginner: 'Lộ trình bắt đầu',
+        intermediate: 'Nhà thám hiểm nhỏ',
+        advanced: 'Thử thách dũng cảm',
     },
 };
 
 const categoryFallback: Record<string, { en: string; vi: string; mark: string }> = {
-    nature: { en: 'Animals and Nature', vi: 'Dong vat va thien nhien', mark: 'AN' },
-    home_family: { en: 'Home and Family', vi: 'Gia dinh', mark: 'HF' },
-    school_food: { en: 'School and Food', vi: 'Truong hoc va mon an', mark: 'SF' },
+    nature: { en: 'Animals and Nature', vi: 'Động vật và thiên nhiên', mark: 'AN' },
+    home_family: { en: 'Home and Family', vi: 'Gia đình', mark: 'HF' },
+    school_food: { en: 'School and Food', vi: 'Trường học và món ăn', mark: 'SF' },
+};
+
+const makeDemoLessons = (prefix: string) => Array.from({ length: 6 }, (_, index) => ({
+    lesson_id: `${prefix}-lesson-${index + 1}`,
+    title: ['Meet the words', 'Watch and listen', 'Tap the picture', 'Say it aloud', 'Play the quiz', 'Earn a sticker'][index],
+    title_vi: ['Gặp từ mới', 'Xem và nghe', 'Chạm vào hình', 'Nói thật rõ', 'Chơi quiz', 'Nhận sticker'][index],
+    order: index + 1,
+    duration_minutes: 6 + index,
+    vocabulary: [],
+    quiz: [],
+    generatedMedia: [],
+})) as Course['lessons'];
+
+const demoCourses: Course[] = [
+    {
+        course_id: 'demo-home-family',
+        title: 'Momo Learns English at Home',
+        description: 'A cheerful first course about family, rooms, feelings, and daily routines.',
+        subtitle_vi: 'Gia đình, ngôi nhà và cảm xúc',
+        theme: 'Home and Family',
+        category_key: 'home_family',
+        category_label: 'Home and Family',
+        category_icon: 'HF',
+        age_range: '5-7',
+        level: 'beginner',
+        description_vi: 'Khóa học vui về gia đình, các phòng, cảm xúc và thói quen hằng ngày.',
+        catalogPreview: [],
+        studentTestimonials: [],
+        lessons: makeDemoLessons('home'),
+        is_published: true,
+    },
+    {
+        course_id: 'demo-animals-nature',
+        title: 'Momo Explores Animals and Nature',
+        description: 'AR flashcards, nature stories, animal words, and playful mini games.',
+        subtitle_vi: 'Động vật, rừng và thiên nhiên',
+        theme: 'Animals and Nature',
+        category_key: 'nature',
+        category_label: 'Animals and Nature',
+        category_icon: 'AN',
+        age_range: '5-7',
+        level: 'beginner',
+        description_vi: 'Flashcard AR, truyện thiên nhiên, từ vựng động vật và trò chơi nhỏ.',
+        catalogPreview: [],
+        studentTestimonials: [],
+        lessons: makeDemoLessons('nature'),
+        is_published: true,
+    },
+    {
+        course_id: 'demo-school-food',
+        title: 'Momo Learns English at School',
+        description: 'Classroom phrases, lunch words, colors, games, speaking practice, and rewards.',
+        subtitle_vi: 'Trường học, lớp học và món ăn',
+        theme: 'School and Food',
+        category_key: 'school_food',
+        category_label: 'School and Food',
+        category_icon: 'SF',
+        age_range: '5-7',
+        level: 'beginner',
+        description_vi: 'Câu giao tiếp ở lớp, món ăn, màu sắc, trò chơi, luyện nói và phần thưởng.',
+        catalogPreview: [],
+        studentTestimonials: [],
+        lessons: makeDemoLessons('school'),
+        is_published: true,
+    },
+];
+
+const demoPathStats = {
+    completedLessons: 7,
+    totalLessons: 18,
+    totalXp: 1240,
+    inProgress: 2,
+    progressPercent: 39,
 };
 
 const getLearnerId = (userId?: string | null, isGuest?: boolean) => (
@@ -66,6 +139,27 @@ const initials = (value: string) => value
     .map(part => part[0])
     .join('')
     .toUpperCase();
+
+const cardPalette = (index: number) => [
+    {
+        shell: 'from-[#FFF4A8] via-[#FFE1A6] to-[#FFD1E8]',
+        thumb: 'from-[#FFE680] via-[#FFB86B] to-[#FF8E8E]',
+        accent: 'bg-[#FF8E8E] text-white',
+        progress: 'from-[#FF8E8E] to-[#FFD93D]',
+    },
+    {
+        shell: 'from-[#D9F99D] via-[#BAF7D0] to-[#A7F3D0]',
+        thumb: 'from-[#BBF7D0] via-[#7DD3FC] to-[#C4B5FD]',
+        accent: 'bg-[#10B981] text-white',
+        progress: 'from-[#10B981] to-[#38BDF8]',
+    },
+    {
+        shell: 'from-[#E9D5FF] via-[#FBCFE8] to-[#BFDBFE]',
+        thumb: 'from-[#C4B5FD] via-[#F9A8D4] to-[#93C5FD]',
+        accent: 'bg-[#7C3AED] text-white',
+        progress: 'from-[#7C3AED] to-[#F472B6]',
+    },
+][index % 3];
 
 const isAnimalNatureCourse = (course: Course) => {
     const haystack = [
@@ -249,19 +343,43 @@ export const CourseList: React.FC = () => {
     }, [activeFilter, courses]);
 
     const pageTitle = activeFilter === 'animals'
-        ? (locale === 'vi' ? 'Dong vat va thien nhien' : 'Animals and Nature')
+        ? (locale === 'vi' ? 'Động vật và thiên nhiên' : 'Animals and Nature')
         : activeFilter && courses.some(course => course.category_key === activeFilter)
             ? courseCategoryLabel(courses.find(course => course.category_key === activeFilter)!, locale)
         : activeFilter && ['beginner', 'intermediate', 'advanced'].includes(activeFilter)
             ? levelLabel[locale][activeFilter] || activeFilter
             : t('courseCatalog');
 
-    const totalLessons = courses.reduce((sum, course) => sum + course.lessons.length, 0);
-    const completedLessons = progress.reduce((sum, item) => sum + (item.completed_lessons?.length || 0), 0);
-    const totalXp = progress.reduce((sum, item) => sum + (item.total_xp || 0), 0);
-    const inProgress = progress.filter(item => item.status === 'started').length;
-    const overallProgress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-    const featuredCourse = filteredCourses[0] || courses[0];
+    const hasLiveCourses = courses.length > 0;
+    const displayCourses = hasLiveCourses ? filteredCourses : demoCourses;
+    const previewCourses = displayCourses.slice(0, 3);
+    const displayPaths = learningPaths.length > 0
+        ? learningPaths
+        : demoCourses.map(course => ({
+            key: course.category_key,
+            title: courseCategoryLabel(course, locale),
+            subtitle: `1 ${t('courses').toLowerCase()}`,
+            mark: categoryFallback[course.category_key]?.mark || initials(courseTheme(course, locale)),
+            courses: [course],
+            completedCourses: 0,
+            completedLessons: course.category_key === 'nature' ? 3 : 2,
+            totalLessons: course.lessons.length,
+            progressPercent: course.category_key === 'nature' ? 50 : 33,
+        }));
+    const totalLessons = hasLiveCourses
+        ? courses.reduce((sum, course) => sum + course.lessons.length, 0)
+        : demoPathStats.totalLessons;
+    const completedLessons = hasLiveCourses
+        ? progress.reduce((sum, item) => sum + (item.completed_lessons?.length || 0), 0)
+        : demoPathStats.completedLessons;
+    const totalXp = hasLiveCourses
+        ? progress.reduce((sum, item) => sum + (item.total_xp || 0), 0)
+        : demoPathStats.totalXp;
+    const inProgress = hasLiveCourses
+        ? progress.filter(item => item.status === 'started').length
+        : demoPathStats.inProgress;
+    const overallProgress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : demoPathStats.progressPercent;
+    const featuredCourse = displayCourses[0];
     const featuredTestimonials = featuredCourse ? testimonials(featuredCourse, locale) : [];
 
     const handleGenerate = async () => {
@@ -283,7 +401,7 @@ export const CourseList: React.FC = () => {
 
     return (
         <div className="min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden bg-[#F7F3FF] pb-[calc(env(safe-area-inset-bottom)+12rem)] md:pb-10">
-            <div className="absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(circle_at_15%_20%,#FFE680_0,transparent_26%),radial-gradient(circle_at_80%_8%,#8EE8FF_0,transparent_24%),linear-gradient(135deg,#FDF2F8_0%,#EFF6FF_48%,#ECFDF5_100%)]" />
+            <div className="absolute inset-x-0 top-0 h-[560px] bg-[radial-gradient(circle_at_12%_18%,#FFE680_0,transparent_24%),radial-gradient(circle_at_88%_7%,#67E8F9_0,transparent_25%),radial-gradient(circle_at_54%_34%,#F9A8D4_0,transparent_23%),linear-gradient(135deg,#FFF7AD_0%,#E0F2FE_45%,#DCFCE7_100%)]" />
             <div className="relative z-10 mx-auto w-full max-w-7xl min-w-0 px-4 py-5 sm:px-6 sm:py-7 lg:px-8 xl:px-10">
                 <header className="mb-6 grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)] lg:items-stretch">
                     <section className="rounded-[34px] border-4 border-white bg-white/85 p-5 shadow-[0_14px_0_rgba(91,141,239,0.14)] backdrop-blur sm:p-7">
@@ -319,30 +437,87 @@ export const CourseList: React.FC = () => {
                         </div>
                     </section>
 
-                    <section className="rounded-[34px] border-4 border-white bg-gradient-to-br from-[#FFF7AD] via-white to-[#BFF7EA] p-5 shadow-[0_14px_0_rgba(251,191,36,0.18)]">
-                        <p className="text-sm font-black uppercase tracking-wide text-slate-500">{t('progressDemo')}</p>
-                        <div className="mt-4 grid grid-cols-2 gap-3">
-                            <div className="rounded-3xl bg-white/80 p-4 shadow-[inset_0_-5px_0_rgba(15,23,42,0.06)]">
-                                <p className="text-3xl font-black text-sky-600">{overallProgress}%</p>
-                                <p className="text-sm font-black text-slate-500">{t('completed')}</p>
-                            </div>
-                            <div className="rounded-3xl bg-white/80 p-4 shadow-[inset_0_-5px_0_rgba(15,23,42,0.06)]">
-                                <p className="text-3xl font-black text-amber-600">{totalXp}</p>
-                                <p className="text-sm font-black text-slate-500">{t('xpEarned')}</p>
-                            </div>
+                    <section className="relative overflow-hidden rounded-[34px] border-4 border-white bg-gradient-to-br from-[#FFF7AD] via-[#CFFAFE] to-[#BBF7D0] p-5 shadow-[0_14px_0_rgba(251,191,36,0.20)]">
+                        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/45" />
+                        <div className="absolute -bottom-12 left-8 h-28 w-28 rounded-full bg-pink-200/50" />
+                        <p className="relative text-sm font-black uppercase tracking-wide text-slate-600">{t('progressDemo')}</p>
+                        <h2 className="relative mt-2 text-3xl font-black leading-tight text-slate-900">
+                            {locale === 'vi' ? 'Nhiệm vụ hôm nay' : "Today's adventure"}
+                        </h2>
+                        <div className="relative mt-4 grid gap-3">
+                            {[
+                                { label: locale === 'vi' ? 'Xem video 6 phút.' : 'Watch a 6-minute video.', value: '01', color: 'bg-white text-sky-600' },
+                                { label: locale === 'vi' ? 'Luyện 8 từ mới.' : 'Practice 8 new words.', value: '02', color: 'bg-white text-emerald-600' },
+                                { label: locale === 'vi' ? 'Quét flashcard AR.' : 'Scan an AR flashcard.', value: '03', color: 'bg-white text-rose-600' },
+                            ].map(item => (
+                                <div key={item.value} className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-3 rounded-3xl bg-white/70 p-3 shadow-[inset_0_-5px_0_rgba(15,23,42,0.06)]">
+                                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl text-sm font-black ${item.color}`}>{item.value}</div>
+                                    <p className="font-black text-slate-700">{item.label}</p>
+                                </div>
+                            ))}
                         </div>
-                        <div className="mt-5 h-4 overflow-hidden rounded-full bg-white">
-                            <div className="h-full rounded-full bg-gradient-to-r from-sky-400 via-fuchsia-300 to-amber-300" style={{ width: `${overallProgress}%` }} />
+                        <div className="relative mt-5 h-4 overflow-hidden rounded-full bg-white">
+                            <div className="h-full rounded-full bg-gradient-to-r from-sky-500 via-fuchsia-400 to-amber-300" style={{ width: `${overallProgress}%` }} />
                         </div>
-                        <p className="mt-3 text-sm font-bold text-slate-600">
-                            {completedLessons} / {totalLessons} {t('lessonsDone').toLowerCase()}
+                        <p className="relative mt-3 text-sm font-black text-slate-700">
+                            {overallProgress}% {t('completed')} · {completedLessons} / {totalLessons} {t('lessons')}
                         </p>
                     </section>
                 </header>
 
+                <section className="mb-7">
+                    <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p className="text-sm font-black uppercase tracking-wide text-rose-600">{t('coursePreview')}</p>
+                            <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">
+                                {locale === 'vi' ? 'Bắt đầu với một khóa học vui nhộn.' : 'Start with a playful course.'}
+                            </h2>
+                        </div>
+                        {!hasLiveCourses && (
+                            <span className="w-fit rounded-full border-4 border-white bg-white/80 px-4 py-2 text-xs font-black text-slate-500 shadow-[0_5px_0_rgba(15,23,42,0.08)]">
+                                {locale === 'vi' ? 'Đang hiển thị bản demo' : 'Showing demo content'}
+                            </span>
+                        )}
+                    </div>
+                    <div className="grid min-w-0 gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6">
+                        {previewCourses.map((course, index) => {
+                            const palette = cardPalette(index);
+                            const progressPercent = hasLiveCourses
+                                ? getCourseProgress(course, progressByCourse.get(course.course_id)).progressPercent
+                                : [35, 50, 22][index] || 30;
+                            return (
+                                <article
+                                    key={`preview-${course.course_id}`}
+                                    className={`min-w-0 overflow-hidden rounded-[32px] border-4 border-white bg-gradient-to-br ${palette.shell} p-4 shadow-[0_12px_0_rgba(91,141,239,0.14)] transition-transform hover:-translate-y-1`}
+                                >
+                                    <div className={`flex min-h-[120px] items-center justify-center rounded-[26px] bg-gradient-to-br ${palette.thumb} text-4xl font-black text-white shadow-[inset_0_-8px_0_rgba(15,23,42,0.10)]`}>
+                                        {initials(courseTheme(course, locale))}
+                                    </div>
+                                    <div className="mt-4 flex flex-wrap gap-2">
+                                        <span className={`rounded-full px-3 py-1 text-xs font-black ${palette.accent}`}>{t('age')} {course.age_range}</span>
+                                        <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-black text-slate-700">{course.lessons.length} {t('lessons')}</span>
+                                    </div>
+                                    <h3 className="mt-3 text-2xl font-black leading-tight text-slate-900">{courseTitle(course, locale)}</h3>
+                                    <p className="mt-2 line-clamp-2 font-bold leading-6 text-slate-700">{courseDescription(course, locale)}</p>
+                                    <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/80">
+                                        <div className={`h-full rounded-full bg-gradient-to-r ${palette.progress}`} style={{ width: `${progressPercent}%` }} />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => hasLiveCourses && navigate(`/courses/${course.course_id}`)}
+                                        className="mt-5 min-h-12 w-full rounded-full bg-slate-900 px-5 font-black text-white shadow-[0_6px_0_rgba(15,23,42,0.22)]"
+                                    >
+                                        {t('startLearning')}
+                                    </button>
+                                </article>
+                            );
+                        })}
+                    </div>
+                </section>
+
                 <section className="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {[
-                        { label: t('courses'), value: courses.length, tone: 'bg-sky-100 text-sky-700', mark: 'C' },
+                        { label: t('courses'), value: hasLiveCourses ? courses.length : demoCourses.length, tone: 'bg-sky-100 text-sky-700', mark: 'C' },
                         { label: t('lessonsDone'), value: `${completedLessons}/${totalLessons}`, tone: 'bg-emerald-100 text-emerald-700', mark: 'L' },
                         { label: t('xpEarned'), value: totalXp, tone: 'bg-yellow-100 text-amber-700', mark: 'XP' },
                         { label: t('inProgress'), value: inProgress, tone: 'bg-rose-100 text-rose-700', mark: 'GO' },
@@ -355,7 +530,31 @@ export const CourseList: React.FC = () => {
                     ))}
                 </section>
 
-                {learningPaths.length > 0 && !activeFilter && (
+                {!hasLiveCourses && !isLoading && (
+                    <section className="mb-7 rounded-[30px] border-4 border-white bg-gradient-to-r from-slate-900 via-slate-800 to-sky-900 p-5 text-white shadow-[0_10px_0_rgba(15,23,42,0.18)]">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-sm font-black uppercase tracking-wide text-sky-200">
+                                    {locale === 'vi' ? 'Bản xem trước' : 'Preview mode'}
+                                </p>
+                                <h2 className="mt-1 text-2xl font-black">
+                                    {locale === 'vi' ? 'Trang đang dùng nội dung demo để bạn kiểm tra thiết kế.' : 'This page is using demo content so you can review the design.'}
+                                </h2>
+                                <p className="mt-1 font-bold text-slate-200">{t('noCoursesBody')}</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleGenerate}
+                                disabled={isGenerating}
+                                className="min-h-12 shrink-0 rounded-full bg-white px-6 font-black text-slate-900 shadow-[0_6px_0_rgba(255,255,255,0.18)] disabled:opacity-60"
+                            >
+                                {isGenerating ? t('generating') : t('generateCourse')}
+                            </button>
+                        </div>
+                    </section>
+                )}
+
+                {displayPaths.length > 0 && !activeFilter && (
                     <section className="mb-8">
                         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                             <div>
@@ -364,11 +563,11 @@ export const CourseList: React.FC = () => {
                             </div>
                         </div>
                         <div className="grid gap-5 xl:grid-cols-3">
-                            {learningPaths.map(path => (
+                            {displayPaths.map(path => (
                                 <button
                                     key={path.key}
                                     type="button"
-                                    onClick={() => navigate(`/courses/category/${path.key}`)}
+                                    onClick={() => hasLiveCourses && navigate(`/courses/category/${path.key}`)}
                                     className="group min-w-0 rounded-[32px] border-4 border-white bg-white/90 p-5 text-left shadow-[0_10px_0_rgba(91,141,239,0.12)] transition-transform hover:-translate-y-1"
                                 >
                                     <div className="grid min-w-0 grid-cols-[64px_minmax(0,1fr)] gap-4">
@@ -413,21 +612,7 @@ export const CourseList: React.FC = () => {
                             <div key={item} className="h-80 animate-pulse rounded-[28px] bg-white/70" />
                         ))}
                     </div>
-                ) : courses.length === 0 ? (
-                    <div className="mx-auto max-w-xl rounded-[32px] border-4 border-white bg-white p-6 text-center shadow-[0_10px_0_rgba(91,141,239,0.12)]">
-                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-sky-100 text-2xl font-black text-sky-700">C</div>
-                        <h2 className="mt-3 text-2xl font-black text-slate-800">{t('noCourses')}</h2>
-                        <p className="mt-2 font-bold text-slate-600">{t('noCoursesBody')}</p>
-                        <button
-                            type="button"
-                            onClick={handleGenerate}
-                            disabled={isGenerating}
-                            className="mt-5 min-h-12 w-full rounded-full bg-slate-900 px-6 font-black text-white shadow-[0_6px_0_rgba(15,23,42,0.22)] disabled:opacity-60"
-                        >
-                            {isGenerating ? t('generating') : t('generateCourse')}
-                        </button>
-                    </div>
-                ) : filteredCourses.length === 0 ? (
+                ) : hasLiveCourses && filteredCourses.length === 0 ? (
                     <div className="rounded-[32px] border-4 border-white bg-white p-6 text-center shadow-[0_10px_0_rgba(91,141,239,0.12)]">
                         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-yellow-100 text-2xl font-black text-amber-700">?</div>
                         <h2 className="mt-3 text-2xl font-black text-slate-800">{t('noCoursesInCategory')}</h2>
@@ -435,27 +620,29 @@ export const CourseList: React.FC = () => {
                     </div>
                 ) : (
                     <div className="grid min-w-0 gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6">
-                        {filteredCourses.map(course => {
+                        {displayCourses.map((course, index) => {
                             const courseProgress = getCourseProgress(course, progressByCourse.get(course.course_id));
                             const totalCourseXp = course.lessons.reduce((sum, lesson) => sum + (lesson.reward?.xp || 0), 0);
                             const firstLessonId = progressByCourse.get(course.course_id)?.current_lesson_id || course.lessons[0]?.lesson_id;
                             const title = courseTitle(course, locale);
                             const theme = courseTheme(course, locale);
+                            const palette = cardPalette(index);
+                            const displayProgress = hasLiveCourses ? courseProgress.progressPercent : [35, 50, 22][index] || 30;
                             return (
                                 <article
                                     key={course.course_id}
-                                    className="group relative min-w-0 cursor-pointer overflow-hidden rounded-[30px] border-4 border-white bg-white shadow-[0_12px_0_rgba(91,141,239,0.13)] transition-transform hover:-translate-y-1"
-                                    onClick={() => navigate(`/courses/${course.course_id}`)}
+                                    className={`group relative min-w-0 cursor-pointer overflow-hidden rounded-[30px] border-4 border-white bg-gradient-to-br ${palette.shell} shadow-[0_12px_0_rgba(91,141,239,0.13)] transition-transform hover:-translate-y-1`}
+                                    onClick={() => hasLiveCourses && navigate(`/courses/${course.course_id}`)}
                                 >
                                     <div className="relative">
                                         <AssetTile
                                             asset={course.thumbnail}
                                             label={theme}
                                             emoji={initials(theme)}
-                                            className="min-h-[150px] rounded-b-none border-0 bg-gradient-to-br from-sky-100 via-emerald-50 to-yellow-50"
+                                            className={`min-h-[150px] rounded-b-none border-0 bg-gradient-to-br ${palette.thumb}`}
                                         />
-                                        <div className="absolute left-3 top-3 rounded-full bg-yellow-300 px-4 py-2 text-xs font-black text-slate-900 shadow-[0_4px_0_rgba(180,83,9,0.25)]">
-                                            {totalCourseXp} XP
+                                        <div className="absolute left-3 top-3 rounded-full bg-white/90 px-4 py-2 text-xs font-black text-slate-900 shadow-[0_4px_0_rgba(180,83,9,0.20)]">
+                                            {hasLiveCourses ? totalCourseXp : [480, 520, 460][index]} XP
                                         </div>
                                     </div>
 
@@ -474,17 +661,19 @@ export const CourseList: React.FC = () => {
                                             {courseDescription(course, locale)}
                                         </p>
                                         <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
-                                            <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-rose-300" style={{ width: `${courseProgress.progressPercent}%` }} />
+                                            <div className={`h-full rounded-full bg-gradient-to-r ${palette.progress}`} style={{ width: `${displayProgress}%` }} />
                                         </div>
                                         <div className="mt-2 text-xs font-bold text-slate-500">
-                                            {courseProgress.completedLessons} / {courseProgress.totalLessons} {t('lessonsDone').toLowerCase()}
+                                            {hasLiveCourses ? courseProgress.completedLessons : [2, 3, 1][index]} / {courseProgress.totalLessons} {t('lessonsDone').toLowerCase()}
                                         </div>
                                         <button
                                             type="button"
                                             className="mt-5 min-h-12 w-full rounded-full bg-gradient-to-br from-[#6EB9FF] to-[#B4E197] px-5 font-black text-slate-900 shadow-[0_6px_0_rgba(14,165,233,0.20)] transition-transform hover:-translate-y-0.5"
                                             onClick={(event) => {
                                                 event.stopPropagation();
-                                                navigate(firstLessonId ? `/courses/${course.course_id}/lessons/${firstLessonId}` : `/courses/${course.course_id}`);
+                                                if (hasLiveCourses) {
+                                                    navigate(firstLessonId ? `/courses/${course.course_id}/lessons/${firstLessonId}` : `/courses/${course.course_id}`);
+                                                }
                                             }}
                                         >
                                             {courseProgress.completedLessons > 0 ? t('continueLearning') : t('startLearning')}
@@ -498,23 +687,40 @@ export const CourseList: React.FC = () => {
 
                 {featuredTestimonials.length > 0 && (
                     <section className="mt-9 grid gap-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-                        <div className="rounded-[32px] border-4 border-white bg-slate-900 p-6 text-white shadow-[0_12px_0_rgba(15,23,42,0.16)]">
-                            <p className="text-sm font-black uppercase tracking-wide text-sky-200">{t('enrollNow')}</p>
-                            <h2 className="mt-2 text-3xl font-black leading-tight">{featuredCourse ? courseTitle(featuredCourse, locale) : t('courseCatalog')}</h2>
-                            <p className="mt-3 font-bold text-slate-200">{featuredCourse ? courseDescription(featuredCourse, locale) : t('heroBody')}</p>
+                        <div className="relative overflow-hidden rounded-[34px] border-4 border-white bg-gradient-to-br from-slate-950 via-[#312E81] to-[#0F766E] p-6 text-white shadow-[0_14px_0_rgba(15,23,42,0.18)]">
+                            <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-yellow-300/25" />
+                            <div className="absolute -bottom-10 left-8 h-24 w-24 rounded-full bg-sky-300/25" />
+                            <p className="relative text-sm font-black uppercase tracking-wide text-sky-200">{t('enrollNow')}</p>
+                            <h2 className="relative mt-2 text-3xl font-black leading-tight">{featuredCourse ? courseTitle(featuredCourse, locale) : t('courseCatalog')}</h2>
+                            <p className="relative mt-3 font-bold leading-7 text-slate-100">{featuredCourse ? courseDescription(featuredCourse, locale) : t('heroBody')}</p>
+                            <div className="relative mt-5 grid grid-cols-3 gap-2">
+                                {[
+                                    { label: t('lessons'), value: '18' },
+                                    { label: 'AR', value: '6' },
+                                    { label: 'XP', value: '1.2k' },
+                                ].map(item => (
+                                    <div key={item.label} className="rounded-2xl bg-white/15 p-3 text-center">
+                                        <p className="text-2xl font-black">{item.value}</p>
+                                        <p className="text-xs font-black text-slate-200">{item.label}</p>
+                                    </div>
+                                ))}
+                            </div>
                             {featuredCourse && (
                                 <button
                                     type="button"
-                                    onClick={() => navigate(`/courses/${featuredCourse.course_id}`)}
-                                    className="mt-5 min-h-12 rounded-full bg-white px-6 font-black text-slate-900 shadow-[0_6px_0_rgba(255,255,255,0.18)]"
+                                    onClick={() => hasLiveCourses && navigate(`/courses/${featuredCourse.course_id}`)}
+                                    className="relative mt-5 min-h-12 rounded-full bg-white px-6 font-black text-slate-900 shadow-[0_6px_0_rgba(255,255,255,0.18)]"
                                 >
                                     {t('enrollNow')}
                                 </button>
                             )}
                         </div>
-                        <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <p className="mb-2 text-sm font-black uppercase tracking-wide text-rose-600">{t('testimonials')}</p>
+                            <h2 className="mb-4 text-3xl font-black text-slate-900">{t('studentVoices')}</h2>
+                            <div className="grid gap-4 sm:grid-cols-2">
                             {featuredTestimonials.map(item => (
-                                <article key={`${item.name}-${item.role}`} className="rounded-[28px] border-4 border-white bg-white/90 p-5 shadow-[0_9px_0_rgba(91,141,239,0.11)]">
+                                <article key={`${item.name}-${item.role}`} className="rounded-[30px] border-4 border-white bg-gradient-to-br from-white via-sky-50 to-rose-50 p-5 shadow-[0_9px_0_rgba(91,141,239,0.11)]">
                                     <div className="flex items-center gap-3">
                                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-yellow-200 to-sky-200 text-lg font-black text-slate-800">
                                             {item.avatar || item.name.slice(0, 1)}
@@ -527,6 +733,7 @@ export const CourseList: React.FC = () => {
                                     <p className="mt-3 font-bold leading-6 text-slate-600">"{item.quote}"</p>
                                 </article>
                             ))}
+                            </div>
                         </div>
                     </section>
                 )}
