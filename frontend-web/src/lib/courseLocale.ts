@@ -30,50 +30,50 @@ const courseCopyByKey: Record<string, CourseCopy> = {
   home_family: {
     title: {
       en: 'Momo Learns English at Home',
-      vi: 'Momo hoc tieng Anh o nha',
+      vi: 'Momo học tiếng Anh ở nhà',
     },
     subtitle: {
       en: 'Home, family, and feelings',
-      vi: 'Gia dinh, ngoi nha va cam xuc',
+      vi: 'Gia đình, ngôi nhà và cảm xúc',
     },
     description: {
       en: 'Learn family words, rooms, feelings, and cozy daily phrases through videos, games, read-aloud stories, quizzes, and stickers.',
-      vi: 'Hoc tu ve gia dinh, cac phong trong nha, cam xuc va cau noi hang ngay qua video, tro choi, truyen doc, quiz va sticker.',
+      vi: 'Học từ về gia đình, các phòng trong nhà, cảm xúc và câu nói hằng ngày qua video, trò chơi, truyện đọc, quiz và sticker.',
     },
-    theme: { en: 'Home and Family', vi: 'Gia dinh' },
-    category: { en: 'Home and Family', vi: 'Gia dinh' },
+    theme: { en: 'Home and Family', vi: 'Gia đình' },
+    category: { en: 'Home and Family', vi: 'Gia đình' },
   },
   nature: {
     title: {
       en: 'Momo Explores Animals and Nature',
-      vi: 'Momo kham pha dong vat va thien nhien',
+      vi: 'Momo khám phá động vật và thiên nhiên',
     },
     subtitle: {
       en: 'Animals, jungle, weather, and nature words',
-      vi: 'Dong vat, rung, thoi tiet va tu vung thien nhien',
+      vi: 'Động vật, rừng, thời tiết và từ vựng thiên nhiên',
     },
     description: {
       en: 'Meet animals, scan AR flashcards, listen to nature stories, and practice useful English words with playful mini games.',
-      vi: 'Gap cac loai dong vat, quet flashcard AR, nghe truyen thien nhien va luyen tu tieng Anh qua cac tro choi nho.',
+      vi: 'Gặp các loài động vật, quét flashcard AR, nghe truyện thiên nhiên và luyện từ tiếng Anh qua các trò chơi nhỏ.',
     },
-    theme: { en: 'Animals and Nature', vi: 'Dong vat va thien nhien' },
-    category: { en: 'Animals and Nature', vi: 'Dong vat va thien nhien' },
+    theme: { en: 'Animals and Nature', vi: 'Động vật và thiên nhiên' },
+    category: { en: 'Animals and Nature', vi: 'Động vật và thiên nhiên' },
   },
   school_food: {
     title: {
       en: 'Momo Learns English at School',
-      vi: 'Momo hoc tieng Anh o truong',
+      vi: 'Momo học tiếng Anh ở trường',
     },
     subtitle: {
       en: 'School, food, classroom, and lunch words',
-      vi: 'Truong hoc, mon an, lop hoc va bua trua',
+      vi: 'Trường học, món ăn, lớp học và bữa trưa',
     },
     description: {
       en: 'Practice classroom words, lunch choices, colors, and friendly school phrases with videos, games, tracing, and cheerful quizzes.',
-      vi: 'Luyen tu ve lop hoc, bua trua, mau sac va cau giao tiep o truong qua video, tro choi, tap noi va quiz vui.',
+      vi: 'Luyện từ về lớp học, bữa trưa, màu sắc và câu giao tiếp ở trường qua video, trò chơi, tập nói và quiz vui.',
     },
-    theme: { en: 'School and Food', vi: 'Truong hoc va mon an' },
-    category: { en: 'School and Food', vi: 'Truong hoc va mon an' },
+    theme: { en: 'School and Food', vi: 'Trường học và món ăn' },
+    category: { en: 'School and Food', vi: 'Trường học và món ăn' },
   },
 };
 
@@ -85,19 +85,19 @@ const fallbackTestimonials: Array<{
 }> = [
   {
     name: 'Lina',
-    role: { en: 'Young learner', vi: 'Hoc vien nho' },
+    role: { en: 'Young learner', vi: 'Học viên nhỏ' },
     quote: {
       en: 'The games make every lesson feel like playtime, and I remember the words faster.',
-      vi: 'Tro choi lam moi bai hoc nhu gio choi, va em nho tu moi nhanh hon.',
+      vi: 'Trò chơi làm mỗi bài học như giờ chơi, và em nhớ từ mới nhanh hơn.',
     },
     avatar: 'L',
   },
   {
     name: 'Minh',
-    role: { en: 'Parent', vi: 'Phu huynh' },
+    role: { en: 'Parent', vi: 'Phụ huynh' },
     quote: {
       en: 'The short lessons and progress badges help my child stay excited after school.',
-      vi: 'Bai hoc ngan va huy hieu tien do giup con toi hao hung sau gio hoc.',
+      vi: 'Bài học ngắn và huy hiệu tiến độ giúp con tôi hào hứng sau giờ học.',
     },
     avatar: 'M',
   },
@@ -196,4 +196,3 @@ export const lessonDescription = (lesson: Lesson, locale: Locale) => {
 export const cleanText = (value: string | undefined | null, fallback: string) => {
   return looksBroken(value) ? fallback : value || fallback;
 };
-

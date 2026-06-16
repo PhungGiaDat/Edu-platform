@@ -115,7 +115,7 @@ export const LessonPlayer: React.FC = () => {
             lesson.readAloudStory && {
                 id: 'read',
                 label: 'Read',
-                title: locale === 'vi' ? 'Truyen doc thanh tieng' : 'Read-aloud story',
+                title: locale === 'vi' ? 'Truyện đọc thành tiếng' : 'Read-aloud story',
                 content: <ReadAloudStoryCard story={lesson.readAloudStory} />,
             },
             lesson.pronunciation && {
