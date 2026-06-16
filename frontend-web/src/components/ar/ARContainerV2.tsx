@@ -31,6 +31,7 @@ interface ARContainerV2Props {
     textureUrl2?: string;
     word?: string;
     word2?: string;
+    targets?: ARViewerTarget[];
     cardCount?: number;
     comboModelUrl?: string;
     comboImageUrl?: string;
@@ -47,6 +48,13 @@ interface ARContainerV2Props {
     children?: React.ReactNode;
 }
 
+interface ARViewerTarget {
+    modelUrl?: string;
+    imageUrl?: string;
+    textureUrl?: string;
+    word?: string;
+}
+
 export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     initialPhase = 'SCANNING',
     mindUrl,
@@ -58,6 +66,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     textureUrl2,
     word,
     word2,
+    targets,
     cardCount,
     comboModelUrl,
     comboImageUrl,
@@ -128,24 +137,36 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         if (!mindUrl) return null;
         const params = new URLSearchParams();
         params.set('mind', mindUrl);
-        if (modelUrl) params.set('model', modelUrl);
-        if (imageUrl) params.set('image', imageUrl);
-        if (textureUrl) params.set('textureUrl', textureUrl);
-        if (modelUrl2) params.set('model2', modelUrl2);
-        if (imageUrl2) params.set('image2', imageUrl2);
-        if (textureUrl2) params.set('textureUrl2', textureUrl2);
-        if (word) params.set('word', word);
-        if (word2) params.set('word2', word2);
-        if (typeof cardCount === 'number') {
-            params.set('cardCount', String(cardCount));
-            params.set('maxTrack', String(Math.max(2, Math.min(cardCount, 5))));
+
+        const viewerTargets = targets?.length
+            ? targets.slice(0, 5)
+            : [
+                { modelUrl, imageUrl, textureUrl, word },
+                { modelUrl: modelUrl2, imageUrl: imageUrl2, textureUrl: textureUrl2, word: word2 }
+            ].filter(target => target.modelUrl || target.imageUrl || target.textureUrl || target.word);
+        const targetCount = typeof cardCount === 'number'
+            ? Math.max(1, Math.min(cardCount, 5))
+            : Math.max(1, viewerTargets.length);
+
+        viewerTargets.slice(0, targetCount).forEach((target, index) => {
+            const suffix = index === 0 ? '' : String(index + 1);
+            if (target.modelUrl) params.set(`model${suffix}`, target.modelUrl);
+            if (target.imageUrl) params.set(`image${suffix}`, target.imageUrl);
+            if (target.textureUrl) params.set(`textureUrl${suffix}`, target.textureUrl);
+            if (target.word) params.set(`word${suffix}`, target.word);
+        });
+
+        params.set('cardCount', String(targetCount));
+        params.set('targetCount', String(targetCount));
+        if (typeof cardCount === 'number' || viewerTargets.length) {
+            params.set('maxTrack', String(Math.max(1, Math.min(targetCount, 5))));
         }
         if (comboModelUrl) params.set('comboModel', comboModelUrl);
         if (comboImageUrl) params.set('comboImage', comboImageUrl);
         if (comboTextureUrl) params.set('comboTextureUrl', comboTextureUrl);
         if (comboPhrase) params.set('comboPhrase', comboPhrase);
         return `/ar-viewer.html?${params.toString()}`;
-    }, [mindUrl, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+    }, [mindUrl, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
 
     useEffect(() => {
         emitDebug('PARENT_VIEWER_SRC_READY', {
@@ -159,13 +180,14 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             textureUrl2,
             word,
             word2,
+            targets,
             cardCount,
             comboModelUrl,
             comboImageUrl,
             comboTextureUrl,
             comboPhrase
         });
-    }, [emitDebug, viewerSrc, mindUrl, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+    }, [emitDebug, viewerSrc, mindUrl, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
 
     const mainSrc = useMemo(() => {
         switch (phase) {
@@ -381,7 +403,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             {mainSrc && (
                 <iframe
                     ref={iframeRef}
-                    key={`main-${phase}`} // ONLY use phase as key to avoid constant reload on model/image change
+                    key={`main-${phase}-${mainSrc}`}
                     src={mainSrc}
                     allow="camera; microphone; autoplay; fullscreen"
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', zIndex: 1 }}

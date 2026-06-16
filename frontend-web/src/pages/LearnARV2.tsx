@@ -58,6 +58,7 @@ const GameOverlay = lazy(() => import('@/components/GameOverlay').then(m => ({ d
 // Session limits (in minutes)
 const SESSION_LIMIT_MINS = 30;
 const SESSION_WARNING_MINS = 25;
+const MAX_AR_TRACKS = 5;
 
 function resolveMindUrl(rawUrl?: string): string | undefined {
     if (!rawUrl) return undefined;
@@ -598,6 +599,7 @@ export default function LearnARV2() {
     // ========== MULTI-FLASHCARD DETECTION ==========
     const {
         addFlashcard,
+        detectedFlashcards,
         flashcardCount,
         activeCombo,
         comboMindUrl,
@@ -679,17 +681,20 @@ export default function LearnARV2() {
         }, 100);
     }, [isAddingCard, isComboViewer]);
 
+    const scannedTarget0 = getFlashcardByIndex(0);
+    const scannedTarget1 = flashcardCount >= 2 ? getFlashcardByIndex(1) : null;
+    const scannedTargets = Array.from(detectedFlashcards.values()).slice(0, MAX_AR_TRACKS);
     const mindUrl = isComboViewer && comboMindUrl
         ? resolveMindUrl(comboMindUrl)
-        : resolveMindUrl(arData?.targets?.[0]?.nft_base_url);
+        : resolveMindUrl(scannedTarget0?.mindUrl || arData?.targets?.[0]?.nft_base_url);
 
     const comboTarget0 = isComboViewer && activeCombo?.requiredTags?.[0]
         ? getFlashcardByTag(activeCombo.requiredTags[0])
-        : null;
+        : scannedTarget0;
     const comboTarget1 = isComboViewer && activeCombo?.requiredTags?.[1]
         ? getFlashcardByTag(activeCombo.requiredTags[1])
-        : null;
-    const fallbackTarget1 = isComboViewer ? getFlashcardByIndex(1) : null;
+        : scannedTarget1;
+    const fallbackTarget1 = scannedTarget1;
 
     const modelUrl = comboTarget0?.model3dUrl || arData?.targets?.[0]?.model_3d_url;
 
@@ -706,6 +711,19 @@ export default function LearnARV2() {
     const comboTextureUrl = isComboViewer ? activeCombo?.textureUrl : undefined;
     const comboPhrase = isComboViewer && activeCombo?.description
         || [comboTarget0?.word || arData?.flashcard?.word, comboTarget1?.word || fallbackTarget1?.word].filter(Boolean).join(' in ');
+    const viewerTargets = scannedTargets.length
+        ? scannedTargets.map(target => ({
+            modelUrl: target.model3dUrl,
+            imageUrl: target.image2dUrl,
+            textureUrl: target.textureUrl,
+            word: target.word
+        }))
+        : [{
+            modelUrl,
+            imageUrl,
+            textureUrl,
+            word: comboTarget0?.word || arData?.flashcard?.word
+        }];
 
     useEffect(() => {
         emitMobileDebug('LEARNAR_VIEWER_INPUTS', {
@@ -810,7 +828,11 @@ export default function LearnARV2() {
                 setDetectedQrId(qrId);
                 setAppState('LOADING');
             } else if (isControlledAdd) {
-                setAppState('SCANNING');
+                setIsAddingCard(false);
+                setAppState('VIEWING');
+                window.setTimeout(() => {
+                    eventBus.emit('AR_SWITCH_TO_VIEWER' as any, {});
+                }, 100);
             }
 
             trackFlashcardView();
@@ -893,9 +915,10 @@ export default function LearnARV2() {
         console.log('[LearnARV2] Model clicked:', modelId, 'Index:', targetIndex);
         let targetWord = "";
         let audioUrl = "";
-        if (targetIndex === 1) {
-            const card2 = getFlashcardByIndex(1);
-            if (card2) targetWord = card2.word;
+        if (typeof targetIndex === 'number') {
+            const scannedCard = getFlashcardByIndex(targetIndex);
+            targetWord = scannedCard?.word || (targetIndex === 0 ? arData?.flashcard?.word || "" : "");
+            if (targetIndex === 0) audioUrl = arData?.flashcard?.audio_url || "";
         } else {
             targetWord = arData?.flashcard?.word || "";
             audioUrl = arData?.flashcard?.audio_url || "";
@@ -1069,7 +1092,8 @@ export default function LearnARV2() {
                 textureUrl2={textureUrl2}
                 word={comboTarget0?.word || arData?.flashcard?.word}
                 word2={comboTarget1?.word || fallbackTarget1?.word}
-                cardCount={isComboViewer && activeCombo?.requiredTags?.length ? activeCombo.requiredTags.length : 1}
+                targets={viewerTargets}
+                cardCount={Math.max(1, Math.min(flashcardCount || viewerTargets.length, MAX_AR_TRACKS))}
                 comboModelUrl={comboModelUrl}
                 comboImageUrl={comboImageUrl}
                 comboTextureUrl={comboTextureUrl}
@@ -1092,7 +1116,7 @@ export default function LearnARV2() {
                         onAppModeSwitch={handleAppModeChange}
                     />
                 )}
-                {appState === 'VIEWING' && !isComboViewer && flashcardCount < 2 && (
+                {appState === 'VIEWING' && !isComboViewer && flashcardCount < MAX_AR_TRACKS && (
                     <button
                         type="button"
                         onClick={handleAddCardScan}

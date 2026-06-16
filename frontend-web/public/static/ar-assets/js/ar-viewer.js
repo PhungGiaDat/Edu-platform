@@ -58,11 +58,21 @@
     const comboImageUrl = params.get('comboImage'); // 2D layered fallback for combo scene
     const comboTextureUrl = params.get('comboTextureUrl'); // Texture for combo model
     const comboPhrase = params.get('comboPhrase') || '';
-    const maxTrack = Math.max(2, Math.min(Number(params.get('maxTrack')) || 2, 5));
-    const cardCount = Number(params.get('cardCount') || '1');
+    const maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));
+    const cardCount = Math.max(1, Math.min(Number(params.get('cardCount') || params.get('targetCount')) || 1, 5));
+    const targetCount = Math.max(1, Math.min(Number(params.get('targetCount')) || cardCount, maxTrack, 5));
+    const getIndexedParam = (base, index) => params.get(index === 0 ? base : `${base}${index + 1}`);
+    const targetConfigs = Array.from({ length: targetCount }, (_, index) => ({
+        index,
+        modelUrl: getIndexedParam('model', index),
+        imageUrl: getIndexedParam('image', index),
+        textureUrl: getIndexedParam('textureUrl', index),
+        word: getIndexedParam('word', index) || ''
+    }));
     // Words for click-to-sound — stored in window globals so SET_WORD can update them too
-    window._arWord0 = params.get('word') || '';
-    window._arWord1 = params.get('word2') || '';
+    targetConfigs.forEach((target) => {
+        window[`_arWord${target.index}`] = target.word;
+    });
 
     log('🔧', `Params: mind=${mindUrl}, model=${modelUrl}, texture=${textureUrl}, word=${window._arWord0}`);
 
@@ -96,10 +106,13 @@
     }
 
     function sendTrackingState(reason) {
+        const targets = {};
+        targetConfigs.forEach((target) => {
+            targets[`target${target.index}`] = activeTargets.has(target.index);
+        });
         sendToParent('AR_TRACKING_STATE', {
             reason,
-            target0: activeTargets.has(0),
-            target1: activeTargets.has(1),
+            ...targets,
             both: activeTargets.has(0) && activeTargets.has(1),
             activeTargets: Array.from(activeTargets.keys())
         });
@@ -111,10 +124,12 @@
             details: details || {},
             phase: isReady ? 'ready' : 'initializing',
             cardCount,
+            targetCount,
             maxTrack,
             hasMindUrl: Boolean(mindUrl),
             hasModel0: Boolean(modelUrl),
             hasModel1: Boolean(modelUrl2),
+            modelCount: targetConfigs.filter(target => Boolean(target.modelUrl)).length,
             hasComboModel: Boolean(comboModelUrl)
         });
     }
@@ -137,16 +152,82 @@
         };
     }
 
+    function getTargetModelScale(index) {
+        if (index === 0) return 0.25;
+        if (index === 1) return 0.5;
+        return 0.35;
+    }
+
+    function ensureDynamicTargets() {
+        targetConfigs.forEach((target) => {
+            let targetEl = document.getElementById(`target-${target.index}`);
+            if (!targetEl) {
+                targetEl = document.createElement('a-entity');
+                targetEl.id = `target-${target.index}`;
+                targetEl.setAttribute('mindar-image-target', `targetIndex: ${target.index}`);
+                targetEl.setAttribute('visible', 'true');
+
+                const imageEl = document.createElement('a-image');
+                imageEl.id = `mode-2d-${target.index}`;
+                imageEl.classList.add('clickable');
+                imageEl.setAttribute('position', '0 0 0');
+                imageEl.setAttribute('rotation', '0 0 0');
+                imageEl.setAttribute('width', '1');
+                imageEl.setAttribute('height', '1');
+                imageEl.setAttribute('visible', 'false');
+                targetEl.appendChild(imageEl);
+
+                const modelEl = document.createElement('a-entity');
+                const modelScale = getTargetModelScale(target.index);
+                modelEl.id = `mode-3d-${target.index}`;
+                modelEl.classList.add('clickable');
+                modelEl.setAttribute('position', `0 ${target.index === 0 ? 0.05 : 0.1} 0`);
+                modelEl.setAttribute('rotation', '0 0 0');
+                modelEl.setAttribute('scale', `${modelScale} ${modelScale} ${modelScale}`);
+                modelEl.setAttribute('visible', 'true');
+                targetEl.appendChild(modelEl);
+
+                scene.appendChild(targetEl);
+                return;
+            }
+
+            if (!document.getElementById(`mode-2d-${target.index}`)) {
+                const imageEl = document.createElement('a-image');
+                imageEl.id = `mode-2d-${target.index}`;
+                imageEl.classList.add('clickable');
+                imageEl.setAttribute('position', '0 0 0');
+                imageEl.setAttribute('rotation', '0 0 0');
+                imageEl.setAttribute('width', '1');
+                imageEl.setAttribute('height', '1');
+                imageEl.setAttribute('visible', 'false');
+                targetEl.appendChild(imageEl);
+            }
+
+            if (!document.getElementById(`mode-3d-${target.index}`)) {
+                const modelEl = document.createElement('a-entity');
+                const modelScale = getTargetModelScale(target.index);
+                modelEl.id = `mode-3d-${target.index}`;
+                modelEl.classList.add('clickable');
+                modelEl.setAttribute('position', `0 ${target.index === 0 ? 0.05 : 0.1} 0`);
+                modelEl.setAttribute('rotation', '0 0 0');
+                modelEl.setAttribute('scale', `${modelScale} ${modelScale} ${modelScale}`);
+                modelEl.setAttribute('visible', 'true');
+                targetEl.appendChild(modelEl);
+            }
+        });
+    }
+
     function sendRenderSnapshot(label, details) {
+        const targetStates = {};
+        targetConfigs.forEach((target) => {
+            targetStates[`target${target.index}`] = getElementDebugState(`target-${target.index}`);
+            targetStates[`mode2d${target.index}`] = getElementDebugState(`mode-2d-${target.index}`);
+            targetStates[`mode3d${target.index}`] = getElementDebugState(`mode-3d-${target.index}`);
+        });
         sendDebug(label, {
             currentMode,
             activeTargets: Array.from(activeTargets.keys()),
-            target0: getElementDebugState('target-0'),
-            target1: getElementDebugState('target-1'),
-            mode2d0: getElementDebugState('mode-2d-0'),
-            mode3d0: getElementDebugState('mode-3d-0'),
-            mode2d1: getElementDebugState('mode-2d-1'),
-            mode3d1: getElementDebugState('mode-3d-1'),
+            ...targetStates,
             comboModel: getElementDebugState('combo-model'),
             comboImage: getElementDebugState('combo-image-scene'),
             details: details || {}
@@ -300,6 +381,18 @@
         sendDebug('MINDAR_CONFIG_ACTIVE', {
             expectedConfig: mindArConfig,
             activeConfig: scene.getAttribute('mindar-image')
+        });
+
+        ensureDynamicTargets();
+        sendDebug('DYNAMIC_TARGETS_READY', {
+            targetCount,
+            targets: targetConfigs.map(target => ({
+                index: target.index,
+                hasModel: Boolean(target.modelUrl),
+                hasImage: Boolean(target.imageUrl),
+                hasTexture: Boolean(target.textureUrl),
+                word: target.word
+            }))
         });
 
         const assetsEl = document.querySelector('a-assets') || document.createElement('a-assets');
@@ -529,6 +622,64 @@
         }
 
         log('🎧', 'Setting up event listeners...');
+        targetConfigs.slice(2).forEach((target) => {
+            const modelEl = document.getElementById(`mode-3d-${target.index}`);
+            const imageEl = document.getElementById(`mode-2d-${target.index}`);
+
+            if (target.imageUrl && imageEl) {
+                const imgAsset = document.createElement('img');
+                imgAsset.setAttribute('id', `img-asset-${target.index}`);
+                imgAsset.setAttribute('src', target.imageUrl);
+                imgAsset.setAttribute('crossorigin', 'anonymous');
+                imgAsset.addEventListener('load', () => {
+                    sendDebug('IMAGE_ASSET_DYNAMIC_LOADED', { targetIndex: target.index, url: target.imageUrl });
+                });
+                imgAsset.addEventListener('error', (e) => {
+                    sendDebug('IMAGE_ASSET_DYNAMIC_ERROR', {
+                        targetIndex: target.index,
+                        url: target.imageUrl,
+                        message: e?.message || String(e)
+                    });
+                });
+                assetsEl.appendChild(imgAsset);
+                imageEl.setAttribute('src', `#img-asset-${target.index}`);
+            }
+
+            if (target.modelUrl && modelEl) {
+                const assetItem = document.createElement('a-asset-item');
+                assetItem.setAttribute('id', `model-asset-${target.index}`);
+                assetItem.setAttribute('src', target.modelUrl);
+                assetItem.setAttribute('crossorigin', 'anonymous');
+                assetItem.setAttribute('timeout', '15000');
+                assetItem.addEventListener('loaded', () => {
+                    sendDebug('MODEL_ASSET_DYNAMIC_LOADED', { targetIndex: target.index, url: target.modelUrl });
+                });
+                assetItem.addEventListener('error', (e) => {
+                    modelEl.dataset.modelLoadFailed = 'true';
+                    modelEl.setAttribute('visible', 'false');
+                    sendDebug('MODEL_ASSET_DYNAMIC_ERROR', {
+                        targetIndex: target.index,
+                        url: target.modelUrl,
+                        message: e?.message || String(e)
+                    });
+                });
+                assetsEl.appendChild(assetItem);
+                modelEl.addEventListener('model-loaded', () => {
+                    sendRenderSnapshot('MODEL_ENTITY_DYNAMIC_LOADED', { targetIndex: target.index, url: target.modelUrl });
+                });
+                modelEl.addEventListener('model-error', (e) => {
+                    modelEl.dataset.modelLoadFailed = 'true';
+                    sendRenderSnapshot('MODEL_ENTITY_DYNAMIC_ERROR', {
+                        targetIndex: target.index,
+                        url: target.modelUrl,
+                        message: e?.message || String(e)
+                    });
+                });
+                modelEl.setAttribute('gltf-model', `#model-asset-${target.index}`);
+                applyTextureWhenModelReady(modelEl, target.textureUrl);
+            }
+        });
+
         setupEventListeners();
         log('✅', 'MindAR Viewer initialization complete');
     }
@@ -542,7 +693,7 @@
             log('✅', 'Camera and tracking are now active');
             isReady = true;
             sendDebug('MINDAR_READY', {
-                targetCount: Math.max(1, Math.min(cardCount || 1, maxTrack))
+                targetCount
             });
             hideLoadingOverlay();
 
@@ -562,7 +713,7 @@
 
             // Also send AR_READY for backwards compatibility
             sendToParent('AR_READY', {
-                targetCount: Math.max(1, Math.min(cardCount || 1, maxTrack))
+                targetCount
             });
         });
 
@@ -611,7 +762,8 @@
 
         // Target tracking
         log('🎯', 'Setting up target tracking listeners for target-0 and target-1');
-        ['target-0', 'target-1'].forEach((id, index) => {
+        targetConfigs.forEach(({ index }) => {
+            const id = `target-${index}`;
             const target = document.getElementById(id);
             sendDebug('TARGET_LOOKUP', {
                 targetId: id,
@@ -691,7 +843,7 @@
             // Haptic feedback
             if (navigator.vibrate) navigator.vibrate([40, 20, 40]);
 
-            const targetIndex = el.id.includes('-1') ? 1 : 0;
+            const targetIndex = Number(el.id.match(/-(\d+)$/)?.[1] || 0);
 
             // ── Click-to-move: bounce the model up then back ──────────────────
             const modelEl = document.getElementById(`mode-3d-${targetIndex}`);
@@ -737,9 +889,7 @@
             }
 
             // ── Click-to-sound: speak the word via Web Speech API ────────────────
-            const wordToSpeak = targetIndex === 0
-                ? (window._arWord0 || '')
-                : (window._arWord1 || '');
+            const wordToSpeak = window[`_arWord${targetIndex}`] || '';
 
             if (wordToSpeak && 'speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
@@ -1120,9 +1270,9 @@
                     raycaster.setFromCamera(mouse, camera);
 
                     // Get models
-                    const model0 = document.getElementById('mode-3d-0');
-                    const model1 = document.getElementById('mode-3d-1');
-                    const models = [model0, model1].filter(m => m && m.object3D);
+                    const models = targetConfigs
+                        .map(target => document.getElementById(`mode-3d-${target.index}`))
+                        .filter(m => m && m.object3D);
 
                     // Raycast
                     const intersects = [];
@@ -1131,7 +1281,7 @@
                         if (hits.length > 0) {
                             intersects.push({
                                 element: modelEl,
-                                targetIndex: modelEl.id.includes('-1') ? 1 : 0,
+                                targetIndex: Number(modelEl.id.match(/-(\d+)$/)?.[1] || 0),
                                 distance: hits[0].distance
                             });
                         }
@@ -1205,9 +1355,7 @@
             modelEl.emit('touch-scale');
 
             // ── Play audio (Web Speech API) ───────────────────────────────────
-            const wordToSpeak = targetIndex === 0
-                ? (window._arWord0 || '')
-                : (window._arWord1 || '');
+            const wordToSpeak = window[`_arWord${targetIndex}`] || '';
 
             if (wordToSpeak && 'speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
@@ -1236,8 +1384,15 @@
             const modelEl = document.getElementById(`mode-3d-${targetIndex}`);
             if (!modelEl) return;
 
-            const defaults = DEFAULT_TRANSFORMS[targetIndex];
-            if (!defaults) return;
+            const defaults = DEFAULT_TRANSFORMS[targetIndex] || {
+                position: { x: 0, y: targetIndex === 0 ? 0.05 : 0.1, z: 0 },
+                scale: {
+                    x: getTargetModelScale(targetIndex),
+                    y: getTargetModelScale(targetIndex),
+                    z: getTargetModelScale(targetIndex)
+                },
+                rotation: { x: 0, y: 0, z: 0 }
+            };
 
             log('🔄', `Resetting model ${targetIndex} to default transform`);
 
@@ -1561,11 +1716,7 @@
             sendDebug('COMBO_IMAGE_FALLBACK_MISSING', { reason });
             return false;
         }
-
-        const model0 = document.getElementById('mode-3d-0');
-        const model1 = document.getElementById('mode-3d-1');
-        if (model0) model0.setAttribute('visible', 'false');
-        if (model1) model1.setAttribute('visible', 'false');
+        hideOriginalModelsForCombo('combo-image-fallback');
 
         let comboImage = document.getElementById('combo-image-scene');
         if (!comboImage) {
@@ -1586,10 +1737,42 @@
         return true;
     }
 
+    function restoreOriginalModels(reason) {
+        const show3d = currentMode === '3D';
+
+        targetConfigs.forEach((target) => {
+            const model = document.getElementById(`mode-3d-${target.index}`);
+            const image = document.getElementById(`mode-2d-${target.index}`);
+
+            if (model && model.dataset.modelLoadFailed !== 'true') {
+                model.setAttribute('visible', show3d);
+            }
+            if (image) image.setAttribute('visible', !show3d);
+        });
+
+        sendRenderSnapshot('ORIGINAL_MODELS_RESTORED', { reason });
+    }
+
+    function hideOriginalModelsForCombo(reason) {
+        targetConfigs.forEach((target) => {
+            const model = document.getElementById(`mode-3d-${target.index}`);
+            const image = document.getElementById(`mode-2d-${target.index}`);
+
+            if (model) model.setAttribute('visible', 'false');
+            if (image) image.setAttribute('visible', 'false');
+        });
+
+        sendRenderSnapshot('ORIGINAL_MODELS_HIDDEN_FOR_COMBO', { reason });
+    }
+
     function loadComboModel(midpoint) {
         // Only load combo model if we have a combo model URL
         if (!comboModelUrl) {
-            showComboImageFallback(midpoint, 'no-combo-model-url');
+            restoreOriginalModels('no-combo-model-url');
+            sendDebug('COMBO_MODEL_MISSING_ORIGINAL_FALLBACK', {
+                comboImageUrl,
+                midpoint
+            });
             log('⚠️', 'No combo model URL provided, skipping combo model load');
             return;
         }
@@ -1603,13 +1786,6 @@
             midpoint
         });
 
-        // Fade out individual models
-        const model0 = document.getElementById('mode-3d-0');
-        const model1 = document.getElementById('mode-3d-1');
-        
-        if (model0) model0.setAttribute('visible', 'false');
-        if (model1) model1.setAttribute('visible', 'false');
-        
         // Create combo model entity if it doesn't exist
         let comboModel = document.getElementById('combo-model');
         if (!comboModel) {
@@ -1617,16 +1793,26 @@
             comboModel.id = 'combo-model';
             comboModel.setAttribute('gltf-model', comboModelUrl);
             comboModel.setAttribute('scale', '0.4 0.4 0.4'); // Bigger for impact!
+            comboModel.setAttribute('visible', 'false');
             comboModel.setAttribute('animation', 'property: rotation; to: 0 360 0; dur: 4000; easing: linear; loop: true');
             comboModel.setAttribute('animation__spawn', 'property: scale; from: 0 0 0; to: 0.4 0.4 0.4; dur: 600; easing: easeOutBack');
             comboModel.addEventListener('model-error', (event) => {
                 log('combo', 'Combo model entity load error:', event);
+                comboModel.dataset.modelLoadFailed = 'true';
                 comboModel.setAttribute('visible', 'false');
-                showComboImageFallback(midpoint, 'combo-model-error');
+                restoreOriginalModels('combo-model-error');
+                sendDebug('COMBO_MODEL_ERROR_ORIGINAL_FALLBACK', {
+                    comboModelUrl,
+                    comboImageUrl,
+                    message: event?.message || String(event)
+                });
             });
             scene.appendChild(comboModel);
             applyTextureWhenModelReady(comboModel, comboTextureUrl);
             comboModel.addEventListener('model-loaded', () => {
+                comboModel.dataset.modelLoaded = 'true';
+                hideOriginalModelsForCombo('combo-model-loaded');
+                comboModel.setAttribute('visible', 'true');
                 sendRenderSnapshot('COMBO_MODEL_LOADED', { comboModelUrl });
             });
             log('✨', 'Combo model entity created');
@@ -1634,7 +1820,12 @@
         
         // Position at midpoint
         comboModel.setAttribute('position', `${midpoint.x} ${midpoint.y} ${midpoint.z}`);
-        comboModel.setAttribute('visible', 'true');
+        if (comboModel.dataset.modelLoaded === 'true') {
+            hideOriginalModelsForCombo('combo-model-visible');
+            comboModel.setAttribute('visible', 'true');
+        } else {
+            restoreOriginalModels('combo-model-loading');
+        }
         sendRenderSnapshot('COMBO_MODEL_VISIBLE', { comboModelUrl, midpoint });
         
         // Speak combo name
@@ -1676,8 +1867,6 @@
     function removeComboModel() {
         const comboModel = document.getElementById('combo-model');
         const comboImage = document.getElementById('combo-image-scene');
-        const model0 = document.getElementById('mode-3d-0');
-        const model1 = document.getElementById('mode-3d-1');
         
         if (comboModel) {
             comboModel.setAttribute('visible', 'false');
@@ -1688,14 +1877,7 @@
             log('combo', 'Combo image fallback hidden');
         }
         sendRenderSnapshot('COMBO_REMOVED_RESTORE_STATE', {});
-        if (model0) {
-            model0.setAttribute('visible', 'true');
-            log('🔄', 'Model 0 restored');
-        }
-        if (model1 && model1.dataset.modelLoadFailed !== 'true') {
-            model1.setAttribute('visible', 'true');
-            log('🔄', 'Model 1 restored');
-        }
+        restoreOriginalModels('combo-model-removed');
         
         log('🧹', 'Combo model removed, individual models restored');
     }
@@ -1710,9 +1892,9 @@
         const is3D = mode === '3D';
         setTimeout(() => sendRenderSnapshot('MODE_APPLIED', { mode }), 0);
 
-        [0, 1].forEach((targetIndex) => {
-            const mode2d = document.getElementById(`mode-2d-${targetIndex}`);
-            const mode3d = document.getElementById(`mode-3d-${targetIndex}`);
+        targetConfigs.forEach((target) => {
+            const mode2d = document.getElementById(`mode-2d-${target.index}`);
+            const mode3d = document.getElementById(`mode-3d-${target.index}`);
 
             if (mode2d) mode2d.setAttribute('visible', !is3D);
             if (mode3d) mode3d.setAttribute('visible', is3D);
