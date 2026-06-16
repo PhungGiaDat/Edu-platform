@@ -59,6 +59,12 @@ const GameOverlay = lazy(() => import('@/components/GameOverlay').then(m => ({ d
 const SESSION_LIMIT_MINS = 30;
 const SESSION_WARNING_MINS = 25;
 const MAX_AR_TRACKS = 5;
+const RECOVERABLE_AR_ERROR_CODES = new Set([
+    'MODEL_LOAD_ERROR',
+    'IMAGE_LOAD_ERROR',
+    'TEXTURE_LOAD_ERROR',
+    'TEXTURE_APPLY_ERROR'
+]);
 
 function resolveMindUrl(rawUrl?: string): string | undefined {
     if (!rawUrl) return undefined;
@@ -711,8 +717,13 @@ export default function LearnARV2() {
     const comboTextureUrl = isComboViewer ? activeCombo?.textureUrl : undefined;
     const comboPhrase = isComboViewer && activeCombo?.description
         || [comboTarget0?.word || arData?.flashcard?.word, comboTarget1?.word || fallbackTarget1?.word].filter(Boolean).join(' in ');
-    const viewerTargets = scannedTargets.length
-        ? scannedTargets.map(target => ({
+    const orderedViewerTargets = isComboViewer && activeCombo?.requiredTags?.length
+        ? activeCombo.requiredTags
+            .map(tag => getFlashcardByTag(tag))
+            .filter((target): target is NonNullable<typeof target> => Boolean(target))
+        : scannedTargets;
+    const viewerTargets = orderedViewerTargets.length
+        ? orderedViewerTargets.map(target => ({
             modelUrl: target.model3dUrl,
             imageUrl: target.image2dUrl,
             textureUrl: target.textureUrl,
@@ -790,6 +801,14 @@ export default function LearnARV2() {
         const lastSeenAt = qrGateRef.current.get(qrId) || 0;
         if (now - lastSeenAt < 2500) {
             console.log('[LearnARV2] QR ignored during cooldown:', qrId);
+            emitMobileDebug('LEARNAR_QR_GATE_COOLDOWN', {
+                qrId,
+                msSinceLastSeen: now - lastSeenAt,
+                appState,
+                isAddingCard: isAddingCardRef.current,
+                detectedQrId: detectedQrIdRef.current,
+                flashcardCount
+            });
             return;
         }
         qrGateRef.current.set(qrId, now);
@@ -808,11 +827,14 @@ export default function LearnARV2() {
                 return;
             }
 
+            const wasExistingCard = flashcardData.detectedAt < now;
             emitMobileDebug('LEARNAR_QR_VALIDATED', {
                 qrId,
                 isFirstQr,
                 isControlledAdd,
                 detectedQrIdBefore: detectedQrIdRef.current,
+                wasExistingCard,
+                flashcardCountBefore: flashcardCount,
                 flashcard: {
                     qrId: flashcardData.qrId,
                     arTag: flashcardData.arTag,
@@ -822,6 +844,15 @@ export default function LearnARV2() {
                     textureUrl: flashcardData.textureUrl
                 }
             });
+
+            if (!isFirstQr && !isControlledAdd) {
+                emitMobileDebug('LEARNAR_QR_VALIDATED_OUTSIDE_ADD_MODE', {
+                    qrId,
+                    detectedQrId: detectedQrIdRef.current,
+                    flashcardCount,
+                    wasExistingCard
+                });
+            }
 
             if (isFirstQr && !detectedQrIdRef.current) {
                 detectedQrIdRef.current = qrId;
@@ -837,7 +868,7 @@ export default function LearnARV2() {
 
             trackFlashcardView();
         });
-    }, [trackFlashcardView, addFlashcard]);
+    }, [trackFlashcardView, addFlashcard, emitMobileDebug, appState, flashcardCount]);
 
     const handleAddCardScan = useCallback(() => {
         HapticService.tap();
@@ -896,6 +927,20 @@ export default function LearnARV2() {
         if (!data || !data.type) return;
         const { type, payload } = data;
         switch (type) {
+            case 'SYSTEM_ERROR':
+            case 'AR_ERROR': {
+                const code = payload?.code;
+                if (code && RECOVERABLE_AR_ERROR_CODES.has(code)) {
+                    emitMobileDebug('LEARNAR_RECOVERABLE_AR_ERROR', {
+                        code,
+                        payload,
+                        appState,
+                        flashcardCount
+                    });
+                    return;
+                }
+                break;
+            }
             case 'COMBO_PROXIMITY_DETECTED':
                 handleProximityDetected(payload);
                 handleComboDetected(payload.targets);
@@ -909,7 +954,7 @@ export default function LearnARV2() {
             case 'AR_TRACKING_STATE':
                 console.log('[LearnARV2] AR tracking state:', payload); break;
         }
-    }, [handleProximityDetected, handleProximityEnded, handleProximityUpdate, handleComboDetected]);
+    }, [emitMobileDebug, appState, flashcardCount, handleProximityDetected, handleProximityEnded, handleProximityUpdate, handleComboDetected]);
 
     const handleModelClick = useCallback((modelId: string, targetIndex?: number) => {
         console.log('[LearnARV2] Model clicked:', modelId, 'Index:', targetIndex);

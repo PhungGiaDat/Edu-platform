@@ -55,6 +55,20 @@ interface ARViewerTarget {
     word?: string;
 }
 
+const PALM_TREE_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb';
+const PALM_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg';
+
+function normalizeViewerAssetUrl(url?: string): string | undefined {
+    if (!url) return undefined;
+    const lower = url.toLowerCase();
+    if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return PALM_TREE_MODEL_URL;
+    if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return PALM_IMAGE_URL;
+    if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
+    if (lower.endsWith('/cute_elephant_jungle.glb')) return '/assets/models/combos/cute_elephant_jungle.glb';
+    if (lower.endsWith('/elephant_tree_combo_layered.png')) return '/assets/model2D/elephant_tree_combo_layered.png';
+    return url;
+}
+
 export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     initialPhase = 'SCANNING',
     mindUrl,
@@ -150,9 +164,12 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
         viewerTargets.slice(0, targetCount).forEach((target, index) => {
             const suffix = index === 0 ? '' : String(index + 1);
-            if (target.modelUrl) params.set(`model${suffix}`, target.modelUrl);
-            if (target.imageUrl) params.set(`image${suffix}`, target.imageUrl);
-            if (target.textureUrl) params.set(`textureUrl${suffix}`, target.textureUrl);
+            const normalizedModelUrl = normalizeViewerAssetUrl(target.modelUrl);
+            const normalizedImageUrl = normalizeViewerAssetUrl(target.imageUrl);
+            const normalizedTextureUrl = normalizeViewerAssetUrl(target.textureUrl);
+            if (normalizedModelUrl) params.set(`model${suffix}`, normalizedModelUrl);
+            if (normalizedImageUrl) params.set(`image${suffix}`, normalizedImageUrl);
+            if (normalizedTextureUrl) params.set(`textureUrl${suffix}`, normalizedTextureUrl);
             if (target.word) params.set(`word${suffix}`, target.word);
         });
 
@@ -331,7 +348,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
             case 'SYSTEM_ERROR':
             case 'AR_ERROR' as any: {
-                const data = payload as { error?: string; message?: string };
+                const data = payload as { code?: string; error?: string; message?: string };
                 const errorMsg = data.error || data.message || 'Unknown error';
                 emitDebug('PARENT_SYSTEM_ERROR', {
                     errorMsg,
@@ -339,6 +356,20 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                     fromPiP,
                     phase
                 });
+                const recoverableCodes = new Set([
+                    'MODEL_LOAD_ERROR',
+                    'IMAGE_LOAD_ERROR',
+                    'TEXTURE_LOAD_ERROR',
+                    'TEXTURE_APPLY_ERROR'
+                ]);
+                if (data.code && recoverableCodes.has(data.code)) {
+                    emitDebug('PARENT_RECOVERABLE_ASSET_ERROR', {
+                        code: data.code,
+                        errorMsg,
+                        payload
+                    });
+                    break;
+                }
                 setError(errorMsg);
                 eventBus.emit(AREvent.AR_ERROR, { error: new Error(errorMsg) } as any);
                 break;

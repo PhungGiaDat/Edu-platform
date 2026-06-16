@@ -47,16 +47,28 @@
 
     // ============ URL PARAMS ============
     const params = new URLSearchParams(window.location.search);
+    const PALM_TREE_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb';
+    const PALM_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg';
+    function normalizeViewerAssetUrl(url) {
+        if (!url) return url;
+        const lower = String(url).toLowerCase();
+        if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return PALM_TREE_MODEL_URL;
+        if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return PALM_IMAGE_URL;
+        if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
+        if (lower.endsWith('/cute_elephant_jungle.glb')) return '/assets/models/combos/cute_elephant_jungle.glb';
+        if (lower.endsWith('/elephant_tree_combo_layered.png')) return '/assets/model2D/elephant_tree_combo_layered.png';
+        return url;
+    }
     const mindUrl = params.get('mind');
-    const modelUrl = params.get('model');
-    const imageUrl = params.get('image');
-    const modelUrl2 = params.get('model2');
-    const imageUrl2 = params.get('image2');
-    const textureUrl = params.get('textureUrl'); // NEW: Texture for model 0
-    const textureUrl2 = params.get('textureUrl2'); // NEW: Texture for model 1
-    const comboModelUrl = params.get('comboModel'); // NEW: combo model URL
-    const comboImageUrl = params.get('comboImage'); // 2D layered fallback for combo scene
-    const comboTextureUrl = params.get('comboTextureUrl'); // Texture for combo model
+    const modelUrl = normalizeViewerAssetUrl(params.get('model'));
+    const imageUrl = normalizeViewerAssetUrl(params.get('image'));
+    const modelUrl2 = normalizeViewerAssetUrl(params.get('model2'));
+    const imageUrl2 = normalizeViewerAssetUrl(params.get('image2'));
+    const textureUrl = normalizeViewerAssetUrl(params.get('textureUrl')); // NEW: Texture for model 0
+    const textureUrl2 = normalizeViewerAssetUrl(params.get('textureUrl2')); // NEW: Texture for model 1
+    const comboModelUrl = normalizeViewerAssetUrl(params.get('comboModel')); // NEW: combo model URL
+    const comboImageUrl = normalizeViewerAssetUrl(params.get('comboImage')); // 2D layered fallback for combo scene
+    const comboTextureUrl = normalizeViewerAssetUrl(params.get('comboTextureUrl')); // Texture for combo model
     const comboPhrase = params.get('comboPhrase') || '';
     const maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));
     const cardCount = Math.max(1, Math.min(Number(params.get('cardCount') || params.get('targetCount')) || 1, 5));
@@ -64,9 +76,9 @@
     const getIndexedParam = (base, index) => params.get(index === 0 ? base : `${base}${index + 1}`);
     const targetConfigs = Array.from({ length: targetCount }, (_, index) => ({
         index,
-        modelUrl: getIndexedParam('model', index),
-        imageUrl: getIndexedParam('image', index),
-        textureUrl: getIndexedParam('textureUrl', index),
+        modelUrl: normalizeViewerAssetUrl(getIndexedParam('model', index)),
+        imageUrl: normalizeViewerAssetUrl(getIndexedParam('image', index)),
+        textureUrl: normalizeViewerAssetUrl(getIndexedParam('textureUrl', index)),
         word: getIndexedParam('word', index) || ''
     }));
     // Words for click-to-sound — stored in window globals so SET_WORD can update them too
@@ -84,6 +96,22 @@
             targetId: modelEl?.id,
             assetId: assetItem?.id
         });
+        return false;
+    }
+
+    function showImageFallbackForTarget(targetIndex, reason) {
+        const imageEl = document.getElementById(`mode-2d-${targetIndex}`);
+        const modelEl = document.getElementById(`mode-3d-${targetIndex}`);
+        if (modelEl) {
+            modelEl.dataset.modelLoadFailed = 'true';
+            modelEl.setAttribute('visible', 'false');
+        }
+        if (imageEl && imageEl.getAttribute('src')) {
+            imageEl.setAttribute('visible', 'true');
+            sendRenderSnapshot('TARGET_IMAGE_FALLBACK_SHOWN', { targetIndex, reason });
+            return true;
+        }
+        sendRenderSnapshot('TARGET_IMAGE_FALLBACK_MISSING', { targetIndex, reason });
         return false;
     }
 
@@ -425,8 +453,9 @@
                 if (retryModelWithFallback(assetItem, model0El, modelUrl, 'Model 0')) {
                     return;
                 }
+                showImageFallbackForTarget(0, 'model-0-asset-error');
                 if (loadText) loadText.textContent = 'Model unavailable, continuing...';
-                sendToParent('SYSTEM_ERROR', {
+                sendDebug('MODEL_ASSET_0_RECOVERED_WITH_IMAGE', {
                     code: 'MODEL_LOAD_ERROR',
                     message: 'Failed to load 3D model',
                     url: modelUrl
@@ -446,6 +475,7 @@
             });
             model0El.addEventListener('model-error', (e) => {
                 sendRenderSnapshot('MODEL_ENTITY_0_ERROR', { url: modelUrl, message: e?.message || String(e) });
+                showImageFallbackForTarget(0, 'model-0-entity-error');
             });
             model0El.setAttribute('gltf-model', '#model-asset-0');
             
@@ -567,7 +597,8 @@
                 if (retryModelWithFallback(assetItem2, model1El, modelUrl2, 'Model 1')) {
                     return;
                 }
-                sendToParent('SYSTEM_ERROR', {
+                showImageFallbackForTarget(1, 'model-1-asset-error');
+                sendDebug('MODEL_ASSET_1_RECOVERED_WITH_IMAGE', {
                     code: 'MODEL_LOAD_ERROR',
                     message: 'Failed to load 3D model 1',
                     url: modelUrl2
@@ -583,6 +614,7 @@
                     log('Model 1 entity load error:', e);
                     model1El.dataset.modelLoadFailed = 'true';
                     model1El.setAttribute('visible', 'false');
+                    showImageFallbackForTarget(1, 'model-1-entity-error');
                     sendRenderSnapshot('MODEL_ENTITY_1_ERROR', { url: modelUrl2, optional: true, message: e?.message || String(e) });
                     sendDebug('SECONDARY_MODEL_SKIPPED', {
                         reason: 'model-1-entity-error',
@@ -604,6 +636,7 @@
                     sendRenderSnapshot('MODEL_ENTITY_1_LOADED', { url: modelUrl2, optional: false });
                 });
                 model1El.addEventListener('model-error', (e) => {
+                    showImageFallbackForTarget(1, 'model-1-entity-error');
                     sendRenderSnapshot('MODEL_ENTITY_1_ERROR', { url: modelUrl2, optional: false, message: e?.message || String(e) });
                 });
                 model1El.setAttribute('gltf-model', '#model-asset-1');
@@ -657,6 +690,7 @@
                 assetItem.addEventListener('error', (e) => {
                     modelEl.dataset.modelLoadFailed = 'true';
                     modelEl.setAttribute('visible', 'false');
+                    showImageFallbackForTarget(target.index, 'dynamic-model-asset-error');
                     sendDebug('MODEL_ASSET_DYNAMIC_ERROR', {
                         targetIndex: target.index,
                         url: target.modelUrl,
@@ -669,6 +703,7 @@
                 });
                 modelEl.addEventListener('model-error', (e) => {
                     modelEl.dataset.modelLoadFailed = 'true';
+                    showImageFallbackForTarget(target.index, 'dynamic-model-entity-error');
                     sendRenderSnapshot('MODEL_ENTITY_DYNAMIC_ERROR', {
                         targetIndex: target.index,
                         url: target.modelUrl,
@@ -1722,7 +1757,8 @@
         if (!comboImage) {
             comboImage = document.createElement('a-image');
             comboImage.id = 'combo-image-scene';
-            comboImage.setAttribute('src', '#img-asset-combo');
+            const comboImageAsset = document.getElementById('img-asset-combo');
+            comboImage.setAttribute('src', comboImageAsset && comboImageAsset.complete ? '#img-asset-combo' : comboImageUrl);
             comboImage.setAttribute('width', '1.25');
             comboImage.setAttribute('height', '0.85');
             comboImage.setAttribute('look-at', '[camera]');
@@ -1800,7 +1836,9 @@
                 log('combo', 'Combo model entity load error:', event);
                 comboModel.dataset.modelLoadFailed = 'true';
                 comboModel.setAttribute('visible', 'false');
-                restoreOriginalModels('combo-model-error');
+                if (!showComboImageFallback(midpoint, 'combo-model-error')) {
+                    restoreOriginalModels('combo-model-error');
+                }
                 sendDebug('COMBO_MODEL_ERROR_ORIGINAL_FALLBACK', {
                     comboModelUrl,
                     comboImageUrl,
