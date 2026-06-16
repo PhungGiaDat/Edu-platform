@@ -18,11 +18,12 @@ export const AssetTile: React.FC<{
   label: string;
   emoji?: string;
   className?: string;
-}> = ({ asset, label, emoji = 'image', className = '' }) => (
+  showAssetMeta?: boolean;
+}> = ({ asset, label, emoji = 'image', className = '', showAssetMeta = false }) => (
   <div className={`flex min-h-[120px] flex-col items-center justify-center rounded-3xl border-4 border-white/80 bg-gradient-to-br from-sky-100 to-yellow-50 p-4 text-center shadow-[0_6px_0_rgba(91,141,239,0.12)] ${className}`}>
     <div className="flex h-11 min-w-11 items-center justify-center rounded-2xl bg-white/70 px-2 text-sm font-black text-sky-600">{emoji}</div>
     <div className="mt-2 text-sm font-black text-slate-700">{label}</div>
-    {asset && (
+    {asset && showAssetMeta && (
       <div className="mt-1 max-w-full truncate rounded-full bg-white/70 px-3 py-1 text-[10px] font-bold text-slate-500">
         {asset.status}: {asset.path}
       </div>

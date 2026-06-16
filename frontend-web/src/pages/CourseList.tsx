@@ -142,22 +142,25 @@ const initials = (value: string) => value
 
 const cardPalette = (index: number) => [
     {
-        shell: 'from-[#FFF4A8] via-[#FFE1A6] to-[#FFD1E8]',
-        thumb: 'from-[#FFE680] via-[#FFB86B] to-[#FF8E8E]',
-        accent: 'bg-[#FF8E8E] text-white',
-        progress: 'from-[#FF8E8E] to-[#FFD93D]',
+        shell: 'from-[#FFF8C7] via-[#FFE7B8] to-[#FFD6E7]',
+        thumb: 'from-[#FFE45E] via-[#FFB86B] to-[#FF8FAB]',
+        accent: 'bg-[#FF7A90] text-white',
+        progress: 'from-[#FF7A90] to-[#FFE45E]',
+        button: 'from-[#FF8FAB] to-[#FFD166]',
     },
     {
-        shell: 'from-[#D9F99D] via-[#BAF7D0] to-[#A7F3D0]',
-        thumb: 'from-[#BBF7D0] via-[#7DD3FC] to-[#C4B5FD]',
-        accent: 'bg-[#10B981] text-white',
-        progress: 'from-[#10B981] to-[#38BDF8]',
+        shell: 'from-[#E7FFD1] via-[#CFF7E8] to-[#C9F1FF]',
+        thumb: 'from-[#8EF6D0] via-[#7DD3FC] to-[#A7C7FF]',
+        accent: 'bg-[#22C55E] text-white',
+        progress: 'from-[#22C55E] to-[#38BDF8]',
+        button: 'from-[#7DD3FC] to-[#8EF6D0]',
     },
     {
-        shell: 'from-[#E9D5FF] via-[#FBCFE8] to-[#BFDBFE]',
-        thumb: 'from-[#C4B5FD] via-[#F9A8D4] to-[#93C5FD]',
-        accent: 'bg-[#7C3AED] text-white',
-        progress: 'from-[#7C3AED] to-[#F472B6]',
+        shell: 'from-[#F1D7FF] via-[#FFD6F0] to-[#D9E8FF]',
+        thumb: 'from-[#BFA7FF] via-[#FF9ED8] to-[#8FD3FF]',
+        accent: 'bg-[#A855F7] text-white',
+        progress: 'from-[#A855F7] to-[#FF8ED1]',
+        button: 'from-[#BFA7FF] to-[#FF9ED8]',
     },
 ][index % 3];
 
@@ -401,7 +404,7 @@ export const CourseList: React.FC = () => {
 
     return (
         <div className="min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden bg-[#F7F3FF] pb-[calc(env(safe-area-inset-bottom)+12rem)] md:pb-10">
-            <div className="absolute inset-x-0 top-0 h-[560px] bg-[radial-gradient(circle_at_12%_18%,#FFE680_0,transparent_24%),radial-gradient(circle_at_88%_7%,#67E8F9_0,transparent_25%),radial-gradient(circle_at_54%_34%,#F9A8D4_0,transparent_23%),linear-gradient(135deg,#FFF7AD_0%,#E0F2FE_45%,#DCFCE7_100%)]" />
+            <div className="absolute inset-x-0 top-0 h-[560px] bg-[radial-gradient(circle_at_12%_18%,#FFE45E_0,transparent_24%),radial-gradient(circle_at_88%_7%,#8FD3FF_0,transparent_25%),radial-gradient(circle_at_54%_34%,#FFB3D9_0,transparent_23%),linear-gradient(135deg,#FFF8C7_0%,#E0F7FF_45%,#F4E8FF_100%)]" />
             <div className="relative z-10 mx-auto w-full max-w-7xl min-w-0 px-4 py-5 sm:px-6 sm:py-7 lg:px-8 xl:px-10">
                 <header className="mb-6 grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)] lg:items-stretch">
                     <section className="rounded-[34px] border-4 border-white bg-white/85 p-5 shadow-[0_14px_0_rgba(91,141,239,0.14)] backdrop-blur sm:p-7">
@@ -421,7 +424,7 @@ export const CourseList: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => navigate('/courses')}
-                                className="min-h-12 rounded-full bg-slate-900 px-6 text-sm font-black text-white shadow-[0_6px_0_rgba(15,23,42,0.22)] transition-transform hover:-translate-y-0.5"
+                                className="min-h-12 rounded-full bg-gradient-to-br from-[#FF8FAB] to-[#FFD166] px-6 text-sm font-black text-slate-900 shadow-[0_6px_0_rgba(255,122,144,0.28)] transition-transform hover:-translate-y-0.5"
                             >
                                 {t('browseCourses')}
                             </button>
@@ -429,7 +432,7 @@ export const CourseList: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => navigate(`/courses/${featuredCourse.course_id}`)}
-                                    className="min-h-12 rounded-full border-4 border-white bg-gradient-to-br from-[#7DD3FC] to-[#BBF7D0] px-6 text-sm font-black text-slate-800 shadow-[0_6px_0_rgba(14,165,233,0.18)] transition-transform hover:-translate-y-0.5"
+                                    className="min-h-12 rounded-full border-4 border-white bg-gradient-to-br from-[#8FD3FF] to-[#BFA7FF] px-6 text-sm font-black text-slate-900 shadow-[0_6px_0_rgba(143,211,255,0.25)] transition-transform hover:-translate-y-0.5"
                                 >
                                     {t('enrollNow')}
                                 </button>
@@ -437,7 +440,7 @@ export const CourseList: React.FC = () => {
                         </div>
                     </section>
 
-                    <section className="relative overflow-hidden rounded-[34px] border-4 border-white bg-gradient-to-br from-[#FFF7AD] via-[#CFFAFE] to-[#BBF7D0] p-5 shadow-[0_14px_0_rgba(251,191,36,0.20)]">
+                    <section className="relative overflow-hidden rounded-[34px] border-4 border-white bg-gradient-to-br from-[#FFF8C7] via-[#DFF8FF] to-[#DFFBEA] p-5 shadow-[0_14px_0_rgba(251,191,36,0.20)]">
                         <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/45" />
                         <div className="absolute -bottom-12 left-8 h-28 w-28 rounded-full bg-pink-200/50" />
                         <p className="relative text-sm font-black uppercase tracking-wide text-slate-600">{t('progressDemo')}</p>
@@ -505,7 +508,7 @@ export const CourseList: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => hasLiveCourses && navigate(`/courses/${course.course_id}`)}
-                                        className="mt-5 min-h-12 w-full rounded-full bg-slate-900 px-5 font-black text-white shadow-[0_6px_0_rgba(15,23,42,0.22)]"
+                                    className={`mt-5 min-h-12 w-full rounded-full bg-gradient-to-br ${palette.button} px-5 font-black text-slate-900 shadow-[0_6px_0_rgba(255,122,144,0.22)]`}
                                     >
                                         {t('startLearning')}
                                     </button>
@@ -531,22 +534,22 @@ export const CourseList: React.FC = () => {
                 </section>
 
                 {!hasLiveCourses && !isLoading && (
-                    <section className="mb-7 rounded-[30px] border-4 border-white bg-gradient-to-r from-slate-900 via-slate-800 to-sky-900 p-5 text-white shadow-[0_10px_0_rgba(15,23,42,0.18)]">
+                    <section className="mb-7 rounded-[30px] border-4 border-white bg-gradient-to-r from-[#FFE45E] via-[#FFB3D9] to-[#8FD3FF] p-5 text-slate-900 shadow-[0_10px_0_rgba(255,122,144,0.18)]">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <p className="text-sm font-black uppercase tracking-wide text-sky-200">
+                                <p className="text-sm font-black uppercase tracking-wide text-rose-700">
                                     {locale === 'vi' ? 'Bản xem trước' : 'Preview mode'}
                                 </p>
                                 <h2 className="mt-1 text-2xl font-black">
                                     {locale === 'vi' ? 'Trang đang dùng nội dung demo để bạn kiểm tra thiết kế.' : 'This page is using demo content so you can review the design.'}
                                 </h2>
-                                <p className="mt-1 font-bold text-slate-200">{t('noCoursesBody')}</p>
+                                <p className="mt-1 font-bold text-slate-700">{t('noCoursesBody')}</p>
                             </div>
                             <button
                                 type="button"
                                 onClick={handleGenerate}
                                 disabled={isGenerating}
-                                className="min-h-12 shrink-0 rounded-full bg-white px-6 font-black text-slate-900 shadow-[0_6px_0_rgba(255,255,255,0.18)] disabled:opacity-60"
+                                className="min-h-12 shrink-0 rounded-full bg-white px-6 font-black text-slate-900 shadow-[0_6px_0_rgba(255,255,255,0.35)] disabled:opacity-60"
                             >
                                 {isGenerating ? t('generating') : t('generateCourse')}
                             </button>
@@ -668,7 +671,7 @@ export const CourseList: React.FC = () => {
                                         </div>
                                         <button
                                             type="button"
-                                            className="mt-5 min-h-12 w-full rounded-full bg-gradient-to-br from-[#6EB9FF] to-[#B4E197] px-5 font-black text-slate-900 shadow-[0_6px_0_rgba(14,165,233,0.20)] transition-transform hover:-translate-y-0.5"
+                                            className={`mt-5 min-h-12 w-full rounded-full bg-gradient-to-br ${palette.button} px-5 font-black text-slate-900 shadow-[0_6px_0_rgba(255,122,144,0.22)] transition-transform hover:-translate-y-0.5`}
                                             onClick={(event) => {
                                                 event.stopPropagation();
                                                 if (hasLiveCourses) {
@@ -687,21 +690,21 @@ export const CourseList: React.FC = () => {
 
                 {featuredTestimonials.length > 0 && (
                     <section className="mt-9 grid gap-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-                        <div className="relative overflow-hidden rounded-[34px] border-4 border-white bg-gradient-to-br from-slate-950 via-[#312E81] to-[#0F766E] p-6 text-white shadow-[0_14px_0_rgba(15,23,42,0.18)]">
-                            <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-yellow-300/25" />
-                            <div className="absolute -bottom-10 left-8 h-24 w-24 rounded-full bg-sky-300/25" />
-                            <p className="relative text-sm font-black uppercase tracking-wide text-sky-200">{t('enrollNow')}</p>
+                        <div className="relative overflow-hidden rounded-[34px] border-4 border-white bg-gradient-to-br from-[#FFF8C7] via-[#FFB3D9] to-[#BFA7FF] p-6 text-slate-900 shadow-[0_14px_0_rgba(255,122,144,0.18)]">
+                            <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/35" />
+                            <div className="absolute -bottom-10 left-8 h-24 w-24 rounded-full bg-sky-200/45" />
+                            <p className="relative text-sm font-black uppercase tracking-wide text-rose-700">{t('enrollNow')}</p>
                             <h2 className="relative mt-2 text-3xl font-black leading-tight">{featuredCourse ? courseTitle(featuredCourse, locale) : t('courseCatalog')}</h2>
-                            <p className="relative mt-3 font-bold leading-7 text-slate-100">{featuredCourse ? courseDescription(featuredCourse, locale) : t('heroBody')}</p>
+                            <p className="relative mt-3 font-bold leading-7 text-slate-700">{featuredCourse ? courseDescription(featuredCourse, locale) : t('heroBody')}</p>
                             <div className="relative mt-5 grid grid-cols-3 gap-2">
                                 {[
                                     { label: t('lessons'), value: '18' },
                                     { label: 'AR', value: '6' },
                                     { label: 'XP', value: '1.2k' },
                                 ].map(item => (
-                                    <div key={item.label} className="rounded-2xl bg-white/15 p-3 text-center">
+                                    <div key={item.label} className="rounded-2xl bg-white/60 p-3 text-center">
                                         <p className="text-2xl font-black">{item.value}</p>
-                                        <p className="text-xs font-black text-slate-200">{item.label}</p>
+                                        <p className="text-xs font-black text-slate-600">{item.label}</p>
                                     </div>
                                 ))}
                             </div>
