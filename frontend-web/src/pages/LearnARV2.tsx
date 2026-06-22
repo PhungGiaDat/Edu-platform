@@ -616,6 +616,7 @@ export default function LearnARV2() {
         handleProximityDetected,
         handleProximityEnded,
         handleProximityUpdate,
+        rejectCombo,
         reset: resetMultiFlashcard,
         getFlashcardByIndex,
         getFlashcardByTag
@@ -791,6 +792,24 @@ export default function LearnARV2() {
             }
         });
     }, [emitMobileDebug, appState, isAddingCard, isComboViewer, flashcardCount, displayMode, detectedQrId, mindUrl, activeCombo, comboTarget0, comboTarget1, fallbackTarget1, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+
+    const handleViewerAssetError = useCallback((data: { code?: string; error: string; url?: string }) => {
+        if (!isComboViewer) return;
+        emitMobileDebug('COMBO_VIEWER_FAILED_RESTORING_ORIGINALS', {
+            ...data,
+            comboId: activeCombo?.comboId,
+            originalTargets: scannedTargets.map(target => ({
+                qrId: target.qrId,
+                arTag: target.arTag,
+                mindUrl: target.mindUrl,
+                model3dUrl: target.model3dUrl,
+                image2dUrl: target.image2dUrl
+            }))
+        });
+        setCommittedComboId(null);
+        setIsComboActive(false);
+        rejectCombo(data.code || data.error);
+    }, [isComboViewer, emitMobileDebug, activeCombo, scannedTargets, rejectCombo]);
 
     // ========== HANDLERS ==========
     const handleQRDetected = useCallback((qrId: string) => {
@@ -1151,6 +1170,7 @@ export default function LearnARV2() {
                 onTargetLost={handleTargetLost}
                 onModelClick={handleModelClick}
                 onComboDetected={handleComboDetected}
+                onViewerAssetError={handleViewerAssetError}
             >
                 {/* Control Panel - Only show during VIEWING */}
                 {appState === 'VIEWING' && (

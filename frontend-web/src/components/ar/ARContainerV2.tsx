@@ -45,6 +45,7 @@ interface ARContainerV2Props {
     onTargetLost?: (targetIndex: number) => void;
     onModelClick?: (modelId: string, targetIndex?: number) => void;
     onComboDetected?: (targets: number[]) => void;
+    onViewerAssetError?: (data: { code?: string; error: string; url?: string }) => void;
     children?: React.ReactNode;
 }
 
@@ -57,15 +58,19 @@ interface ARViewerTarget {
 
 const PALM_TREE_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb';
 const PALM_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg';
+const ELEPHANT_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg';
+const COMBO_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb';
+const COMBO_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png';
 
 function normalizeViewerAssetUrl(url?: string): string | undefined {
     if (!url) return undefined;
     const lower = url.toLowerCase();
     if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return PALM_TREE_MODEL_URL;
     if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return PALM_IMAGE_URL;
+    if (lower.includes('/frontend/model2d/elephant.jpg') || lower.endsWith('/elephant.jpg')) return ELEPHANT_IMAGE_URL;
     if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
-    if (lower.endsWith('/cute_elephant_jungle.glb')) return '/assets/models/combos/cute_elephant_jungle.glb';
-    if (lower.endsWith('/elephant_tree_combo_layered.png')) return '/assets/model2D/elephant_tree_combo_layered.png';
+    if (lower.endsWith('/cute_elephant_jungle.glb')) return COMBO_MODEL_URL;
+    if (lower.endsWith('/elephant_tree_combo_layered.png')) return COMBO_IMAGE_URL;
     return url;
 }
 
@@ -94,6 +99,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     onTargetLost,
     onModelClick,
     onComboDetected,
+    onViewerAssetError,
     children
 }) => {
     const [phase, setPhase] = useState<ARPhase>(initialPhase);
@@ -124,6 +130,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         onTargetLost,
         onModelClick,
         onComboDetected,
+        onViewerAssetError,
         onPhaseChange
     });
 
@@ -134,9 +141,10 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             onTargetLost,
             onModelClick,
             onComboDetected,
+            onViewerAssetError,
             onPhaseChange
         };
-    }, [onQRDetected, onTargetFound, onTargetLost, onModelClick, onComboDetected, onPhaseChange]);
+    }, [onQRDetected, onTargetFound, onTargetLost, onModelClick, onComboDetected, onViewerAssetError, onPhaseChange]);
 
     const transitionTo = useCallback((newPhase: ARPhase) => {
         if (newPhase === phase) return;
@@ -178,9 +186,12 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         if (typeof cardCount === 'number' || viewerTargets.length) {
             params.set('maxTrack', String(Math.max(1, Math.min(targetCount, 5))));
         }
-        if (comboModelUrl) params.set('comboModel', comboModelUrl);
-        if (comboImageUrl) params.set('comboImage', comboImageUrl);
-        if (comboTextureUrl) params.set('comboTextureUrl', comboTextureUrl);
+        const normalizedComboModelUrl = normalizeViewerAssetUrl(comboModelUrl);
+        const normalizedComboImageUrl = normalizeViewerAssetUrl(comboImageUrl);
+        const normalizedComboTextureUrl = normalizeViewerAssetUrl(comboTextureUrl);
+        if (normalizedComboModelUrl) params.set('comboModel', normalizedComboModelUrl);
+        if (normalizedComboImageUrl) params.set('comboImage', normalizedComboImageUrl);
+        if (normalizedComboTextureUrl) params.set('comboTextureUrl', normalizedComboTextureUrl);
         if (comboPhrase) params.set('comboPhrase', comboPhrase);
         return `/ar-viewer.html?${params.toString()}`;
     }, [mindUrl, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
@@ -348,8 +359,13 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
             case 'SYSTEM_ERROR':
             case 'AR_ERROR' as any: {
-                const data = payload as { code?: string; error?: string; message?: string };
+                const data = payload as { code?: string; error?: string; message?: string; url?: string };
                 const errorMsg = data.error || data.message || 'Unknown error';
+                callbacksRef.current.onViewerAssetError?.({
+                    code: data.code,
+                    error: errorMsg,
+                    url: data.url
+                });
                 emitDebug('PARENT_SYSTEM_ERROR', {
                     errorMsg,
                     payload,
