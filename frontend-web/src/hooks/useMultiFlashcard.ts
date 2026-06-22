@@ -16,16 +16,51 @@ import { SoundEffectService } from '../services/SoundEffectService';
 const API_BASE = getApiBase();
 const PALM_TREE_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb';
 const PALM_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg';
+const ELEPHANT_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg';
+const COMBO_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb';
+const COMBO_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png';
+const COMBO_MIND_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/combo_targets.mind';
 
 function normalizeArAssetUrl(url?: string): string | undefined {
     if (!url) return undefined;
     const lower = url.toLowerCase();
     if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return PALM_TREE_MODEL_URL;
     if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return PALM_IMAGE_URL;
+    if (lower.includes('/frontend/model2d/elephant.jpg') || lower.endsWith('/elephant.jpg')) return ELEPHANT_IMAGE_URL;
     if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
-    if (lower.endsWith('/cute_elephant_jungle.glb')) return '/assets/models/combos/cute_elephant_jungle.glb';
-    if (lower.endsWith('/elephant_tree_combo_layered.png')) return '/assets/model2D/elephant_tree_combo_layered.png';
+    if (lower.endsWith('/cute_elephant_jungle.glb')) return COMBO_MODEL_URL;
+    if (lower.endsWith('/elephant_tree_combo_layered.png')) return COMBO_IMAGE_URL;
+    if (lower.endsWith('/combo_targets.mind')) return COMBO_MIND_URL;
     return url;
+}
+
+function emitArDebug(label: string, details: Record<string, unknown>) {
+    window.postMessage({
+        type: 'AR_DEBUG',
+        payload: { label, details, source: 'useMultiFlashcard' },
+        timestamp: Date.now()
+    }, window.location.origin);
+}
+
+async function probeArAsset(label: string, url?: string): Promise<boolean> {
+    if (!url) {
+        emitArDebug('COMBO_ASSET_INVALID', { label, url });
+        return false;
+    }
+    try {
+        const response = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+        emitArDebug('COMBO_ASSET_PROBE', {
+            label, url, status: response.status,
+            contentType: response.headers.get('content-type')
+        });
+        return response.ok;
+    } catch (error) {
+        emitArDebug('COMBO_ASSET_PROBE_FAILED', {
+            label, url,
+            error: error instanceof Error ? error.message : String(error)
+        });
+        return false;
+    }
 }
 
 interface FlashcardData {
@@ -85,6 +120,7 @@ export function useMultiFlashcard() {
 
     const comboCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const proximityComboRef = useRef<boolean>(false);
+    const rejectedComboKeyRef = useRef<string | null>(null);
     const stateRef = useRef(state);
 
     useEffect(() => {
@@ -143,6 +179,14 @@ export function useMultiFlashcard() {
                 detectedAt: Date.now()
             };
 
+            emitArDebug('FLASHCARD_RESOLVED', {
+                qrId,
+                arTag: flashcardData.arTag,
+                mindUrl: flashcardData.mindUrl,
+                model3dUrl: flashcardData.model3dUrl,
+                image2dUrl: flashcardData.image2dUrl
+            });
+
             setState(prev => {
                 if (prev.detectedFlashcards.has(qrId)) return prev;
 
@@ -171,6 +215,7 @@ export function useMultiFlashcard() {
      * Remove a flashcard (e.g., when target lost for extended time)
      */
     const removeFlashcard = useCallback((qrId: string) => {
+        rejectedComboKeyRef.current = null;
         setState(prev => {
             const newMap = new Map(prev.detectedFlashcards);
             newMap.delete(qrId);
@@ -190,66 +235,103 @@ export function useMultiFlashcard() {
      */
     const checkCombo = useCallback(async () => {
         const flashcards = Array.from(state.detectedFlashcards.values());
+        if (flashcards.length < 2) return null;
 
-        if (flashcards.length < 2) {
-            console.log('[MultiFlashcard] Not enough flashcards for combo');
-            return null;
-        }
+        const arTags = flashcards.map(card => card.arTag);
+        const comboKey = [...arTags].sort().join('|');
+        if (rejectedComboKeyRef.current === comboKey) return null;
 
-        const arTags = flashcards.map(f => f.arTag);
-        console.log('[MultiFlashcard] 🔗 Checking combo for tags:', arTags);
-
+        emitArDebug('COMBO_LOOKUP_STARTED', { arTags, comboKey });
         setState(prev => ({ ...prev, isCheckingCombo: true }));
 
         try {
             const response = await fetch(
                 `${API_BASE}/api/v1/combos/check?tags=${encodeURIComponent(arTags.join(','))}`
             );
-
             if (!response.ok) {
-                console.warn('[MultiFlashcard] Combo check failed:', response.status);
                 setState(prev => ({ ...prev, isCheckingCombo: false }));
                 return null;
             }
 
             const data = await response.json();
-
-            if (data.found && data.combo) {
-                console.log('[MultiFlashcard] ✅ Combo found:', data.combo.combo_id);
-
-                // Determine combo mind URL
-                const comboMindUrl = buildUrl(data.combo.combo_mind_url) || null;
-
-                setState(prev => ({
-                    ...prev,
-                    activeCombo: {
-                        comboId: data.combo.combo_id,
-                        description: data.combo.description,
-                        requiredTags: data.combo.required_tags,
-                        model3dUrl: buildUrl(data.combo.model_3d_url) || '',
-                        image2dUrl: buildUrl(data.combo.image_2d_url) || '',
-                        textureUrl: buildUrl(data.combo.texture_url),
-                        comboMindUrl,
-                        bonusXp: data.combo.bonus_xp || 100
-                    },
-                    comboMindUrl,
-                    mode: 'COMBO',
-                    isCheckingCombo: false
-                }));
-
-                return data.combo;
+            if (!data.found || !data.combo) {
+                setState(prev => ({ ...prev, isCheckingCombo: false }));
+                return null;
             }
 
-            console.log('[MultiFlashcard] No combo found for these tags');
-            setState(prev => ({ ...prev, isCheckingCombo: false }));
-            return null;
+            const comboMindUrl = buildUrl(data.combo.combo_mind_url) || null;
+            const model3dUrl = buildUrl(data.combo.model_3d_url) || '';
+            const image2dUrl = buildUrl(data.combo.image_2d_url) || '';
+            const textureUrl = buildUrl(data.combo.texture_url);
+            const probes = await Promise.all([
+                probeArAsset('mind', comboMindUrl || undefined),
+                probeArAsset('model3d', model3dUrl),
+                probeArAsset('image2d', image2dUrl),
+                textureUrl ? probeArAsset('texture', textureUrl) : Promise.resolve(true)
+            ]);
 
+            if (probes.some(ok => !ok)) {
+                rejectedComboKeyRef.current = comboKey;
+                emitArDebug('COMBO_REJECTED_ORIGINALS_PRESERVED', {
+                    comboId: data.combo.combo_id, arTags,
+                    comboMindUrl, model3dUrl, image2dUrl
+                });
+                setState(prev => ({
+                    ...prev,
+                    activeCombo: null,
+                    comboMindUrl: null,
+                    mode: prev.detectedFlashcards.size >= 2 ? 'MULTI' : 'SINGLE',
+                    isCheckingCombo: false
+                }));
+                return null;
+            }
+
+            rejectedComboKeyRef.current = null;
+            emitArDebug('COMBO_ASSETS_READY', {
+                comboId: data.combo.combo_id,
+                requiredTags: data.combo.required_tags,
+                comboMindUrl, model3dUrl, image2dUrl
+            });
+            setState(prev => ({
+                ...prev,
+                activeCombo: {
+                    comboId: data.combo.combo_id,
+                    description: data.combo.description,
+                    requiredTags: data.combo.required_tags,
+                    model3dUrl,
+                    image2dUrl,
+                    textureUrl,
+                    comboMindUrl,
+                    bonusXp: data.combo.bonus_xp || 100
+                },
+                comboMindUrl,
+                mode: 'COMBO',
+                isCheckingCombo: false
+            }));
+            return data.combo;
         } catch (error) {
-            console.error('[MultiFlashcard] Combo check error:', error);
+            emitArDebug('COMBO_LOOKUP_FAILED', {
+                arTags,
+                error: error instanceof Error ? error.message : String(error)
+            });
             setState(prev => ({ ...prev, isCheckingCombo: false }));
             return null;
         }
     }, [state.detectedFlashcards, buildUrl]);
+
+    const rejectCombo = useCallback((reason: string) => {
+        const arTags = Array.from(stateRef.current.detectedFlashcards.values()).map(card => card.arTag);
+        rejectedComboKeyRef.current = [...arTags].sort().join('|');
+        emitArDebug('COMBO_ROLLBACK_ORIGINALS_PRESERVED', { reason, arTags });
+        setState(prev => ({
+            ...prev,
+            activeCombo: null,
+            comboMindUrl: null,
+            isCheckingCombo: false,
+            comboTriggered: false,
+            mode: prev.detectedFlashcards.size >= 2 ? 'MULTI' : 'SINGLE'
+        }));
+    }, []);
 
     /**
      * Auto-check for combo when we have 2+ flashcards
@@ -362,6 +444,7 @@ export function useMultiFlashcard() {
      */
     const reset = useCallback(() => {
         proximityComboRef.current = false;
+        rejectedComboKeyRef.current = null;
         setState({
             detectedFlashcards: new Map(),
             activeCombo: null,
@@ -417,6 +500,7 @@ export function useMultiFlashcard() {
         addFlashcard,
         removeFlashcard,
         checkCombo,
+        rejectCombo,
         reset,
 
         // Proximity handlers (to be connected to AR message events)
