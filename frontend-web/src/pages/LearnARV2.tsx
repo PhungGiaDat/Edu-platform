@@ -58,7 +58,7 @@ const GameOverlay = lazy(() => import('@/components/GameOverlay').then(m => ({ d
 // Session limits (in minutes)
 const SESSION_LIMIT_MINS = 30;
 const SESSION_WARNING_MINS = 25;
-const MAX_AR_TRACKS = 5;
+const MAX_AR_TRACKS = 2;
 const RECOVERABLE_AR_ERROR_CODES = new Set([
     'MODEL_LOAD_ERROR',
     'IMAGE_LOAD_ERROR',
@@ -522,6 +522,16 @@ export default function LearnARV2() {
     const [appMode, setAppMode] = useState<AppMode>('LEARNING');
     const [detectedQrId, setDetectedQrId] = useState<string | null>(null);
     const [committedComboId, setCommittedComboId] = useState<string | null>(null);
+    const [committedMultiKey, setCommittedMultiKey] = useState<string | null>(null);
+    const [multiPreparation, setMultiPreparation] = useState<{
+        key: string | null;
+        status: 'idle' | 'preparing' | 'ready' | 'committed' | 'error';
+        mindUrl: string | null;
+        mindBuffer: Uint8Array | null;
+        progress: number;
+        error: string | null;
+    }>({ key: null, status: 'idle', mindUrl: null, mindBuffer: null, progress: 0, error: null });
+    const [multiRetryToken, setMultiRetryToken] = useState(0);
     const [isAddingCard, setIsAddingCard] = useState(false);
     const [, setIsComboActive] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -540,6 +550,10 @@ export default function LearnARV2() {
     const isAddingCardRef = useRef(false);
     const qrGateRef = useRef<Map<string, number>>(new Map());
     const lastTargetEventRef = useRef(0);
+    const multiOperationIdRef = useRef(0);
+    const multiAbortRef = useRef<AbortController | null>(null);
+    const multiPreparingKeyRef = useRef<string | null>(null);
+    const firstTarget1FoundKeyRef = useRef<string | null>(null);
 
     // Session ID returned from backend when we POST /sessions/start
     const sessionIdRef = useRef<string | null>(null);
@@ -605,6 +619,7 @@ export default function LearnARV2() {
     // ========== MULTI-FLASHCARD DETECTION ==========
     const {
         addFlashcard,
+        removeFlashcard,
         detectedFlashcards,
         flashcardCount,
         activeCombo,
@@ -612,6 +627,9 @@ export default function LearnARV2() {
         hasCombo,
         isProximityCombo,
         comboTriggered,
+        comboKey,
+        comboResolution,
+        shouldPrepareIndependentMulti,
         proximity: _proximity, // eslint-disable-line @typescript-eslint/no-unused-vars
         handleProximityDetected,
         handleProximityEnded,
@@ -691,8 +709,172 @@ export default function LearnARV2() {
     const scannedTarget0 = getFlashcardByIndex(0);
     const scannedTarget1 = flashcardCount >= 2 ? getFlashcardByIndex(1) : null;
     const scannedTargets = Array.from(detectedFlashcards.values()).slice(0, MAX_AR_TRACKS);
+
+    useEffect(() => {
+        if (!shouldPrepareIndependentMulti || !comboKey || !scannedTarget0 || !scannedTarget1) return;
+        if (multiPreparingKeyRef.current === comboKey) return;
+
+        const operationId = ++multiOperationIdRef.current;
+        const controller = new AbortController();
+        multiAbortRef.current?.abort();
+        multiAbortRef.current = controller;
+        multiPreparingKeyRef.current = comboKey;
+        setCommittedMultiKey(null);
+        setMultiPreparation({
+            key: comboKey,
+            status: 'preparing',
+            mindUrl: null,
+            mindBuffer: null,
+            progress: 10,
+            error: null
+        });
+        const startedAt = Date.now();
+        const details = {
+            comboKey,
+            operationId,
+            qrIds: [scannedTarget0.qrId, scannedTarget1.qrId],
+            arTags: [scannedTarget0.arTag, scannedTarget1.arTag]
+        };
+        emitMobileDebug('MULTI_MIND_PREPARE_STARTED', details);
+
+        const ensureCurrent = () => {
+            if (controller.signal.aborted || multiOperationIdRef.current !== operationId) {
+                throw new DOMException('Stale multi-card preparation', 'AbortError');
+            }
+        };
+        const fetchMind = async (url: string, index: number) => {
+            if (!url) throw new Error(`Card ${index + 1} has no Mind target file`);
+            const resolvedUrl = resolveMindUrl(url);
+            if (!resolvedUrl) throw new Error(`Card ${index + 1} Mind target URL is invalid`);
+            const response = await fetch(resolvedUrl, { signal: controller.signal, cache: 'no-store' });
+            if (!response.ok) throw new Error(`Card ${index + 1} Mind file returned HTTP ${response.status}`);
+            const buffer = await response.arrayBuffer();
+            emitMobileDebug('MULTI_MIND_SOURCE_LOADED', { ...details, index, bytes: buffer.byteLength, url });
+            setMultiPreparation(prev => prev.key === comboKey
+                ? { ...prev, progress: index === 0 ? 25 : 40 }
+                : prev);
+            return buffer;
+        };
+        const preflightCard = async (index: number, urls: string[]) => {
+            for (const url of urls.filter(Boolean)) {
+                try {
+                    const response = await fetch(url, { method: 'HEAD', signal: controller.signal, cache: 'no-store' });
+                    if (response.ok) return;
+                } catch (error) {
+                    if (controller.signal.aborted) throw error;
+                }
+            }
+            throw new Error(`Card ${index + 1} has no reachable model or fallback image`);
+        };
+
+        void (async () => {
+            try {
+                const [first, second] = await Promise.all([
+                    fetchMind(scannedTarget0.mindUrl, 0),
+                    fetchMind(scannedTarget1.mindUrl, 1)
+                ]);
+                ensureCurrent();
+                const { mergeMindTargetBuffers } = await import('@/utils/mergeMindTargets');
+                const merged = mergeMindTargetBuffers(first, second);
+                ensureCurrent();
+                emitMobileDebug('MULTI_MIND_VALIDATED', { ...details, elapsedMs: Date.now() - startedAt });
+                setMultiPreparation(prev => prev.key === comboKey ? { ...prev, progress: 60 } : prev);
+                emitMobileDebug('MULTI_MIND_MERGED', { ...details, bytes: merged.byteLength, elapsedMs: Date.now() - startedAt });
+                setMultiPreparation(prev => prev.key === comboKey ? { ...prev, progress: 75 } : prev);
+                await Promise.all([
+                    preflightCard(0, [scannedTarget0.model3dUrl, scannedTarget0.image2dUrl]),
+                    preflightCard(1, [scannedTarget1.model3dUrl, scannedTarget1.image2dUrl])
+                ]);
+                ensureCurrent();
+                setMultiPreparation({
+                    key: comboKey,
+                    status: 'ready',
+                    mindUrl: 'runtime-buffer',
+                    mindBuffer: merged,
+                    progress: 90,
+                    error: null
+                });
+            } catch (error) {
+                if (error instanceof DOMException && error.name === 'AbortError') {
+                    emitMobileDebug('MULTI_MIND_OPERATION_STALE', { ...details, elapsedMs: Date.now() - startedAt });
+                    return;
+                }
+                const message = error instanceof Error ? error.message : String(error);
+                multiPreparingKeyRef.current = null;
+                emitMobileDebug('MULTI_MIND_PREPARE_FAILED', { ...details, error: message, elapsedMs: Date.now() - startedAt });
+                setMultiPreparation({
+                    key: comboKey,
+                    status: 'error',
+                    mindUrl: null,
+                    mindBuffer: null,
+                    progress: 0,
+                    error: message
+                });
+            }
+        })();
+
+        return () => controller.abort();
+    }, [shouldPrepareIndependentMulti, comboKey, scannedTarget0, scannedTarget1, multiRetryToken, emitMobileDebug]);
+
+    useEffect(() => {
+        if (multiPreparation.status !== 'ready' || !multiPreparation.mindUrl || !comboKey || multiPreparation.key !== comboKey) return;
+        if (!shouldPrepareIndependentMulti || activeCombo) return;
+        let cancelled = false;
+        let timeoutId: number | undefined;
+        const commitWhenTrackingSettles = () => {
+            const msSinceTargetEvent = Date.now() - lastTargetEventRef.current;
+            if (msSinceTargetEvent < 900) {
+                timeoutId = window.setTimeout(commitWhenTrackingSettles, 900 - msSinceTargetEvent);
+                return;
+            }
+            if (!cancelled) {
+                setCommittedMultiKey(comboKey);
+                setMultiPreparation(prev => prev.key === comboKey
+                    ? { ...prev, status: 'committed', progress: 100 }
+                    : prev);
+                emitMobileDebug('MULTI_VIEWER_COMMITTED', { comboKey });
+            }
+        };
+        timeoutId = window.setTimeout(commitWhenTrackingSettles, 700);
+        return () => {
+            cancelled = true;
+            if (timeoutId) window.clearTimeout(timeoutId);
+        };
+    }, [multiPreparation, comboKey, shouldPrepareIndependentMulti, activeCombo, emitMobileDebug]);
+
+    const isMultiViewer = Boolean(
+        committedMultiKey &&
+        committedMultiKey === comboKey &&
+        multiPreparation.status === 'committed' &&
+        multiPreparation.mindUrl &&
+        !isComboViewer
+    );
+
+    useEffect(() => {
+        if (!isComboViewer && flashcardCount === 2 && comboKey === multiPreparation.key) return;
+        multiOperationIdRef.current += 1;
+        multiAbortRef.current?.abort();
+        multiPreparingKeyRef.current = null;
+        setCommittedMultiKey(null);
+        setMultiPreparation(prev => prev.status === 'idle' && prev.key === null ? prev : ({
+            key: null,
+            status: 'idle',
+            mindUrl: null,
+            mindBuffer: null,
+            progress: 0,
+            error: null
+        }));
+    }, [isComboViewer, flashcardCount, comboKey, multiPreparation.key]);
+
+    useEffect(() => () => {
+        multiOperationIdRef.current += 1;
+        multiAbortRef.current?.abort();
+    }, []);
+
     const mindUrl = isComboViewer && comboMindUrl
         ? resolveMindUrl(comboMindUrl)
+        : isMultiViewer && multiPreparation.mindUrl
+            ? multiPreparation.mindUrl
         : resolveMindUrl(scannedTarget0?.mindUrl || arData?.targets?.[0]?.nft_base_url);
 
     const comboTarget0 = isComboViewer && activeCombo?.requiredTags?.[0]
@@ -723,6 +905,7 @@ export default function LearnARV2() {
             .map(tag => getFlashcardByTag(tag))
             .filter((target): target is NonNullable<typeof target> => Boolean(target))
         : scannedTargets;
+    const committedViewerTargetCount = isComboViewer || isMultiViewer ? 2 : 1;
     const viewerTargets = orderedViewerTargets.length
         ? orderedViewerTargets.map(target => ({
             modelUrl: target.model3dUrl,
@@ -742,7 +925,10 @@ export default function LearnARV2() {
             appState,
             isAddingCard,
             isComboViewer,
+            isMultiViewer,
             flashcardCount,
+            comboKey,
+            comboResolution,
             displayMode,
             detectedQrId,
             mindUrl,
@@ -791,9 +977,26 @@ export default function LearnARV2() {
                 comboPhrase
             }
         });
-    }, [emitMobileDebug, appState, isAddingCard, isComboViewer, flashcardCount, displayMode, detectedQrId, mindUrl, activeCombo, comboTarget0, comboTarget1, fallbackTarget1, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+    }, [emitMobileDebug, appState, isAddingCard, isComboViewer, isMultiViewer, flashcardCount, comboKey, comboResolution, displayMode, detectedQrId, mindUrl, activeCombo, comboTarget0, comboTarget1, fallbackTarget1, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
 
     const handleViewerAssetError = useCallback((data: { code?: string; error: string; url?: string }) => {
+        if (isMultiViewer) {
+            emitMobileDebug('MULTI_MIND_PREPARE_FAILED', {
+                ...data,
+                comboKey,
+                phase: 'viewer_initialization'
+            });
+            setCommittedMultiKey(null);
+            setMultiPreparation(prev => ({
+                ...prev,
+                status: 'error',
+                mindUrl: null,
+                mindBuffer: null,
+                error: data.error,
+                progress: 0
+            }));
+            return;
+        }
         if (!isComboViewer) return;
         emitMobileDebug('COMBO_VIEWER_FAILED_RESTORING_ORIGINALS', {
             ...data,
@@ -809,7 +1012,7 @@ export default function LearnARV2() {
         setCommittedComboId(null);
         setIsComboActive(false);
         rejectCombo(data.code || data.error);
-    }, [isComboViewer, emitMobileDebug, activeCombo, scannedTargets, rejectCombo]);
+    }, [isMultiViewer, isComboViewer, emitMobileDebug, comboKey, activeCombo, scannedTargets, rejectCombo]);
 
     // ========== HANDLERS ==========
     const handleQRDetected = useCallback((qrId: string) => {
@@ -919,7 +1122,15 @@ export default function LearnARV2() {
         console.log('[LearnARV2] Target found:', idx);
         lastTargetEventRef.current = Date.now();
         if (idx === 0) setMarkerFound(true);
-    }, []);
+        if (idx === 1 && isMultiViewer && comboKey && firstTarget1FoundKeyRef.current !== comboKey) {
+            firstTarget1FoundKeyRef.current = comboKey;
+            const secondCard = getFlashcardByIndex(1);
+            emitMobileDebug('MULTI_TARGET_1_FIRST_FOUND', {
+                comboKey,
+                elapsedMs: secondCard ? Date.now() - secondCard.detectedAt : undefined
+            });
+        }
+    }, [isMultiViewer, comboKey, getFlashcardByIndex, emitMobileDebug]);
 
     const handleTargetLost = useCallback((idx: number) => {
         console.log('[LearnARV2] Target lost:', idx);
@@ -1148,6 +1359,7 @@ export default function LearnARV2() {
             <ARContainerV2
                 initialPhase={detectedQrId ? 'VIEWING' : 'SCANNING'}
                 mindUrl={mindUrl}
+                mindBuffer={isMultiViewer ? multiPreparation.mindBuffer : null}
                 modelUrl={modelUrl}
                 imageUrl={imageUrl}
                 textureUrl={textureUrl}
@@ -1157,7 +1369,7 @@ export default function LearnARV2() {
                 word={comboTarget0?.word || arData?.flashcard?.word}
                 word2={comboTarget1?.word || fallbackTarget1?.word}
                 targets={viewerTargets}
-                cardCount={Math.max(1, Math.min(flashcardCount || viewerTargets.length, MAX_AR_TRACKS))}
+                cardCount={committedViewerTargetCount}
                 comboModelUrl={comboModelUrl}
                 comboImageUrl={comboImageUrl}
                 comboTextureUrl={comboTextureUrl}
@@ -1204,6 +1416,44 @@ export default function LearnARV2() {
                     >
                         + Add card
                     </button>
+                )}
+                {appState === 'VIEWING' && multiPreparation.status === 'preparing' && (
+                    <div style={{
+                        position: 'fixed', left: '50%', top: 20, transform: 'translateX(-50%)',
+                        zIndex: 100006, minWidth: 220, padding: '12px 16px', borderRadius: 18,
+                        color: '#fff', background: 'rgba(15,23,42,0.88)', textAlign: 'center',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+                    }}>
+                        <div style={{ fontWeight: 800 }}>Preparing both cards...</div>
+                        <div style={{ height: 5, marginTop: 8, borderRadius: 4, background: 'rgba(255,255,255,0.2)', overflow: 'hidden' }}>
+                            <div style={{ width: `${multiPreparation.progress}%`, height: '100%', background: '#2dd4bf', transition: 'width 180ms ease' }} />
+                        </div>
+                    </div>
+                )}
+                {appState === 'VIEWING' && multiPreparation.status === 'error' && flashcardCount === 2 && (
+                    <div style={{
+                        position: 'fixed', left: '50%', top: 20, transform: 'translateX(-50%)',
+                        zIndex: 100006, width: 'min(360px, calc(100vw - 32px))', padding: 16,
+                        borderRadius: 18, color: '#fff', background: 'rgba(127,29,29,0.94)', textAlign: 'center'
+                    }}>
+                        <div style={{ fontWeight: 800 }}>Could not prepare both cards.</div>
+                        <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center', gap: 10 }}>
+                            <button type="button" onClick={() => {
+                                multiPreparingKeyRef.current = null;
+                                setMultiPreparation(prev => ({
+                                    ...prev,
+                                    status: 'idle',
+                                    mindUrl: null,
+                                    mindBuffer: null,
+                                    error: null
+                                }));
+                                setMultiRetryToken(value => value + 1);
+                            }} style={{ padding: '9px 14px', border: 0, borderRadius: 14, fontWeight: 800, cursor: 'pointer' }}>Retry</button>
+                            <button type="button" onClick={() => {
+                                if (scannedTarget1) removeFlashcard(scannedTarget1.qrId);
+                            }} style={{ padding: '9px 14px', border: '1px solid #fff', borderRadius: 14, color: '#fff', background: 'transparent', fontWeight: 800, cursor: 'pointer' }}>Remove second card</button>
+                        </div>
+                    </div>
                 )}
                 {isAddingCard && (
                     <div

@@ -92,6 +92,14 @@ interface ProximityData {
     lastDetected: number;
 }
 
+type ComboResolution = 'idle' | 'checking' | 'found' | 'not_found' | 'rejected' | 'error';
+
+interface ComboResolutionState {
+    key: string | null;
+    status: ComboResolution;
+    reason?: string;
+}
+
 interface MultiFlashcardState {
     detectedFlashcards: Map<string, FlashcardData>;
     activeCombo: ComboData | null;
@@ -100,6 +108,7 @@ interface MultiFlashcardState {
     mode: 'SINGLE' | 'MULTI' | 'COMBO' | 'PROXIMITY_COMBO';
     proximity: ProximityData;
     comboTriggered: boolean;
+    comboResolution: ComboResolutionState;
 }
 
 export function useMultiFlashcard() {
@@ -115,12 +124,12 @@ export function useMultiFlashcard() {
             midpoint: null,
             lastDetected: 0
         },
-        comboTriggered: false
+        comboTriggered: false,
+        comboResolution: { key: null, status: 'idle' }
     });
 
     const comboCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const proximityComboRef = useRef<boolean>(false);
-    const rejectedComboKeyRef = useRef<string | null>(null);
     const stateRef = useRef(state);
 
     useEffect(() => {
@@ -147,6 +156,10 @@ export function useMultiFlashcard() {
         if (existing) {
             console.log('[MultiFlashcard] QR already detected:', qrId);
             return existing;
+        }
+        if (stateRef.current.detectedFlashcards.size >= 2) {
+            emitArDebug('FLASHCARD_LIMIT_REACHED', { qrId, limit: 2 });
+            return null;
         }
 
         console.log('[MultiFlashcard] 📱 New QR detected:', qrId);
@@ -194,12 +207,18 @@ export function useMultiFlashcard() {
                 newMap.set(qrId, flashcardData);
 
                 const newMode = newMap.size >= 2 ? 'MULTI' : 'SINGLE';
+                const newComboKey = newMap.size === 2
+                    ? Array.from(newMap.values()).map(card => card.arTag).sort().join('|')
+                    : null;
                 console.log('[MultiFlashcard] Mode:', newMode, 'Cards:', newMap.size);
 
                 return {
                     ...prev,
                     detectedFlashcards: newMap,
-                    mode: newMode
+                    mode: newMode,
+                    activeCombo: null,
+                    comboMindUrl: null,
+                    comboResolution: { key: newComboKey, status: 'idle' }
                 };
             });
 
@@ -215,7 +234,6 @@ export function useMultiFlashcard() {
      * Remove a flashcard (e.g., when target lost for extended time)
      */
     const removeFlashcard = useCallback((qrId: string) => {
-        rejectedComboKeyRef.current = null;
         setState(prev => {
             const newMap = new Map(prev.detectedFlashcards);
             newMap.delete(qrId);
@@ -225,7 +243,10 @@ export function useMultiFlashcard() {
                 detectedFlashcards: newMap,
                 mode: newMap.size >= 2 ? 'MULTI' : 'SINGLE',
                 activeCombo: newMap.size < 2 ? null : prev.activeCombo,
-                comboMindUrl: newMap.size < 2 ? null : prev.comboMindUrl
+                comboMindUrl: newMap.size < 2 ? null : prev.comboMindUrl,
+                comboResolution: newMap.size < 2
+                    ? { key: null, status: 'idle' }
+                    : prev.comboResolution
             };
         });
     }, []);
@@ -234,28 +255,38 @@ export function useMultiFlashcard() {
      * Check for combo when we have 2+ flashcards
      */
     const checkCombo = useCallback(async () => {
-        const flashcards = Array.from(state.detectedFlashcards.values());
-        if (flashcards.length < 2) return null;
+        const snapshot = stateRef.current;
+        const flashcards = Array.from(snapshot.detectedFlashcards.values()).slice(0, 2);
+        if (flashcards.length !== 2) return null;
 
         const arTags = flashcards.map(card => card.arTag);
         const comboKey = [...arTags].sort().join('|');
-        if (rejectedComboKeyRef.current === comboKey) return null;
+        if (snapshot.comboResolution.key === comboKey && snapshot.comboResolution.status !== 'idle') return null;
 
         emitArDebug('COMBO_LOOKUP_STARTED', { arTags, comboKey });
-        setState(prev => ({ ...prev, isCheckingCombo: true }));
+        emitArDebug('COMBO_RESOLUTION_CHANGED', { comboKey, status: 'checking' });
+        setState(prev => ({
+            ...prev,
+            isCheckingCombo: true,
+            comboResolution: { key: comboKey, status: 'checking' }
+        }));
 
         try {
             const response = await fetch(
                 `${API_BASE}/api/v1/combos/check?tags=${encodeURIComponent(arTags.join(','))}`
             );
             if (!response.ok) {
-                setState(prev => ({ ...prev, isCheckingCombo: false }));
-                return null;
+                throw new Error(`Combo lookup returned HTTP ${response.status}`);
             }
 
             const data = await response.json();
             if (!data.found || !data.combo) {
-                setState(prev => ({ ...prev, isCheckingCombo: false }));
+                emitArDebug('COMBO_RESOLUTION_CHANGED', { comboKey, status: 'not_found' });
+                setState(prev => prev.comboResolution.key !== comboKey ? prev : ({
+                    ...prev,
+                    isCheckingCombo: false,
+                    comboResolution: { key: comboKey, status: 'not_found' }
+                }));
                 return null;
             }
 
@@ -271,7 +302,6 @@ export function useMultiFlashcard() {
             ]);
 
             if (probes.some(ok => !ok)) {
-                rejectedComboKeyRef.current = comboKey;
                 emitArDebug('COMBO_REJECTED_ORIGINALS_PRESERVED', {
                     comboId: data.combo.combo_id, arTags,
                     comboMindUrl, model3dUrl, image2dUrl
@@ -281,12 +311,17 @@ export function useMultiFlashcard() {
                     activeCombo: null,
                     comboMindUrl: null,
                     mode: prev.detectedFlashcards.size >= 2 ? 'MULTI' : 'SINGLE',
-                    isCheckingCombo: false
+                    isCheckingCombo: false,
+                    comboResolution: { key: comboKey, status: 'rejected', reason: 'combo_asset_preflight' }
                 }));
+                emitArDebug('COMBO_RESOLUTION_CHANGED', {
+                    comboKey,
+                    status: 'rejected',
+                    reason: 'combo_asset_preflight'
+                });
                 return null;
             }
 
-            rejectedComboKeyRef.current = null;
             emitArDebug('COMBO_ASSETS_READY', {
                 comboId: data.combo.combo_id,
                 requiredTags: data.combo.required_tags,
@@ -306,30 +341,44 @@ export function useMultiFlashcard() {
                 },
                 comboMindUrl,
                 mode: 'COMBO',
-                isCheckingCombo: false
+                isCheckingCombo: false,
+                comboResolution: { key: comboKey, status: 'found' }
             }));
+            emitArDebug('COMBO_RESOLUTION_CHANGED', { comboKey, status: 'found' });
             return data.combo;
         } catch (error) {
+            const reason = error instanceof Error ? error.message : String(error);
             emitArDebug('COMBO_LOOKUP_FAILED', {
                 arTags,
-                error: error instanceof Error ? error.message : String(error)
+                error: reason
             });
-            setState(prev => ({ ...prev, isCheckingCombo: false }));
+            emitArDebug('COMBO_RESOLUTION_CHANGED', { comboKey, status: 'error', reason });
+            setState(prev => prev.comboResolution.key !== comboKey ? prev : ({
+                ...prev,
+                isCheckingCombo: false,
+                comboResolution: {
+                    key: comboKey,
+                    status: 'error',
+                    reason
+                }
+            }));
             return null;
         }
-    }, [state.detectedFlashcards, buildUrl]);
+    }, [buildUrl]);
 
     const rejectCombo = useCallback((reason: string) => {
         const arTags = Array.from(stateRef.current.detectedFlashcards.values()).map(card => card.arTag);
-        rejectedComboKeyRef.current = [...arTags].sort().join('|');
+        const comboKey = [...arTags].sort().join('|');
         emitArDebug('COMBO_ROLLBACK_ORIGINALS_PRESERVED', { reason, arTags });
+        emitArDebug('COMBO_RESOLUTION_CHANGED', { comboKey, status: 'rejected', reason });
         setState(prev => ({
             ...prev,
             activeCombo: null,
             comboMindUrl: null,
             isCheckingCombo: false,
             comboTriggered: false,
-            mode: prev.detectedFlashcards.size >= 2 ? 'MULTI' : 'SINGLE'
+            mode: prev.detectedFlashcards.size >= 2 ? 'MULTI' : 'SINGLE',
+            comboResolution: { key: comboKey, status: 'rejected', reason }
         }));
     }, []);
 
@@ -337,7 +386,8 @@ export function useMultiFlashcard() {
      * Auto-check for combo when we have 2+ flashcards
      */
     useEffect(() => {
-        if (state.detectedFlashcards.size >= 2 && !state.activeCombo && !state.isCheckingCombo) {
+        if (state.detectedFlashcards.size === 2 && !state.activeCombo &&
+            state.comboResolution.status === 'idle') {
             // Debounce combo check
             if (comboCheckTimeoutRef.current) {
                 clearTimeout(comboCheckTimeoutRef.current);
@@ -353,7 +403,7 @@ export function useMultiFlashcard() {
                 clearTimeout(comboCheckTimeoutRef.current);
             }
         };
-    }, [state.detectedFlashcards.size, state.activeCombo, state.isCheckingCombo, checkCombo]);
+    }, [state.detectedFlashcards, state.activeCombo, state.comboResolution.status, checkCombo]);
 
     /**
      * Handle proximity detected event from AR viewer
@@ -444,7 +494,6 @@ export function useMultiFlashcard() {
      */
     const reset = useCallback(() => {
         proximityComboRef.current = false;
-        rejectedComboKeyRef.current = null;
         setState({
             detectedFlashcards: new Map(),
             activeCombo: null,
@@ -457,7 +506,8 @@ export function useMultiFlashcard() {
                 midpoint: null,
                 lastDetected: 0
             },
-            comboTriggered: false
+            comboTriggered: false,
+            comboResolution: { key: null, status: 'idle' }
         });
     }, []);
 
@@ -495,6 +545,9 @@ export function useMultiFlashcard() {
         isCheckingCombo: state.isCheckingCombo,
         proximity: state.proximity,
         comboTriggered: state.comboTriggered,
+        comboKey: state.comboResolution.key,
+        comboResolution: state.comboResolution.status,
+        comboResolutionReason: state.comboResolution.reason,
 
         // Actions
         addFlashcard,
@@ -516,8 +569,12 @@ export function useMultiFlashcard() {
         // Derived
         hasCombo: !!state.activeCombo,
         isMultiMode: state.mode === 'MULTI' || state.mode === 'COMBO' || state.mode === 'PROXIMITY_COMBO',
-        isProximityCombo: state.mode === 'PROXIMITY_COMBO'
+        isProximityCombo: state.mode === 'PROXIMITY_COMBO',
+        shouldPrepareIndependentMulti: state.detectedFlashcards.size === 2 &&
+            !state.activeCombo &&
+            state.comboResolution.key !== null &&
+            ['not_found', 'rejected', 'error'].includes(state.comboResolution.status)
     };
 }
 
-export type { FlashcardData, ComboData, MultiFlashcardState, ProximityData };
+export type { FlashcardData, ComboData, MultiFlashcardState, ProximityData, ComboResolution, ComboResolutionState };
