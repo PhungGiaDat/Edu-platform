@@ -26,9 +26,17 @@ const { createCanvas, loadImage } = require('canvas');
 // ──────────────────────────────────────────────
 // Configuration
 // ──────────────────────────────────────────────
-const IMAGE_PATHS = [
-  path.resolve(__dirname, '../backend/static/assets/flashcards/elephant_card.png'),
-  path.resolve(__dirname, '../backend/static/assets/flashcards/jungle_card.png'),
+// This manifest is deliberately ordered: array position becomes MindAR's
+// targetIndex and must match ar_combinations.target_order in MongoDB.
+const TARGETS = [
+  {
+    arTag: 'jungle_marker_01',
+    imagePath: path.resolve(__dirname, '../backend/static/assets/flashcards/jungle_card.png'),
+  },
+  {
+    arTag: 'elephant_marker_01',
+    imagePath: path.resolve(__dirname, '../backend/static/assets/flashcards/elephant_card.png'),
+  },
 ];
 
 const OUTPUT_PATH = path.resolve(
@@ -42,10 +50,12 @@ const OUTPUT_PATH = path.resolve(
 async function main() {
   console.log('[MindAR Compiler] Starting combo_targets.mind retraining...');
   console.log('[MindAR Compiler] Images:');
-  IMAGE_PATHS.forEach((p, i) => console.log(`  [${i}] ${p}`));
+  TARGETS.forEach((target, i) => {
+    console.log(`  [${i}] ${target.arTag}: ${target.imagePath}`);
+  });
 
   // Verify images exist
-  for (const imgPath of IMAGE_PATHS) {
+  for (const { imagePath: imgPath } of TARGETS) {
     if (!fs.existsSync(imgPath)) {
       console.error(`[ERROR] Image not found: ${imgPath}`);
       process.exit(1);
@@ -54,7 +64,7 @@ async function main() {
 
   // Load images into canvas ImageData format (required by MindAR compiler)
   const imageDataList = [];
-  for (const imgPath of IMAGE_PATHS) {
+  for (const { imagePath: imgPath } of TARGETS) {
     console.log(`[MindAR Compiler] Loading image: ${path.basename(imgPath)}`);
     const img = await loadImage(imgPath);
     const canvas = createCanvas(img.width, img.height);
@@ -80,9 +90,10 @@ async function main() {
   console.log(`[MindAR Compiler] ✅ Saved: ${OUTPUT_PATH}`);
   console.log(`[MindAR Compiler] File size: ${(fs.statSync(OUTPUT_PATH).size / 1024).toFixed(1)} KB`);
   console.log('');
-  console.log('Target index mapping (matches ar-viewer.js):');
-  console.log('  target-0 → elephant_card.png  (index 0 in .mind file)');
-  console.log('  target-1 → jungle_card.png    (index 1 in .mind file)');
+  console.log('Target index mapping (store this exact list as target_order):');
+  TARGETS.forEach((target, index) => {
+    console.log(`  target-${index} -> ${target.arTag} (${path.basename(target.imagePath)})`);
+  });
   console.log('');
   console.log('Next step: Restart the backend server so it serves the new .mind file.');
 }

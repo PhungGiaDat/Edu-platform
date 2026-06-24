@@ -28,7 +28,14 @@ function validateSingleTargetMind(buffer: ArrayBuffer | Uint8Array, source: stri
     return payload as MindV2Payload;
 }
 
-/** Merge two single-target MindAR v2 files while preserving scan order. */
+/**
+ * Merge two single-target MindAR v2 files while preserving scan order.
+ *
+ * Ordering invariant: callers must bind targetIndex 0 to `first` card content
+ * and targetIndex 1 to `second` card content. The array below is the source of
+ * truth for the runtime-compiled MULTI viewer; changing it independently of
+ * viewerTargets would recreate the combo target-order bug.
+ */
 export function mergeMindTargetBuffers(
     first: ArrayBuffer | Uint8Array,
     second: ArrayBuffer | Uint8Array
