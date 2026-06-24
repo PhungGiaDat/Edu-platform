@@ -877,11 +877,11 @@ export default function LearnARV2() {
             ? multiPreparation.mindUrl
         : resolveMindUrl(scannedTarget0?.mindUrl || arData?.targets?.[0]?.nft_base_url);
 
-    const comboTarget0 = isComboViewer && activeCombo?.requiredTags?.[0]
-        ? getFlashcardByTag(activeCombo.requiredTags[0])
+    const comboTarget0 = isComboViewer && activeCombo?.targetOrder?.[0]
+        ? getFlashcardByTag(activeCombo.targetOrder[0])
         : scannedTarget0;
-    const comboTarget1 = isComboViewer && activeCombo?.requiredTags?.[1]
-        ? getFlashcardByTag(activeCombo.requiredTags[1])
+    const comboTarget1 = isComboViewer && activeCombo?.targetOrder?.[1]
+        ? getFlashcardByTag(activeCombo.targetOrder[1])
         : scannedTarget1;
     const fallbackTarget1 = scannedTarget1;
 
@@ -900,8 +900,8 @@ export default function LearnARV2() {
     const comboTextureUrl = isComboViewer ? activeCombo?.textureUrl : undefined;
     const comboPhrase = isComboViewer && activeCombo?.description
         || [comboTarget0?.word || arData?.flashcard?.word, comboTarget1?.word || fallbackTarget1?.word].filter(Boolean).join(' in ');
-    const orderedViewerTargets = isComboViewer && activeCombo?.requiredTags?.length
-        ? activeCombo.requiredTags
+    const orderedViewerTargets = isComboViewer && activeCombo?.targetOrder?.length
+        ? activeCombo.targetOrder
             .map(tag => getFlashcardByTag(tag))
             .filter((target): target is NonNullable<typeof target> => Boolean(target))
         : scannedTargets;
@@ -935,6 +935,7 @@ export default function LearnARV2() {
             activeCombo: activeCombo ? {
                 comboId: activeCombo.comboId,
                 requiredTags: activeCombo.requiredTags,
+                targetOrder: activeCombo.targetOrder,
                 model3dUrl: activeCombo.model3dUrl,
                 image2dUrl: activeCombo.image2dUrl,
                 comboMindUrl: activeCombo.comboMindUrl,

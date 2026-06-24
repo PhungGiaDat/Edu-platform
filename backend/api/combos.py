@@ -19,6 +19,9 @@ class ComboResponse(BaseModel):
     combo_id: str
     description: str
     required_tags: List[str]
+    # Optional only while legacy records await a physical target-index audit.
+    # New records require this field through ArCombinationSchema.
+    target_order: Optional[List[str]] = None
     model_3d_url: str
     texture_url: Optional[str] = None
     image_2d_url: str
@@ -39,10 +42,23 @@ class ComboCheckResponse(BaseModel):
 
 def _to_combo_response(combo: dict) -> ComboResponse:
     """Convert raw combo dict to response schema"""
+    required_tags = combo.get("required_tags", [])
+    target_order = combo.get("target_order")
+    # Do not turn malformed legacy data into a plausible-but-wrong binding.
+    # The client will reject a combo without a valid explicit compile order and
+    # continue through the independent MULTI path instead.
+    if (
+        not isinstance(target_order, list)
+        or len(target_order) != len(required_tags)
+        or len(set(target_order)) != len(target_order)
+        or set(target_order) != set(required_tags)
+    ):
+        target_order = None
     return ComboResponse(
         combo_id=combo.get("combo_id", ""),
         description=combo.get("description", ""),
-        required_tags=combo.get("required_tags", []),
+        required_tags=required_tags,
+        target_order=target_order,
         model_3d_url=combo.get("model_3d_url", ""),
         texture_url=combo.get("texture_url"),
         image_2d_url=combo.get("image_2d_url", ""),

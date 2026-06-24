@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale, type Locale } from '@/contexts/LocaleContext';
+import { colors, radius, shadows, transitions } from '@/design-tokens/claymorphic';
 import {
     courseCategoryLabel,
     courseDescription,
@@ -174,6 +175,20 @@ const demoPathStats = {
 const getLearnerId = (userId?: string | null, isGuest?: boolean) => (
     userId || (isGuest ? 'guest-learner' : null)
 );
+
+const courseListTheme = {
+    '--course-ink': colors.deepSlate,
+    '--course-muted': colors.mediumGray,
+    '--course-page': colors.skyBlueLight,
+    '--course-yellow': colors.sunshineYellow,
+    '--course-yellow-dark': colors.sunshineYellowDark,
+    '--course-coral': colors.coralPink,
+    '--course-coral-dark': colors.coralPinkDark,
+    '--course-card-radius': radius['4xl'],
+    '--course-card-shadow': shadows.clayLg,
+    '--course-button-shadow': shadows.clayPink,
+    '--course-motion': `${transitions.normal} ${transitions.springSubtle}`,
+} as React.CSSProperties;
 
 const getCourseProgress = (course: Course, progress?: UserProgress) => {
     const totalLessons = course.lessons.length;
@@ -433,7 +448,10 @@ export const CourseList: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden clay-bg-playful pb-[calc(env(safe-area-inset-bottom)+12rem)] md:pb-10">
+        <div
+            className="course-catalog min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden clay-bg-playful pb-[calc(env(safe-area-inset-bottom)+12rem)] md:pb-10"
+            style={courseListTheme}
+        >
             <div className="pointer-events-none fixed inset-0 hidden overflow-hidden sm:block">
                 <div
                     className="clay-shape-blob absolute -left-20 top-20 h-64 w-64 opacity-30"
@@ -579,7 +597,7 @@ export const CourseList: React.FC = () => {
                         <p className="mt-2 font-bold text-slate-600">{t('noCoursesInCategoryBody')}</p>
                     </div>
                 ) : (
-                    <div className="grid min-w-0 gap-6 lg:grid-cols-2 xl:grid-cols-3 xl:gap-7">
+                    <div className="course-list-grid grid min-w-0 gap-6 lg:grid-cols-2 xl:grid-cols-3 xl:gap-7">
                         {displayCourses.map((course, index) => {
                             const courseProgress = getCourseProgress(course, progressByCourse.get(course.course_id));
                             const totalCourseXp = course.lessons.reduce((sum, lesson) => sum + (lesson.reward?.xp || 0), 0);
@@ -599,21 +617,29 @@ export const CourseList: React.FC = () => {
                             return (
                                 <article
                                     key={course.course_id}
-                                    className="clay-course-card group relative min-w-0 cursor-pointer !rounded-[34px]"
+                                    className="clay-course-card course-list-card group relative min-w-0 cursor-pointer"
                                     onClick={() => hasLiveCourses && navigate(`/courses/${course.course_id}`)}
+                                    onKeyDown={(event) => {
+                                        if (hasLiveCourses && (event.key === 'Enter' || event.key === ' ')) {
+                                            event.preventDefault();
+                                            navigate(`/courses/${course.course_id}`);
+                                        }
+                                    }}
+                                    role={hasLiveCourses ? 'link' : undefined}
+                                    tabIndex={hasLiveCourses ? 0 : undefined}
                                 >
-                                    <div className="bg-[#FFE5DF] p-5">
-                                        <div className="flex min-h-[140px] items-center justify-center rounded-none bg-[#FFD93D] shadow-[0_6px_0_#E5B800]">
+                                    <div className="course-list-card__xp-shell">
+                                        <div className="course-list-card__xp-panel">
                                             <div className="flex items-center justify-center gap-4 text-slate-800">
-                                                <BoltIcon className="h-16 w-16 text-orange-500 sm:h-20 sm:w-20" />
-                                                <span className="text-6xl font-black leading-none sm:text-7xl" style={{ fontFamily: "'Baloo 2', system-ui, sans-serif" }}>
+                                                <BoltIcon className="course-list-card__bolt" />
+                                                <span className="course-list-card__xp" style={{ fontFamily: "'Baloo 2', system-ui, sans-serif" }}>
                                                     {displayXp} XP
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="min-w-0 p-5 sm:p-6">
+                                    <div className="course-list-card__body min-w-0">
                                         <div className="mb-4 flex flex-wrap items-center gap-2 text-base font-semibold text-slate-500">
                                             <span className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-600">
                                                 {displayLevel}
@@ -646,7 +672,7 @@ export const CourseList: React.FC = () => {
                                         </div>
                                         <button
                                             type="button"
-                                            className="mt-7 flex min-h-16 w-full items-center justify-center rounded-[28px] bg-gradient-to-br from-[#FFB4A2] to-[#F47F70] px-5 text-xl font-black text-slate-900 shadow-[0_8px_0_#D97070,inset_0_2px_0_rgba(255,255,255,0.35)] transition-transform hover:-translate-y-1"
+                                            className="course-list-card__cta mt-7 flex min-h-16 w-full items-center justify-center px-5 text-xl font-black"
                                             onClick={(event) => {
                                                 event.stopPropagation();
                                                 if (hasLiveCourses) {

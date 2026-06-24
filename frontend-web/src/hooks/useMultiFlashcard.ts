@@ -78,6 +78,7 @@ interface ComboData {
     comboId: string;
     description: string;
     requiredTags: string[];
+    targetOrder: string[];
     model3dUrl: string;
     image2dUrl: string;
     textureUrl?: string;
@@ -294,6 +295,38 @@ export function useMultiFlashcard() {
             const model3dUrl = buildUrl(data.combo.model_3d_url) || '';
             const image2dUrl = buildUrl(data.combo.image_2d_url) || '';
             const textureUrl = buildUrl(data.combo.texture_url);
+            const requiredTags: string[] = Array.isArray(data.combo.required_tags)
+                ? data.combo.required_tags
+                : [];
+            const targetOrder: string[] | null = Array.isArray(data.combo.target_order)
+                ? data.combo.target_order
+                : null;
+            const hasValidTargetOrder = Boolean(
+                targetOrder
+                && targetOrder.length === requiredTags.length
+                && new Set(targetOrder).size === targetOrder.length
+                && targetOrder.every(tag => requiredTags.includes(tag))
+            );
+            if (!hasValidTargetOrder || !targetOrder) {
+                emitArDebug('COMBO_REJECTED_ORIGINALS_PRESERVED', {
+                    comboId: data.combo.combo_id,
+                    arTags,
+                    reason: 'missing_or_invalid_target_order'
+                });
+                setState(prev => ({
+                    ...prev,
+                    activeCombo: null,
+                    comboMindUrl: null,
+                    mode: prev.detectedFlashcards.size >= 2 ? 'MULTI' : 'SINGLE',
+                    isCheckingCombo: false,
+                    comboResolution: {
+                        key: comboKey,
+                        status: 'rejected',
+                        reason: 'missing_or_invalid_target_order'
+                    }
+                }));
+                return null;
+            }
             const probes = await Promise.all([
                 probeArAsset('mind', comboMindUrl || undefined),
                 probeArAsset('model3d', model3dUrl),
@@ -325,6 +358,7 @@ export function useMultiFlashcard() {
             emitArDebug('COMBO_ASSETS_READY', {
                 comboId: data.combo.combo_id,
                 requiredTags: data.combo.required_tags,
+                targetOrder,
                 comboMindUrl, model3dUrl, image2dUrl
             });
             setState(prev => ({
@@ -332,7 +366,8 @@ export function useMultiFlashcard() {
                 activeCombo: {
                     comboId: data.combo.combo_id,
                     description: data.combo.description,
-                    requiredTags: data.combo.required_tags,
+                    requiredTags,
+                    targetOrder,
                     model3dUrl,
                     image2dUrl,
                     textureUrl,
@@ -521,7 +556,8 @@ export function useMultiFlashcard() {
 
     /**
      * Get flashcard by AR tag. This is used for combo target mapping because
-     * MindAR target indexes follow combo.required_tags order, not QR scan order.
+     * MindAR target indexes follow combo.target_order, not QR scan order or
+     * the unordered set of required_tags.
      */
     const getFlashcardByTag = useCallback((arTag: string): FlashcardData | null => {
         const flashcards = Array.from(state.detectedFlashcards.values());
