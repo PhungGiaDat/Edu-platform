@@ -23,6 +23,7 @@ export type ARPhase = 'IDLE' | 'SCANNING' | 'LOADING' | 'VIEWING' | 'ERROR'
 interface ARContainerV2Props {
     initialPhase?: ARPhase;
     mindUrl?: string;
+    mindBuffer?: Uint8Array | null;
     modelUrl?: string;
     imageUrl?: string;
     textureUrl?: string;
@@ -77,6 +78,7 @@ function normalizeViewerAssetUrl(url?: string): string | undefined {
 export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     initialPhase = 'SCANNING',
     mindUrl,
+    mindBuffer,
     modelUrl,
     imageUrl,
     textureUrl,
@@ -156,9 +158,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
     // ========== VIEWER SRC ==========
     const viewerSrc = useMemo(() => {
-        if (!mindUrl) return null;
+        if (!mindUrl && !mindBuffer) return null;
         const params = new URLSearchParams();
-        params.set('mind', mindUrl);
+        params.set('mind', mindBuffer ? 'runtime-buffer' : mindUrl!);
 
         const viewerTargets = targets?.length
             ? targets.slice(0, 5)
@@ -194,12 +196,13 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         if (normalizedComboTextureUrl) params.set('comboTextureUrl', normalizedComboTextureUrl);
         if (comboPhrase) params.set('comboPhrase', comboPhrase);
         return `/ar-viewer.html?${params.toString()}`;
-    }, [mindUrl, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+    }, [mindUrl, mindBuffer, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
 
     useEffect(() => {
         emitDebug('PARENT_VIEWER_SRC_READY', {
             hasViewerSrc: Boolean(viewerSrc),
             mindUrl,
+            hasMindBuffer: Boolean(mindBuffer?.byteLength),
             modelUrl,
             imageUrl,
             textureUrl,
@@ -215,7 +218,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             comboTextureUrl,
             comboPhrase
         });
-    }, [emitDebug, viewerSrc, mindUrl, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+    }, [emitDebug, viewerSrc, mindUrl, mindBuffer, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
 
     const mainSrc = useMemo(() => {
         switch (phase) {
@@ -312,6 +315,18 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 eventBus.emit(AREvent.SCENE_READY, { scene: 'viewer' } as any);
                 break;
 
+            case 'MIND_BUFFER_REQUEST': {
+                const iframeWindow = iframeRef.current?.contentWindow;
+                if (!fromPiP && mindBuffer && iframeWindow && event.source === iframeWindow) {
+                    iframeWindow.postMessage(
+                        createMessage('MIND_BUFFER', { buffer: mindBuffer }),
+                        '*'
+                    );
+                    emitDebug('PARENT_MIND_BUFFER_SENT', { bytes: mindBuffer.byteLength });
+                }
+                break;
+            }
+
             case 'TARGET_FOUND': {
                 const data = payload as ARMessagePayloadMap['TARGET_FOUND'];
                 emitDebug('PARENT_TARGET_FOUND', {
@@ -391,7 +406,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 break;
             }
         }
-    }, [phase, transitionTo, deferQrTransition, emitDebug, viewerSrc]);
+    }, [phase, transitionTo, deferQrTransition, emitDebug, viewerSrc, mindBuffer]);
 
     useEffect(() => {
         window.addEventListener('message', handleMessage);

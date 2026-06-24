@@ -1,25 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>AR Viewer</title>
-
-    <!-- A-Frame 1.4+ -->
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-
-    <!-- MindAR Image Tracking -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
-    <!-- External CSS -->
     <link rel="stylesheet" href="/static/ar-assets/css/ar-viewer.css">
 </head>
-
 <body>
-    <!-- Loading overlay removed - direct AR experience -->
-
-    <!-- AR Loading Overlay — shown while models download, hidden once arReady fires -->
     <div id="ar-loading-overlay" style="
         position:fixed;inset:0;
         background:linear-gradient(135deg,#0ea5e9 0%,#0284c7 100%);
@@ -38,79 +25,145 @@
         <style>@keyframes arSpin{to{transform:rotate(360deg)}}</style>
     </div>
 
+    <template id="ar-scene-template">
+        <a-scene id="ar-scene"
+            color-space="sRGB"
+            renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true"
+            embedded
+            vr-mode-ui="enabled: false"
+            device-orientation-permission-ui="enabled: false">
+            <a-assets timeout="15000"></a-assets>
+
+            <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+            <a-entity id="target-0" mindar-image-target="targetIndex: 0" visible="true">
+                <a-image id="mode-2d-0" class="clickable" position="0 0 0" rotation="0 0 0"
+                    width="1" height="1" visible="false"></a-image>
+                <a-entity id="mode-3d-0" class="clickable" position="0 0.05 0" rotation="0 0 0"
+                    scale="0.25 0.25 0.25"
+                    animation__hover="property: scale; to: 0.28 0.28 0.28; dur: 200; startEvents: mouseenter"
+                    animation__leave="property: scale; to: 0.25 0.25 0.25; dur: 200; startEvents: mouseleave"
+                    animation__click="property: scale; from: 0.25 0.25 0.25; to: 0.3 0.3 0.3; dir: alternate; loop: 1; dur: 150; startEvents: click"
+                    visible="true"></a-entity>
+            </a-entity>
+
+            <a-entity id="target-1" mindar-image-target="targetIndex: 1" visible="true">
+                <a-image id="mode-2d-1" class="clickable" position="0 0 0" rotation="0 0 0"
+                    width="1" height="1" visible="false"></a-image>
+                <a-entity id="mode-3d-1" class="clickable" position="0 0.1 0" scale="0.5 0.5 0.5"
+                    animation__hover="property: scale; to: 0.55 0.55 0.55; dur: 200; startEvents: mouseenter"
+                    animation__leave="property: scale; to: 0.5 0.5 0.5; dur: 200; startEvents: mouseleave"
+                    animation__click="property: scale; from: 0.5 0.5 0.5; to: 0.6 0.6 0.6; dir: alternate; loop: 1; dur: 150; startEvents: click"
+                    visible="true"></a-entity>
+            </a-entity>
+        </a-scene>
+    </template>
+
     <script>
         (function () {
             var params = new URLSearchParams(window.location.search);
-            var mindUrl = params.get('mind') || '';
-            var maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));
-            var config = [
-                'imageTargetSrc: ' + mindUrl,
-                'maxTrack: ' + maxTrack,
-                'uiLoading: no',
-                'uiScanning: no',
-                'uiError: no',
-                'filterMinCF: 0.001',
-                'filterBeta: 0.001'
-            ].join('; ');
-            var escapedConfig = config
-                .replace(/&/g, '&amp;')
-                .replace(/"/g, '&quot;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
+            var runtimeMindUrl = null;
 
-            window.__AR_VIEWER_INITIAL_MINDAR_CONFIG__ = config;
-            document.write(
-                '<a-scene id="ar-scene" mindar-image="' + escapedConfig + '"' +
-                ' color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true" embedded' +
-                ' vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">'
-            );
+            function postToParent(type, payload) {
+                window.parent.postMessage({
+                    type: type,
+                    payload: payload || {},
+                    timestamp: Date.now(),
+                    origin: 'child'
+                }, '*');
+            }
+
+            function loadScript(src) {
+                return new Promise(function (resolve, reject) {
+                    var script = document.createElement('script');
+                    script.src = src;
+                    script.onload = resolve;
+                    script.onerror = function () { reject(new Error('Failed to load ' + src)); };
+                    document.head.appendChild(script);
+                });
+            }
+
+            function receiveMindBuffer() {
+                return new Promise(function (resolve, reject) {
+                    var requestIntervalId;
+                    var timeoutId = window.setTimeout(function () {
+                        window.clearInterval(requestIntervalId);
+                        window.removeEventListener('message', onMessage);
+                        reject(new Error('Timed out waiting for merged Mind buffer'));
+                    }, 15000);
+
+                    function onMessage(event) {
+                        if (event.source !== window.parent || !event.data || event.data.type !== 'MIND_BUFFER') return;
+                        var payload = event.data.payload || event.data;
+                        if (!payload.buffer) return;
+                        window.clearTimeout(timeoutId);
+                        window.clearInterval(requestIntervalId);
+                        window.removeEventListener('message', onMessage);
+                        runtimeMindUrl = URL.createObjectURL(new Blob([payload.buffer], {
+                            type: 'application/octet-stream'
+                        }));
+                        postToParent('AR_DEBUG', {
+                            label: 'MULTI_MIND_BLOB_CREATED',
+                            details: { bytes: payload.buffer.byteLength },
+                            source: 'ar-viewer-bootstrap'
+                        });
+                        resolve(runtimeMindUrl);
+                    }
+
+                    window.addEventListener('message', onMessage);
+                    var requestBuffer = function () { postToParent('MIND_BUFFER_REQUEST', {}); };
+                    requestIntervalId = window.setInterval(requestBuffer, 300);
+                    requestBuffer();
+                });
+            }
+
+            async function bootstrap() {
+                var requestedMind = params.get('mind') || '';
+                var mindUrl = requestedMind === 'runtime-buffer'
+                    ? await receiveMindBuffer()
+                    : requestedMind;
+                if (!mindUrl) throw new Error('No Mind target source was provided');
+
+                await loadScript('https://aframe.io/releases/1.4.2/aframe.min.js');
+                await loadScript('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js');
+
+                var maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));
+                var config = [
+                    'imageTargetSrc: ' + mindUrl,
+                    'maxTrack: ' + maxTrack,
+                    'uiLoading: no',
+                    'uiScanning: no',
+                    'uiError: no',
+                    'filterMinCF: 0.001',
+                    'filterBeta: 0.001'
+                ].join('; ');
+                window.__AR_VIEWER_INITIAL_MINDAR_CONFIG__ = config;
+                window.__AR_VIEWER_RESOLVED_MIND_URL__ = mindUrl;
+
+                var template = document.getElementById('ar-scene-template');
+                var scene = template.content.firstElementChild.cloneNode(true);
+                scene.setAttribute('mindar-image', config);
+                document.body.appendChild(scene);
+                await loadScript('/static/ar-assets/js/ar-viewer.js');
+            }
+
+            window.addEventListener('beforeunload', function () {
+                if (!runtimeMindUrl) return;
+                URL.revokeObjectURL(runtimeMindUrl);
+                postToParent('AR_DEBUG', {
+                    label: 'MULTI_MIND_BLOB_REVOKED',
+                    details: { reason: 'viewer_unload' },
+                    source: 'ar-viewer-bootstrap'
+                });
+            });
+
+            bootstrap().catch(function (error) {
+                postToParent('SYSTEM_ERROR', {
+                    code: 'MIND_BUFFER_BOOTSTRAP_ERROR',
+                    message: error && error.message ? error.message : String(error)
+                });
+            });
         })();
     </script>
-
-        <!-- Timeout raised to 15s so models load over slow Render cold-start -->
-        <a-assets timeout="15000">
-            <!-- Dynamic assets loaded via URL params -->
-        </a-assets>
-
-        <a-camera position="0 0 0" look-controls="enabled: false">
-            <!-- Cursor disabled - using native touch events for mobile compatibility -->
-            <!-- <a-entity cursor="rayOrigin: mouse; fuse: false" raycaster="objects: .clickable; far: 1000"></a-entity> -->
-        </a-camera>
-
-        <!-- Target 0: Primary flashcard -->
-        <a-entity id="target-0" mindar-image-target="targetIndex: 0" visible="true">
-            <!-- 2D Mode: Image plane (initially hidden, toggled via mode switch) -->
-            <a-image id="mode-2d-0" class="clickable" position="0 0 0" rotation="0 0 0" width="1" height="1"
-                visible="false">
-            </a-image>
-
-            <!-- 3D Mode: GLTF Model (default visible) - smaller scale for mobile -->
-            <a-entity id="mode-3d-0" class="clickable" position="0 0.05 0" rotation="0 0 0" scale="0.25 0.25 0.25"
-                animation__hover="property: scale; to: 0.28 0.28 0.28; dur: 200; startEvents: mouseenter"
-                animation__leave="property: scale; to: 0.25 0.25 0.25; dur: 200; startEvents: mouseleave"
-                animation__click="property: scale; from: 0.25 0.25 0.25; to: 0.3 0.3 0.3; dir: alternate; loop: 1; dur: 150; startEvents: click"
-                visible="true">
-            </a-entity>
-        </a-entity>
-
-        <!-- Target 1: Secondary flashcard (for combo) -->
-        <a-entity id="target-1" mindar-image-target="targetIndex: 1" visible="true">
-            <!-- 2D Mode: Image plane -->
-            <a-image id="mode-2d-1" class="clickable" position="0 0 0" rotation="0 0 0" width="1" height="1"
-                visible="false">
-            </a-image>
-
-            <!-- 3D Mode: GLTF Model -->
-            <a-entity id="mode-3d-1" class="clickable" position="0 0.1 0" scale="0.5 0.5 0.5" visible="true"
-                animation__hover="property: scale; to: 0.55 0.55 0.55; dur: 200; startEvents: mouseenter"
-                animation__leave="property: scale; to: 0.5 0.5 0.5; dur: 200; startEvents: mouseleave"
-                animation__click="property: scale; from: 0.5 0.5 0.5; to: 0.6 0.6 0.6; dir: alternate; loop: 1; dur: 150; startEvents: click">
-            </a-entity>
-        </a-entity>
-    </a-scene>
-
-    <!-- External JS -->
-    <script src="/static/ar-assets/js/ar-viewer.js"></script>
 </body>
-
 </html>

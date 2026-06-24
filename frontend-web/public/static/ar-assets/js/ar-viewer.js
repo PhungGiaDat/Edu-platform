@@ -63,7 +63,7 @@
         if (lower.endsWith('/elephant_tree_combo_layered.png')) return COMBO_IMAGE_URL;
         return url;
     }
-    const mindUrl = params.get('mind');
+    const mindUrl = window.__AR_VIEWER_RESOLVED_MIND_URL__ || params.get('mind');
     const modelUrl = normalizeViewerAssetUrl(params.get('model'));
     const imageUrl = normalizeViewerAssetUrl(params.get('image'));
     const modelUrl2 = normalizeViewerAssetUrl(params.get('model2'));
@@ -385,7 +385,7 @@
         log('📥', `Attempting to fetch MIND file: ${mindUrl}`);
         
         // Test MIND file accessibility
-        fetch(mindUrl, { method: 'HEAD' })
+        fetch(mindUrl, mindUrl.startsWith('blob:') ? undefined : { method: 'HEAD' })
             .then(response => {
                 log('✅', `MIND file HEAD response: ${response.status} ${response.statusText}`);
                 log('📋', `Content-Type: ${response.headers.get('content-type')}`);
