@@ -9,7 +9,7 @@ from settings import settings
 from typing import Optional
 
 # Import Beanie initialization and Documents
-from database.mongodb import init_mongodb, close_mongodb, test_connection
+from database.mongodb import init_mongodb, close_mongodb, get_client, get_database as get_mongodb_database, test_connection
 from models.flashcard import Flashcard
 from models.user_mongo import UserDocument, LearningProgressDocument, QuizAttemptDocument
 from models.pet import PetDocument
@@ -36,9 +36,8 @@ class DatabaseManager:
         return cls._instance
     
     def __init__(self):
-        """Initialize connection only once"""
-        if self._client is None:
-            self._connect()
+        """Connection is initialized during FastAPI startup."""
+        pass
     
     def _connect(self):
         """Establish MongoDB connection"""
@@ -59,7 +58,8 @@ class DatabaseManager:
     def database(self) -> motor.motor_asyncio.AsyncIOMotorDatabase:
         """Get database instance"""
         if self._db is None:
-            self._connect()
+            self._client = get_client()
+            self._db = get_mongodb_database()
         return self._db
     
     def get_collection(self, collection_name: str) -> motor.motor_asyncio.AsyncIOMotorCollection:
@@ -119,6 +119,8 @@ async def connect_to_database():
             database_name=settings.MONGO_DB,
             document_models=document_models
         )
+        db_manager._client = get_client()
+        db_manager._db = get_mongodb_database()
         logger.info("✅ [MongoDB] Beanie ODM initialized successfully")
     except Exception as e:
         logger.error(f"❌ [MongoDB] Initialization failed: {e}")
