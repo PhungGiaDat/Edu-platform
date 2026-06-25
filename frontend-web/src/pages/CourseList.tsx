@@ -1,15 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { CourseCard } from '@/components/CourseCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale, type Locale } from '@/contexts/LocaleContext';
 import { colors, radius, shadows, transitions } from '@/design-tokens/claymorphic';
 import {
     courseCategoryLabel,
-    courseDescription,
-    courseSubtitle,
     courseTheme,
-    courseTitle,
 } from '@/lib/courseLocale';
 import { courseService } from '@/services/CourseService';
 import type { Course, UserProgress } from '@/types/course';
@@ -602,8 +600,6 @@ export const CourseList: React.FC = () => {
                             const courseProgress = getCourseProgress(course, progressByCourse.get(course.course_id));
                             const totalCourseXp = course.lessons.reduce((sum, lesson) => sum + (lesson.reward?.xp || 0), 0);
                             const firstLessonId = progressByCourse.get(course.course_id)?.current_lesson_id || course.lessons[0]?.lesson_id;
-                            const title = courseTitle(course, locale);
-                            const subtitle = courseSubtitle(course, locale);
                             const displayProgress = hasLiveCourses ? courseProgress.progressPercent : [35, 50, 22][index] || 30;
                             const displayXp = hasLiveCourses ? totalCourseXp : [500, 350, 480][index] || 420;
                             const duration = course.lessons.reduce((sum, lesson) => sum + (lesson.duration_minutes || 0), 0) || course.lessons.length * 6;
@@ -613,77 +609,30 @@ export const CourseList: React.FC = () => {
                                 locale === 'vi' ? 'Từ vựng' : 'Vocabulary',
                                 locale === 'vi' ? 'Vui' : 'Fun',
                             ];
+                            const completed = hasLiveCourses ? courseProgress.completedLessons : [2, 3, 1][index] || 0;
+                            const total = courseProgress.totalLessons || course.lessons.length || 1;
 
                             return (
-                                <article
+                                <CourseCard
                                     key={course.course_id}
-                                    className="clay-course-card course-list-card group relative min-w-0 cursor-pointer"
-                                    onClick={() => hasLiveCourses && navigate(`/courses/${course.course_id}`)}
-                                    onKeyDown={(event) => {
-                                        if (hasLiveCourses && (event.key === 'Enter' || event.key === ' ')) {
-                                            event.preventDefault();
-                                            navigate(`/courses/${course.course_id}`);
-                                        }
+                                    course={course}
+                                    locale={locale}
+                                    completedLessons={completed}
+                                    totalLessons={total}
+                                    progressPercent={displayProgress}
+                                    xp={displayXp}
+                                    durationMinutes={duration}
+                                    levelLabel={displayLevel}
+                                    actionLabel={completed > 0 ? t('continueLearning') : t('startLearning')}
+                                    progressLabel={t('progress')}
+                                    hourLabel={locale === 'vi' ? 'giờ' : 'hours'}
+                                    tags={tags}
+                                    isInteractive={hasLiveCourses}
+                                    onOpen={() => navigate(`/courses/${course.course_id}`)}
+                                    onStart={() => {
+                                        navigate(firstLessonId ? `/courses/${course.course_id}/lessons/${firstLessonId}` : `/courses/${course.course_id}`);
                                     }}
-                                    role={hasLiveCourses ? 'link' : undefined}
-                                    tabIndex={hasLiveCourses ? 0 : undefined}
-                                >
-                                    <div className="course-list-card__xp-shell">
-                                        <div className="course-list-card__xp-panel">
-                                            <div className="flex items-center justify-center gap-4 text-slate-800">
-                                                <BoltIcon className="course-list-card__bolt" />
-                                                <span className="course-list-card__xp" style={{ fontFamily: "'Baloo 2', system-ui, sans-serif" }}>
-                                                    {displayXp} XP
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="course-list-card__body min-w-0">
-                                        <div className="mb-4 flex flex-wrap items-center gap-2 text-base font-semibold text-slate-500">
-                                            <span className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-600">
-                                                {displayLevel}
-                                            </span>
-                                            <span aria-hidden="true">•</span>
-                                            <span>
-                                                {Math.max(1, Math.round(duration / 60))} {locale === 'vi' ? 'giờ' : 'hours'}
-                                            </span>
-                                        </div>
-                                        <h2 className="text-3xl font-black leading-tight text-slate-800">{title}</h2>
-                                        <p className="mt-2 text-xl font-medium leading-7 text-slate-500">{subtitle}</p>
-                                        <p className="mt-4 line-clamp-3 min-h-[5.25rem] text-xl font-medium leading-7 text-slate-600">
-                                            {courseDescription(course, locale)}
-                                        </p>
-                                        <div className="mt-5 flex flex-wrap gap-3">
-                                            {tags.map(tag => (
-                                                <span key={tag} className="rounded-2xl bg-slate-100 px-4 py-2 text-base font-semibold text-slate-600">
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
-                                        <div className="mt-6 flex items-center justify-between text-lg font-black text-slate-700">
-                                            <span>{locale === 'vi' ? 'Tiến độ' : 'Progress'}</span>
-                                            <span className="text-rose-500">
-                                                {hasLiveCourses ? courseProgress.completedLessons : [2, 3, 1][index]} / {courseProgress.totalLessons}
-                                            </span>
-                                        </div>
-                                        <div className="mt-2 h-4 overflow-hidden rounded-full bg-slate-100">
-                                            <div className="h-full rounded-full bg-gradient-to-r from-[#FFB4A2] to-[#FF7A90]" style={{ width: `${displayProgress}%` }} />
-                                        </div>
-                                        <button
-                                            type="button"
-                                            className="course-list-card__cta mt-7 flex min-h-16 w-full items-center justify-center px-5 text-xl font-black"
-                                            onClick={(event) => {
-                                                event.stopPropagation();
-                                                if (hasLiveCourses) {
-                                                    navigate(firstLessonId ? `/courses/${course.course_id}/lessons/${firstLessonId}` : `/courses/${course.course_id}`);
-                                                }
-                                            }}
-                                        >
-                                            {courseProgress.completedLessons > 0 ? t('continueLearning') : t('startLearning')}
-                                        </button>
-                                    </div>
-                                </article>
+                                />
                             );
                         })}
                     </div>
