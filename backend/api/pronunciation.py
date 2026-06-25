@@ -27,7 +27,7 @@ from repositories.pronunciation_repository import (
     PronunciationRepository,
     get_pronunciation_repository,
 )
-from services.gamification_service import GamificationService
+from services.gamification_service import GamificationService, get_gamification_service
 from services.ai_service import get_ai_service
 from services.feedback_service import FeedbackService, get_feedback_service
 from services.speech_processing_service import (
@@ -39,9 +39,6 @@ from services.speech_processing_service import (
 
 router = APIRouter(prefix="/pronunciation", tags=["Pronunciation"])
 logger = logging.getLogger(__name__)
-
-# Shared gamification service instance (stateless — safe to share)
-_gamification_service = GamificationService()
 
 # Badge ID awarded after 5 total pronunciation attempts
 BADGE_PRONUNCIATION_PRO = "pronunciation_pro_5"
@@ -65,6 +62,7 @@ class AIFeedbackResponse(BaseModel):
 async def log_pronunciation_attempt(
     payload: PronunciationAttemptCreate,
     repo: PronunciationRepository = Depends(get_pronunciation_repository),
+    gamification_service: GamificationService = Depends(get_gamification_service),
 ):
     """
     Log a single pronunciation attempt and award XP.
@@ -84,7 +82,7 @@ async def log_pronunciation_attempt(
     doc_id = await repo.create_attempt(doc_data)
 
     # Award XP
-    xp_result = await _gamification_service.add_xp(
+    xp_result = await gamification_service.add_xp(
         user_id=payload.user_id,
         action="pronunciation_attempt",
         metadata={"flashcard_qr_id": payload.flashcard_qr_id, "score": payload.score},
@@ -96,7 +94,7 @@ async def log_pronunciation_attempt(
     # subsequent attempt, regardless of whether award_badge is idempotent.
     total = await repo.count_attempts_for_user(payload.user_id)
     if total == 5:
-        await _gamification_service.award_badge(payload.user_id, BADGE_PRONUNCIATION_PRO)
+        await gamification_service.award_badge(payload.user_id, BADGE_PRONUNCIATION_PRO)
         logger.info(f"[Pronunciation] Badge '{BADGE_PRONUNCIATION_PRO}' awarded to {payload.user_id}")
 
     return PronunciationAttemptResponse(

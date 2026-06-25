@@ -223,16 +223,12 @@ logger.info("✅ All routers registered")
 @app.get("/health", tags=["System"])
 async def health_check():
     """
-    Health check endpoint for monitoring and deployment
+    Lightweight health check endpoint for monitoring and deployment.
+    Avoid a MongoDB ping here because Render may call this every few seconds.
     """
-    from database.connection import db_manager
-    
-    db_status = "healthy" if await db_manager.ping() else "unhealthy"
-    
     return {
         "status": "ok",
         "app": settings.APP_NAME,
-        "database": db_status,
         "debug": settings.DEBUG
     }
 

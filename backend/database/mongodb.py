@@ -104,6 +104,15 @@ def get_database() -> motor.motor_asyncio.AsyncIOMotorDatabase:
     return _database
 
 
+def get_client() -> motor.motor_asyncio.AsyncIOMotorClient:
+    """
+    Get the initialized MongoDB client.
+    """
+    if not _client:
+        raise RuntimeError("[MongoDB] Client not initialized. Call init_mongodb() first.")
+    return _client
+
+
 def get_collection(collection_name: str):
     """
     Get a raw MongoDB collection (for non-Beanie operations)

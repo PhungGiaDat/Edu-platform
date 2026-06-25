@@ -68,7 +68,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # Render provides PORT environment variable
 CMD gunicorn main:app \
     --bind 0.0.0.0:${PORT:-8000} \
-    --workers ${WORKERS:-4} \
+    --workers ${WORKERS:-1} \
     --worker-class uvicorn.workers.UvicornWorker \
     --timeout 120 \
     --keep-alive 5 \
