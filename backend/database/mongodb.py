@@ -99,7 +99,7 @@ def get_database() -> motor.motor_asyncio.AsyncIOMotorDatabase:
     
     For direct collection access when needed
     """
-    if not _database:
+    if _database is None:
         raise RuntimeError("[MongoDB] Database not initialized. Call init_mongodb() first.")
     return _database
 
@@ -108,7 +108,7 @@ def get_client() -> motor.motor_asyncio.AsyncIOMotorClient:
     """
     Get the initialized MongoDB client.
     """
-    if not _client:
+    if _client is None:
         raise RuntimeError("[MongoDB] Client not initialized. Call init_mongodb() first.")
     return _client
 
@@ -126,7 +126,7 @@ def get_collection(collection_name: str):
 
 async def test_connection() -> bool:
     """Test if the MongoDB connection is working"""
-    if not _client:
+    if _client is None:
         return False
     
     try:
