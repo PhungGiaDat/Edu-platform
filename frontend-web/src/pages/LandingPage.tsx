@@ -23,6 +23,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useLocale } from '../contexts/LocaleContext';
 
 // ─── Inline SVG icons (no emoji used as UI icons per ui-skills rules) ───────
 
@@ -91,72 +92,73 @@ const COURSES = [
   {
     id: 'animals',
     emoji: '🐘',
-    title: 'Animals World',
-    description: 'Meet elephants, tigers, and 30+ animals in 3D AR',
-    words: '42 words',
-    level: 'Beginner',
+    titleKey: 'landingCourseAnimalsTitle',
+    descriptionKey: 'landingCourseAnimalsDescription',
+    wordsKey: 'landingCourseAnimalsWords',
+    levelKey: 'landingCourseAnimalsLevel',
     color: '#B4E197',
     shadow: '#7DC760',
-    badge: 'Most Popular',
+    badgeKey: 'landingCourseAnimalsBadge',
   },
   {
     id: 'food',
     emoji: '🍎',
-    title: 'Yummy Food',
-    description: 'Learn fruits, vegetables, and meals that come alive',
-    words: '38 words',
-    level: 'Beginner',
+    titleKey: 'landingCourseFoodTitle',
+    descriptionKey: 'landingCourseFoodDescription',
+    wordsKey: 'landingCourseFoodWords',
+    levelKey: 'landingCourseFoodLevel',
     color: '#FFD93D',
     shadow: '#E5B800',
-    badge: 'Kids Favorite',
+    badgeKey: 'landingCourseFoodBadge',
   },
   {
     id: 'vehicles',
     emoji: '🚗',
-    title: 'Vehicles & Transport',
-    description: 'Cars, planes, and ships rolling right off the page',
-    words: '30 words',
-    level: 'Intermediate',
+    titleKey: 'landingCourseVehiclesTitle',
+    descriptionKey: 'landingCourseVehiclesDescription',
+    wordsKey: 'landingCourseVehiclesWords',
+    levelKey: 'landingCourseVehiclesLevel',
     color: '#6EB9FF',
     shadow: '#3A8FD1',
-    badge: 'New',
+    badgeKey: 'landingCourseVehiclesBadge',
   },
 ];
 
 const TESTIMONIALS = [
   {
-    name: 'Emma, age 7',
+    nameKey: 'landingTestimonialEmmaName',
     avatar: '👧',
-    quote: "The elephant came out of my book! I learned 10 words today!",
+    quoteKey: 'landingTestimonialEmmaQuote',
     stars: 5,
     color: '#FFD93D',
   },
   {
-    name: 'Liam, age 9',
+    nameKey: 'landingTestimonialLiamName',
     avatar: '👦',
-    quote: "I got 3 stars on the animal quiz. My teacher was so surprised!",
+    quoteKey: 'landingTestimonialLiamQuote',
     stars: 5,
     color: '#B4E197',
   },
   {
-    name: 'Sofia, age 8',
+    nameKey: 'landingTestimonialSofiaName',
     avatar: '👧',
-    quote: "I love touching the 3D cake and hearing the word. So cool!",
+    quoteKey: 'landingTestimonialSofiaQuote',
     stars: 5,
     color: '#6EB9FF',
   },
 ];
 
 const FEATURES = [
-  'Scan flashcards to launch 3D models',
-  'Tap models to hear correct pronunciation',
-  'Earn XP, badges, and unlock pets',
-  'Progress tracking for parents & teachers',
+  'landingFeatureScan',
+  'landingFeaturePronunciation',
+  'landingFeatureRewards',
+  'landingFeatureProgress',
 ];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export const LandingPage: React.FC = () => {
+  const { locale, setLocale, t } = useLocale();
   // Intersection Observer for scroll-reveal animations
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -283,7 +285,7 @@ export const LandingPage: React.FC = () => {
             onMouseEnter={e => (e.currentTarget.style.background = '#f0f4ff')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
-            Courses
+            {t('navCourses')}
           </Link>
           <Link to="/login" style={{
             padding: '10px 18px', fontWeight: 700, color: '#1A2744',
@@ -293,8 +295,18 @@ export const LandingPage: React.FC = () => {
             onMouseEnter={e => (e.currentTarget.style.background = '#f0f4ff')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
-            Log in
+            {t('navLogin')}
           </Link>
+          <button type="button" aria-label={t('language')} style={{
+            padding: '10px 12px', fontWeight: 900, color: '#1A2744',
+            background: '#fff', border: '2px solid #E2E8F0',
+            textDecoration: 'none', borderRadius: 14,
+            minHeight: 44, cursor: 'pointer',
+          }}
+            onClick={() => setLocale(locale === 'en' ? 'vi' : 'en')}
+          >
+            {t('switchLocale')}
+          </button>
           <Link to="/register" className="clay-btn" style={{
             padding: '10px 22px',
             background: '#FFD93D',
@@ -306,7 +318,7 @@ export const LandingPage: React.FC = () => {
             display: 'inline-flex', alignItems: 'center',
             minHeight: 44,
           }}>
-            Get Started
+            {t('navGetStarted')}
           </Link>
         </div>
       </nav>
@@ -339,7 +351,7 @@ export const LandingPage: React.FC = () => {
               boxShadow: '0 3px 0 #d97070',
             }}>
               <ZapIcon />
-              AR-Powered Language Learning
+              {t('landingBadge')}
             </div>
 
             {/* Headline */}
@@ -350,7 +362,7 @@ export const LandingPage: React.FC = () => {
               margin: '0 0 24px',
               letterSpacing: '-1px',
             }}>
-              Learn Words <br />
+              {t('landingHeroTitleLine1')} <br />
               <span style={{
                 display: 'inline-block',
                 background: 'linear-gradient(135deg, #6EB9FF, #B4E197)',
@@ -358,7 +370,7 @@ export const LandingPage: React.FC = () => {
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}>
-                in 3D Magic
+                {t('landingHeroTitleLine2')}
               </span>
             </h1>
 
@@ -367,8 +379,7 @@ export const LandingPage: React.FC = () => {
               fontSize: 18, fontWeight: 600, color: '#4A5568',
               maxWidth: 480, lineHeight: 1.6, margin: '0 0 36px',
             }}>
-              Point your phone at any flashcard and watch animals, food, and vehicles
-              leap into the real world. Kids ages 6–12 love it.
+              {t('landingHeroBody')}
             </p>
 
             {/* Feature checklist */}
@@ -383,7 +394,7 @@ export const LandingPage: React.FC = () => {
                   }}>
                     <CheckIcon />
                   </span>
-                  {f}
+                  {t(f)}
                 </li>
               ))}
             </ul>
@@ -399,7 +410,7 @@ export const LandingPage: React.FC = () => {
                 minHeight: 56,
                 border: 'none',
               }}>
-                Start Learning Free
+                {t('landingStartFree')}
                 <ArrowRightIcon />
               </Link>
               <Link to="/learn-ar" className="clay-btn" style={{
@@ -412,7 +423,7 @@ export const LandingPage: React.FC = () => {
                 border: '2px solid #E2E8F0',
               }}>
                 <CameraIcon />
-                Try AR Demo
+                {t('landingTryArDemo')}
               </Link>
             </div>
           </div>
@@ -463,10 +474,10 @@ export const LandingPage: React.FC = () => {
 
               <div style={{ textAlign: 'center' }}>
                 <p style={{ fontWeight: 900, fontSize: 22, margin: '0 0 4px', color: '#1A2744' }}>
-                  Elephant
+                  {t('landingPreviewWord')}
                 </p>
                 <p style={{ fontSize: 13, color: '#94A3B8', fontWeight: 600, margin: 0 }}>
-                  Tap to hear pronunciation
+                  {t('landingPreviewHint')}
                 </p>
               </div>
 
@@ -514,10 +525,10 @@ export const LandingPage: React.FC = () => {
           gap: 0, textAlign: 'center',
         }}>
           {[
-            { icon: <UsersIcon />, value: '50,000+', label: 'Happy Kids' },
-            { icon: <BookOpenIcon />, value: '110+', label: 'AR Flashcards' },
-            { icon: <TrophyIcon />, value: '4.9 / 5', label: 'App Rating' },
-            { icon: <ZapIcon />, value: '2M+', label: 'Words Learned' },
+            { icon: <UsersIcon />, value: '50,000+', label: t('landingHappyKids') },
+            { icon: <BookOpenIcon />, value: '110+', label: t('landingArFlashcards') },
+            { icon: <TrophyIcon />, value: '4.9 / 5', label: t('landingAppRating') },
+            { icon: <ZapIcon />, value: '2M+', label: t('landingWordsLearned') },
           ].map(({ icon, value, label }) => (
             <div key={label} style={{
               padding: '16px 24px', color: '#fff',
@@ -535,13 +546,13 @@ export const LandingPage: React.FC = () => {
       <section style={{ maxWidth: 1200, margin: '0 auto', padding: '80px 24px 40px' }}>
         <div className="reveal" style={{ textAlign: 'center', marginBottom: 48 }}>
           <p style={{ fontWeight: 800, color: '#6EB9FF', fontSize: 14, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 12px' }}>
-            What We Teach
+            {t('landingTeachKicker')}
           </p>
           <h2 style={{ fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 900, margin: '0 0 16px', letterSpacing: '-0.5px' }}>
-            Pick Your Adventure
+            {t('landingTeachTitle')}
           </h2>
           <p style={{ fontSize: 17, color: '#4A5568', fontWeight: 600, maxWidth: 480, margin: '0 auto' }}>
-            Every course uses real AR flashcards. No app download needed — just a phone camera.
+            {t('landingTeachBody')}
           </p>
         </div>
 
@@ -569,7 +580,7 @@ export const LandingPage: React.FC = () => {
                 fontSize: 12, fontWeight: 800, marginBottom: 20,
                 color: '#1A2744',
               }}>
-                {course.badge}
+                {t(course.badgeKey)}
               </div>
 
               {/* Emoji */}
@@ -581,10 +592,10 @@ export const LandingPage: React.FC = () => {
               </div>
 
               <h3 style={{ fontSize: 22, fontWeight: 900, margin: '0 0 8px', color: '#1A2744' }}>
-                {course.title}
+                {t(course.titleKey)}
               </h3>
               <p style={{ fontSize: 14, fontWeight: 600, color: '#3D4A5C', margin: '0 0 20px', lineHeight: 1.5 }}>
-                {course.description}
+                {t(course.descriptionKey)}
               </p>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -592,13 +603,13 @@ export const LandingPage: React.FC = () => {
                   background: 'rgba(255,255,255,0.6)', borderRadius: 10,
                   padding: '4px 12px', fontSize: 13, fontWeight: 800, color: '#1A2744',
                 }}>
-                  {course.words}
+                  {t(course.wordsKey)}
                 </span>
                 <span style={{
                   background: 'rgba(255,255,255,0.6)', borderRadius: 10,
                   padding: '4px 12px', fontSize: 13, fontWeight: 800, color: '#1A2744',
                 }}>
-                  {course.level}
+                  {t(course.levelKey)}
                 </span>
               </div>
 
@@ -632,7 +643,7 @@ export const LandingPage: React.FC = () => {
             textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
             border: 'none',
           }}>
-            View All Courses
+            {t('landingViewAllCourses')}
             <ArrowRightIcon />
           </Link>
         </div>
@@ -652,14 +663,13 @@ export const LandingPage: React.FC = () => {
             {/* Left: copy */}
             <div className="reveal">
               <p style={{ fontWeight: 800, color: '#6EB9FF', fontSize: 14, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 12px' }}>
-                Progress Tracking
+                {t('landingProgressKicker')}
               </p>
               <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, margin: '0 0 16px', letterSpacing: '-0.5px' }}>
-                Watch Kids Level Up in Real Time
+                {t('landingProgressTitle')}
               </h2>
               <p style={{ fontSize: 16, color: '#4A5568', fontWeight: 600, lineHeight: 1.6, margin: '0 0 28px' }}>
-                Every flashcard scan earns XP. Every correct pronunciation earns a badge.
-                Parents and teachers can track every milestone.
+                {t('landingProgressBody')}
               </p>
               <Link to="/register" className="clay-btn" style={{
                 background: '#6EB9FF', padding: '14px 28px',
@@ -667,7 +677,7 @@ export const LandingPage: React.FC = () => {
                 textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
                 border: 'none',
               }}>
-                Create Free Account
+                {t('landingCreateAccount')}
                 <ArrowRightIcon />
               </Link>
             </div>
@@ -687,16 +697,16 @@ export const LandingPage: React.FC = () => {
                   🦊
                 </div>
                 <div>
-                  <p style={{ fontWeight: 900, fontSize: 18, margin: '0 0 2px' }}>Alex's Progress</p>
+                  <p style={{ fontWeight: 900, fontSize: 18, margin: '0 0 2px' }}>{t('landingAlexProgress')}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{
                       background: '#B4E197', borderRadius: 99, padding: '2px 10px',
                       fontSize: 12, fontWeight: 800, boxShadow: '0 2px 0 #7DC760',
                     }}>
-                      Level 5
+                      {t('landingLevel5')}
                     </span>
                     <span style={{ fontSize: 12, color: '#94A3B8', fontWeight: 700 }}>
-                      Word Explorer
+                      {t('landingWordExplorer')}
                     </span>
                   </div>
                 </div>
@@ -705,7 +715,7 @@ export const LandingPage: React.FC = () => {
               {/* XP Bar */}
               <div style={{ marginBottom: 24 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontWeight: 800, fontSize: 14 }}>Experience Points</span>
+                  <span style={{ fontWeight: 800, fontSize: 14 }}>{t('landingExperiencePoints')}</span>
                   <span style={{ fontWeight: 900, fontSize: 14, color: '#6EB9FF' }}>680 / 1000 XP</span>
                 </div>
                 <div style={{ background: '#E2E8F0', borderRadius: 99, height: 14, overflow: 'hidden' }}>
@@ -728,9 +738,9 @@ export const LandingPage: React.FC = () => {
               {/* Stats row */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 24 }}>
                 {[
-                  { icon: '🔥', value: '12', label: 'Day Streak' },
-                  { icon: '⭐', value: '24', label: 'Badges' },
-                  { icon: '📚', label: 'Words', value: '86' },
+                  { icon: '🔥', value: '12', label: t('landingDayStreak') },
+                  { icon: '⭐', value: '24', label: t('landingBadges') },
+                  { icon: '📚', label: t('words'), value: '86' },
                 ].map(s => (
                   <div key={s.label} className="clay-card" style={{
                     background: '#FFFBF0', padding: '12px 8px', textAlign: 'center'
@@ -744,9 +754,13 @@ export const LandingPage: React.FC = () => {
 
               {/* Recent badges */}
               <div>
-                <p style={{ fontWeight: 800, fontSize: 13, margin: '0 0 10px', color: '#4A5568' }}>RECENT BADGES</p>
+                <p style={{ fontWeight: 800, fontSize: 13, margin: '0 0 10px', color: '#4A5568' }}>{t('landingRecentBadges')}</p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {['🐘 Animal Pro', '🍎 Fruit Master', '🔤 Speller'].map(b => (
+                  {[
+                    `🐘 ${t('landingBadgeAnimal')}`,
+                    `🍎 ${t('landingBadgeFruit')}`,
+                    `🔤 ${t('landingBadgeSpeller')}`,
+                  ].map(b => (
                     <span key={b} style={{
                       background: '#FFD93D', borderRadius: 10,
                       padding: '4px 10px', fontSize: 12, fontWeight: 800,
@@ -764,10 +778,10 @@ export const LandingPage: React.FC = () => {
       <section style={{ maxWidth: 1200, margin: '0 auto', padding: '80px 24px' }}>
         <div className="reveal" style={{ textAlign: 'center', marginBottom: 48 }}>
           <p style={{ fontWeight: 800, color: '#FF9F9F', fontSize: 14, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 12px' }}>
-            Student Stories
+            {t('landingStoriesKicker')}
           </p>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, margin: 0, letterSpacing: '-0.5px' }}>
-            Kids Are Obsessed
+            {t('landingStoriesTitle')}
           </h2>
         </div>
 
@@ -776,19 +790,19 @@ export const LandingPage: React.FC = () => {
           gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
           gap: 24,
         }}>
-          {TESTIMONIALS.map((t, i) => (
+          {TESTIMONIALS.map((testimonial, i) => (
             <div
-              key={t.name}
+              key={testimonial.nameKey}
               className="clay-card reveal"
               style={{
-                background: t.color,
+                background: testimonial.color,
                 padding: 28,
                 transitionDelay: `${i * 0.12}s`,
               }}
             >
               {/* Stars */}
               <div style={{ display: 'flex', gap: 3, marginBottom: 16 }}>
-                {Array.from({ length: t.stars }).map((_, j) => (
+                {Array.from({ length: testimonial.stars }).map((_, j) => (
                   <span key={j} style={{ color: '#1A2744' }}><StarIcon fill="#1A2744" /></span>
                 ))}
               </div>
@@ -800,7 +814,7 @@ export const LandingPage: React.FC = () => {
                   borderRadius: 20, padding: '16px 20px',
                   fontSize: 15, fontWeight: 700, lineHeight: 1.5, color: '#1A2744',
                 }}>
-                  "{t.quote}"
+                  "{t(testimonial.quoteKey)}"
                 </div>
                 {/* Tail */}
                 <div style={{
@@ -819,11 +833,11 @@ export const LandingPage: React.FC = () => {
                   borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 22, boxShadow: '0 2px 0 rgba(0,0,0,0.08)',
                 }}>
-                  {t.avatar}
+                  {testimonial.avatar}
                 </div>
                 <div>
-                  <p style={{ fontWeight: 900, fontSize: 14, margin: '0 0 1px', color: '#1A2744' }}>{t.name}</p>
-                  <p style={{ fontSize: 12, color: '#3D4A5C', fontWeight: 700, margin: 0 }}>EduAR Student</p>
+                  <p style={{ fontWeight: 900, fontSize: 14, margin: '0 0 1px', color: '#1A2744' }}>{t(testimonial.nameKey)}</p>
+                  <p style={{ fontSize: 12, color: '#3D4A5C', fontWeight: 700, margin: 0 }}>{t('landingStudentRole')}</p>
                 </div>
               </div>
             </div>
@@ -855,14 +869,14 @@ export const LandingPage: React.FC = () => {
             color: '#fff', margin: '0 0 16px', letterSpacing: '-0.5px',
             transitionDelay: '0.05s',
           }}>
-            Start Your Kid's<br />AR Learning Journey
+            {t('landingCtaTitleLine1')}<br />{t('landingCtaTitleLine2')}
           </h2>
           <p className="reveal" style={{
             fontSize: 17, color: '#94A3B8', fontWeight: 600,
             margin: '0 0 40px', lineHeight: 1.6,
             transitionDelay: '0.1s',
           }}>
-            Free to start. No credit card required. Hundreds of 3D AR flashcards ready to explore.
+            {t('landingCtaBody')}
           </p>
 
           <div className="reveal" style={{
@@ -875,7 +889,7 @@ export const LandingPage: React.FC = () => {
               textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
               minHeight: 60, border: 'none',
             }}>
-              Create Free Account
+              {t('landingCreateAccount')}
               <ArrowRightIcon />
             </Link>
             <Link to="/learn-ar" className="clay-btn" style={{
@@ -886,7 +900,7 @@ export const LandingPage: React.FC = () => {
               border: '2px solid rgba(255,255,255,0.25)',
             }}>
               <CameraIcon />
-              Try Without Account
+              {t('landingTryWithoutAccount')}
             </Link>
           </div>
 
@@ -895,7 +909,7 @@ export const LandingPage: React.FC = () => {
             fontSize: 13, color: '#64748B', fontWeight: 700, marginTop: 24,
             transitionDelay: '0.2s',
           }}>
-            Trusted by 50,000+ families worldwide. COPPA-compliant &amp; child-safe.
+            {t('landingTrustLine')}
           </p>
         </div>
       </section>
@@ -919,10 +933,14 @@ export const LandingPage: React.FC = () => {
           </span>
         </div>
         <p style={{ fontSize: 13, color: '#4B5563', fontWeight: 700, margin: 0 }}>
-          © 2025 EduAR Platform. Built with love for kids everywhere.
+          {t('landingFooter')}
         </p>
         <div style={{ display: 'flex', gap: 20 }}>
-          {['Privacy', 'Terms', 'Contact'].map(l => (
+          {[
+            t('landingPrivacy'),
+            t('landingTerms'),
+            t('landingContact'),
+          ].map(l => (
             <a key={l} href="#" style={{ fontSize: 13, color: '#4B5563', fontWeight: 700, textDecoration: 'none',
               transition: 'color 0.2s',
             }}
