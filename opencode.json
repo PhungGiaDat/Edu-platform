@@ -13,6 +13,76 @@
       "model": "github-copilot/GPT-5.2-Codex",
       "temperature": 0.3,
       "color": "#8E44AD"
+    },
+    "planner": {
+      "description": "Strategic planner for requirements gathering, architecture design, and project planning",
+      "mode": "subagent",
+      "model": "github-copilot/GPT-5.2-Codex",
+      "temperature": 0.2,
+      "color": "#2ECC71"
+    },
+    "researcher": {
+      "description": "Research specialist for investigating technologies, debugging issues, and gathering information",
+      "mode": "subagent",
+      "model": "github-copilot/GPT-5.2-Codex",
+      "temperature": 0.2,
+      "color": "#3498DB"
+    },
+    "debug": {
+      "description": "Expert debugger specializing in root cause analysis, issue investigation, and problem diagnosis",
+      "mode": "subagent",
+      "model": "github-copilot/GPT-5.2-Codex",
+      "temperature": 0.2,
+      "color": "#E67E22"
+    },
+    "fix": {
+      "description": "Expert bug fixer specializing in implementing clean, safe, and tested solutions to identified issues",
+      "mode": "subagent",
+      "model": "github-copilot/GPT-5.2-Codex",
+      "temperature": 0.1,
+      "color": "#E74C3C"
+    },
+    "reviewer": {
+      "description": "Code reviewer specializing in code quality, security audit, and maintainability",
+      "mode": "subagent",
+      "model": "github-copilot/GPT-5.2-Codex",
+      "temperature": 0.1,
+      "color": "#9B59B6"
+    },
+    "tester": {
+      "description": "QA engineer specializing in test creation, quality assurance, and coverage improvement",
+      "mode": "subagent",
+      "model": "github-copilot/GPT-5.2-Codex",
+      "temperature": 0.1,
+      "color": "#1ABC9C"
+    },
+    "documenter": {
+      "description": "Technical writer specializing in documentation, READMEs, API docs, and user guides",
+      "mode": "subagent",
+      "model": "github-copilot/GPT-5.2-Codex",
+      "temperature": 0.2,
+      "color": "#16A085"
+    },
+    "git-manager": {
+      "description": "DevOps specialist for version control, branching, merging, and release management",
+      "mode": "subagent",
+      "model": "github-copilot/GPT-5.2-Codex",
+      "temperature": 0.1,
+      "color": "#F39C12"
+    },
+    "devops": {
+      "description": "DevOps specialist for CI/CD, deployment, infrastructure, and containerization",
+      "mode": "subagent",
+      "model": "github-copilot/GPT-5.2-Codex",
+      "temperature": 0.1,
+      "color": "#D35400"
+    },
+    "database-admin": {
+      "description": "Database administrator specializing in schema design, query optimization, indexing, and migrations",
+      "mode": "subagent",
+      "model": "github-copilot/GPT-5.2-Codex",
+      "temperature": 0.1,
+      "color": "#7F8C8D"
     }
   },
   "permission": {
@@ -20,6 +90,17 @@
     "bash": "allow"
   },
   "instructions": [
+    "./sdlc-kit/.opencode/agents/orchestrator.md",
+    "./sdlc-kit/.opencode/agents/planner.md",
+    "./sdlc-kit/.opencode/agents/researcher.md",
+    "./sdlc-kit/.opencode/agents/debug.md",
+    "./sdlc-kit/.opencode/agents/fix.md",
+    "./sdlc-kit/.opencode/agents/reviewer.md",
+    "./sdlc-kit/.opencode/agents/tester.md",
+    "./sdlc-kit/.opencode/agents/documenter.md",
+    "./sdlc-kit/.opencode/agents/git-manager.md",
+    "./sdlc-kit/.opencode/agents/devops.md",
+    "./sdlc-kit/.opencode/agents/database-admin.md",
     "./AGENTS.md",
     "./.opencode/rules/*.md"
   ],
