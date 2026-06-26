@@ -162,7 +162,26 @@ async def change_pet_outfit(
     return result
 
 
+@router.get("/gamification/pet-xp/{user_id}")
+async def get_pet_xp(
+    user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service)
+):
+    """Get pet XP and evolution progress"""
+    user_id = str(current_user.id)
+    return await service.get_pet_xp(user_id)
+
+
 # ========== STICKER ENDPOINTS ==========
+
+@router.get("/gamification/stickers/catalog")
+async def get_sticker_catalog(
+    service: GamificationService = Depends(get_gamification_service)
+):
+    """Get full sticker catalog with all available stickers"""
+    return service.get_sticker_catalog()
+
 
 @router.get("/gamification/stickers/{user_id}")
 async def get_stickers(
@@ -187,6 +206,19 @@ async def collect_sticker(
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error"))
     return result
+
+
+# ========== STREAK & DAILY GOAL ==========
+
+@router.get("/gamification/streak/{user_id}")
+async def get_streak(
+    user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service)
+):
+    """Get streak data including daily goal progress for a user"""
+    user_id = str(current_user.id)
+    return await service.get_streak(user_id)
 
 
 # ========== PROGRESS REPORT ENDPOINTS ==========
