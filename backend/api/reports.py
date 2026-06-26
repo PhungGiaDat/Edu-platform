@@ -9,7 +9,7 @@ from models.user_mongo import UserDocument, LearningProgressDocument
 from models.session_log import SessionLogDocument
 from core.security import get_current_user
 from repositories.gamification_repository import get_gamification_repository
-from database.db import get_database
+from database.connection import get_database
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 logger = logging.getLogger(__name__)
@@ -126,7 +126,7 @@ async def get_user_progress_summary(
             "pronunciation_score_avg": pronunciation_score_avg
         },
         "topics": topics,
-        "recent_activity": recent_activity[-days:] if recent_activity else [],
+        "recent_activity": recent_activity[:days] if recent_activity else [],
         "generated_at": datetime.utcnow().isoformat()
     })
 
