@@ -104,8 +104,8 @@ export interface CourseUpdate {
 export interface FlashcardDeck {
   deck_id: string;
   teacher_id: string;
-  name: LocalizedString;
-  description?: LocalizedString;
+  name: string;
+  description?: string;
   cover_image_url?: string;
   category?: string;
   tags?: string[];
@@ -122,16 +122,16 @@ export interface LocalizedString {
 }
 
 export interface DeckCreate {
-  name: LocalizedString;
-  description?: LocalizedString;
+  name: string;
+  description?: string;
   cover_image_url?: string;
   category?: string;
   tags?: string[];
 }
 
 export interface DeckUpdate {
-  name?: LocalizedString;
-  description?: LocalizedString;
+  name?: string;
+  description?: string;
   cover_image_url?: string;
   category?: string;
   tags?: string[];
@@ -141,11 +141,11 @@ export interface DeckUpdate {
 // ========== Flashcard Types ==========
 
 export interface Flashcard {
-  qr_id: string;
+  qr_id?: string;
   teacher_id?: string;
   deck_id?: string;
   word: string;
-  translation: LocalizedString;
+  translation: string;
   pronunciation?: string;
   image_url?: string;
   audio_url?: string;
@@ -158,9 +158,8 @@ export interface Flashcard {
 }
 
 export interface FlashcardCreate {
-  qr_id: string;
   word: string;
-  translation: LocalizedString;
+  translation: string;
   deck_id?: string;
   pronunciation?: string;
   image_url?: string;
@@ -172,7 +171,7 @@ export interface FlashcardCreate {
 
 export interface FlashcardUpdate {
   word?: string;
-  translation?: LocalizedString;
+  translation?: string;
   deck_id?: string;
   pronunciation?: string;
   image_url?: string;

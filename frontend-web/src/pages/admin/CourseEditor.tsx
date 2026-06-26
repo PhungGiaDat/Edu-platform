@@ -25,17 +25,21 @@ const CourseEditor: React.FC<CourseEditorProps> = ({ isEdit = false }) => {
     setError(null);
 
     try {
-      const data: CourseCreate | CourseUpdate = {
-        title,
-        description,
-        thumbnail_url: thumbnailUrl,
-        is_published: false,
-      };
-
       if (isEdit && courseId) {
+        const data: CourseUpdate = {
+          title,
+          description,
+          thumbnail_url: thumbnailUrl,
+          is_published: false,
+        };
         await adminCoursesApi.updateCourse(courseId, data);
         navigate('/admin/courses');
       } else {
+        const data: CourseCreate = {
+          title,
+          description,
+          thumbnail_url: thumbnailUrl,
+        };
         await adminCoursesApi.createCourse(data);
         navigate('/admin/courses');
       }
