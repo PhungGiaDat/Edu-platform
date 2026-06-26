@@ -5,10 +5,10 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AdminLayout } from '../../components/admin/AdminLayout';
-import { AdminCard, SectionCard, StatCard } from '../../components/admin/AdminCard';
+import { SectionCard, StatCard } from '../../components/admin/AdminCard';
+import { ChartBarIcon, UsersIcon, ClockIcon, FireIcon } from '../../components/Icons';
 import { adminAnalyticsApi } from '../../services/adminApi';
 import type { ProgressAnalytics, EngagementAnalytics } from '../../types/admin';
-import { ChartBarIcon, UsersIcon, ClockIcon, FireIcon } from '../../components/Icons';
 
 const Analytics: React.FC = () => {
   const { t } = useTranslation();
@@ -105,8 +105,8 @@ const Analytics: React.FC = () => {
         <StatCard
           title={t('admin.analytics.avgProgress')}
           value={`${Math.round(
-            progressData?.progress_trends?.reduce((sum, p) => sum + p.avg_progress, 0) / 
-            Math.max(progressData?.progress_trends?.length || 1, 1) || 0
+            (progressData?.progress_trends?.reduce((sum, p) => sum + p.avg_progress, 0) || 0) / 
+            Math.max(progressData?.progress_trends?.length || 1, 1)
           )}%`}
           icon={<ChartBarIcon className="w-6 h-6" />}
           color="pink"
@@ -119,13 +119,13 @@ const Analytics: React.FC = () => {
         <SectionCard title={t('admin.analytics.activityByDay')}>
           <div className="h-48 sm:h-48 overflow-x-auto">
             <div className="min-w-[300px] h-full flex items-end justify-around gap-2">
-              {(engagementData?.activity_by_day || []).map((day, index) => (
+              {(engagementData?.activity_by_day || []).map((day, _index) => (
                 <div key={day.day} className="flex flex-col items-center gap-2 flex-1">
                   <div 
                     className="w-full bg-gradient-to-t from-[#6EB9FF] to-[#B4E197] rounded-t-lg transition-all"
                     style={{ height: `${maxActivity > 0 ? (day.count / maxActivity) * 100 : 0}%`, minHeight: '8px' }}
                   />
-                  <span className="text-xs text-gray-500">{dayLabels[index]}</span>
+                  <span className="text-xs text-gray-500">{dayLabels[_index]}</span>
                 </div>
               ))}
             </div>
@@ -135,7 +135,7 @@ const Analytics: React.FC = () => {
         {/* XP Distribution */}
         <SectionCard title={t('admin.analytics.xpDistribution')}>
           <div className="space-y-3">
-            {(progressData?.xp_distribution || []).map((bucket, index) => (
+            {(progressData?.xp_distribution || []).map((bucket) => (
               <div key={bucket.range} className="flex items-center gap-4">
                 <span className="text-sm text-gray-600 w-24">{bucket.range}</span>
                 <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
@@ -168,7 +168,7 @@ const Analytics: React.FC = () => {
       >
         <div className="h-32 sm:h-48 overflow-x-auto">
           <div className="min-w-[400px] h-full flex items-end justify-between gap-1">
-            {(progressData?.progress_trends || []).slice(-14).map((trend, index) => (
+            {(progressData?.progress_trends || []).slice(-14).map((trend) => (
               <div key={trend.date} className="flex flex-col items-center gap-2 flex-1">
                 <div 
                   className="w-full bg-gradient-to-t from-[#6EB9FF] to-[#B4E197]/50 rounded-t transition-all"

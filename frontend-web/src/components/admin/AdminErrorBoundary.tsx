@@ -9,8 +9,6 @@ import { useTranslation } from 'react-i18next';
 
 interface Props {
   children: ReactNode;
-  fallbackTitle?: string;
-  fallbackMessage?: string;
 }
 
 interface State {
@@ -116,7 +114,7 @@ class AdminErrorBoundary extends Component<Props, State> {
 
   render(): ReactNode {
     const { hasError, error } = this.state;
-    const { children, fallbackTitle, fallbackMessage } = this.props;
+    const { children } = this.props;
 
     if (hasError) {
       return (

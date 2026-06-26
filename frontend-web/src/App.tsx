@@ -11,7 +11,7 @@ import { Register } from "./pages/Register";
 import { LandingPage } from "./pages/LandingPage";
 import { ProgressDashboard } from "./pages/ProgressDashboard";
 import { LearningPathSetup } from "./pages/LearningPathSetup";
-import { PetsPage } from "./pages/PetsPage";
+import PetsPage from "./pages/PetsPage";
 import StickersPage from "./pages/StickersPage";
 import { Layout } from "./components/Layout";
 import { AIChatBuddy } from "./components/AIChatBuddy";
@@ -21,7 +21,6 @@ import { eventBus } from "./runtime/EventBus";
 import { usePets, type Pet } from "./hooks/usePets";
 import { useAuth } from "./contexts/AuthContext";
 import { getApiBase } from "./config";
-import PetsPage from "./pages/PetsPage";
 import { apiClient } from "./services/apiClient";
 import { SoundEffectService } from "./services/SoundEffectService";
 

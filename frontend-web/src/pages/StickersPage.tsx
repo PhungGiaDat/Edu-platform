@@ -8,7 +8,7 @@
  * - Rarity sparkle CSS effects
  */
 
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { apiClient } from '@/services/apiClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { HapticService } from '@/services/HapticService';

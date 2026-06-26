@@ -10,10 +10,9 @@ import { AdminCard, SectionCard } from '../../components/admin/AdminCard';
 import { adminStudentsApi, adminLearningGoalsApi } from '../../services/adminApi';
 import type { StudentProgress, LearningGoal } from '../../types/admin';
 import { UsersIcon, FireIcon, ClockIcon, BookOpenIcon, CardsIcon, ChevronLeftIcon, CheckCircleIcon } from '../../components/Icons';
-import { formatDistanceToNow } from '../../utils/dateUtils';
 
 const StudentDetail: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [student, setStudent] = useState<StudentProgress | null>(null);

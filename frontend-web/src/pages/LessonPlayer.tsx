@@ -665,7 +665,7 @@ export const LessonPlayer: React.FC = () => {
   };
 
   const handleFinishLesson = async () => {
-    if (!courseId || !lessonId || !result?.passed) return;
+    if (!courseId || !lessonId || !result?.passed || !lesson) return;
     setIsSubmitting(true);
     try {
       const wordsLearned = lesson.vocabulary

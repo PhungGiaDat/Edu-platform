@@ -8,8 +8,8 @@ import { useTranslation } from 'react-i18next';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { AdminCard } from '../../components/admin/AdminCard';
 import { adminLearningGoalsApi, adminStudentsApi } from '../../services/adminApi';
-import type { LearningGoal, LearningGoalCreate, PaginatedResponse, StudentProgress } from '../../types/admin';
-import { SettingsIcon, FireIcon, ChevronLeftIcon, SaveIcon } from '../../components/Icons';
+import type { LearningGoal, LearningGoalCreate, StudentProgress } from '../../types/admin';
+import { FireIcon, ChevronLeftIcon, SaveIcon } from '../../components/Icons';
 
 const GoalSettings: React.FC = () => {
   const { t } = useTranslation();
