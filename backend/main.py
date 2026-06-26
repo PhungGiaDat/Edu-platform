@@ -37,6 +37,7 @@ from api import (
     combos_router,
     pronunciation_router,
     sessions_router,
+    admin_router,
 )
 from api.websocket import router as websocket_router
 from api.reports import router as reports_router
@@ -214,6 +215,12 @@ app.include_router(
     sessions_router,
     prefix=settings.API_V1_PREFIX,
     tags=["Sessions"]
+)
+
+app.include_router(
+    admin_router,
+    prefix=f"{settings.API_V1_PREFIX}/admin",
+    tags=["Admin"]
 )
 
 logger.info("✅ All routers registered")

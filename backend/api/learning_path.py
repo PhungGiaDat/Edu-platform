@@ -177,28 +177,80 @@ async def track_daily_progress(
     current_user: UserDocument = Depends(get_current_user),
 ):
     """
-    Track daily progress increments.
-    NOTE: Detailed daily progress tracking is done via session_logs.
-    This endpoint returns a computed response using the stored goal targets.
+    Track daily progress from session logs.
+    Aggregates from SessionLogDocument instead of echoing client input (Q5: upsert-per-day).
     """
+    from repositories.gamification_repository import get_gamification_repository
+    from database.db import get_database
+    
     user_id = str(current_user.id)
-    logger.info(f"[LearningPath] POST progress for user={user_id} date={progress.date}")
-
-    # Simple echo-back: actual accumulation lives in session_logs
-    updated = {
-        "time_spent_mins": progress.time_spent_mins,
-        "words_learned": progress.words_learned,
-        "games_played": progress.games_played,
-        "pronunciation_attempts": progress.pronunciation_attempts,
-    }
-
+    target_date = progress.date
+    logger.info(f"[LearningPath] POST progress for user={user_id} date={target_date}")
+    
+    repo = get_gamification_repository()
+    db = await get_database()
+    
+    # Get all sessions for the target date
+    start_of_day = datetime.strptime(target_date, "%Y-%m-%d")
+    end_of_day = start_of_day.replace(hour=23, minute=59, second=59)
+    
+    sessions = await db.session_logs.find({
+        "user_id": user_id,
+        "started_at": {"$gte": start_of_day, "$lte": end_of_day},
+        "ended_at": {"$ne": None}  # Only completed sessions
+    }).to_list(100)
+    
+    # Aggregate from session logs
+    total_time_seconds = 0
+    total_words = 0
+    total_games = 0
+    total_pronun = 0
+    topic_counts: dict = {}
+    
+    for session in sessions:
+        # Calculate duration from ended_at - started_at
+        if session.get("ended_at") and session.get("started_at"):
+            duration = (session["ended_at"] - session["started_at"]).total_seconds()
+            total_time_seconds += int(duration)
+        
+        # Aggregate learning metrics
+        total_words += session.get("words_learned", 0)
+        total_games += session.get("games_played", 0)
+        total_pronun += session.get("pronunciation_attempts", 0)
+        
+        # Track most studied topic
+        topic = session.get("active_topic")
+        if topic:
+            topic_counts[topic] = topic_counts.get(topic, 0) + 1
+    
+    total_time_mins = total_time_seconds // 60
+    most_studied_topic = max(topic_counts, key=topic_counts.get) if topic_counts else None
+    
+    # Get user goals for comparison
+    user_prefs = await repo.get_by_user_id(user_id) or {}
+    time_goal = 15  # default
+    words_goal = 5  # default
+    
+    # Determine goals met
     goals_met = {
-        "time_goal_met": False,
-        "words_goal_met": False,
-        "all_goals_met": False,
+        "time_goal_met": total_time_mins >= time_goal,
+        "words_goal_met": total_words >= words_goal,
+        "all_goals_met": total_time_mins >= time_goal and total_words >= words_goal,
     }
-
-    return JSONResponse({"status": "tracked", "progress": updated, "goals_met": goals_met})
+    
+    return JSONResponse({
+        "status": "tracked",
+        "progress": {
+            "time_spent_mins": total_time_mins,
+            "words_learned": total_words,
+            "games_played": total_games,
+            "pronunciation_attempts": total_pronun,
+        },
+        "goals_met": goals_met,
+        "most_studied_topic": most_studied_topic,
+        "sessions_count": len(sessions),
+        "source": "session_logs"  # Indicates real aggregation vs mock
+    })
 
 
 @router.get("/{user_id}/today")

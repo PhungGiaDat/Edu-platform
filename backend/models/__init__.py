@@ -31,6 +31,23 @@ from .feedback_template import (
     SCORE_RANGES,
     DEFAULT_ENCOURAGEMENTS,
 )
+from .admin_models import (
+    FlashcardDeckDocument,
+    FlashcardDeckCreate,
+    FlashcardDeckUpdate,
+    FlashcardDeckResponse,
+    AdminFlashcardCreate,
+    AdminFlashcardUpdate,
+    AdminFlashcardResponse,
+    AdminCourseCreate,
+    AdminCourseUpdate,
+    AdminCourseResponse,
+    StudentProgressResponse,
+    LearningGoalCreate,
+    LearningGoalResponse,
+    DashboardStats,
+    PaginatedResponse,
+)
 
 __all__ = [
     # Flashcard
@@ -70,4 +87,20 @@ __all__ = [
     "score_to_stars",
     "SCORE_RANGES",
     "DEFAULT_ENCOURAGEMENTS",
+    # Admin Models
+    "FlashcardDeckDocument",
+    "FlashcardDeckCreate",
+    "FlashcardDeckUpdate",
+    "FlashcardDeckResponse",
+    "AdminFlashcardCreate",
+    "AdminFlashcardUpdate",
+    "AdminFlashcardResponse",
+    "AdminCourseCreate",
+    "AdminCourseUpdate",
+    "AdminCourseResponse",
+    "StudentProgressResponse",
+    "LearningGoalCreate",
+    "LearningGoalResponse",
+    "DashboardStats",
+    "PaginatedResponse",
 ]
