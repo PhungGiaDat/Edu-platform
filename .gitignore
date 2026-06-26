@@ -10,7 +10,6 @@ backend/generated/
 
 .docs
 
-
 .shared/
 # User-specific files
 *.rsuser
