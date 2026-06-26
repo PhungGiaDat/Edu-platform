@@ -680,7 +680,7 @@ export const LessonPlayer: React.FC = () => {
 
       await courseService.completeLesson(courseId, lessonId, learnerId, {
         score: result.score,
-        timeSpent: sessionStartTime > 0 ? Math.round((Date.now() - sessionStartTime) / 1000) : 0,
+        timeSpent: sessionStartTime > 0 ? Math.ceil((Date.now() - sessionStartTime) / 60000) : 0,
         wordsLearned,
         pronunciationScores,
         gamesPlayed,
