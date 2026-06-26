@@ -16,6 +16,7 @@ from .pets import router as pet_router
 from .combos import router as combos_router
 from .pronunciation import router as pronunciation_router
 from .sessions import router as sessions_router
+from .admin import router as admin_router
 
 __all__ = [
     "flashcard_router",
@@ -31,5 +32,6 @@ __all__ = [
     "combos_router",
     "pronunciation_router",
     "sessions_router",
+    "admin_router",
 ]
 

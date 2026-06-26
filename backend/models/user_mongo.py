@@ -64,6 +64,9 @@ class LearningProgressDocument(Document):
     last_reviewed_at: Optional[datetime] = None
     next_review_at: Optional[datetime] = None
 
+    # Mastery timestamp
+    mastered_at: Optional[datetime] = None  # When mastery_level >= 3 was reached
+
     class Settings:
         name = "learning_progress"
 

@@ -41,6 +41,11 @@ class SessionLogDocument(Document):
     # (used in progress reports to show "most studied topic")
     active_topic: Optional[str] = None
 
+    # Learning metrics from lesson activities
+    words_learned: int = 0  # Count of new words mastered
+    games_played: int = 0  # Count of games completed
+    pronunciation_attempts: int = 0  # Count of pronunciation exercises
+
     class Settings:
         name = "session_logs"
         indexes = [
