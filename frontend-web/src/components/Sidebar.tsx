@@ -3,7 +3,37 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { courseService } from '@/services/CourseService';
+import { apiClient } from '@/services/apiClient';
+import { DailyGoal } from '@/components/Gamification/DailyGoal';
+import { StreakBadge } from '@/components/Gamification/StreakBadge';
 import type { Course, UserProgress } from '@/types/course';
+
+// Sticker count badge component
+function StickerCountBadge() {
+    const { user } = useAuth();
+    const [collectedCount, setCollectedCount] = useState(0);
+    const [totalCount] = useState(18); // Total stickers in catalog
+
+    useEffect(() => {
+        if (!user?.id) return;
+        
+        apiClient.getStickers(user.id)
+            .then((stickers: any[]) => {
+                setCollectedCount(Array.isArray(stickers) ? stickers.length : 0);
+            })
+            .catch(() => {
+                setCollectedCount(0);
+            });
+    }, [user?.id]);
+
+    return (
+        <Link to="/stickers" className="clay-stat-card hover:scale-105 transition-transform">
+            <div className="text-xl">🏆</div>
+            <div className="clay-stat-number">{collectedCount}/{totalCount}</div>
+            <div className="clay-stat-label">Stickers</div>
+        </Link>
+    );
+}
 
 const BookIcon: React.FC<{ className?: string }> = ({ className = 'w-6 h-6' }) => (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -140,6 +170,16 @@ export const Sidebar: React.FC = () => {
                         <p className="text-sm font-semibold text-gray-600">Play. Explore. Learn English.</p>
                     </section>
 
+                    {/* Daily Goal + Streak — always visible on desktop */}
+                    {!isGuest && (
+                        <section className="clay-card-elevated p-4">
+                            <div className="flex gap-3 items-start">
+                                <DailyGoal variant="mini" showCelebration={false} />
+                                <StreakBadge className="flex-1 min-w-0" />
+                            </div>
+                        </section>
+                    )}
+
                     <section className="clay-card-elevated p-4">
                         <h2 className="mb-3 text-sm font-black text-gray-800">Quick Links</h2>
                         <div className="flex flex-wrap gap-2">
@@ -164,6 +204,15 @@ export const Sidebar: React.FC = () => {
                                 >
                                     <PetIcon className="h-4 w-4" />
                                     <span className="text-xs font-bold">My Pet</span>
+                                </button>
+                            )}
+                            {!isGuest && (
+                                <button
+                                    onClick={() => navigate('/stickers')}
+                                    className={`clay-tab flex items-center gap-2 ${location.pathname === '/stickers' ? 'clay-tab-active' : ''}`}
+                                >
+                                    <span className="text-base">🏆</span>
+                                    <span className="text-xs font-bold">Stickers</span>
                                 </button>
                             )}
                         </div>
@@ -220,7 +269,7 @@ export const Sidebar: React.FC = () => {
 
                     <section className="clay-card-elevated p-4">
                         <h2 className="mb-3 text-sm font-black text-gray-800">Progress Tracker</h2>
-                        <div className="mb-3 grid grid-cols-2 gap-3">
+                        <div className="mb-3 grid grid-cols-3 gap-3">
                             <div className="clay-stat-card">
                                 <div className="text-xl">⚡</div>
                                 <div className="clay-stat-number">{stats.totalXp}</div>
@@ -231,6 +280,7 @@ export const Sidebar: React.FC = () => {
                                 <div className="clay-stat-number">{stats.completedLessons}</div>
                                 <div className="clay-stat-label">Done</div>
                             </div>
+                            <StickerCountBadge />
                         </div>
                         <div className="mb-2 text-xs font-bold text-gray-600">
                             {stats.completedLessons}/{stats.totalLessons} lessons
@@ -298,8 +348,54 @@ export const Sidebar: React.FC = () => {
                             </div>
                         </button>
                     )}
+
+                    {/* Inline mini daily goal dot (always visible in mobile nav) */}
+                    {!isGuest && <MobileDailyGoalIndicator />}
                 </div>
             </nav>
         </>
     );
 };
+
+// ========== Mobile Daily Goal Indicator ==========
+
+function MobileDailyGoalIndicator() {
+    const { user } = useAuth();
+    const [minutes, setMinutes] = useState(0);
+    const goal = 15;
+
+    useEffect(() => {
+        if (!user?.id) return;
+        apiClient.getStreak(user.id).then((data: any) => {
+            setMinutes(data.minutes_today ?? 0);
+        }).catch(() => {
+            apiClient.getUserStats(user.id).then((data: any) => {
+                setMinutes(data.minutes_today ?? 0);
+            }).catch(() => {});
+        });
+    }, [user?.id]);
+
+    const pct = Math.min(Math.round((minutes / goal) * 100), 100);
+    const isDone = pct >= 100;
+    const color = isDone ? '#22c55e' : pct >= 60 ? '#0ea5e9' : '#f59e0b';
+
+    return (
+        <div className="flex flex-col items-center justify-center w-full" title={`Daily goal: ${minutes}/${goal} min`}>
+            <div className="relative h-[26px] w-[26px] flex items-center justify-center mb-0.5">
+                {/* Tiny ring */}
+                <svg width="26" height="26" viewBox="0 0 26 26" className="transform -rotate-90 absolute">
+                    <circle cx="13" cy="13" r="10" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                    <circle
+                        cx="13" cy="13" r="10" fill="none"
+                        stroke={color}
+                        strokeWidth="3"
+                        strokeDasharray={`${(pct / 100) * 62.83} 62.83`}
+                        strokeLinecap="round"
+                        className="transition-all duration-500"
+                    />
+                </svg>
+                <span className="relative text-[9px] leading-none" style={{ color }}>🎯</span>
+            </div>
+        </div>
+    );
+}

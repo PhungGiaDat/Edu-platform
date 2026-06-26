@@ -3,32 +3,9 @@
 // Kid-friendly with visual progress indicators
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getApiBase } from '../../config';
-import { useAuth } from '../../contexts/AuthContext';
-
-const API_BASE = getApiBase();
-
-interface GoalProgress {
-    target: number;
-    current: number;
-    percentage: number;
-    remaining: number;
-}
-
-interface DailyGoalData {
-    date: string;
-    progress: {
-        time_spent_mins: number;
-        words_learned: number;
-        games_played: number;
-        pronunciation_attempts: number;
-    };
-    goals: {
-        time: GoalProgress;
-        words: GoalProgress;
-    };
-    is_complete: boolean;
-}
+import { apiClient } from '@/services/apiClient';
+import { useAuth } from '@/contexts/AuthContext';
+import type { DailyGoalData } from '@/types/gamification';
 
 interface DailyGoalProps {
     userId?: string;
@@ -51,18 +28,15 @@ export const DailyGoal: React.FC<DailyGoalProps> = ({
     const fetchProgress = useCallback(async () => {
         if (!userId) return;
         try {
-            const res = await fetch(`${API_BASE}/api/v1/learning-path/${userId}/today`);
-            if (res.ok) {
-                const result = await res.json();
-                setData(result);
+            const result = await apiClient.getLearningProgress(userId);
+            setData(result as DailyGoalData);
 
-                // Check if just completed
-                if (result.is_complete && showCelebration && !showComplete) {
-                    setShowComplete(true);
-                    onGoalComplete?.();
-                    // Auto-hide celebration after 3 seconds
-                    setTimeout(() => setShowComplete(false), 3000);
-                }
+            // Check if just completed
+            if (result.is_complete && showCelebration && !showComplete) {
+                setShowComplete(true);
+                onGoalComplete?.();
+                // Auto-hide celebration after 3 seconds
+                setTimeout(() => setShowComplete(false), 3000);
             }
         } catch (e) {
             console.error('[DailyGoal] Failed to fetch:', e);
