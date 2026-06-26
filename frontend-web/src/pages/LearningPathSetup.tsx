@@ -1,553 +1,487 @@
-// src/pages/LearningPathSetup.tsx
-// Enhanced learning path setup with daily goals and time settings
-// Parent and kid-friendly interface
+import React, { useEffect, useMemo, useState } from 'react';
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { apiClient } from '../services/apiClient';
-import { useAuth } from '../contexts/AuthContext';
-
-interface Topic {
-    id: string;
-    name: string;
-    nameVi: string;
-    emoji: string;
-    wordCount: number;
-    isPriority: boolean;
-}
-
-interface DailyGoals {
-    timeGoalMins: number;
-    wordsGoal: number;
-}
-
-const AVAILABLE_TOPICS: Topic[] = [
-    { id: 'animals', name: 'Animals', nameVi: 'Animals', emoji: '🦁', wordCount: 15, isPriority: false },
-    { id: 'colors', name: 'Colors', nameVi: 'Colors', emoji: '🌈', wordCount: 8, isPriority: false },
-    { id: 'family', name: 'Family', nameVi: 'Family', emoji: '👨‍👩‍👧', wordCount: 12, isPriority: false },
-    { id: 'nature', name: 'Nature', nameVi: 'Nature', emoji: '🌳', wordCount: 10, isPriority: false },
-    { id: 'food', name: 'Food', nameVi: 'Food', emoji: '🍎', wordCount: 14, isPriority: false },
-    { id: 'school', name: 'School', nameVi: 'School', emoji: '📚', wordCount: 11, isPriority: false },
-    { id: 'body', name: 'Body Parts', nameVi: 'Body Parts', emoji: '🖐️', wordCount: 10, isPriority: false },
-    { id: 'transport', name: 'Transport', nameVi: 'Transport', emoji: '🚗', wordCount: 9, isPriority: false },
-];
-
-const TIME_OPTIONS = [
-    { value: 10, label: '10 mins', emoji: '⏱️', description: 'Quick session' },
-    { value: 15, label: '15 mins', emoji: '⏰', description: 'Recommended' },
-    { value: 20, label: '20 mins', emoji: '🕐', description: 'Standard' },
-    { value: 30, label: '30 mins', emoji: '🕑', description: 'Deep learning' },
-];
-
-const WORDS_OPTIONS = [
-    { value: 3, label: '3 words', emoji: '📖', description: 'Easy start' },
-    { value: 5, label: '5 words', emoji: '📚', description: 'Recommended' },
-    { value: 7, label: '7 words', emoji: '📕', description: 'Challenge' },
-    { value: 10, label: '10 words', emoji: '📗', description: 'Pro learner' },
-];
+import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
+import { colors, shadows } from '@/design-tokens/claymorphic';
+import { learningTopics, topicHint, topicLabel } from '@/lib/learningPathTopics';
+import {
+  learningPathService,
+  type LearningPathPayload,
+} from '@/services/LearningPathService';
 
 type SetupStep = 'topics' | 'goals' | 'complete';
 
+type DailyGoals = {
+  timeGoalMins: number;
+  wordsGoal: number;
+};
+
+const copy = {
+  en: {
+    kicker: 'Set up a learning path',
+    title: 'Choose what your child should learn first',
+    body: 'Start with real beginner themes inspired by early English readers for ages 5 to 8.',
+    step: 'Step',
+    of: 'of',
+    topicTitle: 'Priority topics',
+    topicBody: 'Pick the themes you want to see first in the course catalog.',
+    topicEmpty: 'Tap at least one topic to build a custom path.',
+    topicSelected: (count: number) => `${count} topic${count === 1 ? '' : 's'} selected`,
+    next: 'Next: daily goals',
+    goalsTitle: 'Daily goals',
+    goalsBody: 'Set a small rhythm that feels easy to repeat every day.',
+    timeGoal: 'Daily time',
+    wordGoal: 'Daily words',
+    back: 'Back',
+    save: 'Save learning path',
+    saving: 'Saving...',
+    completeTitle: 'Learning path ready',
+    completeBody: 'Your priorities and goals are saved. Recommended courses will move to the top of the catalog.',
+    restart: 'Edit choices',
+    saved: 'Learning path saved.',
+    signInRequired: 'Sign in to save this learning path.',
+    saveFallback: 'We could not save right now, but your choices are still on screen.',
+    ageBand: 'Age 5-8',
+    words: 'words',
+    recommended: 'Recommended',
+    timeSuffix: 'mins',
+    wordsSuffix: 'words',
+  },
+  vi: {
+    kicker: 'Thiết lập lộ trình học',
+    title: 'Chọn chủ đề ưu tiên cho bé học trước',
+    body: 'Bắt đầu với các chủ đề tiếng Anh cơ bản dành cho trẻ 5 đến 8 tuổi.',
+    step: 'Bước',
+    of: 'trên',
+    topicTitle: 'Chủ đề ưu tiên',
+    topicBody: 'Chọn các chủ đề bạn muốn xuất hiện đầu tiên trong danh sách khóa học.',
+    topicEmpty: 'Hãy chọn ít nhất một chủ đề để tạo lộ trình riêng.',
+    topicSelected: (count: number) => `Đã chọn ${count} chủ đề`,
+    next: 'Tiếp theo: mục tiêu hằng ngày',
+    goalsTitle: 'Mục tiêu hằng ngày',
+    goalsBody: 'Chọn nhịp học ngắn gọn để bé dễ duy trì mỗi ngày.',
+    timeGoal: 'Thời gian học',
+    wordGoal: 'Số từ mới',
+    back: 'Quay lại',
+    save: 'Lưu lộ trình học',
+    saving: 'Đang lưu...',
+    completeTitle: 'Lộ trình đã sẵn sàng',
+    completeBody: 'Ưu tiên và mục tiêu học đã được lưu. Các khóa học phù hợp sẽ được đẩy lên đầu danh sách.',
+    restart: 'Chỉnh sửa lại',
+    saved: 'Đã lưu lộ trình học.',
+    signInRequired: 'Cần đăng nhập để lưu lộ trình học.',
+    saveFallback: 'Hiện chưa lưu được, nhưng các lựa chọn của bạn vẫn còn trên màn hình.',
+    ageBand: 'Độ tuổi 5-8',
+    words: 'từ',
+    recommended: 'Khuyên dùng',
+    timeSuffix: 'phút',
+    wordsSuffix: 'từ',
+  },
+} as const;
+
+const timeOptions = [10, 15, 20, 30];
+const wordOptions = [3, 5, 7, 10];
+
+const palette = [
+  {
+    card: '#FFFFFF',
+    shell: '#FFF0D9',
+    border: 'rgba(255, 217, 61, 0.38)',
+    shadow: '0 12px 0 rgba(229, 184, 0, 0.18), 0 22px 36px rgba(26,39,68,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+    accent: colors.sunshineYellow,
+    accentDark: colors.sunshineYellowDark,
+  },
+  {
+    card: '#FFFFFF',
+    shell: '#EAF5FF',
+    border: 'rgba(110, 185, 255, 0.34)',
+    shadow: '0 12px 0 rgba(58, 143, 209, 0.18), 0 22px 36px rgba(26,39,68,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+    accent: colors.skyBlue,
+    accentDark: colors.skyBlueDark,
+  },
+  {
+    card: '#FFFFFF',
+    shell: '#EEF9E7',
+    border: 'rgba(180, 225, 151, 0.40)',
+    shadow: '0 12px 0 rgba(125, 199, 96, 0.18), 0 22px 36px rgba(26,39,68,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+    accent: colors.mintGreen,
+    accentDark: colors.mintGreenDark,
+  },
+  {
+    card: '#FFFFFF',
+    shell: '#FFE6E3',
+    border: 'rgba(255, 159, 159, 0.40)',
+    shadow: '0 12px 0 rgba(217, 112, 112, 0.18), 0 22px 36px rgba(26,39,68,0.10), inset 0 1px 0 rgba(255,255,255,0.9)',
+    accent: colors.coralPink,
+    accentDark: colors.coralPinkDark,
+  },
+];
+
 export const LearningPathSetup: React.FC = () => {
-    const [topics, setTopics] = useState<Topic[]>(AVAILABLE_TOPICS);
-    const [dailyGoals, setDailyGoals] = useState<DailyGoals>({
-        timeGoalMins: 15,
-        wordsGoal: 5,
-    });
-    const [step, setStep] = useState<SetupStep>('topics');
-    const [savedMessage, setSavedMessage] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
+  const { locale } = useLocale();
+  const ui = copy[locale];
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [dailyGoals, setDailyGoals] = useState<DailyGoals>({
+    timeGoalMins: 15,
+    wordsGoal: 5,
+  });
+  const [step, setStep] = useState<SetupStep>('topics');
+  const [isLoading, setIsLoading] = useState(false);
+  const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
-    const { user } = useAuth();
-    const userId = user?.id ?? '';
+  useEffect(() => {
+    if (!user?.id) return;
 
-    // Load existing preferences on mount
-    useEffect(() => {
-        if (!userId) {
-            return;
-        }
-
-        const loadPreferences = async () => {
-            try {
-                const data = await apiClient.get(`/api/v1/learning-path/${userId}`);
-                if (data.preferences) {
-                    // Update topics with saved priorities
-                    if (data.preferences.priority_topics?.length > 0) {
-                        setTopics(prev =>
-                            prev.map(t => ({
-                                ...t,
-                                isPriority: data.preferences.priority_topics.includes(t.id)
-                            }))
-                        );
-                    }
-                    // Update goals
-                    setDailyGoals({
-                        timeGoalMins: data.preferences.daily_time_goal_mins || 15,
-                        wordsGoal: data.preferences.daily_words_goal || 5,
-                    });
-                }
-            } catch {
-                console.log('[LearningPathSetup] Could not load preferences, using defaults');
-            }
-        };
-        loadPreferences();
-    }, [userId]);
-
-    const togglePriority = useCallback((topicId: string) => {
-        setTopics((prev) =>
-            prev.map((t) =>
-                t.id === topicId ? { ...t, isPriority: !t.isPriority } : t
-            )
-        );
+    learningPathService
+      .get(user.id)
+      .then((response) => {
+        const preferences = response.preferences;
+        setSelectedTopics(preferences.priority_topics || []);
+        setDailyGoals({
+          timeGoalMins: preferences.daily_time_goal_mins || 15,
+          wordsGoal: preferences.daily_words_goal || 5,
+        });
+      })
+      .catch(() => {
         setSavedMessage(null);
-    }, []);
+      });
+  }, [user?.id]);
 
-    const handleSave = useCallback(async () => {
-        if (!userId) {
-            setSavedMessage('Sign in required to save learning path');
-            return;
-        }
+  const selectedTopicDetails = useMemo(
+    () => learningTopics.filter((topic) => selectedTopics.includes(topic.id)),
+    [selectedTopics],
+  );
 
-        setIsLoading(true);
-        const priorityTopics = topics.filter((t) => t.isPriority).map((t) => t.id);
-
-        try {
-            await apiClient.post('/api/v1/learning-path/preferences', {
-                user_id: userId,
-                priority_topics: priorityTopics,
-                daily_time_goal_mins: dailyGoals.timeGoalMins,
-                daily_words_goal: dailyGoals.wordsGoal,
-                notifications_enabled: true,
-            });
-
-            setSavedMessage('Learning path saved!');
-            setStep('complete');
-        } catch {
-            setSavedMessage('Saved locally');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [topics, dailyGoals, userId]);
-
-    const priorityCount = topics.filter((t) => t.isPriority).length;
-
-    // Render based on current step
-    return (
-        <div
-            className={`min-h-screen pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300 ${
-                step === 'complete' ? 'bg-gradient-to-br from-emerald-100 to-green-300' : 'clay-bg-playful'
-            }`}
-        >
-            {/* Progress Indicator */}
-            <div className="px-4 sm:px-6 pt-4 sm:pt-6">
-                <div className="flex gap-2 mb-2">
-                    {['topics', 'goals', 'complete'].map((s, i) => (
-                        <div
-                            key={s}
-                            className="flex-1 h-2 rounded-full transition-all duration-300"
-                            style={{
-                                background: ['topics', 'goals', 'complete'].indexOf(step) >= i
-                                    ? 'linear-gradient(90deg, #0ea5e9, #22c55e)'
-                                    : '#e5e7eb'
-                            }}
-                        />
-                    ))}
-                </div>
-                <p className="text-center text-slate-700 text-xs sm:text-sm font-bold">
-                    Step {step === 'topics' ? 1 : step === 'goals' ? 2 : 3} of 3
-                </p>
-            </div>
-
-            {step === 'topics' && (
-                <TopicSelectionStep
-                    topics={topics}
-                    priorityCount={priorityCount}
-                    togglePriority={togglePriority}
-                    onNext={() => setStep('goals')}
-                />
-            )}
-
-            {step === 'goals' && (
-                <GoalSettingStep
-                    dailyGoals={dailyGoals}
-                    setDailyGoals={setDailyGoals}
-                    onBack={() => setStep('topics')}
-                    onSave={handleSave}
-                    isLoading={isLoading}
-                />
-            )}
-
-            {step === 'complete' && (
-                <CompletionStep
-                    topics={topics}
-                    dailyGoals={dailyGoals}
-                    savedMessage={savedMessage}
-                    onRestart={() => setStep('topics')}
-                />
-            )}
-        </div>
+  const toggleTopic = (topicId: string) => {
+    setSelectedTopics((current) =>
+      current.includes(topicId)
+        ? current.filter((value) => value !== topicId)
+        : [...current, topicId],
     );
-};
+    setSavedMessage(null);
+  };
 
-// ========== Step Components ==========
+  const handleSave = async () => {
+    if (!user?.id) {
+      setSavedMessage(ui.signInRequired);
+      return;
+    }
 
-interface TopicStepProps {
-    topics: Topic[];
-    priorityCount: number;
-    togglePriority: (id: string) => void;
-    onNext: () => void;
-}
+    const payload: LearningPathPayload = {
+      user_id: user.id,
+      priority_topics: selectedTopics,
+      daily_time_goal_mins: dailyGoals.timeGoalMins,
+      daily_words_goal: dailyGoals.wordsGoal,
+      notifications_enabled: true,
+    };
 
-const TopicSelectionStep: React.FC<TopicStepProps> = ({
-    topics,
-    priorityCount,
-    togglePriority,
-    onNext,
-}) => (
-    <div className="px-4 sm:px-6 pt-4 sm:pt-6">
-        {/* Header */}
-        <div className="text-center mb-4 sm:mb-6">
-            <h1 className="text-xl sm:text-2xl font-black text-amber-800">📚 Choose Topics</h1>
-            <p className="text-amber-700 text-xs sm:text-sm">What do you want to learn?</p>
-        </div>
+    setIsLoading(true);
+    try {
+      await learningPathService.save(payload);
+      setSavedMessage(ui.saved);
+      setStep('complete');
+    } catch {
+      setSavedMessage(ui.saveFallback);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        {/* Priority count */}
-        <div
-            className="mb-4 p-3 sm:p-4 rounded-2xl text-center"
-            style={{
-                background: 'rgba(255,255,255,0.9)',
-                border: '3px solid #f59e0b',
-            }}
+  return (
+    <div className="min-h-screen clay-bg-playful pb-[calc(env(safe-area-inset-bottom)+6rem)] md:pb-8">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+        <section
+          className="rounded-[36px] border-4 border-white px-5 py-6 shadow-[0_14px_0_rgba(91,141,239,0.12)] sm:px-7"
+          style={{ background: '#F7FBFF' }}
         >
-            <p className="text-amber-800 font-bold text-sm sm:text-base">
-                {priorityCount === 0
-                    ? '👆 Tap topics to prioritize'
-                    : `${priorityCount} topic${priorityCount > 1 ? 's' : ''} selected`}
-            </p>
-        </div>
-
-        {/* Topics Grid */}
-        <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-6">
-            {topics.map((topic) => (
-                <button
-                    key={topic.id}
-                    onClick={() => togglePriority(topic.id)}
-                    className="p-3 sm:p-4 rounded-2xl text-left transition-all"
+          <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <div className="inline-flex rounded-full border-4 border-white bg-white px-4 py-2 text-sm font-black text-sky-700 shadow-[0_6px_0_rgba(91,141,239,0.12)]">
+                {ui.kicker}
+              </div>
+              <h1
+                className="mt-4 text-4xl font-black leading-tight text-slate-800 sm:text-5xl"
+                style={{ fontFamily: "'Baloo 2', system-ui, sans-serif" }}
+              >
+                {ui.title}
+              </h1>
+              <p className="mt-3 max-w-2xl text-base font-bold leading-7 text-slate-600 sm:text-lg">
+                {ui.body}
+              </p>
+            </div>
+            <div className="rounded-[28px] border-4 border-white bg-white px-4 py-4 text-sm font-black text-slate-700 shadow-[0_8px_0_rgba(255,217,61,0.18)]">
+              <div>{ui.step} {step === 'topics' ? 1 : step === 'goals' ? 2 : 3} {ui.of} 3</div>
+              <div className="mt-3 flex gap-2">
+                {['topics', 'goals', 'complete'].map((item, index) => (
+                  <div
+                    key={item}
+                    className="h-2 w-14 rounded-full"
                     style={{
-                        background: topic.isPriority
-                            ? 'linear-gradient(135deg, #22c55e, #4ade80)'
-                            : 'rgba(255,255,255,0.9)',
-                        border: topic.isPriority ? '4px solid #16a34a' : '3px solid #e5e7eb',
-                        transform: topic.isPriority ? 'scale(1.02)' : 'scale(1)',
-                        boxShadow: topic.isPriority
-                            ? '0 8px 20px rgba(34,197,94,0.3)'
-                            : '0 2px 8px rgba(0,0,0,0.1)',
-                        minHeight: 80,
+                      background: (step === 'topics' && index === 0)
+                        || (step === 'goals' && index <= 1)
+                        || (step === 'complete')
+                        ? colors.coralPink
+                        : '#E2E8F0',
                     }}
-                >
-                    <div className="flex items-start gap-2">
-                        <span className="text-2xl sm:text-3xl flex-shrink-0">{topic.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                            <div
-                                className="font-bold text-xs sm:text-sm truncate"
-                                style={{ color: topic.isPriority ? '#fff' : '#1f2937' }}
-                            >
-                                {topic.name}
-                            </div>
-                            <div
-                                className="text-xs truncate"
-                                style={{ color: topic.isPriority ? 'rgba(255,255,255,0.8)' : '#6b7280' }}
-                            >
-                                {topic.nameVi}
-                            </div>
-                            <div
-                                className="text-xs mt-1"
-                                style={{ color: topic.isPriority ? 'rgba(255,255,255,0.7)' : '#9ca3af' }}
-                            >
-                                {topic.wordCount} words
-                            </div>
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {savedMessage && (
+            <div className="mb-5 rounded-[28px] border-4 border-white bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-[0_6px_0_rgba(91,141,239,0.10)]">
+              {savedMessage}
+            </div>
+          )}
+
+          {step === 'topics' && (
+            <section>
+              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-3xl font-black text-slate-800">{ui.topicTitle}</h2>
+                  <p className="mt-1 font-bold text-slate-600">{ui.topicBody}</p>
+                </div>
+                <div className="rounded-full border-4 border-white bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-[0_6px_0_rgba(26,39,68,0.08)]">
+                  {selectedTopics.length === 0 ? ui.topicEmpty : ui.topicSelected(selectedTopics.length)}
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {learningTopics.map((topic, index) => {
+                  const tone = palette[index % palette.length];
+                  const isSelected = selectedTopics.includes(topic.id);
+                  return (
+                    <button
+                      key={topic.id}
+                      type="button"
+                      onClick={() => toggleTopic(topic.id)}
+                      className="min-h-[188px] rounded-[32px] border-4 p-4 text-left transition-transform hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-slate-800"
+                      style={{
+                        background: isSelected ? tone.shell : tone.card,
+                        borderColor: isSelected ? tone.accent : tone.border,
+                        boxShadow: isSelected ? tone.shadow : shadows.clay,
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div
+                          className="flex h-16 w-16 items-center justify-center rounded-[22px] text-xl font-black text-slate-800"
+                          style={{
+                            background: tone.accent,
+                            boxShadow: `0 6px 0 ${tone.accentDark}, inset 0 1px 0 rgba(255,255,255,0.45)`,
+                          }}
+                        >
+                          {topic.icon}
                         </div>
-                        {topic.isPriority && (
-                            <span className="text-white text-lg sm:text-xl flex-shrink-0">✓</span>
+                        <div className="rounded-full border-4 border-white bg-white px-3 py-1 text-xs font-black text-slate-600 shadow-[0_4px_0_rgba(15,23,42,0.08)]">
+                          {ui.ageBand}
+                        </div>
+                      </div>
+                      <h3 className="mt-4 text-2xl font-black text-slate-800">
+                        {topicLabel(topic.id, locale)}
+                      </h3>
+                      <p className="mt-2 text-sm font-bold leading-6 text-slate-600">
+                        {topicHint(topic.id, locale)}
+                      </p>
+                      <div className="mt-4 flex items-center justify-between gap-3">
+                        <span className="rounded-full bg-white px-3 py-2 text-xs font-black text-slate-600 shadow-[0_4px_0_rgba(15,23,42,0.06)]">
+                          {topic.wordCount} {ui.words}
+                        </span>
+                        {topic.id === 'school' && (
+                          <span className="rounded-full px-3 py-2 text-xs font-black text-slate-800" style={{ background: '#FFF3A3' }}>
+                            {ui.recommended}
+                          </span>
                         )}
-                    </div>
-                </button>
-            ))}
-        </div>
-
-        {/* Next Button */}
-        <button
-            onClick={onNext}
-            disabled={priorityCount === 0}
-            className="w-full py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg"
-            style={{
-                background: priorityCount > 0
-                    ? 'linear-gradient(135deg, #0ea5e9, #22c55e)'
-                    : 'linear-gradient(135deg, #e5e7eb, #d1d5db)',
-                color: priorityCount > 0 ? '#fff' : '#9ca3af',
-                border: priorityCount > 0 ? '4px solid #0284c7' : '3px solid #d1d5db',
-                minHeight: 56,
-            }}
-        >
-            Next: Set Daily Goals ➡️
-        </button>
-    </div>
-);
-
-interface GoalStepProps {
-    dailyGoals: DailyGoals;
-    setDailyGoals: React.Dispatch<React.SetStateAction<DailyGoals>>;
-    onBack: () => void;
-    onSave: () => void;
-    isLoading: boolean;
-}
-
-const GoalSettingStep: React.FC<GoalStepProps> = ({
-    dailyGoals,
-    setDailyGoals,
-    onBack,
-    onSave,
-    isLoading,
-}) => (
-    <div className="px-4 sm:px-6 pt-4 sm:pt-6">
-        {/* Header */}
-        <div className="text-center mb-4 sm:mb-6">
-            <h1 className="text-xl sm:text-2xl font-black text-amber-800">🎯 Daily Goals</h1>
-            <p className="text-amber-700 text-xs sm:text-sm">How much time each day?</p>
-        </div>
-
-        {/* Time Goal */}
-        <div
-            className="mb-4 p-4 sm:p-5 rounded-2xl"
-            style={{
-                background: 'rgba(255,255,255,0.95)',
-                border: '3px solid #0ea5e9',
-            }}
-        >
-            <h3 className="text-sky-800 font-bold mb-3 flex items-center gap-2 text-sm sm:text-base">
-                <span>⏱️</span> Daily Time Goal
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-                {TIME_OPTIONS.map((option) => (
-                    <button
-                        key={option.value}
-                        onClick={() => setDailyGoals(prev => ({ ...prev, timeGoalMins: option.value }))}
-                        className="p-2 sm:p-3 rounded-xl text-center transition-all"
-                        style={{
-                            background: dailyGoals.timeGoalMins === option.value
-                                ? 'linear-gradient(135deg, #0ea5e9, #38bdf8)'
-                                : '#f3f4f6',
-                            border: dailyGoals.timeGoalMins === option.value
-                                ? '3px solid #0284c7'
-                                : '2px solid #e5e7eb',
-                            minHeight: 64,
-                        }}
-                    >
-                        <div className={`text-lg sm:text-xl mb-1`}>{option.emoji}</div>
-                        <div
-                            className="font-bold text-xs sm:text-sm"
-                            style={{ color: dailyGoals.timeGoalMins === option.value ? '#fff' : '#374151' }}
-                        >
-                            {option.label}
-                        </div>
-                        <div
-                            className="text-xs"
-                            style={{ color: dailyGoals.timeGoalMins === option.value ? 'rgba(255,255,255,0.8)' : '#6b7280' }}
-                        >
-                            {option.description}
-                        </div>
+                      </div>
                     </button>
-                ))}
-            </div>
-        </div>
+                  );
+                })}
+              </div>
 
-        {/* Words Goal */}
-        <div
-            className="mb-6 p-4 sm:p-5 rounded-2xl"
-            style={{
-                background: 'rgba(255,255,255,0.95)',
-                border: '3px solid #22c55e',
-            }}
-        >
-            <h3 className="text-green-800 font-bold mb-3 flex items-center gap-2 text-sm sm:text-base">
-                <span>📚</span> Daily Words Goal
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-                {WORDS_OPTIONS.map((option) => (
-                    <button
-                        key={option.value}
-                        onClick={() => setDailyGoals(prev => ({ ...prev, wordsGoal: option.value }))}
-                        className="p-2 sm:p-3 rounded-xl text-center transition-all"
-                        style={{
-                            background: dailyGoals.wordsGoal === option.value
-                                ? 'linear-gradient(135deg, #22c55e, #4ade80)'
-                                : '#f3f4f6',
-                            border: dailyGoals.wordsGoal === option.value
-                                ? '3px solid #16a34a'
-                                : '2px solid #e5e7eb',
-                            minHeight: 64,
-                        }}
+              <div className="mt-6 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setStep('goals')}
+                  disabled={selectedTopics.length === 0}
+                  className="min-h-14 rounded-[28px] border-4 px-6 text-base font-black text-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{
+                    background: colors.coralPink,
+                    borderColor: '#FFFFFF',
+                    boxShadow: shadows.clayPink,
+                  }}
+                >
+                  {ui.next}
+                </button>
+              </div>
+            </section>
+          )}
+
+          {step === 'goals' && (
+            <section>
+              <div className="mb-5">
+                <h2 className="text-3xl font-black text-slate-800">{ui.goalsTitle}</h2>
+                <p className="mt-1 font-bold text-slate-600">{ui.goalsBody}</p>
+              </div>
+
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
+                <GoalSelector
+                  title={ui.timeGoal}
+                  suffix={ui.timeSuffix}
+                  value={dailyGoals.timeGoalMins}
+                  values={timeOptions}
+                  onSelect={(value) => setDailyGoals((current) => ({ ...current, timeGoalMins: value }))}
+                  tone={palette[1]}
+                />
+                <GoalSelector
+                  title={ui.wordGoal}
+                  suffix={ui.wordsSuffix}
+                  value={dailyGoals.wordsGoal}
+                  values={wordOptions}
+                  onSelect={(value) => setDailyGoals((current) => ({ ...current, wordsGoal: value }))}
+                  tone={palette[0]}
+                />
+                <aside className="rounded-[32px] border-4 border-white bg-white p-5 shadow-[0_10px_0_rgba(26,39,68,0.08)]">
+                  <h3 className="text-xl font-black text-slate-800">
+                    {locale === 'vi' ? 'Tóm tắt lộ trình' : 'Path summary'}
+                  </h3>
+                  <div className="mt-4 space-y-3">
+                    {selectedTopicDetails.map((topic) => (
+                      <div key={topic.id} className="rounded-[22px] bg-slate-50 px-4 py-3">
+                        <div className="text-sm font-black text-slate-800">{topicLabel(topic.id, locale)}</div>
+                        <div className="mt-1 text-xs font-bold text-slate-500">{topicHint(topic.id, locale)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </aside>
+              </div>
+
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
+                <button
+                  type="button"
+                  onClick={() => setStep('topics')}
+                  className="min-h-14 rounded-[28px] border-4 border-white bg-white px-6 text-base font-black text-slate-700 shadow-[0_6px_0_rgba(148,163,184,0.18)]"
+                >
+                  {ui.back}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  className="min-h-14 rounded-[28px] border-4 border-white px-6 text-base font-black text-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{
+                    background: colors.mintGreen,
+                    boxShadow: shadows.clayGreen,
+                  }}
+                >
+                  {isLoading ? ui.saving : ui.save}
+                </button>
+              </div>
+            </section>
+          )}
+
+          {step === 'complete' && (
+            <section className="rounded-[32px] border-4 border-white bg-white px-5 py-6 text-center shadow-[0_10px_0_rgba(91,141,239,0.12)]">
+              <div
+                className="mx-auto flex h-20 w-20 items-center justify-center rounded-[28px] text-2xl font-black text-slate-800"
+                style={{
+                  background: colors.sunshineYellow,
+                  boxShadow: shadows.clayYellow,
+                }}
+              >
+                OK
+              </div>
+              <h2 className="mt-5 text-3xl font-black text-slate-800">{ui.completeTitle}</h2>
+              <p className="mx-auto mt-3 max-w-2xl font-bold leading-7 text-slate-600">
+                {ui.completeBody}
+              </p>
+              <div className="mx-auto mt-6 grid max-w-3xl gap-3 sm:grid-cols-3">
+                {selectedTopicDetails.slice(0, 3).map((topic, index) => {
+                  const tone = palette[index % palette.length];
+                  return (
+                    <div
+                      key={topic.id}
+                      className="rounded-[26px] border-4 border-white px-4 py-4 text-left"
+                      style={{
+                        background: tone.shell,
+                        boxShadow: '0 8px 0 rgba(26,39,68,0.08)',
+                      }}
                     >
-                        <div className={`text-lg sm:text-xl mb-1`}>{option.emoji}</div>
-                        <div
-                            className="font-bold text-xs sm:text-sm"
-                            style={{ color: dailyGoals.wordsGoal === option.value ? '#fff' : '#374151' }}
-                        >
-                            {option.label}
-                        </div>
-                        <div
-                            className="text-xs"
-                            style={{ color: dailyGoals.wordsGoal === option.value ? 'rgba(255,255,255,0.8)' : '#6b7280' }}
-                        >
-                            {option.description}
-                        </div>
-                    </button>
-                ))}
-            </div>
-        </div>
-
-        {/* Summary */}
-        <div
-            className="mb-6 p-4 sm:p-5 rounded-2xl text-center"
-            style={{
-                background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-                border: '3px solid #f59e0b',
-            }}
-        >
-            <p className="text-amber-800 font-bold text-sm sm:text-base">Your Daily Goal:</p>
-            <p className="text-amber-900 text-base sm:text-lg font-black mt-1">
-                {dailyGoals.timeGoalMins} mins & {dailyGoals.wordsGoal} words/day
-            </p>
-        </div>
-
-        {/* Navigation Buttons */}
-        <div className="flex gap-3">
-            <button
-                onClick={onBack}
-                className="flex-1 py-3 sm:py-4 rounded-2xl font-bold text-sm sm:text-lg"
+                      <div className="text-sm font-black text-slate-500">{ui.ageBand}</div>
+                      <div className="mt-2 text-xl font-black text-slate-800">{topicLabel(topic.id, locale)}</div>
+                      <div className="mt-2 text-sm font-bold text-slate-600">{topicHint(topic.id, locale)}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() => setStep('topics')}
+                className="mt-6 min-h-14 rounded-[28px] border-4 border-white px-6 text-base font-black text-slate-800"
                 style={{
-                    background: 'rgba(255,255,255,0.9)',
-                    color: '#6b7280',
-                    border: '3px solid #e5e7eb',
-                    minHeight: 56,
+                  background: colors.coralPink,
+                  boxShadow: shadows.clayPink,
                 }}
-            >
-                ⬅️ Back
-            </button>
-            <button
-                onClick={onSave}
-                disabled={isLoading}
-                className="flex-[2] py-3 sm:py-4 rounded-2xl font-bold text-sm sm:text-lg"
-                style={{
-                    background: 'linear-gradient(135deg, #0ea5e9, #22c55e)',
-                    color: '#fff',
-                    border: '4px solid #0284c7',
-                    boxShadow: '0 8px 20px rgba(14,165,233,0.35)',
-                    minHeight: 56,
-                    opacity: isLoading ? 0.7 : 1,
-                }}
-            >
-                {isLoading ? '💾 Saving...' : '💾 Save & Start!'}
-            </button>
-        </div>
+              >
+                {ui.restart}
+              </button>
+            </section>
+          )}
+        </section>
+      </div>
     </div>
-);
-
-interface CompletionStepProps {
-    topics: Topic[];
-    dailyGoals: DailyGoals;
-    savedMessage: string | null;
-    onRestart: () => void;
-}
-
-const CompletionStep: React.FC<CompletionStepProps> = ({
-    topics,
-    dailyGoals,
-    savedMessage,
-    onRestart,
-}) => {
-    const priorityTopics = topics.filter(t => t.isPriority);
-
-    return (
-        <div className="px-4 sm:px-6 pt-8 sm:pt-12">
-            {/* Success Animation */}
-            <div className="text-center mb-6 sm:mb-8">
-                <div className="text-5xl sm:text-6xl mb-4 animate-bounce">🎉</div>
-                <h1 className="text-xl sm:text-2xl font-black text-green-800">All Set!</h1>
-                <p className="text-green-700 text-xs sm:text-sm">{savedMessage || 'Learning path saved!'}</p>
-            </div>
-
-            {/* Summary Card */}
-            <div
-                className="p-4 sm:p-5 rounded-2xl mb-6"
-                style={{
-                    background: 'rgba(255,255,255,0.95)',
-                    border: '3px solid #22c55e',
-                }}
-            >
-                <h3 className="text-green-800 font-bold mb-3 text-sm sm:text-base">Your Learning Plan:</h3>
-
-                <div className="space-y-3">
-                    {/* Topics */}
-                    <div className="flex flex-wrap gap-2">
-                        {priorityTopics.map(topic => (
-                            <span
-                                key={topic.id}
-                                className="px-3 py-1 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold"
-                                style={{
-                                    background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)',
-                                    color: '#16a34a',
-                                }}
-                            >
-                                {topic.emoji} {topic.name}
-                            </span>
-                        ))}
-                    </div>
-
-                    {/* Goals */}
-                    <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-green-200">
-                        <div className="flex items-center gap-2">
-                            <span className="text-lg sm:text-xl">⏱️</span>
-                            <span className="font-bold text-green-800 text-sm sm:text-base">{dailyGoals.timeGoalMins} mins/day</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-lg sm:text-xl">📚</span>
-                            <span className="font-bold text-green-800 text-sm sm:text-base">{dailyGoals.wordsGoal} words/day</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Actions */}
-            <div className="space-y-3">
-                <button
-                    onClick={() => window.location.href = '/learn'}
-                    className="w-full py-3 sm:py-4 rounded-2xl font-bold text-sm sm:text-lg"
-                    style={{
-                        background: 'linear-gradient(135deg, #22c55e, #4ade80)',
-                        color: '#fff',
-                        border: '4px solid #16a34a',
-                        boxShadow: '0 8px 20px rgba(34,197,94,0.4)',
-                        minHeight: 56,
-                    }}
-                >
-                    🚀 Start Learning Now!
-                </button>
-
-                <button
-                    onClick={onRestart}
-                    className="w-full py-3 sm:py-4 rounded-2xl font-bold text-sm sm:text-base"
-                    style={{
-                        background: 'rgba(255,255,255,0.9)',
-                        color: '#6b7280',
-                        border: '2px solid #e5e7eb',
-                        minHeight: 48,
-                    }}
-                >
-                    ✏️ Edit Settings
-                </button>
-            </div>
-        </div>
-    );
+  );
 };
+
+const GoalSelector: React.FC<{
+  title: string;
+  suffix: string;
+  value: number;
+  values: number[];
+  onSelect: (value: number) => void;
+  tone: {
+    card: string;
+    shell: string;
+    border: string;
+    shadow: string;
+    accent: string;
+    accentDark: string;
+  };
+}> = ({ title, suffix, value, values, onSelect, tone }) => (
+  <section
+    className="rounded-[32px] border-4 p-5"
+    style={{
+      background: tone.shell,
+      borderColor: tone.border,
+      boxShadow: tone.shadow,
+    }}
+  >
+    <h3 className="text-2xl font-black text-slate-800">{title}</h3>
+    <div className="mt-4 grid grid-cols-2 gap-3">
+      {values.map((option) => {
+        const isActive = option === value;
+        return (
+          <button
+            key={option}
+            type="button"
+            onClick={() => onSelect(option)}
+            className="min-h-[88px] rounded-[24px] border-4 px-4 py-3 text-center transition-transform hover:-translate-y-1"
+            style={{
+              background: '#FFFFFF',
+              borderColor: isActive ? tone.accent : '#FFFFFF',
+              boxShadow: isActive
+                ? `0 8px 0 ${tone.accentDark}, inset 0 1px 0 rgba(255,255,255,0.7)`
+                : '0 6px 0 rgba(148,163,184,0.18), inset 0 1px 0 rgba(255,255,255,0.9)',
+            }}
+          >
+            <div className="text-3xl font-black text-slate-800">{option}</div>
+            <div className="mt-1 text-xs font-black text-slate-500">{suffix}</div>
+          </button>
+        );
+      })}
+    </div>
+  </section>
+);
 
 export default LearningPathSetup;
+

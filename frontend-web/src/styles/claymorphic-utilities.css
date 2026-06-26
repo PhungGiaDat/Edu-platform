@@ -576,7 +576,7 @@
 
 .course-list-card__xp-shell {
   padding: 20px;
-  background: linear-gradient(145deg, #FFDCD4 0%, #FFECE8 100%);
+  background: #FFECE8;
 }
 
 .course-list-card__xp-panel {
@@ -613,7 +613,7 @@
   border: 0;
   border-radius: 28px;
   color: var(--course-ink, #1A2744);
-  background: linear-gradient(145deg, #FFB4A2 0%, var(--course-coral, #FF9F9F) 58%, #F47F70 100%);
+  background: var(--course-coral, #FF9F9F);
   box-shadow: var(--course-button-shadow, 0 6px 0 #D97070), inset 0 2px 0 rgba(255,255,255,0.38);
   cursor: pointer;
   transition: transform var(--course-motion, 250ms ease), box-shadow var(--course-motion, 250ms ease);

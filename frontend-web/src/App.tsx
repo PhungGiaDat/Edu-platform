@@ -11,6 +11,8 @@ import { Register } from "./pages/Register";
 import { LandingPage } from "./pages/LandingPage";
 import { ProgressDashboard } from "./pages/ProgressDashboard";
 import { LearningPathSetup } from "./pages/LearningPathSetup";
+import { PetsPage } from "./pages/PetsPage";
+import StickersPage from "./pages/StickersPage";
 import { Layout } from "./components/Layout";
 import { AIChatBuddy } from "./components/AIChatBuddy";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -231,6 +233,7 @@ const App = () => {
         <Route path="/learn-ar" element={<RequireLearnerAccess><LearnARV2 /></RequireLearnerAccess>} />
         <Route path="/courses" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/animals" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/path/:pathId" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/level/:level" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/category/:category" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/:id" element={<RequireLearnerAccess><Layout><CourseDetail /></Layout></RequireLearnerAccess>} />
@@ -240,6 +243,7 @@ const App = () => {
         <Route path="/learning-path" element={<RequireUserAuth><Layout><LearningPathSetup /></Layout></RequireUserAuth>} />
 
         <Route path="/pets" element={<RequireUserAuth><Layout><PetsPage /></Layout></RequireUserAuth>} />
+        <Route path="/stickers" element={<RequireUserAuth><Layout><StickersPage /></Layout></RequireUserAuth>} />
         <Route path="/scan" element={<Navigate to="/learn-ar" replace />} />
       </Routes>
 
