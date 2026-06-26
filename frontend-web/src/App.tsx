@@ -33,6 +33,8 @@ import AdminFlashcardManager from "./pages/admin/FlashcardManager";
 import AdminAnalytics from "./pages/admin/Analytics";
 import AdminGoalSettings from "./pages/admin/GoalSettings";
 import AdminErrorBoundary from "./components/admin/AdminErrorBoundary";
+import { CourseCreatePage, CourseEditPage } from "./pages/admin/CourseEditor";
+import { DeckNewPage, DeckEditPage, CardNewPage, CardEditPage } from "./pages/admin/FlashcardEditor";
 
 // ========== Global Pet Unlock Notifier ==========
 // Listens to PET_CAN_UNLOCK (XP gate met) and PET_UNLOCKED (after actual unlock)
@@ -278,6 +280,17 @@ const App = () => {
         <Route path="/admin/students/:userId" element={<RequireTeacherRole><AdminErrorBoundary><AdminStudentDetail /></AdminErrorBoundary></RequireTeacherRole>} />
         <Route path="/admin/students/:userId/goals" element={<RequireTeacherRole><AdminErrorBoundary><AdminGoalSettings /></AdminErrorBoundary></RequireTeacherRole>} />
         <Route path="/admin/analytics" element={<RequireTeacherRole><AdminErrorBoundary><AdminAnalytics /></AdminErrorBoundary></RequireTeacherRole>} />
+
+        {/* Course CRUD Routes */}
+        <Route path="/admin/courses/new" element={<RequireTeacherRole><AdminErrorBoundary><CourseCreatePage /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/courses/:courseId/edit" element={<RequireTeacherRole><AdminErrorBoundary><CourseEditPage /></AdminErrorBoundary></RequireTeacherRole>} />
+
+        {/* Flashcard CRUD Routes */}
+        <Route path="/admin/flashcards/new-deck" element={<RequireTeacherRole><AdminErrorBoundary><DeckNewPage /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/flashcards/:deckId/edit" element={<RequireTeacherRole><AdminErrorBoundary><DeckEditPage /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/flashcards/:deckId/new" element={<RequireTeacherRole><AdminErrorBoundary><CardNewPage /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/flashcards/:deckId/:cardId" element={<RequireTeacherRole><AdminErrorBoundary><CardEditPage /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/flashcards/:deckId/:cardId/edit" element={<RequireTeacherRole><AdminErrorBoundary><CardEditPage /></AdminErrorBoundary></RequireTeacherRole>} />
       </Routes>
 
       {/* Global AI Chat Buddy - Hidden on AR page to avoid z-index conflicts */}

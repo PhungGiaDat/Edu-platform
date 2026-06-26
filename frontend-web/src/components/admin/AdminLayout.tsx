@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
-import { HomeIcon, UsersIcon, BookOpenIcon, ChartBarIcon, CardsIcon } from '../Icons';
+import { HomeIcon, UsersIcon, BookOpenIcon, ChartBarIcon, CardsIcon, TargetIcon } from '../Icons';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -18,6 +18,7 @@ const navItems = [
   { path: '/admin/flashcards', label: 'flashcards', icon: CardsIcon },
   { path: '/admin/courses', label: 'courses', icon: BookOpenIcon },
   { path: '/admin/students', label: 'students', icon: UsersIcon },
+  { path: '/admin/students/goals', label: 'goalSettings', icon: TargetIcon },
   { path: '/admin/analytics', label: 'analytics', icon: ChartBarIcon },
 ];
 

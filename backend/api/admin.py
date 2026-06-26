@@ -343,17 +343,17 @@ async def create_flashcard_in_deck(
         )
 
 
-@router.put("/flashcards/cards/{qr_id}", response_model=AdminFlashcardResponse)
+@router.put("/flashcards/cards/{qrId}", response_model=AdminFlashcardResponse)
 async def update_flashcard(
-    qr_id: str,
+    qrId: str,
     card_data: AdminFlashcardUpdate,
     repo: AdminRepository = Depends(get_admin_repo)
 ):
     """Update a flashcard"""
-    logger.info(f"[Admin] PUT /admin/flashcards/cards/{qr_id}")
+    logger.info(f"[Admin] PUT /admin/flashcards/cards/{qrId}")
     
     update_dict = {k: v for k, v in card_data.model_dump().items() if v is not None}
-    success = await repo.update_flashcard(qr_id, update_dict)
+    success = await repo.update_flashcard(qrId, update_dict)
     
     if not success:
         raise HTTPException(
@@ -361,19 +361,19 @@ async def update_flashcard(
             detail="Flashcard not found"
         )
     
-    card = await repo.get_flashcard_by_id(qr_id)
+    card = await repo.get_flashcard_by_id(qrId)
     return AdminFlashcardResponse(**card)
 
 
-@router.delete("/flashcards/cards/{qr_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/flashcards/cards/{qrId}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_flashcard(
-    qr_id: str,
+    qrId: str,
     repo: AdminRepository = Depends(get_admin_repo)
 ):
     """Delete a flashcard"""
-    logger.info(f"[Admin] DELETE /admin/flashcards/cards/{qr_id}")
+    logger.info(f"[Admin] DELETE /admin/flashcards/cards/{qrId}")
     
-    success = await repo.delete_flashcard(qr_id)
+    success = await repo.delete_flashcard(qrId)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
