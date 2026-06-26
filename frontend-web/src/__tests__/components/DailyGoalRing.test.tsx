@@ -262,7 +262,7 @@ describe('DailyGoalRing Component', () => {
         minutes_today: 10,
       });
 
-      render(<DailyGoalRing showMotivation />);
+      render(<DailyGoalRing showMotivation={false} />);
 
       await waitFor(() => {
         expect(screen.getByText('5m left')).toBeTruthy();
@@ -399,29 +399,48 @@ describe('DailyGoalRing Component', () => {
   });
 
   describe('User Context', () => {
-    it('should not fetch when user is null', () => {
-      // Override the mock to return null user
+    it('should not fetch when user is null', async () => {
+      vi.resetModules();
       vi.doMock('@/contexts/AuthContext', () => ({
         useAuth: () => ({
           user: null,
         }),
       }));
+      vi.doMock('@/services/apiClient', () => ({
+        apiClient: {
+          getStreak: vi.fn(),
+          getUserStats: vi.fn(),
+        },
+      }));
+
+      const { DailyGoalRing } = await import('../../components/Gamification/DailyGoalRing');
+      const { apiClient: nullApiClient } = await import('@/services/apiClient');
 
       render(<DailyGoalRing />);
 
-      expect(apiClient.getStreak).not.toHaveBeenCalled();
+      expect(nullApiClient.getStreak).not.toHaveBeenCalled();
     });
 
-    it('should not fetch when user.id is undefined', () => {
+    it('should not fetch when user.id is undefined', async () => {
+      vi.resetModules();
       vi.doMock('@/contexts/AuthContext', () => ({
         useAuth: () => ({
           user: { name: 'Test' }, // No id
         }),
       }));
+      vi.doMock('@/services/apiClient', () => ({
+        apiClient: {
+          getStreak: vi.fn(),
+          getUserStats: vi.fn(),
+        },
+      }));
+
+      const { DailyGoalRing } = await import('../../components/Gamification/DailyGoalRing');
+      const { apiClient: noIdApiClient } = await import('@/services/apiClient');
 
       render(<DailyGoalRing />);
 
-      expect(apiClient.getStreak).not.toHaveBeenCalled();
+      expect(noIdApiClient.getStreak).not.toHaveBeenCalled();
     });
   });
 });
