@@ -47,7 +47,7 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
                 const data = await apiClient.get(`/api/v1/gamification/user/${userId}`);
                 setStats(data);
                 setPetHappiness(data.pet?.happiness || 75);
-            } catch (e) {
+            } catch {
                 console.log('[ARGamification] Stats fetch failed');
             }
         };
@@ -63,7 +63,7 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
                         params: { limit: 5 }
                     });
                     setLeaderboard(data.entries || []);
-                } catch (e) {
+                } catch {
                     console.log('[ARGamification] Leaderboard fetch failed');
                 }
             };
@@ -78,22 +78,22 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
             setPetHappiness(prev => Math.min(100, prev + 10));
             
             // Event-driven AR communication: trigger animation in scene
-            eventBus.emit('AR_COMMAND' as any, {
+            eventBus.emit('AR_COMMAND', {
                 type: 'TRIGGER_ANIMATION',
                 payload: { clip: 'happy', loop: false }
             });
             
             onFeedPet?.();
-        } catch (e) {
-            // Optimistic update
-            setPetHappiness(prev => Math.min(100, prev + 5));
-        }
+            } catch {
+                // Optimistic update
+                setPetHappiness(prev => Math.min(100, prev + 5));
+            }
     }, [userId, onFeedPet]);
 
     const handlePetClick = () => {
         // Event-driven pattern: Notify other components that pet was clicked
         const petName = activePet?.name || 'Buddy';
-        eventBus.emit('PET_CHAT_OPEN' as any, { petName, word: '' });
+        eventBus.emit('PET_CHAT_OPEN', { petName, word: '' });
         
         onPetClick?.();
     };

@@ -5,7 +5,7 @@ const CameraCapture = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [scanning, setScanning] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<{ qr_id?: string; ar_object?: { tag?: string; model_url?: string } } | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
 
   useEffect(() => {
@@ -32,7 +32,7 @@ const CameraCapture = () => {
           };
         }
        } catch (err) {
-         alert("🚫 Cannot open camera: " + (err as any).message);
+         alert("🚫 Cannot open camera: " + (err instanceof Error ? err.message : String(err)));
        }
     };
 
@@ -78,7 +78,7 @@ const CameraCapture = () => {
         const data = await detectQR(blob);
         setResult(data);
         alert("✅ Server response: " + JSON.stringify(data));
-      } catch (err) {
+      } catch (_err) {
         setResult(null);
         alert("❌ QR code not found or server error");
       } finally {
