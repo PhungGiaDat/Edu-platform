@@ -3,8 +3,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from models.course_model import CourseSchema
+from models.course_model import CourseSchema, LessonSession, LessonSessionStepState
 from repositories.course_repository import get_course_repository
+from services.gamification_service import get_gamification_service
 from settings import settings
 
 
@@ -33,8 +34,8 @@ def _normalize_asset_buckets(value: Any) -> Any:
 
 
 def _validate_phase1_course(course: CourseSchema) -> None:
-    if course.age_range != "5-7":
-        raise ValueError("Phase 1 courses must target age range 5-7")
+    if course.age_range != "5-8":
+        raise ValueError("Phase 1 courses must target age range 5-8")
     if not course.thumbnail:
         raise ValueError("Phase 1 courses require a thumbnail asset reference")
     if not 5 <= len(course.lessons) <= 8:
@@ -86,9 +87,231 @@ def load_all_course_seeds() -> List[Dict[str, Any]]:
     return [load_course_seed(path.name) for path in sorted(SEED_DIR.glob("*.json"))]
 
 
+def _lesson_step_blueprint(lesson: Dict[str, Any]) -> List[Dict[str, str]]:
+    steps: List[Dict[str, str]] = []
+    if lesson.get("videoLesson"):
+        steps.append({"step_id": "watch", "title": "Watch"})
+        if lesson["videoLesson"].get("scenes"):
+            steps.append({"step_id": "story", "title": "Story"})
+    if lesson.get("game"):
+        steps.append({"step_id": "game", "title": "Game"})
+    if lesson.get("vocabulary"):
+        steps.append({"step_id": "words", "title": "Words"})
+    if lesson.get("readAloudStory"):
+        steps.append({"step_id": "read", "title": "Read"})
+    if lesson.get("pronunciation"):
+        steps.append({"step_id": "say", "title": "Say"})
+    if lesson.get("quiz"):
+        steps.append({"step_id": "quiz", "title": "Quiz"})
+    steps.append({"step_id": "finish", "title": "Finish"})
+    return steps
+
+
+def _public_asset_url(asset: Dict[str, Any]) -> str:
+    bucket = asset.get("bucket") or settings.LEARNAR_ASSETS_BUCKET
+    path = asset.get("path", "")
+    if path.startswith("http://") or path.startswith("https://") or path.startswith("/"):
+        return path
+    return f"/{bucket}/{path}"
+
+
+def _collect_lesson_media_assets(course_id: str, lesson: Dict[str, Any]) -> List[Dict[str, Any]]:
+    lesson_id = lesson["lesson_id"]
+    assets: List[Dict[str, Any]] = []
+
+    def add(section_id: str, asset_key: str, asset: Optional[Dict[str, Any]], metadata: Optional[Dict[str, Any]] = None) -> None:
+        if not asset or not asset.get("path"):
+            return
+        assets.append({
+            "course_id": course_id,
+            "lesson_id": lesson_id,
+            "section_id": section_id,
+            "asset_key": asset_key,
+            "bucket": asset.get("bucket") or settings.LEARNAR_ASSETS_BUCKET,
+            "path": asset["path"],
+            "type": asset["type"],
+            "status": asset.get("status", "pending"),
+            "public_url": _public_asset_url(asset),
+            "provider": "supabase",
+            "metadata": metadata or {},
+        })
+
+    add("lesson", "course_thumbnail", lesson.get("thumbnail"))
+    video_lesson = lesson.get("videoLesson") or {}
+    add("watch", "video", video_lesson.get("video"), {"duration_seconds": video_lesson.get("duration_seconds")})
+    add("watch", "thumbnail", video_lesson.get("thumbnail"))
+
+    for scene in video_lesson.get("scenes", []):
+        add("story", f"scene:{scene['scene_id']}", scene.get("image"), {"order": scene.get("order")})
+
+    for item in lesson.get("vocabulary", []):
+        slug = item.get("word_en", "").lower()
+        add("words", f"word:{slug}:image", item.get("image"))
+        add("words", f"word:{slug}:audio", item.get("audio"))
+        add("words", f"word:{slug}:sticker", item.get("sticker"))
+
+    game = lesson.get("game") or {}
+    for item in game.get("items", []):
+        add("game", f"game:{item.get('id')}", item.get("image"))
+
+    read_story = lesson.get("readAloudStory") or {}
+    for page in read_story.get("pages", []):
+        add("read", f"page:{page['page_id']}:image", page.get("image"), {"order": page.get("order")})
+        add("read", f"page:{page['page_id']}:audio", page.get("audio"), {"order": page.get("order")})
+
+    pronunciation = lesson.get("pronunciation") or {}
+    add("say", "prompt_audio", pronunciation.get("audio"))
+
+    for item in (lesson.get("activity") or {}).get("items", []):
+        add("activity", f"activity:{item.get('id')}", item.get("image"))
+
+    for question in lesson.get("quiz", []):
+        for option in question.get("options", []):
+            add("quiz", f"quiz:{question['question_id']}:{option['option_id']}", option.get("image"))
+
+    add("finish", "reward_sticker", (lesson.get("reward") or {}).get("sticker"))
+    return assets
+
+
+def _normalize_existing_step(step: Dict[str, Any]) -> Dict[str, Any]:
+    normalized = dict(step)
+    normalized.setdefault("title", step.get("step_id", "").title())
+    normalized.setdefault("status", "locked")
+    normalized.setdefault("attempts", 0)
+    normalized.setdefault("best_score", 0)
+    normalized.setdefault("passed", False)
+    normalized.setdefault("last_response", {})
+    normalized.setdefault("updated_at", datetime.utcnow())
+    normalized.setdefault("completed_at", None)
+    return normalized
+
+
+def _build_session(user_id: str, course_id: str, lesson: Dict[str, Any]) -> Dict[str, Any]:
+    blueprint = _lesson_step_blueprint(lesson)
+    steps: List[Dict[str, Any]] = []
+    for index, item in enumerate(blueprint):
+        step = LessonSessionStepState(
+            step_id=item["step_id"],
+            title=item["title"],
+            status="in_progress" if index == 0 else "locked",
+        ).model_dump()
+        steps.append(step)
+
+    session = LessonSession(
+        user_id=user_id,
+        course_id=course_id,
+        lesson_id=lesson["lesson_id"],
+        current_step_id=steps[0]["step_id"],
+        current_step_index=0,
+        progress_percent=0,
+        steps=[LessonSessionStepState(**step) for step in steps],
+    )
+    return session.model_dump()
+
+
+def _progress_percent(steps: List[Dict[str, Any]]) -> int:
+    if not steps:
+        return 0
+    completed = sum(1 for step in steps if step.get("status") == "completed")
+    return round((completed / len(steps)) * 100)
+
+
+def _normalize_session(session: Dict[str, Any], lesson: Dict[str, Any]) -> Dict[str, Any]:
+    existing_steps = {
+        step["step_id"]: _normalize_existing_step(step)
+        for step in session.get("steps", [])
+    }
+    normalized_steps: List[Dict[str, Any]] = []
+
+    for index, item in enumerate(_lesson_step_blueprint(lesson)):
+        current = existing_steps.get(item["step_id"])
+        if current:
+            current["title"] = item["title"]
+            normalized_steps.append(current)
+        else:
+            normalized_steps.append(
+                LessonSessionStepState(
+                    step_id=item["step_id"],
+                    title=item["title"],
+                    status="locked" if index else "available",
+                ).model_dump()
+            )
+
+    if normalized_steps and all(step["status"] == "locked" for step in normalized_steps):
+        normalized_steps[0]["status"] = "available"
+
+    current_step_id = session.get("current_step_id")
+    if current_step_id not in {step["step_id"] for step in normalized_steps}:
+        next_step = next((step for step in normalized_steps if step["status"] in {"available", "in_progress", "needs_retry"}), normalized_steps[0])
+        current_step_id = next_step["step_id"]
+
+    current_step_index = next(
+        (index for index, step in enumerate(normalized_steps) if step["step_id"] == current_step_id),
+        0,
+    )
+
+    session["steps"] = normalized_steps
+    session["current_step_id"] = current_step_id
+    session["current_step_index"] = current_step_index
+    session["progress_percent"] = _progress_percent(normalized_steps)
+    session["updated_at"] = datetime.utcnow()
+    return session
+
+
+def _advance_session(session: Dict[str, Any], step_id: str, passed: bool, score: int, response_data: Dict[str, Any]) -> Dict[str, Any]:
+    now = datetime.utcnow()
+    steps = [_normalize_existing_step(step) for step in session.get("steps", [])]
+    index_map = {step["step_id"]: idx for idx, step in enumerate(steps)}
+    step_index = index_map[step_id]
+    step = steps[step_index]
+    step_complete = bool(response_data.get("step_complete", passed))
+
+    step["attempts"] = int(step.get("attempts", 0)) + 1
+    step["best_score"] = max(int(step.get("best_score", 0)), score)
+    step["last_response"] = response_data
+    step["updated_at"] = now
+    step["passed"] = passed
+
+    if passed and step_complete:
+        step["status"] = "completed"
+        step["completed_at"] = step.get("completed_at") or now
+        next_index = step_index + 1
+        if next_index < len(steps):
+            next_step = steps[next_index]
+            if next_step["status"] == "locked":
+                next_step["status"] = "available"
+            if next_step["status"] in {"available", "needs_retry"}:
+                next_step["status"] = "in_progress"
+            session["current_step_id"] = next_step["step_id"]
+            session["current_step_index"] = next_index
+        else:
+            session["current_step_id"] = step["step_id"]
+            session["current_step_index"] = step_index
+    elif passed:
+        step["status"] = "in_progress"
+        session["current_step_id"] = step["step_id"]
+        session["current_step_index"] = step_index
+    else:
+        step["status"] = "needs_retry"
+        session["current_step_id"] = step["step_id"]
+        session["current_step_index"] = step_index
+
+    if step_id == "finish" and passed:
+        session["status"] = "completed"
+        session["completed_at"] = now
+
+    session["steps"] = steps
+    session["progress_percent"] = _progress_percent(steps)
+    session["updated_at"] = now
+    return session
+
+
 class CourseService:
     def __init__(self):
         self.repo = get_course_repository()
+
+    async def _register_lesson_media(self, course_id: str, lesson: Dict[str, Any]) -> None:
+        await self.repo.upsert_media_assets(_collect_lesson_media_assets(course_id, lesson))
 
     async def get_courses(self, skip: int = 0, limit: int = 20) -> List[Dict[str, Any]]:
         return await self.repo.get_all_published(skip, limit)
@@ -97,7 +320,16 @@ class CourseService:
         return await self.repo.get_by_course_id(course_id)
 
     async def get_lesson(self, course_id: str, lesson_id: str) -> Optional[Dict[str, Any]]:
-        return await self.repo.get_lesson(course_id, lesson_id)
+        lesson = await self.repo.get_lesson(course_id, lesson_id)
+        if lesson:
+            await self._register_lesson_media(course_id, lesson)
+        return lesson
+
+    async def get_lesson_media(self, course_id: str, lesson_id: str) -> List[Dict[str, Any]]:
+        lesson = await self.get_lesson(course_id, lesson_id)
+        if not lesson:
+            raise ValueError("Lesson not found")
+        return await self.repo.get_media_assets(course_id, lesson_id)
 
     async def generate_sample_course(
         self,
@@ -106,6 +338,8 @@ class CourseService:
     ) -> Dict[str, Any]:
         course = validate_course_payload(payload) if payload else load_course_seed(seed_name)
         await self.repo.upsert_course(course)
+        for lesson in course.get("lessons", []):
+            await self._register_lesson_media(course["course_id"], lesson)
         return course
 
     async def start_course(self, user_id: str, course_id: str) -> Dict[str, Any]:
@@ -139,7 +373,79 @@ class CourseService:
         await self.repo.upsert_progress(user_id, course_id, progress)
         return progress
 
-    async def complete_lesson(self, user_id: str, course_id: str, lesson_id: str) -> Dict[str, Any]:
+    async def start_lesson_session(self, user_id: str, course_id: str, lesson_id: str) -> Dict[str, Any]:
+        await self.start_course(user_id, course_id)
+        lesson = await self.get_lesson(course_id, lesson_id)
+        if not lesson:
+            raise ValueError("Lesson not found")
+
+        existing = await self.repo.get_lesson_session(user_id, course_id, lesson_id)
+        session = _normalize_session(existing, lesson) if existing else _build_session(user_id, course_id, lesson)
+        await self.repo.upsert_lesson_session(session)
+        return session
+
+    async def get_lesson_session(self, user_id: str, course_id: str, lesson_id: str) -> Dict[str, Any]:
+        session = await self.repo.get_lesson_session(user_id, course_id, lesson_id)
+        if session:
+            lesson = await self.get_lesson(course_id, lesson_id)
+            if not lesson:
+                raise ValueError("Lesson not found")
+            session = _normalize_session(session, lesson)
+            await self.repo.upsert_lesson_session(session)
+            return session
+        return await self.start_lesson_session(user_id, course_id, lesson_id)
+
+    async def submit_lesson_step(
+        self,
+        user_id: str,
+        course_id: str,
+        lesson_id: str,
+        step_id: str,
+        attempt_type: str,
+        passed: bool,
+        score: int,
+        response_data: Dict[str, Any],
+        mastery_words: List[str],
+    ) -> Dict[str, Any]:
+        session = await self.get_lesson_session(user_id, course_id, lesson_id)
+        step_map = {step["step_id"]: step for step in session.get("steps", [])}
+        if step_id not in step_map:
+            raise ValueError(f"Unknown lesson step: {step_id}")
+        if step_id != session.get("current_step_id"):
+            raise ValueError(f"Step is not currently available: {step_id}")
+
+        session = _advance_session(session, step_id, passed, score, response_data)
+        await self.repo.upsert_lesson_session(session)
+        await self.repo.create_lesson_step_attempt({
+            "session_id": session["session_id"],
+            "user_id": user_id,
+            "course_id": course_id,
+            "lesson_id": lesson_id,
+            "step_id": step_id,
+            "attempt_type": attempt_type,
+            "passed": passed,
+            "score": score,
+            "response_data": response_data,
+        })
+
+        for word in mastery_words:
+            await self.repo.update_word_mastery(user_id, course_id, lesson_id, word, passed, score)
+
+        return session
+
+    async def complete_lesson(
+        self,
+        user_id: str,
+        course_id: str,
+        lesson_id: str,
+        *,
+        score: Optional[float] = None,
+        time_spent: Optional[int] = None,
+        words_learned: Optional[List[str]] = None,
+        pronunciation_scores: Optional[Dict[str, float]] = None,
+        games_played: Optional[int] = None,
+        completed_steps: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
         course = await self.get_course_by_id(course_id)
         if not course:
             raise ValueError("Course not found")
@@ -174,7 +480,47 @@ class CourseService:
             "rewards": rewards,
         })
         await self.repo.upsert_progress(user_id, course_id, progress)
-        return progress
+
+        # === Gamification Hook: Track learning + check stickers ===
+        gam_service = get_gamification_service()
+        words_count = len(words_learned) if words_learned else 0
+        time_mins = (time_spent or 0) // 60
+        await gam_service.track_learning(user_id, words_count, time_mins)
+
+        # Award stickers if threshold reached (auto-award)
+        if words_count > 0 or games_played:
+            await gam_service._maybe_award_lesson_sticker(user_id, words_count, games_played)
+
+        existing_session = await self.repo.get_lesson_session(user_id, course_id, lesson_id)
+        if existing_session:
+            finish_step = next((step for step in existing_session.get("steps", []) if step.get("step_id") == "finish"), None)
+            response = {"completed_via": "lesson_complete"}
+            if finish_step and finish_step.get("status") != "completed":
+                existing_session = _advance_session(existing_session, "finish", True, 100, response)
+            else:
+                existing_session["status"] = "completed"
+                existing_session["completed_at"] = datetime.utcnow()
+                existing_session["updated_at"] = datetime.utcnow()
+                existing_session["progress_percent"] = 100
+            await self.repo.upsert_lesson_session(existing_session)
+
+        # Award stickers if threshold reached (auto-award)
+        new_sticker = None
+        if words_count > 0 or games_played:
+            new_sticker = await gam_service._maybe_award_lesson_sticker(user_id, words_count, games_played)
+
+        # Build enriched response with XP metadata
+        result = {
+            **progress,
+            "gamification": {
+                "xp_earned": 0 if was_already_completed or not reward else int(reward.get("xp", 0)),
+                "words_learned": words_count,
+                "time_mins": time_mins,
+                "new_sticker": new_sticker,
+            }
+        }
+
+        return result
 
     async def submit_quiz(self, user_id: str, course_id: str, lesson_id: str, answers: Dict[str, str]) -> Dict[str, Any]:
         lesson = await self.get_lesson(course_id, lesson_id)

@@ -6,6 +6,8 @@ from pydantic import BaseModel
 from models.course_model import (
     CompleteLessonRequest,
     CourseSchema,
+    LessonSessionRequest,
+    LessonStepAttemptRequest,
     QuizSubmitRequest,
     StartCourseRequest,
     UserProgress,
@@ -53,6 +55,67 @@ async def get_lesson(
     return lesson
 
 
+@router.get("/courses/{course_id}/lessons/{lesson_id}/media")
+async def get_lesson_media(
+    course_id: str,
+    lesson_id: str,
+    service: CourseService = Depends(get_course_service),
+):
+    try:
+        return await service.get_lesson_media(course_id, lesson_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/courses/{course_id}/lessons/{lesson_id}/session")
+async def get_lesson_session(
+    course_id: str,
+    lesson_id: str,
+    user_id: str,
+    service: CourseService = Depends(get_course_service),
+):
+    try:
+        return await service.get_lesson_session(user_id, course_id, lesson_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/courses/{course_id}/lessons/{lesson_id}/session/start")
+async def start_lesson_session(
+    course_id: str,
+    lesson_id: str,
+    payload: LessonSessionRequest,
+    service: CourseService = Depends(get_course_service),
+):
+    try:
+        return await service.start_lesson_session(payload.user_id, course_id, lesson_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/courses/{course_id}/lessons/{lesson_id}/steps/attempt")
+async def submit_lesson_step(
+    course_id: str,
+    lesson_id: str,
+    payload: LessonStepAttemptRequest,
+    service: CourseService = Depends(get_course_service),
+):
+    try:
+        return await service.submit_lesson_step(
+            payload.user_id,
+            course_id,
+            lesson_id,
+            payload.step_id,
+            payload.attempt_type,
+            payload.passed,
+            payload.score,
+            payload.response_data,
+            payload.mastery_words,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
 @router.post("/courses/generate", response_model=CourseSchema)
 async def generate_course(
     payload: Optional[GenerateCourseRequest] = None,
@@ -88,7 +151,17 @@ async def complete_lesson(
     service: CourseService = Depends(get_course_service),
 ):
     try:
-        return await service.complete_lesson(payload.user_id, payload.course_id, lesson_id)
+        return await service.complete_lesson(
+            payload.user_id,
+            payload.course_id,
+            lesson_id,
+            score=payload.score,
+            time_spent=payload.time_spent,
+            words_learned=payload.words_learned,
+            pronunciation_scores=payload.pronunciation_scores,
+            games_played=payload.games_played,
+            completed_steps=payload.completed_steps,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 

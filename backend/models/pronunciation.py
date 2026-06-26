@@ -38,6 +38,11 @@ class PronunciationAttemptDocument(Document):
     # Supabase public URL for the child's recorded audio (optional — uploaded async)
     # Format: https://<project>.supabase.co/storage/v1/object/public/pronunciations/<uuid>.webm
     audio_url: Optional[str] = None
+    course_id: Optional[str] = None
+    lesson_id: Optional[str] = None
+    section_id: Optional[str] = None
+    session_id: Optional[str] = None
+    target_text: Optional[str] = None
 
     attempted_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -61,6 +66,11 @@ class PronunciationAttemptCreate(BaseModel):
     score: int = Field(..., ge=0, le=100)
     feedback: Optional[str] = None
     audio_url: Optional[str] = None  # Supabase URL, set after async upload
+    course_id: Optional[str] = None
+    lesson_id: Optional[str] = None
+    section_id: Optional[str] = None
+    session_id: Optional[str] = None
+    target_text: Optional[str] = None
 
 
 class PronunciationAttemptResponse(BaseModel):
@@ -72,6 +82,11 @@ class PronunciationAttemptResponse(BaseModel):
     score: int
     feedback: Optional[str] = None
     audio_url: Optional[str] = None
+    course_id: Optional[str] = None
+    lesson_id: Optional[str] = None
+    section_id: Optional[str] = None
+    session_id: Optional[str] = None
+    target_text: Optional[str] = None
     attempted_at: datetime
     xp_awarded: Optional[int] = None  # XP given for this attempt
 

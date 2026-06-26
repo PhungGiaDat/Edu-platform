@@ -1,5 +1,5 @@
-import type { Course, EnrollmentCTA, Lesson, StudentTestimonial } from '@/types/course';
 import type { Locale } from '@/contexts/LocaleContext';
+import type { Course, EnrollmentCTA, Lesson, StudentTestimonial } from '@/types/course';
 
 type LocalizedText = {
   en: string;
@@ -12,7 +12,6 @@ type CourseCopy = {
   description: LocalizedText;
   theme: LocalizedText;
   category: LocalizedText;
-  preview?: Array<{ label: LocalizedText; value: string; color: string }>;
   cta?: {
     headline: LocalizedText;
     body: LocalizedText;
@@ -38,10 +37,18 @@ const courseCopyByKey: Record<string, CourseCopy> = {
     },
     description: {
       en: 'Learn family words, rooms, feelings, and cozy daily phrases through videos, games, read-aloud stories, quizzes, and stickers.',
-      vi: 'Học từ về gia đình, các phòng trong nhà, cảm xúc và câu nói hằng ngày qua video, trò chơi, truyện đọc, quiz và sticker.',
+      vi: 'Học từ vựng về gia đình, các phòng trong nhà, cảm xúc và câu nói hằng ngày qua video, trò chơi, truyện đọc, quiz và sticker.',
     },
     theme: { en: 'Home and Family', vi: 'Gia đình' },
     category: { en: 'Home and Family', vi: 'Gia đình' },
+    cta: {
+      headline: { en: 'Start the home adventure', vi: 'Bắt đầu hành trình ở nhà' },
+      body: {
+        en: 'Short lessons about family, rooms, and feelings help kids build a warm English routine.',
+        vi: 'Các bài học ngắn về gia đình, căn phòng và cảm xúc giúp bé tạo thói quen học tiếng Anh thật gần gũi.',
+      },
+      buttonLabel: { en: 'Start this path', vi: 'Bắt đầu lộ trình' },
+    },
   },
   nature: {
     title: {
@@ -58,6 +65,14 @@ const courseCopyByKey: Record<string, CourseCopy> = {
     },
     theme: { en: 'Animals and Nature', vi: 'Động vật và thiên nhiên' },
     category: { en: 'Animals and Nature', vi: 'Động vật và thiên nhiên' },
+    cta: {
+      headline: { en: 'Jump into the nature trail', vi: 'Bước vào hành trình thiên nhiên' },
+      body: {
+        en: 'Kids can learn animal words, nature scenes, and AR flashcards in one bright route.',
+        vi: 'Bé có thể học từ về động vật, cảnh thiên nhiên và flashcard AR trong một lộ trình rực rỡ.',
+      },
+      buttonLabel: { en: 'Explore now', vi: 'Khám phá ngay' },
+    },
   },
   school_food: {
     title: {
@@ -74,6 +89,14 @@ const courseCopyByKey: Record<string, CourseCopy> = {
     },
     theme: { en: 'School and Food', vi: 'Trường học và món ăn' },
     category: { en: 'School and Food', vi: 'Trường học và món ăn' },
+    cta: {
+      headline: { en: 'Get ready for classroom English', vi: 'Sẵn sàng cho tiếng Anh trong lớp học' },
+      body: {
+        en: 'From lunch words to classroom phrases, this path keeps school English easy and playful.',
+        vi: 'Từ từ vựng bữa trưa đến câu nói trong lớp, lộ trình này giúp tiếng Anh ở trường trở nên nhẹ nhàng và vui hơn.',
+      },
+      buttonLabel: { en: 'Open the path', vi: 'Mở lộ trình' },
+    },
   },
 };
 
@@ -103,7 +126,18 @@ const fallbackTestimonials: Array<{
   },
 ];
 
-const looksBroken = (value?: string | null) => !value || /�|Ã|Æ|Ä|á|»|\?{2,}|ð|Ÿ|â/.test(value);
+const looksBroken = (value?: string | null) => {
+  if (!value) return true;
+  if (/ÃƒÂ¯Ã‚Â¿Ã‚Â½|ÃƒÆ’Ã†â€™|ÃƒÆ’Ã¢â‚¬Â |ÃƒÆ’Ã¢â‚¬Å¾|ÃƒÆ’Ã‚Â¡|Ãƒâ€šÃ‚Â»|\?{2,}|ÃƒÆ’Ã‚Â°|Ãƒâ€¦Ã‚Â¸|ÃƒÆ’Ã‚Â¢/.test(value)) return true;
+
+  const trimmed = value.trim();
+  const questionMarks = (trimmed.match(/\?/g) || []).length;
+  if (questionMarks > 1) return true;
+  if (questionMarks === 1 && trimmed.length <= 5) return true;
+  if (questionMarks === 1 && !/[?!]$/.test(trimmed)) return true;
+
+  return false;
+};
 
 const pick = (text: LocalizedText, locale: Locale) => text[locale] || text.en;
 
@@ -162,6 +196,7 @@ export const enrollmentCta = (course: Course, locale: Locale, fallbackButton: st
       buttonLabel: pick(copy.cta.buttonLabel, locale),
     };
   }
+
   return {
     headline: courseTitle(course, locale),
     body: courseDescription(course, locale),
@@ -174,7 +209,7 @@ export const enrollmentCta = (course: Course, locale: Locale, fallbackButton: st
 export const testimonials = (course: Course, locale: Locale): StudentTestimonial[] => {
   const copy = getCourseCopy(course);
   const source = copy?.testimonials || fallbackTestimonials;
-  return source.map(item => ({
+  return source.map((item) => ({
     name: item.name,
     role: pick(item.role, locale),
     quote: pick(item.quote, locale),
@@ -193,6 +228,5 @@ export const lessonDescription = (lesson: Lesson, locale: Locale) => {
   return lessonTitle(lesson, locale);
 };
 
-export const cleanText = (value: string | undefined | null, fallback: string) => {
-  return looksBroken(value) ? fallback : value || fallback;
-};
+export const cleanText = (value: string | undefined | null, fallback: string) =>
+  (looksBroken(value) ? fallback : value || fallback);
