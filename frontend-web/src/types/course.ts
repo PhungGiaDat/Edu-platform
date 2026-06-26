@@ -219,3 +219,58 @@ export interface UserProgress {
   started_at?: string;
   updated_at?: string;
 }
+
+export type LessonStepStatus = 'locked' | 'available' | 'in_progress' | 'completed' | 'needs_retry';
+
+export interface LessonSessionStepState {
+  step_id: string;
+  title: string;
+  status: LessonStepStatus;
+  attempts: number;
+  best_score: number;
+  passed: boolean;
+  last_response: Record<string, unknown>;
+  updated_at?: string;
+  completed_at?: string | null;
+}
+
+export interface LessonSession {
+  session_id: string;
+  user_id: string;
+  course_id: string;
+  lesson_id: string;
+  status: 'started' | 'completed';
+  current_step_id: string;
+  current_step_index: number;
+  progress_percent: number;
+  steps: LessonSessionStepState[];
+  started_at?: string;
+  updated_at?: string;
+  completed_at?: string | null;
+}
+
+export interface LessonStepAttemptPayload {
+  user_id: string;
+  step_id: string;
+  attempt_type: string;
+  passed: boolean;
+  score: number;
+  response_data?: Record<string, unknown>;
+  mastery_words?: string[];
+}
+
+export interface MediaAssetRecord {
+  asset_id: string;
+  course_id: string;
+  lesson_id: string;
+  section_id: string;
+  asset_key: string;
+  bucket: string;
+  path: string;
+  type: AssetType;
+  status: AssetStatus;
+  public_url?: string | null;
+  provider?: string;
+  metadata?: Record<string, unknown>;
+  updated_at?: string;
+}

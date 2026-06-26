@@ -205,7 +205,7 @@ class CourseSchema(BaseModel):
     category_key: str = ""
     category_label: str = ""
     category_icon: str = ""
-    age_range: str = "5-7"
+    age_range: str = "5-8"
     level: Literal["beginner", "intermediate", "advanced"] = "beginner"
     description_vi: str = ""
     thumbnail: Optional[AssetReference] = None
@@ -226,8 +226,8 @@ class CourseSchema(BaseModel):
     @field_validator("age_range")
     @classmethod
     def validate_age_range(cls, value: str) -> str:
-        if value != "5-7":
-            raise ValueError("Phase 1 courses must target age range 5-7")
+        if value != "5-8":
+            raise ValueError("Phase 1 courses must target age range 5-8")
         return value
 
 
@@ -252,6 +252,67 @@ class UserProgress(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+LessonSessionStatus = Literal["started", "completed"]
+LessonStepStatus = Literal["locked", "available", "in_progress", "completed", "needs_retry"]
+
+
+class LessonSessionStepState(BaseModel):
+    step_id: str
+    title: str = ""
+    status: LessonStepStatus = "locked"
+    attempts: int = 0
+    best_score: int = 0
+    passed: bool = False
+    last_response: Dict[str, Any] = Field(default_factory=dict)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    completed_at: Optional[datetime] = None
+
+
+class LessonSession(BaseModel):
+    session_id: str = Field(default_factory=lambda: str(ObjectId()))
+    user_id: str
+    course_id: str
+    lesson_id: str
+    status: LessonSessionStatus = "started"
+    current_step_id: str
+    current_step_index: int = 0
+    progress_percent: int = 0
+    steps: List[LessonSessionStepState] = Field(default_factory=list)
+    started_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    completed_at: Optional[datetime] = None
+
+
+class LessonStepAttemptRequest(BaseModel):
+    user_id: str
+    step_id: str
+    attempt_type: str = "practice"
+    passed: bool = False
+    score: int = Field(default=0, ge=0, le=100)
+    response_data: Dict[str, Any] = Field(default_factory=dict)
+    mastery_words: List[str] = Field(default_factory=list)
+
+
+class LessonSessionRequest(BaseModel):
+    user_id: str
+
+
+class MediaAssetRecord(BaseModel):
+    asset_id: str = Field(default_factory=lambda: str(ObjectId()))
+    course_id: str
+    lesson_id: str
+    section_id: str
+    asset_key: str
+    bucket: str
+    path: str
+    type: AssetType
+    status: AssetStatus = "pending"
+    public_url: Optional[str] = None
+    provider: str = "supabase"
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 class StartCourseRequest(BaseModel):
     user_id: str
 
@@ -259,6 +320,12 @@ class StartCourseRequest(BaseModel):
 class CompleteLessonRequest(BaseModel):
     user_id: str
     course_id: str
+    score: Optional[float] = None
+    time_spent: Optional[int] = None
+    words_learned: Optional[List[str]] = None
+    pronunciation_scores: Optional[Dict[str, float]] = None
+    games_played: Optional[int] = None
+    completed_steps: Optional[List[str]] = None
 
 
 class QuizSubmitRequest(BaseModel):

@@ -1,7 +1,23 @@
 import { apiClient } from './apiClient';
-import type { Course, Lesson, QuizSubmitResult, UserProgress } from '@/types/course';
+import type {
+  Course,
+  Lesson,
+  LessonSession,
+  LessonStepAttemptPayload,
+  MediaAssetRecord,
+  QuizSubmitResult,
+  UserProgress,
+} from '@/types/course';
 
-export type { Course, Lesson, QuizSubmitResult, UserProgress } from '@/types/course';
+export type {
+  Course,
+  Lesson,
+  LessonSession,
+  LessonStepAttemptPayload,
+  MediaAssetRecord,
+  QuizSubmitResult,
+  UserProgress,
+} from '@/types/course';
 
 export const courseService = {
   listCourses: (): Promise<Course[]> => apiClient.get('/api/v1/courses'),
@@ -12,16 +28,48 @@ export const courseService = {
   getLesson: (courseId: string, lessonId: string): Promise<Lesson> =>
     apiClient.get(`/api/v1/courses/${courseId}/lessons/${lessonId}`),
 
+  getLessonMedia: (courseId: string, lessonId: string): Promise<MediaAssetRecord[]> =>
+    apiClient.get(`/api/v1/courses/${courseId}/lessons/${lessonId}/media`),
+
   generateSampleCourse: (): Promise<Course> =>
     apiClient.post('/api/v1/courses/generate', {}),
 
   startCourse: (courseId: string, userId: string) =>
     apiClient.post(`/api/v1/courses/${courseId}/start`, { user_id: userId }),
 
-  completeLesson: (courseId: string, lessonId: string, userId: string) =>
+  startLessonSession: (courseId: string, lessonId: string, userId: string): Promise<LessonSession> =>
+    apiClient.post(`/api/v1/courses/${courseId}/lessons/${lessonId}/session/start`, { user_id: userId }),
+
+  getLessonSession: (courseId: string, lessonId: string, userId: string): Promise<LessonSession> =>
+    apiClient.get(`/api/v1/courses/${courseId}/lessons/${lessonId}/session`, { params: { user_id: userId } }),
+
+  submitLessonStep: (
+    courseId: string,
+    lessonId: string,
+    payload: LessonStepAttemptPayload,
+  ): Promise<LessonSession> =>
+    apiClient.post(`/api/v1/courses/${courseId}/lessons/${lessonId}/steps/attempt`, payload),
+
+  completeLesson: (
+    courseId: string, 
+    lessonId: string, 
+    userId: string,
+    stats?: {
+      score?: number;
+      timeSpent?: number;
+      wordsLearned?: string[];
+      pronunciationScores?: Record<string, number>;
+      gamesPlayed?: number;
+    }
+  ) =>
     apiClient.post(`/api/v1/lessons/${lessonId}/complete`, {
       user_id: userId,
       course_id: courseId,
+      score: stats?.score,
+      time_spent: stats?.timeSpent,
+      words_learned: stats?.wordsLearned,
+      pronunciation_scores: stats?.pronunciationScores,
+      games_played: stats?.gamesPlayed,
     }),
 
   submitQuiz: (

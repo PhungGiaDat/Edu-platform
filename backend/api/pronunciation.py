@@ -105,6 +105,11 @@ async def log_pronunciation_attempt(
         score=payload.score,
         feedback=payload.feedback,
         audio_url=payload.audio_url,
+        course_id=payload.course_id,
+        lesson_id=payload.lesson_id,
+        section_id=payload.section_id,
+        session_id=payload.session_id,
+        target_text=payload.target_text,
         attempted_at=doc_data.get("attempted_at"),
         xp_awarded=xp_awarded,
     )
