@@ -56,15 +56,5 @@
       ]
     }
   ],
-  "env": {
-    "VITE_API_BASE": "@eduplatform-api-url",
-    "VITE_WS_URL": "@eduplatform-ws-url"
-  },
-  "regions": ["sin1"],
-  "git": {
-    "deploymentEnabled": {
-      "main": true,
-      "develop": true
-    }
-  }
+  "regions": ["sin1"]
 }
