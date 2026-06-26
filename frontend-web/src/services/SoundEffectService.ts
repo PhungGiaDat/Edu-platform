@@ -24,7 +24,9 @@ type SoundType =
   | 'whoosh'
   | 'chime'
   | 'click'
-  | 'notification';
+  | 'notification'
+  | 'chestOpen'
+  | 'reward';
 
 interface SoundConfig {
   frequency?: number;     // Hz for generated tones
@@ -146,6 +148,17 @@ const SOUND_CONFIGS: Record<SoundType, SoundConfig> = {
     type: 'triangle',
     volume: 0.3,
     ramp: true,
+  },
+
+  // Reward chest sounds
+  chestOpen: {
+    url: '/sounds/chest-open.mp3',
+    volume: 0.6,
+  },
+
+  reward: {
+    url: '/sounds/reward.mp3',
+    volume: 0.6,
   },
 };
 

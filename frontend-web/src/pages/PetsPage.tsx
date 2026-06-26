@@ -17,6 +17,73 @@ import { SoundEffectService } from '@/services/SoundEffectService';
 import { rarityConfig } from '@/components/pets/PetCard';
 import type { PetViewerInteraction, PetViewerMood } from '@/components/pets/PetViewer3D';
 
+interface PetXPData {
+  xp: number;
+  stage: string;
+  progress: {
+    current_stage: string;
+    current_xp: number;
+    progress_percentage: number;
+    xp_to_next_stage: number;
+    next_stage: string | null;
+    next_stage_threshold: number | null;
+  };
+}
+
+interface EvolutionModalProps {
+  newStage: string;
+  petXp: number;
+  onClose: () => void;
+}
+
+const STAGE_EMOJI: Record<string, string> = {
+  baby: '🥚',
+  child: '🐣',
+  teen: '🦋',
+  adult: '🌟',
+};
+
+const STAGE_COLORS: Record<string, string> = {
+  baby: 'from-amber-100 to-yellow-200',
+  child: 'from-green-100 to-emerald-200',
+  teen: 'from-blue-100 to-indigo-200',
+  adult: 'from-purple-100 to-pink-200',
+};
+
+// Evolution celebration modal
+function EvolutionModal({ newStage, petXp, onClose }: EvolutionModalProps) {
+  const emoji = STAGE_EMOJI[newStage] || '✨';
+  const colors = STAGE_COLORS[newStage] || 'from-purple-100 to-pink-200';
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className={`clay-card-elevated max-w-sm w-full p-8 text-center bg-gradient-to-br ${colors} animate-bounce-in`}>
+        <div className="text-8xl mb-4 animate-pulse">{emoji}</div>
+        <h2 className="text-3xl font-black text-gray-800 mb-2">Your Pet Evolved!</h2>
+        <p className="text-xl font-bold text-gray-600 mb-4 capitalize">{newStage} Stage</p>
+        <div className="bg-white/50 rounded-xl p-3 mb-6">
+          <p className="text-sm text-gray-600">Total XP Earned</p>
+          <p className="text-2xl font-black text-purple-600">{petXp} XP</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="clay-btn clay-btn-yellow clay-btn-md w-full"
+        >
+          Awesome! 🎉
+        </button>
+      </div>
+      <style>{`
+        @keyframes bounce-in {
+          0% { transform: scale(0.5); opacity: 0; }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-bounce-in { animation: bounce-in 0.5s ease-out; }
+      `}</style>
+    </div>
+  );
+}
+
 // Lazy-load the heavy 3D viewer
 const PetViewer3D = lazy(() =>
     import('@/components/pets/PetViewer3D').then(m => ({ default: m.PetViewer3D }))
@@ -206,6 +273,8 @@ export default function PetsPage() {
         mood: 'content',
         last_action: 'idle',
     });
+    const [petXP, setPetXP] = useState<PetXPData | null>(null);
+    const [showEvolutionModal, setShowEvolutionModal] = useState(false);
     const [viewerInteraction, setViewerInteraction] = useState<PetViewerInteraction>('idle');
     const [viewerInteractionKey, setViewerInteractionKey] = useState(0);
 
@@ -223,6 +292,8 @@ export default function PetsPage() {
         if (!userId) return;
 
         let isMounted = true;
+        
+        // Load pet care state
         apiClient.get(`/api/v1/gamification/pet/${userId}`)
             .then((pet) => {
                 if (!isMounted) return;
@@ -236,6 +307,16 @@ export default function PetsPage() {
             })
             .catch((error) => {
                 console.warn('[PetsPage] Pet care state unavailable:', error);
+            });
+        
+        // Load pet XP data
+        apiClient.get(`/api/v1/gamification/pet-xp/${userId}`)
+            .then((xpData: PetXPData) => {
+                if (!isMounted) return;
+                setPetXP(xpData);
+            })
+            .catch((error) => {
+                console.warn('[PetsPage] Pet XP unavailable:', error);
             });
 
         return () => {
@@ -289,7 +370,7 @@ export default function PetsPage() {
         setPetCare(prev => ({
             ...prev,
             happiness: Math.min(100, prev.happiness + 8),
-            hunger: Math.min(100, prev.hunger + 16),
+            hunger: Math.max(0, prev.hunger - 16),
             mood: 'happy',
             last_action: 'feed',
         }));
@@ -308,6 +389,29 @@ export default function PetsPage() {
                 mood: result.mood ?? 'happy',
                 last_action: 'feed',
             }));
+            
+            // Update XP and check for evolution
+            if (result.pet_xp !== undefined) {
+                const newXp = result.pet_xp;
+                const newStage = result.stage;
+                setPetXP(prev => prev ? {
+                    ...prev,
+                    xp: newXp,
+                    stage: newStage,
+                    progress: {
+                        ...prev.progress,
+                        current_xp: newXp,
+                        current_stage: newStage,
+                    }
+                } : null);
+                
+                // Show evolution modal if pet evolved
+                if (result.evolved) {
+                    setShowEvolutionModal(true);
+                    SoundEffectService.play('success');
+                    HapticService.success();
+                }
+            }
         } catch (error) {
             console.error('Feed error:', error);
         }
@@ -321,7 +425,7 @@ export default function PetsPage() {
         setPetCare(prev => ({
             ...prev,
             happiness: Math.min(100, prev.happiness + 10),
-            energy: Math.max(0, prev.energy - 8),
+            energy: Math.max(0, prev.energy - 15),
             mood: 'happy',
             last_action: 'play',
         }));
@@ -475,6 +579,36 @@ export default function PetsPage() {
                                         </div>
                                     </div>
 
+                                    {/* Pet Stage & XP Display */}
+                                    {petXP && (
+                                        <div className="mb-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl">
+                                            <div className="flex items-center justify-center gap-2 mb-2">
+                                                <span className="text-2xl">{STAGE_EMOJI[petXP.stage] || '🥚'}</span>
+                                                <span className="clay-badge-yellow capitalize">{petXP.stage} Stage</span>
+                                            </div>
+                                            <div className="text-center mb-2">
+                                                <span className="text-lg font-black text-purple-600">{petXP.xp} XP</span>
+                                            </div>
+                                            {petXP.progress.next_stage && (
+                                                <div>
+                                                    <div className="flex justify-between text-xs text-gray-500 mb-1">
+                                                        <span>Progress to {petXP.progress.next_stage}</span>
+                                                        <span>{petXP.progress.progress_percentage}%</span>
+                                                    </div>
+                                                    <div className="h-3 bg-white rounded-full overflow-hidden shadow-inner">
+                                                        <div
+                                                            className="h-full rounded-full bg-gradient-to-r from-purple-400 to-pink-400 transition-all duration-500"
+                                                            style={{ width: `${petXP.progress.progress_percentage}%` }}
+                                                        />
+                                                    </div>
+                                                    <p className="text-xs text-center text-gray-500 mt-1">
+                                                        {petXP.progress.xp_to_next_stage} XP to next stage
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     {/* Pet Stats */}
                                     <div className="space-y-3 mb-4">
                                         <ProgressBar label="Happiness" value={petCare.happiness} max={100} color="#5B8DEF" />
@@ -535,6 +669,15 @@ export default function PetsPage() {
                         </button>
                     </div>
                 </div>
+
+                {/* Evolution Celebration Modal */}
+                {showEvolutionModal && petXP && (
+                    <EvolutionModal
+                        newStage={petXP.stage}
+                        petXp={petXP.xp}
+                        onClose={() => setShowEvolutionModal(false)}
+                    />
+                )}
             </div>
         </div>
     );
