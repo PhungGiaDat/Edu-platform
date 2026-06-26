@@ -38,7 +38,7 @@ describe('StreakBadge Component', () => {
 
       render(<StreakBadge />);
 
-      expect(screen.getByText(/day streak/i)).toBeTruthy();
+      expect(screen.getByText('Streak')).toBeTruthy();
       expect(screen.getByText('...')).toBeTruthy();
     });
   });
@@ -324,28 +324,46 @@ describe('StreakBadge Component', () => {
       });
     });
 
-    it('should not fetch when user is null', () => {
+    it('should not fetch when user is null', async () => {
+      vi.resetModules();
       vi.doMock('@/contexts/AuthContext', () => ({
         useAuth: () => ({
           user: null,
         }),
       }));
+      vi.doMock('@/services/apiClient', () => ({
+        apiClient: {
+          get: vi.fn(),
+        },
+      }));
+
+      const { StreakBadge } = await import('../../components/Gamification/StreakBadge');
+      const { apiClient: nullApiClient } = await import('@/services/apiClient');
 
       render(<StreakBadge />);
 
-      expect(apiClient.get).not.toHaveBeenCalled();
+      expect(nullApiClient.get).not.toHaveBeenCalled();
     });
 
-    it('should not fetch when user.id is undefined', () => {
+    it('should not fetch when user.id is undefined', async () => {
+      vi.resetModules();
       vi.doMock('@/contexts/AuthContext', () => ({
         useAuth: () => ({
           user: { name: 'Test' }, // No id
         }),
       }));
+      vi.doMock('@/services/apiClient', () => ({
+        apiClient: {
+          get: vi.fn(),
+        },
+      }));
+
+      const { StreakBadge } = await import('../../components/Gamification/StreakBadge');
+      const { apiClient: noIdApiClient } = await import('@/services/apiClient');
 
       render(<StreakBadge />);
 
-      expect(apiClient.get).not.toHaveBeenCalled();
+      expect(noIdApiClient.get).not.toHaveBeenCalled();
     });
   });
 
@@ -486,9 +504,12 @@ describe('StreakBadge Edge Cases', () => {
       streak_active_today: true,
     });
 
-    const { rerender } = render(<StreakBadge />);
+    render(<StreakBadge />);
 
-    // Simulate user prop change
+    await waitFor(() => {
+      expect(screen.getByText('5')).toBeTruthy();
+    });
+
     vi.clearAllMocks();
     vi.mocked(apiClient.get).mockResolvedValue({
       current_streak: 6,
@@ -497,7 +518,7 @@ describe('StreakBadge Edge Cases', () => {
       streak_active_today: true,
     });
 
-    rerender(<StreakBadge />);
+    render(<StreakBadge />);
 
     await waitFor(() => {
       expect(screen.getByText('6')).toBeTruthy();

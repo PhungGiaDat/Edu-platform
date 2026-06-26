@@ -101,7 +101,7 @@ export const DailyGoalRing: React.FC<DailyGoalRingProps> = ({
     );
   }
 
-  const goal = data?.daily_goal_minutes ?? goalMinutes ?? DAILY_GOAL_DEFAULT;
+  const goal = goalMinutes ?? data?.daily_goal_minutes ?? DAILY_GOAL_DEFAULT;
   const minutes = data?.minutes_today ?? 0;
   const percentage = Math.min(Math.round((minutes / goal) * 100), 100);
   const isComplete = percentage >= 100;
@@ -126,6 +126,10 @@ export const DailyGoalRing: React.FC<DailyGoalRingProps> = ({
     : percentage > 0
     ? 'Almost there!'
     : 'Start learning!';
+
+  const displayText = showMotivation
+    ? motivation
+    : `${remaining}m left`;
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
@@ -183,14 +187,12 @@ export const DailyGoalRing: React.FC<DailyGoalRingProps> = ({
           <p className="text-xs font-bold text-gray-600 sm:text-sm">
             {minutes}/{goal} min
           </p>
-          {showMotivation && (
-            <p
-              className="text-xs mt-0.5"
-              style={{ color: ringColor }}
-            >
-              {remaining > 0 ? `${remaining}m left` : motivation}
-            </p>
-          )}
+          <p
+            className="text-xs mt-0.5"
+            style={{ color: ringColor }}
+          >
+            {displayText}
+          </p>
         </div>
       )}
     </div>
