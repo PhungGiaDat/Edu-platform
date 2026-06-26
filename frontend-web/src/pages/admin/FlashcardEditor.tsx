@@ -57,16 +57,20 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
     setError(null);
 
     try {
-      const data: FlashcardCreate | FlashcardUpdate = {
-        front_text: frontText,
-        back_text: backText,
-        ar_model_url: arModelUrl,
-      };
-
       if (mode === 'card-new' && deckId) {
+        const data: FlashcardCreate = {
+          word: frontText,
+          translation: backText,
+          ar_model_url: arModelUrl,
+        };
         await adminFlashcardsApi.createFlashcard(deckId, data);
         navigate(`/admin/flashcards/${deckId}`);
       } else if (mode === 'card-edit' && deckId && cardId) {
+        const data: FlashcardUpdate = {
+          word: frontText,
+          translation: backText,
+          ar_model_url: arModelUrl,
+        };
         await adminFlashcardsApi.updateFlashcard(cardId, data);
         navigate(`/admin/flashcards/${deckId}`);
       }
