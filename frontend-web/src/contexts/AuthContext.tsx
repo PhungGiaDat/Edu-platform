@@ -19,7 +19,9 @@ export interface User {
   id: string;
   email: string;
   username: string;
-  // Add other user fields as needed
+  name?: string;
+  role?: string;
+  is_superuser?: boolean;
 }
 
 export interface AuthContextType {

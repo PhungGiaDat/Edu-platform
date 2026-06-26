@@ -123,20 +123,21 @@ const StudentList: React.FC = () => {
   // Reset to page 0 when search changes
   useEffect(() => {
     setPage(0);
-    loadStudents(true);
   }, [search]);
 
-  const loadMore = () => {
-    if (!loading && hasMore) {
-      setPage(prev => prev + 1);
-    }
-  };
-
+  // Load students when page changes
   useEffect(() => {
-    if (page > 0) {
-      loadStudents();
+    if (page > 0 || search === '') {
+      loadStudents(page === 0);
     }
-  }, [page]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, search]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPage(0);
+    loadStudents(true);
+  };
 
   const goToPage = (newPage: number) => {
     if (newPage >= 0 && (!hasMore || students.length >= limit)) {
@@ -144,7 +145,6 @@ const StudentList: React.FC = () => {
     }
   };
 
-  const currentPage = page;
   const startItem = total > 0 ? page * limit + 1 : 0;
   const endItem = Math.min((page + 1) * limit, total);
 

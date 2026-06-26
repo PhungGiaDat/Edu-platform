@@ -14,7 +14,7 @@ import { CardsIcon, PlusIcon, BookOpenIcon, TrashIcon, EditIcon, ChevronRightIco
 type ViewMode = 'decks' | 'deck-detail';
 
 const FlashcardManager: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t, i18n: _i18n } = useTranslation();
   const navigate = useNavigate();
   
   // State
@@ -24,7 +24,7 @@ const FlashcardManager: React.FC = () => {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
+  const [_hasMore, setHasMore] = useState(false);
   const [total, setTotal] = useState(0);
   const limit = 20;
 

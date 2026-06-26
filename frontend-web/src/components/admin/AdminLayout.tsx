@@ -32,8 +32,9 @@ const AdminSidebar: React.FC = () => {
 
   // Get user initials for avatar
   const getInitials = () => {
-    if (user?.name) {
-      return user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const name = user?.name || user?.username;
+    if (name) {
+      return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
     }
     if (user?.email) {
       return user.email[0].toUpperCase();
@@ -83,7 +84,7 @@ const AdminSidebar: React.FC = () => {
             {getInitials()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-sm font-medium truncate">{user?.name || 'Teacher'}</p>
+            <p className="text-white text-sm font-medium truncate">{user?.name || user?.username || 'Teacher'}</p>
             <p className="text-white/50 text-xs truncate">{user?.email || ''}</p>
           </div>
         </div>
@@ -103,8 +104,9 @@ const AdminMobileHeader: React.FC<{ title: string }> = ({ title }) => {
     (path !== '/admin' && location.pathname.startsWith(path));
 
   const getInitials = () => {
-    if (user?.name) {
-      return user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const name = user?.name || user?.username;
+    if (name) {
+      return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
     }
     if (user?.email) {
       return user.email[0].toUpperCase();

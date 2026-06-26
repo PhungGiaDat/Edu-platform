@@ -33,8 +33,8 @@ const ADMIN_BASE_URL = '/api/v1/admin';
 export const adminDashboardApi = {
   async getStats(): Promise<DashboardStats> {
     try {
-      const response = await apiClient.get<DashboardStats>(`${ADMIN_BASE_URL}/dashboard`);
-      return response.data;
+      const response = await apiClient.get(`${ADMIN_BASE_URL}/dashboard`);
+      return response as DashboardStats;
     } catch (error) {
       console.error('[adminDashboardApi.getStats] Error:', error);
       throw error;
@@ -49,11 +49,11 @@ export const adminCoursesApi = {
   async getCourses(params: PaginationParams = {}): Promise<PaginatedResponse<Course>> {
     try {
       const { skip = 0, limit = 20 } = params;
-      const response = await apiClient.get<PaginatedResponse<Course>>(
+      const response = await apiClient.get(
         `${ADMIN_BASE_URL}/courses`,
         { params: { skip, limit } }
       );
-      return response.data;
+      return response as PaginatedResponse<Course>;
     } catch (error) {
       console.error('[adminCoursesApi.getCourses] Error:', error);
       throw error;
@@ -62,10 +62,10 @@ export const adminCoursesApi = {
 
   async getCourse(courseId: string): Promise<Course> {
     try {
-      const response = await apiClient.get<Course>(
+      const response = await apiClient.get(
         `${ADMIN_BASE_URL}/courses/${courseId}`
       );
-      return response.data;
+      return response as Course;
     } catch (error) {
       console.error('[adminCoursesApi.getCourse] Error:', error);
       throw error;
@@ -74,11 +74,11 @@ export const adminCoursesApi = {
 
   async createCourse(data: CourseCreate): Promise<Course> {
     try {
-      const response = await apiClient.post<Course>(
+      const response = await apiClient.post(
         `${ADMIN_BASE_URL}/courses`,
         data
       );
-      return response.data;
+      return response as Course;
     } catch (error) {
       console.error('[adminCoursesApi.createCourse] Error:', error);
       throw error;
@@ -87,11 +87,11 @@ export const adminCoursesApi = {
 
   async updateCourse(courseId: string, data: CourseUpdate): Promise<Course> {
     try {
-      const response = await apiClient.put<Course>(
+      const response = await apiClient.put(
         `${ADMIN_BASE_URL}/courses/${courseId}`,
         data
       );
-      return response.data;
+      return response as Course;
     } catch (error) {
       console.error('[adminCoursesApi.updateCourse] Error:', error);
       throw error;
@@ -115,11 +115,11 @@ export const adminDecksApi = {
   async getDecks(params: PaginationParams = {}): Promise<PaginatedResponse<FlashcardDeck>> {
     try {
       const { skip = 0, limit = 20 } = params;
-      const response = await apiClient.get<PaginatedResponse<FlashcardDeck>>(
+      const response = await apiClient.get(
         `${ADMIN_BASE_URL}/flashcards/decks`,
         { params: { skip, limit } }
       );
-      return response.data;
+      return response as PaginatedResponse<FlashcardDeck>;
     } catch (error) {
       console.error('[adminDecksApi.getDecks] Error:', error);
       throw error;
@@ -128,10 +128,10 @@ export const adminDecksApi = {
 
   async getDeck(deckId: string): Promise<FlashcardDeck> {
     try {
-      const response = await apiClient.get<FlashcardDeck>(
+      const response = await apiClient.get(
         `${ADMIN_BASE_URL}/flashcards/decks/${deckId}`
       );
-      return response.data;
+      return response as FlashcardDeck;
     } catch (error) {
       console.error('[adminDecksApi.getDeck] Error:', error);
       throw error;
@@ -140,11 +140,11 @@ export const adminDecksApi = {
 
   async createDeck(data: DeckCreate): Promise<FlashcardDeck> {
     try {
-      const response = await apiClient.post<FlashcardDeck>(
+      const response = await apiClient.post(
         `${ADMIN_BASE_URL}/flashcards/decks`,
         data
       );
-      return response.data;
+      return response as FlashcardDeck;
     } catch (error) {
       console.error('[adminDecksApi.createDeck] Error:', error);
       throw error;
@@ -153,11 +153,11 @@ export const adminDecksApi = {
 
   async updateDeck(deckId: string, data: DeckUpdate): Promise<FlashcardDeck> {
     try {
-      const response = await apiClient.put<FlashcardDeck>(
+      const response = await apiClient.put(
         `${ADMIN_BASE_URL}/flashcards/decks/${deckId}`,
         data
       );
-      return response.data;
+      return response as FlashcardDeck;
     } catch (error) {
       console.error('[adminDecksApi.updateDeck] Error:', error);
       throw error;
@@ -184,11 +184,11 @@ export const adminFlashcardsApi = {
   ): Promise<PaginatedResponse<Flashcard>> {
     try {
       const { skip = 0, limit = 50 } = params;
-      const response = await apiClient.get<PaginatedResponse<Flashcard>>(
+      const response = await apiClient.get(
         `${ADMIN_BASE_URL}/flashcards/decks/${deckId}/cards`,
         { params: { skip, limit } }
       );
-      return response.data;
+      return response as PaginatedResponse<Flashcard>;
     } catch (error) {
       console.error('[adminFlashcardsApi.getFlashcardsInDeck] Error:', error);
       throw error;
@@ -200,11 +200,11 @@ export const adminFlashcardsApi = {
     data: FlashcardCreate
   ): Promise<Flashcard> {
     try {
-      const response = await apiClient.post<Flashcard>(
+      const response = await apiClient.post(
         `${ADMIN_BASE_URL}/flashcards/decks/${deckId}/cards`,
         data
       );
-      return response.data;
+      return response as Flashcard;
     } catch (error) {
       console.error('[adminFlashcardsApi.createFlashcard] Error:', error);
       throw error;
@@ -216,11 +216,11 @@ export const adminFlashcardsApi = {
     data: FlashcardUpdate
   ): Promise<Flashcard> {
     try {
-      const response = await apiClient.put<Flashcard>(
+      const response = await apiClient.put(
         `${ADMIN_BASE_URL}/flashcards/cards/${qrId}`,
         data
       );
-      return response.data;
+      return response as Flashcard;
     } catch (error) {
       console.error('[adminFlashcardsApi.updateFlashcard] Error:', error);
       throw error;
@@ -246,11 +246,11 @@ export const adminStudentsApi = {
   ): Promise<PaginatedResponse<StudentProgress>> {
     try {
       const { skip = 0, limit = 20, search } = params;
-      const response = await apiClient.get<PaginatedResponse<StudentProgress>>(
+      const response = await apiClient.get(
         `${ADMIN_BASE_URL}/students`,
         { params: { skip, limit, search } }
       );
-      return response.data;
+      return response as PaginatedResponse<StudentProgress>;
     } catch (error) {
       console.error('[adminStudentsApi.getStudents] Error:', error);
       throw error;
@@ -259,10 +259,10 @@ export const adminStudentsApi = {
 
   async getStudent(userId: string): Promise<StudentProgress> {
     try {
-      const response = await apiClient.get<StudentProgress>(
+      const response = await apiClient.get(
         `${ADMIN_BASE_URL}/students/${userId}`
       );
-      return response.data;
+      return response as StudentProgress;
     } catch (error) {
       console.error('[adminStudentsApi.getStudent] Error:', error);
       throw error;
@@ -276,11 +276,11 @@ export const adminStudentsApi = {
 export const adminAnalyticsApi = {
   async getProgressAnalytics(days: number = 30): Promise<ProgressAnalytics> {
     try {
-      const response = await apiClient.get<ProgressAnalytics>(
+      const response = await apiClient.get(
         `${ADMIN_BASE_URL}/analytics/progress`,
         { params: { days } }
       );
-      return response.data;
+      return response as ProgressAnalytics;
     } catch (error) {
       console.error('[adminAnalyticsApi.getProgressAnalytics] Error:', error);
       throw error;
@@ -289,10 +289,10 @@ export const adminAnalyticsApi = {
 
   async getEngagementAnalytics(): Promise<EngagementAnalytics> {
     try {
-      const response = await apiClient.get<EngagementAnalytics>(
+      const response = await apiClient.get(
         `${ADMIN_BASE_URL}/analytics/engagement`
       );
-      return response.data;
+      return response as EngagementAnalytics;
     } catch (error) {
       console.error('[adminAnalyticsApi.getEngagementAnalytics] Error:', error);
       throw error;
@@ -309,12 +309,12 @@ export const adminLearningGoalsApi = {
     data: LearningGoalCreate
   ): Promise<LearningGoal> {
     try {
-      const response = await apiClient.post<LearningGoal>(
+      const response = await apiClient.post(
         `${ADMIN_BASE_URL}/learning-goals`,
         data,
         { params: { user_id: userId } }
       );
-      return response.data;
+      return response as LearningGoal;
     } catch (error) {
       console.error('[adminLearningGoalsApi.setLearningGoal] Error:', error);
       throw error;
@@ -323,10 +323,10 @@ export const adminLearningGoalsApi = {
 
   async getLearningGoal(userId: string): Promise<LearningGoal> {
     try {
-      const response = await apiClient.get<LearningGoal>(
+      const response = await apiClient.get(
         `${ADMIN_BASE_URL}/learning-goals/${userId}`
       );
-      return response.data;
+      return response as LearningGoal;
     } catch (error) {
       console.error('[adminLearningGoalsApi.getLearningGoal] Error:', error);
       throw error;
@@ -338,11 +338,11 @@ export const adminLearningGoalsApi = {
   ): Promise<PaginatedResponse<LearningGoal>> {
     try {
       const { skip = 0, limit = 50 } = params;
-      const response = await apiClient.get<PaginatedResponse<LearningGoal>>(
+      const response = await apiClient.get(
         `${ADMIN_BASE_URL}/learning-goals`,
         { params: { skip, limit } }
       );
-      return response.data;
+      return response as PaginatedResponse<LearningGoal>;
     } catch (error) {
       console.error('[adminLearningGoalsApi.getAllLearningGoals] Error:', error);
       throw error;

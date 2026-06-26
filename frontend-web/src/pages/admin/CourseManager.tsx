@@ -9,10 +9,10 @@ import { AdminLayout } from '../../components/admin/AdminLayout';
 import { AdminCard } from '../../components/admin/AdminCard';
 import { adminCoursesApi } from '../../services/adminApi';
 import type { Course, PaginatedResponse } from '../../types/admin';
-import { BookOpenIcon, PlusIcon, SearchIcon, ChevronRightIcon, TrashIcon, EditIcon } from '../../components/Icons';
+import { BookOpenIcon, PlusIcon, TrashIcon, EditIcon } from '../../components/Icons';
 
 const CourseManager: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t, i18n: _i18n } = useTranslation();
   const navigate = useNavigate();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);

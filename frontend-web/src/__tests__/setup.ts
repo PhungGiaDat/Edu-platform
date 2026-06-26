@@ -1,7 +1,17 @@
 /**
  * Vitest test setup file
  */
-import { expect, vi } from 'vitest';
+import { vi, beforeAll, afterAll } from 'vitest';
+
+// Type declarations for test globals
+declare global {
+  namespace NodeJS {
+    interface Global {
+      IntersectionObserver: typeof IntersectionObserver;
+      ResizeObserver: typeof ResizeObserver;
+    }
+  }
+}
 
 // Mock IntersectionObserver
 const mockIntersectionObserver = vi.fn(() => ({
@@ -9,7 +19,7 @@ const mockIntersectionObserver = vi.fn(() => ({
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 }));
-window.IntersectionObserver = mockIntersectionObserver;
+window.IntersectionObserver = mockIntersectionObserver as unknown as typeof IntersectionObserver;
 
 // Mock ResizeObserver
 const mockResizeObserver = vi.fn(() => ({
@@ -17,12 +27,12 @@ const mockResizeObserver = vi.fn(() => ({
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 }));
-window.ResizeObserver = mockResizeObserver;
+window.ResizeObserver = mockResizeObserver as unknown as typeof ResizeObserver;
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation((query) => ({
+  value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,

@@ -12,9 +12,10 @@ import { getApiBase } from '@/config';
 const API_BASE = getApiBase();
 const TOKEN_KEY = 'authToken';
 
-export interface ApiClientOptions extends RequestInit {
-  skipAuth?: boolean; // Skip adding Authorization header
+export interface ApiClientOptions extends Omit<RequestInit, 'body'> {
+  skipAuth?: boolean;
   params?: Record<string, string | number | boolean | undefined>;
+  body?: any;
 }
 
 /**
@@ -143,15 +144,16 @@ async function request(
   endpoint: string,
   options: ApiClientOptions = {}
 ): Promise<any> {
-  const { params, skipAuth, ...fetchOptions } = options;
+  const { params, skipAuth, body, ...fetchOptions } = options;
 
   const url = buildUrl(endpoint, params);
-  const headers = prepareHeaders({ ...fetchOptions, skipAuth });
+  const headers = prepareHeaders({ ...fetchOptions, skipAuth, body });
 
   try {
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
+      body: body as BodyInit | null | undefined,
     });
 
     return await handleResponse(response);
@@ -178,7 +180,7 @@ export const apiClient = {
     request(endpoint, {
       ...options,
       method: 'POST',
-      body: body instanceof FormData ? body : JSON.stringify(body),
+      body: body instanceof FormData ? body : body ?? undefined,
     }),
 
   /**
@@ -188,7 +190,7 @@ export const apiClient = {
     request(endpoint, {
       ...options,
       method: 'PUT',
-      body: body instanceof FormData ? body : JSON.stringify(body),
+      body: body instanceof FormData ? body : body ?? undefined,
     }),
 
   /**
@@ -198,7 +200,7 @@ export const apiClient = {
     request(endpoint, {
       ...options,
       method: 'PATCH',
-      body: body instanceof FormData ? body : JSON.stringify(body),
+      body: body instanceof FormData ? body : body ?? undefined,
     }),
 
   /**
