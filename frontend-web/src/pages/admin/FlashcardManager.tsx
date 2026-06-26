@@ -136,7 +136,7 @@ const FlashcardManager: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
-              {selectedDeck.name?.en || selectedDeck.name?.vi || t('admin.flashcards.untitledDeck')}
+              {selectedDeck.name || t('admin.flashcards.untitledDeck')}
             </h1>
             <p className="text-gray-500 mt-1">
               {t('admin.flashcards.cardsCount', { count: selectedDeck.card_count || 0 })}
@@ -189,7 +189,7 @@ const FlashcardManager: React.FC = () => {
                 {/* Word */}
                 <h3 className="font-semibold text-gray-800 truncate">{card.word}</h3>
                 <p className="text-sm text-gray-500 truncate">
-                  {card.translation?.en || card.translation?.vi || '-'}
+                  {card.translation || '-'}
                 </p>
                 
                 {/* Actions */}
@@ -277,7 +277,7 @@ const FlashcardManager: React.FC = () => {
               {/* Deck Cover */}
               <div className="h-24 rounded-2xl bg-gradient-to-br from-[#6EB9FF]/20 to-[#B4E197]/20 mb-3 flex items-center justify-center">
                 {deck.cover_image_url ? (
-                  <img src={deck.cover_image_url} alt={deck.name?.en} className="w-full h-full object-cover rounded-2xl" />
+                  <img src={deck.cover_image_url} alt={deck.name} className="w-full h-full object-cover rounded-2xl" />
                 ) : (
                   <CardsIcon className="w-10 h-10 text-[#6EB9FF]/50" />
                 )}
@@ -285,7 +285,7 @@ const FlashcardManager: React.FC = () => {
               
               {/* Deck Info */}
               <h3 className="font-semibold text-gray-800 truncate">
-                {deck.name?.en || deck.name?.vi || t('admin.flashcards.untitledDeck')}
+                {deck.name || t('admin.flashcards.untitledDeck')}
               </h3>
               <p className="text-sm text-gray-500 mb-2">
                 {deck.card_count || 0} {t('admin.flashcards.cards')}
