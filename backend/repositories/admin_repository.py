@@ -37,7 +37,7 @@ class AdminRepository:
         self.learning_goals_collection = mongo_connector.get_collection("learning_goals")
         self.users_collection = mongo_connector.get_collection("users")
         
-        logger.debug(f"📦 [AdminRepo] Initialized for teacher: {teacher_id}")
+        logger.debug(f"[AdminRepo] Initialized for teacher: {teacher_id}")
     
     # ========== Dashboard Stats ==========
     

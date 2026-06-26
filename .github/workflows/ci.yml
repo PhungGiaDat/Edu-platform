@@ -1,0 +1,210 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  # ========================================
+  # Frontend Tests
+  # ========================================
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: frontend-web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend-web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend-web/coverage/
+          retention-days: 7
+
+  # ========================================
+  # Backend Tests
+  # ========================================
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov httpx
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --cov=. --cov-report=xml --cov-report=html
+        continue-on-error: true
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/htmlcov/
+          retention-days: 7
+
+  # ========================================
+  # Build Docker Images
+  # ========================================
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [frontend-test, backend-test]
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          dockerfile: ../Dockerfile.backend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/eduplatform-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend-web
+          dockerfile: ../Dockerfile.frontend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/eduplatform-frontend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ========================================
+  # Deploy Frontend to Vercel
+  # ========================================
+  deploy-frontend:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    needs: [frontend-test]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: frontend-web
+
+      - name: Build for Preview
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: frontend-web
+
+      - name: Deploy to Vercel Preview
+        if: github.event_name == 'pull_request'
+        id: deploy-preview
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview_url=$url" >> $GITHUB_OUTPUT
+        working-directory: frontend-web
+
+      - name: Deploy to Vercel Production
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: frontend-web
+
+      - name: Comment PR with Preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🚀 Preview deployed to: ${{ steps.deploy-preview.outputs.preview_url }}'
+            })
+
+  # ========================================
+  # Deploy Backend to Render
+  # ========================================
+  deploy-backend:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    needs: [backend-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Render
+        uses: render/deploy-action@v1
+        with:
+          render-token: ${{ secrets.RENDER_TOKEN }}
+          service-id: ${{ secrets.RENDER_BACKEND_SERVICE_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}

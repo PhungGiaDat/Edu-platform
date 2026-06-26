@@ -226,7 +226,7 @@ app.include_router(
 logger.info("✅ All routers registered")
 
 
-# ========== Health Check Endpoint ==========
+# ========== Health Check Endpoints ==========
 @app.get("/health", tags=["System"])
 async def health_check():
     """
@@ -238,6 +238,44 @@ async def health_check():
         "app": settings.APP_NAME,
         "debug": settings.DEBUG
     }
+
+
+@app.get("/health/detailed", tags=["System"])
+async def detailed_health_check():
+    """
+    Detailed health check including database connectivity.
+    Use this for comprehensive health monitoring.
+    """
+    from database.connection import db_manager
+    
+    health_status = {
+        "status": "ok",
+        "app": settings.APP_NAME,
+        "version": "2.0.0",
+        "debug": settings.DEBUG
+    }
+    
+    # Check database connectivity
+    try:
+        db_healthy = await db_manager.ping()
+        health_status["database"] = {
+            "status": "connected" if db_healthy else "disconnected",
+            "healthy": db_healthy
+        }
+    except Exception as e:
+        health_status["database"] = {
+            "status": "error",
+            "healthy": False,
+            "error": str(e)
+        }
+        health_status["status"] = "degraded"
+    
+    # Check AI services
+    health_status["ai_services"] = {
+        "google_api_configured": bool(settings.GOOGLE_API_KEY)
+    }
+    
+    return health_status
 
 
 @app.get("/debug/admin-hash", tags=["Debug"])

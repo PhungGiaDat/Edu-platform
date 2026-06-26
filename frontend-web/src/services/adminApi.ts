@@ -309,10 +309,10 @@ export const adminLearningGoalsApi = {
     data: LearningGoalCreate
   ): Promise<LearningGoal> {
     try {
+      const payload = { ...data, user_id: userId };
       const response = await apiClient.post(
         `${ADMIN_BASE_URL}/learning-goals`,
-        data,
-        { params: { user_id: userId } }
+        payload
       );
       return response as LearningGoal;
     } catch (error) {
