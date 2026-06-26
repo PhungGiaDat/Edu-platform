@@ -24,6 +24,8 @@ interface HapticPatterns {
   cardFlip: VibrationPattern;
   match: VibrationPattern;
   notification: VibrationPattern;
+  reward: VibrationPattern;
+  chestOpen: VibrationPattern;
 }
 
 // Vibration patterns in milliseconds
@@ -59,6 +61,12 @@ const HAPTIC_PATTERNS: HapticPatterns = {
   
   // Notification received
   notification: [20, 100, 20],
+  
+  // Reward/treasure chest
+  reward: [40, 60, 40, 60, 80],
+  
+  // Chest opening
+  chestOpen: [50, 40, 50, 40, 100],
 };
 
 class HapticServiceClass {
@@ -209,6 +217,20 @@ class HapticServiceClass {
    */
   notification(): boolean {
     return this.vibrate(HAPTIC_PATTERNS.notification);
+  }
+
+  /**
+   * Reward received - exciting celebration pattern
+   */
+  reward(): boolean {
+    return this.vibrate(HAPTIC_PATTERNS.reward);
+  }
+
+  /**
+   * Chest opening - treasure reveal
+   */
+  chestOpen(): boolean {
+    return this.vibrate(HAPTIC_PATTERNS.chestOpen);
   }
 
   /**
