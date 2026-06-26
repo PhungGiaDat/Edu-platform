@@ -1,0 +1,13 @@
+{
+  "plugins": {
+    "supabase": {
+      "enabled": true
+    },
+    "mongodb": {
+      "enabled": true
+    },
+    "render": {
+      "enabled": true
+    }
+  }
+}
