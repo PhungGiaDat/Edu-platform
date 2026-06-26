@@ -107,7 +107,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                 </div>
                 <div className="mt-2 h-4 overflow-hidden rounded-full bg-slate-100">
                     <div
-                        className="h-full rounded-full bg-gradient-to-r from-[#FFB4A2] to-[#FF7A90]"
+                        className="h-full rounded-full bg-[#FF9F9F]"
                         style={{ width: `${progressPercent}%` }}
                     />
                 </div>
