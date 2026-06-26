@@ -63,7 +63,7 @@ export const Scene = forwardRef<HTMLElement, ISceneProps>(
       if (sceneEl.hasLoaded) {
         handleSceneLoaded();
       } else {
-        sceneEl.addEventListener('loaded', handleSceneLoaded, { once: true });
+        sceneEl.addEventListener('loaded', handleSceneLoaded, false);
       }
 
       [100, 500, 1000, 2000].forEach((delay) => setTimeout(findVideo, delay));

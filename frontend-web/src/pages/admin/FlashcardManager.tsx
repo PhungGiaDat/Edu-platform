@@ -213,7 +213,7 @@ const FlashcardManager: React.FC = () => {
                       <EditIcon className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={(e) => handleDeleteFlashcard(card.qr_id, e)}
+                      onClick={(e) => card.qr_id && handleDeleteFlashcard(card.qr_id, e)}
                       className="p-1.5 rounded-lg hover:bg-red-50 text-red-500"
                     >
                       <TrashIcon className="w-4 h-4" />
