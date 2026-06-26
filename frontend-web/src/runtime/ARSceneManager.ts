@@ -71,8 +71,8 @@ class ARSceneManager implements ISceneManager {
         this.scene.renderer.setClearColor(0x000000, 0);
         this.scene.renderer.setClearAlpha(0);
         
-        if (this.scene.renderer.context) {
-          const gl = this.scene.renderer.context as WebGLRenderingContext;
+        if ((this.scene.renderer as any).context) {
+          const gl = (this.scene.renderer as any).context as WebGLRenderingContext;
           if (gl.DEPTH_TEST !== undefined) {
             gl.enable(gl.DEPTH_TEST);
           }
