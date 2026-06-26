@@ -407,12 +407,26 @@ class CourseService:
         response_data: Dict[str, Any],
         mastery_words: List[str],
     ) -> Dict[str, Any]:
+        # SECURITY FIX: Validate score against passed status
+        # If client claims passed=True, score should be >= 70
+        if passed and score < 70:
+            raise ValueError("Cannot mark step as passed with score below 70")
+
         session = await self.get_lesson_session(user_id, course_id, lesson_id)
         step_map = {step["step_id"]: step for step in session.get("steps", [])}
         if step_id not in step_map:
             raise ValueError(f"Unknown lesson step: {step_id}")
         if step_id != session.get("current_step_id"):
             raise ValueError(f"Step is not currently available: {step_id}")
+
+        # SECURITY FIX: Validate mastery_words against lesson vocabulary
+        lesson = await self.get_lesson(course_id, lesson_id)
+        if lesson:
+            valid_words = {vocab.get("word_en", "").lower() for vocab in lesson.get("vocabulary", [])}
+            valid_words.discard("")  # Remove empty string if present
+            invalid_words = [word for word in mastery_words if word.lower() not in valid_words]
+            if invalid_words:
+                raise ValueError(f"Invalid vocabulary words: {invalid_words}. These words are not in the lesson vocabulary.")
 
         session = _advance_session(session, step_id, passed, score, response_data)
         await self.repo.upsert_lesson_session(session)
@@ -484,12 +498,17 @@ class CourseService:
         # === Gamification Hook: Track learning + check stickers ===
         gam_service = get_gamification_service()
         words_count = len(words_learned) if words_learned else 0
-        time_mins = (time_spent or 0) // 60
-        await gam_service.track_learning(user_id, words_count, time_mins)
+        # Frontend sends time in minutes (already ceil'd), use directly
+        time_mins = time_spent if time_spent is not None else 0
 
-        # Award stickers if threshold reached (auto-award)
-        if words_count > 0 or games_played:
-            await gam_service._maybe_award_lesson_sticker(user_id, words_count, games_played)
+        # Award XP for lesson completion (only first time)
+        xp_earned = 0
+        if not was_already_completed and reward:
+            xp_earned = int(reward.get("xp", 0))
+            if xp_earned > 0:
+                await gam_service.add_xp(user_id, "lesson_complete", {"course_id": course_id, "lesson_id": lesson_id})
+
+        await gam_service.track_learning(user_id, words_count, time_mins)
 
         existing_session = await self.repo.get_lesson_session(user_id, course_id, lesson_id)
         if existing_session:

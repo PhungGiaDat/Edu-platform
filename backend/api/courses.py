@@ -12,6 +12,8 @@ from models.course_model import (
     StartCourseRequest,
     UserProgress,
 )
+from models.user_mongo import UserDocument
+from core.security import get_current_user
 from services.course_service import CourseService, get_course_service
 
 
@@ -59,6 +61,7 @@ async def get_lesson(
 async def get_lesson_media(
     course_id: str,
     lesson_id: str,
+    current_user: UserDocument = Depends(get_current_user),
     service: CourseService = Depends(get_course_service),
 ):
     try:
@@ -71,9 +74,10 @@ async def get_lesson_media(
 async def get_lesson_session(
     course_id: str,
     lesson_id: str,
-    user_id: str,
+    current_user: UserDocument = Depends(get_current_user),
     service: CourseService = Depends(get_course_service),
 ):
+    user_id = str(current_user.id)
     try:
         return await service.get_lesson_session(user_id, course_id, lesson_id)
     except ValueError as exc:
@@ -84,11 +88,12 @@ async def get_lesson_session(
 async def start_lesson_session(
     course_id: str,
     lesson_id: str,
-    payload: LessonSessionRequest,
+    current_user: UserDocument = Depends(get_current_user),
     service: CourseService = Depends(get_course_service),
 ):
+    user_id = str(current_user.id)
     try:
-        return await service.start_lesson_session(payload.user_id, course_id, lesson_id)
+        return await service.start_lesson_session(user_id, course_id, lesson_id)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -98,11 +103,13 @@ async def submit_lesson_step(
     course_id: str,
     lesson_id: str,
     payload: LessonStepAttemptRequest,
+    current_user: UserDocument = Depends(get_current_user),
     service: CourseService = Depends(get_course_service),
 ):
+    user_id = str(current_user.id)
     try:
         return await service.submit_lesson_step(
-            payload.user_id,
+            user_id,
             course_id,
             lesson_id,
             payload.step_id,
@@ -148,11 +155,13 @@ async def start_course(
 async def complete_lesson(
     lesson_id: str,
     payload: CompleteLessonRequest,
+    current_user: UserDocument = Depends(get_current_user),
     service: CourseService = Depends(get_course_service),
 ):
+    user_id = str(current_user.id)
     try:
         return await service.complete_lesson(
-            payload.user_id,
+            user_id,
             payload.course_id,
             lesson_id,
             score=payload.score,
