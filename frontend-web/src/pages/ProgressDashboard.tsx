@@ -6,6 +6,8 @@ import React, { useState } from 'react';
 import { useProgressReport } from '../hooks/useProgressReport';
 import { ProgressChart } from '../components/Gamification/ProgressChart';
 import { WeeklyReport } from '../components/Gamification/WeeklyReport';
+import { StreakBadge } from '../components/Gamification/StreakBadge';
+import { DailyGoal } from '../components/Gamification/DailyGoal';
 import { useAuth } from '../contexts/AuthContext';
 
 type ViewMode = 'overview' | 'detailed';
@@ -132,17 +134,18 @@ export const ProgressDashboard: React.FC = () => {
                         label="Words"
                         color="#22c55e"
                     />
-                    <QuickStat
-                        icon="🔥"
-                        value={`${summary?.stats.streak_days || 0}`}
-                        label="Streak"
-                        color="#ef4444"
-                    />
+                    <StreakBadge className="clay-stat-card" />
                 </div>
 
                 {viewMode === 'overview' ? (
                     <>
-                        {/* Weekly Report Card */}
+                        {/* Daily Goal + Streak Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <DailyGoal variant="full" showCelebration={true} />
+                    <StreakBadge className="clay-stat-card" />
+                </div>
+
+                {/* Weekly Report Card */}
                         {weeklyReport && (
                             <WeeklyReport
                                 summary={weeklyReport.summary}
