@@ -25,6 +25,16 @@ import PetsPage from "./pages/PetsPage";
 import { apiClient } from "./services/apiClient";
 import { SoundEffectService } from "./services/SoundEffectService";
 
+// Admin Pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminStudentList from "./pages/admin/StudentList";
+import AdminStudentDetail from "./pages/admin/StudentDetail";
+import AdminCourseManager from "./pages/admin/CourseManager";
+import AdminFlashcardManager from "./pages/admin/FlashcardManager";
+import AdminAnalytics from "./pages/admin/Analytics";
+import AdminGoalSettings from "./pages/admin/GoalSettings";
+import AdminErrorBoundary from "./components/admin/AdminErrorBoundary";
+
 // ========== Global Pet Unlock Notifier ==========
 // Listens to PET_CAN_UNLOCK (XP gate met) and PET_UNLOCKED (after actual unlock)
 // Shows PetUnlockModal as a global overlay on any page
@@ -190,6 +200,21 @@ const RequireUserAuth: React.FC<{ children: React.ReactNode }> = ({ children }) 
   return <>{children}</>;
 };
 
+const RequireTeacherRole: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  
+  // Check if user has teacher/admin privileges
+  const hasTeacherRole = user?.role === 'teacher' || user?.role === 'admin' || user?.is_superuser;
+  
+  if (!hasTeacherRole) {
+    // Redirect non-teachers away from admin pages
+    return <Navigate to="/profile" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
 // ========== App ==========
 
 const App = () => {
@@ -245,6 +270,15 @@ const App = () => {
         <Route path="/pets" element={<RequireUserAuth><Layout><PetsPage /></Layout></RequireUserAuth>} />
         <Route path="/stickers" element={<RequireUserAuth><Layout><StickersPage /></Layout></RequireUserAuth>} />
         <Route path="/scan" element={<Navigate to="/learn-ar" replace />} />
+
+        {/* Admin Routes - Require Teacher/Admin Role with Error Boundary */}
+        <Route path="/admin" element={<RequireTeacherRole><AdminErrorBoundary><AdminDashboard /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/flashcards" element={<RequireTeacherRole><AdminErrorBoundary><AdminFlashcardManager /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/courses" element={<RequireTeacherRole><AdminErrorBoundary><AdminCourseManager /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/students" element={<RequireTeacherRole><AdminErrorBoundary><AdminStudentList /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/students/:userId" element={<RequireTeacherRole><AdminErrorBoundary><AdminStudentDetail /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/students/:userId/goals" element={<RequireTeacherRole><AdminErrorBoundary><AdminGoalSettings /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/analytics" element={<RequireTeacherRole><AdminErrorBoundary><AdminAnalytics /></AdminErrorBoundary></RequireTeacherRole>} />
       </Routes>
 
       {/* Global AI Chat Buddy - Hidden on AR page to avoid z-index conflicts */}

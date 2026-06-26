@@ -146,17 +146,28 @@ async def get_current_teacher(
     """
     FastAPI dependency to ensure the current user has teacher role
     
-    Note: The teacher role can be checked via is_superuser or a role field.
-    For now, we check is_superuser as teachers have elevated privileges.
+    Checks:
+    - is_superuser flag (admin/teacher elevated privileges)
+    - role field equals 'teacher' or 'admin'
+    
+    Returns 403 Forbidden if user is not a teacher/admin.
     """
-    # Check if user has teacher/admin privileges
-    # In a full implementation, this would check a roles array or role field
-    # For now, teachers are identified by is_superuser or they can be 
-    # assigned to specific courses
+    # Check is_superuser first (backward compatible)
+    if current_user.is_superuser:
+        return current_user
     
-    # If user has superuser flag, they have teacher privileges
-    # Otherwise, we could check a roles array or course assignments
-    # For this implementation, we'll allow all authenticated users
-    # The admin endpoints will scope data to their own content
+    # Check role field if it exists
+    role = getattr(current_user, 'role', None)
+    if role in ('teacher', 'admin'):
+        return current_user
     
-    return current_user
+    # Check roles array if it exists
+    roles = getattr(current_user, 'roles', [])
+    if isinstance(roles, list) and ('teacher' in roles or 'admin' in roles):
+        return current_user
+    
+    # User is authenticated but not a teacher - deny access
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Teacher privileges required to access admin dashboard"
+    )
