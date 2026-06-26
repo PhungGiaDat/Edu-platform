@@ -19,5 +19,16 @@ export default tseslint.config([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/ban-ts-comment': 'warn',
+      '@typescript-eslint/triple-slash-reference': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+      'react-refresh/only-export-components': 'warn',
+      'no-async-promise-executor': 'warn',
+      'prefer-const': 'warn',
+    },
   },
 ])
