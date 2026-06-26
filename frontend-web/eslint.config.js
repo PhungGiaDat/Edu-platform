@@ -29,6 +29,7 @@ export default tseslint.config([
       'react-refresh/only-export-components': 'warn',
       'no-async-promise-executor': 'warn',
       'prefer-const': 'warn',
+      'no-irregular-whitespace': 'off',
     },
   },
 ])
