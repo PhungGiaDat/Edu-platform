@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from repositories.gamification_repository import get_gamification_repository
 from models.gamification_model import XP_REWARDS, BADGE_DEFINITIONS, calculate_next_level_xp
 from datetime import datetime
@@ -25,6 +25,14 @@ class GamificationService:
             except ValueError:
                 return None
         return None
+
+    def _is_today_active(self, last_activity) -> bool:
+        """Check if user was active today."""
+        if not last_activity:
+            return False
+        today = datetime.utcnow().date()
+        last_date = last_activity.date() if hasattr(last_activity, "date") else last_activity
+        return last_date == today
 
     def _default_pet(self) -> Dict[str, Any]:
         now = datetime.utcnow()
@@ -221,11 +229,15 @@ class GamificationService:
                 "badges": [],
                 "streak_days": 0,
                 "longest_streak": 0,
+                "streak_active_today": False,
+                "minutes_today": 0,
                 "daily_progress": [],
                 "pet": self._default_pet(),
             }
         if "user_id" not in stats:
             stats["user_id"] = user_id
+        stats["streak_active_today"] = self._is_today_active(stats.get("last_activity_date"))
+        stats["minutes_today"] = stats.get("minutes_today", 0)
         stats["pet"] = self._hydrate_pet_state(stats.get("pet"))
         return stats
 
@@ -233,6 +245,15 @@ class GamificationService:
         """Get leaderboard"""
         return await self.repo.get_leaderboard()
     
+    # ========== STREAK & DAILY GOAL ==========
+
+    async def get_streak(self, user_id: str) -> Dict[str, Any]:
+        """
+        Get streak data for a user.
+        Returns current streak, longest streak, and daily goal progress.
+        """
+        return await self.repo.get_streak(user_id)
+
     # ========== PET METHODS ==========
     
     async def get_pet(self, user_id: str) -> Dict[str, Any]:
@@ -369,6 +390,58 @@ class GamificationService:
             return "child"
         return "baby"
     
+    def _get_evolution_threshold(self, stage: str) -> int:
+        """Get XP threshold for a given stage"""
+        thresholds = {"baby": 0, "child": 100, "teen": 500, "adult": 2000}
+        return thresholds.get(stage, 0)
+    
+    def _get_evolution_progress(self, xp: int) -> Dict[str, Any]:
+        """Calculate progress to next evolution stage"""
+        current_stage = self._get_evolution_stage(xp)
+        current_threshold = self._get_evolution_threshold(current_stage)
+        
+        # Next stage thresholds
+        next_thresholds = {"baby": 100, "child": 500, "teen": 2000}
+        next_stage = None
+        next_threshold = None
+        
+        if current_stage in next_thresholds:
+            next_stage = "teen" if current_stage == "child" else ("adult" if current_stage == "teen" else "child")
+            next_threshold = next_thresholds[current_stage]
+        
+        progress = 0
+        remaining = 0
+        
+        if next_threshold:
+            progress = int(((xp - current_threshold) / (next_threshold - current_threshold)) * 100)
+            remaining = next_threshold - xp
+        
+        return {
+            "current_stage": current_stage,
+            "current_xp": xp,
+            "progress_percentage": min(100, max(0, progress)),
+            "xp_to_next_stage": max(0, remaining),
+            "next_stage": next_stage,
+            "next_stage_threshold": next_threshold,
+        }
+    
+    async def get_pet_xp(self, user_id: str) -> Dict[str, Any]:
+        """Get pet XP and evolution progress for a user"""
+        pet = await self.repo.get_pet(user_id)
+        if not pet:
+            return {
+                "xp": 0,
+                "stage": "baby",
+                "progress": self._get_evolution_progress(0)
+            }
+        
+        xp = pet.get("xp_earned", 0)
+        return {
+            "xp": xp,
+            "stage": self._get_evolution_stage(xp),
+            "progress": self._get_evolution_progress(xp)
+        }
+    
     # ========== STICKER METHODS ==========
     
     STICKER_CATALOG = {
@@ -410,11 +483,17 @@ class GamificationService:
         "streak_14": ["dragon"],
         "level_10": ["trophy_gold"],
         "level_20": ["phoenix"],
+        # Lesson completion rewards
+        "lesson_completed": ["star_gold", "heart_pink", "animal_elephant", "book_blue"],
     }
     
     async def get_stickers(self, user_id: str) -> List[Dict[str, Any]]:
         """Get user's sticker collection"""
         return await self.repo.get_stickers(user_id)
+    
+    def get_sticker_catalog(self) -> Dict[str, Dict[str, Any]]:
+        """Get full sticker catalog (no auth required)"""
+        return self.STICKER_CATALOG
     
     async def collect_sticker(self, user_id: str, sticker_id: str) -> Dict[str, Any]:
         """
@@ -508,13 +587,58 @@ class GamificationService:
                 return result.get("sticker")
         
         return None
-    
+
+    async def _maybe_award_lesson_sticker(
+        self,
+        user_id: str,
+        words_count: int,
+        games_played: int,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Auto-award stickers for lesson completion based on milestones.
+        Called automatically when a lesson is completed.
+        """
+        import random
+
+        user_stats = await self.repo.get_by_user_id(user_id) or {}
+        total_lessons = user_stats.get("lessons_completed", 0)
+        total_games = user_stats.get("games_played", 0) + (games_played or 0)
+        total_words = user_stats.get("total_words_learned", 0) + (words_count or 0)
+
+        sticker_to_award: Optional[str] = None
+
+        # Lesson milestone stickers
+        milestone_map = {
+            1: "star_gold",
+            5: "medal_silver",
+            10: "trophy_bronze",
+            20: "trophy_gold",
+            50: "crown",
+        }
+        for threshold, sticker_id in milestone_map.items():
+            if total_lessons == threshold:
+                sticker_to_award = sticker_id
+                break
+
+        # Fallback: random sticker with low chance for non-milestone completions
+        if not sticker_to_award and random.random() < 0.15:
+            candidates = self.STICKER_REWARDS.get("lesson_completed", [])
+            if candidates:
+                sticker_to_award = random.choice(candidates)
+
+        if sticker_to_award:
+            result = await self.collect_sticker(user_id, sticker_to_award)
+            if result.get("collected"):
+                return result.get("sticker")
+
+        return None
+
     # ========== PROGRESS REPORTS ==========
-    
+
     async def track_learning(self, user_id: str, words_learned: int, time_mins: int) -> Dict[str, Any]:
         """Track daily learning progress"""
         await self.repo.add_daily_stat(user_id, words_learned, time_mins)
-        return {"success": True, "words": words_learned, "time_mins": time_mins}
+        return {"success": True, "words_learned": words_learned, "time_mins": time_mins}
     
     async def get_progress_report(self, user_id: str, days: int = 7) -> Dict[str, Any]:
         """
@@ -526,8 +650,8 @@ class GamificationService:
         # Get daily stats
         daily_stats = await self.repo.get_daily_stats(user_id, days)
         
-        # Calculate totals
-        total_words = sum(s.get("words", 0) for s in daily_stats)
+        # Calculate totals (support both old 'words' and new 'words_learned' field names)
+        total_words = sum(s.get("words_learned", s.get("words", 0)) for s in daily_stats)
         total_time = sum(s.get("time_mins", 0) for s in daily_stats)
         
         return {
