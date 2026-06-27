@@ -342,11 +342,10 @@ export const LessonPlayer: React.FC = () => {
 
   const lessonSummary = useMemo(() => {
     if (!lesson) return [];
-    const videoScenes = lesson.videoLesson?.scenes;
     return [
       `${copy.duration}: ${lesson.duration_minutes ?? 0}m`,
       `${copy.vocabulary}: ${lesson.vocabulary?.length ?? 0}`,
-      `${copy.scenes}: ${videoScenes?.length ?? 0}`,
+      `${copy.scenes}: ${lesson.videoLesson?.scenes?.length ?? 0}`,
       `${copy.reward}: ${lesson.reward?.xp ?? 0} XP`,
     ];
   }, [copy.duration, copy.reward, copy.scenes, copy.vocabulary, lesson]);
