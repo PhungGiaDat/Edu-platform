@@ -23,6 +23,7 @@ class AddXPRequest(BaseModel):
 
 class FeedPetRequest(BaseModel):
     user_id: str
+    pet_id: Optional[str] = None  # Optional: specific pet to feed (for multi-pet support)
 
 
 class ChoosePetRequest(BaseModel):
@@ -32,6 +33,7 @@ class ChoosePetRequest(BaseModel):
 
 class PlayPetRequest(BaseModel):
     user_id: str
+    pet_id: Optional[str] = None  # Optional: specific pet to play with
 
 
 class ChangePetOutfitRequest(BaseModel):

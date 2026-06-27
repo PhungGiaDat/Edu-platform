@@ -130,13 +130,15 @@ function PetCollectionCard({
     isActive,
     onSelect,
     onFeed,
-    onPlay
+    onPlay,
+    hunger = 50 // Default hunger value for cards
 }: {
     pet: Pet;
     isActive: boolean;
     onSelect: () => void;
     onFeed: () => void;
     onPlay: () => void;
+    hunger?: number; // 0 = full, 100 = starving
 }) {
     const config = rarityConfig[pet.rarity];
     const isLocked = !pet.is_unlocked;
@@ -207,10 +209,12 @@ function PetCollectionCard({
             {!isLocked && (
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                     <button
-                        onClick={(e) => { e.stopPropagation(); onFeed(); }}
-                        className="min-h-[44px] rounded-xl bg-white/60 px-3 py-2 text-xs font-bold transition-all hover:bg-white/80 sm:text-sm"
+                        onClick={(e) => { e.stopPropagation(); if (hunger > 0) onFeed(); }}
+                        disabled={hunger === 0}
+                        title={hunger === 0 ? 'Pet is full!' : 'Feed your pet'}
+                        className={`min-h-[44px] rounded-xl px-3 py-2 text-xs font-bold transition-all sm:text-sm ${hunger === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white/60 hover:bg-white/80'}`}
                     >
-                        🍖 Feed
+                        {hunger === 0 ? '🍖 Full!' : '🍖 Feed'}
                     </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); onPlay(); }}
@@ -627,9 +631,11 @@ export default function PetsPage() {
                                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2">
                                             <button
                                                 onClick={() => handleFeed(displayPet.pet_id)}
-                                                className="clay-btn clay-btn-yellow clay-btn-md w-full"
+                                                disabled={petCare.hunger === 0}
+                                                title={petCare.hunger === 0 ? 'Your pet is already full! 🍖' : 'Feed your pet'}
+                                                className={`clay-btn clay-btn-yellow clay-btn-md w-full ${petCare.hunger === 0 ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
                                             >
-                                                🍖 Feed
+                                                {petCare.hunger === 0 ? '🍖 Full!' : '🍖 Feed'}
                                             </button>
                                             <button
                                                 onClick={() => handlePlay(displayPet.pet_id)}
