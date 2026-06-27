@@ -66,6 +66,51 @@ function getDracoLoader(): DRACOLoader {
   return dracoLoader;
 }
 
+// =============================================================================
+// Local fallback texture
+// =============================================================================
+// Some legacy GLB models reference external textures (e.g. Supabase-hosted
+// `colormap.png`) that may be unavailable (404/504/CORS). When this happens we
+// try to load a tiny locally-served PNG from `/textures/colormap-fallback.png`
+// so the model still has a valid texture binding. If the local file is also
+// unavailable the caller clears `material.map` and relies on the material
+// color instead.
+
+let fallbackTexturePromise: Promise<THREE.Texture | null> | null = null;
+
+const FALLBACK_TEXTURE_PATHS = [
+  '/textures/colormap-fallback.png',
+  '/learnar-assets/textures/colormap-fallback.png',
+];
+
+function loadLocalFallbackTexture(): Promise<THREE.Texture | null> {
+  if (fallbackTexturePromise) {
+    return fallbackTexturePromise;
+  }
+
+  fallbackTexturePromise = (async () => {
+    if (typeof window === 'undefined') return null;
+    const loader = new THREE.TextureLoader();
+    loader.setCrossOrigin('anonymous');
+
+    for (const candidate of FALLBACK_TEXTURE_PATHS) {
+      try {
+        const texture = await loader.loadAsync(candidate);
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+        texture.flipY = false;
+        texture.colorSpace = THREE.SRGBColorSpace;
+        return texture;
+      } catch {
+        // Try the next candidate.
+      }
+    }
+    return null;
+  })();
+
+  return fallbackTexturePromise;
+}
+
 function createGLTFLoader(modelUrl: string): {
   loader: GLTFLoader;
   getExternalDependencies: () => string[];
@@ -223,10 +268,52 @@ export function useSafeGLTF(url: string | null | undefined, textureUrl?: string 
 
                 const externalDependencies = getExternalDependencies();
                 if (externalDependencies.length > 0 && !textureUrl) {
-                    console.warn('[useSafeGLTF] Legacy split-file model detected without override:', url, externalDependencies);
-                    setError('Legacy split-file model detected. Re-upload as self-contained optimized GLB.');
-                    setState('error');
-                    setProgress(0);
+                    console.warn('[useSafeGLTF] Legacy split-file model detected, attempting local texture fallback:', url, externalDependencies);
+                    // Try to apply a locally-served fallback texture so the model
+                    // doesn't fail to render when the Supabase-hosted colormap.png
+                    // is unavailable (404/504). Falls back to clearing the texture
+                    // reference if the local file is also unavailable.
+                    const applyFallbackAndFinish = (fallbackTexture: THREE.Texture | null) => {
+                        if (fallbackTexture) {
+                            loadedGltf.scene.traverse((child) => {
+                                if (child instanceof THREE.Mesh) {
+                                    const materials = Array.isArray(child.material) ? child.material : [child.material];
+                                    materials.forEach((mat) => {
+                                        if (mat) {
+                                            mat.map = fallbackTexture;
+                                            mat.needsUpdate = true;
+                                        }
+                                    });
+                                }
+                            });
+                            console.log('[useSafeGLTF] Local fallback texture applied to legacy model');
+                        } else {
+                            console.warn('[useSafeGLTF] No local fallback available, clearing texture references');
+                            loadedGltf.scene.traverse((child) => {
+                                if (child instanceof THREE.Mesh) {
+                                    const materials = Array.isArray(child.material) ? child.material : [child.material];
+                                    materials.forEach((mat) => {
+                                        if (mat) {
+                                            mat.map = null;
+                                            mat.needsUpdate = true;
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        modelCache.set(cacheKey, loadedGltf);
+                        setGltf(loadedGltf);
+                        setState('loaded');
+                        setProgress(100);
+                    };
+
+                    if (signal.aborted) return;
+                    loadLocalFallbackTexture()
+                        .then(applyFallbackAndFinish)
+                        .catch((fallbackError) => {
+                            console.warn('[useSafeGLTF] Local fallback texture load threw, clearing texture references:', fallbackError);
+                            applyFallbackAndFinish(null);
+                        });
                     return;
                 }
                 
