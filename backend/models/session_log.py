@@ -9,6 +9,7 @@ records duration data without enforcement. The frontend
 Data feeds the Progress Report (time spent per topic/day).
 """
 from beanie import Document, Indexed
+from pymongo import IndexModel
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
@@ -55,11 +56,11 @@ class SessionLogDocument(Document):
             [("user_id", 1), ("started_at", -1)],  # User's sessions (most recent first)
             [("active_topic", 1), ("started_at", -1)],  # Topic analytics (sparse)
             # TTL index for data retention (30 days)
-            {
-                "fields": [("started_at", 1)],
-                "expireAfterSeconds": 2592000,  # 30 days
-                "name": "session_logs_ttl"
-            },
+            IndexModel(
+                [("started_at", 1)],
+                expireAfterSeconds=2592000,  # 30 days
+                name="session_logs_ttl",
+            ),
         ]
 
 

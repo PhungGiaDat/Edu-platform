@@ -8,6 +8,7 @@ Audio files are stored in Supabase; audio_url points to the Supabase public URL.
 Scores are integers 0-100 for kid-friendly display.
 """
 from beanie import Document, Indexed
+from pymongo import IndexModel
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -93,17 +94,17 @@ class PronunciationAttemptDocument(Document):
             # Status indexes
             [("status", 1)],
             # Partial index for active processing (high-performance queue)
-            {
-                "fields": [("status", 1)],
-                "partialFilterExpression": {"status": "processing"},
-                "name": "processing_status_partial"
-            },
+            IndexModel(
+                [("status", 1)],
+                partialFilterExpression={"status": "processing"},
+                name="processing_status_partial",
+            ),
             # TTL index for data retention (90 days)
-            {
-                "fields": [("attempted_at", 1)],
-                "expireAfterSeconds": 7776000,  # 90 days
-                "name": "pronunciation_attempts_ttl"
-            },
+            IndexModel(
+                [("attempted_at", 1)],
+                expireAfterSeconds=7776000,  # 90 days
+                name="pronunciation_attempts_ttl",
+            ),
         ]
 
 

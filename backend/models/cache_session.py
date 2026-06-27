@@ -5,6 +5,7 @@ Note: This is a MongoDB-backed cache for fallback/audit when Redis is unavailabl
 For primary caching, use Redis directly. This collection provides durability.
 """
 from beanie import Document, Indexed
+from pymongo import IndexModel
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
 from datetime import datetime
@@ -67,11 +68,11 @@ class RedisCache(Document):
             [("cache_type", 1), ("expires_at", 1)],  # Type + expiry queries
             [("cache_type", 1), ("created_at", 1)],  # Cache warming queries
             # TTL index for auto-expiration (expireAfterSeconds=0 means delete at expiration time)
-            {
-                "fields": [("expires_at", 1)],
-                "expireAfterSeconds": 0,
-                "name": "cache_ttl"
-            },
+            IndexModel(
+                [("expires_at", 1)],
+                expireAfterSeconds=0,
+                name="cache_ttl",
+            ),
         ]
     
     @classmethod
