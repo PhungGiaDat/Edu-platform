@@ -1,13 +1,22 @@
 // components/Navbar.tsx
 /**
  * Kid-Friendly E-Learning Navbar
- * - White background with soft shadow
- * - Colorful icons with active states
- * - XP progress indicator
- * - Prominent AR Mode button
+ *
+ * Responsive layout:
+ * - Desktop (md+): horizontal nav with icons, AR Mode pill, XP bar
+ * - Mobile (<md): hamburger button that opens a slide-in overlay drawer
+ *   from the right with a dimmed backdrop, full-height menu items, and
+ *   Escape key / click-outside dismissal. Matches the "Picture 2" mobile
+ *   drawer pattern.
+ *
+ * Accessibility:
+ * - Hamburger exposes aria-expanded / aria-controls
+ * - Drawer is a region with role="dialog" + aria-modal
+ * - Escape closes the drawer
+ * - Body scroll is locked while the drawer is open
  */
-import React, { useState } from 'react';
-import { Link, useLocation } from "react-router-dom";
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 // Icon components for cleaner code
 const HomeIcon = ({ active }: { active: boolean }) => (
@@ -23,7 +32,7 @@ const BookIcon = ({ active }: { active: boolean }) => (
 );
 
 const CameraIcon = () => (
-  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
     <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
   </svg>
 );
@@ -63,6 +72,17 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isActive, onClick })
   </Link>
 );
 
+const NAV_LINKS: Array<{
+  to: string;
+  label: string;
+  icon: 'home' | 'book' | 'user';
+  mobileIcon: string;
+}> = [
+  { to: '/courses', label: 'Học tập', icon: 'home', mobileIcon: '🏠' },
+  { to: '/flashcards', label: 'Flashcards', icon: 'book', mobileIcon: '📚' },
+  { to: '/profile', label: 'Hồ sơ', icon: 'user', mobileIcon: '👤' },
+];
+
 const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -74,10 +94,40 @@ const Navbar: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  const closeMobileMenu = useCallback(() => setIsMobileMenuOpen(false), []);
+
+  // Close drawer on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Close drawer on Escape; lock body scroll while open
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMobileMenuOpen]);
+
   return (
     <>
       {/* Main Navbar - Kid Friendly Style */}
-      <nav className="h-16 bg-white text-gray-800 flex items-center px-3 sm:px-4 shadow-md flex-shrink-0 relative z-50 border-b border-gray-100">
+      <nav
+        aria-label="Primary"
+        className="h-16 bg-white text-gray-800 flex items-center px-3 sm:px-4 shadow-md flex-shrink-0 relative z-50 border-b border-gray-100"
+      >
         <div className="w-full max-w-7xl mx-auto">
           <div className="flex justify-between items-center h-16 gap-2 sm:gap-4">
 
@@ -93,18 +143,23 @@ const Navbar: React.FC = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-1">
-              <NavItem
-                to="/courses"
-                icon={<HomeIcon active={isActive('/courses')} />}
-                label="Học tập"
-                isActive={isActive('/courses')}
-              />
-              <NavItem
-                to="/flashcards"
-                icon={<BookIcon active={isActive('/flashcards')} />}
-                label="Flashcards"
-                isActive={isActive('/flashcards')}
-              />
+              {NAV_LINKS.map((link) => (
+                <NavItem
+                  key={link.to}
+                  to={link.to}
+                  icon={
+                    link.icon === 'home' ? (
+                      <HomeIcon active={isActive(link.to)} />
+                    ) : link.icon === 'book' ? (
+                      <BookIcon active={isActive(link.to)} />
+                    ) : (
+                      <UserIcon active={isActive(link.to)} />
+                    )
+                  }
+                  label={link.label}
+                  isActive={isActive(link.to)}
+                />
+              ))}
 
               {/* AR Mode - Prominent Button */}
               <Link
@@ -121,13 +176,6 @@ const Navbar: React.FC = () => {
                 <CameraIcon />
                 <span>AR Mode</span>
               </Link>
-
-              <NavItem
-                to="/profile"
-                icon={<UserIcon active={isActive('/profile')} />}
-                label="Hồ sơ"
-                isActive={isActive('/profile')}
-              />
             </div>
 
             {/* XP Progress (Desktop) */}
@@ -141,14 +189,16 @@ const Navbar: React.FC = () => {
               </div>
             </div>
 
-            {/* Mobile menu button */}
+            {/* Mobile menu button - hamburger that toggles the drawer */}
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              type="button"
+              onClick={() => setIsMobileMenuOpen((open) => !open)}
               className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-              title={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="navbar-mobile-drawer"
             >
-              <svg className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 {isMobileMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
@@ -160,54 +210,92 @@ const Navbar: React.FC = () => {
         </div>
       </nav>
 
-      {/* Mobile Navigation Menu */}
+      {/* Mobile Drawer (overlay) */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-gray-200 shadow-lg z-40 animate-slideDown">
-          {/* XP Progress (Mobile) */}
-          <div className="px-4 py-3 bg-amber-50 border-b border-amber-100">
-            <div className="flex items-center gap-3">
-              <span className="text-amber-600 font-bold text-sm flex-shrink-0">⚡ {userXP} XP</span>
-              <div className="flex-1 h-2 bg-amber-200 rounded-full overflow-hidden min-w-0">
-                <div
-                  className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
-                  style={{ width: `${xpProgress}%` }}
-                />
+        <>
+          {/* Backdrop */}
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={closeMobileMenu}
+            className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm md:hidden animate-fadeIn"
+          />
+
+          {/* Drawer */}
+          <aside
+            id="navbar-mobile-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation"
+            className="fixed inset-y-0 right-0 z-50 w-[min(85vw,320px)] bg-white shadow-2xl md:hidden flex flex-col animate-slideInRight"
+          >
+            <div className="flex items-center justify-between px-5 h-16 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-md">
+                  <span className="text-white text-lg">🐰</span>
+                </div>
+                <span className="text-base font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+                  EduPlatform
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={closeMobileMenu}
+                className="p-2 rounded-xl hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Close menu"
+              >
+                <svg className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* XP Progress (in drawer) */}
+            <div className="px-5 py-4 bg-amber-50 border-b border-amber-100 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="text-amber-600 font-bold text-sm flex-shrink-0">⚡ {userXP} XP</span>
+                <div className="flex-1 h-2 bg-amber-200 rounded-full overflow-hidden min-w-0">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+                    style={{ width: `${xpProgress}%` }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="p-2 space-y-1">
-            <MobileNavItem
-              to="/courses"
-              icon="🏠"
-              label="Học tập"
-              isActive={isActive('/courses')}
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-            <MobileNavItem
-              to="/flashcards"
-              icon="📚"
-              label="Flashcards"
-              isActive={isActive('/flashcards')}
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-            <MobileNavItem
-              to="/learn-ar"
-              icon="📷"
-              label="AR Mode"
-              isActive={isActive('/learn-ar')}
-              onClick={() => setIsMobileMenuOpen(false)}
-              highlight
-            />
-            <MobileNavItem
-              to="/profile"
-              icon="👤"
-              label="Hồ sơ"
-              isActive={isActive('/profile')}
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-          </div>
-        </div>
+            <nav className="flex-1 overflow-y-auto p-3 space-y-1" aria-label="Mobile navigation links">
+              <MobileNavItem
+                to="/courses"
+                icon="🏠"
+                label="Học tập"
+                isActive={isActive('/courses')}
+                onClick={closeMobileMenu}
+              />
+              <MobileNavItem
+                to="/flashcards"
+                icon="📚"
+                label="Flashcards"
+                isActive={isActive('/flashcards')}
+                onClick={closeMobileMenu}
+              />
+              <MobileNavItem
+                to="/learn-ar"
+                icon="📷"
+                label="AR Mode"
+                isActive={isActive('/learn-ar')}
+                onClick={closeMobileMenu}
+                highlight
+              />
+              <MobileNavItem
+                to="/profile"
+                icon="👤"
+                label="Hồ sơ"
+                isActive={isActive('/profile')}
+                onClick={closeMobileMenu}
+              />
+            </nav>
+          </aside>
+        </>
       )}
     </>
   );
@@ -228,7 +316,7 @@ const MobileNavItem: React.FC<{
     className={`
       flex items-center gap-3 px-4 py-4 rounded-xl font-medium transition-colors min-h-[56px]
       ${highlight
-        ? 'bg-gradient-to-r from-cyan-400 to-sky-500 text-white'
+        ? 'bg-gradient-to-r from-cyan-400 to-sky-500 text-white shadow-md'
         : isActive
           ? 'bg-amber-50 text-amber-600'
           : 'text-gray-600 hover:bg-gray-50'
@@ -241,4 +329,3 @@ const MobileNavItem: React.FC<{
 );
 
 export default Navbar;
-

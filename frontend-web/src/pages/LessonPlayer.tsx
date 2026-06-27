@@ -342,25 +342,30 @@ export const LessonPlayer: React.FC = () => {
 
   const lessonSummary = useMemo(() => {
     if (!lesson) return [];
+    const videoScenes = lesson.videoLesson?.scenes;
     return [
-      `${copy.duration}: ${lesson.duration_minutes}m`,
-      `${copy.vocabulary}: ${lesson.vocabulary.length}`,
-      `${copy.scenes}: ${lesson.videoLesson?.scenes.length || 0}`,
-      `${copy.reward}: ${lesson.reward?.xp || 0} XP`,
+      `${copy.duration}: ${lesson.duration_minutes ?? 0}m`,
+      `${copy.vocabulary}: ${lesson.vocabulary?.length ?? 0}`,
+      `${copy.scenes}: ${videoScenes?.length ?? 0}`,
+      `${copy.reward}: ${lesson.reward?.xp ?? 0} XP`,
     ];
   }, [copy.duration, copy.reward, copy.scenes, copy.vocabulary, lesson]);
 
   const stepOrder = useMemo(() => {
     if (!lesson) return [];
+    const vocabularyCount = lesson.vocabulary?.length ?? 0;
+    const quizCount = lesson.quiz?.length ?? 0;
+    const imagesCount = lesson.images?.length ?? 0;
+    const scenesCount = lesson.videoLesson?.scenes?.length ?? 0;
     return [
-      (lesson.video_url || lesson.intro_video_url || lesson.images.length || lesson.lesson_media) && { id: 'intro', label: copy.intro, title: copy.introTitle },
+      (lesson.video_url || lesson.intro_video_url || imagesCount || lesson.lesson_media) && { id: 'intro', label: copy.intro, title: copy.introTitle },
       lesson.videoLesson && { id: 'watch', label: copy.watch, title: cleanText(lesson.videoLesson.title, lessonTitle(lesson, locale)) },
-      lesson.videoLesson?.scenes?.length && { id: 'story', label: copy.story, title: copy.storyTitle },
+      scenesCount && { id: 'story', label: copy.story, title: copy.storyTitle },
       lesson.game && { id: 'game', label: copy.game, title: copy.gameTitle },
-      lesson.vocabulary.length && { id: 'words', label: copy.words, title: copy.wordsTitle },
+      vocabularyCount && { id: 'words', label: copy.words, title: copy.wordsTitle },
       lesson.readAloudStory && { id: 'read', label: copy.read, title: copy.readTitle },
       lesson.pronunciation && { id: 'say', label: copy.say, title: copy.sayTitle },
-      lesson.quiz.length && { id: 'quiz', label: copy.quiz, title: copy.quiz },
+      quizCount && { id: 'quiz', label: copy.quiz, title: copy.quiz },
       { id: 'finish', label: copy.finish, title: copy.rewardTitle },
     ].filter(Boolean) as Array<{ id: string; label: string; title: string }>;
   }, [copy.finish, copy.game, copy.gameTitle, copy.intro, copy.introTitle, copy.quiz, copy.read, copy.readTitle, copy.rewardTitle, copy.say, copy.sayTitle, copy.story, copy.storyTitle, copy.watch, copy.words, copy.wordsTitle, lesson, locale]);
@@ -568,6 +573,7 @@ export const LessonPlayer: React.FC = () => {
 
   const handleWordPractice = async (item: VocabularyItem) => {
     if (!lesson) return;
+    const vocabulary = lesson.vocabulary ?? [];
     const key = normalizeKey(item.word_en);
     setBusyKey(`word:${key}`);
     try {
@@ -575,7 +581,7 @@ export const LessonPlayer: React.FC = () => {
       await savePronunciationAttempt('words', item.word_en, resultSummary);
       const next = { ...wordPractice, [key]: resultSummary };
       setWordPractice(next);
-      const passedCount = lesson.vocabulary.filter((word) => next[normalizeKey(word.word_en)]?.passed).length;
+      const passedCount = vocabulary.filter((word) => next[normalizeKey(word.word_en)]?.passed).length;
       await AudioService.playSoundEffect(resultSummary.passed ? 'correct' : 'wrong');
       await saveStepProgress('words', {
         passed: resultSummary.passed,
@@ -586,8 +592,8 @@ export const LessonPlayer: React.FC = () => {
           transcript: resultSummary.transcript,
           feedback: resultSummary.feedback,
           completed_words: passedCount,
-          total_words: lesson.vocabulary.length,
-          step_complete: passedCount === lesson.vocabulary.length,
+          total_words: vocabulary.length,
+          step_complete: passedCount === vocabulary.length,
         },
         masteryWords: [item.word_en],
       });
@@ -668,7 +674,7 @@ export const LessonPlayer: React.FC = () => {
   };
 
   const allAnswered = useMemo(() => {
-    if (!lesson) return false;
+    if (!lesson?.quiz?.length) return false;
     return lesson.quiz.every((question) => Boolean(answers[question.question_id]));
   }, [answers, lesson]);
 
