@@ -1,0 +1,19 @@
+id: no-n-plus-one
+language: TypeScript
+severity: warning
+message: "Possible N+1 query — awaiting inside a forEach/map/for loop"
+note: "Batch into a single query or use DataLoader to coalesce requests"
+rule:
+  any:
+    - pattern: |
+        $ARRAY.forEach(async ($X) => {
+          $$$_
+          await $EXPR
+          $$$
+        })
+    - pattern: |
+        $ARRAY.map(async ($X) => {
+          $$$_
+          await $EXPR
+          $$$
+        })

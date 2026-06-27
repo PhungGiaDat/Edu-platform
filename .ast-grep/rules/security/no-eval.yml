@@ -1,0 +1,10 @@
+id: no-eval
+language: JavaScript
+severity: error
+message: "Avoid eval() — it executes arbitrary code and is a security risk"
+note: "Refactor to explicit parsing or use a sandboxed alternative"
+rule:
+  any:
+    - pattern: eval($$$ARGS)
+    - pattern: window.eval($$$ARGS)
+    - pattern: globalThis.eval($$$ARGS)

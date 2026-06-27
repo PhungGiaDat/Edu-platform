@@ -164,6 +164,7 @@ export interface FlashcardCreate {
   pronunciation?: string;
   image_url?: string;
   audio_url?: string;
+  ar_model_url?: string;
   category?: string;
   difficulty?: string;
   tags?: string[];
@@ -176,6 +177,7 @@ export interface FlashcardUpdate {
   pronunciation?: string;
   image_url?: string;
   audio_url?: string;
+  ar_model_url?: string;
   category?: string;
   difficulty?: string;
   tags?: string[];

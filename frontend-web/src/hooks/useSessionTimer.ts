@@ -51,8 +51,6 @@ export const useSessionTimer = (config: SessionTimerConfig): UseSessionTimerRetu
     });
 
     const lockStateRef = useRef<LockState | null>(null);
-    const startTimeRef = useRef<number | null>(null);
-    const pausedTimeRef = useRef<number>(0);
 
     // Calculate elapsed time from lock state
     const calculateFromLockState = useCallback((lockState: LockState | null) => {
@@ -83,9 +81,9 @@ export const useSessionTimer = (config: SessionTimerConfig): UseSessionTimerRetu
         });
 
         // Trigger callbacks
-        if (isLimitReached && !lockStateRef.current?.state) {
+        if (elapsedMins >= limitMins && !lockStateRef.current?.state) {
             onLimitReached?.();
-        } else if (isWarning && lockStateRef.current?.state !== 'warning') {
+        } else if (elapsedMins >= warningMins && elapsedMins < limitMins && lockStateRef.current?.state !== 'warning') {
             onWarning?.();
         }
     }, [limitMins, warningMins, onWarning, onLimitReached]);
@@ -128,7 +126,7 @@ export const useSessionTimer = (config: SessionTimerConfig): UseSessionTimerRetu
     useEffect(() => {
         if (!syncWithBackend) return;
 
-        const syncWithBackend = async () => {
+        const doSync = async () => {
             try {
                 const lockState = await sessionApi.getLockState();
                 calculateFromLockState(lockState);
@@ -138,10 +136,10 @@ export const useSessionTimer = (config: SessionTimerConfig): UseSessionTimerRetu
         };
 
         // Initial sync
-        syncWithBackend();
+        doSync();
 
         // Periodic sync every 30 seconds
-        const syncInterval = setInterval(syncWithBackend, 30000);
+        const syncInterval = setInterval(doSync, 30000);
 
         return () => clearInterval(syncInterval);
     }, [syncWithBackend, calculateFromLockState]);

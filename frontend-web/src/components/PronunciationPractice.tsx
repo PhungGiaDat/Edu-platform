@@ -156,7 +156,7 @@ export const PronunciationPractice: React.FC<PronunciationPracticeProps> = ({
         } catch (err) {
             console.error('TTS playback failed:', err);
             // Fallback to original audio service
-            AudioService.playPronunciation(targetText, language, audioUrl);
+            AudioService.playPronunciation(targetText, language as 'en' | 'vi', audioUrl);
         }
     }, [targetText, language, audioUrl, isPlaying]);
 
@@ -215,7 +215,7 @@ export const PronunciationPractice: React.FC<PronunciationPracticeProps> = ({
     }, [evaluationResult]);
 
     // Highlight matching words
-    const highlightWord = useCallback((word: string, index: number) => {
+    const highlightWord = useCallback((word: string, _index: number) => {
         if (!transcription) return word;
         
         const words = word.split('');

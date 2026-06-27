@@ -766,7 +766,7 @@ export const LessonPlayer: React.FC = () => {
         </div>
         <h2 className="mt-4 text-3xl font-black text-slate-800">{copy.introTitle}</h2>
         <p className="mt-2 font-bold leading-7 text-slate-600">
-          {cleanText(lessonDescription(lesson, locale), copy.descriptionFallback)}
+          {cleanText(lessonDescription(lesson!, locale), copy.descriptionFallback)}
         </p>
       </div>
 
@@ -809,7 +809,6 @@ export const LessonPlayer: React.FC = () => {
     (lesson?.videoLesson?.video ? getAssetCandidateUrls(lesson.videoLesson.video)[0] : undefined);
   const videoPoster = lesson?.video_thumbnail || lesson?.lesson_media?.video_thumbnail_url ||
     (lesson?.videoLesson?.thumbnail ? getAssetCandidateUrls(lesson.videoLesson.thumbnail)[0] : undefined);
-  const videoDuration = lesson?.video_duration || lesson?.lesson_media?.video_duration_seconds || 0;
 
   const watchContent = (lesson?.videoLesson || videoUrl) ? (
     <section className="rounded-[34px] border-4 border-white bg-[#EAF5FF] p-5 shadow-[0_12px_0_rgba(91,141,239,0.14)]">
@@ -820,17 +819,17 @@ export const LessonPlayer: React.FC = () => {
               src={videoUrl}
               poster={videoPoster}
               onEnded={handleWatchComplete}
-              onTimeUpdate={(currentTime, duration) => {
+              onTimeUpdate={() => {
                 // Track video progress if needed
               }}
             />
-          ) : (
+          ) : lesson?.videoLesson ? (
             <LessonMediaPreview
-              title={cleanText(lesson.videoLesson!.title, lessonTitle(lesson, locale))}
-              asset={lesson.videoLesson!.video}
-              thumbnail={lesson.videoLesson!.thumbnail}
+              title={cleanText(lesson.videoLesson.title, lessonTitle(lesson, locale))}
+              asset={lesson.videoLesson.video}
+              thumbnail={lesson.videoLesson.thumbnail}
             />
-          )}
+          ) : null}
         </div>
         <div className="rounded-[28px] border-4 border-white bg-white/90 p-5 shadow-[0_8px_0_rgba(91,141,239,0.10)]">
           <div className="flex flex-wrap gap-2">
@@ -841,7 +840,7 @@ export const LessonPlayer: React.FC = () => {
           </div>
           <h2 className="mt-4 text-3xl font-black text-slate-800">{copy.watch}</h2>
           <p className="mt-2 font-bold leading-7 text-slate-600">
-            {cleanText(lessonDescription(lesson, locale), copy.descriptionFallback)}
+            {cleanText(lesson ? lessonDescription(lesson, locale) : '', copy.descriptionFallback)}
           </p>
           <p className="mt-4 text-sm font-semibold text-slate-500">{copy.stepGuide}</p>
           <div className="mt-5">
@@ -969,7 +968,7 @@ export const LessonPlayer: React.FC = () => {
   ) : null;
 
   // Transform vocabulary images to gallery format
-  const vocabularyImages = lesson?.vocabulary.map((item, index) => ({
+  const vocabularyImages = lesson?.vocabulary.map((item) => ({
     id: item.word_en,
     src: getAssetCandidateUrls(item.image)[0] || '',
     thumbnail: getAssetCandidateUrls(item.image)[0] || '',
@@ -1207,7 +1206,7 @@ export const LessonPlayer: React.FC = () => {
               </h1>
               <p className="mt-2 text-lg font-bold text-slate-500">{currentStep.title}</p>
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-7 text-slate-500">
-                {cleanText(lessonDescription(lesson, locale), copy.descriptionFallback)}
+                {cleanText(lessonDescription(lesson!, locale), copy.descriptionFallback)}
               </p>
             </div>
             <div className="rounded-[26px] border-4 border-white bg-slate-50 p-4">

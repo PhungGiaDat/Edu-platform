@@ -36,8 +36,8 @@ async def init_mongodb(
         document_models: List of Beanie Document classes to register
         
     Usage during FastAPI lifespan:
-        from backend.models.flashcard_model import Flashcard
-        from backend.models.ar_model import ARObject
+        from models.flashcard_model import Flashcard
+        from models.ar_model import ARObject
         
         await init_mongodb(
             mongo_url=settings.MONGO_URL,

@@ -158,12 +158,12 @@ class AIPronunciationService {
         console.log(`[AI Pronunciation] Generating TTS for: "${text}" (${language})`);
         
         try {
-            const response = await fetch(`${API_BASE}/api/v1/pronunciation/tts/stream/${encodeURIComponent(text)}`, {
+            const params = new URLSearchParams({ language, speed: speed.toString() });
+            const response = await fetch(`${API_BASE}/api/v1/pronunciation/tts/stream/${encodeURIComponent(text)}?${params}`, {
                 method: 'GET',
                 headers: {
                     'Accept': 'audio/wav',
                 },
-                params: { language, speed: speed.toString() },
             });
             
             if (!response.ok) {

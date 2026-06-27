@@ -49,4 +49,10 @@ axios.interceptors.response.use(
   }
 );
 
+/**
+ * Pre-configured axios instance with interceptors
+ * Use this for API calls that need automatic auth token injection
+ */
+export const api = axios;
+
 export default axios;

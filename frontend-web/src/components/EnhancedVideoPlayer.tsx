@@ -5,7 +5,6 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { VideoCaption, VideoChapterMarker } from '@/types/enhancedLesson';
-import { getAssetCandidateUrls } from '@/lib/courseAssets';
 
 interface VideoPlayerProps {
   /** Video source URL */

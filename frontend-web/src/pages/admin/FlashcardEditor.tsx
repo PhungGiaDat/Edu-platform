@@ -61,6 +61,7 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
         const data: FlashcardCreate = {
           word: frontText,
           translation: backText,
+          ar_model_url: arModelUrl || undefined,
         };
         await adminFlashcardsApi.createFlashcard(deckId, data);
         navigate(`/admin/flashcards/${deckId}`);
@@ -68,6 +69,7 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
         const data: FlashcardUpdate = {
           word: frontText,
           translation: backText,
+          ar_model_url: arModelUrl || undefined,
         };
         await adminFlashcardsApi.updateFlashcard(cardId, data);
         navigate(`/admin/flashcards/${deckId}`);

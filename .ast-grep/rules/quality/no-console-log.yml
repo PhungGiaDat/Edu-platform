@@ -1,0 +1,12 @@
+id: no-console-log
+language: TypeScript
+severity: warning
+message: "Avoid console.log in production code — use a logger instead"
+note: "Replace with structured logger (pino, winston) or remove before merging"
+rule:
+  any:
+    - pattern: console.log($$$ARGS)
+    - pattern: console.debug($$$ARGS)
+    - pattern: console.info($$$ARGS)
+    - pattern: console.warn($$$ARGS)
+    - pattern: console.error($$$ARGS)
