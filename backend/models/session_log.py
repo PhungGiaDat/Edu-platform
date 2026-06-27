@@ -48,9 +48,18 @@ class SessionLogDocument(Document):
 
     class Settings:
         name = "session_logs"
-        indexes = [
-            "user_id",
-            [("user_id", 1), ("started_at", -1)],
+        indexes: list = [
+            # Foreign key lookups
+            [("user_id", 1)],
+            # Compound indexes for common queries
+            [("user_id", 1), ("started_at", -1)],  # User's sessions (most recent first)
+            [("active_topic", 1), ("started_at", -1)],  # Topic analytics (sparse)
+            # TTL index for data retention (30 days)
+            {
+                "fields": [("started_at", 1)],
+                "expireAfterSeconds": 2592000,  # 30 days
+                "name": "session_logs_ttl"
+            },
         ]
 
 

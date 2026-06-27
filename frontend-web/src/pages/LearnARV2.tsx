@@ -593,7 +593,7 @@ export default function LearnARV2() {
             }
         };
         startSession();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
     }, [USER_ID, token]);
 
     // ── End backend session on unmount ──────────────────────────────────────────
@@ -613,7 +613,7 @@ export default function LearnARV2() {
                 { keepalive: true }
             ).catch(() => {});
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, []);
 
     // ========== MULTI-FLASHCARD DETECTION ==========

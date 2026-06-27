@@ -1,17 +1,20 @@
 # backend/utils/cache.py
 """
-Simple in-memory cache utility for reducing database calls.
+Cache utility with Redis backend support.
 
-Optimized for Render free tier:
+Optimized for multi-worker deployments:
+- Uses Redis when available for distributed caching
+- Falls back to in-memory cache when Redis is unavailable
 - TTL-based expiration
-- Memory-efficient (stores only essential data)
 - Thread-safe for async operations
 
 Use cases:
 - Pet catalog (changes rarely)
 - User stats (cached for short periods)
+- API response caching
 """
 import asyncio
+import json
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, Optional, TypeVar
@@ -26,8 +29,8 @@ class SimpleCache:
     """
     Simple in-memory cache with TTL support.
     
-    Designed for single-worker deployments (Render free tier).
-    For multi-worker, use Redis instead.
+    Designed for single-worker deployments or as fallback when Redis unavailable.
+    For multi-worker, use RedisCacheService instead.
     """
     
     def __init__(self, default_ttl: int = 300):
@@ -47,7 +50,6 @@ class SimpleCache:
             
             entry = self._cache[key]
             if datetime.utcnow() > entry['expires_at']:
-                # Entry expired, remove it
                 del self._cache[key]
                 return None
             
@@ -108,6 +110,80 @@ class SimpleCache:
         }
 
 
+class RedisCache:
+    """
+    Redis-backed cache adapter.
+    
+    Wraps the Redis service to provide the same interface as SimpleCache.
+    """
+    
+    def __init__(self, default_ttl: int = 300):
+        self._default_ttl = default_ttl
+    
+    async def get(self, key: str) -> Optional[Any]:
+        """Get value from Redis cache."""
+        from services.redis_service import redis_service
+        
+        value = await redis_service.get(key)
+        if value is None:
+            return None
+        
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError:
+            return value
+    
+    async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
+        """Set value in Redis cache."""
+        from services.redis_service import redis_service
+        
+        if isinstance(value, (dict, list)):
+            value = json.dumps(value)
+        elif not isinstance(value, str):
+            value = str(value)
+        
+        await redis_service.set(key, value, ttl_seconds=ttl or self._default_ttl)
+    
+    async def delete(self, key: str) -> bool:
+        """Delete a key from Redis cache."""
+        from services.redis_service import redis_service
+        return await redis_service.delete(key)
+    
+    async def delete_pattern(self, pattern: str) -> int:
+        """Delete all keys matching pattern."""
+        from services.redis_service import redis_service
+        return await redis_service.delete_pattern(pattern)
+    
+    async def clear(self) -> None:
+        """Clear all cached data (use with caution!)."""
+        from services.redis_service import redis_service
+        await redis_service.delete_pattern("*")
+    
+    async def cleanup_expired(self) -> int:
+        """Redis handles expiration automatically."""
+        return 0
+    
+    def stats(self) -> Dict[str, Any]:
+        """Get cache statistics."""
+        return {
+            'type': 'redis',
+            'default_ttl': self._default_ttl,
+        }
+
+
+def get_cache_backend() -> Any:
+    """
+    Get the appropriate cache backend.
+    
+    Returns RedisCache if Redis is available, SimpleCache otherwise.
+    """
+    from services.redis_service import redis_service
+    
+    if redis_service._is_connected:
+        return RedisCache()
+    return SimpleCache()
+
+
 # ========== Global Cache Instances ==========
 
 # Pet catalog cache (longer TTL - catalog changes rarely)
@@ -119,7 +195,7 @@ user_stats_cache = SimpleCache(default_ttl=60)  # 1 minute
 
 # ========== Cache Decorators ==========
 
-def cached(cache: SimpleCache, key_prefix: str, ttl: Optional[int] = None):
+def cached(cache: Any, key_prefix: str, ttl: Optional[int] = None):
     """
     Decorator for caching async function results.
     
@@ -173,6 +249,16 @@ class CacheKeys:
     @staticmethod
     def user_pets(user_id: str) -> str:
         return f"user:pets:{user_id}"
+    
+    # Session data
+    @staticmethod
+    def session(session_id: str) -> str:
+        return f"session:{session_id}"
+    
+    # App lock
+    @staticmethod
+    def app_lock(user_id: str) -> str:
+        return f"app_lock:user:{user_id}"
 
 
 # ========== Utility Functions ==========
@@ -186,5 +272,4 @@ async def invalidate_user_cache(user_id: str) -> None:
 async def invalidate_pet_catalog() -> None:
     """Invalidate pet catalog cache (call after admin updates)."""
     await pet_cache.delete(CacheKeys.ALL_PETS)
-    # Also invalidate user-specific pet caches
     await pet_cache.delete_pattern("user:pets:")

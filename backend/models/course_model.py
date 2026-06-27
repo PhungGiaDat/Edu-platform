@@ -55,6 +55,41 @@ class VideoScene(BaseModel):
     narration_vi: str
     audio_text_en: str
     image: Optional[AssetReference] = None
+    # Duolingo-style: scene image URL for video frame thumbnails
+    scene_image_url: Optional[str] = None
+    scene_thumbnail_url: Optional[str] = None
+
+
+class SceneImage(BaseModel):
+    """Scene image for video frame/chapter navigation."""
+    scene_id: str
+    image_url: str
+    thumbnail_url: Optional[str] = None
+    timestamp_seconds: int = Field(default=0, ge=0)
+    title: str = ""
+    description: Optional[str] = None
+
+
+class LessonMedia(BaseModel):
+    """Duolingo-style media container for lesson introduction."""
+    # Video fields
+    video_url: Optional[str] = None
+    video_thumbnail_url: Optional[str] = None
+    video_duration_seconds: int = Field(default=0, ge=0)
+    
+    # Intro video (plays before lesson content)
+    intro_video_url: Optional[str] = None
+    intro_video_thumbnail: Optional[str] = None
+    intro_video_duration: int = Field(default=0, ge=0)
+    
+    # Image gallery for visual learning
+    images: List[str] = Field(default_factory=list)
+    
+    # Scene/chapter navigation for videos
+    scene_images: List[SceneImage] = Field(default_factory=list)
+    
+    # Auto-play intro at lesson start
+    auto_play_intro: bool = True
 
 
 class VideoLesson(BaseModel):
@@ -176,6 +211,22 @@ class Lesson(BaseModel):
     order: int
     is_completed: bool = False
 
+    # Duolingo-style media fields
+    # Direct video URLs for lesson intro/content
+    video_url: Optional[str] = None
+    video_thumbnail: Optional[str] = None
+    video_duration: int = Field(default=0, ge=0)
+    
+    # Intro video (plays before main lesson)
+    intro_video_url: Optional[str] = None
+    intro_video_thumbnail: Optional[str] = None
+    
+    # Image gallery for visual learning
+    images: List[str] = Field(default_factory=list)
+    
+    # Scene/chapter images for video navigation
+    scene_images: List[SceneImage] = Field(default_factory=list)
+    
     # Phase 1 learning blocks. These are optional at the model layer so older
     # courses can still serialize; seed/course generation validates them.
     duration_minutes: int = Field(default=3, ge=3, le=7)
@@ -189,6 +240,9 @@ class Lesson(BaseModel):
     reward: Optional[Reward] = None
     arReference: Optional[ARReference] = None
     generatedMedia: List[GeneratedMedia] = Field(default_factory=list)
+    
+    # Media container (Duolingo-style)
+    lesson_media: Optional[LessonMedia] = None
 
 
 class LessonSchema(Lesson):

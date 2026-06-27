@@ -307,8 +307,6 @@ const ARContainer: React.FC<ARContainerProps> = ({
                 right: 0,
                 bottom: 0,
                 width: '100vw',
-                height: '100vh',
-                // @ts-ignore - dvh for mobile viewport
                 height: '100dvh',
                 background: '#000',
                 overflow: 'hidden',

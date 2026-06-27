@@ -10,11 +10,15 @@ Endpoints:
   GET  /pronunciation/transcribe/status — Check speech processing availability
   GET  /pronunciation/{user_id}/{flashcard_qr_id}/stats — stats + history
   GET  /pronunciation/{user_id}/recent                  — recent attempts
+  POST /pronunciation/tts            — Generate TTS audio for word pronunciation
+  POST /pronunciation/evaluate        — Full AI pronunciation evaluation
 """
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Response
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 import logging
+import io
 
 from models.pronunciation import (
     PronunciationAttemptCreate,
@@ -36,6 +40,12 @@ from services.speech_processing_service import (
     TranscriptionError,
     RateLimitError,
 )
+from services.tts_service import TTSService, get_tts_service, TTSError, TTSUnavailableError
+from services.pronunciation_evaluator import (
+    PronunciationEvaluator,
+    get_pronunciation_evaluator,
+    EvaluationError,
+)
 
 router = APIRouter(prefix="/pronunciation", tags=["Pronunciation"])
 logger = logging.getLogger(__name__)
@@ -56,6 +66,59 @@ class AIFeedbackResponse(BaseModel):
     message: str         # encouraging sentence for the child
     emoji: str           # 1-3 relevant emojis
     stars: int           # 1-3
+
+
+# ── TTS Request / Response Models ──────────────────────────────────────────────
+
+class TTSRequest(BaseModel):
+    """Request to generate TTS audio for a word."""
+    text: str = Field(..., min_length=1, max_length=500, description="Text to convert to speech")
+    language: str = Field(default="en", description="Language code (en, vi)")
+    speed: float = Field(default=0.9, ge=0.5, le=2.0, description="Speech speed (0.5-2.0)")
+
+
+class TTSResponse(BaseModel):
+    """Response with TTS generation metadata."""
+    success: bool
+    text: str
+    language: str
+    duration_seconds: float
+    source: str  # 'xtts', 'google', 'cache'
+
+
+class EvaluationRequest(BaseModel):
+    """Request for full AI pronunciation evaluation."""
+    audio_data: Optional[str] = Field(None, description="Base64-encoded audio data")
+    target_text: str = Field(..., min_length=1, description="Expected text to be pronounced")
+    transcribed_text: Optional[str] = Field(None, description="Pre-transcribed text (if available)")
+    language: str = Field(default="en", description="Language code (en, vi)")
+    confidence: float = Field(default=1.0, ge=0, le=1, description="Transcription confidence")
+
+
+class PhonemeAnalysisResponse(BaseModel):
+    """Individual phoneme analysis result."""
+    expected: str
+    spoken: str
+    is_match: bool
+    confidence: float
+    suggestion: Optional[str] = None
+
+
+class EvaluationResponse(BaseModel):
+    """Full pronunciation evaluation result."""
+    score: int  # 0-100
+    grade: str  # 'excellent', 'good', 'needs_practice'
+    stars: int  # 1-3
+    transcription: str
+    confidence: float
+    feedback: str
+    feedback_emoji: str
+    phoneme_analysis: List[PhonemeAnalysisResponse]
+    areas_for_improvement: List[str]
+    strengths: List[str]
+    suggestions: List[str]
+    language: str
+    source: str
 
 
 @router.post("/attempt", response_model=PronunciationAttemptResponse, status_code=201)
@@ -365,3 +428,250 @@ async def get_feedback_stats(
     """
     stats = await feedback_service.get_feedback_stats(language=language)
     return stats
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# NEW TTS ENDPOINTS
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+@router.post("/tts", response_model=TTSResponse)
+async def generate_tts_audio(
+    payload: TTSRequest,
+    tts_service: TTSService = Depends(get_tts_service),
+):
+    """
+    Generate AI-powered Text-to-Speech audio for pronunciation practice.
+    
+    Uses Coqui XTTS v2 (offline, high quality) with Google Cloud TTS as fallback.
+    Supports Vietnamese language with natural, kid-friendly voices.
+    
+    The audio is returned directly in the response with appropriate content-type.
+    """
+    logger.info(
+        f"[TTS] Generating speech for text='{payload.text[:50]}...' "
+        f"language={payload.language} speed={payload.speed}"
+    )
+    
+    try:
+        result = await tts_service.generate_speech(
+            text=payload.text,
+            language=payload.language,
+            speed=payload.speed,
+        )
+        
+        return TTSResponse(
+            success=True,
+            text=result.text,
+            language=payload.language,
+            duration_seconds=result.duration_seconds,
+            source=result.source,
+        )
+        
+    except TTSUnavailableError as e:
+        logger.error(f"[TTS] Service unavailable: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="TTS service is not available. Please try again later."
+        )
+    except TTSError as e:
+        logger.error(f"[TTS] Generation failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"TTS generation failed: {str(e)}"
+        )
+
+
+@router.get("/tts/stream/{word}")
+async def stream_tts_audio(
+    word: str,
+    language: str = "en",
+    speed: float = 0.9,
+    tts_service: TTSService = Depends(get_tts_service),
+):
+    """
+    Stream TTS audio directly for a word.
+    
+    Returns audio in WAV format for web playback.
+    Optimized for low latency with caching.
+    """
+    logger.info(f"[TTS Stream] Word='{word}' language={language}")
+    
+    try:
+        result = await tts_service.generate_speech(
+            text=word,
+            language=language,
+            speed=speed,
+        )
+        
+        # Return audio as streaming response
+        return Response(
+            content=result.audio_data,
+            media_type="audio/wav",
+            headers={
+                "Content-Length": str(len(result.audio_data)),
+                "X-Duration": str(result.duration_seconds),
+                "X-Source": result.source,
+            },
+        )
+        
+    except TTSUnavailableError as e:
+        raise HTTPException(
+            status_code=503,
+            detail="TTS service is not available"
+        )
+    except TTSError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+
+@router.get("/tts/status")
+async def get_tts_status(
+    tts_service: TTSService = Depends(get_tts_service),
+):
+    """
+    Check TTS service status and capabilities.
+    
+    Returns:
+    - Service availability
+    - Available providers (Coqui XTTS, Google TTS)
+    - Supported languages
+    - Cache status
+    """
+    status = await tts_service.get_status()
+    return status
+
+
+@router.post("/tts/clear-cache")
+async def clear_tts_cache(
+    tts_service: TTSService = Depends(get_tts_service),
+):
+    """
+    Clear the TTS audio cache.
+    
+    Useful for:
+    - Freeing up disk space
+    - Ensuring fresh audio generation
+    """
+    count = await tts_service.clear_cache()
+    return {"success": True, "files_cleared": count}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# NEW AI EVALUATION ENDPOINTS
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+@router.post("/evaluate", response_model=EvaluationResponse)
+async def evaluate_pronunciation(
+    payload: EvaluationRequest,
+    evaluator: PronunciationEvaluator = Depends(get_pronunciation_evaluator),
+):
+    """
+    Perform full AI-powered pronunciation evaluation.
+    
+    This endpoint combines:
+    - Speech-to-text transcription (if audio provided)
+    - Phonetic analysis
+    - Score calculation (0-100)
+    - Kid-friendly feedback generation
+    
+    Either provide audio_data (base64) for automatic transcription,
+    or provide transcribed_text if you already have the transcription.
+    
+    Returns detailed evaluation with:
+    - Score and star rating
+    - Transcription of what was said
+    - Phoneme-level analysis
+    - Strengths and areas for improvement
+    - Suggestions for practice
+    """
+    logger.info(
+        f"[Evaluate] target='{payload.target_text}' "
+        f"language={payload.language} "
+        f"has_audio={payload.audio_data is not None}"
+    )
+    
+    try:
+        if payload.audio_data:
+            # Decode base64 audio and evaluate
+            import base64
+            
+            audio_bytes = base64.b64decode(payload.audio_data)
+            
+            evaluation = await evaluator.evaluate_from_audio(
+                audio_data=audio_bytes,
+                target_text=payload.target_text,
+                language=payload.language,
+            )
+        else:
+            # Evaluate from pre-transcribed text
+            if not payload.transcribed_text:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Either audio_data or transcribed_text must be provided"
+                )
+            
+            evaluation = await evaluator.evaluate_from_transcription(
+                transcribed_text=payload.transcribed_text,
+                target_text=payload.target_text,
+                confidence=payload.confidence,
+                language=payload.language,
+            )
+        
+        # Convert to response model
+        return EvaluationResponse(
+            score=evaluation.score,
+            grade=evaluation.grade,
+            stars=evaluation.stars,
+            transcription=evaluation.transcription,
+            confidence=evaluation.confidence,
+            feedback=evaluation.feedback,
+            feedback_emoji=evaluation.feedback_emoji,
+            phoneme_analysis=[
+                PhonemeAnalysisResponse(
+                    expected=p.expected,
+                    spoken=p.spoken,
+                    is_match=p.is_match,
+                    confidence=p.confidence,
+                    suggestion=p.suggestion,
+                )
+                for p in evaluation.phoneme_analysis
+            ],
+            areas_for_improvement=evaluation.areas_for_improvement,
+            strengths=evaluation.strengths,
+            suggestions=evaluation.suggestions,
+            language=evaluation.language,
+            source=evaluation.source,
+        )
+        
+    except EvaluationError as e:
+        logger.error(f"[Evaluate] Evaluation failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Pronunciation evaluation failed: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"[Evaluate] Unexpected error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Evaluation error: {str(e)}"
+        )
+
+
+@router.get("/evaluate/status")
+async def get_evaluation_status(
+    evaluator: PronunciationEvaluator = Depends(get_pronunciation_evaluator),
+):
+    """
+    Check pronunciation evaluator service status.
+    
+    Returns:
+    - Service availability
+    - Model status
+    - Supported languages
+    """
+    status = await evaluator.get_status()
+    return status

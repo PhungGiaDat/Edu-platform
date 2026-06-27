@@ -15,7 +15,10 @@ from .learning_path import router as learning_path_router
 from .pets import router as pet_router
 from .combos import router as combos_router
 from .pronunciation import router as pronunciation_router
+from .pronunciation_enhanced import router as pronunciation_enhanced_router
 from .sessions import router as sessions_router
+from .lessons import router as lessons_router
+from .session_tracking import router as session_tracking_router
 from .admin import router as admin_router
 
 __all__ = [
@@ -31,7 +34,10 @@ __all__ = [
     "pet_router",
     "combos_router",
     "pronunciation_router",
+    "pronunciation_enhanced_router",
     "sessions_router",
+    "lessons_router",
+    "session_tracking_router",
     "admin_router",
 ]
 

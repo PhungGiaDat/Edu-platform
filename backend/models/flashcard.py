@@ -52,9 +52,17 @@ class Flashcard(Document):
 
     class Settings:
         name = "flashcards"  # MongoDB collection name
-        indexes = [
-            "category",
-            "difficulty"
+        indexes: list = [
+            # Unique identifier
+            [("qr_id", 1)],
+            # Organization indexes
+            [("category", 1)],
+            [("difficulty", 1)],
+            [("is_active", 1)],
+            # Deck-based queries
+            [("deck_id", 1), ("created_at", 1)],  # Flashcards in deck by creation time
+            # Teacher scoping
+            [("teacher_id", 1)],  # Teacher's flashcards (sparse - nullable field)
         ]
 
     class Config:
