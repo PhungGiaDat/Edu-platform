@@ -140,8 +140,10 @@ class FlashcardDocument(Document):
     class Settings:
         name = "flashcards"
         indexes: list = [
-            # Unique identifier
-            [("qr_id", 1)],
+            # NOTE: qr_id unique index is auto-generated from the field-level
+            # `qr_id: Indexed(str, unique=True)` declaration above (name="qr_id_1").
+            # Do NOT add [("qr_id", 1)] here or MongoDB will raise
+            # IndexKeySpecsConflict (code 86).
             # Organization indexes
             [("teacher_id", 1)],
             [("deck_id", 1)],
