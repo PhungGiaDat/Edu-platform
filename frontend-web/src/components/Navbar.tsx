@@ -213,10 +213,10 @@ const Navbar: React.FC = () => {
       {/* Mobile Drawer (overlay) */}
       {isMobileMenuOpen && (
         <>
-          {/* Backdrop */}
-          <button
-            type="button"
-            aria-label="Close menu"
+          {/* Backdrop (click closes the drawer) */}
+          <div
+            role="presentation"
+            aria-hidden="true"
             onClick={closeMobileMenu}
             className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm md:hidden animate-fadeIn"
           />
