@@ -1,0 +1,7 @@
+id: prefer-const
+language: JavaScript
+severity: suggestion
+message: "Use const for variables that are never reassigned"
+note: "Reduces cognitive load and signals intent"
+rule:
+  pattern: let $NAME = $VALUE

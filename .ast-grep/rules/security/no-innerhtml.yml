@@ -1,0 +1,11 @@
+id: no-innerhtml
+language: TypeScript
+severity: warning
+message: "Avoid innerHTML — it can introduce XSS vulnerabilities"
+note: "Use textContent or a sanitization library (DOMPurify) instead"
+rule:
+  any:
+    - pattern: $EL.innerHTML = $VALUE
+    - pattern: $EL.outerHTML = $VALUE
+    - pattern: document.write($$$ARGS)
+    - pattern: document.writeln($$$ARGS)

@@ -379,7 +379,7 @@ export const IntroVideoBanner: React.FC<{
   onComplete?: () => void;
   onSkip?: () => void;
   locale: 'en' | 'vi';
-}> = ({ introUrl, thumbnail, duration = 0, autoPlay = false, onComplete, onSkip, locale }) => {
+}> = ({ introUrl, thumbnail, duration = 0, autoPlay = false, onComplete, onSkip: _onSkip, locale }) => {
   const [showVideo, setShowVideo] = useState(autoPlay && !!introUrl);
   const t = locale === 'vi' ? {
     intro: 'Gioi thieu',

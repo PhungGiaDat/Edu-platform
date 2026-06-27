@@ -1,0 +1,7 @@
+id: no-floating-promise
+language: TypeScript
+severity: warning
+message: "Floating promise — call .catch() or use void to signal fire-and-forget"
+note: "Unawaited promises can hide unhandled rejections"
+rule:
+  pattern: $PROMISE.then($$$ARGS)

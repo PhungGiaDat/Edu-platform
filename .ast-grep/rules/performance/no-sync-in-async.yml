@@ -1,0 +1,25 @@
+id: no-sync-in-async
+language: TypeScript
+severity: warning
+message: "Avoid synchronous I/O inside async functions — blocks the event loop"
+note: "Use the async equivalent (fs.promises, fetch, child_process.promises)"
+rule:
+  any:
+    - pattern: |
+        async function $NAME($$$ARGS) {
+          $$$_
+          readFileSync($$$)
+          $$$
+        }
+    - pattern: |
+        async function $NAME($$$ARGS) {
+          $$$_
+          writeFileSync($$$)
+          $$$
+        }
+    - pattern: |
+        async function $NAME($$$ARGS) {
+          $$$_
+          execSync($$$)
+          $$$
+        }

@@ -2,7 +2,7 @@
 """
 Database Module Exports
 """
-from database.connection import (
+from .connection import (
     db_manager,
     get_database,
     connect_to_database,
@@ -10,7 +10,7 @@ from database.connection import (
 )
 
 # Import index management functions
-from backend.database.indexes import (
+from .indexes import (
     IndexManager,
     run_index_migration,
     verify_all_indexes,

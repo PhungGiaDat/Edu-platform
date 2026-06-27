@@ -1,0 +1,19 @@
+id: no-await-in-loop
+language: TypeScript
+severity: warning
+message: "Avoid await inside for/while loops — it serializes independent operations"
+note: "Use Promise.all, Promise.allSettled, or a worker pool to parallelize"
+rule:
+  any:
+    - pattern: |
+        for ($$$INIT; $$$COND; $$$UPDATE) {
+          $$$_
+          await $EXPR
+          $$$
+        }
+    - pattern: |
+        for ($$$ITEM of $$$ITER) {
+          $$$_
+          await $EXPR
+          $$$
+        }

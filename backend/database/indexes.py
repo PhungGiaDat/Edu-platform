@@ -10,7 +10,7 @@ This module provides:
 - Migration helpers
 
 Usage:
-    from backend.database.indexes import run_index_migration, verify_all_indexes
+    from database.indexes import run_index_migration, verify_all_indexes
 
     # Run all index migrations
     await run_index_migration()

@@ -124,8 +124,11 @@ const makeDemoLessons = (prefix: string) => Array.from({ length: 6 }, (_, index)
   title_vi: ['Gặp từ mới', 'Xem và nghe', 'Chạm vào hình', 'Nói thật rõ', 'Chơi quiz', 'Nhận sticker'][index],
   order: index + 1,
   duration_minutes: 6,
+  video_duration: 0,
   vocabulary: [],
   quiz: [],
+  images: [],
+  scene_images: [],
   generatedMedia: [],
 })) as Course['lessons'];
 

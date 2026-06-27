@@ -1,0 +1,12 @@
+id: no-sql-injection
+language: TypeScript
+severity: error
+message: "Possible SQL injection — concatenating user input into a query"
+note: "Use parameterized queries or an ORM (Prisma, Drizzle, Mongoose for Mongo)"
+rule:
+  any:
+    - pattern: db.query(`...${$$$INPUT}...`)
+    - pattern: db.execute(`...${$$$INPUT}...`)
+    - pattern: db.raw(`...${$$$INPUT}...`)
+    - pattern: $CONN.query("..." + $INPUT + "...")
+    - pattern: $CONN.query("..." + $INPUT)

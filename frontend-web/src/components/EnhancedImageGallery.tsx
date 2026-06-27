@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import type { GalleryImage, GalleryCategory, ImageGallery as ImageGalleryType } from '@/types/enhancedLesson';
+import type { GalleryImage, ImageGallery as ImageGalleryType } from '@/types/enhancedLesson';
 import { getAssetCandidateUrls } from '@/lib/courseAssets';
 
 interface ImageGalleryProps {
@@ -534,7 +534,7 @@ const Slideshow: React.FC<{
 
 export const ImageGallery: React.FC<ImageGalleryProps> = ({
   gallery,
-  locale = 'en',
+  locale: _locale = 'en',
   onImageSelect,
   onComplete,
   enableZoom = true,

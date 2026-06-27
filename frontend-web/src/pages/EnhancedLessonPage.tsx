@@ -7,20 +7,14 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { EnhancedVideoPlayer } from '@/components/EnhancedVideoPlayer';
 import { ImageGallery } from '@/components/EnhancedImageGallery';
-import { Flashcard } from '@/components/Flashcard';
-import { Quiz } from '@/components/Quiz';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { enhancedCourseService, type StartSessionResponse } from '@/services/EnhancedCourseService';
 import type {
   LessonEnhanced,
   LessonProgressEnhanced,
-  VideoContent,
-  ImageGallery as ImageGalleryType,
-  VocabularyItemEnhanced,
-  QuizSection,
-  SectionProgress,
-  VocabularyMastery,
+  VocabularyMasteryRecord,
+  GalleryImage,
 } from '@/types/enhancedLesson';
 
 interface EnhancedLessonPageProps {
@@ -28,14 +22,6 @@ interface EnhancedLessonPageProps {
 }
 
 type LessonStep = 'introduction' | 'vocabulary' | 'practice' | 'quiz' | 'complete';
-
-const stepColors: Record<LessonStep, string> = {
-  introduction: '#EAF5FF',
-  vocabulary: '#EEF9E7',
-  practice: '#FFF1D7',
-  quiz: '#FFE7E3',
-  complete: '#FFF8D8',
-};
 
 const stepIcons: Record<LessonStep, string> = {
   introduction: '🎬',
@@ -63,20 +49,18 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
   const [currentStep, setCurrentStep] = useState<LessonStep>('introduction');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCompleting, setIsCompleting] = useState(false);
 
   // Vocabulary practice state
   const [currentVocabIndex, setCurrentVocabIndex] = useState(0);
-  const [vocabMastery, setVocabMastery] = useState<Map<string, VocabularyMastery>>(new Map());
-  const [showFlashcardAnswer, setShowFlashcardAnswer] = useState(false);
+  const [vocabMastery, setVocabMastery] = useState<Map<string, VocabularyMasteryRecord>>(new Map());
 
   // Quiz state
-  const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
-  const [quizSubmitted, setQuizSubmitted] = useState(false);
-  const [quizScore, setQuizScore] = useState<number | null>(null);
+  const [_quizSubmitted, _setQuizSubmitted] = useState(false);
+  const [quizScore, _setQuizScore] = useState<number | null>(null);
+  const [quizAnswers, _setQuizAnswers] = useState<Record<string, string>>({});
 
   // Video state
-  const [videoCompleted, setVideoCompleted] = useState(false);
+  const [, setVideoCompleted] = useState(false);
 
   // Load lesson data
   useEffect(() => {
@@ -93,18 +77,11 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
         setLesson(sessionData.lesson);
         setProgress(sessionData.progress);
 
-        // Initialize vocabulary mastery map
-        const masteryMap = new Map<string, VocabularyMastery>();
-        sessionData.progress.vocabulary_mastery.forEach((m) => {
-          masteryMap.set(m.word_id, m);
-        });
-        setVocabMastery(masteryMap);
-
         // Determine starting step based on progress
-        if (sessionData.progress.overall_progress > 0) {
-          const completedSections = sessionData.progress.completed_sections;
-          if (completedSections.includes('introduction') && lesson?.introduction_video) {
-            if (completedSections.includes('vocabulary') && lesson.vocabulary?.length) {
+        if (sessionData.progress.overallProgress > 0) {
+          const completedSections = sessionData.progress.completedSections || [];
+          if (completedSections.includes('introduction') && lesson?.introductionVideo) {
+            if (completedSections.includes('vocabulary') && lesson.vocabularyGallery?.allImages?.length) {
               if (completedSections.includes('quiz') && lesson.quiz) {
                 setCurrentStep('complete');
               } else {
@@ -155,93 +132,75 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
     await updateProgress('introduction', 100, 100);
   }, [updateProgress]);
 
-  // Handle vocabulary practice
-  const handleVocabCorrect = useCallback(async (wordId: string) => {
-    if (!lesson?.vocabulary) return;
+  // Handle vocabulary gallery selection
+  const handleVocabImageSelect = useCallback(
+    async (image: GalleryImage, _index: number) => {
+      const wordId = image.image_id;
+      if (!wordId) return;
 
-    try {
-      const result = await enhancedCourseService.submitVocabularyPractice(lessonId!, {
-        userId: learnerId,
-        lessonId: lessonId!,
-        sessionId: session!.session_id,
-        wordId,
-        isCorrect: true,
-      });
-
-      // Update local mastery
-      const newMastery = new Map(vocabMastery);
-      result.mastery.forEach((m) => newMastery.set(m.word_id, m));
-      setVocabMastery(newMastery);
-
-      // Move to next word or complete section
-      if (currentVocabIndex < lesson.vocabulary.length - 1) {
-        setCurrentVocabIndex((prev) => prev + 1);
-        setShowFlashcardAnswer(false);
-      } else {
-        // All vocabulary practiced
-        await updateProgress('vocabulary', 100, 100);
+      try {
+        const result = await enhancedCourseService.submitVocabularyPractice(lessonId, {
+          userId: learnerId,
+          lessonId,
+          sessionId: session?.session_id || '',
+          wordId,
+          isCorrect: true,
+        });
+        const newMastery = new Map(vocabMastery);
+        const existing = newMastery.get(wordId);
+        newMastery.set(wordId, {
+          wordId,
+          masteryLevel: existing?.masteryLevel ?? 0,
+          correctAttempts: existing?.correctAttempts ?? 0,
+          incorrectAttempts: existing?.incorrectAttempts ?? 0,
+          lastPracticedAt: existing?.lastPracticedAt ?? new Date().toISOString(),
+          isMastered: result.success,
+        });
+        setVocabMastery(newMastery);
+      } catch {
+        // Non-blocking — vocab practice is optional
       }
-    } catch (err) {
-      console.error('[EnhancedLessonPage] vocab practice error:', err);
-    }
-  }, [lesson, lessonId, learnerId, session, currentVocabIndex, vocabMastery, updateProgress]);
+    },
+    [lessonId, learnerId, session, vocabMastery]
+  );
 
-  const handleVocabIncorrect = useCallback(() => {
-    // Just show feedback, user can try again
+  // Handle quiz answer selection
+  const handleQuizAnswer = useCallback((questionId: string, optionId: string) => {
+    _setQuizAnswers((prev) => ({ ...prev, [questionId]: optionId }));
   }, []);
 
   // Handle quiz submission
   const handleQuizSubmit = useCallback(async () => {
     if (!lesson?.quiz) return;
 
-    // Calculate score
+    const questions = lesson.quiz.questions;
+    if (Object.keys(quizAnswers).length < questions.length) return;
+
     let correct = 0;
-    lesson.quiz.questions.forEach((q) => {
-      const answer = quizAnswers[q.question_id];
-      const correctOption = q.options.find((o) => o.is_correct);
-      if (correctOption && answer === correctOption.option_id) {
+    questions.forEach((q) => {
+      const selectedOptionId = quizAnswers[q.question_id];
+      const correctOption = q.options.find((o) => o.isCorrect);
+      if (correctOption && selectedOptionId === correctOption.option_id) {
         correct++;
       }
     });
 
-    const score = Math.round((correct / lesson.quiz.questions.length) * 100);
-    setQuizScore(score);
-    setQuizSubmitted(true);
+    const score = Math.round((correct / questions.length) * 100);
+    _setQuizSubmitted(true);
+    _setQuizScore(score);
+
     await updateProgress('quiz', 100, score);
+
+    if (score >= 70) {
+      await updateProgress('complete', 100, score);
+      setCurrentStep('complete');
+    }
   }, [lesson, quizAnswers, updateProgress]);
 
-  // Handle lesson completion
-  const handleCompleteLesson = useCallback(async () => {
-    if (!lesson) return;
-
-    setIsCompleting(true);
-    try {
-      const masteredVocab = Array.from(vocabMastery.values())
-        .filter((m) => m.is_mastered)
-        .map((m) => m.word_id);
-
-      const result = await enhancedCourseService.completeLesson(lessonId!, {
-        userId: learnerId,
-        sessionId: session!.session_id,
-        totalTimeSpent: 0,
-        finalScore: quizScore || 0,
-        vocabularyLearned: masteredVocab,
-        quizScore: quizScore || undefined,
-      });
-
-      if (result.success) {
-        setProgress(result.updated_progress);
-        // Show celebration/reward
-        setCurrentStep('complete');
-      }
-    } catch (err) {
-      console.error('[EnhancedLessonPage] complete error:', err);
-    } finally {
-      setIsCompleting(false);
-    }
-  }, [lesson, lessonId, learnerId, session, vocabMastery, quizScore]);
-
-  // Navigation
+  // Handle quiz exit (skip)
+  const handleQuizExit = useCallback(() => {
+    goToStep('vocabulary');
+  }, []);
   const goToStep = (step: LessonStep) => {
     setCurrentStep(step);
   };
@@ -259,10 +218,10 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
     if (!lesson) return [];
 
     const steps: LessonStep[] = ['introduction'];
-    if (lesson.vocabulary && lesson.vocabulary.length > 0) {
+    if (lesson.vocabularyGallery?.allImages && lesson.vocabularyGallery.allImages.length > 0) {
       steps.push('vocabulary');
     }
-    if (lesson.quiz && lesson.quiz.questions.length > 0) {
+    if (lesson.quiz?.questions && lesson.quiz.questions.length > 0) {
       steps.push('quiz');
     }
     steps.push('complete');
@@ -273,9 +232,9 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
   const currentStepIndex = availableSteps.indexOf(currentStep);
   const overallProgress = progress
     ? Math.round(
-        availableSteps.reduce((sum, step, idx) => {
+        availableSteps.reduce((sum, _step, idx) => {
           if (idx < currentStepIndex) return sum + 100;
-          if (idx === currentStepIndex) return sum + (progress.overall_progress || 0);
+          if (idx === currentStepIndex) return sum + (progress.overallProgress || 0);
           return sum;
         }, 0) / availableSteps.length
       )
@@ -325,9 +284,9 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
 
           <div className="flex items-center gap-3">
             <span className="rounded-full bg-yellow-400 px-4 py-1 text-sm font-bold text-slate-800">
-              {progress?.overall_progress || 0}%
+              {progress?.overallProgress || 0}%
             </span>
-            <span className="text-sm font-bold text-slate-500">{lesson.xp_reward} XP</span>
+            <span className="text-sm font-bold text-slate-500">{lesson.xpReward} XP</span>
           </div>
         </div>
 
@@ -345,7 +304,7 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
       {/* Step tabs */}
       <div className="border-b-4 border-white bg-white px-4 py-2 shadow-sm">
         <div className="mx-auto flex max-w-4xl gap-2 overflow-x-auto">
-          {availableSteps.map((step, idx) => (
+          {availableSteps.map((step) => (
             <button
               key={step}
               onClick={() => goToStep(step)}
@@ -365,7 +324,7 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
       {/* Main content */}
       <main className="mx-auto max-w-4xl px-4 py-6">
         {/* Introduction Step */}
-        {currentStep === 'introduction' && lesson.introduction_video && (
+        {currentStep === 'introduction' && lesson.introductionVideo && (
           <section className="space-y-6">
             <div className="rounded-3xl border-4 border-white bg-white p-6 shadow-lg">
               <h2 className="text-2xl font-black text-slate-800">
@@ -377,11 +336,11 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
             </div>
 
             <EnhancedVideoPlayer
-              src={`/${lesson.introduction_video.primary_source.bucket}/${lesson.introduction_video.primary_source.path}`}
-              thumbnailUrl={`/${lesson.introduction_video.thumbnail.bucket}/${lesson.introduction_video.thumbnail.path}`}
-              title={lesson.introduction_video.title}
-              captions={lesson.introduction_video.captions}
-              chapterMarkers={lesson.introduction_video.chapter_markers}
+              src={`/${lesson.introductionVideo.primarySource.bucket}/${lesson.introductionVideo.primarySource.path}`}
+              thumbnailUrl={`/${lesson.introductionVideo.thumbnail.bucket}/${lesson.introductionVideo.thumbnail.path}`}
+              title={lesson.introductionVideo.title}
+              captions={lesson.introductionVideo.captions}
+              chapterMarkers={lesson.introductionVideo.chapterMarkers}
               onEnded={handleVideoComplete}
             />
 
@@ -397,7 +356,7 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
         )}
 
         {/* Vocabulary Step */}
-        {currentStep === 'vocabulary' && lesson.vocabulary && (
+        {currentStep === 'vocabulary' && lesson.vocabularyGallery && lesson.vocabularyGallery.allImages && lesson.vocabularyGallery.allImages.length > 0 && (
           <section className="space-y-6">
             <div className="rounded-3xl border-4 border-white bg-white p-6 shadow-lg">
               <div className="flex items-center justify-between">
@@ -406,67 +365,32 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
                     {locale === 'vi' ? 'Từ vựng' : 'Vocabulary'}
                   </h2>
                   <p className="mt-1 text-slate-500">
-                    {currentVocabIndex + 1} / {lesson.vocabulary.length}
+                    {currentVocabIndex + 1} / {lesson.vocabularyGallery.allImages.length}
                   </p>
                 </div>
                 <div className="h-8 w-32 overflow-hidden rounded-full bg-slate-200">
                   <div
                     className="h-full bg-green-500 transition-all"
-                    style={{ width: `${((currentVocabIndex + 1) / lesson.vocabulary.length) * 100}%` }}
+                    style={{ width: `${((currentVocabIndex + 1) / (lesson.vocabularyGallery.allImages?.length || 1)) * 100}%` }}
                   />
                 </div>
               </div>
             </div>
 
             {/* Vocabulary Gallery */}
-            {lesson.vocabulary_gallery && (
-              <div className="rounded-3xl border-4 border-white bg-white p-6 shadow-lg">
-                <ImageGallery gallery={lesson.vocabulary_gallery} locale={locale} />
-              </div>
-            )}
-
-            {/* Flashcard Practice */}
-            {lesson.vocabulary.length > 0 && (
-              <div className="rounded-3xl border-4 border-white bg-[#EEF9E7] p-6 shadow-lg">
-                <Flashcard
-                  word={lesson.vocabulary[currentVocabIndex].word_en}
-                  translation={lesson.vocabulary[currentVocabIndex].word_vi}
-                  imageUrl={`/${lesson.vocabulary[currentVocabIndex].image.bucket}/${lesson.vocabulary[currentVocabIndex].image.path}`}
-                  audioUrl={`/${lesson.vocabulary[currentVocabIndex].audio.bucket}/${lesson.vocabulary[currentVocabIndex].audio.path}`}
-                  exampleSentence={locale === 'vi' ? lesson.vocabulary[currentVocabIndex].example_sentence_vi : lesson.vocabulary[currentVocabIndex].example_sentence_en}
-                  isFlipped={showFlashcardAnswer}
-                  onFlip={() => setShowFlashcardAnswer(!showFlashcardAnswer)}
-                  onCorrect={() => handleVocabCorrect(lesson.vocabulary[currentVocabIndex].word_id)}
-                  onIncorrect={handleVocabIncorrect}
-                />
-
-                {/* Mastery indicator */}
-                {vocabMastery.has(lesson.vocabulary[currentVocabIndex].word_id) && (
-                  <div className="mt-4 flex items-center justify-center gap-2">
-                    <span className="text-sm font-medium text-slate-600">Mastery:</span>
-                    <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map((level) => (
-                        <div
-                          key={level}
-                          className={`h-3 w-3 rounded-full ${
-                            (vocabMastery.get(lesson.vocabulary[currentVocabIndex].word_id)?.mastery_level || 0) >= level
-                              ? 'bg-green-500'
-                              : 'bg-slate-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="rounded-3xl border-4 border-white bg-white p-6 shadow-lg">
+              <ImageGallery
+                gallery={lesson.vocabularyGallery}
+                locale={locale}
+                onImageSelect={handleVocabImageSelect}
+              />
+            </div>
 
             <div className="flex justify-between">
               <button
                 onClick={() => {
                   if (currentVocabIndex > 0) {
                     setCurrentVocabIndex((prev) => prev - 1);
-                    setShowFlashcardAnswer(false);
                   } else {
                     goToStep('introduction');
                   }
@@ -497,65 +421,77 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
               <p className="mt-1 text-slate-500">
                 {locale === 'vi' ? 'Hoàn thành bài quiz để nhận phần thưởng!' : 'Complete the quiz to earn your reward!'}
               </p>
+              <p className="mt-4 text-lg text-slate-600">
+                {lesson.quiz.questions.length} questions
+              </p>
             </div>
 
-            <div className="rounded-3xl border-4 border-white bg-[#FFE7E3] p-6 shadow-lg">
-              <Quiz
-                questions={lesson.quiz.questions.map((q) => ({
-                  question_id: q.question_id,
-                  type: q.type as 'image_choice' | 'sound_choice' | 'word_choice',
-                  prompt_vi: q.question_vi,
-                  questionAudioText: q.question,
-                  options: q.options.map((o) => ({
-                    option_id: o.option_id,
-                    label: o.text,
-                    image: o.image,
-                  })),
-                  correctOptionId: q.options.find((o) => o.is_correct)?.option_id || '',
-                  feedbackCorrect: '',
-                  feedbackIncorrect: '',
-                }))}
-                answers={quizAnswers}
-                onAnswer={(questionId, optionId) => {
-                  setQuizAnswers((prev) => ({ ...prev, [questionId]: optionId }));
-                  setQuizSubmitted(false);
-                }}
-              />
-            </div>
-
-            {/* Quiz Results */}
-            {quizSubmitted && quizScore !== null && (
-              <div className="rounded-3xl border-4 border-white bg-white p-6 text-center shadow-lg">
-                <p className="text-4xl font-black text-slate-800">{quizScore}%</p>
-                <p className={`mt-2 text-lg font-bold ${quizScore >= 70 ? 'text-green-600' : 'text-rose-600'}`}>
-                  {quizScore >= 70
-                    ? locale === 'vi'
-                      ? 'Tuyệt vời! Bạn đã qua!'
-                      : 'Great job! You passed!'
-                    : locale === 'vi'
-                    ? 'Cố gắng lên! Hãy thử lại.'
-                    : 'Keep trying! You can do it.'}
+            {/* Quiz Questions */}
+            {lesson.quiz.questions.map((question, qIdx) => (
+              <div key={question.question_id} className="rounded-3xl border-4 border-white bg-[#FFE7E3] p-6 shadow-lg">
+                <div className="mb-4">
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-500">
+                    {locale === 'vi' ? 'Câu' : 'Question'} {qIdx + 1}
+                  </span>
+                  {quizAnswers[question.question_id] && (
+                    <span className="ml-2 rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-600">
+                      ✓
+                    </span>
+                  )}
+                </div>
+                <p className="mb-4 text-xl font-black text-slate-800">
+                  {locale === 'vi' ? question.question_vi : question.question}
                 </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {question.options.map((option) => {
+                    const isSelected = quizAnswers[question.question_id] === option.option_id;
+                    return (
+                      <button
+                        key={option.option_id}
+                        onClick={() => handleQuizAnswer(question.question_id, option.option_id)}
+                        className={`rounded-2xl border-4 p-4 text-left font-bold transition-all ${
+                          isSelected
+                            ? 'border-yellow-400 bg-yellow-100 text-slate-900'
+                            : 'border-white bg-white text-slate-700 hover:border-yellow-200 hover:bg-yellow-50'
+                        }`}
+                      >
+                        <span className="mr-2">{option.text}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+            ))}
+
+            {/* Submit Button */}
+            {lesson.quiz.questions.length > 0 && Object.keys(quizAnswers).length === lesson.quiz.questions.length && (
+              <div className="flex justify-center">
+                <button
+                  onClick={handleQuizSubmit}
+                  className="rounded-2xl border-4 border-white bg-yellow-400 px-8 py-4 text-xl font-black text-slate-800 shadow-lg transition-all hover:scale-105 hover:bg-yellow-500"
+                >
+                  {locale === 'vi' ? 'Nộp bài' : 'Submit Quiz'}
+                </button>
+              </div>
+            )}
+
+            {Object.keys(quizAnswers).length > 0 && Object.keys(quizAnswers).length < lesson.quiz.questions.length && (
+              <p className="text-center text-sm text-slate-500">
+                {locale === 'vi'
+                  ? `Đã trả lời ${Object.keys(quizAnswers).length} / ${lesson.quiz.questions.length} câu`
+                  : `Answered ${Object.keys(quizAnswers).length} / ${lesson.quiz.questions.length} questions`}
+              </p>
             )}
 
             <div className="flex justify-between">
               <button
-                onClick={() => goToStep('vocabulary')}
+                onClick={handleQuizExit}
                 className="rounded-2xl border-4 border-white bg-white px-6 py-3 font-bold text-slate-700 shadow transition-all hover:bg-slate-50"
               >
                 ← {locale === 'vi' ? 'Quay lại' : 'Back'}
               </button>
 
-              {!quizSubmitted ? (
-                <button
-                  onClick={handleQuizSubmit}
-                  disabled={Object.keys(quizAnswers).length < lesson.quiz!.questions.length}
-                  className="rounded-2xl border-4 border-white bg-yellow-400 px-6 py-3 font-bold text-slate-800 shadow transition-all hover:bg-yellow-500 disabled:opacity-50"
-                >
-                  {locale === 'vi' ? 'Nộp bài' : 'Submit'} ({Object.keys(quizAnswers).length}/{lesson.quiz!.questions.length})
-                </button>
-              ) : (
+              {Object.keys(quizAnswers).length < lesson.quiz.questions.length && (
                 <button
                   onClick={nextStep}
                   className="rounded-2xl border-4 border-white bg-yellow-400 px-6 py-3 font-bold text-slate-800 shadow transition-all hover:bg-yellow-500"
@@ -584,12 +520,12 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
               {/* Stats */}
               <div className="mt-6 grid grid-cols-3 gap-4">
                 <div className="rounded-2xl bg-yellow-100 p-4">
-                  <p className="text-3xl font-black text-yellow-600">{lesson.xp_reward}</p>
+                  <p className="text-3xl font-black text-yellow-600">{lesson.xpReward}</p>
                   <p className="text-sm text-slate-500">XP</p>
                 </div>
                 <div className="rounded-2xl bg-green-100 p-4">
                   <p className="text-3xl font-black text-green-600">
-                    {Array.from(vocabMastery.values()).filter((m) => m.is_mastered).length}
+                    {Array.from(vocabMastery.values()).filter((m) => m.isMastered).length}
                   </p>
                   <p className="text-sm text-slate-500">{locale === 'vi' ? 'Từ đã học' : 'Words learned'}</p>
                 </div>
@@ -601,15 +537,15 @@ export const EnhancedLessonPage: React.FC<EnhancedLessonPageProps> = ({ lessonId
             </div>
 
             {/* Badges earned */}
-            {progress?.earned_badges && progress.earned_badges.length > 0 && (
+            {progress?.earnedBadges && progress.earnedBadges.length > 0 && (
               <div className="rounded-3xl border-4 border-white bg-white p-6 shadow-lg">
                 <h3 className="text-xl font-bold text-slate-800">
                   {locale === 'vi' ? 'Huy hiệu đã nhận' : 'Badges Earned'}
                 </h3>
                 <div className="mt-4 flex flex-wrap justify-center gap-4">
-                  {progress.earned_badges.map((badge) => (
+                  {progress.earnedBadges.map((badge) => (
                     <div
-                      key={badge.badge_id}
+                      key={badge.badgeId}
                       className="flex flex-col items-center rounded-2xl bg-yellow-50 p-4"
                     >
                       <span className="text-4xl">{badge.icon}</span>

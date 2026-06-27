@@ -42,6 +42,9 @@ from api import (
     sessions_router,
     admin_router,
 )
+from api.pronunciation_enhanced import router as pronunciation_enhanced_router
+from api.lessons import router as lessons_router
+from api.session_tracking import router as session_tracking_router
 from api.session_lock import router as session_lock_router
 from api.websocket import router as websocket_router
 from api.reports import router as reports_router
@@ -161,12 +164,6 @@ app.include_router(
 app.include_router(
     course_router,
     prefix=settings.API_V1_PREFIX,
-    tags=["Courses"]
-)
-
-app.include_router(
-    course_router,
-    prefix="/api",
     tags=["Courses"]
 )
 

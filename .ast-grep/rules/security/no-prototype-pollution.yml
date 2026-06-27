@@ -1,0 +1,10 @@
+id: no-prototype-pollution
+language: JavaScript
+severity: error
+message: "Avoid direct prototype assignment — risk of prototype pollution"
+note: "Use Object.create(null) or validate keys before merging"
+rule:
+  any:
+    - pattern: $OBJ.__proto__ = $VALUE
+    - pattern: $OBJ.constructor = $VALUE
+    - pattern: $OBJ.prototype = $VALUE

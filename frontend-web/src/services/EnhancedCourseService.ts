@@ -7,10 +7,8 @@ import { apiClient } from './apiClient';
 import type {
   LessonEnhanced,
   LessonProgressEnhanced,
-  SectionProgress,
-  VocabularyMastery,
+  VocabularyMasteryRecord,
   EarnedBadge,
-  QuizScoreRecord,
 } from '@/types/enhancedLesson';
 
 // ============================================
@@ -122,7 +120,13 @@ export const enhancedCourseService = {
     request: SubmitSectionRequest
   ): Promise<{ success: boolean; progress: LessonProgressEnhanced }> => {
     return apiClient.post(`/api/v1/lessons/section/progress`, {
-      ...request,
+      user_id: request.userId,
+      session_id: request.sessionId,
+      section_id: request.sectionId,
+      progress: request.progress,
+      time_spent: request.timeSpent,
+      score: request.score,
+      answers: request.answers,
       lesson_id: lessonId,
     });
   },
@@ -133,10 +137,14 @@ export const enhancedCourseService = {
   submitVocabularyPractice: async (
     lessonId: string,
     request: SubmitVocabularyRequest
-  ): Promise<{ success: boolean; mastery: VocabularyMastery[] }> => {
+  ): Promise<{ success: boolean; mastery: VocabularyMasteryRecord[] }> => {
     return apiClient.post(`/api/v1/lessons/vocabulary/practice`, {
-      ...request,
+      user_id: request.userId,
       lesson_id: lessonId,
+      session_id: request.sessionId,
+      word_id: request.wordId,
+      is_correct: request.isCorrect,
+      transcript: request.transcript,
     });
   },
 
@@ -148,8 +156,13 @@ export const enhancedCourseService = {
     request: CompleteLessonRequest
   ): Promise<CompleteLessonResponse> => {
     return apiClient.post(`/api/v1/lessons/complete`, {
-      ...request,
+      user_id: request.userId,
+      session_id: request.sessionId,
       lesson_id: lessonId,
+      total_time_spent: request.totalTimeSpent,
+      final_score: request.finalScore,
+      vocabulary_learned: request.vocabularyLearned,
+      quiz_score: request.quizScore,
     });
   },
 
@@ -157,14 +170,14 @@ export const enhancedCourseService = {
    * Calculate overall progress percentage
    */
   calculateProgress: (progress: LessonProgressEnhanced): number => {
-    if (!progress.section_progress || progress.section_progress.length === 0) {
+    if (!progress.sectionProgress || progress.sectionProgress.length === 0) {
       return 0;
     }
-    const totalProgress = progress.section_progress.reduce(
+    const totalProgress = progress.sectionProgress.reduce(
       (sum, section) => sum + section.progress,
       0
     );
-    return Math.round(totalProgress / progress.section_progress.length);
+    return Math.round(totalProgress / progress.sectionProgress.length);
   },
 
   /**
@@ -174,30 +187,30 @@ export const enhancedCourseService = {
     progress: LessonProgressEnhanced,
     sectionId: string
   ): boolean => {
-    return progress.completed_sections?.includes(sectionId) ?? false;
+    return progress.completedSections?.includes(sectionId) ?? false;
   },
 
   /**
    * Get vocabulary mastery percentage
    */
   getVocabularyMasteryPercent: (progress: LessonProgressEnhanced): number => {
-    if (!progress.vocabulary_mastery || progress.vocabulary_mastery.length === 0) {
+    if (!progress.vocabularyMastery || progress.vocabularyMastery.length === 0) {
       return 0;
     }
-    const masteredCount = progress.vocabulary_mastery.filter(
-      (m) => m.is_mastered
+    const masteredCount = progress.vocabularyMastery.filter(
+      (m) => m.isMastered
     ).length;
-    return Math.round((masteredCount / progress.vocabulary_mastery.length) * 100);
+    return Math.round((masteredCount / progress.vocabularyMastery.length) * 100);
   },
 
   /**
    * Get best quiz score
    */
   getBestQuizScore: (progress: LessonProgressEnhanced): number | null => {
-    if (!progress.quiz_scores || progress.quiz_scores.length === 0) {
+    if (!progress.quizScores || progress.quizScores.length === 0) {
       return null;
     }
-    return Math.max(...progress.quiz_scores.map((q) => q.score));
+    return Math.max(...progress.quizScores.map((q) => q.score));
   },
 
   /**
@@ -274,7 +287,7 @@ export type {
   LessonEnhanced,
   LessonProgressEnhanced,
   SectionProgress,
-  VocabularyMastery,
+  VocabularyMasteryRecord,
   EarnedBadge,
   QuizScoreRecord,
 } from '@/types/enhancedLesson';
