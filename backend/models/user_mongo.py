@@ -4,6 +4,7 @@ MongoDB User Models using Beanie ODM
 Replacing PostgreSQL/SQLModel implementation
 """
 from beanie import Document, Indexed
+from pymongo import IndexModel
 from pydantic import Field, EmailStr
 from typing import Optional, List
 from datetime import datetime
@@ -78,11 +79,11 @@ class LearningProgressDocument(Document):
             # Mastery/leaderboard queries
             [("user_id", 1), ("mastery_level", -1)],  # User's mastery ranking
             # Partial index for mastered items (mastery_level >= 3)
-            {
-                "fields": [("mastery_level", -1)],
-                "partialFilterExpression": {"mastery_level": {"$gte": 3}},
-                "name": "mastered_items_partial"
-            },
+            IndexModel(
+                [("mastery_level", -1)],
+                partialFilterExpression={"mastery_level": {"$gte": 3}},
+                name="mastered_items_partial",
+            ),
             # Spaced repetition queries
             [("next_review_at", 1)],  # Review queue (sparse - nullable field)
         ]
@@ -113,11 +114,11 @@ class QuizAttemptDocument(Document):
             [("user_id", 1), ("attempted_at", -1)],  # User's quiz history
             [("user_id", 1), ("quiz_type", 1)],  # User's attempts by type
             # TTL index (90 days)
-            {
-                "fields": [("attempted_at", 1)],
-                "expireAfterSeconds": 7776000,  # 90 days
-                "name": "quiz_attempts_ttl"
-            },
+            IndexModel(
+                [("attempted_at", 1)],
+                expireAfterSeconds=7776000,  # 90 days
+                name="quiz_attempts_ttl",
+            ),
         ]
 
 
