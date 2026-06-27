@@ -76,12 +76,15 @@ class FlashcardDeckDocument(Document):
 
     class Settings:
         name = "flashcard_decks"
-        indexes = [
-            "teacher_id",
-            "is_active",
-            "category",
-            # Compound index for teacher's active decks
-            ("teacher_id", "is_active"),
+        indexes: list = [
+            # Unique identifier
+            [("deck_id", 1)],
+            # Organization indexes
+            [("teacher_id", 1)],
+            [("is_active", 1)],
+            [("category", 1)],
+            # Compound indexes for common queries
+            [("teacher_id", 1), ("is_active", 1)],  # Teacher's active decks
         ]
 
 
@@ -136,12 +139,18 @@ class FlashcardDocument(Document):
 
     class Settings:
         name = "flashcards"
-        indexes = [
-            "teacher_id",
-            "deck_id",
-            "category",
-            "difficulty",
-            "is_active",
+        indexes: list = [
+            # Unique identifier
+            [("qr_id", 1)],
+            # Organization indexes
+            [("teacher_id", 1)],
+            [("deck_id", 1)],
+            [("category", 1)],
+            [("difficulty", 1)],
+            [("is_active", 1)],
+            # Compound indexes for common queries
+            [("deck_id", 1), ("created_at", 1)],  # Flashcards in deck by creation time
+            [("category", 1), ("difficulty", 1)],  # Category + difficulty
         ]
 
 
@@ -190,16 +199,19 @@ class CourseDocument(Document):
 
     class Settings:
         name = "courses"
-        indexes = [
-            "teacher_id",
-            "is_published",
-            "is_template",
-            "category_key",
-            "level",
+        indexes: list = [
+            # Unique identifier
+            [("course_id", 1)],
+            # Organization indexes
+            [("teacher_id", 1)],
+            [("is_published", 1)],
+            [("is_template", 1)],
+            [("category_key", 1)],
+            [("level", 1)],
             # Compound indexes for common queries
-            ("teacher_id", "is_active"),
-            ("teacher_id", "created_at"),
-            ("teacher_id", "is_published"),
+            [("teacher_id", 1), ("is_published", 1)],  # Teacher's published courses
+            [("teacher_id", 1), ("created_at", -1)],  # Teacher's courses (newest first)
+            [("teacher_id", 1), ("is_active", 1)],  # Teacher's active courses
         ]
 
 
@@ -254,13 +266,15 @@ class StudentProgressDocument(Document):
 
     class Settings:
         name = "student_progress"
-        indexes = [
-            "user_id",
-            "teacher_id",
-            "last_active",
+        indexes: list = [
+            # Foreign key lookups
+            [("user_id", 1)],
+            [("teacher_id", 1)],
+            # Activity queries
+            [("last_active", 1)],
             # Compound indexes for common queries
-            ("teacher_id", "last_active"),
-            ("teacher_id", "total_xp"),
+            [("teacher_id", 1), ("last_active", -1)],  # Teacher's students by activity
+            [("teacher_id", 1), ("total_xp", -1)],  # Leaderboard queries
         ]
 
 
@@ -307,10 +321,19 @@ class UsageSessionDocument(Document):
 
     class Settings:
         name = "usage_sessions"
-        indexes = [
-            "user_id",
-            "started_at",
-            "is_active",
+        indexes: list = [
+            # Unique identifier
+            [("session_id", 1)],
+            # Foreign key lookups
+            [("user_id", 1)],
+            # Activity status
+            [("is_active", 1)],
+            # TTL index (365 days)
+            {
+                "fields": [("started_at", 1)],
+                "expireAfterSeconds": 31536000,  # 365 days
+                "name": "usage_sessions_ttl"
+            },
         ]
 
 
@@ -351,9 +374,11 @@ class LearningGoalDocument(Document):
 
     class Settings:
         name = "learning_goals"
-        indexes = [
-            "user_id",
-            "teacher_id",
+        indexes: list = [
+            # Unique identifier
+            [("user_id", 1)],
+            # Organization indexes
+            [("teacher_id", 1)],
         ]
 
 

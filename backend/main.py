@@ -22,6 +22,9 @@ if str(backend_dir) not in sys.path:
 from settings import settings
 from database.connection import connect_to_database, close_database_connection
 
+# Import Redis services
+from services.redis_service import redis_service
+
 # Import API routers
 from api import (
     flashcard_router,
@@ -39,6 +42,7 @@ from api import (
     sessions_router,
     admin_router,
 )
+from api.session_lock import router as session_lock_router
 from api.websocket import router as websocket_router
 from api.reports import router as reports_router
 
@@ -75,12 +79,27 @@ async def lifespan(app: FastAPI):
         logger.error(f"❌ Database connection failed: {e}")
         raise
     
+    # Connect to Redis (optional, falls back gracefully if unavailable)
+    try:
+        redis_connected = await redis_service.connect()
+        if redis_connected:
+            logger.info("✅ Redis connected successfully")
+        else:
+            logger.info("⚠️ Redis unavailable - using in-memory fallback")
+    except Exception as e:
+        logger.warning(f"⚠️ Redis initialization failed: {e}, using fallback")
+    
     logger.info("✅ Application started successfully")
     
     yield  # Application runs here
     
     # Shutdown
     logger.info("🔄 Shutting down Eduplatform AR API...")
+    
+    # Close Redis connection
+    await redis_service.disconnect()
+    logger.info("✅ Redis connection closed")
+    
     await close_database_connection()
     logger.info("✅ Application shut down successfully")
 
@@ -212,9 +231,33 @@ app.include_router(
 )
 
 app.include_router(
+    pronunciation_enhanced_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Pronunciation Enhanced"]
+)
+
+app.include_router(
     sessions_router,
     prefix=settings.API_V1_PREFIX,
     tags=["Sessions"]
+)
+
+app.include_router(
+    session_lock_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Session Lock"]
+)
+
+app.include_router(
+    lessons_router,
+    prefix="/api",
+    tags=["Lesson Media"]
+)
+
+app.include_router(
+    session_tracking_router,
+    prefix="/api",
+    tags=["Session Tracking"]
 )
 
 app.include_router(
@@ -243,7 +286,7 @@ async def health_check():
 @app.get("/health/detailed", tags=["System"])
 async def detailed_health_check():
     """
-    Detailed health check including database connectivity.
+    Detailed health check including database and Redis connectivity.
     Use this for comprehensive health monitoring.
     """
     from database.connection import db_manager
@@ -264,6 +307,20 @@ async def detailed_health_check():
         }
     except Exception as e:
         health_status["database"] = {
+            "status": "error",
+            "healthy": False,
+            "error": str(e)
+        }
+        health_status["status"] = "degraded"
+    
+    # Check Redis connectivity
+    try:
+        redis_health = await redis_service.health_check()
+        health_status["redis"] = redis_health
+        if not redis_health.get("healthy"):
+            health_status["status"] = "degraded"
+    except Exception as e:
+        health_status["redis"] = {
             "status": "error",
             "healthy": False,
             "error": str(e)

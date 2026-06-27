@@ -48,6 +48,29 @@ from .admin_models import (
     DashboardStats,
     PaginatedResponse,
 )
+# NEW: Optimized schema models
+from .course_lesson import (
+    CourseLesson,
+    LessonStatus,
+    LessonType,
+    MediaAsset,
+    VocabularyItem,
+)
+from .user_session import (
+    UserSession,
+    SessionStatus,
+    ActivityEntry,
+)
+from .cache_session import (
+    RedisCache,
+    CacheType,
+)
+from .pronunciation import (
+    PronunciationAttemptDocument,
+    PronunciationAttemptCreate,
+    PronunciationAttemptResponse,
+    AttemptStatus,
+)
 
 __all__ = [
     # Flashcard
@@ -103,4 +126,19 @@ __all__ = [
     "LearningGoalResponse",
     "DashboardStats",
     "PaginatedResponse",
+    # NEW: Optimized schema models
+    "CourseLesson",
+    "LessonStatus",
+    "LessonType",
+    "MediaAsset",
+    "VocabularyItem",
+    "UserSession",
+    "SessionStatus",
+    "ActivityEntry",
+    "RedisCache",
+    "CacheType",
+    "PronunciationAttemptDocument",
+    "PronunciationAttemptCreate",
+    "PronunciationAttemptResponse",
+    "AttemptStatus",
 ]

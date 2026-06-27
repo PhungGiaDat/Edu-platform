@@ -2,6 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { AssetTile, ImageQuiz, RewardPopup } from '@/components/courses/CourseLearningBlocks';
+import { LessonMedia } from '@/components/LessonMedia';
+import { LessonVideoPlayer } from '@/components/LessonVideoPlayer';
+import { LessonImageGallery } from '@/components/LessonImageGallery';
+import { SceneViewer } from '@/components/SceneViewer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { eventBus } from '@/runtime/EventBus';
@@ -27,6 +31,8 @@ const getLearnerId = (userId?: string | null) => userId || 'guest-learner';
 
 const shellTone = (stepId?: string) => {
   switch (stepId) {
+    case 'intro':
+      return '#FFF8D8';
     case 'watch':
       return '#EAF5FF';
     case 'story':
@@ -195,6 +201,7 @@ export const LessonPlayer: React.FC = () => {
       loadingLesson: 'Opening lesson...',
       back: 'Back',
       sections: 'Sections',
+      intro: 'Intro',
       watch: 'Watch',
       story: 'Story',
       words: 'Words',
@@ -203,6 +210,7 @@ export const LessonPlayer: React.FC = () => {
       game: 'Game',
       quiz: 'Quiz',
       finish: 'Finish',
+      introTitle: 'Watch & Learn',
       storyTitle: 'Short video story',
       gameTitle: 'Quick game',
       wordsTitle: 'New words',
@@ -256,12 +264,15 @@ export const LessonPlayer: React.FC = () => {
       pageDone: 'Page complete',
       speakingDone: 'Speaking complete',
       stepGuide: 'One small step at a time.',
+      introComplete: 'Continue to vocabulary',
+      skipIntro: 'Skip intro',
     },
     vi: {
       lessonNotFound: 'Khong tim thay bai hoc.',
       loadingLesson: 'Dang mo bai hoc...',
       back: 'Quay lai',
       sections: 'Phan hoc',
+      intro: 'Gioi thieu',
       watch: 'Xem',
       story: 'Truyen',
       words: 'Tu moi',
@@ -270,6 +281,7 @@ export const LessonPlayer: React.FC = () => {
       game: 'Tro choi',
       quiz: 'Quiz',
       finish: 'Hoan thanh',
+      introTitle: 'Xem va hoc',
       storyTitle: 'Cau chuyen ngan',
       gameTitle: 'Tro choi nhanh',
       wordsTitle: 'Tu moi',
@@ -323,6 +335,8 @@ export const LessonPlayer: React.FC = () => {
       pageDone: 'Da xong trang nay',
       speakingDone: 'Da xong phan noi',
       stepGuide: 'Moi buoc mot chut thoi.',
+      introComplete: 'Tiep tuc tu moi',
+      skipIntro: 'Bo qua gioi thieu',
     },
   }[locale];
 
@@ -339,6 +353,7 @@ export const LessonPlayer: React.FC = () => {
   const stepOrder = useMemo(() => {
     if (!lesson) return [];
     return [
+      (lesson.video_url || lesson.intro_video_url || lesson.images.length || lesson.lesson_media) && { id: 'intro', label: copy.intro, title: copy.introTitle },
       lesson.videoLesson && { id: 'watch', label: copy.watch, title: cleanText(lesson.videoLesson.title, lessonTitle(lesson, locale)) },
       lesson.videoLesson?.scenes?.length && { id: 'story', label: copy.story, title: copy.storyTitle },
       lesson.game && { id: 'game', label: copy.game, title: copy.gameTitle },
@@ -348,7 +363,7 @@ export const LessonPlayer: React.FC = () => {
       lesson.quiz.length && { id: 'quiz', label: copy.quiz, title: copy.quiz },
       { id: 'finish', label: copy.finish, title: copy.rewardTitle },
     ].filter(Boolean) as Array<{ id: string; label: string; title: string }>;
-  }, [copy.finish, copy.game, copy.gameTitle, copy.quiz, copy.read, copy.readTitle, copy.rewardTitle, copy.say, copy.sayTitle, copy.story, copy.storyTitle, copy.watch, copy.words, copy.wordsTitle, lesson, locale]);
+  }, [copy.finish, copy.game, copy.gameTitle, copy.intro, copy.introTitle, copy.quiz, copy.read, copy.readTitle, copy.rewardTitle, copy.say, copy.sayTitle, copy.story, copy.storyTitle, copy.watch, copy.words, copy.wordsTitle, lesson, locale]);
 
   const sessionSteps = useMemo(() => {
     const map = new Map<string, LessonSessionStepState>();
@@ -474,6 +489,33 @@ export const LessonPlayer: React.FC = () => {
         passed: true,
         score: 100,
         responseData: { watched: true, step_complete: true },
+      });
+    } finally {
+      setBusyKey(null);
+    }
+  };
+
+  const handleIntroComplete = async () => {
+    setBusyKey('intro');
+    try {
+      await saveStepProgress('intro', {
+        passed: true,
+        score: 100,
+        responseData: { intro_watched: true, step_complete: true },
+      });
+      setNotice(copy.stepSaved);
+    } finally {
+      setBusyKey(null);
+    }
+  };
+
+  const handleIntroSkip = async () => {
+    setBusyKey('intro');
+    try {
+      await saveStepProgress('intro', {
+        passed: true,
+        score: 100,
+        responseData: { intro_skipped: true, step_complete: true },
       });
     } finally {
       setBusyKey(null);
@@ -713,6 +755,48 @@ export const LessonPlayer: React.FC = () => {
 
   const isStepLocked = (stepId: string) => sessionSteps.get(stepId)?.status === 'locked';
 
+  const introContent = lesson ? (
+    <section className="space-y-4 rounded-[34px] border-4 border-white bg-[#FFF8D8] p-5 shadow-[0_12px_0_rgba(229,184,0,0.14)]">
+      <div className="rounded-[28px] border-4 border-white bg-white/90 p-5 shadow-[0_8px_0_rgba(229,184,0,0.08)]">
+        <div className="flex flex-wrap gap-2">
+          <StatusPill tone="#FFF1D7">{copy.intro}</StatusPill>
+          <StatusPill tone={statusTone(currentSessionStep?.status)}>
+            {currentSessionStep?.status === 'completed' ? copy.completed : copy.active}
+          </StatusPill>
+        </div>
+        <h2 className="mt-4 text-3xl font-black text-slate-800">{copy.introTitle}</h2>
+        <p className="mt-2 font-bold leading-7 text-slate-600">
+          {cleanText(lessonDescription(lesson, locale), copy.descriptionFallback)}
+        </p>
+      </div>
+
+      {/* Duolingo-style media component */}
+      <LessonMedia
+        media={lesson.lesson_media || {
+          video_url: lesson.video_url,
+          video_thumbnail_url: lesson.video_thumbnail,
+          video_duration_seconds: lesson.video_duration,
+          intro_video_url: lesson.intro_video_url,
+          intro_video_thumbnail: lesson.intro_video_thumbnail,
+          intro_video_duration: lesson.video_duration,
+          images: lesson.images,
+          scene_images: lesson.scene_images,
+          auto_play_intro: true,
+        }}
+        autoPlay
+        onIntroComplete={handleIntroComplete}
+        onIntroSkip={handleIntroSkip}
+        locale={locale}
+      />
+
+      <div className="flex justify-end">
+        <ActionButton onClick={handleIntroComplete} disabled={busyKey === 'intro' || currentSessionStep?.status === 'completed'}>
+          {busyKey === 'intro' ? copy.stepSaved : currentSessionStep?.status === 'completed' ? copy.introComplete : copy.introComplete}
+        </ActionButton>
+      </div>
+    </section>
+  ) : null;
+
   const canGoNext = useMemo(() => {
     if (!stepOrder.length) return false;
     const next = stepOrder[activeStep + 1];
@@ -720,15 +804,33 @@ export const LessonPlayer: React.FC = () => {
     return !isStepLocked(next.id);
   }, [activeStep, stepOrder, sessionSteps]);
 
-  const watchContent = lesson?.videoLesson ? (
+  // Video URL from lesson or lesson_media
+  const videoUrl = lesson?.video_url || lesson?.lesson_media?.video_url || 
+    (lesson?.videoLesson?.video ? getAssetCandidateUrls(lesson.videoLesson.video)[0] : undefined);
+  const videoPoster = lesson?.video_thumbnail || lesson?.lesson_media?.video_thumbnail_url ||
+    (lesson?.videoLesson?.thumbnail ? getAssetCandidateUrls(lesson.videoLesson.thumbnail)[0] : undefined);
+  const videoDuration = lesson?.video_duration || lesson?.lesson_media?.video_duration_seconds || 0;
+
+  const watchContent = (lesson?.videoLesson || videoUrl) ? (
     <section className="rounded-[34px] border-4 border-white bg-[#EAF5FF] p-5 shadow-[0_12px_0_rgba(91,141,239,0.14)]">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="rounded-[28px] border-4 border-white bg-[#1A2744] p-4 shadow-[0_8px_0_rgba(15,23,42,0.18)]">
-          <LessonMediaPreview
-            title={cleanText(lesson.videoLesson.title, lessonTitle(lesson, locale))}
-            asset={lesson.videoLesson.video}
-            thumbnail={lesson.videoLesson.thumbnail}
-          />
+          {videoUrl ? (
+            <LessonVideoPlayer
+              src={videoUrl}
+              poster={videoPoster}
+              onEnded={handleWatchComplete}
+              onTimeUpdate={(currentTime, duration) => {
+                // Track video progress if needed
+              }}
+            />
+          ) : (
+            <LessonMediaPreview
+              title={cleanText(lesson.videoLesson!.title, lessonTitle(lesson, locale))}
+              asset={lesson.videoLesson!.video}
+              thumbnail={lesson.videoLesson!.thumbnail}
+            />
+          )}
         </div>
         <div className="rounded-[28px] border-4 border-white bg-white/90 p-5 shadow-[0_8px_0_rgba(91,141,239,0.10)]">
           <div className="flex flex-wrap gap-2">
@@ -752,9 +854,39 @@ export const LessonPlayer: React.FC = () => {
     </section>
   ) : null;
 
+  // Transform video scenes to SceneViewer format
+  const videoScenes = lesson?.videoLesson?.scenes.map((scene, index) => ({
+    id: scene.scene_id || `scene-${index}`,
+    imageUrl: scene.scene_image_url || '',
+    thumbnailUrl: scene.scene_thumbnail_url || scene.scene_image_url || '',
+    title: scene.audio_text_en,
+    narrationText: scene.narration_vi,
+    duration: scene.duration_seconds,
+  })) || [];
+
+  const handleSceneChange = (scene: { id: string; narrationText?: string }) => {
+    const index = videoScenes.findIndex(s => s.id === scene.id);
+    if (index !== -1 && index !== storyIndex) {
+      setStoryIndex(index);
+    }
+  };
+
   const storyScene = lesson?.videoLesson?.scenes[storyIndex];
   const storyContent = lesson?.videoLesson && storyScene ? (
     <section className="rounded-[34px] border-4 border-white bg-[#FFE7E3] p-5 shadow-[0_12px_0_rgba(244,114,182,0.14)]">
+      {/* SceneViewer component for story scenes */}
+      <div className="mb-4">
+        <SceneViewer
+          scenes={videoScenes}
+          showNavigation={true}
+          showThumbnails={true}
+          showNarration={true}
+          enableAudioSync={false}
+          onSceneChange={handleSceneChange}
+          onComplete={handleStoryAdvance}
+        />
+      </div>
+      
       <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
         <AssetTile
           asset={storyScene.image}
@@ -836,8 +968,30 @@ export const LessonPlayer: React.FC = () => {
     </section>
   ) : null;
 
+  // Transform vocabulary images to gallery format
+  const vocabularyImages = lesson?.vocabulary.map((item, index) => ({
+    id: item.word_en,
+    src: getAssetCandidateUrls(item.image)[0] || '',
+    thumbnail: getAssetCandidateUrls(item.image)[0] || '',
+    alt: item.word_en,
+    caption: item.word_en,
+  })) || [];
+
   const wordsContent = lesson ? (
     <section className="space-y-4 rounded-[34px] border-4 border-white bg-[#EEF9E7] p-5 shadow-[0_12px_0_rgba(125,199,96,0.14)]">
+      {/* Image gallery for vocabulary */}
+      {vocabularyImages.length > 0 && (
+        <div className="mb-4">
+          <LessonImageGallery
+            images={vocabularyImages}
+            columns={3}
+            gap="sm"
+            enableLightbox={true}
+            enableZoom={true}
+            enableSwipe={true}
+          />
+        </div>
+      )}
       {lesson.vocabulary.map((item) => {
         const key = normalizeKey(item.word_en);
         const practice = wordPractice[key];
@@ -1000,6 +1154,7 @@ export const LessonPlayer: React.FC = () => {
   ) : null;
 
   const stepContentMap: Record<string, React.ReactNode> = {
+    intro: introContent,
     watch: watchContent,
     story: storyContent,
     game: gameContent,

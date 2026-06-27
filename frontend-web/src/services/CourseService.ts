@@ -87,4 +87,52 @@ export const courseService = {
 
   getProgress: (userId: string): Promise<UserProgress[]> =>
     apiClient.get(`/api/v1/users/${userId}/progress`),
+
+  // Media upload endpoints
+  uploadMedia: (
+    courseId: string,
+    lessonId: string,
+    formData: FormData
+  ): Promise<MediaAssetRecord> =>
+    apiClient.post(`/api/v1/courses/${courseId}/lessons/${lessonId}/media/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+
+  updateMediaMetadata: (
+    courseId: string,
+    lessonId: string,
+    mediaId: string,
+    metadata: {
+      title?: string;
+      description?: string;
+      tags?: string[];
+      duration?: number;
+      order?: number;
+    }
+  ): Promise<MediaAssetRecord> =>
+    apiClient.patch(
+      `/api/v1/courses/${courseId}/lessons/${lessonId}/media/${mediaId}`,
+      metadata
+    ),
+
+  deleteMedia: (
+    courseId: string,
+    lessonId: string,
+    mediaId: string
+  ): Promise<void> =>
+    apiClient.delete(`/api/v1/courses/${courseId}/lessons/${lessonId}/media/${mediaId}`),
+
+  getMediaMetadata: (mediaId: string): Promise<MediaAssetRecord> =>
+    apiClient.get(`/api/v1/media/${mediaId}`),
+
+  // Batch media operations
+  batchUpdateMediaOrder: (
+    courseId: string,
+    lessonId: string,
+    updates: Array<{ media_id: string; order: number }>
+  ): Promise<MediaAssetRecord[]> =>
+    apiClient.patch(
+      `/api/v1/courses/${courseId}/lessons/${lessonId}/media/order`,
+      { updates }
+    ),
 };

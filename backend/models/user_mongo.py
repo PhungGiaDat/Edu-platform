@@ -69,6 +69,23 @@ class LearningProgressDocument(Document):
 
     class Settings:
         name = "learning_progress"
+        indexes: list = [
+            # Foreign key lookups
+            [("user_id", 1)],
+            [("flashcard_qr_id", 1)],
+            # Unique constraint on user + flashcard
+            [("user_id", 1), ("flashcard_qr_id", 1)],  # Unique compound index
+            # Mastery/leaderboard queries
+            [("user_id", 1), ("mastery_level", -1)],  # User's mastery ranking
+            # Partial index for mastered items (mastery_level >= 3)
+            {
+                "fields": [("mastery_level", -1)],
+                "partialFilterExpression": {"mastery_level": {"$gte": 3}},
+                "name": "mastered_items_partial"
+            },
+            # Spaced repetition queries
+            [("next_review_at", 1)],  # Review queue (sparse - nullable field)
+        ]
 
 
 class QuizAttemptDocument(Document):
@@ -87,6 +104,21 @@ class QuizAttemptDocument(Document):
 
     class Settings:
         name = "quiz_attempts"
+        indexes: list = [
+            # Foreign key lookups
+            [("user_id", 1)],
+            # Quiz type queries
+            [("quiz_type", 1)],
+            # History queries
+            [("user_id", 1), ("attempted_at", -1)],  # User's quiz history
+            [("user_id", 1), ("quiz_type", 1)],  # User's attempts by type
+            # TTL index (90 days)
+            {
+                "fields": [("attempted_at", 1)],
+                "expireAfterSeconds": 7776000,  # 90 days
+                "name": "quiz_attempts_ttl"
+            },
+        ]
 
 
 # ========== API Schemas (Pydantic) ==========

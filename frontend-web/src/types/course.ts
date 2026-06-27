@@ -30,6 +30,35 @@ export interface VideoScene {
   narration_vi: string;
   audio_text_en: string;
   image?: AssetReference | null;
+  /** Scene image URL for video frame thumbnails */
+  scene_image_url?: string | null;
+  scene_thumbnail_url?: string | null;
+}
+
+export interface SceneImage {
+  scene_id: string;
+  image_url: string;
+  thumbnail_url?: string | null;
+  timestamp_seconds: number;
+  title: string;
+  description?: string | null;
+}
+
+export interface LessonMedia {
+  /** Direct video URL */
+  video_url?: string | null;
+  video_thumbnail_url?: string | null;
+  video_duration_seconds: number;
+  /** Intro video (plays before lesson content) */
+  intro_video_url?: string | null;
+  intro_video_thumbnail?: string | null;
+  intro_video_duration: number;
+  /** Image gallery for visual learning */
+  images: string[];
+  /** Scene/chapter navigation */
+  scene_images: SceneImage[];
+  /** Auto-play intro at lesson start */
+  auto_play_intro: boolean;
 }
 
 export interface VideoLesson {
@@ -157,6 +186,17 @@ export interface Lesson {
   order: number;
   is_completed?: boolean;
   duration_minutes: number;
+  /** Direct video URLs (Duolingo-style) */
+  video_url?: string | null;
+  video_thumbnail?: string | null;
+  video_duration: number;
+  /** Intro video */
+  intro_video_url?: string | null;
+  intro_video_thumbnail?: string | null;
+  /** Image gallery */
+  images: string[];
+  /** Scene images for video navigation */
+  scene_images: SceneImage[];
   videoLesson?: VideoLesson | null;
   vocabulary: VocabularyItem[];
   game?: SectionGame | null;
@@ -167,6 +207,8 @@ export interface Lesson {
   reward?: Reward | null;
   arReference?: ARReference | null;
   generatedMedia: GeneratedMedia[];
+  /** Duolingo-style media container */
+  lesson_media?: LessonMedia | null;
 }
 
 export interface Course {

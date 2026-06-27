@@ -53,16 +53,63 @@ class Settings(BaseSettings):
     AI_CONTENT_TIMEOUT_SECONDS: float = 8.0
     AI_CONTENT_RETRIES: int = 2
     
+    # ========== Redis Configuration ==========
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+    REDIS_PASSWORD: Optional[str] = ""
+    REDIS_URL: Optional[str] = None  # Full URL takes precedence
+    REDIS_MAX_CONNECTIONS: int = 50
+    REDIS_SOCKET_TIMEOUT: int = 5
+    REDIS_SOCKET_CONNECT_TIMEOUT: int = 5
+    REDIS_SSL: bool = False
+    
+    # ========== App Lock / Time Limit Settings ==========
+    APP_LOCK_DEFAULT_TTL_MINUTES: int = 30
+    APP_LOCK_WARNING_TTL_MINUTES: int = 25
+    APP_LOCK_MAX_EXTENSION_MINUTES: int = 60
+    
+    # ========== Rate Limiting Settings ==========
+    RATE_LIMIT_AUTH_PER_MINUTE: int = 10
+    RATE_LIMIT_API_PER_MINUTE: int = 60
+    RATE_LIMIT_API_PER_HOUR: int = 1000
+    RATE_LIMIT_BURST: int = 10
+    
+    # ========== Session Settings ==========
+    SESSION_TTL_HOURS: int = 24
+    SESSION_REFRESH_THRESHOLD_MINUTES: int = 30
+    
+    # ========== Cache Settings ==========
+    REDIS_TTL: int = 300
+    CACHE_PETS_TTL_SECONDS: int = 600
+    CACHE_COURSE_TTL_SECONDS: int = 300
+    CACHE_USER_STATS_TTL_SECONDS: int = 60
+    CACHE_LEADERBOARD_TTL_SECONDS: int = 300
+    
+    # ========== Supabase Redis Backup ==========
+    SUPABASE_REDIS_BACKUP_ENABLED: bool = False
+    
     # ========== Pydantic Settings Config ==========
     model_config = SettingsConfigDict(
-        # Try to load .env file (will not fail if missing - good for production)
         env_file=".env",
         env_file_encoding="utf-8",
-        # Ignore extra fields from environment
         extra="ignore",
-        # Case sensitive
         case_sensitive=True
     )
+    
+    @property
+    def redis_url(self) -> Optional[str]:
+        """Get Redis URL (full URL takes precedence)."""
+        if self.REDIS_URL:
+            return self.REDIS_URL
+        if self.REDIS_PASSWORD:
+            return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+    
+    @property
+    def is_redis_configured(self) -> bool:
+        """Check if Redis is properly configured."""
+        return bool(self.REDIS_URL or self.REDIS_HOST != "localhost")
     
     @property
     def cors_origins(self) -> list[str]:
@@ -94,7 +141,7 @@ class Settings(BaseSettings):
         return list(set(default_origins + custom_origins))
     
     def __repr__(self) -> str:
-        return f"<Settings(db={self.MONGO_DB}, debug={self.DEBUG})>"
+        return f"<Settings(db={self.MONGO_DB}, debug={self.DEBUG}, redis={self.is_redis_configured})>"
 
 
 # ========== Singleton Instance ==========
@@ -104,4 +151,5 @@ settings = Settings()
 # Print configuration on startup (sanitized)
 if __name__ != "__main__":
     print(f"[CONFIG] Loaded settings: DB={settings.MONGO_DB}, Debug={settings.DEBUG}")
+    print(f"[CONFIG] Redis configured: {settings.is_redis_configured}")
     print(f"[CONFIG] Static dir: {settings.STATIC_DIR}")

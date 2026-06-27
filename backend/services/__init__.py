@@ -13,9 +13,22 @@ from .speech_processing_service import (
     TranscriptionError,
     RateLimitError,
 )
-# NOTE: VerificationService requires OpenCV (cv2) which is not installed
-# QR detection is handled on frontend, so this service is optional
-# from .verification_service import VerificationService, get_verification_service
+from .tts_service import (
+    TTSService,
+    get_tts_service,
+    TTSError,
+    TTSUnavailableError,
+    TTSResult,
+)
+from .pronunciation_evaluator import (
+    PronunciationEvaluator,
+    get_pronunciation_evaluator,
+    EvaluationError,
+    PronunciationEvaluation,
+    PhonemeAnalysis,
+)
+from .lesson_media_service import LessonMediaService, get_lesson_media_service
+from .session_tracking_service import SessionTrackingService, get_session_tracking_service
 
 __all__ = [
     "FlashcardService",
@@ -32,6 +45,18 @@ __all__ = [
     "get_speech_processing_service",
     "TranscriptionError",
     "RateLimitError",
-    # "VerificationService",
-    # "get_verification_service",
+    "TTSService",
+    "get_tts_service",
+    "TTSError",
+    "TTSUnavailableError",
+    "TTSResult",
+    "PronunciationEvaluator",
+    "get_pronunciation_evaluator",
+    "EvaluationError",
+    "PronunciationEvaluation",
+    "PhonemeAnalysis",
+    "LessonMediaService",
+    "get_lesson_media_service",
+    "SessionTrackingService",
+    "get_session_tracking_service",
 ]
