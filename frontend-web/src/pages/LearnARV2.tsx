@@ -37,6 +37,7 @@ import { useGameData } from '@/hooks/useGameData';
 import { usePets } from '@/hooks/usePets';
 import { useGamification } from '@/hooks/useGamification';
 import { useMultiFlashcard } from '@/hooks/useMultiFlashcard';
+import { useFlashcardSnapshot } from '@/hooks/useFlashcardSnapshot';
 import { useSessionTimer } from '@/hooks/useSessionTimer';
 import { HapticService } from '@/services/HapticService';
 import { SoundEffectService } from '@/services/SoundEffectService';
@@ -554,6 +555,14 @@ export default function LearnARV2() {
     const multiAbortRef = useRef<AbortController | null>(null);
     const multiPreparingKeyRef = useRef<string | null>(null);
     const firstTarget1FoundKeyRef = useRef<string | null>(null);
+    // Mirror of multiPreparation.mindBuffer that ARContainerV2 can read via
+    // postMessage even mid-render. Solves Cause 2 of
+    // report/DEBUG_20260706_MULTI_FLASHCARD_LOADING.md: the iframe's
+    // bootstrap() starts its 300 ms MIND_BUFFER_REQUEST poll ~immediately
+    // after mount, before React effects have had a chance to run. If the
+    // parent only stores the buffer in React state, the first poll arrives
+    // before the subscription effect has copied it into a ref-based handler.
+    const mindBufferRef = useRef<{ buffer: Uint8Array | null }>({ buffer: null });
 
     // Session ID returned from backend when we POST /sessions/start
     const sessionIdRef = useRef<string | null>(null);
@@ -706,8 +715,9 @@ export default function LearnARV2() {
         }, 100);
     }, [isAddingCard, isComboViewer]);
 
-    const scannedTarget0 = getFlashcardByIndex(0);
-    const scannedTarget1 = flashcardCount >= 2 ? getFlashcardByIndex(1) : null;
+    const flashcardSnapshot = useFlashcardSnapshot((i) => getFlashcardByIndex(i));
+    const scannedTarget0 = flashcardSnapshot.card0;
+    const scannedTarget1 = flashcardSnapshot.card1;
     const scannedTargets = Array.from(detectedFlashcards.values()).slice(0, MAX_AR_TRACKS);
 
     useEffect(() => {
@@ -814,7 +824,26 @@ export default function LearnARV2() {
         })();
 
         return () => controller.abort();
-    }, [shouldPrepareIndependentMulti, comboKey, scannedTarget0, scannedTarget1, multiRetryToken, emitMobileDebug]);
+    }, [
+        shouldPrepareIndependentMulti,
+        comboKey,
+        // Use the snapshot's version as the stable identity signal. The qrIds
+        // are also listed as a safety net for the rare case where the
+        // snapshot's equality check misses under React 18 strict-mode.
+        flashcardSnapshot.version,
+        scannedTarget0?.qrId,
+        scannedTarget1?.qrId,
+        multiRetryToken,
+        emitMobileDebug
+    ]);
+
+    // Mirror the merged mindBuffer into a ref so ARContainerV2 can read it via
+    // postMessage without re-rendering. This is the bridge for Edit I — when
+    // the iframe mounts and immediately polls MIND_BUFFER_REQUEST, the parent's
+    // stable handler (registered once in ARContainerV2) reads from this ref.
+    useEffect(() => {
+        mindBufferRef.current.buffer = multiPreparation.mindBuffer;
+    }, [multiPreparation.mindBuffer]);
 
     useEffect(() => {
         if (multiPreparation.status !== 'ready' || !multiPreparation.mindUrl || !comboKey || multiPreparation.key !== comboKey) return;
@@ -843,16 +872,20 @@ export default function LearnARV2() {
     }, [multiPreparation, comboKey, shouldPrepareIndependentMulti, activeCombo, emitMobileDebug]);
 
     const isMultiViewer = Boolean(
-        committedMultiKey &&
-        committedMultiKey === comboKey &&
         multiPreparation.status === 'committed' &&
-        multiPreparation.mindUrl &&
+        multiPreparation.mindBuffer &&
+        Boolean(multiPreparation.mindUrl) &&
+        flashcardCount === 2 &&
+        (comboKey === null || comboKey === multiPreparation.key) &&
         !isComboViewer
     );
 
     useEffect(() => {
         if (!isComboViewer && flashcardCount === 2 && comboKey === multiPreparation.key) return;
-        multiOperationIdRef.current += 1;
+        // Operation id is no longer incremented here — the prepare effect owns
+        // its own cancellation via `multiAbortRef`, and bumping it during the
+        // cleanup window would race with the prepare's catch handler (see
+        // Skeptic Objection #5 in the multi-agent design review).
         multiAbortRef.current?.abort();
         multiPreparingKeyRef.current = null;
         setCommittedMultiKey(null);
