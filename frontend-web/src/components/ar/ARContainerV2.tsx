@@ -111,6 +111,16 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const pipRef = useRef<HTMLIFrameElement>(null);
 
+    // Ref-held buffer so the long-lived MIND_BUFFER_REQUEST listener (see the
+    // stable handler below) can ship the latest merged buffer to the iframe
+    // regardless of prop churn. Solves Cause 2 of
+    // report/DEBUG_20260706_MULTI_FLASHCARD_LOADING.md.
+    const mindBufferDeliveryRef = useRef<Uint8Array | null>(null);
+
+    useEffect(() => {
+        mindBufferDeliveryRef.current = mindBuffer ?? null;
+    }, [mindBuffer]);
+
     const emitDebug = useCallback((label: string, details: Record<string, unknown> = {}) => {
         window.postMessage({
             type: 'AR_DEBUG',
@@ -227,6 +237,24 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             default: return null;
         }
     }, [phase, viewerSrc]);
+
+    // Identity key for the viewer iframe that signals a meaningful change
+    // (phase flip, or runtime-buffer mode flip, OR the underlying buffer
+    // identity changed). Solves Cause 2 — the iframe no longer remounts on
+    // every viewerSrc string change, only when the actual source flips.
+    const mindIdentityKey = useMemo(() => {
+        if (!mainSrc) return 'none';
+        // For runtime-buffer mode, key by buffer reference identity so a
+        // successful merge re-mounts the iframe exactly once.
+        if (mindBuffer && mindBuffer.byteLength > 0) return `mind=runtime-buffer#${mindBuffer.byteLength}#${mainSrc}`;
+        if (mainSrc.startsWith('data:') || mainSrc.includes('mind=')) {
+            // Use only the mind= param portion — the rest of the querystring
+            // (model, image, word params) does NOT require an iframe remount.
+            const url = new URL(mainSrc, window.location.origin);
+            return `phase=${phase}|mind=${url.searchParams.get('mind') ?? 'none'}`;
+        }
+        return `phase=${phase}|scanner`;
+    }, [phase, mainSrc, mindBuffer]);
 
     // ========== SEND TO IFRAME HELPERS ==========
     const sendToMain = useCallback((type: string, data: any = {}) => {
@@ -413,6 +441,43 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         return () => window.removeEventListener('message', handleMessage);
     }, [handleMessage]);
 
+    // ========== STABLE MIND BUFFER DELIVERY (Edit I) ==========
+    // Registered once on mount, never re-subscribes. Solves the iframe
+    // thrash where React re-renders between the iframe's MIND_BUFFER_REQUEST
+    // and the parent's reply — see
+    // report/DEBUG_20260706_MULTI_FLASHCARD_LOADING.md, Cause 2.
+    //
+    // Defensive buffer copy: iOS Safari can neuter ArrayBuffer views during
+    // structured-clone-like operations inside postMessage (Constraint
+    // Guardian #6). Copying into a fresh Uint8Array detaches from the
+    // neuter-prone buffer.
+    useEffect(() => {
+        const onMessage = (event: MessageEvent) => {
+            const data = event.data;
+            if (!data || data.type !== 'MIND_BUFFER_REQUEST') return;
+            const iframeWindow = iframeRef.current?.contentWindow;
+            if (event.source !== iframeWindow || !iframeWindow) return;
+            const buffer = mindBufferDeliveryRef.current;
+            if (!buffer || !buffer.byteLength) return;
+            const safeBuffer = new Uint8Array(buffer.byteLength);
+            safeBuffer.set(buffer);
+            try {
+                iframeWindow.postMessage(
+                    createMessage('MIND_BUFFER', { buffer: safeBuffer }),
+                    '*'
+                );
+                emitDebug('PARENT_MIND_BUFFER_SENT', { bytes: safeBuffer.byteLength });
+            } catch (error) {
+                emitDebug('PARENT_MIND_BUFFER_POST_FAILED', {
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        };
+        window.addEventListener('message', onMessage);
+        return () => window.removeEventListener('message', onMessage);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // ========== EXTERNAL CONTROLS ==========
     useEffect(() => {
         const handleSwitchToViewer = () => setTimeout(() => transitionTo('VIEWING'), 100);
@@ -465,7 +530,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             {mainSrc && (
                 <iframe
                     ref={iframeRef}
-                    key={`main-${phase}-${mainSrc}`}
+                    key={`main-${mindIdentityKey}`}
                     src={mainSrc}
                     allow="camera; microphone; autoplay; fullscreen"
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', zIndex: 1 }}

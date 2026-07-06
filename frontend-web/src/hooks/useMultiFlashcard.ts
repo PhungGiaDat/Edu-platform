@@ -132,6 +132,13 @@ export function useMultiFlashcard() {
     const comboCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const proximityComboRef = useRef<boolean>(false);
     const stateRef = useRef(state);
+    // Edit J: serializes every addFlashcard call so concurrent scans never
+    // overwrite each other's setState. The chain head silently absorbs
+    // rejections so a slow fetch doesn't poison subsequent calls.
+    // The 10s per-fetch abort timeout (see addFlashcard body) prevents the
+    // chain from queueing indefinitely behind a dead promise — see
+    // Constraint Guardian #3.
+    const addFlashcardChainRef = useRef<Promise<void>>(Promise.resolve());
 
     useEffect(() => {
         stateRef.current = state;
@@ -151,7 +158,7 @@ export function useMultiFlashcard() {
     /**
      * Add a newly detected flashcard
      */
-    const addFlashcard = useCallback(async (qrId: string): Promise<FlashcardData | null> => {
+    const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): Promise<FlashcardData | null> => {
         // Skip if already detected
         const existing = stateRef.current.detectedFlashcards.get(qrId);
         if (existing) {
@@ -167,7 +174,7 @@ export function useMultiFlashcard() {
 
         // Fetch flashcard data
         try {
-            const response = await fetch(`${API_BASE}/api/v1/flashcard/${qrId}`);
+            const response = await fetch(`${API_BASE}/api/v1/flashcard/${qrId}`, { signal });
             if (!response.ok) {
                 console.error('[MultiFlashcard] Failed to fetch flashcard:', qrId);
                 return null;
@@ -226,10 +233,39 @@ export function useMultiFlashcard() {
             return flashcardData;
 
         } catch (error) {
+            if (error instanceof DOMException && error.name === 'AbortError') {
+                emitArDebug('FLASHCARD_FETCH_ABORTED', { qrId });
+                return null;
+            }
             console.error('[MultiFlashcard] Error fetching flashcard:', error);
             return null;
         }
     }, [buildUrl]);
+
+    const addFlashcard = useCallback((qrId: string): Promise<FlashcardData | null> => {
+        // 10s per-fetch safety timeout so a stuck request can't starve the
+        // chain forever (Constraint Guardian #3). The AbortController is
+        // local to this invocation.
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 10000);
+
+        const nextLink = addFlashcardChainRef.current
+            .catch(() => { /* swallow prior errors so they don't poison */ })
+            .then(() => addFlashcardImpl(qrId, controller.signal));
+
+        // Always clear timeout — whether the chain resolves, rejects, or hangs,
+        // we don't leak the timer.
+        nextLink.finally(() => window.clearTimeout(timeoutId)).catch(() => {});
+
+        // Update chain head AFTER the local link resolves — this serializes
+        // callers without holding the chain head open prematurely. The .then
+        // forces the chain head back to `Promise<void>` (the original type),
+        // discarding the resolved FlashcardData | null that the inner link
+        // carries for the caller.
+        addFlashcardChainRef.current = nextLink.then(() => undefined, () => undefined);
+
+        return nextLink;
+    }, [addFlashcardImpl]);
 
     /**
      * Remove a flashcard (e.g., when target lost for extended time)
@@ -417,28 +453,56 @@ export function useMultiFlashcard() {
         }));
     }, []);
 
+    // Edit K: ref-captured snapshot of the combo-check pre-conditions. The
+    // timer only restarts when (size, status, activeCombo) actually changes,
+    // so transient state updates within the 500 ms window don't cancel the
+    // debounce. Addresses Skeptic Objection #5.
+    const comboCheckSnapshotRef = useRef<{ size: number; status: ComboResolution; hasActiveCombo: boolean }>({
+        size: 0,
+        status: 'idle',
+        hasActiveCombo: false
+    });
+
     /**
      * Auto-check for combo when we have 2+ flashcards
      */
     useEffect(() => {
-        if (state.detectedFlashcards.size === 2 && !state.activeCombo &&
-            state.comboResolution.status === 'idle') {
-            // Debounce combo check
-            if (comboCheckTimeoutRef.current) {
-                clearTimeout(comboCheckTimeoutRef.current);
-            }
+        const snapshot = {
+            size: state.detectedFlashcards.size,
+            status: state.comboResolution.status,
+            hasActiveCombo: Boolean(state.activeCombo)
+        };
 
-            comboCheckTimeoutRef.current = setTimeout(() => {
-                checkCombo();
-            }, 500);
+        const prev = comboCheckSnapshotRef.current;
+        const sameAsPrev =
+            prev.size === snapshot.size &&
+            prev.status === snapshot.status &&
+            prev.hasActiveCombo === snapshot.hasActiveCombo;
+        comboCheckSnapshotRef.current = snapshot;
+
+        if (snapshot.size !== 2) return;
+        if (snapshot.hasActiveCombo) return;
+        // Only restart the debounce when the conditions actually change.
+        // Within the same (size, status, hasActiveCombo) tuple, additional
+        // renders don't restart the timer — solving the 'debounce dies on
+        // every setState' bug from the DEBUG report.
+        if (sameAsPrev && comboCheckTimeoutRef.current) return;
+        if (snapshot.status !== 'idle') return;
+
+        if (comboCheckTimeoutRef.current) {
+            clearTimeout(comboCheckTimeoutRef.current);
         }
+        comboCheckTimeoutRef.current = setTimeout(() => {
+            checkCombo();
+        }, 500);
 
         return () => {
             if (comboCheckTimeoutRef.current) {
                 clearTimeout(comboCheckTimeoutRef.current);
+                comboCheckTimeoutRef.current = null;
             }
         };
-    }, [state.detectedFlashcards, state.activeCombo, state.comboResolution.status, checkCombo]);
+    }, [state.detectedFlashcards.size, state.activeCombo, state.comboResolution.status, checkCombo]);
 
     /**
      * Handle proximity detected event from AR viewer
