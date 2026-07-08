@@ -523,7 +523,6 @@ export default function LearnARV2() {
     const [appMode, setAppMode] = useState<AppMode>('LEARNING');
     const [detectedQrId, setDetectedQrId] = useState<string | null>(null);
     const [committedComboId, setCommittedComboId] = useState<string | null>(null);
-    const [committedMultiKey, setCommittedMultiKey] = useState<string | null>(null);
     const [multiPreparation, setMultiPreparation] = useState<{
         key: string | null;
         status: 'idle' | 'preparing' | 'ready' | 'committed' | 'error';
