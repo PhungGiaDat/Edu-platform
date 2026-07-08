@@ -728,7 +728,6 @@ export default function LearnARV2() {
         multiAbortRef.current?.abort();
         multiAbortRef.current = controller;
         multiPreparingKeyRef.current = comboKey;
-        setCommittedMultiKey(null);
         setMultiPreparation({
             key: comboKey,
             status: 'preparing',
@@ -856,7 +855,6 @@ export default function LearnARV2() {
                 return;
             }
             if (!cancelled) {
-                setCommittedMultiKey(comboKey);
                 setMultiPreparation(prev => prev.key === comboKey
                     ? { ...prev, status: 'committed', progress: 100 }
                     : prev);
@@ -887,7 +885,6 @@ export default function LearnARV2() {
         // Skeptic Objection #5 in the multi-agent design review).
         multiAbortRef.current?.abort();
         multiPreparingKeyRef.current = null;
-        setCommittedMultiKey(null);
         setMultiPreparation(prev => prev.status === 'idle' && prev.key === null ? prev : ({
             key: null,
             status: 'idle',
@@ -1019,9 +1016,9 @@ export default function LearnARV2() {
                 comboKey,
                 phase: 'viewer_initialization'
             });
-            setCommittedMultiKey(null);
             setMultiPreparation(prev => ({
                 ...prev,
+                key: null,
                 status: 'error',
                 mindUrl: null,
                 mindBuffer: null,
