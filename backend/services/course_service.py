@@ -3,14 +3,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from models.course_model import CourseSchema, LessonSession, LessonSessionStepState
+from models.course_integrity import normalize_course_payload
+from models.course_model import LessonSession, LessonSessionStepState
 from repositories.course_repository import get_course_repository
 from services.gamification_service import get_gamification_service
 from settings import settings
 
 
 SEED_DIR = Path(__file__).resolve().parent.parent / "seeds" / "courses"
-DEFAULT_SEED_FILENAME = "momo_nature_phase1.json"
+DEFAULT_SEED_FILENAME = "momo_nature.json"
 
 
 def _seed_path(seed_name: Optional[str] = None) -> Path:
@@ -22,59 +23,8 @@ def _seed_path(seed_name: Optional[str] = None) -> Path:
     return path
 
 
-def _normalize_asset_buckets(value: Any) -> Any:
-    if isinstance(value, dict):
-        normalized = {key: _normalize_asset_buckets(item) for key, item in value.items()}
-        if {"bucket", "path", "type", "status"}.issubset(normalized.keys()):
-            normalized["bucket"] = normalized.get("bucket") or settings.LEARNAR_ASSETS_BUCKET
-        return normalized
-    if isinstance(value, list):
-        return [_normalize_asset_buckets(item) for item in value]
-    return value
-
-
-def _validate_phase1_course(course: CourseSchema) -> None:
-    if course.age_range != "5-8":
-        raise ValueError("Phase 1 courses must target age range 5-8")
-    if not course.thumbnail:
-        raise ValueError("Phase 1 courses require a thumbnail asset reference")
-    if not 5 <= len(course.lessons) <= 8:
-        raise ValueError("Phase 1 demo courses require 5-8 sections")
-
-    for lesson in course.lessons:
-        if not 3 <= lesson.duration_minutes <= 7:
-            raise ValueError(f"Lesson {lesson.lesson_id} must be 3-7 minutes")
-        if not lesson.videoLesson:
-            raise ValueError(f"Lesson {lesson.lesson_id} requires videoLesson")
-        if not 60 <= lesson.videoLesson.duration_seconds <= 120:
-            raise ValueError(f"Lesson {lesson.lesson_id} video must be 60-120 seconds")
-        if not 3 <= len(lesson.vocabulary) <= 5:
-            raise ValueError(f"Lesson {lesson.lesson_id} requires 3-5 vocabulary words")
-        if not lesson.activity:
-            raise ValueError(f"Lesson {lesson.lesson_id} requires an activity")
-        if not lesson.game:
-            raise ValueError(f"Lesson {lesson.lesson_id} requires a section game")
-        if not lesson.readAloudStory:
-            raise ValueError(f"Lesson {lesson.lesson_id} requires a read-aloud story")
-        if not lesson.pronunciation:
-            raise ValueError(f"Lesson {lesson.lesson_id} requires a pronunciation task")
-        if not 3 <= len(lesson.quiz) <= 5:
-            raise ValueError(f"Lesson {lesson.lesson_id} requires 3-5 quiz questions")
-        if not lesson.reward:
-            raise ValueError(f"Lesson {lesson.lesson_id} requires a reward")
-        for question in lesson.quiz:
-            if len(question.options) > 4:
-                raise ValueError(f"Quiz {question.question_id} has more than 4 options")
-            if not question.questionAudioText:
-                raise ValueError(f"Quiz {question.question_id} requires questionAudioText")
-
-
 def validate_course_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
-    course = CourseSchema.model_validate(_normalize_asset_buckets(payload))
-    _validate_phase1_course(course)
-    course_data = course.model_dump()
-    course_data["updated_at"] = datetime.utcnow()
-    return course_data
+    return normalize_course_payload(payload, strict_generated=True)
 
 
 def load_course_seed(seed_name: Optional[str] = None) -> Dict[str, Any]:

@@ -227,7 +227,7 @@ class Lesson(BaseModel):
     # Scene/chapter images for video navigation
     scene_images: List[SceneImage] = Field(default_factory=list)
     
-    # Phase 1 learning blocks. These are optional at the model layer so older
+    # Generated-course learning blocks. These are optional at the model layer so older
     # courses can still serialize; seed/course generation validates them.
     duration_minutes: int = Field(default=3, ge=3, le=7)
     videoLesson: Optional[VideoLesson] = None
@@ -281,7 +281,7 @@ class CourseSchema(BaseModel):
     @classmethod
     def validate_age_range(cls, value: str) -> str:
         if value != "5-8":
-            raise ValueError("Phase 1 courses must target age range 5-8")
+            raise ValueError("Generated courses must target age range 5-8")
         return value
 
 

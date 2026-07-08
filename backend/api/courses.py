@@ -194,7 +194,7 @@ async def submit_quiz(
     payload: QuizSubmitRequest,
     service: CourseService = Depends(get_course_service),
 ):
-    # quiz_id maps to a lesson_id in Phase 1; a separate quiz collection can be added later.
+    # quiz_id currently maps to a lesson_id; a separate quiz collection can be added later.
     lesson_id = payload.lesson_id or quiz_id
     try:
         return await service.submit_quiz(payload.user_id, payload.course_id, lesson_id, payload.answers)

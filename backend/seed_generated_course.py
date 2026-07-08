@@ -1,12 +1,13 @@
 """
-Seed the Phase 1 kids course learning sample.
+Seed the generated kids course learning sample.
 
 Run from backend/:
-    python seed_phase1_course.py
+    python seed_generated_course.py
 """
 
 import asyncio
 import sys
+from datetime import datetime
 
 import certifi
 import motor.motor_asyncio
@@ -30,9 +31,15 @@ async def main() -> None:
     seed_name = sys.argv[1] if len(sys.argv) > 1 else None
     courses = load_all_course_seeds() if seed_name in (None, "all") else [load_course_seed(seed_name)]
     for course in courses:
+        course = dict(course)
+        created_at = course.pop("created_at", datetime.utcnow())
+        course["updated_at"] = datetime.utcnow()
         result = await db.courses.update_one(
             {"course_id": course["course_id"]},
-            {"$set": course},
+            {
+                "$set": course,
+                "$setOnInsert": {"created_at": created_at},
+            },
             upsert=True,
         )
         action = "inserted" if result.upserted_id else "updated"

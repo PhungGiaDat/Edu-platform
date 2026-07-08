@@ -1,5 +1,5 @@
 """
-Generate demo media files for Phase 2 course manifests.
+Generate demo media files for generated course manifests.
 
 This creates lightweight local SVG/WAV placeholders for image, sticker, and
 audio assets referenced by course seed JSON files. If SUPABASE_URL and
