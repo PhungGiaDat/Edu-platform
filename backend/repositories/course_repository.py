@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from database.base_repo import BaseRepository
 from database.db import mongo_connector
+from models.course_integrity import normalize_course_payload
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class CourseRepository(BaseRepository):
         return await self.find_one({"course_id": course_id, "is_published": True})
 
     async def upsert_course(self, course: Dict[str, Any]) -> bool:
-        course = dict(course)
+        course = normalize_course_payload(course, strict_generated=True, refresh_updated_at=False)
         course.pop("_id", None)
         created_at = course.pop("created_at", datetime.utcnow())
         course["updated_at"] = datetime.utcnow()
