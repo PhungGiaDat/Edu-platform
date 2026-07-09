@@ -48,6 +48,7 @@ from api.session_tracking import router as session_tracking_router
 from api.session_lock import router as session_lock_router
 from api.websocket import router as websocket_router
 from api.reports import router as reports_router
+from api.debug import router as debug_router
 
 # Configure logging
 logging.basicConfig(
@@ -261,6 +262,13 @@ app.include_router(
     admin_router,
     prefix=f"{settings.API_V1_PREFIX}/admin",
     tags=["Admin"]
+)
+
+# Debug router — logs AR_DEBUG from mobile web app to Vercel runtime logs
+app.include_router(
+    debug_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Debug"]
 )
 
 logger.info("✅ All routers registered")

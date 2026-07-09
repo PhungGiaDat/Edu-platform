@@ -495,16 +495,24 @@ export default function LearnARV2() {
     const navigate = useNavigate();
 
     const emitMobileDebug = useCallback((label: string, details: Record<string, unknown> = {}) => {
+        // 1. Local desktop: postMessage for the browser console panel
         window.postMessage({
             type: 'AR_DEBUG',
-            payload: {
-                label,
-                details,
-                source: 'learn-ar-page'
-            },
+            payload: { label, details, source: 'learn-ar-page' },
             timestamp: Date.now(),
             origin: 'parent'
         }, '*');
+
+        // 2. Vercel function logs — always logged so you can tail in Vercel dashboard
+        console.log(`[AR_DEBUG] ${label}`, details);
+
+        // 3. Mobile on Vercel: fire-and-forget POST to Render backend
+        //    Logs appear in Render's log stream (render.com → your service → Logs)
+        fetch(`${API_BASE}/api/v1/debug/ar-log`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ label, details, source: 'learn-ar-page', timestamp: Date.now() }),
+        }).catch(() => {}); // swallow errors — never block UX
     }, []);
 
     // Redirect to login if not authenticated (after auth finishes loading)
