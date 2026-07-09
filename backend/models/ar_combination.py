@@ -20,10 +20,9 @@ class ArCombinationSchema(BaseModel):
     combo_id: str = Field(..., description="A unique string identifier for the combo")
     description: str = Field(..., description="Description of the combination")
     required_tags: List[str] = Field(..., min_length=2)
-    target_order: List[str] = Field(
-        ...,
-        min_length=2,
-        description="AR tags in the exact order used to compile combo_mind_url",
+    target_order: Optional[List[str]] = Field(
+        default=None,
+        description="DEPRECATED: MindAR target indices are now determined by scan order. This field is ignored.",
     )
     model_3d_url: str
     texture_url: Optional[str] = None
@@ -31,17 +30,6 @@ class ArCombinationSchema(BaseModel):
     combo_mind_url: Optional[str] = None  # MindAR .mind file with both target images
     bonus_xp: int = Field(default=100, description="XP awarded when combo is triggered")
     center_transform: Optional[TransformSchema] = None
-
-    @model_validator(mode="after")
-    def validate_target_order(self):
-        """Never allow compile order to drift from the combo's required cards."""
-        if len(self.target_order) != len(self.required_tags):
-            raise ValueError("target_order must contain every required_tag exactly once")
-        if len(set(self.target_order)) != len(self.target_order):
-            raise ValueError("target_order must not contain duplicate tags")
-        if set(self.target_order) != set(self.required_tags):
-            raise ValueError("target_order must be a permutation of required_tags")
-        return self
 
     class Config:
         json_encoders = {

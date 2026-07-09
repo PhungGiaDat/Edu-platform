@@ -44,6 +44,8 @@ def _to_combo_response(combo: dict) -> ComboResponse:
     """Convert raw combo dict to response schema"""
     required_tags = combo.get("required_tags", [])
     target_order = combo.get("target_order")
+    # DEPRECATED: target_order is ignored. MindAR target indices are determined
+    # by scan order in the frontend via the merged mind buffer.
     # Do not turn malformed legacy data into a plausible-but-wrong binding.
     # The client will reject a combo without a valid explicit compile order and
     # continue through the independent MULTI path instead.

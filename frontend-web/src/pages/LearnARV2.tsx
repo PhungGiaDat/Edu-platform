@@ -645,7 +645,6 @@ export default function LearnARV2() {
         rejectCombo,
         reset: resetMultiFlashcard,
         getFlashcardByIndex,
-        getFlashcardByTag
     } = useMultiFlashcard();
 
     // ========== DATA HOOKS ==========
@@ -699,20 +698,19 @@ export default function LearnARV2() {
     }, [hasCombo, activeCombo, comboMindUrl, flashcardCount, committedComboId]);
 
     const isComboViewer = Boolean(
-        committedComboId &&
-        hasCombo &&
-        activeCombo?.comboId === committedComboId &&
-        comboMindUrl
+        comboResolution === 'found' &&
+        multiPreparation.status === 'committed' &&
+        !isAddingCard
     );
 
     useEffect(() => {
-        if (!isAddingCard || !isComboViewer) return;
+        if (!isAddingCard || comboResolution !== 'found') return;
         setIsAddingCard(false);
         setAppState('VIEWING');
         window.setTimeout(() => {
             eventBus.emit('AR_SWITCH_TO_VIEWER' as any, {});
         }, 100);
-    }, [isAddingCard, isComboViewer]);
+    }, [isAddingCard, comboResolution]);
 
     const flashcardSnapshot = useFlashcardSnapshot((i) => getFlashcardByIndex(i));
     const scannedTarget0 = flashcardSnapshot.card0;
@@ -900,10 +898,8 @@ export default function LearnARV2() {
         multiAbortRef.current?.abort();
     }, []);
 
-    const mindUrl = isComboViewer && comboMindUrl
-        ? resolveMindUrl(comboMindUrl)
-        : isMultiViewer && multiPreparation.mindUrl
-            ? multiPreparation.mindUrl
+    const mindUrl = (isMultiViewer || comboResolution === 'found') && multiPreparation.mindUrl
+        ? multiPreparation.mindUrl
         : resolveMindUrl(scannedTarget0?.mindUrl || arData?.targets?.[0]?.nft_base_url);
 
     const comboTarget0 = scannedTarget0;
@@ -925,11 +921,7 @@ export default function LearnARV2() {
     const comboTextureUrl = isComboViewer ? activeCombo?.textureUrl : undefined;
     const comboPhrase = isComboViewer && activeCombo?.description
         || [comboTarget0?.word || arData?.flashcard?.word, comboTarget1?.word || fallbackTarget1?.word].filter(Boolean).join(' in ');
-    const orderedViewerTargets = isComboViewer && activeCombo?.targetOrder?.length
-        ? activeCombo.targetOrder
-            .map(tag => getFlashcardByTag(tag))
-            .filter((target): target is NonNullable<typeof target> => Boolean(target))
-        : scannedTargets;
+    const orderedViewerTargets = scannedTargets;
     const committedViewerTargetCount = isComboViewer || isMultiViewer ? 2 : 1;
     const viewerTargets = orderedViewerTargets.length
         ? orderedViewerTargets.map(target => ({
