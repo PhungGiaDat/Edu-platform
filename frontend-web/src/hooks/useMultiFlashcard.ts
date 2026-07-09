@@ -671,9 +671,8 @@ export function useMultiFlashcard() {
         isMultiMode: state.mode === 'MULTI' || state.mode === 'COMBO' || state.mode === 'PROXIMITY_COMBO',
         isProximityCombo: state.mode === 'PROXIMITY_COMBO',
         shouldPrepareIndependentMulti: state.detectedFlashcards.size === 2 &&
-            !state.activeCombo &&
             state.comboResolution.key !== null &&
-            ['not_found', 'rejected', 'error'].includes(state.comboResolution.status)
+            ['not_found', 'rejected', 'error', 'found'].includes(state.comboResolution.status)
     };
 }
 
