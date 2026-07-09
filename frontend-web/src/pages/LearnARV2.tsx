@@ -906,12 +906,8 @@ export default function LearnARV2() {
             ? multiPreparation.mindUrl
         : resolveMindUrl(scannedTarget0?.mindUrl || arData?.targets?.[0]?.nft_base_url);
 
-    const comboTarget0 = isComboViewer && activeCombo?.targetOrder?.[0]
-        ? getFlashcardByTag(activeCombo.targetOrder[0])
-        : scannedTarget0;
-    const comboTarget1 = isComboViewer && activeCombo?.targetOrder?.[1]
-        ? getFlashcardByTag(activeCombo.targetOrder[1])
-        : scannedTarget1;
+    const comboTarget0 = scannedTarget0;
+    const comboTarget1 = scannedTarget1;
     const fallbackTarget1 = scannedTarget1;
 
     const modelUrl = comboTarget0?.model3dUrl || arData?.targets?.[0]?.model_3d_url;
