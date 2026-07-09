@@ -9,7 +9,8 @@ import './index.css'
 import './services/axiosConfig'
 
 Sentry.init({
-  dsn: "https://27d11c44af122c9cc417160c331241f2@o4511704263622656.ingest.de.sentry.io/4511704276009040",
+  dsn: import.meta.env.VITE_SENTRY_DSN || "",
+  enabled: !!import.meta.env.VITE_SENTRY_DSN,
   dataCollection: {
     userInfo: false,
     httpBodies: [],
