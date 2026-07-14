@@ -52,6 +52,46 @@
     const ELEPHANT_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg';
     const COMBO_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb';
     const COMBO_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png';
+    const FALLBACK_COLORMAP_URL = '/textures/colormap-fallback.png';
+
+    function isLegacySupabaseColormapUrl(url) {
+        try {
+            const parsed = new URL(url, window.location.href);
+            const path = decodeURIComponent(parsed.pathname).replace(/\\/g, '/').toLowerCase();
+            return (
+                parsed.hostname.endsWith('.supabase.co') &&
+                path.includes('/storage/v1/object/public/ar_models/') &&
+                path.includes('/textures/') &&
+                path.endsWith('/colormap.png')
+            );
+        } catch {
+            return false;
+        }
+    }
+
+    function installLegacyColormapFallback() {
+        const three = window.THREE;
+        const manager = three?.DefaultLoadingManager;
+        if (!manager || manager.__eduLegacyColormapFallbackInstalled) {
+            return;
+        }
+
+        const previousModifier = manager.urlModifier;
+        manager.setURLModifier((url) => {
+            const resolvedUrl = previousModifier ? previousModifier(url) : url;
+            if (isLegacySupabaseColormapUrl(resolvedUrl)) {
+                log('texture', `Redirecting legacy colormap dependency to ${FALLBACK_COLORMAP_URL}`, {
+                    originalUrl: resolvedUrl
+                });
+                return FALLBACK_COLORMAP_URL;
+            }
+            return resolvedUrl;
+        });
+        manager.__eduLegacyColormapFallbackInstalled = true;
+    }
+
+    installLegacyColormapFallback();
+
     function normalizeViewerAssetUrl(url) {
         if (!url) return url;
         const lower = String(url).toLowerCase();
