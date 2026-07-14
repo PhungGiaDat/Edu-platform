@@ -1,12 +1,12 @@
 {
   "course_id": "momo-nature-english-5-7",
-  "title": "B? G?u Momo H?c Ti?ng Anh C?ng Thi?n Nhi?n",
+  "title": "Bé Gấu Momo Học Tiếng Anh Cùng Thiên Nhiên",
   "description": "Short visual English course for children aged 5-7.",
-  "subtitle_vi": "H?c t? thi?n nhi?n qua video, tr? ch?i v? ph?t ?m.",
+  "subtitle_vi": "Học từ thiên nhiên qua video, trò chơi và phát âm.",
   "theme": "Animals and Nature",
   "age_range": "5-8",
   "level": "beginner",
-  "description_vi": "M?i ph?n h?c c? video ng?n, tr? ch?i, luy?n ph?t ?m, ho?t ??ng h?nh ?nh, quiz v? sticker th??ng.",
+  "description_vi": "Mỗi phần học có video ngắn, trò chơi, luyện phát âm, hoạt động hình ảnh, quiz và sticker thưởng.",
   "thumbnail_url": null,
   "thumbnail": {
     "bucket": "learnar-assets",
@@ -20,7 +20,7 @@
       "id": "meet-the-elephant",
       "lesson_id": "meet-the-elephant",
       "title": "Meet the Elephant",
-      "description": "Nghe v? ch?m v?o h?nh con voi.",
+      "description": "Nghe và chạm vào hình con voi.",
       "video": {
         "title": "Meet the Elephant",
         "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/meet-the-elephant/video.mp4",
@@ -28,7 +28,7 @@
         "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/meet-the-elephant/thumb.png"
       },
       "content": null,
-      "title_vi": "G?p b?n voi",
+      "title_vi": "Gặp bạn voi",
       "order": 1,
       "is_completed": false,
       "duration_minutes": 5,
@@ -53,7 +53,7 @@
             "order": 1,
             "duration_seconds": 24,
             "visual_prompt": "Cute classroom style scene for Elephant.",
-            "narration_vi": "Momo nh?n th?y con voi.",
+            "narration_vi": "Momo nhìn thấy con voi.",
             "audio_text_en": "Look! Elephant!",
             "image": {
               "bucket": "learnar-assets",
@@ -67,7 +67,7 @@
             "order": 2,
             "duration_seconds": 24,
             "visual_prompt": "Bright picture story for Big.",
-            "narration_vi": "B? nghe v? n?i Big.",
+            "narration_vi": "Bé nghe và nói Big.",
             "audio_text_en": "Say Big with Momo.",
             "image": {
               "bucket": "learnar-assets",
@@ -81,7 +81,7 @@
             "order": 3,
             "duration_seconds": 24,
             "visual_prompt": "Happy reward scene with Trunk.",
-            "narration_vi": "Momo v? tay khen b?.",
+            "narration_vi": "Momo vỗ tay khen bé.",
             "audio_text_en": "Good job! Trunk!",
             "image": {
               "bucket": "learnar-assets",
@@ -143,7 +143,7 @@
         },
         {
           "word_en": "Trunk",
-          "word_vi": "c?i v?i",
+          "word_vi": "cái vòi",
           "emoji": "trunk",
           "image": {
             "bucket": "learnar-assets",
@@ -169,7 +169,7 @@
       "game": {
         "game_id": "meet-the-elephant-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
         "prompt_audio_text": "Tap elephant.",
         "items": [
           {
@@ -203,11 +203,11 @@
             }
           }
         ],
-        "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
       },
       "pronunciation": {
         "task_id": "meet-the-elephant-say",
-        "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
         "prompt_audio_text": "Elephant, Big, Trunk",
         "target_words": [
           "Elephant",
@@ -221,12 +221,12 @@
           "status": "pending"
         },
         "pass_score": 70,
-        "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
       },
       "activity": {
         "activity_id": "meet-the-elephant-activity",
         "type": "match_picture",
-        "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
         "prompt_audio_text": "Find Elephant and Big.",
         "items": [
           {
@@ -260,13 +260,13 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con gh?p h?nh r?t t?t!"
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
       },
       "quiz": [
         {
           "question_id": "meet-the-elephant-q1",
           "type": "image_choice",
-          "prompt_vi": "Con nghe t? n?o?",
+          "prompt_vi": "Con nghe từ nào?",
           "questionAudioText": "Tap elephant.",
           "options": [
             {
@@ -301,13 +301,13 @@
             }
           ],
           "correctOptionId": "meet-the-elephant-q1-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "meet-the-elephant-q2",
           "type": "image_choice",
-          "prompt_vi": "C?i v?i l? t? n?o?",
+          "prompt_vi": "Cái vòi là từ nào?",
           "questionAudioText": "Find trunk.",
           "options": [
             {
@@ -342,18 +342,18 @@
             }
           ],
           "correctOptionId": "meet-the-elephant-q2-2",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "meet-the-elephant-q3",
           "type": "image_choice",
-          "prompt_vi": "Big ngh?a l? g??",
+          "prompt_vi": "Big nghĩa là gì?",
           "questionAudioText": "Big.",
           "options": [
             {
               "option_id": "meet-the-elephant-q3-1",
-              "label": "nh?",
+              "label": "nhỏ",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q3-1.svg",
@@ -383,8 +383,8 @@
             }
           ],
           "correctOptionId": "meet-the-elephant-q3-2",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         }
       ],
       "reward": {
@@ -396,19 +396,19 @@
           "status": "pending"
         },
         "badgeTitle": "Elephant Star",
-        "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
       },
       "arReference": null,
       "readAloudStory": {
         "story_id": "meet-the-elephant-read-aloud",
         "title": "Read with Momo: Meet the Elephant",
-        "instruction_vi": "Nghe Momo ??c, nh?n h?nh, r?i ??c theo t?ng c?u ng?n.",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
         "pages": [
           {
             "page_id": "meet-the-elephant-read-1",
             "order": 1,
             "text_en": "I see a elephant.",
-            "text_vi": "Momo nh?n th?y: Elephant.",
+            "text_vi": "Momo nhìn thấy: Elephant.",
             "highlighted_words": [
               "Elephant"
             ],
@@ -429,7 +429,7 @@
             "page_id": "meet-the-elephant-read-2",
             "order": 2,
             "text_en": "Elephant and Big are here.",
-            "text_vi": "B? ??c c?ng Momo b?ng gi?ng th?t r?.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
             "highlighted_words": [
               "Elephant",
               "Big"
@@ -448,7 +448,7 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con ??c theo r?t t?t. Momo nghe r? r?i!"
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
       },
       "generatedMedia": [
         {
@@ -547,7 +547,7 @@
       "id": "the-green-tree",
       "lesson_id": "the-green-tree",
       "title": "The Green Tree",
-      "description": "B? h?c v? c?y v? l?.",
+      "description": "Bé học về cây và lá.",
       "video": {
         "title": "The Green Tree",
         "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/the-green-tree/video.mp4",
@@ -555,7 +555,7 @@
         "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/the-green-tree/thumb.png"
       },
       "content": null,
-      "title_vi": "C?y xanh",
+      "title_vi": "Cây xanh",
       "order": 2,
       "is_completed": false,
       "duration_minutes": 5,
@@ -580,7 +580,7 @@
             "order": 1,
             "duration_seconds": 24,
             "visual_prompt": "Cute classroom style scene for Tree.",
-            "narration_vi": "Momo nh?n th?y c?y.",
+            "narration_vi": "Momo nhìn thấy cây.",
             "audio_text_en": "Look! Tree!",
             "image": {
               "bucket": "learnar-assets",
@@ -594,7 +594,7 @@
             "order": 2,
             "duration_seconds": 24,
             "visual_prompt": "Bright picture story for Leaf.",
-            "narration_vi": "B? nghe v? n?i Leaf.",
+            "narration_vi": "Bé nghe và nói Leaf.",
             "audio_text_en": "Say Leaf with Momo.",
             "image": {
               "bucket": "learnar-assets",
@@ -608,7 +608,7 @@
             "order": 3,
             "duration_seconds": 24,
             "visual_prompt": "Happy reward scene with Green.",
-            "narration_vi": "Momo v? tay khen b?.",
+            "narration_vi": "Momo vỗ tay khen bé.",
             "audio_text_en": "Good job! Green!",
             "image": {
               "bucket": "learnar-assets",
@@ -622,7 +622,7 @@
       "vocabulary": [
         {
           "word_en": "Tree",
-          "word_vi": "c?y",
+          "word_vi": "cây",
           "emoji": "tree",
           "image": {
             "bucket": "learnar-assets",
@@ -646,7 +646,7 @@
         },
         {
           "word_en": "Leaf",
-          "word_vi": "chi?c l?",
+          "word_vi": "chiếc lá",
           "emoji": "leaf",
           "image": {
             "bucket": "learnar-assets",
@@ -670,7 +670,7 @@
         },
         {
           "word_en": "Green",
-          "word_vi": "m?u xanh l?",
+          "word_vi": "màu xanh lá",
           "emoji": "green",
           "image": {
             "bucket": "learnar-assets",
@@ -696,7 +696,7 @@
       "game": {
         "game_id": "the-green-tree-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
         "prompt_audio_text": "Tap tree.",
         "items": [
           {
@@ -730,11 +730,11 @@
             }
           }
         ],
-        "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
       },
       "pronunciation": {
         "task_id": "the-green-tree-say",
-        "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
         "prompt_audio_text": "Tree, Leaf, Green",
         "target_words": [
           "Tree",
@@ -748,12 +748,12 @@
           "status": "pending"
         },
         "pass_score": 70,
-        "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
       },
       "activity": {
         "activity_id": "the-green-tree-activity",
         "type": "match_picture",
-        "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
         "prompt_audio_text": "Find Tree and Leaf.",
         "items": [
           {
@@ -787,13 +787,13 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con gh?p h?nh r?t t?t!"
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
       },
       "quiz": [
         {
           "question_id": "the-green-tree-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n c?y nh?.",
+          "prompt_vi": "Con chọn cây nhé.",
           "questionAudioText": "Tap tree.",
           "options": [
             {
@@ -828,18 +828,18 @@
             }
           ],
           "correctOptionId": "the-green-tree-q1-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "the-green-tree-q2",
           "type": "image_choice",
-          "prompt_vi": "Green l? m?u g??",
+          "prompt_vi": "Green là màu gì?",
           "questionAudioText": "Find green.",
           "options": [
             {
               "option_id": "the-green-tree-q2-1",
-              "label": "??",
+              "label": "đỏ",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q2-1.svg",
@@ -849,7 +849,7 @@
             },
             {
               "option_id": "the-green-tree-q2-2",
-              "label": "xanh l?",
+              "label": "xanh lá",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q2-2.svg",
@@ -859,7 +859,7 @@
             },
             {
               "option_id": "the-green-tree-q2-3",
-              "label": "v?ng",
+              "label": "vàng",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q2-3.svg",
@@ -869,18 +869,18 @@
             }
           ],
           "correctOptionId": "the-green-tree-q2-2",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "the-green-tree-q3",
           "type": "image_choice",
-          "prompt_vi": "Leaf l? g??",
+          "prompt_vi": "Leaf là gì?",
           "questionAudioText": "Leaf.",
           "options": [
             {
               "option_id": "the-green-tree-q3-1",
-              "label": "l?",
+              "label": "lá",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q3-1.svg",
@@ -900,7 +900,7 @@
             },
             {
               "option_id": "the-green-tree-q3-3",
-              "label": "n??c",
+              "label": "nước",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q3-3.svg",
@@ -910,8 +910,8 @@
             }
           ],
           "correctOptionId": "the-green-tree-q3-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         }
       ],
       "reward": {
@@ -923,19 +923,19 @@
           "status": "pending"
         },
         "badgeTitle": "Tree Helper",
-        "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
       },
       "arReference": null,
       "readAloudStory": {
         "story_id": "the-green-tree-read-aloud",
         "title": "Read with Momo: The Green Tree",
-        "instruction_vi": "Nghe Momo ??c, nh?n h?nh, r?i ??c theo t?ng c?u ng?n.",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
         "pages": [
           {
             "page_id": "the-green-tree-read-1",
             "order": 1,
             "text_en": "I see a tree.",
-            "text_vi": "Momo nh?n th?y: Tree.",
+            "text_vi": "Momo nhìn thấy: Tree.",
             "highlighted_words": [
               "Tree"
             ],
@@ -956,7 +956,7 @@
             "page_id": "the-green-tree-read-2",
             "order": 2,
             "text_en": "Tree and Leaf are here.",
-            "text_vi": "B? ??c c?ng Momo b?ng gi?ng th?t r?.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
             "highlighted_words": [
               "Tree",
               "Leaf"
@@ -975,7 +975,7 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con ??c theo r?t t?t. Momo nghe r? r?i!"
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
       },
       "generatedMedia": [
         {
@@ -1074,7 +1074,7 @@
       "id": "splashing-river",
       "lesson_id": "splashing-river",
       "title": "Splashing River",
-      "description": "Nghe ?m thanh n??c v? h?c t? m?i.",
+      "description": "Nghe âm thanh nước và học từ mới.",
       "video": {
         "title": "Splashing River",
         "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/splashing-river/video.mp4",
@@ -1082,7 +1082,7 @@
         "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/splashing-river/thumb.png"
       },
       "content": null,
-      "title_vi": "D?ng s?ng vui",
+      "title_vi": "Dòng sông vui",
       "order": 3,
       "is_completed": false,
       "duration_minutes": 5,
@@ -1107,7 +1107,7 @@
             "order": 1,
             "duration_seconds": 24,
             "visual_prompt": "Cute classroom style scene for River.",
-            "narration_vi": "Momo nh?n th?y d?ng s?ng.",
+            "narration_vi": "Momo nhìn thấy dòng sông.",
             "audio_text_en": "Look! River!",
             "image": {
               "bucket": "learnar-assets",
@@ -1121,7 +1121,7 @@
             "order": 2,
             "duration_seconds": 24,
             "visual_prompt": "Bright picture story for Water.",
-            "narration_vi": "B? nghe v? n?i Water.",
+            "narration_vi": "Bé nghe và nói Water.",
             "audio_text_en": "Say Water with Momo.",
             "image": {
               "bucket": "learnar-assets",
@@ -1135,7 +1135,7 @@
             "order": 3,
             "duration_seconds": 24,
             "visual_prompt": "Happy reward scene with Blue.",
-            "narration_vi": "Momo v? tay khen b?.",
+            "narration_vi": "Momo vỗ tay khen bé.",
             "audio_text_en": "Good job! Blue!",
             "image": {
               "bucket": "learnar-assets",
@@ -1149,7 +1149,7 @@
       "vocabulary": [
         {
           "word_en": "River",
-          "word_vi": "d?ng s?ng",
+          "word_vi": "dòng sông",
           "emoji": "river",
           "image": {
             "bucket": "learnar-assets",
@@ -1173,7 +1173,7 @@
         },
         {
           "word_en": "Water",
-          "word_vi": "n??c",
+          "word_vi": "nước",
           "emoji": "water",
           "image": {
             "bucket": "learnar-assets",
@@ -1197,7 +1197,7 @@
         },
         {
           "word_en": "Blue",
-          "word_vi": "m?u xanh d??ng",
+          "word_vi": "màu xanh dương",
           "emoji": "blue",
           "image": {
             "bucket": "learnar-assets",
@@ -1223,7 +1223,7 @@
       "game": {
         "game_id": "splashing-river-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
         "prompt_audio_text": "Tap river.",
         "items": [
           {
@@ -1257,11 +1257,11 @@
             }
           }
         ],
-        "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
       },
       "pronunciation": {
         "task_id": "splashing-river-say",
-        "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
         "prompt_audio_text": "River, Water, Blue",
         "target_words": [
           "River",
@@ -1275,12 +1275,12 @@
           "status": "pending"
         },
         "pass_score": 70,
-        "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
       },
       "activity": {
         "activity_id": "splashing-river-activity",
         "type": "match_picture",
-        "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
         "prompt_audio_text": "Find River and Water.",
         "items": [
           {
@@ -1314,13 +1314,13 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con gh?p h?nh r?t t?t!"
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
       },
       "quiz": [
         {
           "question_id": "splashing-river-q1",
           "type": "image_choice",
-          "prompt_vi": "Con th?y river ? ??u?",
+          "prompt_vi": "Con thấy river ở đâu?",
           "questionAudioText": "Tap river.",
           "options": [
             {
@@ -1355,18 +1355,18 @@
             }
           ],
           "correctOptionId": "splashing-river-q1-2",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "splashing-river-q2",
           "type": "image_choice",
-          "prompt_vi": "Water ngh?a l? g??",
+          "prompt_vi": "Water nghĩa là gì?",
           "questionAudioText": "Water.",
           "options": [
             {
               "option_id": "splashing-river-q2-1",
-              "label": "n??c",
+              "label": "nước",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-1.svg",
@@ -1376,7 +1376,7 @@
             },
             {
               "option_id": "splashing-river-q2-2",
-              "label": "l?",
+              "label": "lá",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-2.svg",
@@ -1386,7 +1386,7 @@
             },
             {
               "option_id": "splashing-river-q2-3",
-              "label": "m?y",
+              "label": "mây",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-3.svg",
@@ -1396,18 +1396,18 @@
             }
           ],
           "correctOptionId": "splashing-river-q2-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "splashing-river-q3",
           "type": "image_choice",
-          "prompt_vi": "Blue l? m?u n?o?",
+          "prompt_vi": "Blue là màu nào?",
           "questionAudioText": "Blue.",
           "options": [
             {
               "option_id": "splashing-river-q3-1",
-              "label": "xanh d??ng",
+              "label": "xanh dương",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-1.svg",
@@ -1417,7 +1417,7 @@
             },
             {
               "option_id": "splashing-river-q3-2",
-              "label": "xanh l?",
+              "label": "xanh lá",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-2.svg",
@@ -1427,7 +1427,7 @@
             },
             {
               "option_id": "splashing-river-q3-3",
-              "label": "h?ng",
+              "label": "hồng",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-3.svg",
@@ -1437,8 +1437,8 @@
             }
           ],
           "correctOptionId": "splashing-river-q3-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         }
       ],
       "reward": {
@@ -1450,19 +1450,19 @@
           "status": "pending"
         },
         "badgeTitle": "River Friend",
-        "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
       },
       "arReference": null,
       "readAloudStory": {
         "story_id": "splashing-river-read-aloud",
         "title": "Read with Momo: Splashing River",
-        "instruction_vi": "Nghe Momo ??c, nh?n h?nh, r?i ??c theo t?ng c?u ng?n.",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
         "pages": [
           {
             "page_id": "splashing-river-read-1",
             "order": 1,
             "text_en": "I see a river.",
-            "text_vi": "Momo nh?n th?y: River.",
+            "text_vi": "Momo nhìn thấy: River.",
             "highlighted_words": [
               "River"
             ],
@@ -1483,7 +1483,7 @@
             "page_id": "splashing-river-read-2",
             "order": 2,
             "text_en": "River and Water are here.",
-            "text_vi": "B? ??c c?ng Momo b?ng gi?ng th?t r?.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
             "highlighted_words": [
               "River",
               "Water"
@@ -1502,7 +1502,7 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con ??c theo r?t t?t. Momo nghe r? r?i!"
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
       },
       "generatedMedia": [
         {
@@ -1601,7 +1601,7 @@
       "id": "little-bird",
       "lesson_id": "little-bird",
       "title": "Little Bird",
-      "description": "B? nghe ti?ng chim v? n?i t? bird.",
+      "description": "Bé nghe tiếng chim và nói từ bird.",
       "video": {
         "title": "Little Bird",
         "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/little-bird/video.mp4",
@@ -1609,7 +1609,7 @@
         "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/little-bird/thumb.png"
       },
       "content": null,
-      "title_vi": "Chim nh?",
+      "title_vi": "Chim nhỏ",
       "order": 4,
       "is_completed": false,
       "duration_minutes": 5,
@@ -1634,7 +1634,7 @@
             "order": 1,
             "duration_seconds": 24,
             "visual_prompt": "Cute classroom style scene for Bird.",
-            "narration_vi": "Momo nh?n th?y con chim.",
+            "narration_vi": "Momo nhìn thấy con chim.",
             "audio_text_en": "Look! Bird!",
             "image": {
               "bucket": "learnar-assets",
@@ -1648,7 +1648,7 @@
             "order": 2,
             "duration_seconds": 24,
             "visual_prompt": "Bright picture story for Fly.",
-            "narration_vi": "B? nghe v? n?i Fly.",
+            "narration_vi": "Bé nghe và nói Fly.",
             "audio_text_en": "Say Fly with Momo.",
             "image": {
               "bucket": "learnar-assets",
@@ -1662,7 +1662,7 @@
             "order": 3,
             "duration_seconds": 24,
             "visual_prompt": "Happy reward scene with Small.",
-            "narration_vi": "Momo v? tay khen b?.",
+            "narration_vi": "Momo vỗ tay khen bé.",
             "audio_text_en": "Good job! Small!",
             "image": {
               "bucket": "learnar-assets",
@@ -1724,7 +1724,7 @@
         },
         {
           "word_en": "Small",
-          "word_vi": "nh?",
+          "word_vi": "nhỏ",
           "emoji": "small",
           "image": {
             "bucket": "learnar-assets",
@@ -1750,7 +1750,7 @@
       "game": {
         "game_id": "little-bird-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
         "prompt_audio_text": "Tap bird.",
         "items": [
           {
@@ -1784,11 +1784,11 @@
             }
           }
         ],
-        "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
       },
       "pronunciation": {
         "task_id": "little-bird-say",
-        "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
         "prompt_audio_text": "Bird, Fly, Small",
         "target_words": [
           "Bird",
@@ -1802,12 +1802,12 @@
           "status": "pending"
         },
         "pass_score": 70,
-        "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
       },
       "activity": {
         "activity_id": "little-bird-activity",
         "type": "match_picture",
-        "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
         "prompt_audio_text": "Find Bird and Fly.",
         "items": [
           {
@@ -1841,13 +1841,13 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con gh?p h?nh r?t t?t!"
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
       },
       "quiz": [
         {
           "question_id": "little-bird-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n bird.",
+          "prompt_vi": "Con chọn bird.",
           "questionAudioText": "Tap bird.",
           "options": [
             {
@@ -1882,18 +1882,18 @@
             }
           ],
           "correctOptionId": "little-bird-q1-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "little-bird-q2",
           "type": "image_choice",
-          "prompt_vi": "Fly ngh?a l? g??",
+          "prompt_vi": "Fly nghĩa là gì?",
           "questionAudioText": "Fly.",
           "options": [
             {
               "option_id": "little-bird-q2-1",
-              "label": "ng?",
+              "label": "ngủ",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-1.svg",
@@ -1913,7 +1913,7 @@
             },
             {
               "option_id": "little-bird-q2-3",
-              "label": "?n",
+              "label": "ăn",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-3.svg",
@@ -1923,18 +1923,18 @@
             }
           ],
           "correctOptionId": "little-bird-q2-2",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "little-bird-q3",
           "type": "image_choice",
-          "prompt_vi": "Small l? g??",
+          "prompt_vi": "Small là gì?",
           "questionAudioText": "Small.",
           "options": [
             {
               "option_id": "little-bird-q3-1",
-              "label": "nh?",
+              "label": "nhỏ",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q3-1.svg",
@@ -1964,8 +1964,8 @@
             }
           ],
           "correctOptionId": "little-bird-q3-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         }
       ],
       "reward": {
@@ -1977,19 +1977,19 @@
           "status": "pending"
         },
         "badgeTitle": "Bird Singer",
-        "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
       },
       "arReference": null,
       "readAloudStory": {
         "story_id": "little-bird-read-aloud",
         "title": "Read with Momo: Little Bird",
-        "instruction_vi": "Nghe Momo ??c, nh?n h?nh, r?i ??c theo t?ng c?u ng?n.",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
         "pages": [
           {
             "page_id": "little-bird-read-1",
             "order": 1,
             "text_en": "I see a bird.",
-            "text_vi": "Momo nh?n th?y: Bird.",
+            "text_vi": "Momo nhìn thấy: Bird.",
             "highlighted_words": [
               "Bird"
             ],
@@ -2010,7 +2010,7 @@
             "page_id": "little-bird-read-2",
             "order": 2,
             "text_en": "Bird and Fly are here.",
-            "text_vi": "B? ??c c?ng Momo b?ng gi?ng th?t r?.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
             "highlighted_words": [
               "Bird",
               "Fly"
@@ -2029,7 +2029,7 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con ??c theo r?t t?t. Momo nghe r? r?i!"
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
       },
       "generatedMedia": [
         {
@@ -2128,7 +2128,7 @@
       "id": "sunny-sky",
       "lesson_id": "sunny-sky",
       "title": "Sunny Sky",
-      "description": "B? h?c sun, sky, yellow.",
+      "description": "Bé học sun, sky, yellow.",
       "video": {
         "title": "Sunny Sky",
         "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/sunny-sky/video.mp4",
@@ -2136,7 +2136,7 @@
         "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/sunny-sky/thumb.png"
       },
       "content": null,
-      "title_vi": "B?u tr?i n?ng",
+      "title_vi": "Bầu trời nắng",
       "order": 5,
       "is_completed": false,
       "duration_minutes": 5,
@@ -2161,7 +2161,7 @@
             "order": 1,
             "duration_seconds": 24,
             "visual_prompt": "Cute classroom style scene for Sun.",
-            "narration_vi": "Momo nh?n th?y m?t tr?i.",
+            "narration_vi": "Momo nhìn thấy mặt trời.",
             "audio_text_en": "Look! Sun!",
             "image": {
               "bucket": "learnar-assets",
@@ -2175,7 +2175,7 @@
             "order": 2,
             "duration_seconds": 24,
             "visual_prompt": "Bright picture story for Sky.",
-            "narration_vi": "B? nghe v? n?i Sky.",
+            "narration_vi": "Bé nghe và nói Sky.",
             "audio_text_en": "Say Sky with Momo.",
             "image": {
               "bucket": "learnar-assets",
@@ -2189,7 +2189,7 @@
             "order": 3,
             "duration_seconds": 24,
             "visual_prompt": "Happy reward scene with Yellow.",
-            "narration_vi": "Momo v? tay khen b?.",
+            "narration_vi": "Momo vỗ tay khen bé.",
             "audio_text_en": "Good job! Yellow!",
             "image": {
               "bucket": "learnar-assets",
@@ -2203,7 +2203,7 @@
       "vocabulary": [
         {
           "word_en": "Sun",
-          "word_vi": "m?t tr?i",
+          "word_vi": "mặt trời",
           "emoji": "sun",
           "image": {
             "bucket": "learnar-assets",
@@ -2227,7 +2227,7 @@
         },
         {
           "word_en": "Sky",
-          "word_vi": "b?u tr?i",
+          "word_vi": "bầu trời",
           "emoji": "sky",
           "image": {
             "bucket": "learnar-assets",
@@ -2251,7 +2251,7 @@
         },
         {
           "word_en": "Yellow",
-          "word_vi": "m?u v?ng",
+          "word_vi": "màu vàng",
           "emoji": "yellow",
           "image": {
             "bucket": "learnar-assets",
@@ -2277,7 +2277,7 @@
       "game": {
         "game_id": "sunny-sky-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
         "prompt_audio_text": "Tap sun.",
         "items": [
           {
@@ -2311,11 +2311,11 @@
             }
           }
         ],
-        "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
       },
       "pronunciation": {
         "task_id": "sunny-sky-say",
-        "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
         "prompt_audio_text": "Sun, Sky, Yellow",
         "target_words": [
           "Sun",
@@ -2329,12 +2329,12 @@
           "status": "pending"
         },
         "pass_score": 70,
-        "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
       },
       "activity": {
         "activity_id": "sunny-sky-activity",
         "type": "match_picture",
-        "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
         "prompt_audio_text": "Find Sun and Sky.",
         "items": [
           {
@@ -2368,13 +2368,13 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con gh?p h?nh r?t t?t!"
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
       },
       "quiz": [
         {
           "question_id": "sunny-sky-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n sun.",
+          "prompt_vi": "Con chọn sun.",
           "questionAudioText": "Tap sun.",
           "options": [
             {
@@ -2409,18 +2409,18 @@
             }
           ],
           "correctOptionId": "sunny-sky-q1-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "sunny-sky-q2",
           "type": "image_choice",
-          "prompt_vi": "Sky l? g??",
+          "prompt_vi": "Sky là gì?",
           "questionAudioText": "Sky.",
           "options": [
             {
               "option_id": "sunny-sky-q2-1",
-              "label": "b?u tr?i",
+              "label": "bầu trời",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-1.svg",
@@ -2430,7 +2430,7 @@
             },
             {
               "option_id": "sunny-sky-q2-2",
-              "label": "d?ng s?ng",
+              "label": "dòng sông",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-2.svg",
@@ -2440,7 +2440,7 @@
             },
             {
               "option_id": "sunny-sky-q2-3",
-              "label": "c?y",
+              "label": "cây",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-3.svg",
@@ -2450,18 +2450,18 @@
             }
           ],
           "correctOptionId": "sunny-sky-q2-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "sunny-sky-q3",
           "type": "image_choice",
-          "prompt_vi": "Yellow l? m?u n?o?",
+          "prompt_vi": "Yellow là màu nào?",
           "questionAudioText": "Yellow.",
           "options": [
             {
               "option_id": "sunny-sky-q3-1",
-              "label": "v?ng",
+              "label": "vàng",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-1.svg",
@@ -2481,7 +2481,7 @@
             },
             {
               "option_id": "sunny-sky-q3-3",
-              "label": "?en",
+              "label": "đen",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-3.svg",
@@ -2491,8 +2491,8 @@
             }
           ],
           "correctOptionId": "sunny-sky-q3-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         }
       ],
       "reward": {
@@ -2504,19 +2504,19 @@
           "status": "pending"
         },
         "badgeTitle": "Sunny Smile",
-        "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
       },
       "arReference": null,
       "readAloudStory": {
         "story_id": "sunny-sky-read-aloud",
         "title": "Read with Momo: Sunny Sky",
-        "instruction_vi": "Nghe Momo ??c, nh?n h?nh, r?i ??c theo t?ng c?u ng?n.",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
         "pages": [
           {
             "page_id": "sunny-sky-read-1",
             "order": 1,
             "text_en": "I see a sun.",
-            "text_vi": "Momo nh?n th?y: Sun.",
+            "text_vi": "Momo nhìn thấy: Sun.",
             "highlighted_words": [
               "Sun"
             ],
@@ -2537,7 +2537,7 @@
             "page_id": "sunny-sky-read-2",
             "order": 2,
             "text_en": "Sun and Sky are here.",
-            "text_vi": "B? ??c c?ng Momo b?ng gi?ng th?t r?.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
             "highlighted_words": [
               "Sun",
               "Sky"
@@ -2556,7 +2556,7 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con ??c theo r?t t?t. Momo nghe r? r?i!"
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
       },
       "generatedMedia": [
         {
@@ -2655,7 +2655,7 @@
       "id": "nature-review",
       "lesson_id": "nature-review",
       "title": "Nature Review",
-      "description": "B? ?n l?i t? ?? h?c.",
+      "description": "Bé ôn lại từ đã học.",
       "video": {
         "title": "Nature Review",
         "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/nature-review/video.mp4",
@@ -2663,7 +2663,7 @@
         "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/nature-review/thumb.png"
       },
       "content": null,
-      "title_vi": "?n thi?n nhi?n",
+      "title_vi": "Ôn thiên nhiên",
       "order": 6,
       "is_completed": false,
       "duration_minutes": 5,
@@ -2688,7 +2688,7 @@
             "order": 1,
             "duration_seconds": 24,
             "visual_prompt": "Cute classroom style scene for Elephant.",
-            "narration_vi": "Momo nh?n th?y con voi.",
+            "narration_vi": "Momo nhìn thấy con voi.",
             "audio_text_en": "Look! Elephant!",
             "image": {
               "bucket": "learnar-assets",
@@ -2702,7 +2702,7 @@
             "order": 2,
             "duration_seconds": 24,
             "visual_prompt": "Bright picture story for Tree.",
-            "narration_vi": "B? nghe v? n?i Tree.",
+            "narration_vi": "Bé nghe và nói Tree.",
             "audio_text_en": "Say Tree with Momo.",
             "image": {
               "bucket": "learnar-assets",
@@ -2716,7 +2716,7 @@
             "order": 3,
             "duration_seconds": 24,
             "visual_prompt": "Happy reward scene with Bird.",
-            "narration_vi": "Momo v? tay khen b?.",
+            "narration_vi": "Momo vỗ tay khen bé.",
             "audio_text_en": "Good job! Bird!",
             "image": {
               "bucket": "learnar-assets",
@@ -2754,7 +2754,7 @@
         },
         {
           "word_en": "Tree",
-          "word_vi": "c?y",
+          "word_vi": "cây",
           "emoji": "tree",
           "image": {
             "bucket": "learnar-assets",
@@ -2802,7 +2802,7 @@
         },
         {
           "word_en": "Sun",
-          "word_vi": "m?t tr?i",
+          "word_vi": "mặt trời",
           "emoji": "sun",
           "image": {
             "bucket": "learnar-assets",
@@ -2828,7 +2828,7 @@
       "game": {
         "game_id": "nature-review-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
         "prompt_audio_text": "Tap tree.",
         "items": [
           {
@@ -2872,11 +2872,11 @@
             }
           }
         ],
-        "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
       },
       "pronunciation": {
         "task_id": "nature-review-say",
-        "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
         "prompt_audio_text": "Elephant, Tree, Bird",
         "target_words": [
           "Elephant",
@@ -2890,12 +2890,12 @@
           "status": "pending"
         },
         "pass_score": 70,
-        "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
       },
       "activity": {
         "activity_id": "nature-review-activity",
         "type": "match_picture",
-        "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
         "prompt_audio_text": "Find Elephant and Tree.",
         "items": [
           {
@@ -2939,13 +2939,13 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con gh?p h?nh r?t t?t!"
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
       },
       "quiz": [
         {
           "question_id": "nature-review-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n elephant.",
+          "prompt_vi": "Con chọn elephant.",
           "questionAudioText": "Tap elephant.",
           "options": [
             {
@@ -2980,13 +2980,13 @@
             }
           ],
           "correctOptionId": "nature-review-q1-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "nature-review-q2",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n tree.",
+          "prompt_vi": "Con chọn tree.",
           "questionAudioText": "Tap tree.",
           "options": [
             {
@@ -3021,13 +3021,13 @@
             }
           ],
           "correctOptionId": "nature-review-q2-2",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "nature-review-q3",
           "type": "image_choice",
-          "prompt_vi": "Bird l?m g??",
+          "prompt_vi": "Bird làm gì?",
           "questionAudioText": "Birds fly.",
           "options": [
             {
@@ -3062,8 +3062,8 @@
             }
           ],
           "correctOptionId": "nature-review-q3-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         }
       ],
       "reward": {
@@ -3075,19 +3075,19 @@
           "status": "pending"
         },
         "badgeTitle": "Nature Champion",
-        "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
       },
       "arReference": null,
       "readAloudStory": {
         "story_id": "nature-review-read-aloud",
         "title": "Read with Momo: Nature Review",
-        "instruction_vi": "Nghe Momo ??c, nh?n h?nh, r?i ??c theo t?ng c?u ng?n.",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
         "pages": [
           {
             "page_id": "nature-review-read-1",
             "order": 1,
             "text_en": "I see a elephant.",
-            "text_vi": "Momo nh?n th?y: Elephant.",
+            "text_vi": "Momo nhìn thấy: Elephant.",
             "highlighted_words": [
               "Elephant"
             ],
@@ -3108,7 +3108,7 @@
             "page_id": "nature-review-read-2",
             "order": 2,
             "text_en": "Elephant and Tree are here.",
-            "text_vi": "B? ??c c?ng Momo b?ng gi?ng th?t r?.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
             "highlighted_words": [
               "Elephant",
               "Tree"
@@ -3127,7 +3127,7 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con ??c theo r?t t?t. Momo nghe r? r?i!"
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
       },
       "generatedMedia": [
         {
@@ -3249,22 +3249,22 @@
     {
       "name": "Minh, 6",
       "role": "Young learner",
-      "quote": "Con th?ch ch?m v?o h?nh v? n?i elephant!",
+      "quote": "Con thích chạm vào hình và nói elephant!",
       "avatar": "M"
     },
     {
-      "name": "M? c?a An",
+      "name": "Mẹ của An",
       "role": "Parent",
-      "quote": "B?i ng?n, nhi?u h?nh, b? ch?u h?c m?i ng?y.",
+      "quote": "Bài ngắn, nhiều hình, bé chịu học mỗi ngày.",
       "avatar": "A"
     }
   ],
   "enrollmentCta": {
-    "headline": "C?ng Momo kh?m ph? thi?n nhi?n h?m nay",
-    "body": "M?i ph?n h?c ch? v?i ph?t: xem, ch?i, n?i, ch?n ??p ?n v? nh?n sticker.",
-    "buttonLabel": "B?t ??u v?i thi?n nhi?n"
+    "headline": "Cùng Momo khám phá thiên nhiên hôm nay",
+    "body": "Mỗi phần học chỉ vài phút: xem, chơi, nói, chọn đáp án và nhận sticker.",
+    "buttonLabel": "Bắt đầu với thiên nhiên"
   },
   "category_key": "nature",
-  "category_label": "Thi?n nhi?n",
+  "category_label": "Thiên nhiên",
   "category_icon": "Nature"
 }

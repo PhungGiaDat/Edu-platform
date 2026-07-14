@@ -52,19 +52,47 @@ export function CodexPetSprite({
 }: CodexPetSpriteProps) {
     const animation = useMemo(() => ANIMATION_ROWS[animationState], [animationState]);
     const [frame, setFrame] = useState(0);
+    const [reduceMotion, setReduceMotion] = useState(false);
+
+    useEffect(() => {
+        if (typeof window.matchMedia !== 'function') return;
+
+        const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const updateMotionPreference = () => {
+            setReduceMotion(mediaQuery.matches);
+            if (mediaQuery.matches) setFrame(0);
+        };
+
+        updateMotionPreference();
+        if (typeof mediaQuery.addEventListener === 'function') {
+            mediaQuery.addEventListener('change', updateMotionPreference);
+        } else {
+            mediaQuery.addListener?.(updateMotionPreference);
+        }
+
+        return () => {
+            if (typeof mediaQuery.removeEventListener === 'function') {
+                mediaQuery.removeEventListener('change', updateMotionPreference);
+            } else {
+                mediaQuery.removeListener?.(updateMotionPreference);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         setFrame(0);
     }, [animationState]);
 
     useEffect(() => {
+        if (reduceMotion) return;
+
         const duration = animation.durations[frame] ?? animation.durations[0];
         const timer = window.setTimeout(() => {
             setFrame((currentFrame) => (currentFrame + 1) % animation.durations.length);
         }, duration);
 
         return () => window.clearTimeout(timer);
-    }, [animation, frame]);
+    }, [animation, frame, reduceMotion]);
 
     const safeFrame = Math.min(frame, animation.durations.length - 1);
     const backgroundPositionX = `${(safeFrame / (ATLAS_COLUMNS - 1)) * 100}%`;
@@ -82,8 +110,10 @@ export function CodexPetSprite({
             aria-label={label}
         >
             <div
-                className="h-full max-w-full"
+                className="max-h-full max-w-full shrink-0"
                 style={{
+                    width: 'auto',
+                    height: '100%',
                     aspectRatio: `${CELL_WIDTH} / ${CELL_HEIGHT}`,
                     backgroundImage: `url("${src}")`,
                     backgroundRepeat: 'no-repeat',

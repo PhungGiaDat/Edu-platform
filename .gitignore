@@ -5,6 +5,8 @@
 
 .opencode    
 scripts
+!backend/scripts/
+!backend/scripts/create_admin.py
 .git
 backend/generated/
 

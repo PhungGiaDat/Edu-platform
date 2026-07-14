@@ -99,7 +99,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
             {!isOpen && show3DPet && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="group fixed bottom-[calc(env(safe-area-inset-bottom)+8rem)] right-2 h-16 w-16 cursor-pointer p-0 transition-transform duration-300 hover:scale-105 sm:right-4 sm:h-20 sm:w-20 md:bottom-6 md:right-6 md:h-32 md:w-32"
+                    className="group fixed bottom-[calc(env(safe-area-inset-bottom)+8rem)] right-2 flex h-16 w-16 cursor-pointer items-center justify-center p-0 transition-transform duration-300 motion-safe:hover:scale-105 sm:right-4 sm:h-[76px] sm:w-[76px] md:bottom-6 md:right-6 md:h-20 md:w-20 lg:h-[92px] lg:w-[92px]"
                     style={{
                         zIndex: 'var(--z-chatbot)',
                         background: 'transparent',
@@ -115,17 +115,19 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                     title="Talk to Lexi"
                     aria-label="Talk to Lexi"
                 >
-                    <span className="absolute -left-28 top-2 hidden w-32 rounded-2xl border-2 border-sky-100 bg-white px-3 py-2 text-left text-xs font-black leading-tight text-slate-700 shadow-[0_10px_24px_rgba(91,141,239,0.18)] transition-transform duration-300 group-hover:-translate-y-1 sm:block">
+                    <span className="absolute -left-28 top-2 hidden w-32 rounded-2xl border-2 border-sky-100 bg-white px-3 py-2 text-left text-xs font-black leading-tight text-slate-700 shadow-[0_10px_24px_rgba(91,141,239,0.18)] motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:-translate-y-1 sm:block">
                         Need help?
                         <span className="block font-bold text-sky-500">Ask Lexi!</span>
                         <span className="absolute -right-2 top-8 h-4 w-4 rotate-45 border-r-2 border-t-2 border-sky-100 bg-white" />
                     </span>
-                    <CodexPetSprite
-                        animationState="waiting"
-                        className="drop-shadow-2xl"
-                        label="Lexi"
-                        size="100%"
-                    />
+                    <span className="block h-14 w-14 sm:h-[68px] sm:w-[68px] md:h-[72px] md:w-[72px] lg:h-[84px] lg:w-[84px]">
+                        <CodexPetSprite
+                            animationState="waiting"
+                            className="drop-shadow-2xl"
+                            label="Lexi"
+                            size="100%"
+                        />
+                    </span>
                 </button>
             )}
 
@@ -143,8 +145,8 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                         <div className="absolute bottom-0 left-12 h-14 w-14 rounded-full bg-yellow-200/25" />
                         <div className="relative flex items-center justify-between">
                             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/90 shadow-[0_5px_0_rgba(30,87,153,0.16)] sm:h-14 sm:w-14">
-                                    <CodexPetSprite animationState="waving" label="Lexi" size={52} />
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/90 p-[3px] shadow-[0_5px_0_rgba(30,87,153,0.16)] sm:h-14 sm:w-14 sm:p-1">
+                                    <CodexPetSprite animationState="waving" label="Lexi" size="100%" />
                                 </div>
                                 <div className="min-w-0">
                                     <h3 className="truncate text-lg font-black text-white drop-shadow-sm sm:text-xl">Lexi</h3>
@@ -179,8 +181,8 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                                 className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
                                 {msg.role === 'ai' && (
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-[0_4px_0_rgba(91,141,239,0.12)]">
-                                        <CodexPetSprite animationState="idle" label="Lexi" size={38} />
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white p-[3px] shadow-[0_4px_0_rgba(91,141,239,0.12)]">
+                                        <CodexPetSprite animationState="idle" label="Lexi" size="100%" />
                                     </div>
                                 )}
 
