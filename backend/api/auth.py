@@ -69,6 +69,7 @@ async def register(user_in: UserCreate):
         avatar_url=user.avatar_url,
         is_active=user.is_active,
         is_verified=user.is_verified,
+        is_superuser=user.is_superuser,
         created_at=user.created_at
     )
 
@@ -145,5 +146,6 @@ async def get_me(current_user: UserDocument = Depends(get_current_user)):
         avatar_url=current_user.avatar_url,
         is_active=current_user.is_active,
         is_verified=current_user.is_verified,
+        is_superuser=current_user.is_superuser,
         created_at=current_user.created_at
     )

@@ -250,8 +250,13 @@ The `.cursor/` directory is now self-contained: all 11 agents, 18 skills, the in
 
 ### Prerequisites
 
-Run once after cloning:
+**On Windows, before running the installer**, install one of the following (required to build `ast-grep` from source — `cargo install ast-grep --locked` needs both a C compiler and a Windows import-library tool):
+
+1. **Visual Studio Build Tools** (recommended) — `winget install Microsoft.VisualStudio.2022.BuildTools` and select the "Desktop development with C++" workload. Provides `link.exe` for the default MSVC Rust target.
+2. **MinGW-w64** (alternative) — `winget install BrechtSanders.WinLibs.POSIX.UCRT`. Provides `gcc.exe`/`as.exe`/`dlltool.exe`/`ld.exe`. After install, add its `bin\` directory to PATH and run `rustup default stable-x86_64-pc-windows-gnu`.
+
+Then run the installer once:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .cursor\scripts\install-code-intelligence.ps1
 ```
-Then restart the terminal. `sg scan --json` should report findings from the rule library.
+Restart the terminal. `sg scan --json` should report findings from the rule library.

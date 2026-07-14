@@ -1,7 +1,7 @@
 id: no-nested-ternary
 language: TypeScript
-severity: suggestion
+severity: info
 message: "Avoid nested ternary expressions — they hurt readability"
 note: "Use if/else, switch, or a lookup map instead"
 rule:
-  pattern: $A ? $B ? $$$NESTED : $$$ : $$$
+  pattern: "$A ? $B ? $$$NESTED : $$$ : $$$"

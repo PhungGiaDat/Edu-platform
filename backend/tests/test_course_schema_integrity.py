@@ -130,3 +130,95 @@ def test_backfillStrictMode_onlyTargetsGeneratedLookingCourses():
     assert _should_validate_strict(legacy_document, strict_generated=True) is False
     assert _should_validate_strict(generated_document, strict_generated=True) is True
     assert _should_validate_strict(generated_document, strict_generated=False) is False
+
+
+def test_normalizeCoursePayload_acceptsLegacyAgeRangeAtSchemaLevel():
+    """CourseSchema no longer rejects non-5-8 age_range at validation time.
+
+    Relaxed normalization (strict_generated=False) fixes age_range to "5-8"
+    silently, while strict validation (strict_generated=True) raises via
+    validate_generated_course instead.  This prevents a Pydantic-level hard
+    reject from blocking the legacy backfill migration.
+    """
+    from models.course_model import CourseSchema
+
+    # Schema-level validation must not raise — normalize_course_payload
+    # handles the final decision.
+    CourseSchema.model_validate({
+        "course_id": "legacy-course",
+        "title": "Legacy Course",
+        "age_range": "5-7",
+        "lessons": [
+            {
+                "lesson_id": "legacy-lesson",
+                "title": "Legacy Lesson",
+                "order": 1,
+            }
+        ],
+    })
+
+    # Relaxed mode normalizes it to "5-8".
+    normalized = normalize_course_payload(
+        {
+            "course_id": "legacy-course",
+            "title": "Legacy Course",
+            "age_range": "5-7",
+            "lessons": [
+                {
+                    "lesson_id": "legacy-lesson",
+                    "title": "Legacy Lesson",
+                    "order": 1,
+                }
+            ],
+        },
+        strict_generated=False,
+        refresh_updated_at=False,
+    )
+    assert normalized["age_range"] == "5-8"
+
+
+def test_normalizeCoursePayload_strictRejectsWrongAgeRange():
+    """Strict validation (strict_generated=True) rejects wrong age_range."""
+    import pytest
+
+    payload = _seed_payload()
+    payload["age_range"] = "9-12"
+
+    with pytest.raises(ValueError, match="age range 5-8"):
+        normalize_course_payload(payload, strict_generated=True, refresh_updated_at=False)
+
+
+def test_normalizeCoursePayload_rejectsTooManyQuizOptions():
+    """QuizQuestion.options max_length=4 is enforced at Pydantic level."""
+    import pytest
+
+    payload = _seed_payload()
+    # Seed questions have 3 options; add 2 more to exceed max_length=4.
+    quiz = payload["lessons"][0]["quiz"][0]
+    quiz["options"].extend([
+        {
+            "option_id": "opt-E",
+            "label": "Wrong answer 1",
+            "image": None,
+        },
+        {
+            "option_id": "opt-F",
+            "label": "Wrong answer 2",
+            "image": None,
+        },
+    ])
+
+    with pytest.raises(Exception):  # Pydantic ValidationError (not ValueError)
+        normalize_course_payload(payload, strict_generated=True, refresh_updated_at=False)
+
+
+def test_validateGeneratedCourse_errorMessageMentionsLessons():
+    """Error message says 'lessons', not 'sections'."""
+    import pytest
+
+    payload = _seed_payload()
+    # Remove enough lessons to trigger the 5-8 range violation.
+    payload["lessons"] = payload["lessons"][:4]
+
+    with pytest.raises(ValueError, match="5-8 lessons"):
+        normalize_course_payload(payload, strict_generated=True, refresh_updated_at=False)
