@@ -1,12 +1,12 @@
 {
   "course_id": "momo-home-family-english-5-7",
-  "title": "B? G?u Momo H?c Ti?ng Anh Trong Ng?i Nh? Nh?",
+  "title": "Bé Gấu Momo Học Tiếng Anh Trong Ngôi Nhà Nhỏ",
   "description": "Short visual English course for children aged 5-7.",
-  "subtitle_vi": "H?c t? gia ??nh, ?? v?t v? c?m x?c trong nh?.",
+  "subtitle_vi": "Học từ gia đình, đồ vật và cảm xúc trong nhà.",
   "theme": "Home, Family and Feelings",
   "age_range": "5-8",
   "level": "beginner",
-  "description_vi": "M?i ph?n h?c c? video ng?n, tr? ch?i, luy?n ph?t ?m, ho?t ??ng h?nh ?nh, quiz v? sticker th??ng.",
+  "description_vi": "Mỗi phần học có video ngắn, trò chơi, luyện phát âm, hoạt động hình ảnh, quiz và sticker thưởng.",
   "thumbnail_url": null,
   "thumbnail": {
     "bucket": "learnar-assets",
@@ -20,7 +20,7 @@
       "id": "hello-family",
       "lesson_id": "hello-family",
       "title": "Hello Family",
-      "description": "B? h?c c?c th?nh vi?n gia ??nh.",
+      "description": "Bé học các thành viên gia đình.",
       "video": {
         "title": "Hello Family",
         "url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/hello-family/video.mp4",
@@ -28,7 +28,7 @@
         "thumbnail_url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/hello-family/thumb.png"
       },
       "content": null,
-      "title_vi": "Ch?o gia ??nh",
+      "title_vi": "Chào gia đình",
       "order": 1,
       "is_completed": false,
       "duration_minutes": 5,
@@ -53,7 +53,7 @@
             "order": 1,
             "duration_seconds": 24,
             "visual_prompt": "Cute classroom style scene for Mom.",
-            "narration_vi": "Momo nh?n th?y m?.",
+            "narration_vi": "Momo nhìn thấy mẹ.",
             "audio_text_en": "Look! Mom!",
             "image": {
               "bucket": "learnar-assets",
@@ -67,7 +67,7 @@
             "order": 2,
             "duration_seconds": 24,
             "visual_prompt": "Bright picture story for Dad.",
-            "narration_vi": "B? nghe v? n?i Dad.",
+            "narration_vi": "Bé nghe và nói Dad.",
             "audio_text_en": "Say Dad with Momo.",
             "image": {
               "bucket": "learnar-assets",
@@ -81,7 +81,7 @@
             "order": 3,
             "duration_seconds": 24,
             "visual_prompt": "Happy reward scene with Baby.",
-            "narration_vi": "Momo v? tay khen b?.",
+            "narration_vi": "Momo vỗ tay khen bé.",
             "audio_text_en": "Good job! Baby!",
             "image": {
               "bucket": "learnar-assets",
@@ -95,7 +95,7 @@
       "vocabulary": [
         {
           "word_en": "Mom",
-          "word_vi": "m?",
+          "word_vi": "mẹ",
           "emoji": "mom",
           "image": {
             "bucket": "learnar-assets",
@@ -143,7 +143,7 @@
         },
         {
           "word_en": "Baby",
-          "word_vi": "em b?",
+          "word_vi": "em bé",
           "emoji": "baby",
           "image": {
             "bucket": "learnar-assets",
@@ -169,7 +169,7 @@
       "game": {
         "game_id": "hello-family-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
         "prompt_audio_text": "Tap mom.",
         "items": [
           {
@@ -203,11 +203,11 @@
             }
           }
         ],
-        "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
       },
       "pronunciation": {
         "task_id": "hello-family-say",
-        "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
         "prompt_audio_text": "Mom, Dad, Baby",
         "target_words": [
           "Mom",
@@ -221,12 +221,12 @@
           "status": "pending"
         },
         "pass_score": 70,
-        "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
       },
       "activity": {
         "activity_id": "hello-family-activity",
         "type": "match_picture",
-        "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
         "prompt_audio_text": "Find Mom and Dad.",
         "items": [
           {
@@ -260,13 +260,13 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con gh?p h?nh r?t t?t!"
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
       },
       "quiz": [
         {
           "question_id": "hello-family-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n mom.",
+          "prompt_vi": "Con chọn mom.",
           "questionAudioText": "Tap mom.",
           "options": [
             {
@@ -301,13 +301,13 @@
             }
           ],
           "correctOptionId": "hello-family-q1-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "hello-family-q2",
           "type": "image_choice",
-          "prompt_vi": "Dad l? ai?",
+          "prompt_vi": "Dad là ai?",
           "questionAudioText": "Dad.",
           "options": [
             {
@@ -322,7 +322,7 @@
             },
             {
               "option_id": "hello-family-q2-2",
-              "label": "m?",
+              "label": "mẹ",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q2-2.svg",
@@ -332,7 +332,7 @@
             },
             {
               "option_id": "hello-family-q2-3",
-              "label": "b?",
+              "label": "bố",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q2-3.svg",
@@ -342,18 +342,18 @@
             }
           ],
           "correctOptionId": "hello-family-q2-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "hello-family-q3",
           "type": "image_choice",
-          "prompt_vi": "Baby ngh?a l? g??",
+          "prompt_vi": "Baby nghĩa là gì?",
           "questionAudioText": "Baby.",
           "options": [
             {
               "option_id": "hello-family-q3-1",
-              "label": "em b?",
+              "label": "em bé",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q3-1.svg",
@@ -363,7 +363,7 @@
             },
             {
               "option_id": "hello-family-q3-2",
-              "label": "b?n",
+              "label": "bạn",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q3-2.svg",
@@ -373,7 +373,7 @@
             },
             {
               "option_id": "hello-family-q3-3",
-              "label": "c?a",
+              "label": "cửa",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q3-3.svg",
@@ -383,8 +383,8 @@
             }
           ],
           "correctOptionId": "hello-family-q3-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         }
       ],
       "reward": {
@@ -396,19 +396,19 @@
           "status": "pending"
         },
         "badgeTitle": "Family Hello",
-        "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
       },
       "arReference": null,
       "readAloudStory": {
         "story_id": "hello-family-read-aloud",
         "title": "Read with Momo: Hello Family",
-        "instruction_vi": "Nghe Momo ??c, nh?n h?nh, r?i ??c theo t?ng c?u ng?n.",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
         "pages": [
           {
             "page_id": "hello-family-read-1",
             "order": 1,
             "text_en": "I see a mom.",
-            "text_vi": "Momo nh?n th?y: Mom.",
+            "text_vi": "Momo nhìn thấy: Mom.",
             "highlighted_words": [
               "Mom"
             ],
@@ -429,7 +429,7 @@
             "page_id": "hello-family-read-2",
             "order": 2,
             "text_en": "Mom and Dad are here.",
-            "text_vi": "B? ??c c?ng Momo b?ng gi?ng th?t r?.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
             "highlighted_words": [
               "Mom",
               "Dad"
@@ -448,7 +448,7 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con ??c theo r?t t?t. Momo nghe r? r?i!"
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
       },
       "generatedMedia": [
         {
@@ -547,7 +547,7 @@
       "id": "my-room",
       "lesson_id": "my-room",
       "title": "My Room",
-      "description": "B? h?c ?? v?t trong ph?ng.",
+      "description": "Bé học đồ vật trong phòng.",
       "video": {
         "title": "My Room",
         "url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/my-room/video.mp4",
@@ -555,7 +555,7 @@
         "thumbnail_url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/my-room/thumb.png"
       },
       "content": null,
-      "title_vi": "Ph?ng c?a b?",
+      "title_vi": "Phòng của bé",
       "order": 2,
       "is_completed": false,
       "duration_minutes": 5,
@@ -580,7 +580,7 @@
             "order": 1,
             "duration_seconds": 24,
             "visual_prompt": "Cute classroom style scene for Bed.",
-            "narration_vi": "Momo nh?n th?y gi??ng.",
+            "narration_vi": "Momo nhìn thấy giường.",
             "audio_text_en": "Look! Bed!",
             "image": {
               "bucket": "learnar-assets",
@@ -594,7 +594,7 @@
             "order": 2,
             "duration_seconds": 24,
             "visual_prompt": "Bright picture story for Chair.",
-            "narration_vi": "B? nghe v? n?i Chair.",
+            "narration_vi": "Bé nghe và nói Chair.",
             "audio_text_en": "Say Chair with Momo.",
             "image": {
               "bucket": "learnar-assets",
@@ -608,7 +608,7 @@
             "order": 3,
             "duration_seconds": 24,
             "visual_prompt": "Happy reward scene with Toy.",
-            "narration_vi": "Momo v? tay khen b?.",
+            "narration_vi": "Momo vỗ tay khen bé.",
             "audio_text_en": "Good job! Toy!",
             "image": {
               "bucket": "learnar-assets",
@@ -622,7 +622,7 @@
       "vocabulary": [
         {
           "word_en": "Bed",
-          "word_vi": "gi??ng",
+          "word_vi": "giường",
           "emoji": "bed",
           "image": {
             "bucket": "learnar-assets",
@@ -646,7 +646,7 @@
         },
         {
           "word_en": "Chair",
-          "word_vi": "gh?",
+          "word_vi": "ghế",
           "emoji": "chair",
           "image": {
             "bucket": "learnar-assets",
@@ -670,7 +670,7 @@
         },
         {
           "word_en": "Toy",
-          "word_vi": "?? ch?i",
+          "word_vi": "đồ chơi",
           "emoji": "toy",
           "image": {
             "bucket": "learnar-assets",
@@ -696,7 +696,7 @@
       "game": {
         "game_id": "my-room-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
         "prompt_audio_text": "Tap bed.",
         "items": [
           {
@@ -730,11 +730,11 @@
             }
           }
         ],
-        "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
       },
       "pronunciation": {
         "task_id": "my-room-say",
-        "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
         "prompt_audio_text": "Bed, Chair, Toy",
         "target_words": [
           "Bed",
@@ -748,12 +748,12 @@
           "status": "pending"
         },
         "pass_score": 70,
-        "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
       },
       "activity": {
         "activity_id": "my-room-activity",
         "type": "match_picture",
-        "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
         "prompt_audio_text": "Find Bed and Chair.",
         "items": [
           {
@@ -787,13 +787,13 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con gh?p h?nh r?t t?t!"
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
       },
       "quiz": [
         {
           "question_id": "my-room-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n bed.",
+          "prompt_vi": "Con chọn bed.",
           "questionAudioText": "Tap bed.",
           "options": [
             {
@@ -828,18 +828,18 @@
             }
           ],
           "correctOptionId": "my-room-q1-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "my-room-q2",
           "type": "image_choice",
-          "prompt_vi": "Chair l? g??",
+          "prompt_vi": "Chair là gì?",
           "questionAudioText": "Chair.",
           "options": [
             {
               "option_id": "my-room-q2-1",
-              "label": "gh?",
+              "label": "ghế",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q2-1.svg",
@@ -849,7 +849,7 @@
             },
             {
               "option_id": "my-room-q2-2",
-              "label": "b?ng",
+              "label": "bóng",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q2-2.svg",
@@ -859,7 +859,7 @@
             },
             {
               "option_id": "my-room-q2-3",
-              "label": "m?o",
+              "label": "mèo",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q2-3.svg",
@@ -869,18 +869,18 @@
             }
           ],
           "correctOptionId": "my-room-q2-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "my-room-q3",
           "type": "image_choice",
-          "prompt_vi": "Toy ngh?a l? g??",
+          "prompt_vi": "Toy nghĩa là gì?",
           "questionAudioText": "Toy.",
           "options": [
             {
               "option_id": "my-room-q3-1",
-              "label": "?? ch?i",
+              "label": "đồ chơi",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q3-1.svg",
@@ -890,7 +890,7 @@
             },
             {
               "option_id": "my-room-q3-2",
-              "label": "c?y",
+              "label": "cây",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q3-2.svg",
@@ -900,7 +900,7 @@
             },
             {
               "option_id": "my-room-q3-3",
-              "label": "n??c",
+              "label": "nước",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q3-3.svg",
@@ -910,8 +910,8 @@
             }
           ],
           "correctOptionId": "my-room-q3-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         }
       ],
       "reward": {
@@ -923,19 +923,19 @@
           "status": "pending"
         },
         "badgeTitle": "Room Explorer",
-        "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
       },
       "arReference": null,
       "readAloudStory": {
         "story_id": "my-room-read-aloud",
         "title": "Read with Momo: My Room",
-        "instruction_vi": "Nghe Momo ??c, nh?n h?nh, r?i ??c theo t?ng c?u ng?n.",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
         "pages": [
           {
             "page_id": "my-room-read-1",
             "order": 1,
             "text_en": "I see a bed.",
-            "text_vi": "Momo nh?n th?y: Bed.",
+            "text_vi": "Momo nhìn thấy: Bed.",
             "highlighted_words": [
               "Bed"
             ],
@@ -956,7 +956,7 @@
             "page_id": "my-room-read-2",
             "order": 2,
             "text_en": "Bed and Chair are here.",
-            "text_vi": "B? ??c c?ng Momo b?ng gi?ng th?t r?.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
             "highlighted_words": [
               "Bed",
               "Chair"
@@ -975,7 +975,7 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con ??c theo r?t t?t. Momo nghe r? r?i!"
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
       },
       "generatedMedia": [
         {
@@ -1074,7 +1074,7 @@
       "id": "snack-time",
       "lesson_id": "snack-time",
       "title": "Snack Time",
-      "description": "B? h?c m?n ?n d? nh?.",
+      "description": "Bé học món ăn dễ nhớ.",
       "video": {
         "title": "Snack Time",
         "url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/snack-time/video.mp4",
@@ -1082,7 +1082,7 @@
         "thumbnail_url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/snack-time/thumb.png"
       },
       "content": null,
-      "title_vi": "Gi? ?n nh?",
+      "title_vi": "Giờ ăn nhẹ",
       "order": 3,
       "is_completed": false,
       "duration_minutes": 5,
@@ -1107,7 +1107,7 @@
             "order": 1,
             "duration_seconds": 24,
             "visual_prompt": "Cute classroom style scene for Apple.",
-            "narration_vi": "Momo nh?n th?y qu? t?o.",
+            "narration_vi": "Momo nhìn thấy quả táo.",
             "audio_text_en": "Look! Apple!",
             "image": {
               "bucket": "learnar-assets",
@@ -1121,7 +1121,7 @@
             "order": 2,
             "duration_seconds": 24,
             "visual_prompt": "Bright picture story for Milk.",
-            "narration_vi": "B? nghe v? n?i Milk.",
+            "narration_vi": "Bé nghe và nói Milk.",
             "audio_text_en": "Say Milk with Momo.",
             "image": {
               "bucket": "learnar-assets",
@@ -1135,7 +1135,7 @@
             "order": 3,
             "duration_seconds": 24,
             "visual_prompt": "Happy reward scene with Cookie.",
-            "narration_vi": "Momo v? tay khen b?.",
+            "narration_vi": "Momo vỗ tay khen bé.",
             "audio_text_en": "Good job! Cookie!",
             "image": {
               "bucket": "learnar-assets",
@@ -1149,7 +1149,7 @@
       "vocabulary": [
         {
           "word_en": "Apple",
-          "word_vi": "qu? t?o",
+          "word_vi": "quả táo",
           "emoji": "apple",
           "image": {
             "bucket": "learnar-assets",
@@ -1173,7 +1173,7 @@
         },
         {
           "word_en": "Milk",
-          "word_vi": "s?a",
+          "word_vi": "sữa",
           "emoji": "milk",
           "image": {
             "bucket": "learnar-assets",
@@ -1197,7 +1197,7 @@
         },
         {
           "word_en": "Cookie",
-          "word_vi": "b?nh quy",
+          "word_vi": "bánh quy",
           "emoji": "cookie",
           "image": {
             "bucket": "learnar-assets",
@@ -1223,7 +1223,7 @@
       "game": {
         "game_id": "snack-time-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
         "prompt_audio_text": "Tap apple.",
         "items": [
           {
@@ -1257,11 +1257,11 @@
             }
           }
         ],
-        "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
       },
       "pronunciation": {
         "task_id": "snack-time-say",
-        "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
         "prompt_audio_text": "Apple, Milk, Cookie",
         "target_words": [
           "Apple",
@@ -1275,12 +1275,12 @@
           "status": "pending"
         },
         "pass_score": 70,
-        "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
       },
       "activity": {
         "activity_id": "snack-time-activity",
         "type": "match_picture",
-        "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
         "prompt_audio_text": "Find Apple and Milk.",
         "items": [
           {
@@ -1314,13 +1314,13 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con gh?p h?nh r?t t?t!"
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
       },
       "quiz": [
         {
           "question_id": "snack-time-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n apple.",
+          "prompt_vi": "Con chọn apple.",
           "questionAudioText": "Tap apple.",
           "options": [
             {
@@ -1355,18 +1355,18 @@
             }
           ],
           "correctOptionId": "snack-time-q1-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "snack-time-q2",
           "type": "image_choice",
-          "prompt_vi": "Milk l? g??",
+          "prompt_vi": "Milk là gì?",
           "questionAudioText": "Milk.",
           "options": [
             {
               "option_id": "snack-time-q2-1",
-              "label": "s?a",
+              "label": "sữa",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q2-1.svg",
@@ -1376,7 +1376,7 @@
             },
             {
               "option_id": "snack-time-q2-2",
-              "label": "n??c",
+              "label": "nước",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q2-2.svg",
@@ -1386,7 +1386,7 @@
             },
             {
               "option_id": "snack-time-q2-3",
-              "label": "l?",
+              "label": "lá",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q2-3.svg",
@@ -1396,18 +1396,18 @@
             }
           ],
           "correctOptionId": "snack-time-q2-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "snack-time-q3",
           "type": "image_choice",
-          "prompt_vi": "Cookie l? m?n n?o?",
+          "prompt_vi": "Cookie là món nào?",
           "questionAudioText": "Cookie.",
           "options": [
             {
               "option_id": "snack-time-q3-1",
-              "label": "b?nh quy",
+              "label": "bánh quy",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q3-1.svg",
@@ -1417,7 +1417,7 @@
             },
             {
               "option_id": "snack-time-q3-2",
-              "label": "m?t tr?i",
+              "label": "mặt trời",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q3-2.svg",
@@ -1427,7 +1427,7 @@
             },
             {
               "option_id": "snack-time-q3-3",
-              "label": "gi??ng",
+              "label": "giường",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q3-3.svg",
@@ -1437,8 +1437,8 @@
             }
           ],
           "correctOptionId": "snack-time-q3-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         }
       ],
       "reward": {
@@ -1450,19 +1450,19 @@
           "status": "pending"
         },
         "badgeTitle": "Snack Star",
-        "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
       },
       "arReference": null,
       "readAloudStory": {
         "story_id": "snack-time-read-aloud",
         "title": "Read with Momo: Snack Time",
-        "instruction_vi": "Nghe Momo ??c, nh?n h?nh, r?i ??c theo t?ng c?u ng?n.",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
         "pages": [
           {
             "page_id": "snack-time-read-1",
             "order": 1,
             "text_en": "I see a apple.",
-            "text_vi": "Momo nh?n th?y: Apple.",
+            "text_vi": "Momo nhìn thấy: Apple.",
             "highlighted_words": [
               "Apple"
             ],
@@ -1483,7 +1483,7 @@
             "page_id": "snack-time-read-2",
             "order": 2,
             "text_en": "Apple and Milk are here.",
-            "text_vi": "B? ??c c?ng Momo b?ng gi?ng th?t r?.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
             "highlighted_words": [
               "Apple",
               "Milk"
@@ -1502,7 +1502,7 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con ??c theo r?t t?t. Momo nghe r? r?i!"
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
       },
       "generatedMedia": [
         {
@@ -1601,7 +1601,7 @@
       "id": "clean-hands",
       "lesson_id": "clean-hands",
       "title": "Clean Hands",
-      "description": "B? h?c t? cho th?i quen t?t.",
+      "description": "Bé học từ cho thói quen tốt.",
       "video": {
         "title": "Clean Hands",
         "url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/clean-hands/video.mp4",
@@ -1609,7 +1609,7 @@
         "thumbnail_url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/clean-hands/thumb.png"
       },
       "content": null,
-      "title_vi": "R?a tay s?ch",
+      "title_vi": "Rửa tay sạch",
       "order": 4,
       "is_completed": false,
       "duration_minutes": 5,
@@ -1634,7 +1634,7 @@
             "order": 1,
             "duration_seconds": 24,
             "visual_prompt": "Cute classroom style scene for Hand.",
-            "narration_vi": "Momo nh?n th?y b?n tay.",
+            "narration_vi": "Momo nhìn thấy bàn tay.",
             "audio_text_en": "Look! Hand!",
             "image": {
               "bucket": "learnar-assets",
@@ -1648,7 +1648,7 @@
             "order": 2,
             "duration_seconds": 24,
             "visual_prompt": "Bright picture story for Soap.",
-            "narration_vi": "B? nghe v? n?i Soap.",
+            "narration_vi": "Bé nghe và nói Soap.",
             "audio_text_en": "Say Soap with Momo.",
             "image": {
               "bucket": "learnar-assets",
@@ -1662,7 +1662,7 @@
             "order": 3,
             "duration_seconds": 24,
             "visual_prompt": "Happy reward scene with Clean.",
-            "narration_vi": "Momo v? tay khen b?.",
+            "narration_vi": "Momo vỗ tay khen bé.",
             "audio_text_en": "Good job! Clean!",
             "image": {
               "bucket": "learnar-assets",
@@ -1676,7 +1676,7 @@
       "vocabulary": [
         {
           "word_en": "Hand",
-          "word_vi": "b?n tay",
+          "word_vi": "bàn tay",
           "emoji": "hand",
           "image": {
             "bucket": "learnar-assets",
@@ -1700,7 +1700,7 @@
         },
         {
           "word_en": "Soap",
-          "word_vi": "x? ph?ng",
+          "word_vi": "xà phòng",
           "emoji": "soap",
           "image": {
             "bucket": "learnar-assets",
@@ -1724,7 +1724,7 @@
         },
         {
           "word_en": "Clean",
-          "word_vi": "s?ch",
+          "word_vi": "sạch",
           "emoji": "clean",
           "image": {
             "bucket": "learnar-assets",
@@ -1750,7 +1750,7 @@
       "game": {
         "game_id": "clean-hands-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
         "prompt_audio_text": "Tap soap.",
         "items": [
           {
@@ -1784,11 +1784,11 @@
             }
           }
         ],
-        "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
       },
       "pronunciation": {
         "task_id": "clean-hands-say",
-        "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
         "prompt_audio_text": "Hand, Soap, Clean",
         "target_words": [
           "Hand",
@@ -1802,12 +1802,12 @@
           "status": "pending"
         },
         "pass_score": 70,
-        "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
       },
       "activity": {
         "activity_id": "clean-hands-activity",
         "type": "match_picture",
-        "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
         "prompt_audio_text": "Find Hand and Soap.",
         "items": [
           {
@@ -1841,13 +1841,13 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con gh?p h?nh r?t t?t!"
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
       },
       "quiz": [
         {
           "question_id": "clean-hands-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n soap.",
+          "prompt_vi": "Con chọn soap.",
           "questionAudioText": "Tap soap.",
           "options": [
             {
@@ -1882,18 +1882,18 @@
             }
           ],
           "correctOptionId": "clean-hands-q1-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "clean-hands-q2",
           "type": "image_choice",
-          "prompt_vi": "Hand ngh?a l? g??",
+          "prompt_vi": "Hand nghĩa là gì?",
           "questionAudioText": "Hand.",
           "options": [
             {
               "option_id": "clean-hands-q2-1",
-              "label": "b?n tay",
+              "label": "bàn tay",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q2-1.svg",
@@ -1903,7 +1903,7 @@
             },
             {
               "option_id": "clean-hands-q2-2",
-              "label": "c?i gh?",
+              "label": "cái ghế",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q2-2.svg",
@@ -1913,7 +1913,7 @@
             },
             {
               "option_id": "clean-hands-q2-3",
-              "label": "em b?",
+              "label": "em bé",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q2-3.svg",
@@ -1923,18 +1923,18 @@
             }
           ],
           "correctOptionId": "clean-hands-q2-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "clean-hands-q3",
           "type": "image_choice",
-          "prompt_vi": "Clean l? g??",
+          "prompt_vi": "Clean là gì?",
           "questionAudioText": "Clean.",
           "options": [
             {
               "option_id": "clean-hands-q3-1",
-              "label": "s?ch",
+              "label": "sạch",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q3-1.svg",
@@ -1944,7 +1944,7 @@
             },
             {
               "option_id": "clean-hands-q3-2",
-              "label": "b?n",
+              "label": "bẩn",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q3-2.svg",
@@ -1964,8 +1964,8 @@
             }
           ],
           "correctOptionId": "clean-hands-q3-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         }
       ],
       "reward": {
@@ -1977,19 +1977,19 @@
           "status": "pending"
         },
         "badgeTitle": "Clean Hero",
-        "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
       },
       "arReference": null,
       "readAloudStory": {
         "story_id": "clean-hands-read-aloud",
         "title": "Read with Momo: Clean Hands",
-        "instruction_vi": "Nghe Momo ??c, nh?n h?nh, r?i ??c theo t?ng c?u ng?n.",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
         "pages": [
           {
             "page_id": "clean-hands-read-1",
             "order": 1,
             "text_en": "I see a hand.",
-            "text_vi": "Momo nh?n th?y: Hand.",
+            "text_vi": "Momo nhìn thấy: Hand.",
             "highlighted_words": [
               "Hand"
             ],
@@ -2010,7 +2010,7 @@
             "page_id": "clean-hands-read-2",
             "order": 2,
             "text_en": "Hand and Soap are here.",
-            "text_vi": "B? ??c c?ng Momo b?ng gi?ng th?t r?.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
             "highlighted_words": [
               "Hand",
               "Soap"
@@ -2029,7 +2029,7 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con ??c theo r?t t?t. Momo nghe r? r?i!"
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
       },
       "generatedMedia": [
         {
@@ -2128,7 +2128,7 @@
       "id": "happy-feelings",
       "lesson_id": "happy-feelings",
       "title": "Happy Feelings",
-      "description": "B? h?c c?m x?c ??n gi?n.",
+      "description": "Bé học cảm xúc đơn giản.",
       "video": {
         "title": "Happy Feelings",
         "url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/happy-feelings/video.mp4",
@@ -2136,7 +2136,7 @@
         "thumbnail_url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/happy-feelings/thumb.png"
       },
       "content": null,
-      "title_vi": "C?m x?c vui",
+      "title_vi": "Cảm xúc vui",
       "order": 5,
       "is_completed": false,
       "duration_minutes": 5,
@@ -2161,7 +2161,7 @@
             "order": 1,
             "duration_seconds": 24,
             "visual_prompt": "Cute classroom style scene for Happy.",
-            "narration_vi": "Momo nh?n th?y vui.",
+            "narration_vi": "Momo nhìn thấy vui.",
             "audio_text_en": "Look! Happy!",
             "image": {
               "bucket": "learnar-assets",
@@ -2175,7 +2175,7 @@
             "order": 2,
             "duration_seconds": 24,
             "visual_prompt": "Bright picture story for Sad.",
-            "narration_vi": "B? nghe v? n?i Sad.",
+            "narration_vi": "Bé nghe và nói Sad.",
             "audio_text_en": "Say Sad with Momo.",
             "image": {
               "bucket": "learnar-assets",
@@ -2189,7 +2189,7 @@
             "order": 3,
             "duration_seconds": 24,
             "visual_prompt": "Happy reward scene with Smile.",
-            "narration_vi": "Momo v? tay khen b?.",
+            "narration_vi": "Momo vỗ tay khen bé.",
             "audio_text_en": "Good job! Smile!",
             "image": {
               "bucket": "learnar-assets",
@@ -2227,7 +2227,7 @@
         },
         {
           "word_en": "Sad",
-          "word_vi": "bu?n",
+          "word_vi": "buồn",
           "emoji": "sad",
           "image": {
             "bucket": "learnar-assets",
@@ -2251,7 +2251,7 @@
         },
         {
           "word_en": "Smile",
-          "word_vi": "m?m c??i",
+          "word_vi": "mỉm cười",
           "emoji": "smile",
           "image": {
             "bucket": "learnar-assets",
@@ -2277,7 +2277,7 @@
       "game": {
         "game_id": "happy-feelings-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
         "prompt_audio_text": "Tap happy.",
         "items": [
           {
@@ -2311,11 +2311,11 @@
             }
           }
         ],
-        "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
       },
       "pronunciation": {
         "task_id": "happy-feelings-say",
-        "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
         "prompt_audio_text": "Happy, Sad, Smile",
         "target_words": [
           "Happy",
@@ -2329,12 +2329,12 @@
           "status": "pending"
         },
         "pass_score": 70,
-        "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
       },
       "activity": {
         "activity_id": "happy-feelings-activity",
         "type": "match_picture",
-        "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
         "prompt_audio_text": "Find Happy and Sad.",
         "items": [
           {
@@ -2368,13 +2368,13 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con gh?p h?nh r?t t?t!"
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
       },
       "quiz": [
         {
           "question_id": "happy-feelings-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n happy.",
+          "prompt_vi": "Con chọn happy.",
           "questionAudioText": "Tap happy.",
           "options": [
             {
@@ -2409,18 +2409,18 @@
             }
           ],
           "correctOptionId": "happy-feelings-q1-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "happy-feelings-q2",
           "type": "image_choice",
-          "prompt_vi": "Sad l? g??",
+          "prompt_vi": "Sad là gì?",
           "questionAudioText": "Sad.",
           "options": [
             {
               "option_id": "happy-feelings-q2-1",
-              "label": "bu?n",
+              "label": "buồn",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q2-1.svg",
@@ -2440,7 +2440,7 @@
             },
             {
               "option_id": "happy-feelings-q2-3",
-              "label": "s?ch",
+              "label": "sạch",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q2-3.svg",
@@ -2450,18 +2450,18 @@
             }
           ],
           "correctOptionId": "happy-feelings-q2-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "happy-feelings-q3",
           "type": "image_choice",
-          "prompt_vi": "Smile ngh?a l? g??",
+          "prompt_vi": "Smile nghĩa là gì?",
           "questionAudioText": "Smile.",
           "options": [
             {
               "option_id": "happy-feelings-q3-1",
-              "label": "m?m c??i",
+              "label": "mỉm cười",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q3-1.svg",
@@ -2481,7 +2481,7 @@
             },
             {
               "option_id": "happy-feelings-q3-3",
-              "label": "ng?",
+              "label": "ngủ",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q3-3.svg",
@@ -2491,8 +2491,8 @@
             }
           ],
           "correctOptionId": "happy-feelings-q3-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         }
       ],
       "reward": {
@@ -2504,19 +2504,19 @@
           "status": "pending"
         },
         "badgeTitle": "Feeling Friend",
-        "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
       },
       "arReference": null,
       "readAloudStory": {
         "story_id": "happy-feelings-read-aloud",
         "title": "Read with Momo: Happy Feelings",
-        "instruction_vi": "Nghe Momo ??c, nh?n h?nh, r?i ??c theo t?ng c?u ng?n.",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
         "pages": [
           {
             "page_id": "happy-feelings-read-1",
             "order": 1,
             "text_en": "I see a happy.",
-            "text_vi": "Momo nh?n th?y: Happy.",
+            "text_vi": "Momo nhìn thấy: Happy.",
             "highlighted_words": [
               "Happy"
             ],
@@ -2537,7 +2537,7 @@
             "page_id": "happy-feelings-read-2",
             "order": 2,
             "text_en": "Happy and Sad are here.",
-            "text_vi": "B? ??c c?ng Momo b?ng gi?ng th?t r?.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
             "highlighted_words": [
               "Happy",
               "Sad"
@@ -2556,7 +2556,7 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con ??c theo r?t t?t. Momo nghe r? r?i!"
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
       },
       "generatedMedia": [
         {
@@ -2655,7 +2655,7 @@
       "id": "home-review",
       "lesson_id": "home-review",
       "title": "Home Review",
-      "description": "B? ?n t? v? gia ??nh v? ng?i nh?.",
+      "description": "Bé ôn từ về gia đình và ngôi nhà.",
       "video": {
         "title": "Home Review",
         "url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/home-review/video.mp4",
@@ -2663,7 +2663,7 @@
         "thumbnail_url": "supabase://learnar-assets/courses/momo-home-family-english-5-7/lessons/home-review/thumb.png"
       },
       "content": null,
-      "title_vi": "?n ? nh?",
+      "title_vi": "Ôn ở nhà",
       "order": 6,
       "is_completed": false,
       "duration_minutes": 5,
@@ -2688,7 +2688,7 @@
             "order": 1,
             "duration_seconds": 24,
             "visual_prompt": "Cute classroom style scene for Mom.",
-            "narration_vi": "Momo nh?n th?y m?.",
+            "narration_vi": "Momo nhìn thấy mẹ.",
             "audio_text_en": "Look! Mom!",
             "image": {
               "bucket": "learnar-assets",
@@ -2702,7 +2702,7 @@
             "order": 2,
             "duration_seconds": 24,
             "visual_prompt": "Bright picture story for Bed.",
-            "narration_vi": "B? nghe v? n?i Bed.",
+            "narration_vi": "Bé nghe và nói Bed.",
             "audio_text_en": "Say Bed with Momo.",
             "image": {
               "bucket": "learnar-assets",
@@ -2716,7 +2716,7 @@
             "order": 3,
             "duration_seconds": 24,
             "visual_prompt": "Happy reward scene with Apple.",
-            "narration_vi": "Momo v? tay khen b?.",
+            "narration_vi": "Momo vỗ tay khen bé.",
             "audio_text_en": "Good job! Apple!",
             "image": {
               "bucket": "learnar-assets",
@@ -2730,7 +2730,7 @@
       "vocabulary": [
         {
           "word_en": "Mom",
-          "word_vi": "m?",
+          "word_vi": "mẹ",
           "emoji": "mom",
           "image": {
             "bucket": "learnar-assets",
@@ -2754,7 +2754,7 @@
         },
         {
           "word_en": "Bed",
-          "word_vi": "gi??ng",
+          "word_vi": "giường",
           "emoji": "bed",
           "image": {
             "bucket": "learnar-assets",
@@ -2778,7 +2778,7 @@
         },
         {
           "word_en": "Apple",
-          "word_vi": "qu? t?o",
+          "word_vi": "quả táo",
           "emoji": "apple",
           "image": {
             "bucket": "learnar-assets",
@@ -2828,7 +2828,7 @@
       "game": {
         "game_id": "home-review-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo n?i r?i ch?m v?o h?nh ??ng.",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
         "prompt_audio_text": "Tap apple.",
         "items": [
           {
@@ -2872,11 +2872,11 @@
             }
           }
         ],
-        "feedback_positive_vi": "Tuy?t v?i! Con ?? ch?i r?t nhanh."
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
       },
       "pronunciation": {
         "task_id": "home-review-say",
-        "instruction_vi": "B?m nghe, sau ?? n?i l?i th?t to.",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
         "prompt_audio_text": "Mom, Bed, Apple",
         "target_words": [
           "Mom",
@@ -2890,12 +2890,12 @@
           "status": "pending"
         },
         "pass_score": 70,
-        "feedback_positive_vi": "Gi?ng c?a con r? h?n r?i, gi?i l?m!"
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
       },
       "activity": {
         "activity_id": "home-review-activity",
         "type": "match_picture",
-        "instruction_vi": "K?o ho?c ch?n h?nh gi?ng t? ti?ng Anh.",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
         "prompt_audio_text": "Find Mom and Bed.",
         "items": [
           {
@@ -2939,13 +2939,13 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con gh?p h?nh r?t t?t!"
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
       },
       "quiz": [
         {
           "question_id": "home-review-q1",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n mom.",
+          "prompt_vi": "Con chọn mom.",
           "questionAudioText": "Tap mom.",
           "options": [
             {
@@ -2980,13 +2980,13 @@
             }
           ],
           "correctOptionId": "home-review-q1-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "home-review-q2",
           "type": "image_choice",
-          "prompt_vi": "Con ch?n apple.",
+          "prompt_vi": "Con chọn apple.",
           "questionAudioText": "Tap apple.",
           "options": [
             {
@@ -3021,13 +3021,13 @@
             }
           ],
           "correctOptionId": "home-review-q2-2",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         },
         {
           "question_id": "home-review-q3",
           "type": "image_choice",
-          "prompt_vi": "Happy l? g??",
+          "prompt_vi": "Happy là gì?",
           "questionAudioText": "Happy.",
           "options": [
             {
@@ -3042,7 +3042,7 @@
             },
             {
               "option_id": "home-review-q3-2",
-              "label": "bu?n",
+              "label": "buồn",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q3-2.svg",
@@ -3052,7 +3052,7 @@
             },
             {
               "option_id": "home-review-q3-3",
-              "label": "s?ch",
+              "label": "sạch",
               "image": {
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q3-3.svg",
@@ -3062,8 +3062,8 @@
             }
           ],
           "correctOptionId": "home-review-q3-1",
-          "feedbackCorrect": "Gi?i qu?! Con ch?n ??ng r?i.",
-          "feedbackIncorrect": "Kh?ng sao, m?nh nghe l?i v? th? th?m m?t l?n nh?."
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
         }
       ],
       "reward": {
@@ -3075,19 +3075,19 @@
           "status": "pending"
         },
         "badgeTitle": "Home Champion",
-        "message_vi": "Con ho?n th?nh m?t ph?n h?c m?i c?ng Momo!"
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
       },
       "arReference": null,
       "readAloudStory": {
         "story_id": "home-review-read-aloud",
         "title": "Read with Momo: Home Review",
-        "instruction_vi": "Nghe Momo ??c, nh?n h?nh, r?i ??c theo t?ng c?u ng?n.",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
         "pages": [
           {
             "page_id": "home-review-read-1",
             "order": 1,
             "text_en": "I see a mom.",
-            "text_vi": "Momo nh?n th?y: Mom.",
+            "text_vi": "Momo nhìn thấy: Mom.",
             "highlighted_words": [
               "Mom"
             ],
@@ -3108,7 +3108,7 @@
             "page_id": "home-review-read-2",
             "order": 2,
             "text_en": "Mom and Bed are here.",
-            "text_vi": "B? ??c c?ng Momo b?ng gi?ng th?t r?.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
             "highlighted_words": [
               "Mom",
               "Bed"
@@ -3127,7 +3127,7 @@
             }
           }
         ],
-        "feedback_positive_vi": "Con ??c theo r?t t?t. Momo nghe r? r?i!"
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
       },
       "generatedMedia": [
         {
@@ -3249,22 +3249,22 @@
     {
       "name": "Linh, 5",
       "role": "Young learner",
-      "quote": "Con n?i apple v? happy r?t vui!",
+      "quote": "Con nói apple và happy rất vui!",
       "avatar": "L"
     },
     {
-      "name": "Ba c?a Bin",
+      "name": "Ba của Bin",
       "role": "Parent",
-      "quote": "N?i dung g?n g?i trong nh? n?n b? nh? nhanh.",
+      "quote": "Nội dung gần gũi trong nhà nên bé nhớ nhanh.",
       "avatar": "B"
     }
   ],
   "enrollmentCta": {
-    "headline": "H?c ti?ng Anh trong ng?i nh? nh?",
-    "body": "T? gia ??nh, ?? v?t, m?n ?n v? c?m x?c ???c h?c b?ng h?nh, ?m thanh v? tr? ch?i.",
-    "buttonLabel": "B?t ??u v?i ng?i nh?"
+    "headline": "Học tiếng Anh trong ngôi nhà nhỏ",
+    "body": "Từ gia đình, đồ vật, món ăn và cảm xúc được học bằng hình, âm thanh và trò chơi.",
+    "buttonLabel": "Bắt đầu với ngôi nhà"
   },
   "category_key": "home_family",
-  "category_label": "Gia ??nh",
+  "category_label": "Gia đình",
   "category_icon": "Home"
 }

@@ -18,6 +18,70 @@ export interface ApiClientOptions extends Omit<RequestInit, 'body'> {
   body?: any;
 }
 
+export interface ProfileResponse {
+  identity: {
+    id: string;
+    email: string;
+    username: string;
+    full_name?: string | null;
+    avatar_url: string;
+    role: string;
+    is_superuser: boolean;
+  };
+  summary: {
+    level: number;
+    total_points: number;
+    xp_to_next_level: number;
+    streak_days: number;
+    lessons_completed: number;
+    words_learned: number;
+    quizzes_passed: number;
+  };
+  badges: Array<{
+    id: string;
+    name: string;
+    description: string;
+    emoji: string;
+    icon_url: string;
+    earned: boolean;
+  }>;
+  milestones: Array<{
+    label: string;
+    current: number;
+    target: number;
+    icon: string;
+    color: string;
+  }>;
+  leaderboard: Array<{
+    user_id: string;
+    username: string;
+    points: number;
+    rank: number;
+    avatar_url: string;
+  }>;
+  daily_challenge: {
+    title: string;
+    progress: number;
+    target: number;
+    reward: string;
+  };
+  content: {
+    hero_subtitle: string;
+    testimonials_heading: string;
+    testimonials: Array<{
+      id: string;
+      name: string;
+      age: number;
+      avatar: string;
+      quote: string;
+      rating: number;
+      color: string;
+    }>;
+    cta: { title: string; description: string; label: string; href: string };
+  };
+  meta: { partial_sections: string[]; generated_at: string };
+}
+
 function isNativeBody(body: unknown): body is BodyInit {
   return (
     typeof body === 'string' ||
@@ -199,6 +263,10 @@ export const apiClient = {
    */
   get: (endpoint: string, options?: ApiClientOptions) =>
     request(endpoint, { ...options, method: 'GET' }),
+
+  /** Fetch the authenticated user's fully composed profile. */
+  getMyProfile: (): Promise<ProfileResponse> =>
+    request('/api/v1/profile/me', { method: 'GET' }),
 
   /**
    * POST request

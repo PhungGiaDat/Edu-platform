@@ -5,6 +5,10 @@
 
 .opencode    
 scripts
+!backend/scripts/
+backend/scripts/*
+!backend/scripts/create_admin.py
+!backend/scripts/repair_momo_course_unicode.py
 .git
 backend/generated/
 

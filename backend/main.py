@@ -41,6 +41,7 @@ from api import (
     pronunciation_router,
     sessions_router,
     admin_router,
+    profile_router,
 )
 from api.pronunciation_enhanced import router as pronunciation_enhanced_router
 from api.lessons import router as lessons_router
@@ -192,6 +193,12 @@ app.include_router(
     tags=["User"]
 )
 
+app.include_router(
+    profile_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Profile"]
+)
+
 # WebSocket router (no prefix - keep legacy path)
 app.include_router(
     websocket_router,
@@ -338,33 +345,6 @@ async def detailed_health_check():
     }
     
     return health_status
-
-
-@app.get("/debug/admin-hash", tags=["Debug"])
-async def debug_admin_hash():
-    """
-    Debug endpoint to check admin user hash
-    """
-    from models.user_mongo import UserDocument
-    
-    try:
-        admin = await UserDocument.find_one(UserDocument.username == "admin")
-        if not admin:
-            return {"error": "Admin user not found"}
-        
-        return {
-            "username": admin.username,
-            "hash": admin.hashed_password,
-            "hash_length": len(admin.hashed_password),
-            "hash_type": admin.hashed_password[:7] if admin.hashed_password else None,
-            "is_bcrypt": admin.hashed_password.startswith("$2") if admin.hashed_password else False
-        }
-    except Exception as e:
-        import traceback
-        return {
-            "error": str(e),
-            "traceback": traceback.format_exc()
-        }
 
 
 @app.get("/", tags=["System"])

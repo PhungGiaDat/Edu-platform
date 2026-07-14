@@ -20,17 +20,10 @@ export interface User {
   email: string;
   username: string;
   name?: string;
-  full_name?: string;
-  role?: string;
-  is_superuser?: boolean;
-}
-
-interface ApiUserProfile {
-  id: string;
-  email: string;
-  username: string;
   full_name?: string | null;
-  role?: string | null;
+  avatar_url?: string | null;
+  role?: string;
+  roles?: string[];
   is_superuser?: boolean;
 }
 
@@ -61,7 +54,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  * Decode JWT token to extract user info
  * Note: This is a basic decode - doesn't verify signature
  */
-function decodeToken(token: string): User | null {
+function decodeToken(token: string): { id: string; email: string; username: string } | null {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
@@ -73,8 +66,6 @@ function decodeToken(token: string): User | null {
       id: decoded.sub || decoded.user_id || decoded.id || '',
       email: decoded.email || '',
       username: decoded.username || decoded.name || '',
-      role: decoded.role,
-      is_superuser: Boolean(decoded.is_superuser),
     };
   } catch (error) {
     console.error('[AuthContext] Error decoding token:', error);
@@ -82,58 +73,30 @@ function decodeToken(token: string): User | null {
   }
 }
 
-function normalizeUser(profile: ApiUserProfile): User {
+function normalizeUser(value: Partial<User>): User {
   return {
-    id: profile.id,
-    email: profile.email,
-    username: profile.username,
-    name: profile.full_name || profile.username,
-    full_name: profile.full_name || undefined,
-    role: profile.role || (profile.is_superuser ? 'admin' : undefined),
-    is_superuser: Boolean(profile.is_superuser),
+    id: value.id || '',
+    email: value.email || '',
+    username: value.username || '',
+    name: value.full_name || value.name || value.username || '',
+    full_name: value.full_name ?? value.name ?? null,
+    avatar_url: value.avatar_url ?? null,
+    role: value.role || 'learner',
+    roles: Array.isArray(value.roles) ? value.roles : [],
+    is_superuser: Boolean(value.is_superuser),
   };
 }
 
 async function fetchCurrentUser(authToken: string): Promise<User> {
   const response = await fetch(`${API_BASE}/api/v1/auth/me`, {
-    headers: {
-      Authorization: `Bearer ${authToken}`,
-    },
+    headers: { Authorization: `Bearer ${authToken}` },
   });
-
   if (!response.ok) {
-    throw new Error('Could not load current user profile');
+    const error = new Error(`Unable to load authenticated user (${response.status})`);
+    Object.assign(error, { status: response.status });
+    throw error;
   }
-
-  const profile: ApiUserProfile = await response.json();
-  return normalizeUser(profile);
-}
-
-async function getUserForToken(authToken: string, fallbackUser?: User): Promise<User> {
-  try {
-    return await fetchCurrentUser(authToken);
-  } catch (error) {
-    console.warn('[AuthContext] Falling back to token/local user data:', error);
-    const decodedUser = decodeToken(authToken);
-
-    if (!decodedUser && fallbackUser) {
-      return fallbackUser;
-    }
-
-    if (!decodedUser) {
-      throw new Error('Invalid token format');
-    }
-
-    return {
-      ...decodedUser,
-      email: decodedUser.email || fallbackUser?.email || '',
-      username: decodedUser.username || fallbackUser?.username || '',
-      name: fallbackUser?.name || decodedUser.name,
-      full_name: fallbackUser?.full_name || decodedUser.full_name,
-      role: decodedUser.role || fallbackUser?.role,
-      is_superuser: decodedUser.is_superuser || fallbackUser?.is_superuser,
-    };
-  }
+  return normalizeUser(await response.json());
 }
 
 /**
@@ -227,47 +190,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize auth state from localStorage on mount
+  // Restore the token, then replace any stale stored user shape with /auth/me.
   useEffect(() => {
-    let isCancelled = false;
+    const { token: storedToken, user: storedUser, isGuest: storedGuest } = loadAuthFromStorage();
+    let cancelled = false;
 
-    const initializeAuth = async () => {
-      const { token: storedToken, user: storedUser, isGuest: storedGuest } = loadAuthFromStorage();
-
+    const restore = async () => {
       if (storedToken && storedUser) {
         setToken(storedToken);
-        setUser(storedUser);
-
         try {
-          const currentUser = await getUserForToken(storedToken, storedUser);
-          if (isCancelled) return;
-
-          setUser(currentUser);
-          saveAuthToStorage(storedToken, currentUser);
-          console.log('[AuthContext] Restored auth from backend profile:', currentUser);
-        } catch (authError) {
-          console.error('[AuthContext] Stored auth is invalid:', authError);
-          if (isCancelled) return;
-
-          setToken(null);
-          setUser(null);
-          clearAuthFromStorage();
+          const authoritativeUser = await fetchCurrentUser(storedToken);
+          if (!cancelled) {
+            setUser(authoritativeUser);
+            saveAuthToStorage(storedToken, authoritativeUser);
+          }
+        } catch (restoreError) {
+          const status = (restoreError as Error & { status?: number }).status;
+          if (!cancelled && (status === 401 || status === 403)) {
+            clearAuthFromStorage();
+            setToken(null);
+            setUser(null);
+          } else if (!cancelled && storedUser.role && typeof storedUser.is_superuser === 'boolean') {
+            setUser(normalizeUser(storedUser));
+          } else if (!cancelled) {
+            // A legacy token-only user cannot safely drive role-based routing.
+            clearAuthFromStorage();
+            setToken(null);
+            setUser(null);
+          }
         }
-      } else if (storedGuest) {
+      } else if (storedGuest && !cancelled) {
         setIsGuest(true);
-        console.log('[AuthContext] Restored guest mode from localStorage');
       }
-
-      if (!isCancelled) {
-        setIsLoading(false);
-      }
+      if (!cancelled) setIsLoading(false);
     };
 
-    initializeAuth();
-
-    return () => {
-      isCancelled = true;
-    };
+    void restore();
+    return () => { cancelled = true; };
   }, []);
 
   // ========== Login ==========
@@ -305,7 +264,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw new Error('No token received from server');
         }
 
-        const authenticatedUser = await getUserForToken(authToken);
+        // JWT contains only a subject; /auth/me owns roles and profile fields.
+        const decodedUser = decodeToken(authToken);
+        if (!decodedUser) {
+          throw new Error('Invalid token format');
+        }
+
+        const authenticatedUser = await fetchCurrentUser(authToken);
 
         // Save to state and localStorage
         setIsGuest(false);
@@ -314,7 +279,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(authenticatedUser);
         saveAuthToStorage(authToken, authenticatedUser);
 
-        console.log('[AuthContext] Login successful:', authenticatedUser);
+        console.log('[AuthContext] Login successful:', authenticatedUser.username);
         return { success: true };
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Login failed';
@@ -351,28 +316,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { success: false, error: errorMsg };
         }
 
-        const data = await response.json();
-        const authToken = data.access_token || data.token;
-
-        if (!authToken) {
-          throw new Error('No token received from server');
-        }
-
-        // Decode token to extract user info
-        const decodedUser = decodeToken(authToken);
-        if (!decodedUser) {
-          throw new Error('Invalid token format');
-        }
-
-        // Save to state and localStorage
-        setIsGuest(false);
-        localStorage.removeItem(GUEST_KEY);
-        setToken(authToken);
-        setUser(decodedUser);
-        saveAuthToStorage(authToken, decodedUser);
-
-        console.log('[AuthContext] Registration successful:', decodedUser);
-        return { success: true };
+        return await login(email, password);
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Registration failed';
         setError(errorMsg);
@@ -382,7 +326,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
       }
     },
-    []
+    [login]
   );
 
   // ========== Logout ==========
