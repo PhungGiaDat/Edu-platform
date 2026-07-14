@@ -201,7 +201,6 @@ class EnrollmentCTA(BaseModel):
 
 class Lesson(BaseModel):
     # Legacy/simple course fields kept for existing MongoDB documents.
-    id: str = Field(default_factory=lambda: str(ObjectId()))
     lesson_id: str = Field(default_factory=lambda: str(ObjectId()))
     title: str
     description: Optional[str] = None
@@ -280,8 +279,9 @@ class CourseSchema(BaseModel):
     @field_validator("age_range")
     @classmethod
     def validate_age_range(cls, value: str) -> str:
-        if value != "5-8":
-            raise ValueError("Generated courses must target age range 5-8")
+        # Note: the authoritative strict validation (rejecting non-"5-8") lives in
+        # validate_generated_course() / normalize_course_payload() so that relaxed
+        # normalization can fix legacy values without raising.
         return value
 
 

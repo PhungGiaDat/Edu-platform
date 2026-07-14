@@ -1,6 +1,6 @@
 id: prefer-const
 language: JavaScript
-severity: suggestion
+severity: info
 message: "Use const for variables that are never reassigned"
 note: "Reduces cognitive load and signals intent"
 rule:

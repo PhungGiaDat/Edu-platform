@@ -27,7 +27,7 @@ def validate_generated_course(course: CourseSchema) -> None:
     if not course.thumbnail:
         raise ValueError("Generated courses require a thumbnail asset reference")
     if not 5 <= len(course.lessons) <= 8:
-        raise ValueError("Generated courses require 5-8 sections")
+        raise ValueError("Generated courses require 5-8 lessons")
 
     for lesson in course.lessons:
         if not 3 <= lesson.duration_minutes <= 7:
