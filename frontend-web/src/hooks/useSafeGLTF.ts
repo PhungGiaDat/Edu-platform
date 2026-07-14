@@ -83,6 +83,20 @@ const FALLBACK_TEXTURE_PATHS = [
   '/learnar-assets/textures/colormap-fallback.png',
 ];
 
+function isLegacySupabaseColormapUrl(resourceUrl: URL, modelUrl: URL): boolean {
+  const resourcePath = decodeURIComponent(resourceUrl.pathname).replace(/\\/g, '/').toLowerCase();
+  const modelPath = decodeURIComponent(modelUrl.pathname).replace(/\\/g, '/').toLowerCase();
+
+  return (
+    resourceUrl.origin === modelUrl.origin &&
+    modelUrl.hostname.endsWith('.supabase.co') &&
+    modelPath.includes('/storage/v1/object/public/ar_models/') &&
+    resourcePath.includes('/storage/v1/object/public/ar_models/') &&
+    resourcePath.includes('/textures/') &&
+    resourcePath.endsWith('/colormap.png')
+  );
+}
+
 function loadLocalFallbackTexture(): Promise<THREE.Texture | null> {
   if (fallbackTexturePromise) {
     return fallbackTexturePromise;
@@ -130,6 +144,11 @@ function createGLTFLoader(modelUrl: string): {
       const resolved = new URL(resourceUrl, baseModelUrl);
       const modelHasQuery = baseModelUrl.search.length > 1;
       const resourceHasQuery = resolved.search.length > 1;
+
+      if (isLegacySupabaseColormapUrl(resolved, baseModelUrl)) {
+        externalDependencies.add(resolved.toString());
+        return FALLBACK_TEXTURE_PATHS[0];
+      }
 
       if (
         modelHasQuery &&

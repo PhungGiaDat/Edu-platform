@@ -21,19 +21,9 @@ class AddXPRequest(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
 
-class FeedPetRequest(BaseModel):
-    user_id: str
-    pet_id: Optional[str] = None  # Optional: specific pet to feed (for multi-pet support)
-
-
 class ChoosePetRequest(BaseModel):
     user_id: str
     pet_type: str
-
-
-class PlayPetRequest(BaseModel):
-    user_id: str
-    pet_id: Optional[str] = None  # Optional: specific pet to play with
 
 
 class ChangePetOutfitRequest(BaseModel):
@@ -116,7 +106,6 @@ async def get_pet(
 
 @router.post("/gamification/pet/feed")
 async def feed_pet(
-    request: FeedPetRequest,
     current_user: UserDocument = Depends(get_current_user),
     service: GamificationService = Depends(get_gamification_service)
 ):
@@ -141,7 +130,6 @@ async def choose_pet(
 
 @router.post("/gamification/pet/play")
 async def play_pet(
-    request: PlayPetRequest,
     current_user: UserDocument = Depends(get_current_user),
     service: GamificationService = Depends(get_gamification_service)
 ):

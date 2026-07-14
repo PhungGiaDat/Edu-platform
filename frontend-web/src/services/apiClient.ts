@@ -18,6 +18,33 @@ export interface ApiClientOptions extends Omit<RequestInit, 'body'> {
   body?: any;
 }
 
+function isNativeBody(body: unknown): body is BodyInit {
+  return (
+    typeof body === 'string' ||
+    body instanceof FormData ||
+    body instanceof Blob ||
+    body instanceof URLSearchParams ||
+    body instanceof ArrayBuffer ||
+    ArrayBuffer.isView(body)
+  );
+}
+
+function shouldSerializeAsJson(body: unknown): boolean {
+  return body !== undefined && body !== null && !isNativeBody(body);
+}
+
+function serializeRequestBody(body: unknown): BodyInit | undefined {
+  if (body === undefined || body === null) {
+    return undefined;
+  }
+
+  if (isNativeBody(body)) {
+    return body;
+  }
+
+  return JSON.stringify(body);
+}
+
 /**
  * Get current auth token from localStorage
  */
@@ -71,8 +98,8 @@ function buildUrl(endpoint: string, params?: Record<string, string | number | bo
 function prepareHeaders(options: ApiClientOptions = {}): Headers {
   const headers = new Headers(options.headers || {});
 
-  // Set default Content-Type if not set
-  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+  // Set default Content-Type for JSON bodies if not set
+  if (!headers.has('Content-Type') && shouldSerializeAsJson(options.body)) {
     headers.set('Content-Type', 'application/json');
   }
 
@@ -153,7 +180,7 @@ async function request(
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
-      body: body as BodyInit | null | undefined,
+      body: serializeRequestBody(body),
     });
 
     return await handleResponse(response);
