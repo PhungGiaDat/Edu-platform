@@ -29,6 +29,8 @@ class UserDocument(Document):
     is_active: bool = True
     is_verified: bool = False
     is_superuser: bool = False
+    role: str = "learner"
+    roles: List[str] = Field(default_factory=list)
     
     # Pet system fields
     active_pet: Optional[str] = None  # pet_id of currently active pet
@@ -148,6 +150,9 @@ class UserResponse(BaseModel):
     avatar_url: Optional[str] = None
     is_active: bool
     is_verified: bool
+    is_superuser: bool = False
+    role: str = "learner"
+    roles: List[str] = Field(default_factory=list)
     created_at: datetime
     
     # Pet system fields

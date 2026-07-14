@@ -1,96 +1,55 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import { apiClient, type ProfileResponse } from '../services/apiClient';
 import '../styles/claymorphic-utilities.css';
-
-// Badge icons mapping
-const badgeIcons: Record<string, string> = {
-    'Early Bird': '🌅',
-    'Sharpshooter': '🎯',
-    'Scholar': '📚',
-    'Speed Demon': '⚡',
-    'Perfectionist': '💎',
-    'Team Player': '🤝',
-    'Explorer': '🧭',
-    'Champion': '🏆',
-};
-
-// Testimonials data
-const testimonials = [
-    {
-        id: 1,
-        name: 'Emma',
-        age: 10,
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma&backgroundColor=b6e3f4',
-        quote: "Learning here is so fun! I love collecting pets and earning badges. My English got so much better!",
-        rating: 5,
-        color: 'coral',
-    },
-    {
-        id: 2,
-        name: 'Lucas',
-        age: 12,
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lucas&backgroundColor=c0aede',
-        quote: "The games make studying feel like playing! I actually look forward to my lessons now.",
-        rating: 5,
-        color: 'mint',
-    },
-    {
-        id: 3,
-        name: 'Sofia',
-        age: 9,
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sofia&backgroundColor=ffd5dc',
-        quote: "I've learned so many new words! My pet dragon is the coolest and I'm on a 30-day streak!",
-        rating: 5,
-        color: 'sky',
-    },
-];
-
-// Achievement milestones
-const milestones = [
-    { label: 'Lessons Done', current: 24, target: 50, icon: '📖', color: '#FF6B6B' },
-    { label: 'Words Learned', current: 156, target: 200, icon: '💬', color: '#4ECDC4' },
-    { label: 'Quizzes Passed', current: 18, target: 25, icon: '✅', color: '#45B7D1' },
-    { label: 'Days Streak', current: 12, target: 30, icon: '🔥', color: '#F7DC6F' },
-];
 
 export const Profile: React.FC = () => {
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<'badges' | 'stats'>('badges');
+    const [profile, setProfile] = useState<ProfileResponse | null>(null);
+    const [profileError, setProfileError] = useState(false);
 
-    const username = user?.username || 'Learner';
+    useEffect(() => {
+        let cancelled = false;
+        setProfileError(false);
+        apiClient.getMyProfile()
+            .then((data) => {
+                if (cancelled) return;
+                setProfile(data);
+                if (data.meta.partial_sections.length) {
+                    console.warn('[Profile] Partial profile data:', data.meta.partial_sections);
+                }
+            })
+            .catch((error) => {
+                if (!cancelled) {
+                    console.error('[Profile] Unable to load profile:', error);
+                    setProfileError(true);
+                }
+            });
+        return () => { cancelled = true; };
+    }, [user?.id]);
+
+    const username = profile?.identity.username || user?.username || 'Learner';
     const userStats = {
         username,
-        level: 5,
-        total_points: 1250,
-        streak_days: 12,
-        lessons_completed: 24,
-        words_learned: 156,
-        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username)}&backgroundColor=b6e3f4`,
+        level: profile?.summary.level || 1,
+        total_points: profile?.summary.total_points || 0,
+        streak_days: profile?.summary.streak_days || 0,
+        lessons_completed: profile?.summary.lessons_completed || 0,
+        words_learned: profile?.summary.words_learned || 0,
+        avatar_url: profile?.identity.avatar_url || user?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username)}&backgroundColor=b6e3f4`,
     };
 
-    const badges = [
-        { id: '1', name: 'Early Bird', description: 'Completed a lesson before 8am', icon_url: '' },
-        { id: '2', name: 'Sharpshooter', description: '100% accuracy on a quiz', icon_url: '' },
-        { id: '3', name: 'Scholar', description: 'Learned 50 new words', icon_url: '' },
-        { id: '4', name: 'Speed Demon', description: 'Finished a lesson in record time', icon_url: '' },
-        { id: '5', name: 'Perfectionist', description: 'Got 5 perfect scores in a row', icon_url: '' },
-        { id: '6', name: 'Explorer', description: 'Tried all course categories', icon_url: '' },
-    ];
-
-    const leaderboard = [
-        { user_id: '1', username, points: 1250, rank: 1, avatar_url: userStats.avatar_url },
-        { user_id: '2', username: 'Sarah', points: 980, rank: 2, avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah' },
-        { user_id: '3', username: 'Mike', points: 850, rank: 3, avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike' },
-        { user_id: '4', username: 'Lily', points: 720, rank: 4, avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lily' },
-        { user_id: '5', username: 'Jake', points: 650, rank: 5, avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jake' },
-    ];
-
-    const earnedBadgeIds = ['1', '3', '4'];
+    const badges = profile?.badges || [];
+    const milestones = profile?.milestones || [];
+    const leaderboard = profile?.leaderboard || [];
+    const testimonials = profile?.content.testimonials || [];
+    const earnedBadgeIds = badges.filter((badge) => badge.earned).map((badge) => badge.id);
 
     // Calculate level progress
-    const xpForNextLevel = 1500;
-    const levelProgress = (userStats.total_points / xpForNextLevel) * 100;
+    const xpForNextLevel = profile?.summary.xp_to_next_level || 100;
+    const levelProgress = Math.min(100, (userStats.total_points / xpForNextLevel) * 100);
 
     return (
         <div className="min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden clay-bg-playful pb-24 transition-all duration-300 md:pb-8">
@@ -161,7 +120,9 @@ export const Profile: React.FC = () => {
                                 >
                                     {userStats.username}
                                 </h1>
-                                <p className="mt-1 text-lg font-bold text-slate-500">Super Star Learner ⭐</p>
+                                <p className="mt-1 text-lg font-bold text-slate-500">
+                                    {profileError ? 'Profile data is temporarily unavailable' : profile?.content.hero_subtitle || 'Loading profile…'}
+                                </p>
 
                                 {/* XP Progress bar */}
                                 <div className="mx-auto mt-4 max-w-xs sm:mx-0 sm:max-w-sm lg:max-w-lg">
@@ -186,7 +147,7 @@ export const Profile: React.FC = () => {
                                         />
                                     </div>
                                     <p className="mt-1 text-xs font-medium text-slate-400">
-                                        {xpForNextLevel - userStats.total_points} XP to Level {userStats.level + 1}
+                                        {Math.max(0, xpForNextLevel - userStats.total_points)} XP to Level {userStats.level + 1}
                                     </p>
                                 </div>
                             </div>
@@ -270,7 +231,7 @@ export const Profile: React.FC = () => {
                                                         border: '3px solid #D1D5DB',
                                                     }}
                                                 >
-                                                    {badgeIcons[badge.name] || '🏆'}
+                                                    {badge.emoji || '🏆'}
                                                 </div>
                                                 <span className={`mt-2 text-xs font-bold ${isEarned ? 'text-slate-700' : 'text-slate-400'}`}>
                                                     {badge.name}
@@ -297,7 +258,7 @@ export const Profile: React.FC = () => {
 
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     {milestones.map((milestone, index) => {
-                                        const progress = (milestone.current / milestone.target) * 100;
+                                        const progress = Math.min(100, (milestone.current / Math.max(1, milestone.target)) * 100);
                                         return (
                                             <div
                                                 key={index}
@@ -347,7 +308,7 @@ export const Profile: React.FC = () => {
                         {/* Testimonials Section */}
                         <section className="clay-card-lavender p-4 sm:p-6">
                             <h2 className="mb-4 text-center text-xl font-black text-slate-800">
-                                What Other Learners Say ✨
+                                {profile?.content.testimonials_heading || 'Learner stories'}
                             </h2>
 
                             <div className="grid gap-4 lg:grid-cols-3">
@@ -397,7 +358,7 @@ export const Profile: React.FC = () => {
                                 {leaderboard.map((entry, index) => (
                                     <div
                                         key={entry.user_id}
-                                        className={`flex min-w-0 items-center gap-3 p-3 transition-colors hover:bg-yellow-50 ${entry.username === username ? 'bg-yellow-50' : ''
+                                        className={`flex min-w-0 items-center gap-3 p-3 transition-colors hover:bg-yellow-50 ${entry.user_id === profile?.identity.id ? 'bg-yellow-50' : ''
                                             }`}
                                     >
                                         <div
@@ -407,7 +368,7 @@ export const Profile: React.FC = () => {
                                                             'bg-slate-100 text-slate-500'
                                                 }`}
                                         >
-                                            {index + 1}
+                                            {entry.rank || index + 1}
                                         </div>
                                         <img
                                             src={entry.avatar_url}
@@ -415,9 +376,9 @@ export const Profile: React.FC = () => {
                                             className="h-10 w-10 rounded-full border-2 border-white shadow-sm"
                                         />
                                         <div className="min-w-0 flex-1">
-                                            <div className={`truncate font-bold ${entry.username === username ? 'text-yellow-700' : 'text-slate-700'}`}>
+                                            <div className={`truncate font-bold ${entry.user_id === profile?.identity.id ? 'text-yellow-700' : 'text-slate-700'}`}>
                                                 {entry.username}
-                                                {entry.username === username && <span className="ml-1 text-xs">(You)</span>}
+                                                {entry.user_id === profile?.identity.id && <span className="ml-1 text-xs">(You)</span>}
                                             </div>
                                         </div>
                                         <div className="shrink-0 whitespace-nowrap text-sm font-bold text-yellow-600 sm:text-base">
@@ -447,16 +408,16 @@ export const Profile: React.FC = () => {
 
                             <div className="relative">
                                 <h3 className="mb-2 text-xl font-black text-white">
-                                    Ready for More?
+                                    {profile?.content.cta.title || 'Keep learning'}
                                 </h3>
                                 <p className="mb-4 text-sm text-white/90">
-                                    Keep learning and unlock amazing rewards!
+                                    {profile?.content.cta.description || 'Your next lesson is waiting.'}
                                 </p>
                                 <Link
-                                    to="/courses"
+                                    to={profile?.content.cta.href || '/courses'}
                                     className="clay-cta-secondary inline-block"
                                 >
-                                    Continue Learning →
+                                    {profile?.content.cta.label || 'Continue Learning →'}
                                 </Link>
                             </div>
                         </section>
@@ -474,13 +435,13 @@ export const Profile: React.FC = () => {
                                 </span>
                                 <div className="flex-1">
                                     <div className="text-sm font-bold text-slate-500">Daily Challenge</div>
-                                    <div className="font-black text-slate-800">Complete 3 Lessons</div>
+                                    <div className="font-black text-slate-800">{profile?.daily_challenge.title || 'Loading challenge…'}</div>
                                 </div>
                             </div>
                             <div className="mt-3">
                                 <div className="mb-1 flex justify-between text-xs font-bold text-slate-500">
                                     <span>Progress</span>
-                                    <span>1/3</span>
+                                    <span>{profile?.daily_challenge.progress || 0}/{profile?.daily_challenge.target || 1}</span>
                                 </div>
                                 <div
                                     className="h-3 overflow-hidden rounded-full"
@@ -489,13 +450,13 @@ export const Profile: React.FC = () => {
                                     <div
                                         className="h-full rounded-full"
                                         style={{
-                                            width: '33%',
+                                            width: `${Math.min(100, ((profile?.daily_challenge.progress || 0) / Math.max(1, profile?.daily_challenge.target || 1)) * 100)}%`,
                                             background: 'linear-gradient(90deg, #FF6B6B, #FF8E8E)',
                                         }}
                                     />
                                 </div>
                                 <p className="mt-2 text-xs text-slate-500">
-                                    🎁 Reward: 50 XP + Mystery Badge
+                                    🎁 Reward: {profile?.daily_challenge.reward || 'Loading…'}
                                 </p>
                             </div>
                         </section>

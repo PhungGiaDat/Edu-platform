@@ -26,6 +26,26 @@ from models.user_mongo import (
 
 router = APIRouter()
 
+
+def to_user_response(user: UserDocument) -> UserResponse:
+    """Map the persisted user to the authoritative public auth shape."""
+    return UserResponse(
+        id=str(user.id),
+        email=user.email,
+        username=user.username,
+        full_name=user.full_name,
+        avatar_url=user.avatar_url,
+        is_active=user.is_active,
+        is_verified=user.is_verified,
+        is_superuser=user.is_superuser,
+        role=getattr(user, "role", "learner") or "learner",
+        roles=getattr(user, "roles", []) or [],
+        created_at=user.created_at,
+        active_pet=user.active_pet,
+        unlocked_pets=user.unlocked_pets,
+        pet_preferences=user.pet_preferences,
+    )
+
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_in: UserCreate):
     """
@@ -60,17 +80,7 @@ async def register(user_in: UserCreate):
     )
     await user.insert()
     
-    # Manually map to UserResponse (id is stringified by Beanie for us)
-    return UserResponse(
-        id=str(user.id),
-        email=user.email,
-        username=user.username,
-        full_name=user.full_name,
-        avatar_url=user.avatar_url,
-        is_active=user.is_active,
-        is_verified=user.is_verified,
-        created_at=user.created_at
-    )
+    return to_user_response(user)
 
 @router.post("/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -137,13 +147,4 @@ async def get_me(current_user: UserDocument = Depends(get_current_user)):
     """
     Get current logged in user details
     """
-    return UserResponse(
-        id=str(current_user.id),
-        email=current_user.email,
-        username=current_user.username,
-        full_name=current_user.full_name,
-        avatar_url=current_user.avatar_url,
-        is_active=current_user.is_active,
-        is_verified=current_user.is_verified,
-        created_at=current_user.created_at
-    )
+    return to_user_response(current_user)

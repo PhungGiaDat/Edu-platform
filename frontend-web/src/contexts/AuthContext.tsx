@@ -20,7 +20,10 @@ export interface User {
   email: string;
   username: string;
   name?: string;
+  full_name?: string | null;
+  avatar_url?: string | null;
   role?: string;
+  roles?: string[];
   is_superuser?: boolean;
 }
 
@@ -68,6 +71,32 @@ function decodeToken(token: string): { id: string; email: string; username: stri
     console.error('[AuthContext] Error decoding token:', error);
     return null;
   }
+}
+
+function normalizeUser(value: Partial<User>): User {
+  return {
+    id: value.id || '',
+    email: value.email || '',
+    username: value.username || '',
+    name: value.full_name || value.name || value.username || '',
+    full_name: value.full_name ?? value.name ?? null,
+    avatar_url: value.avatar_url ?? null,
+    role: value.role || 'learner',
+    roles: Array.isArray(value.roles) ? value.roles : [],
+    is_superuser: Boolean(value.is_superuser),
+  };
+}
+
+async function fetchCurrentUser(authToken: string): Promise<User> {
+  const response = await fetch(`${API_BASE}/api/v1/auth/me`, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  if (!response.ok) {
+    const error = new Error(`Unable to load authenticated user (${response.status})`);
+    Object.assign(error, { status: response.status });
+    throw error;
+  }
+  return normalizeUser(await response.json());
 }
 
 /**
@@ -161,20 +190,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize auth state from localStorage on mount
+  // Restore the token, then replace any stale stored user shape with /auth/me.
   useEffect(() => {
     const { token: storedToken, user: storedUser, isGuest: storedGuest } = loadAuthFromStorage();
+    let cancelled = false;
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(storedUser);
-      console.log('[AuthContext] Restored auth from localStorage:', storedUser);
-    } else if (storedGuest) {
-      setIsGuest(true);
-      console.log('[AuthContext] Restored guest mode from localStorage');
-    }
+    const restore = async () => {
+      if (storedToken && storedUser) {
+        setToken(storedToken);
+        try {
+          const authoritativeUser = await fetchCurrentUser(storedToken);
+          if (!cancelled) {
+            setUser(authoritativeUser);
+            saveAuthToStorage(storedToken, authoritativeUser);
+          }
+        } catch (restoreError) {
+          const status = (restoreError as Error & { status?: number }).status;
+          if (!cancelled && (status === 401 || status === 403)) {
+            clearAuthFromStorage();
+            setToken(null);
+            setUser(null);
+          } else if (!cancelled && storedUser.role && typeof storedUser.is_superuser === 'boolean') {
+            setUser(normalizeUser(storedUser));
+          } else if (!cancelled) {
+            // A legacy token-only user cannot safely drive role-based routing.
+            clearAuthFromStorage();
+            setToken(null);
+            setUser(null);
+          }
+        }
+      } else if (storedGuest && !cancelled) {
+        setIsGuest(true);
+      }
+      if (!cancelled) setIsLoading(false);
+    };
 
-    setIsLoading(false);
+    void restore();
+    return () => { cancelled = true; };
   }, []);
 
   // ========== Login ==========
@@ -212,20 +264,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw new Error('No token received from server');
         }
 
-        // Decode token to extract user info
+        // JWT contains only a subject; /auth/me owns roles and profile fields.
         const decodedUser = decodeToken(authToken);
         if (!decodedUser) {
           throw new Error('Invalid token format');
         }
 
+        const authenticatedUser = await fetchCurrentUser(authToken);
+
         // Save to state and localStorage
         setIsGuest(false);
         localStorage.removeItem(GUEST_KEY);
         setToken(authToken);
-        setUser(decodedUser);
-        saveAuthToStorage(authToken, decodedUser);
+        setUser(authenticatedUser);
+        saveAuthToStorage(authToken, authenticatedUser);
 
-        console.log('[AuthContext] Login successful:', decodedUser);
+        console.log('[AuthContext] Login successful:', authenticatedUser.username);
         return { success: true };
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Login failed';
@@ -262,28 +316,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { success: false, error: errorMsg };
         }
 
-        const data = await response.json();
-        const authToken = data.access_token || data.token;
-
-        if (!authToken) {
-          throw new Error('No token received from server');
-        }
-
-        // Decode token to extract user info
-        const decodedUser = decodeToken(authToken);
-        if (!decodedUser) {
-          throw new Error('Invalid token format');
-        }
-
-        // Save to state and localStorage
-        setIsGuest(false);
-        localStorage.removeItem(GUEST_KEY);
-        setToken(authToken);
-        setUser(decodedUser);
-        saveAuthToStorage(authToken, decodedUser);
-
-        console.log('[AuthContext] Registration successful:', decodedUser);
-        return { success: true };
+        return await login(email, password);
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Registration failed';
         setError(errorMsg);
@@ -293,7 +326,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
       }
     },
-    []
+    [login]
   );
 
   // ========== Logout ==========

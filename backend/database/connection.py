@@ -21,6 +21,7 @@ from models.feedback_template import FeedbackTemplateDocument
 from models.course_lesson import CourseLesson
 from models.user_session import UserSession
 from models.cache_session import RedisCache
+from models.profile import ProfileContentDocument
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +120,7 @@ async def connect_to_database():
         CourseLesson,
         UserSession,
         RedisCache,
+        ProfileContentDocument,
     ]
     
     try:
