@@ -14,6 +14,9 @@ env:
   NODE_VERSION: '20'
   PYTHON_VERSION: '3.10'
 
+# Vercel's Git integration is the sole production deployment owner. Actions
+# may create PR previews, but must never update the production alias.
+
 jobs:
   # ========================================
   # Frontend Tests
@@ -45,6 +48,9 @@ jobs:
 
       - name: Run tests
         run: npm run test
+
+      - name: Build frontend
+        run: npm run build
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
@@ -143,6 +149,7 @@ jobs:
     name: Deploy Frontend
     runs-on: ubuntu-latest
     needs: [frontend-test]
+    if: github.event_name == 'pull_request'
     
     steps:
       - name: Checkout code
@@ -170,11 +177,6 @@ jobs:
         run: |
           url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
           echo "preview_url=$url" >> $GITHUB_OUTPUT
-        working-directory: frontend-web
-
-      - name: Deploy to Vercel Production
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
         working-directory: frontend-web
 
       - name: Comment PR with Preview URL
