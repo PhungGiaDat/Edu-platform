@@ -642,7 +642,7 @@ export const CourseList: React.FC = () => {
             )}
           </div>
 
-          <div className="course-catalog__hero-art" aria-label="Momo learning with a friendly guide">
+          <div className="course-catalog__hero-art">
             <span className="course-catalog__hero-spark course-catalog__hero-spark--one" aria-hidden="true" />
             <span className="course-catalog__hero-spark course-catalog__hero-spark--two" aria-hidden="true" />
             <img
