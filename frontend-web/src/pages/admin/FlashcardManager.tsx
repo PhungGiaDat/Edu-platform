@@ -13,6 +13,9 @@ import { CardsIcon, PlusIcon, BookOpenIcon, TrashIcon, EditIcon, ChevronRightIco
 
 type ViewMode = 'decks' | 'deck-detail';
 
+const getTranslationText = (translation: Flashcard['translation']): string =>
+  translation.vi || translation.en || Object.values(translation).find(Boolean) || '-';
+
 const FlashcardManager: React.FC = () => {
   const { t, i18n: _i18n } = useTranslation();
   const navigate = useNavigate();
@@ -189,7 +192,7 @@ const FlashcardManager: React.FC = () => {
                 {/* Word */}
                 <h3 className="font-semibold text-gray-800 truncate">{card.word}</h3>
                 <p className="text-sm text-gray-500 truncate">
-                  {card.translation || '-'}
+                  {getTranslationText(card.translation)}
                 </p>
                 
                 {/* Actions */}
