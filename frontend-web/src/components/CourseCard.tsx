@@ -104,8 +104,6 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             <div className="course-list-card__body min-w-0">
                 <div className="course-list-card__metadata">
                     <span>{hours} {hourLabel}</span>
-                    <span aria-hidden="true">•</span>
-                    <span>{totalLessons} lessons</span>
                 </div>
                 <h2>{englishTitle}</h2>
                 <p className="course-list-card__subtitle">{vietnameseSubtitle}</p>
