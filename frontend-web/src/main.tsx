@@ -7,6 +7,9 @@ import App from './App'
 import './styles/global.css'
 import './index.css'
 import './services/axiosConfig'
+import { registerAssetRecovery } from './runtime/assetRecovery'
+
+registerAssetRecovery()
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN || "",
