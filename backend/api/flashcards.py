@@ -3,7 +3,7 @@
 Flashcard API Router - Thin controller layer
 Includes endpoints for flashcard CRUD with AI embedding support
 """
-from fastapi import Depends, HTTPException, status, Body
+from fastapi import Depends, HTTPException, status, Body, Query
 from core.base_router import create_router
 from services import FlashcardService, get_flashcard_service, ARService, get_ar_service
 from models import FlashcardSchema, ARExperienceResponseSchema
@@ -18,6 +18,23 @@ router = create_router(
     prefix="/flashcard",
     tags=["Flashcards"]
 )
+
+
+@router.get("", response_model=List[FlashcardResponse])
+async def get_flashcards(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
+    service: FlashcardService = Depends(get_flashcard_service)
+):
+    """Get active flashcards for the learner flashcard gallery."""
+    results = await service.get_all_active(skip=skip, limit=limit)
+    return [
+        {
+            **result,
+            "has_embedding": bool(result.get("vector_embedding"))
+        }
+        for result in results
+    ]
 
 
 @router.post("", response_model=FlashcardResponse)
