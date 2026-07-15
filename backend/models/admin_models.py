@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Dict, List, Optional, Literal, Any
 from datetime import datetime
 from enum import Enum
+import uuid
 
 
 # ========== Enums ==========
@@ -472,6 +473,23 @@ class AdminFlashcardResponse(BaseModel):
         from_attributes = True
 
 
+class AdminCourseLesson(BaseModel):
+    """Validated lesson payload used by the visual course builder."""
+    lesson_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str = Field(min_length=1)
+    description: Optional[str] = None
+    title_vi: str = ""
+    order: int = Field(ge=1)
+    duration_minutes: int = Field(default=5, ge=3, le=7)
+    content: Optional[str] = None
+    video_url: Optional[str] = None
+    video_thumbnail: Optional[str] = None
+    intro_video_url: Optional[str] = None
+    intro_video_thumbnail: Optional[str] = None
+    images: List[str] = Field(default_factory=list)
+    is_completed: bool = False
+
+
 class AdminCourseCreate(BaseModel):
     """Schema for creating a course (admin)"""
     title: str
@@ -486,6 +504,8 @@ class AdminCourseCreate(BaseModel):
     level: Literal["beginner", "intermediate", "advanced"] = "beginner"
     description_vi: str = ""
     is_template: bool = False
+    is_published: bool = False
+    lessons: List[AdminCourseLesson] = Field(min_length=1)
 
 
 class AdminCourseUpdate(BaseModel):
@@ -503,7 +523,7 @@ class AdminCourseUpdate(BaseModel):
     description_vi: Optional[str] = None
     is_template: Optional[bool] = None
     is_published: Optional[bool] = None
-    lessons: Optional[List[Any]] = None
+    lessons: Optional[List[AdminCourseLesson]] = Field(default=None, min_length=1)
 
 
 class AdminCourseResponse(BaseModel):
@@ -525,6 +545,9 @@ class AdminCourseResponse(BaseModel):
     is_published: bool
     enrollment_count: int
     lesson_count: int
+    # Response stays permissive so older, richer lesson documents still load.
+    # New writes are validated by AdminCourseCreate/AdminCourseUpdate above.
+    lessons: List[Any] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 
