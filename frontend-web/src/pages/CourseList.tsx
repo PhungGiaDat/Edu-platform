@@ -15,6 +15,7 @@ import {
 } from '@/lib/learningPathTopics';
 import { courseService } from '@/services/CourseService';
 import { learningPathService, type LearningPathPreferences } from '@/services/LearningPathService';
+import '@/styles/course-catalog.css';
 import type { Course, UserProgress } from '@/types/course';
 
 type PathCard = {
@@ -231,6 +232,16 @@ const pathPalette = [
   },
 ];
 
+const pathVisuals: Record<string, string> = {
+  home_family: '/learnar-assets/courses/momo-home-family-english-5-7/images/course-cover.png',
+  nature: '/assets/flashcards/jungle_card.png',
+  animals: '/assets/flashcards/elephant_card.png',
+  school_food: '/assets/flashcards/apple01_card.png',
+};
+
+const getPathVisual = (path: PathCard) =>
+  pathVisuals[path.key] || pathVisuals[path.routeType === 'category' ? path.key : 'home_family'];
+
 const getLearnerId = (userId?: string | null, isGuest?: boolean) =>
   userId || (isGuest ? 'guest-learner' : null);
 
@@ -383,15 +394,13 @@ const LanguageSwitch: React.FC = () => {
   const { locale, setLocale } = useLocale();
 
   return (
-    <div className="inline-flex items-center gap-2 rounded-full border-4 border-white bg-white p-1 shadow-[0_6px_0_rgba(91,141,239,0.12)]">
+    <div className="course-language-switch" aria-label="Language">
       {(['en', 'vi'] as Locale[]).map((option) => (
         <button
           key={option}
           type="button"
           onClick={() => setLocale(option)}
-          className={`min-h-11 rounded-full px-4 text-sm font-black transition-colors ${
-            locale === option ? 'bg-sky-500 text-white' : 'text-slate-600 hover:bg-sky-50'
-          }`}
+          className={`course-language-switch__option ${locale === option ? 'is-active' : ''}`}
         >
           {option === 'en' ? 'EN' : 'VI'}
         </button>
@@ -577,96 +586,98 @@ export const CourseList: React.FC = () => {
 
   return (
     <div
-      className="course-catalog min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden clay-bg-playful pb-[calc(env(safe-area-inset-bottom)+12rem)] md:pb-10"
+      className="course-catalog"
       style={courseListTheme}
     >
-      <div className="relative z-10 mx-auto w-full max-w-6xl min-w-0 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 xl:px-10">
-        <header className="mx-auto mb-8 max-w-4xl text-center sm:mb-10">
-          <div className="mb-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <div className="clay-badge clay-badge-yellow max-w-full text-center text-base sm:text-lg">
-              <span>{ui.heroKicker}</span>
+      <div className="course-catalog__canvas">
+        <header className="course-catalog__hero">
+          <div className="course-catalog__hero-copy">
+            <div className="course-catalog__hero-topline">
+              <span className="course-catalog__eyebrow">{ui.heroKicker}</span>
+              <LanguageSwitch />
             </div>
-            <LanguageSwitch />
-          </div>
-          <h1
-            className="mb-5 text-5xl font-black leading-none text-slate-800 sm:text-6xl lg:text-7xl"
-            style={{ fontFamily: "'Baloo 2', system-ui, sans-serif" }}
-          >
-            {pageTitle}
-          </h1>
-          <p className="mx-auto max-w-3xl text-xl font-semibold leading-9 text-slate-600 sm:text-2xl">
-            {ui.heroBody}
-          </p>
+            <h1>{pageTitle}</h1>
+            <p className="course-catalog__hero-body">{ui.heroBody}</p>
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            {priorityTopics.length > 0 ? (
-              priorityTopics.map((topicId) => (
+            <div className="course-catalog__priority-panel">
+              <div>
+                <span>{ui.priorityTopics}</span>
+                <p>{priorityTopics.length > 0 ? ui.browseTopics : ui.noPriorityTopics}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/learning-path')}
+                className="course-catalog__priority-action"
+                aria-label={ui.priorityTopics}
+              >
+                <span aria-hidden="true">›</span>
+              </button>
+            </div>
+
+            {priorityTopics.length > 0 && (
+              <div className="course-catalog__topic-list" aria-label={ui.priorityTopics}>
+                {priorityTopics.map((topicId) => (
+                  <button
+                    key={topicId}
+                    type="button"
+                    onClick={() => navigate(`/courses/path/${topicId}`)}
+                  >
+                    {topicLabel(topicId, locale)}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {!hasLiveCourses && !isLoading && (
+              <div className="course-catalog__sample-notice">
+                <p>{ui.noCoursesBody}</p>
                 <button
-                  key={topicId}
                   type="button"
-                  onClick={() => navigate(`/courses/path/${topicId}`)}
-                  className="rounded-full border-4 border-white bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-[0_6px_0_rgba(91,141,239,0.10)]"
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
                 >
-                  {topicLabel(topicId, locale)}
+                  {isGenerating ? ui.generating : ui.generateCourse}
                 </button>
-              ))
-            ) : (
-              <div className="rounded-full border-4 border-white bg-white px-4 py-2 text-sm font-black text-slate-600 shadow-[0_6px_0_rgba(91,141,239,0.10)]">
-                {ui.noPriorityTopics}
               </div>
             )}
           </div>
 
-          {!hasLiveCourses && !isLoading && (
-            <div className="mx-auto mt-6 flex max-w-2xl flex-col items-center gap-3 rounded-[28px] border-4 border-white bg-white p-4 shadow-[0_8px_0_rgba(91,141,239,0.10)] sm:flex-row sm:justify-between sm:text-left">
-              <p className="text-sm font-black text-slate-600">{ui.noCoursesBody}</p>
-              <button
-                type="button"
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                className="clay-btn clay-btn-sm clay-btn-yellow shrink-0 disabled:opacity-60"
-              >
-                {isGenerating ? ui.generating : ui.generateCourse}
-              </button>
-            </div>
-          )}
+          <div className="course-catalog__hero-art" aria-label="Momo learning with a friendly guide">
+            <span className="course-catalog__hero-spark course-catalog__hero-spark--one" aria-hidden="true" />
+            <span className="course-catalog__hero-spark course-catalog__hero-spark--two" aria-hidden="true" />
+            <img
+              src="/learnar-assets/courses/momo-home-family-english-5-7/images/course-cover.png"
+              alt="A child learning English with Momo in a colorful room"
+            />
+          </div>
         </header>
 
-        <section className="mb-9 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {statCards.map((item) => {
+        <section className="course-catalog__stats" aria-label="Course progress overview">
+          {statCards.map((item, index) => {
             const Icon = item.icon;
             return (
-              <div key={item.label} className="clay-stat-card min-w-0 !rounded-[26px] !border-white/90 !bg-white/95 !p-5 sm:!p-7">
-                <div className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center ${item.tone}`}>
+              <div key={item.label} className={`course-catalog__stat course-catalog__stat--${index}`}>
+                <div className="course-catalog__stat-icon">
                   <Icon />
                 </div>
-                <div className="clay-stat-number break-words !text-4xl sm:!text-5xl">{item.value}</div>
-                <div className="clay-stat-label !text-base">{item.label}</div>
+                <div className="course-catalog__stat-value">{item.value}</div>
+                <div className="course-catalog__stat-label">{item.label}</div>
               </div>
             );
           })}
         </section>
 
         {!activeFilter && (
-          <section className="mb-8">
-            <div className="mb-5 flex items-end justify-between gap-4">
+          <section className="course-catalog__paths">
+            <div className="course-catalog__section-heading">
               <div>
-                <h2
-                  className="text-4xl font-black leading-tight text-slate-800 sm:text-5xl"
-                  style={{ fontFamily: "'Baloo 2', system-ui, sans-serif" }}
-                >
-                  {ui.yourPaths}
-                </h2>
-                <div className="mt-3 h-2 w-52 rounded-full" style={{ background: colors.coralPink }} />
+                <h2>{ui.yourPaths}</h2>
+                <p>{priorityTopics.length > 0 ? ui.recommended : ui.allPaths}</p>
               </div>
-              {!hasLiveCourses && (
-                <span className="clay-badge clay-badge-blue hidden text-xs sm:inline-flex">
-                  {ui.demo}
-                </span>
-              )}
+              {!hasLiveCourses && <span className="course-catalog__demo-badge">{ui.demo}</span>}
             </div>
 
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <div className="course-catalog__path-grid">
               {learningPaths.map((path, index) => {
                 const palette = pathPalette[index % pathPalette.length];
                 const route = path.routeType === 'path'
@@ -680,48 +691,33 @@ export const CourseList: React.FC = () => {
                     key={path.key}
                     type="button"
                     onClick={() => navigate(route)}
-                    className="group min-w-0 rounded-[34px] border-4 p-5 text-left transition-transform hover:-translate-y-1"
+                    className="course-path-card"
                     style={{
-                      background: palette.shell,
-                      borderColor: palette.border,
-                      boxShadow: palette.shadow,
-                    }}
+                      '--path-shell': palette.shell,
+                      '--path-border': palette.border,
+                      '--path-shadow': palette.shadow,
+                      '--path-accent': palette.accent,
+                      '--path-accent-dark': palette.accentDark,
+                    } as React.CSSProperties}
                   >
-                    <div className="grid min-w-0 grid-cols-[64px_minmax(0,1fr)] items-center gap-4">
-                      <div
-                        className="flex h-16 min-h-16 w-16 min-w-16 items-center justify-center rounded-3xl text-lg font-black text-slate-800"
-                        style={{
-                          background: palette.accent,
-                          boxShadow: `0 7px 0 ${palette.accentDark}, inset 0 2px 0 rgba(255,255,255,0.65)`,
-                        }}
-                      >
-                        {path.mark}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="mb-1 flex items-center gap-2">
-                          <h3 className="line-clamp-1 text-xl font-black text-slate-800">{path.title}</h3>
-                          {path.routeType === 'path' && (
-                            <span className="rounded-full bg-white px-2 py-1 text-[10px] font-black text-slate-600 shadow-[0_3px_0_rgba(15,23,42,0.08)]">
-                              {ui.recommended}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-base font-bold text-slate-500">{path.subtitle}</p>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center justify-between text-sm font-black text-slate-500">
-                      <span>{path.completedCourses} / {Math.max(path.matchedCourses, 1)} {ui.done}</span>
-                      <span className="text-sky-600">{path.progressPercent}%</span>
-                    </div>
-                    <div className="mt-2 h-4 overflow-hidden rounded-full bg-white/80 shadow-[inset_0_2px_4px_rgba(15,23,42,0.08)]">
-                      <div
-                        className="h-full rounded-full shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]"
-                        style={{
-                          width: `${path.progressPercent}%`,
-                          background: palette.accent,
-                        }}
-                      />
-                    </div>
+                    <span className="course-path-card__visual" aria-hidden="true">
+                      <img src={getPathVisual(path)} alt="" />
+                    </span>
+                    <span className="course-path-card__content">
+                      <span className="course-path-card__icon">{path.mark}</span>
+                      <span className="course-path-card__title-row">
+                        <span className="course-path-card__title">{path.title}</span>
+                        {path.routeType === 'path' && <span className="course-path-card__recommendation">{ui.recommended}</span>}
+                      </span>
+                      <span className="course-path-card__subtitle">{path.subtitle}</span>
+                      <span className="course-path-card__progress-row">
+                        <span>{path.completedCourses} / {Math.max(path.matchedCourses, 1)} {ui.done}</span>
+                        <strong>{path.progressPercent}%</strong>
+                      </span>
+                      <span className="course-path-card__progress-track" aria-hidden="true">
+                        <span style={{ width: `${path.progressPercent}%` }} />
+                      </span>
+                    </span>
                   </button>
                 );
               })}
@@ -730,70 +726,74 @@ export const CourseList: React.FC = () => {
         )}
 
         {activeFilter && (
-          <div className="mb-5">
-            <button type="button" onClick={() => navigate('/courses')} className="clay-btn clay-btn-sm clay-btn-white">
+          <div className="course-catalog__back-row">
+            <button type="button" onClick={() => navigate('/courses')}>
+              <span aria-hidden="true">‹</span>
               {ui.backToAllPaths}
             </button>
           </div>
         )}
 
-        {error && (
-          <div className="mb-5 rounded-3xl border-4 border-white bg-rose-50 p-4 text-center font-black text-rose-600 shadow-sm">
-            {error}
-          </div>
-        )}
+        {error && <div className="course-catalog__error" role="alert">{error}</div>}
 
-        {isLoading ? (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="h-72 animate-pulse rounded-[28px] bg-white/70" />
-            ))}
+        <section className="course-catalog__courses" aria-label={ui.courseCatalog}>
+          <div className="course-catalog__section-heading course-catalog__section-heading--courses">
+            <div>
+              <h2>{activeFilter ? pageTitle : ui.courseCatalog}</h2>
+              <p>{activeFilter ? ui.allPaths : ui.browseTopics}</p>
+            </div>
           </div>
-        ) : filteredCourses.length === 0 ? (
-          <div className="mx-auto max-w-xl rounded-[32px] border-4 border-white bg-white p-6 text-center shadow-[0_10px_0_rgba(91,141,239,0.12)]">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-yellow-100 text-2xl font-black text-amber-700">?</div>
-            <h2 className="mt-3 text-2xl font-black text-slate-800">{ui.noCoursesInCategory}</h2>
-            <p className="mt-2 font-bold text-slate-600">{ui.noCoursesInCategoryBody}</p>
-          </div>
-        ) : (
-          <div className="course-list-grid grid min-w-0 gap-6 lg:grid-cols-2 xl:grid-cols-3 xl:gap-7">
-            {filteredCourses.map((course, index) => {
-              const courseProgress = getCourseProgress(course, progressByCourse.get(course.course_id));
-              const totalCourseXp = course.lessons.reduce((sum, lesson) => sum + (lesson.reward?.xp || 0), 0);
-              const firstLessonId = progressByCourse.get(course.course_id)?.current_lesson_id || course.lessons[0]?.lesson_id;
-              const displayProgress = hasLiveCourses ? courseProgress.progressPercent : [35, 50, 22][index] || 30;
-              const displayXp = hasLiveCourses ? totalCourseXp : [500, 350, 480][index] || 420;
-              const duration = course.lessons.reduce((sum, lesson) => sum + (lesson.duration_minutes || 0), 0) || course.lessons.length * 6;
-              const displayLevel = levelLabel[locale][course.level] || course.level;
-              const tags = ['AR', ui.vocabulary, ui.fun];
-              const completed = hasLiveCourses ? courseProgress.completedLessons : [2, 3, 1][index] || 0;
-              const total = courseProgress.totalLessons || course.lessons.length || 1;
 
-              return (
-                <CourseCard
-                  key={course.course_id}
-                  course={course}
-                  locale={locale}
-                  completedLessons={completed}
-                  totalLessons={total}
-                  progressPercent={displayProgress}
-                  xp={displayXp}
-                  durationMinutes={duration}
-                  levelLabel={displayLevel}
-                  actionLabel={completed > 0 ? ui.continueLearning : ui.startLearning}
-                  progressLabel={ui.progress}
-                  hourLabel={ui.hourLabel}
-                  tags={tags}
-                  isInteractive
-                  onOpen={() => navigate(`/courses/${course.course_id}`)}
-                  onStart={() => {
-                    navigate(firstLessonId ? `/courses/${course.course_id}/lessons/${firstLessonId}` : `/courses/${course.course_id}`);
-                  }}
-                />
-              );
-            })}
-          </div>
-        )}
+          {isLoading ? (
+            <div className="course-catalog__skeleton-grid" aria-label="Loading courses">
+              {[1, 2, 3].map((item) => <div key={item} className="course-catalog__skeleton" />)}
+            </div>
+          ) : filteredCourses.length === 0 ? (
+            <div className="course-catalog__empty-state">
+              <div aria-hidden="true">?</div>
+              <h2>{ui.noCoursesInCategory}</h2>
+              <p>{ui.noCoursesInCategoryBody}</p>
+            </div>
+          ) : (
+            <div className="course-list-grid course-catalog__course-grid">
+              {filteredCourses.map((course, index) => {
+                const courseProgress = getCourseProgress(course, progressByCourse.get(course.course_id));
+                const totalCourseXp = course.lessons.reduce((sum, lesson) => sum + (lesson.reward?.xp || 0), 0);
+                const firstLessonId = progressByCourse.get(course.course_id)?.current_lesson_id || course.lessons[0]?.lesson_id;
+                const displayProgress = hasLiveCourses ? courseProgress.progressPercent : [35, 50, 22][index] || 30;
+                const displayXp = hasLiveCourses ? totalCourseXp : [500, 350, 480][index] || 420;
+                const duration = course.lessons.reduce((sum, lesson) => sum + (lesson.duration_minutes || 0), 0) || course.lessons.length * 6;
+                const displayLevel = levelLabel[locale][course.level] || course.level;
+                const tags = ['AR', ui.vocabulary, ui.fun];
+                const completed = hasLiveCourses ? courseProgress.completedLessons : [2, 3, 1][index] || 0;
+                const total = courseProgress.totalLessons || course.lessons.length || 1;
+
+                return (
+                  <CourseCard
+                    key={course.course_id}
+                    course={course}
+                    locale={locale}
+                    completedLessons={completed}
+                    totalLessons={total}
+                    progressPercent={displayProgress}
+                    xp={displayXp}
+                    durationMinutes={duration}
+                    levelLabel={displayLevel}
+                    actionLabel={completed > 0 ? ui.continueLearning : ui.startLearning}
+                    progressLabel={ui.progress}
+                    hourLabel={ui.hourLabel}
+                    tags={tags}
+                    isInteractive
+                    onOpen={() => navigate(`/courses/${course.course_id}`)}
+                    onStart={() => {
+                      navigate(firstLessonId ? `/courses/${course.course_id}/lessons/${firstLessonId}` : `/courses/${course.course_id}`);
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 
 import type { Locale } from '@/contexts/LocaleContext';
+import { getAssetCandidateUrls, resolveStoredMediaUrl } from '@/lib/courseAssets';
 import { courseDescription, courseSubtitle, courseTitle } from '@/lib/courseLocale';
 import type { Course } from '@/services/CourseService';
 
@@ -28,6 +29,15 @@ const BoltIcon: React.FC<{ className?: string }> = ({ className = 'h-8 w-8' }) =
     </svg>
 );
 
+const categoryFallbackVisuals: Record<string, string> = {
+    home_family: '/learnar-assets/courses/momo-home-family-english-5-7/images/course-cover.png',
+    nature: '/assets/flashcards/jungle_card.png',
+    school_food: '/assets/flashcards/apple01_card.png',
+};
+
+const uniqueSources = (sources: Array<string | null | undefined>) =>
+    Array.from(new Set(sources.filter((source): source is string => Boolean(source))));
+
 export const CourseCard: React.FC<CourseCardProps> = ({
     course,
     locale,
@@ -49,6 +59,14 @@ export const CourseCard: React.FC<CourseCardProps> = ({
     const vietnameseSubtitle = courseSubtitle(course, 'vi');
     const localizedDescription = courseDescription(course, locale);
     const hours = Math.max(1, Math.round(durationMinutes / 60));
+    const visualSources = useMemo(() => uniqueSources([
+        resolveStoredMediaUrl(course.thumbnail_url),
+        ...getAssetCandidateUrls(course.thumbnail),
+        categoryFallbackVisuals[course.category_key],
+        categoryFallbackVisuals.home_family,
+    ]), [course.category_key, course.thumbnail, course.thumbnail_url]);
+    const [visualIndex, setVisualIndex] = useState(0);
+    const visualSource = visualSources[visualIndex];
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
         if (!isInteractive || !onOpen) return;
@@ -67,54 +85,54 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             tabIndex={isInteractive ? 0 : undefined}
             aria-label={`${englishTitle}. ${vietnameseSubtitle}`}
         >
-            <div className="course-list-card__xp-shell">
-                <div className="course-list-card__xp-panel">
-                    <div className="flex min-w-0 items-center justify-center gap-4 text-slate-800">
-                        <BoltIcon className="course-list-card__bolt" />
-                        <span className="course-list-card__xp" style={{ fontFamily: "'Baloo 2', system-ui, sans-serif" }}>
-                            {xp} XP
-                        </span>
-                    </div>
-                </div>
+            <div className="course-list-card__visual">
+                {visualSource && (
+                    <img
+                        src={visualSource}
+                        alt={`Preview of ${englishTitle}`}
+                        onError={() => setVisualIndex((current) => Math.min(current + 1, visualSources.length - 1))}
+                    />
+                )}
+                <span className="course-list-card__visual-wash" aria-hidden="true" />
+                <span className="course-list-card__level">{levelLabel}</span>
+                <span className="course-list-card__xp-badge">
+                    <BoltIcon className="course-list-card__bolt" />
+                    {xp} XP
+                </span>
             </div>
 
             <div className="course-list-card__body min-w-0">
-                <div className="mb-4 flex flex-wrap items-center gap-2 text-base font-semibold text-slate-500">
-                    <span className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-600">
-                        {levelLabel}
-                    </span>
-                    <span aria-hidden="true">&bull;</span>
+                <div className="course-list-card__metadata">
                     <span>{hours} {hourLabel}</span>
+                    <span aria-hidden="true">•</span>
+                    <span>{totalLessons} lessons</span>
                 </div>
+                <h2>{englishTitle}</h2>
+                <p className="course-list-card__subtitle">{vietnameseSubtitle}</p>
+                <p className="course-list-card__description">{localizedDescription}</p>
 
-                <h2 className="text-3xl font-black leading-tight text-slate-800">{englishTitle}</h2>
-                <p className="mt-2 text-xl font-medium leading-7 text-slate-500">{vietnameseSubtitle}</p>
-                <p className="mt-4 line-clamp-3 min-h-[5.25rem] text-xl font-medium leading-7 text-slate-600">
-                    {localizedDescription}
-                </p>
-
-                <div className="mt-5 flex flex-wrap gap-3">
+                <div className="course-list-card__tags">
                     {tags.map(tag => (
-                        <span key={tag} className="rounded-2xl bg-slate-100 px-4 py-2 text-base font-semibold text-slate-600">
+                        <span key={tag}>
                             {tag}
                         </span>
                     ))}
                 </div>
 
-                <div className="mt-6 flex items-center justify-between text-lg font-black text-slate-700">
+                <div className="course-list-card__progress-row">
                     <span>{progressLabel}</span>
-                    <span className="text-rose-500">{completedLessons}/{totalLessons}</span>
+                    <strong>{completedLessons}/{totalLessons}</strong>
                 </div>
-                <div className="mt-2 h-4 overflow-hidden rounded-full bg-slate-100">
+                <div className="course-list-card__progress-track" aria-label={`${progressPercent}% ${progressLabel}`}>
                     <div
-                        className="h-full rounded-full bg-[#FF9F9F]"
+                        className="course-list-card__progress-fill"
                         style={{ width: `${progressPercent}%` }}
                     />
                 </div>
 
                 <button
                     type="button"
-                    className="course-list-card__cta mt-7 flex min-h-16 w-full items-center justify-center px-5 text-xl font-black"
+                    className="course-list-card__cta"
                     onClick={(event) => {
                         event.stopPropagation();
                         onStart?.();
