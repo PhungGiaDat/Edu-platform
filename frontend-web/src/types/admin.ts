@@ -62,9 +62,16 @@ export interface Lesson {
   lesson_id: string;
   title: string;
   description?: string;
-  order?: number;
+  title_vi?: string;
+  order: number;
   duration_minutes?: number;
-  // Add other lesson fields as needed
+  content?: string;
+  video_url?: string;
+  video_thumbnail?: string;
+  intro_video_url?: string;
+  intro_video_thumbnail?: string;
+  images?: string[];
+  is_completed?: boolean;
 }
 
 export interface CourseCreate {
@@ -80,6 +87,8 @@ export interface CourseCreate {
   level?: 'beginner' | 'intermediate' | 'advanced';
   description_vi?: string;
   is_template?: boolean;
+  is_published?: boolean;
+  lessons: Lesson[];
 }
 
 export interface CourseUpdate {
@@ -145,7 +154,7 @@ export interface Flashcard {
   teacher_id?: string;
   deck_id?: string;
   word: string;
-  translation: string;
+  translation: LocalizedString;
   pronunciation?: string;
   image_url?: string;
   audio_url?: string;
@@ -158,8 +167,9 @@ export interface Flashcard {
 }
 
 export interface FlashcardCreate {
+  qr_id: string;
   word: string;
-  translation: string;
+  translation: LocalizedString;
   deck_id?: string;
   pronunciation?: string;
   image_url?: string;
@@ -172,7 +182,7 @@ export interface FlashcardCreate {
 
 export interface FlashcardUpdate {
   word?: string;
-  translation?: string;
+  translation?: LocalizedString;
   deck_id?: string;
   pronunciation?: string;
   image_url?: string;
