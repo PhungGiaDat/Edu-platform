@@ -22,6 +22,30 @@ body,
   box-sizing: border-box;
 }
 
+/* Keep the fixed learner sidebar and its page canvas on one width contract. */
+.learner-shell {
+  --learner-sidebar-width: 0px;
+}
+
+.learner-sidebar {
+  width: var(--learner-sidebar-width);
+}
+
+.learner-main {
+  margin-left: var(--learner-sidebar-width);
+  max-width: calc(100vw - var(--learner-sidebar-width));
+}
+
+@media (min-width: 768px) {
+  .learner-shell {
+    --learner-sidebar-width: 88px;
+  }
+
+  .learner-shell--sidebar-expanded {
+    --learner-sidebar-width: 296px;
+  }
+}
+
 /* ========== Design System: EduAR Kids — Claymorphism ==========
    Warm, soft, non-high-contrast palette for ages 6–12
    ============================================================ */
@@ -245,6 +269,15 @@ button {
 button:hover {
   border-color: var(--color-primary-light);
   background-color: var(--color-surface-soft);
+}
+
+.learner-sidebar-toggle {
+  padding: 0;
+  color: #4E78CC;
+}
+
+.learner-sidebar-toggle:hover {
+  background-color: #EFF6FF;
 }
 
 button:focus,

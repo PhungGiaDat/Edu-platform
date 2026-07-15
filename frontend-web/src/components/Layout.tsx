@@ -37,18 +37,17 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }, []);
 
     return (
-        <div className="flex min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden" style={{ backgroundColor: 'var(--color-bg)' }}>
+        <div
+            className={`learner-shell flex min-h-[100dvh] w-full max-w-[100vw] min-w-0 overflow-x-hidden ${
+                isSidebarExpanded ? 'learner-shell--sidebar-expanded' : ''
+            }`}
+            style={{ backgroundColor: 'var(--color-bg)' }}
+        >
             <Sidebar
                 isDesktopExpanded={isSidebarExpanded}
                 onDesktopExpandedChange={setSidebarExpanded}
             />
-            <main
-                className={`w-full max-w-[100vw] min-w-0 flex-1 overflow-x-hidden pb-28 transition-[margin,max-width] duration-300 md:ml-[88px] md:max-w-[calc(100vw-88px)] md:pb-0 ${
-                    isSidebarExpanded
-                        ? 'min-[1200px]:ml-[296px] min-[1200px]:max-w-[calc(100vw-296px)]'
-                        : 'min-[1200px]:ml-[88px] min-[1200px]:max-w-[calc(100vw-88px)]'
-                }`}
-            >
+            <main className="learner-main w-full max-w-[100vw] min-w-0 flex-1 overflow-x-hidden pb-28 transition-[margin,max-width] duration-300 md:pb-0 motion-reduce:transition-none">
                 {children}
             </main>
         </div>

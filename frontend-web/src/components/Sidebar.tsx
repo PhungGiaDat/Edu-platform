@@ -374,13 +374,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
 
     return (
         <>
-            <aside className={`fixed left-0 top-0 z-50 hidden h-screen flex-col overflow-x-hidden border-r-4 border-white bg-[#FFF7EC] shadow-[4px_0_24px_rgba(91,141,239,0.10)] transition-[width] duration-300 md:flex ${isDesktopExpanded ? 'w-[296px]' : 'w-[88px]'}`}>
+            <aside
+                aria-label="Learning sidebar"
+                className="learner-sidebar fixed left-0 top-0 z-50 hidden h-[100dvh] flex-col overflow-x-hidden border-r-4 border-white bg-[#FFF7EC] shadow-[4px_0_24px_rgba(91,141,239,0.10)] transition-[width] duration-300 md:flex motion-reduce:transition-none"
+            >
                 <button
                     type="button"
                     onClick={() => onDesktopExpandedChange(!isDesktopExpanded)}
                     aria-expanded={isDesktopExpanded}
                     aria-label={isDesktopExpanded ? 'Collapse navigation' : 'Expand navigation'}
-                    className="absolute right-2 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#4E78CC] shadow-[0_4px_0_#DDE8FC] hover:bg-blue-50"
+                    className="learner-sidebar-toggle absolute right-2 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-[0_4px_0_#DDE8FC]"
                 >
                     <ChevronIcon expanded={isDesktopExpanded} />
                 </button>
