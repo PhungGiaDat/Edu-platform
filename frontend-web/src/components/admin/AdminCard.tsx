@@ -1,7 +1,3 @@
-// frontend-web/src/components/admin/AdminCard.tsx
-/**
- * Admin Card - Claymorphic card component for dashboard
- */
 import React from 'react';
 
 interface AdminCardProps {
@@ -11,11 +7,11 @@ interface AdminCardProps {
   onClick?: () => void;
 }
 
-export const AdminCard: React.FC<AdminCardProps> = ({ 
-  children, 
-  className = '', 
+export const AdminCard: React.FC<AdminCardProps> = ({
+  children,
+  className = '',
   padding = 'md',
-  onClick 
+  onClick,
 }) => {
   const paddingClasses = {
     none: '',
@@ -24,28 +20,25 @@ export const AdminCard: React.FC<AdminCardProps> = ({
     lg: 'p-6 md:p-8',
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!onClick || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    onClick();
+  };
+
   return (
-    <div 
-      className={`
-        bg-white rounded-3xl
-        shadow-[0_4px_0_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.8)]
-        hover:shadow-[0_8px_0_rgba(0,0,0,0.1),0_4px_16px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.9)]
-        hover:-translate-y-0.5
-        active:shadow-[0_2px_0_rgba(0,0,0,0.06),0_1px_4px_rgba(0,0,0,0.04),inset_0_2px_4px_rgba(0,0,0,0.06)]
-        active:translate-y-0.5
-        transition-all duration-200
-        ${paddingClasses[padding]}
-        ${onClick ? 'cursor-pointer' : ''}
-        ${className}
-      `}
+    <div
+      className={`admin-card ${onClick ? 'admin-card--interactive' : ''} ${paddingClasses[padding]} ${className}`}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
     >
       {children}
     </div>
   );
 };
 
-// Stat Card for dashboard
 interface StatCardProps {
   title: string;
   value: string | number;
@@ -62,38 +55,24 @@ export const StatCard: React.FC<StatCardProps> = ({
   value,
   icon,
   trend,
-  color = 'blue'
-}) => {
-  const colorClasses = {
-    blue: 'bg-[#6EB9FF]/10 text-[#6EB9FF]',
-    green: 'bg-[#B4E197]/10 text-[#7DC760]',
-    yellow: 'bg-[#FFD93D]/10 text-[#E5B800]',
-    pink: 'bg-[#FF9F9F]/10 text-[#D97070]',
-  };
-
-  return (
-    <AdminCard>
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-          <p className="text-2xl md:text-3xl font-bold text-gray-800">{value}</p>
-          {trend && (
-            <p className={`text-xs font-medium mt-1 ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
-              {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%
-            </p>
-          )}
-        </div>
-        {icon && (
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${colorClasses[color]}`}>
-            {icon}
-          </div>
+}) => (
+  <AdminCard className="admin-stat-card">
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <p className="admin-stat-label">{title}</p>
+        <p className="admin-stat-value">{value}</p>
+        {trend && (
+          <p className={`mt-2 mb-0 text-xs font-extrabold ${trend.isPositive ? 'text-emerald-700' : 'text-red-700'}`}>
+            <span aria-hidden="true">{trend.isPositive ? '↑' : '↓'}</span>{' '}
+            {Math.abs(trend.value)}%
+          </p>
         )}
       </div>
-    </AdminCard>
-  );
-};
+      {icon && <div className="admin-stat-icon">{icon}</div>}
+    </div>
+  </AdminCard>
+);
 
-// Section Card with header
 interface SectionCardProps {
   title: string;
   subtitle?: string;
@@ -107,20 +86,18 @@ export const SectionCard: React.FC<SectionCardProps> = ({
   subtitle,
   action,
   children,
-  className = ''
-}) => {
-  return (
-    <AdminCard className={className}>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-          {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
-        </div>
-        {action && <div>{action}</div>}
+  className = '',
+}) => (
+  <AdminCard className={className}>
+    <div className="admin-section-header">
+      <div>
+        <h2 className="admin-section-title">{title}</h2>
+        {subtitle && <p className="admin-section-copy">{subtitle}</p>}
       </div>
-      {children}
-    </AdminCard>
-  );
-};
+      {action && <div>{action}</div>}
+    </div>
+    {children}
+  </AdminCard>
+);
 
 export default AdminCard;

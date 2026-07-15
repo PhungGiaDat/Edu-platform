@@ -2,10 +2,10 @@
   "admin": {
     "nav": {
       "dashboard": "Dashboard",
-      "flashcards": "Flash",
+      "flashcards": "Flashcards",
       "courses": "Courses",
       "students": "Students",
-      "analytics": "Stats"
+      "analytics": "Analytics"
     },
     "common": {
       "save": "Save",
@@ -23,11 +23,16 @@
       "loadMore": "Load more",
       "confirm": "Confirm",
       "success": "Success",
-      "error": "Error"
+      "error": "Error",
+      "administrator": "Administrator",
+      "primaryNavigation": "Admin navigation",
+      "openMenu": "Open navigation",
+      "closeMenu": "Close navigation"
     },
     "dashboard": {
       "title": "Dashboard",
       "welcome": "Welcome back! Here's your teaching overview.",
+      "summary": "Platform summary",
       "totalStudents": "Students",
       "totalCourses": "Courses",
       "totalFlashcards": "Flashcards",

@@ -2,7 +2,7 @@
   "admin": {
     "nav": {
       "dashboard": "Tổng quan",
-      "flashcards": "Thẻ",
+      "flashcards": "Thẻ ghi nhớ",
       "courses": "Khóa học",
       "students": "Học sinh",
       "analytics": "Thống kê"
@@ -23,11 +23,16 @@
       "loadMore": "Tải thêm",
       "confirm": "Xác nhận",
       "success": "Thành công",
-      "error": "Lỗi"
+      "error": "Lỗi",
+      "administrator": "Quản trị viên",
+      "primaryNavigation": "Điều hướng quản trị",
+      "openMenu": "Mở điều hướng",
+      "closeMenu": "Đóng điều hướng"
     },
     "dashboard": {
       "title": "Tổng quan",
       "welcome": "Chào mừng trở lại! Đây là tổng quan giảng dạy của bạn.",
+      "summary": "Tổng quan nền tảng",
       "totalStudents": "Học sinh",
       "totalCourses": "Khóa học",
       "totalFlashcards": "Thẻ ghi nhớ",
