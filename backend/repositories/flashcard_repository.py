@@ -33,6 +33,25 @@ class FlashcardRepository(BaseRepository):
         if result and "_id" in result:
             result["_id"] = str(result["_id"])
         return result
+
+    async def get_all_active(
+        self,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[Dict[str, Any]]:
+        """Return active flashcards for the learner flashcard gallery."""
+        cursor = (
+            self.collection
+            .find({"is_active": {"$ne": False}})
+            .sort("created_at", -1)
+            .skip(skip)
+            .limit(limit)
+        )
+        results = await cursor.to_list(length=limit)
+        for result in results:
+            if "_id" in result:
+                result["_id"] = str(result["_id"])
+        return results
     
     async def get_by_ar_tag(self, ar_tag: str) -> Optional[Dict[str, Any]]:
         """

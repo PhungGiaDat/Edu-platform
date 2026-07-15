@@ -26,6 +26,14 @@ class FlashcardService:
     async def get_by_qr_id(self, qr_id: str) -> Optional[Dict[str, Any]]:
         """Get flashcard by QR ID"""
         return await self.flashcard_repo.get_by_qr_id(qr_id)
+
+    async def get_all_active(
+        self,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[Dict[str, Any]]:
+        """Get active flashcards for the learner gallery."""
+        return await self.flashcard_repo.get_all_active(skip=skip, limit=limit)
     
     async def get_by_category(self, category: str) -> List[Dict[str, Any]]:
         """Get flashcards by category"""
