@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import adminI18n from '../i18n/adminI18n';
 
 export type Locale = 'en' | 'vi';
 
@@ -298,6 +299,7 @@ export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     document.documentElement.lang = locale;
+    void adminI18n.changeLanguage(locale);
   }, [locale]);
 
   const value = useMemo<LocaleContextValue>(() => ({
