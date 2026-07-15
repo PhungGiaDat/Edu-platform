@@ -1,5 +1,5 @@
 // frontend-web/src/pages/FlashcardPage.tsx
-// Fetches all flashcards from /api/v1/flashcards and renders a scrollable grid.
+// Fetches all flashcards from /api/v1/flashcard and renders a scrollable grid.
 // Tap any card to select it; a collapsible Practice panel appears below with
 // PronunciationPractice and buttons for the 4 game types.
 // Falls back to a single demo card if the API is offline.
@@ -17,8 +17,9 @@ import jungle from "../../public/assets/flashcards/jungle.jpg";
 interface FlashcardData {
   id?: string;
   _id?: string;
+  qr_id?: string;
   word: string;
-  translation?: string;
+  translation?: string | Record<string, string>;
   image_url?: string;
   audio_url?: string;
   ar_tag?: string;
@@ -47,6 +48,15 @@ const DEMO_CARD: FlashcardData = {
 const BG_FALLBACK =
   "https://cdn.pixabay.com/photo/2016/11/14/03/22/elephant-1822636_1280.jpg";
 
+const getTranslationText = (translation?: FlashcardData["translation"]): string | undefined => {
+  if (!translation) return undefined;
+  if (typeof translation === "string") return translation;
+  return translation.vi ?? translation.en ?? Object.values(translation)[0];
+};
+
+const getQrData = (card: FlashcardData): string =>
+  card.qr_id ?? card.ar_tag ?? card.word;
+
 // -------- Component --------
 
 const FlashcardPage = () => {
@@ -64,7 +74,7 @@ const FlashcardPage = () => {
     let cancelled = false;
     const fetchCards = async () => {
       try {
-        const data = await apiClient.get('/api/v1/flashcards', {
+        const data = await apiClient.get('/api/v1/flashcard', {
           signal: AbortSignal.timeout(6000),
         });
         const list: FlashcardData[] = Array.isArray(data)
@@ -95,7 +105,7 @@ const FlashcardPage = () => {
       try {
         await apiClient.post('/api/v1/pronunciation/attempt', {
           user_id: userId,
-          flashcard_qr_id: selectedCard.ar_tag ?? selectedCard.word,
+          flashcard_qr_id: getQrData(selectedCard),
           spoken_text: selectedCard.word, // browser speech transcription
           score,
         });
@@ -111,7 +121,7 @@ const FlashcardPage = () => {
       if (!selectedCard || startingGame) return;
       setStartingGame(true);
       try {
-        const qrId = selectedCard.ar_tag ?? selectedCard.word;
+        const qrId = getQrData(selectedCard);
         if (userId && token && !isGuest) {
           await apiClient.post('/api/v1/game/start', null, {
             params: { type: gameType, flashcard_id: qrId, user_id: userId }
@@ -168,10 +178,10 @@ const FlashcardPage = () => {
                 word={card.word}
                 bgUrl={BG_FALLBACK}
                 imgUrl={card.image_url ?? jungle as string}
-                qrData={card.ar_tag ?? card.word}
+                qrData={getQrData(card)}
                 audioUrl={card.audio_url}
                 imageAnimationType={card.image_animation_type}
-                translation={card.translation}
+                translation={getTranslationText(card.translation)}
               />
             </button>
           );
