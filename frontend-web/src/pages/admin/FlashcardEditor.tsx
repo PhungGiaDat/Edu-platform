@@ -94,6 +94,87 @@ const drawImageContain = (
 const safeFileName = (value: string): string =>
   value.trim().replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '') || 'flashcard';
 
+const CARD_WIDTH = 800;
+const CARD_HEIGHT = 960;
+
+interface CardArtwork {
+  cardImage: HTMLImageElement;
+  backgroundImage: HTMLImageElement | null;
+  frontText: string;
+  backText: string;
+}
+
+// Draws everything except the QR code, so the same base can be exported
+// both clean (dataset / OCR / re-edit source) and with a QR overlay (print).
+const drawCardBase = (context: CanvasRenderingContext2D, artwork: CardArtwork) => {
+  const { cardImage, backgroundImage, frontText, backText } = artwork;
+
+  roundedRect(context, 5, 5, 790, 950, 36);
+  context.save();
+  context.clip();
+  if (backgroundImage) {
+    drawImageCover(context, backgroundImage, 0, 0, CARD_WIDTH, CARD_HEIGHT);
+  } else {
+    const gradient = context.createLinearGradient(0, 0, CARD_WIDTH, CARD_HEIGHT);
+    gradient.addColorStop(0, '#dbeafe');
+    gradient.addColorStop(1, '#bae6fd');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+  }
+  context.fillStyle = 'rgba(191, 219, 254, 0.55)';
+  context.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+  context.restore();
+
+  context.strokeStyle = '#4ade80';
+  context.lineWidth = 10;
+  roundedRect(context, 7, 7, 786, 946, 34);
+  context.stroke();
+
+  context.fillStyle = '#fef3c7';
+  roundedRect(context, 105, 215, 590, 515, 30);
+  context.fill();
+  drawImageContain(context, cardImage, 145, 250, 510, 445);
+
+  context.fillStyle = 'rgba(254, 215, 170, 0.97)';
+  roundedRect(context, 105, 765, 590, 142, 30);
+  context.fill();
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillStyle = '#ec4899';
+  context.font = '800 50px system-ui, sans-serif';
+  context.fillText(frontText.toUpperCase(), 400, 815, 530);
+  context.fillStyle = '#c2410c';
+  context.font = '700 27px system-ui, sans-serif';
+  context.fillText(backText, 400, 866, 520);
+};
+
+// Draws only the QR code in its fixed top-right position.
+const drawQrOverlay = (context: CanvasRenderingContext2D, qrCanvas: HTMLCanvasElement) => {
+  context.fillStyle = '#ffffff';
+  roundedRect(context, 604, 38, 158, 158, 22);
+  context.fill();
+  context.drawImage(qrCanvas, 623, 57, 120, 120);
+};
+
+const canvasToPng = (canvas: HTMLCanvasElement): Promise<Blob> =>
+  new Promise((resolve, reject) => {
+    canvas.toBlob((result) => {
+      if (result) resolve(result);
+      else reject(new Error('Could not export the flashcard image.'));
+    }, 'image/png');
+  });
+
+const downloadBlob = (blob: Blob, filename: string) => {
+  const downloadUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = downloadUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
+};
+
 const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
   const navigate = useNavigate();
   const { deckId, cardId } = useParams<{ deckId?: string; cardId?: string }>();
@@ -278,69 +359,26 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
         loadImage(FLASHCARD_BACKGROUND_URL).catch(() => null),
       ]);
       const canvas = document.createElement('canvas');
-      canvas.width = 800;
-      canvas.height = 960;
+      canvas.width = CARD_WIDTH;
+      canvas.height = CARD_HEIGHT;
       const context = canvas.getContext('2d');
       if (!context) throw new Error('Your browser could not create the card image.');
 
-      roundedRect(context, 5, 5, 790, 950, 36);
-      context.save();
-      context.clip();
-      if (backgroundImage) {
-        drawImageCover(context, backgroundImage, 0, 0, canvas.width, canvas.height);
-      } else {
-        const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-        gradient.addColorStop(0, '#dbeafe');
-        gradient.addColorStop(1, '#bae6fd');
-        context.fillStyle = gradient;
-        context.fillRect(0, 0, canvas.width, canvas.height);
-      }
-      context.fillStyle = 'rgba(191, 219, 254, 0.55)';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      context.restore();
+      const artwork: CardArtwork = {
+        cardImage,
+        backgroundImage,
+        frontText: frontText.trim(),
+        backText: backText.trim(),
+      };
+      const baseName = safeFileName(qrId);
 
-      context.strokeStyle = '#4ade80';
-      context.lineWidth = 10;
-      roundedRect(context, 7, 7, 786, 946, 34);
-      context.stroke();
+      // Export #1: clean card without QR (dataset / OCR / re-edit source).
+      drawCardBase(context, artwork);
+      downloadBlob(await canvasToPng(canvas), `${baseName}.png`);
 
-      context.fillStyle = '#ffffff';
-      roundedRect(context, 604, 38, 158, 158, 22);
-      context.fill();
-      context.drawImage(qrCanvas, 623, 57, 120, 120);
-
-      context.fillStyle = '#fef3c7';
-      roundedRect(context, 105, 215, 590, 515, 30);
-      context.fill();
-      drawImageContain(context, cardImage, 145, 250, 510, 445);
-
-      context.fillStyle = 'rgba(254, 215, 170, 0.97)';
-      roundedRect(context, 105, 765, 590, 142, 30);
-      context.fill();
-      context.textAlign = 'center';
-      context.textBaseline = 'middle';
-      context.fillStyle = '#ec4899';
-      context.font = '800 50px system-ui, sans-serif';
-      context.fillText(frontText.trim().toUpperCase(), 400, 815, 530);
-      context.fillStyle = '#c2410c';
-      context.font = '700 27px system-ui, sans-serif';
-      context.fillText(backText.trim(), 400, 866, 520);
-
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((result) => {
-          if (result) resolve(result);
-          else reject(new Error('Could not export the flashcard image.'));
-        }, 'image/png');
-      });
-
-      const downloadUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `${safeFileName(qrId)}-flashcard.png`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
+      // Export #2: same card with the QR overlay (print for students).
+      drawQrOverlay(context, qrCanvas);
+      downloadBlob(await canvasToPng(canvas), `${baseName}_qr.png`);
     } catch (generateError) {
       setError(generateError instanceof Error ? generateError.message : 'Could not generate the flashcard image.');
     } finally {
@@ -588,8 +626,12 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
                 disabled={!imageUrl || !qrId.trim() || !frontText.trim() || isGenerating}
                 className="mt-4 min-h-12 w-full rounded-xl border border-[#247CC2] bg-white px-4 font-semibold text-[#176AA9] transition-colors hover:bg-blue-50 active:translate-y-px disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400"
               >
-                {isGenerating ? 'Generating...' : 'Download Card Image'}
+                {isGenerating ? 'Generating...' : 'Download images (QR + clean)'}
               </button>
+              <p className="mt-2 text-xs leading-5 text-gray-600">
+                Saves two PNGs: <span className="font-mono">{`${safeFileName(qrId) || 'card'}.png`}</span> (clean,
+                for datasets or re-editing) and <span className="font-mono">{`${safeFileName(qrId) || 'card'}_qr.png`}</span> (with QR, for printing).
+              </p>
 
               <div ref={qrExportRef} aria-hidden="true" className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0">
                 <QRCodeCanvas value={qrId.trim() || 'flashcard-preview'} size={256} level="H" />

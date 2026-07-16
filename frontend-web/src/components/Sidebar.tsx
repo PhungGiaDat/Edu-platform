@@ -7,6 +7,7 @@ import { CompletedBookIcon, StickerStarIcon, XpBoltIcon } from '@/components/ico
 import { useAuth } from '@/contexts/AuthContext';
 import { courseService } from '@/services/CourseService';
 import { apiClient } from '@/services/apiClient';
+import '@/styles/sidebar.css';
 import type { Course, UserProgress } from '@/types/course';
 
 interface SidebarProps {
@@ -155,7 +156,7 @@ function Tracker({ stats }: { stats: TrackerStats }) {
     const labelClass = 'mt-1 text-[11px] font-extrabold leading-tight text-slate-500';
 
     return (
-        <section className="min-w-0 overflow-hidden rounded-[28px] bg-white p-4 shadow-[0_12px_0_rgba(15,23,42,0.08)]">
+        <section className="learner-sidebar__tracker min-w-0 overflow-hidden rounded-[28px] bg-white p-4 shadow-[0_12px_0_rgba(15,23,42,0.08)]">
             <h2 className="mb-4 text-base font-black text-slate-800">Progress Tracker</h2>
             <div className="mb-5 grid min-w-0 grid-cols-3 gap-2">
                 <div className={metricClass}>
@@ -186,7 +187,7 @@ function Tracker({ stats }: { stats: TrackerStats }) {
 
 function CourseCatalog({ courses, progressByCourse, onNavigate }: { courses: Course[]; progressByCourse: Map<string, UserProgress>; onNavigate: (path: string) => void }) {
     return (
-        <section className="min-w-0 overflow-x-hidden rounded-[28px] bg-white p-4 shadow-[0_12px_0_rgba(15,23,42,0.08)]">
+        <section className="learner-sidebar__catalog min-w-0 overflow-x-hidden rounded-[28px] bg-white p-4 shadow-[0_12px_0_rgba(15,23,42,0.08)]">
             <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
                 <h2 className="min-w-0 text-base font-black leading-tight text-slate-800">Course Catalog</h2>
                 <button onClick={() => onNavigate('/courses')} className="min-h-11 shrink-0 whitespace-nowrap rounded-xl px-2 text-sm font-extrabold text-[#5B8DEF] hover:bg-blue-50">
@@ -376,23 +377,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
         <>
             <aside
                 aria-label="Learning sidebar"
-                className="learner-sidebar fixed left-0 top-0 z-50 hidden h-[100dvh] flex-col overflow-x-hidden border-r-4 border-white bg-[#FFF7EC] shadow-[4px_0_24px_rgba(91,141,239,0.10)] transition-[width] duration-300 md:flex motion-reduce:transition-none"
+                className="learner-sidebar learner-sidebar--desktop fixed left-0 top-0 z-[var(--z-nav)] hidden h-[100dvh] flex-col overflow-x-hidden border-r-4 border-white bg-[#FFF7EC] shadow-[4px_0_24px_rgba(91,141,239,0.10)] transition-[width] duration-300 md:flex motion-reduce:transition-none"
             >
-                <button
-                    type="button"
-                    onClick={() => onDesktopExpandedChange(!isDesktopExpanded)}
-                    aria-expanded={isDesktopExpanded}
-                    aria-label={isDesktopExpanded ? 'Collapse navigation' : 'Expand navigation'}
-                    className="learner-sidebar-toggle absolute right-2 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-[0_4px_0_#DDE8FC]"
-                >
-                    <ChevronIcon expanded={isDesktopExpanded} />
-                </button>
+                <div className={`learner-sidebar__header flex min-w-0 shrink-0 items-center px-3 pb-1 pt-3 ${isDesktopExpanded ? 'justify-end' : 'justify-center'}`}>
+                    <button
+                        type="button"
+                        onClick={() => onDesktopExpandedChange(!isDesktopExpanded)}
+                        aria-expanded={isDesktopExpanded}
+                        aria-label={isDesktopExpanded ? 'Collapse navigation' : 'Expand navigation'}
+                        className="learner-sidebar-toggle learner-sidebar__toggle flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white shadow-[0_4px_0_#DDE8FC]"
+                    >
+                        <ChevronIcon expanded={isDesktopExpanded} />
+                    </button>
+                </div>
 
                 {isDesktopExpanded ? (
-                    <div className="no-scrollbar h-full min-w-0 space-y-5 overflow-x-hidden overflow-y-auto px-4 py-6 pt-16">
-                        <section className="clay-hero min-w-0 rounded-3xl p-5 text-center">
+                    <div className="learner-sidebar__content no-scrollbar h-full min-w-0 space-y-5 overflow-x-hidden overflow-y-auto px-4 pb-6 pt-1">
+                        <section className="learner-sidebar__brand clay-hero min-w-0 rounded-3xl p-5 text-center">
                             <div className="mb-3 flex items-center justify-center gap-3">
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6EB9FF] to-[#3A8FD1] text-white shadow-[0_4px_0_#3A8FD1]">
+                                <div className="learner-sidebar__brand-mark flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6EB9FF] to-[#3A8FD1] text-white shadow-[0_4px_0_#3A8FD1]">
                                     <GraduationCapIcon className="h-7 w-7" />
                                 </div>
                                 <h1 className="text-2xl font-black text-slate-800" style={{ fontFamily: "'Baloo 2', sans-serif" }}>Edu<span className="text-[#6EB9FF]">AR</span></h1>
@@ -401,7 +404,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                         </section>
 
                         {!isGuest && (
-                            <section className="clay-card-elevated min-w-0 overflow-hidden p-4">
+                            <section className="learner-sidebar__daily clay-card-elevated min-w-0 overflow-hidden p-4">
                                 <div className="flex min-w-0 items-start gap-3">
                                     <DailyGoal variant="mini" showCelebration={false} />
                                     <StreakBadge className="min-w-0 flex-1" />
@@ -409,24 +412,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                             </section>
                         )}
 
-                        <section className="clay-card-elevated min-w-0 overflow-hidden p-4">
-                            <h2 className="mb-3 text-sm font-black text-slate-800">Quick Links</h2>
-                            <div className="grid grid-cols-1 gap-2">
+                        <section className="learner-sidebar__quick-links clay-card-elevated min-w-0 overflow-hidden p-4">
+                            <h2 className="learner-sidebar__quick-links-title mb-3 text-sm font-black text-slate-800">Quick Links</h2>
+                            <div className="learner-sidebar__quick-link-list grid grid-cols-1 gap-2">
                                 {navItems.map((item) => {
                                     const Icon = iconComponents[item.iconKey];
                                     const active = isRouteActive(location.pathname, item.path);
                                     return (
-                                        <Link key={item.path} to={item.path} className={`clay-tab flex min-h-11 items-center gap-3 ${active ? 'clay-tab-active' : ''}`}>
+                                        <Link key={item.path} to={item.path} className={`learner-sidebar__nav-link clay-tab flex min-h-11 items-center gap-3 ${active ? 'clay-tab-active' : ''}`}>
                                             <Icon className="h-5 w-5 shrink-0" /><span className="text-sm font-bold">{item.label}</span>
                                         </Link>
                                     );
                                 })}
                                 {!isGuest && (
                                     <>
-                                        <button onClick={() => goTo('/pets')} className={`clay-tab flex min-h-11 items-center gap-3 ${isRouteActive(location.pathname, '/pets') ? 'clay-tab-active' : ''}`}>
+                                        <button onClick={() => goTo('/pets')} className={`learner-sidebar__nav-link clay-tab flex min-h-11 items-center gap-3 ${isRouteActive(location.pathname, '/pets') ? 'clay-tab-active' : ''}`}>
                                             <PetIcon className="h-5 w-5 shrink-0" /><span className="text-sm font-bold">My Pet</span>
                                         </button>
-                                        <button onClick={() => goTo('/stickers')} className={`clay-tab flex min-h-11 items-center gap-3 ${isRouteActive(location.pathname, '/stickers') ? 'clay-tab-active' : ''}`}>
+                                        <button onClick={() => goTo('/stickers')} className={`learner-sidebar__nav-link clay-tab flex min-h-11 items-center gap-3 ${isRouteActive(location.pathname, '/stickers') ? 'clay-tab-active' : ''}`}>
                                             <StickerStarIcon className="h-5 w-5 shrink-0" /><span className="text-sm font-bold">Stickers</span>
                                         </button>
                                     </>
@@ -443,7 +446,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                         </section>
                     </div>
                 ) : (
-                    <div className="no-scrollbar flex h-full flex-col items-center gap-2 overflow-y-auto px-2 pb-4 pt-16">
+                    <div className="learner-sidebar__collapsed no-scrollbar flex h-full flex-col items-center gap-2 overflow-y-auto px-2 pb-4 pt-2">
                         <div className="mb-2 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6EB9FF] to-[#3A8FD1] text-white shadow-[0_4px_0_#3A8FD1]">
                             <GraduationCapIcon className="h-7 w-7" />
                         </div>
@@ -470,8 +473,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                 )}
             </aside>
 
-            <nav aria-label="Primary navigation" className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-3 right-3 z-50 max-w-[calc(100vw-1.5rem)] md:hidden">
-                <div className="pointer-events-auto relative flex min-h-[76px] items-stretch justify-around rounded-[30px] border-2 border-white bg-white/95 p-1.5 shadow-[0_8px_32px_rgba(91,141,239,0.18),0_4px_0_rgba(0,0,0,0.05)] backdrop-blur-md">
+            <nav aria-label="Primary navigation" className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-3 right-3 z-[var(--z-nav)] max-w-[calc(100vw-1.5rem)] md:hidden">
+                <div className="pointer-events-auto relative flex min-h-[76px] items-stretch justify-around gap-1 rounded-[30px] border-2 border-white bg-white/95 p-1.5 shadow-[0_8px_32px_rgba(91,141,239,0.18),0_4px_0_rgba(0,0,0,0.05)] backdrop-blur-md">
                     {navItems.map((item) => {
                         const Icon = iconComponents[item.iconKey];
                         const active = isRouteActive(location.pathname, item.path);
@@ -482,34 +485,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                         );
                     })}
                     <button ref={moreButtonRef} type="button" onClick={() => setIsMobileMoreOpen(true)} aria-expanded={isMobileMoreOpen} aria-controls="mobile-more-sheet" className={`relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-[22px] px-1 ${isMobileMoreOpen ? 'bg-[#FFF0B8] text-slate-800' : 'text-slate-500'}`}>
-                        <MoreIcon className="h-6 w-6" /><span className="mt-1 text-[10px] font-extrabold leading-none">More</span>
+                        <MoreIcon className="h-6 w-6" /><span className="mt-1 max-w-full truncate text-[10px] font-extrabold leading-none">More</span>
                     </button>
                 </div>
             </nav>
 
             {isMobileMoreOpen && (
-                <div className="fixed inset-0 z-[70] md:hidden" role="presentation">
+                <div className="fixed inset-0 z-[var(--z-modal)] md:hidden" role="presentation">
                     <button type="button" aria-label="Close more menu" className="absolute inset-0 h-full w-full bg-slate-900/35 backdrop-blur-[2px]" onClick={() => setIsMobileMoreOpen(false)} />
                     <div ref={mobileSheetRef} id="mobile-more-sheet" role="dialog" aria-modal="true" aria-labelledby="mobile-more-title" className="absolute bottom-0 left-0 right-0 max-h-[88dvh] overflow-x-hidden overflow-y-auto rounded-t-[36px] bg-[#FFF7EC] px-4 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-4 shadow-[0_-12px_40px_rgba(15,23,42,0.22)]">
                         <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-slate-300" />
-                        <div className="mb-4 flex items-center justify-between">
+                        <div className="mb-5 flex items-center justify-between">
                             <h2 id="mobile-more-title" className="text-xl font-black text-slate-800">More adventures</h2>
                             <button type="button" onClick={() => setIsMobileMoreOpen(false)} aria-label="Close more menu" className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-[0_4px_0_#E5E7EB]"><CloseIcon /></button>
                         </div>
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             {!isGuest && (
                                 <>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <button onClick={() => goTo('/pets')} className="flex min-h-16 items-center gap-3 rounded-3xl bg-white p-3 text-left shadow-[0_6px_0_#E8EDF7]">
-                                            <PetIcon className="h-7 w-7 text-[#E47777]" /><span className="text-sm font-black text-slate-700">My Pet</span>
+                                        <button onClick={() => goTo('/pets')} className="flex min-h-16 items-center gap-3 rounded-3xl bg-white p-4 text-left shadow-[0_6px_0_#E8EDF7]">
+                                            <PetIcon className="h-7 w-7 shrink-0 text-[#E47777]" /><span className="text-sm font-black text-slate-700">My Pet</span>
                                         </button>
-                                        <button onClick={() => goTo('/stickers')} className="flex min-h-16 items-center gap-3 rounded-3xl bg-white p-3 text-left shadow-[0_6px_0_#E8EDF7]">
-                                            <StickerStarIcon className="h-7 w-7" /><span className="text-sm font-black text-slate-700">Stickers</span>
+                                        <button onClick={() => goTo('/stickers')} className="flex min-h-16 items-center gap-3 rounded-3xl bg-white p-4 text-left shadow-[0_6px_0_#E8EDF7]">
+                                            <StickerStarIcon className="h-7 w-7 shrink-0" /><span className="text-sm font-black text-slate-700">Stickers</span>
                                         </button>
                                     </div>
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                         <MobileDailyGoalIndicator />
-                                        <div className="min-w-0 rounded-2xl bg-white p-2"><StreakBadge className="min-w-0" /></div>
+                                        <div className="min-w-0 rounded-2xl bg-white p-3"><StreakBadge className="min-w-0" /></div>
                                     </div>
                                 </>
                             )}

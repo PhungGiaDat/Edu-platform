@@ -642,13 +642,19 @@ export const CourseList: React.FC = () => {
             )}
           </div>
 
-          <div className="course-catalog__hero-art">
-            <span className="course-catalog__hero-spark course-catalog__hero-spark--one" aria-hidden="true" />
-            <span className="course-catalog__hero-spark course-catalog__hero-spark--two" aria-hidden="true" />
-            <img
-              src="/learnar-assets/courses/momo-home-family-english-5-7/images/course-cover.png"
-              alt="A child learning English with Momo in a colorful room"
-            />
+          <div className="course-catalog__hero-stage">
+            <div
+              className="course-catalog__hero-art"
+              role="img"
+              aria-label="Momo's home learning adventure"
+            >
+              <span className="course-catalog__hero-spark course-catalog__hero-spark--one" aria-hidden="true" />
+              <span className="course-catalog__hero-spark course-catalog__hero-spark--two" aria-hidden="true" />
+              <img
+                src="/learnar-assets/courses/momo-home-family-english-5-7/images/course-cover.png"
+                alt=""
+              />
+            </div>
           </div>
         </header>
 
