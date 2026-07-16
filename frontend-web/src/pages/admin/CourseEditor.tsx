@@ -21,6 +21,14 @@ interface CourseEditorProps {
 
 type BlockType = 'text' | 'video' | 'image';
 
+type CourseView = 'details' | 'sessions' | 'review';
+
+const COURSE_VIEWS: { id: CourseView; label: string; help: string }[] = [
+  { id: 'details', label: 'Details', help: 'Course information students see first' },
+  { id: 'sessions', label: 'Sessions', help: 'Build and arrange learning sessions' },
+  { id: 'review', label: 'Review', help: 'Preview and publish readiness' },
+];
+
 interface SessionBlock {
   id: string;
   type: BlockType;
@@ -162,6 +170,7 @@ const CourseEditor: React.FC<CourseEditorProps> = ({ isEdit = false }) => {
   const [form, setForm] = useState<CourseFormState>(initialForm);
   const [sessions, setSessions] = useState<CourseSession[]>([createSession(1)]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [view, setView] = useState<CourseView>('details');
   const [isPublished, setIsPublished] = useState(false);
   const [isLoading, setIsLoading] = useState(isEdit);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -454,8 +463,36 @@ const CourseEditor: React.FC<CourseEditorProps> = ({ isEdit = false }) => {
           </div>
         )}
 
+        <nav
+          aria-label="Course editor sections"
+          className="mb-6 flex flex-wrap gap-1.5 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_8px_30px_rgba(30,64,175,0.06)]"
+        >
+          {COURSE_VIEWS.map((courseView) => {
+            const isActive = view === courseView.id;
+            return (
+              <button
+                key={courseView.id}
+                type="button"
+                onClick={() => setView(courseView.id)}
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex min-h-11 flex-1 flex-col items-start justify-center rounded-xl px-4 py-2 text-left transition ${
+                  isActive
+                    ? 'bg-[#126db5] text-white shadow-sm'
+                    : 'text-slate-700 hover:bg-slate-50 active:translate-y-px'
+                }`}
+              >
+                <span className="text-sm font-bold">{courseView.label}</span>
+                <span className={`text-xs ${isActive ? 'text-blue-50' : 'text-slate-500'}`}>
+                  {courseView.help}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
           <main className="min-w-0 space-y-6">
+            {view === 'details' && (
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(30,64,175,0.06)] sm:p-6">
               <div className="mb-6 flex items-start gap-3">
                 <div className="rounded-xl bg-blue-50 p-2.5 text-[#126db5]">
@@ -620,7 +657,9 @@ const CourseEditor: React.FC<CourseEditorProps> = ({ isEdit = false }) => {
                 </div>
               </details>
             </section>
+            )}
 
+            {view === 'sessions' && (
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(30,64,175,0.06)] sm:p-6">
               <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-start gap-3">
@@ -895,6 +934,62 @@ const CourseEditor: React.FC<CourseEditorProps> = ({ isEdit = false }) => {
                 </div>
               )}
             </section>
+            )}
+
+            {view === 'review' && (
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(30,64,175,0.06)] sm:p-6">
+              <div className="mb-6 flex items-start gap-3">
+                <div className="rounded-xl bg-blue-50 p-2.5 text-[#126db5]">
+                  <CheckCircleIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-950">Review and publish</h2>
+                  <p className="text-sm text-slate-600">
+                    Confirm every item is ready, then publish from the top of the page.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-950">Publish readiness</h3>
+                    <p className="mt-0.5 text-xs text-slate-500">{completionPercent}% complete</p>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-sm font-bold text-[#126db5] shadow-sm">
+                    {completionPercent}%
+                  </div>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {checklist.map((item) => (
+                    <div key={item.label} className="flex items-start gap-2.5">
+                      <CheckCircleIcon
+                        className={`mt-0.5 h-4 w-4 shrink-0 ${item.complete ? 'text-[#126db5]' : 'text-slate-300'}`}
+                      />
+                      <span className={`text-sm ${item.complete ? 'font-medium text-slate-800' : 'text-slate-500'}`}>
+                        {item.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <span className="block text-xs text-slate-500">Sessions</span>
+                  <span className="mt-1 block text-xl font-bold text-slate-950">{sessions.length}</span>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <span className="block text-xs text-slate-500">Ready sessions</span>
+                  <span className="mt-1 block text-xl font-bold text-slate-950">{completedSessions}</span>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <span className="block text-xs text-slate-500">Total duration</span>
+                  <span className="mt-1 block text-xl font-bold text-slate-950">{totalDuration} min</span>
+                </div>
+              </div>
+            </section>
+            )}
           </main>
 
           <aside className="space-y-4 lg:sticky lg:top-6">
