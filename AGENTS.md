@@ -2,7 +2,7 @@
 
 A comprehensive team of specialized AI agents covering the full Software Development Life Cycle (SDLC).
 
-**Always use the SDLC orchestrator (`sdlc-orchestrator`) as the entrypoint for any software development task. Invoke subagents via the `Task` tool when deep specialist work is needed (review, testing, DB tuning, deployment, etc.). Do not bypass the orchestrator for tasks that span multiple phases.**
+**Always use the SDLC orchestrator (`sdlc-orchestrator`) as the entrypoint for any software development task. Before answering ANY question, check if a relevant skill in `.cursor/skills/` applies — if yes, load it with the `Read` tool first. Never answer a development question without loading at least one relevant skill.**
 
 ## Skills Loading Rule
 
