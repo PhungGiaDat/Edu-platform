@@ -2,6 +2,8 @@
 
 A comprehensive team of specialized AI agents covering the full Software Development Life Cycle (SDLC).
 
+**Always use the SDLC orchestrator (`sdlc-orchestrator`) as the entrypoint for any software development task. Invoke subagents via the `Task` tool when deep specialist work is needed (review, testing, DB tuning, deployment, etc.). Do not bypass the orchestrator for tasks that span multiple phases.**
+
 ## Skills Loading Rule
 
 **Primary auto-loaded skills directory: `.cursor/skills/`** (Cursor's skill discovery scans this directory and lists its `SKILL.md` files in context).
