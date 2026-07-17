@@ -3,7 +3,7 @@
 Admin API Router - Teacher Admin Dashboard Endpoints
 All endpoints are scoped to the authenticated teacher
 """
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from typing import Optional, List, Any
 from datetime import datetime
 
@@ -26,6 +26,7 @@ from models.admin_models import (
     PaginatedResponse,
 )
 from repositories.admin_repository import AdminRepository, get_admin_repository
+from services.flashcard_upload_service import get_flashcard_upload_service
 import logging
 
 logger = logging.getLogger(__name__)
@@ -372,13 +373,77 @@ async def delete_flashcard(
 ):
     """Delete a flashcard"""
     logger.info(f"[Admin] DELETE /admin/flashcards/cards/{qrId}")
-    
+
     success = await repo.delete_flashcard(qrId)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Flashcard not found"
         )
+
+
+@router.post(
+    "/flashcards/upload-image",
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload flashcard artwork (dual PNG: clean + QR)",
+)
+async def upload_flashcard_image(
+    request: Request,
+    qr_id: str = Query(..., description="Flashcard QR ID"),
+    service=Depends(get_flashcard_upload_service),
+):
+    """
+    Accept base64-encoded PNG bytes and upload both variants to Supabase Storage.
+
+    Request body (JSON):
+        {
+            "image_without_qr_b64": "base64-encoded PNG bytes",
+            "image_with_qr_b64": "base64-encoded PNG bytes (optional — non-fatal if missing)"
+        }
+
+    Returns:
+        {"image_url": "...", "image_with_qr_url": "..."}
+
+    Note: Only `image_url` (clean PNG) should be saved to MongoDB.
+    The `image_with_qr_url` is returned for reference/debugging.
+    QR is always rendered client-side at view time.
+    """
+    import base64
+
+    logger.info(f"[Admin] POST /admin/flashcards/upload-image?qr_id={qr_id}")
+
+    body = await request.json()
+    b64_clean = body.get("image_without_qr_b64", "")
+    b64_qr = body.get("image_with_qr_b64", "")
+
+    if not b64_clean:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="image_without_qr_b64 is required",
+        )
+
+    try:
+        image_clean = base64.b64decode(b64_clean)
+        image_qr = base64.b64decode(b64_qr) if b64_qr else image_clean
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid base64 image data",
+        )
+
+    if len(image_clean) > 10 * 1024 * 1024:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Image exceeds 10 MB limit",
+        )
+    if len(image_qr) > 10 * 1024 * 1024:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="QR image exceeds 10 MB limit",
+        )
+
+    result = await service.upload_dual_images(image_clean, image_qr, qr_id)
+    return result
 
 
 # ========== Students ==========
