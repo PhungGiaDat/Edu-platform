@@ -3,12 +3,10 @@ import React, { useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Text, Image as KonvaImage, Rect, Transformer, Group } from 'react-konva';
 import type Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
-import { QRCodeCanvas } from 'qrcode.react';
 import useFlashcardEditorStore, { 
   CanvasElement, 
   TextElement, 
   ImageElement, 
-  QRElement, 
   CANVAS_WIDTH, 
   CANVAS_HEIGHT 
 } from '../../stores/flashcard-editor.store';
@@ -21,38 +19,13 @@ const FlashcardCanvas: React.FC<FlashcardCanvasProps> = ({ stageRef: externalSta
   const internalStageRef = useRef<Konva.Stage>(null);
   const stageRef = externalStageRef || internalStageRef;
   const transformerRef = useRef<Konva.Transformer>(null);
-  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   
   const {
     elements,
     selectedId,
-    showQR,
-    qrData,
     selectElement,
     updateElement,
   } = useFlashcardEditorStore();
-
-  // Handle QR canvas generation
-  useEffect(() => {
-    if (qrCanvasRef.current) {
-      const canvas = qrCanvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        // Force the QR code to render
-        const qrCanvas = document.createElement('canvas');
-        const qrComponent = (
-          <QRCodeCanvas 
-            value={qrData || 'flashcard'} 
-            size={256} 
-            level="H"
-            onGenerate={(canvas: HTMLCanvasElement) => {
-              // This won't work directly, we need a different approach
-            }}
-          />
-        );
-      }
-    }
-  }, [qrData]);
 
   // Update transformer when selection changes
   useEffect(() => {
@@ -70,7 +43,7 @@ const FlashcardCanvas: React.FC<FlashcardCanvasProps> = ({ stageRef: externalSta
     }
   }, [selectedId, elements]);
 
-  const handleSelect = useCallback((e: KonvaEventObject<MouseEvent>) => {
+  const handleSelect = useCallback((e: KonvaEventObject<MouseEvent | TouchEvent>) => {
     const clickedOnEmpty = e.target === e.target.getStage();
     if (clickedOnEmpty) {
       selectElement(null);
@@ -107,7 +80,6 @@ const FlashcardCanvas: React.FC<FlashcardCanvasProps> = ({ stageRef: externalSta
   }, [updateElement]);
 
   const renderElement = (element: CanvasElement) => {
-    const isSelected = element.id === selectedId;
     const commonProps = {
       id: element.id,
       x: element.x,
@@ -115,7 +87,7 @@ const FlashcardCanvas: React.FC<FlashcardCanvasProps> = ({ stageRef: externalSta
       rotation: element.rotation,
       opacity: element.opacity,
       draggable: true,
-      onClick: (e: KonvaEventObject<MouseEvent>) => {
+      onClick: (e: KonvaEventObject<MouseEvent | TouchEvent>) => {
         e.cancelBubble = true;
         selectElement(element.id);
       },
@@ -243,16 +215,6 @@ const FlashcardCanvas: React.FC<FlashcardCanvasProps> = ({ stageRef: externalSta
           />
         </Layer>
       </Stage>
-
-      {/* Hidden QR canvas for export */}
-      <div className="hidden">
-        <QRCodeCanvas 
-          ref={qrCanvasRef}
-          value={qrData || 'flashcard'} 
-          size={256} 
-          level="H" 
-        />
-      </div>
     </div>
   );
 };
