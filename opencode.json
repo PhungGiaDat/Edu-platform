@@ -90,19 +90,19 @@
     "bash": "allow"
   },
   "instructions": [
-    "./sdlc-kit/.opencode/agents/orchestrator.md",
-    "./sdlc-kit/.opencode/agents/planner.md",
-    "./sdlc-kit/.opencode/agents/researcher.md",
-    "./sdlc-kit/.opencode/agents/debug.md",
-    "./sdlc-kit/.opencode/agents/fix.md",
-    "./sdlc-kit/.opencode/agents/reviewer.md",
-    "./sdlc-kit/.opencode/agents/tester.md",
-    "./sdlc-kit/.opencode/agents/documenter.md",
-    "./sdlc-kit/.opencode/agents/git-manager.md",
-    "./sdlc-kit/.opencode/agents/devops.md",
-    "./sdlc-kit/.opencode/agents/database-admin.md",
-    "./AGENTS.md",
-    "./.opencode/rules/*.md"
+    "./.cursor/rules/superpowers-bootstrap.mdc",
+    "./.cursor/agents/sdlc-orchestrator.md",
+    "./.cursor/agents/planner.md",
+    "./.cursor/agents/researcher.md",
+    "./.cursor/agents/debug.md",
+    "./.cursor/agents/fix.md",
+    "./.cursor/agents/reviewer.md",
+    "./.cursor/agents/tester.md",
+    "./.cursor/agents/documenter.md",
+    "./.cursor/agents/git-manager.md",
+    "./.cursor/agents/devops.md",
+    "./.cursor/agents/database-admin.md",
+    "./AGENTS.md"
   ],
   "mcp": {
     "ast-grep": {
