@@ -10,7 +10,7 @@ import FlashcardCanvas from '../../components/flashcard-editor/FlashcardCanvas';
 import EditorToolbar from '../../components/flashcard-editor/EditorToolbar';
 import PropertiesPanel from '../../components/flashcard-editor/PropertiesPanel';
 import { exportDualImages, base64ToPlain } from '../../utils/flashcard-export';
-import type { Flashcard as AdminFlashcard, FlashcardCreate, FlashcardUpdate } from '../../types/admin';
+import type { FlashcardCreate, FlashcardUpdate } from '../../types/admin';
 
 interface FlashcardEditorProps {
   mode: 'deck-new' | 'deck-edit' | 'card-new' | 'card-edit';
@@ -33,7 +33,6 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
   const {
     elements,
     showQR,
-    qrData,
     frontText,
     backText,
     setQrId: setStoreQrId,

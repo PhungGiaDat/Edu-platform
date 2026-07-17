@@ -1,7 +1,6 @@
 // frontend-web/src/utils/flashcard-export.ts
 import type Konva from 'konva';
-import { QRCodeCanvas } from 'qrcode.react';
-import { CANVAS_WIDTH, CANVAS_HEIGHT, CanvasElement, TextElement, ImageElement } from '../stores/flashcard-editor.store';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../stores/flashcard-editor.store';
 
 interface ExportResult {
   imageWithQr: string; // Base64 data URL

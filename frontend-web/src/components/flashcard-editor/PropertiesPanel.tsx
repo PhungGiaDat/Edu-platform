@@ -1,7 +1,6 @@
 // frontend-web/src/components/flashcard-editor/PropertiesPanel.tsx
 import React from 'react';
 import useFlashcardEditorStore, {
-  CanvasElement,
   TextElement,
   ImageElement,
   QRElement,
