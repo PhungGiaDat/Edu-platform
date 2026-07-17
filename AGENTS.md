@@ -83,16 +83,35 @@ All skills below live in `.cursor/skills/` and are **auto-discovered and loaded 
 
 ### SDLC & Engineering
 
-| Skill | Source | Description |
-|-------|--------|-------------|
+| Skill | Source | Description | Maps to |
+|-------|--------|-------------|---------|
 | `bug-fixing` | local | Safe bug fix patterns — regression test addition, fix verification |
 | `code-review` | local | Code quality review — correctness, maintainability, performance, best practices |
-| `code-intelligence` | local | LSP tools + ast-grep for IDE-level code intelligence |
-| `debugging` | local | Comprehensive debugging methodologies and techniques |
-| `testing-strategies` | local | Test creation strategy — unit, integration, E2E, coverage planning |
+| `code-intelligence` | local | LSP tools + ast-grep for IDE-level code intelligence | all agents |
+| `debugging` | local | Comprehensive debugging methodologies and techniques | `debug` |
+| `testing-strategies` | local | Test creation strategy — unit, integration, E2E, coverage | `tester` |
 | `requirements-analysis` | local | Requirements gathering and structured analysis |
-| `sdlc-workflow` | local | Complete SDLC workflow management, phase coordination, quality gates |
-| `scout` | local | Codebase exploration via pre-built index + ast-grep + MCPLS |
+| `sdlc-workflow` | local | SDLC workflow management, phase coordination, quality gates | `orchestrator` |
+| `scout` | local | Codebase exploration via pre-built index + ast-grep + MCPLS | all agents |
+
+### Superpowers Workflow Skills *(bootstrap-loaded — see Trigger for when each fires)*
+
+| Skill | Trigger | Flow |
+|-------|---------|------|
+| `brainstorming` *(HARD-GATE)* | Before any creative work | Explore intent, propose 2-3 approaches, write spec, invoke `writing-plans` |
+| `writing-plans` | After brainstorming approves a design | Spec to multi-step plan with review checkpoints |
+| `test-driven-development` | Before writing implementation | Red-green-refactor cycle |
+| `systematic-debugging` | On any bug, test failure, unexpected behavior | Reproduce, isolate, hypothesize, verify |
+| `subagent-driven-development` | Executing plans with independent parallel tasks | Orchestrate subagents across sub-tasks |
+| `executing-plans` | Written plan spans multiple sessions | Step-by-step with session boundaries |
+| `dispatching-parallel-agents` | 2+ independent tasks, no shared state | Launch all simultaneously, pick best result |
+| `requesting-code-review` | Before merging or after major features | Pull review, verify requirements |
+| `receiving-code-review` | After review feedback lands | Process suggestions, fix, re-verify |
+| `verification-before-completion` | Before claiming work is done or opening PR | Pre-commit checklist |
+| `finishing-a-development-branch` | Tests pass, work ready to merge | Integration decision, PR, merge |
+| `using-git-worktrees` | Before isolated feature work or parallel plans | Isolated branch per attempt |
+| `using-superpowers` | Meta — how to find and invoke skills | Skill discovery and chaining |
+| `writing-skills` | Creating or editing `.cursor/skills/*.md` files | Draft, pressure-test, commit |
 
 ### Infrastructure & DevOps
 

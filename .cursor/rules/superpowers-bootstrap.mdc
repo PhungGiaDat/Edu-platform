@@ -102,14 +102,67 @@ The skill itself tells you which.
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
 
-## Coexistence With SDLC Agents
+## Superpowers + SDLC Unified Pipeline
 
-This project also has `.cursor/agents/` (SDLC orchestrator + planner, reviewer, tester, etc.) and a workspace `AGENTS.md` describing them. Superpowers and the SDLC agents are complementary, not competitors:
+Superpowers and SDLC agents are **one integrated pipeline**. Superpowers owns the workflow discipline for the current conversation session; SDLC agents own domain delegation at specific gates.
 
-- **Superpowers** owns the *workflow discipline* for the current conversation (brainstorm → plan → TDD → verify).
-- **SDLC agents** own *domain delegation* — when you need a deep specialist (code review, security audit, DB tuning, deployment), dispatch to the right agent via the `Task` tool.
+```
+User request
+    │
+    ▼
+brainstorming  ──────────────────►  planner (@planner) for architecture & estimates
+    │                                 writing-plans  ──────────────────►  orchestrator sequences subagents
+    ▼
+test-driven-development  ──────►  tester (@tester) for test creation
+    │                                    fix (@fix) for implementation
+    ▼
+systematic-debugging  ──────────►  debug (@debug) for root cause investigation
+    │
+    ▼
+verification-before-completion  ─►  tester (@tester) for test verification
+    │
+    ▼
+requesting-code-review  ─────────►  reviewer (@reviewer) for quality gate
+    │
+    ▼
+finishing-a-development-branch  ─►  git-manager (@git-manager) for branch/PR/merge
+```
 
-When both seem relevant, apply the Superpowers workflow first (decide HOW to think about the problem), then dispatch to an SDLC agent for execution when the skill says "use a subagent" or the task clearly fits one of their specialties.
+**SDLC agent dispatch map** (skill → agent):
+
+| Skill | Dispatch to |
+|-------|-------------|
+| `brainstorming` | `@planner` for architecture design |
+| `writing-plans` | `@planner` for plan; `@orchestrator` to sequence |
+| `subagent-driven-development` | `@orchestrator` for parallel dispatch |
+| `dispatching-parallel-agents` | `@orchestrator` to launch subagents |
+| `executing-plans` | `@orchestrator` to coordinate multi-session execution |
+| `test-driven-development` | `@tester` for test creation; current agent implements |
+| `systematic-debugging` | `@debug` for root cause analysis; `@fix` for implementation |
+| `verification-before-completion` | `@tester` to run/verify test suite |
+| `requesting-code-review` | `@reviewer` for code quality gate |
+| `receiving-code-review` | `@fix` for implementing review feedback |
+| `finishing-a-development-branch` | `@git-manager` for PR and merge |
+| `using-git-worktrees` | `@git-manager` for branch management |
+| `code-intelligence` | any agent for LSP/ast-grep lookups |
+| `code-review` | `@reviewer` for deep quality audit |
+| `debugging` | `@debug` for structured investigation |
+| `testing-strategies` | `@tester` for coverage strategy |
+| `requirements-analysis` | `@planner` for scope/acceptance criteria |
+| `sdlc-workflow` | `@orchestrator` for phase management |
+| `scout` | any agent for codebase exploration |
+| `technical-writing` | `@documenter` for docs |
+| `git-workflows` | `@git-manager` for branching strategy |
+| `devops-automation` | `@devops` for CI/CD |
+| `database-admin` | `@database-admin` for DB tasks |
+| `architecture-decision-records` | `@planner` for ADRs |
+| `database-design` | `@database-admin` for schema design |
+| `api-design` | `@planner` for API contracts |
+| `technology-evaluation` | `@researcher` for tech comparison |
+| `docker-containerization` | `@devops` for containerization |
+
+**Rule: Superpowers workflow first, then SDLC domain delegation.**
+Always follow the superpower skill's process discipline (brainstorm → plan → TDD → verify → review → finish). Dispatch to the mapped SDLC agent only when the skill or task calls for specialist domain work.
 
 ## Project-Local Skills Directory
 
