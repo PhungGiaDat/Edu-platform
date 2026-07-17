@@ -103,12 +103,6 @@ const FlashcardCanvas: React.FC<FlashcardCanvasProps> = ({ stageRef: externalSta
     }
   }, []);
 
-  // Handle text edit blur
-  const handleTextEditBlur = useCallback((element: TextElement, newText: string) => {
-    updateElement(element.id, { text: newText });
-    setEditingTextId(null);
-  }, [updateElement]);
-
   // Render text element
   const renderTextElement = (element: TextElement) => {
     const isEditing = editingTextId === element.id;
@@ -224,7 +218,7 @@ const FlashcardCanvas: React.FC<FlashcardCanvasProps> = ({ stageRef: externalSta
   };
 
   // Render QR element
-  const renderQRElement = (element: any) => {
+  const renderQRElement = () => {
     // QR is rendered by QRLayer component, not in Konva
     return null;
   };
@@ -265,7 +259,7 @@ const FlashcardCanvas: React.FC<FlashcardCanvasProps> = ({ stageRef: externalSta
               case 'image':
                 return renderImageElement(element as ImageElement);
               case 'qr':
-                return renderQRElement(element);
+                return renderQRElement();
               default:
                 return null;
             }
