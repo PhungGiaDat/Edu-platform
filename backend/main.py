@@ -50,6 +50,8 @@ from api.session_lock import router as session_lock_router
 from api.websocket import router as websocket_router
 from api.reports import router as reports_router
 from api.debug import router as debug_router
+from api.flashcard_editor import router as flashcard_editor_router
+from api.public import router as public_router
 
 # Configure logging
 logging.basicConfig(
@@ -276,6 +278,19 @@ app.include_router(
     debug_router,
     prefix=settings.API_V1_PREFIX,
     tags=["Debug"]
+)
+
+# Flashcard Editor router (admin-only)
+app.include_router(
+    flashcard_editor_router,
+    prefix=f"{settings.API_V1_PREFIX}/flashcard-editor",
+    tags=["Flashcard Editor"]
+)
+
+# Public router (no auth required) - for QR code scanning
+app.include_router(
+    public_router,
+    tags=["Public"]
 )
 
 logger.info("✅ All routers registered")

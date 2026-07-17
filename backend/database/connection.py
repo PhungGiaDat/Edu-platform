@@ -22,6 +22,7 @@ from models.course_lesson import CourseLesson
 from models.user_session import UserSession
 from models.cache_session import RedisCache
 from models.profile import ProfileContentDocument
+from models.flashcard_editor import FlashcardEditor
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +122,8 @@ async def connect_to_database():
         UserSession,
         RedisCache,
         ProfileContentDocument,
+        # NEW: Flashcard Editor model
+        FlashcardEditor,
     ]
     
     try:
