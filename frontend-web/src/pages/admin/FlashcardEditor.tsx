@@ -1,212 +1,51 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { QRCodeCanvas } from 'qrcode.react';
+// frontend-web/src/pages/admin/FlashcardEditor.tsx
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import type Konva from 'konva';
 import { AdminLayout } from '../../components/admin/AdminLayout';
-import Flashcard from '../../components/Flashcard';
 import { ChevronLeftIcon } from '../../components/Icons';
 import { adminDecksApi, adminFlashcardsApi } from '../../services/adminApi';
+import useFlashcardEditorStore from '../../stores/flashcard-editor.store';
+import FlashcardCanvas from '../../components/flashcard-editor/FlashcardCanvas';
+import EditorToolbar from '../../components/flashcard-editor/EditorToolbar';
+import PropertiesPanel from '../../components/flashcard-editor/PropertiesPanel';
+import { exportDualImages, base64ToPlain } from '../../utils/flashcard-export';
 import type { Flashcard as AdminFlashcard, FlashcardCreate, FlashcardUpdate } from '../../types/admin';
 
 interface FlashcardEditorProps {
   mode: 'deck-new' | 'deck-edit' | 'card-new' | 'card-edit';
 }
 
-const FLASHCARD_BACKGROUND_URL = '/assets/flashcards/jungle.jpg';
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-
-const getTranslationText = (card: AdminFlashcard): string =>
-  card.translation.vi || card.translation.en || Object.values(card.translation).find(Boolean) || '';
-
-const readImageFile = (file: File): Promise<string> => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.onload = () => resolve(String(reader.result));
-  reader.onerror = () => reject(new Error('Could not read the selected image.'));
-  reader.readAsDataURL(file);
-});
-
-const loadImage = (src: string): Promise<HTMLImageElement> => new Promise((resolve, reject) => {
-  const image = new Image();
-  if (/^https?:/i.test(src)) image.crossOrigin = 'anonymous';
-  image.onload = () => resolve(image);
-  image.onerror = () => reject(new Error('Could not load an image for the card.'));
-  image.src = src;
-});
-
-const blobToBase64 = (blob: Blob): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      resolve(result.replace(/^data:image\/\w+;base64,/, ''));
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-
-const roundedRect = (
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number,
-) => {
-  const safeRadius = Math.min(radius, width / 2, height / 2);
-  context.beginPath();
-  context.moveTo(x + safeRadius, y);
-  context.lineTo(x + width - safeRadius, y);
-  context.quadraticCurveTo(x + width, y, x + width, y + safeRadius);
-  context.lineTo(x + width, y + height - safeRadius);
-  context.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height);
-  context.lineTo(x + safeRadius, y + height);
-  context.quadraticCurveTo(x, y + height, x, y + height - safeRadius);
-  context.lineTo(x, y + safeRadius);
-  context.quadraticCurveTo(x, y, x + safeRadius, y);
-  context.closePath();
-};
-
-const drawImageCover = (
-  context: CanvasRenderingContext2D,
-  image: HTMLImageElement,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) => {
-  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-  const sourceWidth = width / scale;
-  const sourceHeight = height / scale;
-  const sourceX = (image.naturalWidth - sourceWidth) / 2;
-  const sourceY = (image.naturalHeight - sourceHeight) / 2;
-  context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
-};
-
-const drawImageContain = (
-  context: CanvasRenderingContext2D,
-  image: HTMLImageElement,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) => {
-  const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
-  const renderedWidth = image.naturalWidth * scale;
-  const renderedHeight = image.naturalHeight * scale;
-  context.drawImage(
-    image,
-    x + (width - renderedWidth) / 2,
-    y + (height - renderedHeight) / 2,
-    renderedWidth,
-    renderedHeight,
-  );
-};
-
-const safeFileName = (value: string): string =>
-  value.trim().replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '') || 'flashcard';
-
-const CARD_WIDTH = 800;
-const CARD_HEIGHT = 960;
-
-interface CardArtwork {
-  cardImage: HTMLImageElement;
-  backgroundImage: HTMLImageElement | null;
-  frontText: string;
-  backText: string;
-}
-
-// Draws everything except the QR code, so the same base can be exported
-// both clean (dataset / OCR / re-edit source) and with a QR overlay (print).
-const drawCardBase = (context: CanvasRenderingContext2D, artwork: CardArtwork) => {
-  const { cardImage, backgroundImage, frontText, backText } = artwork;
-
-  roundedRect(context, 5, 5, 790, 950, 36);
-  context.save();
-  context.clip();
-  if (backgroundImage) {
-    drawImageCover(context, backgroundImage, 0, 0, CARD_WIDTH, CARD_HEIGHT);
-  } else {
-    const gradient = context.createLinearGradient(0, 0, CARD_WIDTH, CARD_HEIGHT);
-    gradient.addColorStop(0, '#dbeafe');
-    gradient.addColorStop(1, '#bae6fd');
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
-  }
-  context.fillStyle = 'rgba(191, 219, 254, 0.55)';
-  context.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
-  context.restore();
-
-  context.strokeStyle = '#4ade80';
-  context.lineWidth = 10;
-  roundedRect(context, 7, 7, 786, 946, 34);
-  context.stroke();
-
-  context.fillStyle = '#fef3c7';
-  roundedRect(context, 105, 215, 590, 515, 30);
-  context.fill();
-  drawImageContain(context, cardImage, 145, 250, 510, 445);
-
-  context.fillStyle = 'rgba(254, 215, 170, 0.97)';
-  roundedRect(context, 105, 765, 590, 142, 30);
-  context.fill();
-  context.textAlign = 'center';
-  context.textBaseline = 'middle';
-  context.fillStyle = '#ec4899';
-  context.font = '800 50px system-ui, sans-serif';
-  context.fillText(frontText.toUpperCase(), 400, 815, 530);
-  context.fillStyle = '#c2410c';
-  context.font = '700 27px system-ui, sans-serif';
-  context.fillText(backText, 400, 866, 520);
-};
-
-// Draws only the QR code in its fixed top-right position.
-const drawQrOverlay = (context: CanvasRenderingContext2D, qrCanvas: HTMLCanvasElement) => {
-  context.fillStyle = '#ffffff';
-  roundedRect(context, 604, 38, 158, 158, 22);
-  context.fill();
-  context.drawImage(qrCanvas, 623, 57, 120, 120);
-};
-
-const canvasToPng = (canvas: HTMLCanvasElement): Promise<Blob> =>
-  new Promise((resolve, reject) => {
-    canvas.toBlob((result) => {
-      if (result) resolve(result);
-      else reject(new Error('Could not export the flashcard image.'));
-    }, 'image/png');
-  });
-
-const downloadBlob = (blob: Blob, filename: string) => {
-  const downloadUrl = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = downloadUrl;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
-};
-
 const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
   const navigate = useNavigate();
   const { deckId, cardId } = useParams<{ deckId?: string; cardId?: string }>();
-  const qrExportRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<Konva.Stage>(null);
 
   const [deckName, setDeckName] = useState('');
   const [deckDescription, setDeckDescription] = useState('');
 
-  const [qrId, setQrId] = useState(cardId || '');
-  const [frontText, setFrontText] = useState('');
-  const [backText, setBackText] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [imageName, setImageName] = useState('');
-  const [imageError, setImageError] = useState<string | null>(null);
-  const [arModelUrl, setArModelUrl] = useState('');
-
+  const [qrId, setQrId] = useState('');
   const [isLoadingInitial, setIsLoadingInitial] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Canvas editor store
+  const {
+    elements,
+    showQR,
+    qrData,
+    frontText,
+    backText,
+    setQrId: setStoreQrId,
+    setFrontText,
+    setBackText,
+    setShowQR,
+    isExporting,
+    setIsExporting,
+    saveToHistory,
+  } = useFlashcardEditorStore();
+
+  // Load existing data for edit mode
   useEffect(() => {
     if (mode !== 'deck-edit' && mode !== 'card-edit') return;
 
@@ -229,10 +68,19 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
           if (!card) throw new Error('Flashcard not found in this deck.');
           if (!cancelled) {
             setQrId(card.qr_id || cardId);
-            setFrontText(card.word);
-            setBackText(getTranslationText(card));
-            setImageUrl(card.image_url || '');
-            setImageName(card.image_url ? 'Current flashcard image' : '');
+            setStoreQrId(card.qr_id || cardId);
+            
+            // Find text elements and update them
+            const frontTextEl = elements.find(el => el.type === 'text' && el.x < 400);
+            const backTextEl = elements.find(el => el.type === 'text' && el.y > 200);
+            
+            if (frontTextEl) {
+              setFrontText(card.word);
+            }
+            if (backTextEl) {
+              const translation = card.translation.vi || card.translation.en || '';
+              setBackText(translation);
+            }
           }
         }
       } catch (loadError) {
@@ -248,8 +96,16 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
     return () => {
       cancelled = true;
     };
-  }, [cardId, deckId, mode]);
+  }, [cardId, deckId, mode, elements, setFrontText, setBackText, setStoreQrId]);
 
+  // Handle QR ID changes
+  const handleQrIdChange = useCallback((value: string) => {
+    setQrId(value);
+    setStoreQrId(value);
+    saveToHistory();
+  }, [setStoreQrId, saveToHistory]);
+
+  // Handle deck submit
   const handleDeckSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsSubmitting(true);
@@ -275,183 +131,69 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
     }
   };
 
-  const validateCard = (): boolean => {
+  // Validate card
+  const validateCard = useCallback((): boolean => {
     const cleanQrId = qrId.trim();
     if (!/^[A-Za-z0-9_-]+$/.test(cleanQrId)) {
       setError('QR ID can only contain letters, numbers, hyphens, and underscores.');
       return false;
     }
-    if (!imageUrl) {
-      setImageError('Choose an image to generate the flashcard.');
-      return false;
-    }
     return true;
-  };
+  }, [qrId]);
 
+  // Handle card submit with canvas export
   const handleCardSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
     if (!validateCard()) return;
 
-    let finalImageUrl = imageUrl;
-
-    // If image is a local file (data URL), generate + upload both PNGs
-    if (imageUrl.startsWith('data:')) {
-      setIsSubmitting(true);
-      try {
-        const qrCanvas = qrExportRef.current?.querySelector('canvas') as HTMLCanvasElement | null;
-        if (!qrCanvas) {
-          setError('The QR preview is not ready yet.');
-          setIsSubmitting(false);
-          return;
-        }
-
-        const [cardImage, backgroundImage] = await Promise.all([
-          loadImage(imageUrl),
-          loadImage(FLASHCARD_BACKGROUND_URL).catch(() => null),
-        ]);
-
-        const canvas = document.createElement('canvas');
-        canvas.width = CARD_WIDTH;
-        canvas.height = CARD_HEIGHT;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Canvas context unavailable');
-
-        const artwork: CardArtwork = {
-          cardImage,
-          backgroundImage,
-          frontText: frontText.trim(),
-          backText: backText.trim(),
-        };
-
-        // Export #1: clean card (saved to MongoDB)
-        drawCardBase(ctx, artwork);
-        const cleanBlob = await canvasToPng(canvas);
-        const cleanB64 = await blobToBase64(cleanBlob);
-
-        // Export #2: with QR overlay (uploaded for reference)
-        drawQrOverlay(ctx, qrCanvas);
-        const qrBlob = await canvasToPng(canvas);
-        const qrB64 = await blobToBase64(qrBlob);
-
-        // Upload both to Supabase
-        const uploadResult = await adminFlashcardsApi.uploadFlashcardImage(
-          qrId.trim(),
-          cleanB64,
-          qrB64,
-        );
-
-        // Use the Supabase URL (clean PNG) for MongoDB
-        finalImageUrl = uploadResult.image_url;
-      } catch (uploadError) {
-        setError(uploadError instanceof Error ? uploadError.message : 'Failed to upload flashcard image.');
-        setIsSubmitting(false);
-        return;
-      }
-    }
-
     setIsSubmitting(true);
-
-    const translation = {
-      en: frontText.trim(),
-      vi: backText.trim(),
-    };
+    setIsExporting(true);
 
     try {
+      // Export canvas to two images
+      const { imageWithQr, imageWithoutQr } = await exportDualImages(
+        stageRef,
+        qrId.trim(),
+        showQR
+      );
+
+      // Upload to Supabase
+      const uploadResult = await adminFlashcardsApi.uploadFlashcardImage(
+        qrId.trim(),
+        base64ToPlain(imageWithoutQr),
+        base64ToPlain(imageWithQr)
+      );
+
+      // Create or update flashcard
+      const translation = {
+        en: frontText.trim(),
+        vi: backText.trim(),
+      };
+
       if (mode === 'card-new' && deckId) {
         const data: FlashcardCreate = {
           qr_id: qrId.trim(),
           word: frontText.trim(),
           translation,
-          image_url: finalImageUrl,
-          ar_model_url: arModelUrl.trim() || undefined,
+          image_url: uploadResult.image_url,
         };
         await adminFlashcardsApi.createFlashcard(deckId, data);
-      } else if (mode === 'card-edit' && deckId && cardId) {
+      } else if (mode === 'card-edit' && cardId) {
         const data: FlashcardUpdate = {
           word: frontText.trim(),
           translation,
-          image_url: finalImageUrl,
-          ar_model_url: arModelUrl.trim() || undefined,
+          image_url: uploadResult.image_url,
         };
         await adminFlashcardsApi.updateFlashcard(cardId, data);
       }
-      navigate(`/admin/flashcards/${deckId}`);
+
+      navigate(deckId ? `/admin/flashcards/${deckId}` : '/admin/flashcards');
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Failed to save flashcard');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setImageError(null);
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      setImageError('Use a PNG, JPG, or WebP image.');
-      event.target.value = '';
-      return;
-    }
-    if (file.size > MAX_IMAGE_SIZE) {
-      setImageError('Image must be 2 MB or smaller.');
-      event.target.value = '';
-      return;
-    }
-
-    try {
-      setImageUrl(await readImageFile(file));
-      setImageName(file.name);
-    } catch (readError) {
-      setImageError(readError instanceof Error ? readError.message : 'Could not read the image.');
-    }
-  };
-
-  const handleDownloadArtwork = async () => {
-    setError(null);
-    if (!validateCard() || !frontText.trim()) {
-      if (!frontText.trim()) setError('Add front text before downloading the flashcard.');
-      return;
-    }
-
-    const qrCanvas = qrExportRef.current?.querySelector('canvas');
-    if (!qrCanvas) {
-      setError('The QR preview is not ready yet.');
-      return;
-    }
-
-    setIsGenerating(true);
-    try {
-      const [cardImage, backgroundImage] = await Promise.all([
-        loadImage(imageUrl),
-        loadImage(FLASHCARD_BACKGROUND_URL).catch(() => null),
-      ]);
-      const canvas = document.createElement('canvas');
-      canvas.width = CARD_WIDTH;
-      canvas.height = CARD_HEIGHT;
-      const context = canvas.getContext('2d');
-      if (!context) throw new Error('Your browser could not create the card image.');
-
-      const artwork: CardArtwork = {
-        cardImage,
-        backgroundImage,
-        frontText: frontText.trim(),
-        backText: backText.trim(),
-      };
-      const baseName = safeFileName(qrId);
-
-      // Export #1: clean card without QR (dataset / OCR / re-edit source).
-      drawCardBase(context, artwork);
-      downloadBlob(await canvasToPng(canvas), `${baseName}.png`);
-
-      // Export #2: same card with the QR overlay (print for students).
-      drawQrOverlay(context, qrCanvas);
-      downloadBlob(await canvasToPng(canvas), `${baseName}_qr.png`);
-    } catch (generateError) {
-      setError(generateError instanceof Error ? generateError.message : 'Could not generate the flashcard image.');
-    } finally {
-      setIsGenerating(false);
+      setIsExporting(false);
     }
   };
 
@@ -462,8 +204,8 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
     switch (mode) {
       case 'deck-new': return 'Create New Deck';
       case 'deck-edit': return 'Edit Deck';
-      case 'card-new': return 'Create Flashcard';
-      case 'card-edit': return 'Edit Flashcard';
+      case 'card-new': return 'Create Flashcard (Canvas)';
+      case 'card-edit': return 'Edit Flashcard (Canvas)';
       default: return '';
     }
   };
@@ -476,12 +218,9 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
   if (isLoadingInitial) {
     return (
       <AdminLayout>
-        <div className="max-w-5xl mx-auto animate-pulse" aria-label="Loading flashcard editor">
+        <div className="max-w-7xl mx-auto animate-pulse" aria-label="Loading flashcard editor">
           <div className="h-11 w-28 rounded-xl bg-gray-200 mb-6" />
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="h-[620px] rounded-2xl bg-white shadow-sm" />
-            <div className="h-[480px] rounded-2xl bg-white shadow-sm" />
-          </div>
+          <div className="h-[900px] rounded-2xl bg-white shadow-sm" />
         </div>
       </AdminLayout>
     );
@@ -489,7 +228,7 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
 
   return (
     <AdminLayout>
-      <div className={`${isCardMode ? 'max-w-6xl' : 'max-w-2xl'} mx-auto`}>
+      <div className={`${isCardMode ? 'max-w-7xl' : 'max-w-2xl'} mx-auto`}>
         <button
           type="button"
           onClick={() => navigate(getBackPath())}
@@ -499,14 +238,149 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
           Back
         </button>
 
-        <div className={isCardMode ? 'grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start' : ''}>
+        {isCardMode ? (
+          <div className="space-y-6">
+            <div>
+              <h1 className="mb-2 text-3xl font-bold tracking-tight text-gray-950">{getTitle()}</h1>
+              <p className="text-sm leading-6 text-gray-600">
+                Design your flashcard on the canvas, add text and images, then save to generate the QR code.
+              </p>
+            </div>
+
+            {error && (
+              <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800">
+                {error}
+              </div>
+            )}
+
+            {/* Main Editor Area */}
+            <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+              {/* Left: Canvas and Toolbar */}
+              <div className="space-y-4">
+                {/* Metadata */}
+                <div className="rounded-xl bg-white p-4 shadow-sm">
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <label htmlFor="qrId" className="mb-2 block text-sm font-semibold text-gray-800">
+                        QR ID *
+                      </label>
+                      <input
+                        type="text"
+                        id="qrId"
+                        value={qrId}
+                        onChange={(e) => handleQrIdChange(e.target.value)}
+                        required
+                        disabled={mode === 'card-edit'}
+                        pattern="[A-Za-z0-9_-]+"
+                        className="min-h-10 w-full rounded-lg border border-gray-300 px-3 font-mono text-sm text-gray-950 outline-none transition focus:border-[#3A8FD1] focus:ring-2 focus:ring-[#6EB9FF]/35 disabled:cursor-not-allowed disabled:bg-gray-100"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="frontText" className="mb-2 block text-sm font-semibold text-gray-800">
+                        Front Text *
+                      </label>
+                      <input
+                        type="text"
+                        id="frontText"
+                        value={frontText}
+                        onChange={(e) => {
+                          setFrontText(e.target.value);
+                          saveToHistory();
+                        }}
+                        required
+                        className="min-h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-gray-950 outline-none transition focus:border-[#3A8FD1] focus:ring-2 focus:ring-[#6EB9FF]/35"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="backText" className="mb-2 block text-sm font-semibold text-gray-800">
+                        Back Text *
+                      </label>
+                      <input
+                        type="text"
+                        id="backText"
+                        value={backText}
+                        onChange={(e) => {
+                          setBackText(e.target.value);
+                          saveToHistory();
+                        }}
+                        required
+                        className="min-h-10 w-full rounded-lg border border-gray-300 px-3 text-sm text-gray-950 outline-none transition focus:border-[#3A8FD1] focus:ring-2 focus:ring-[#6EB9FF]/35"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Toolbar */}
+                <EditorToolbar />
+
+                {/* Canvas */}
+                <div className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <div className="flex justify-center">
+                    <div className="relative">
+                      <FlashcardCanvas stageRef={stageRef} />
+                      {/* QR Overlay */}
+                      {showQR && (
+                        <div className="pointer-events-none absolute bottom-4 right-4 rounded-lg bg-white p-2 shadow-lg">
+                          <div className="text-xs text-gray-500 mb-1 text-center">QR Preview</div>
+                          {/* QR will be rendered by the canvas */}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => navigate(getBackPath())}
+                    className="min-h-11 rounded-xl border border-gray-300 px-6 font-semibold text-gray-800 transition-colors hover:bg-gray-50 active:translate-y-px"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    form="flashcard-form"
+                    disabled={isSubmitting || isExporting}
+                    className="min-h-11 rounded-xl bg-[#247CC2] px-7 font-semibold text-white transition-colors hover:bg-[#176AA9] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55"
+                  >
+                    {isSubmitting || isExporting ? 'Exporting...' : 'Save Flashcard'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Right: Properties Panel */}
+              <div className="lg:sticky lg:top-6">
+                <PropertiesPanel />
+
+                {/* QR Toggle */}
+                <div className="mt-4 rounded-xl bg-white p-4 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">QR Code</h3>
+                      <p className="text-sm text-gray-500">Include in exported image</p>
+                    </div>
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={showQR}
+                        onChange={(e) => setShowQR(e.target.checked)}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:top-0.5 after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Hidden form for submit */}
+            <form id="flashcard-form" onSubmit={handleSubmit} className="hidden" />
+          </div>
+        ) : (
+          /* Deck Mode */
           <div className="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
             <h1 className="mb-2 text-3xl font-bold tracking-tight text-gray-950">{getTitle()}</h1>
-            {isCardMode && (
-              <p className="mb-7 max-w-2xl text-sm leading-6 text-gray-600">
-                Add the learning content, upload one clear image, and choose the QR ID students will scan.
-              </p>
-            )}
 
             {error && (
               <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800">
@@ -515,129 +389,33 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {mode.startsWith('deck') ? (
-                <>
-                  <div>
-                    <label htmlFor="name" className="mb-2 block text-sm font-semibold text-gray-800">
-                      Deck Name
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      value={deckName}
-                      onChange={(event) => setDeckName(event.target.value)}
-                      required
-                      className="min-h-12 w-full rounded-xl border border-gray-300 px-4 text-gray-950 outline-none transition focus:border-[#3A8FD1] focus:ring-2 focus:ring-[#6EB9FF]/35"
-                      placeholder="Enter deck name"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="description" className="mb-2 block text-sm font-semibold text-gray-800">
-                      Description
-                    </label>
-                    <textarea
-                      id="description"
-                      value={deckDescription}
-                      onChange={(event) => setDeckDescription(event.target.value)}
-                      rows={4}
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-950 outline-none transition focus:border-[#3A8FD1] focus:ring-2 focus:ring-[#6EB9FF]/35"
-                      placeholder="Enter deck description"
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <label htmlFor="qrId" className="mb-2 block text-sm font-semibold text-gray-800">
-                      QR ID
-                    </label>
-                    <input
-                      type="text"
-                      id="qrId"
-                      value={qrId}
-                      onChange={(event) => setQrId(event.target.value)}
-                      required
-                      disabled={mode === 'card-edit'}
-                      pattern="[A-Za-z0-9_-]+"
-                      className="min-h-12 w-full rounded-xl border border-gray-300 px-4 font-mono text-gray-950 outline-none transition focus:border-[#3A8FD1] focus:ring-2 focus:ring-[#6EB9FF]/35 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-600"
-                      placeholder="example: apple_001"
-                      aria-describedby="qrIdHelp"
-                    />
-                    <p id="qrIdHelp" className="mt-2 text-xs leading-5 text-gray-600">
-                      Use a unique ID with letters, numbers, hyphens, or underscores. This exact value is encoded in the QR code.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <div>
-                      <label htmlFor="frontText" className="mb-2 block text-sm font-semibold text-gray-800">
-                        Front Text
-                      </label>
-                      <textarea
-                        id="frontText"
-                        value={frontText}
-                        onChange={(event) => setFrontText(event.target.value)}
-                        required
-                        rows={3}
-                        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-950 outline-none transition focus:border-[#3A8FD1] focus:ring-2 focus:ring-[#6EB9FF]/35"
-                        placeholder="Word or question"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="backText" className="mb-2 block text-sm font-semibold text-gray-800">
-                        Back Text
-                      </label>
-                      <textarea
-                        id="backText"
-                        value={backText}
-                        onChange={(event) => setBackText(event.target.value)}
-                        required
-                        rows={3}
-                        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-950 outline-none transition focus:border-[#3A8FD1] focus:ring-2 focus:ring-[#6EB9FF]/35"
-                        placeholder="Answer or translation"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="cardImage" className="mb-2 block text-sm font-semibold text-gray-800">
-                      Flashcard Image
-                    </label>
-                    <label
-                      htmlFor="cardImage"
-                      className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-5 py-6 text-center transition-colors hover:border-[#6EB9FF] hover:bg-blue-50/60"
-                    >
-                      <span className="text-sm font-semibold text-gray-800">
-                        {imageName || 'Choose an image'}
-                      </span>
-                      <span className="mt-1 text-xs text-gray-600">PNG, JPG, or WebP up to 2 MB</span>
-                    </label>
-                    <input
-                      id="cardImage"
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      onChange={handleImageChange}
-                      required={!imageUrl}
-                      className="sr-only"
-                    />
-                    {imageError && <p role="alert" className="mt-2 text-sm font-medium text-red-700">{imageError}</p>}
-                  </div>
-
-                  <div>
-                    <label htmlFor="arModelUrl" className="mb-2 block text-sm font-semibold text-gray-800">
-                      AR Model URL <span className="font-normal text-gray-500">(optional)</span>
-                    </label>
-                    <input
-                      type="url"
-                      id="arModelUrl"
-                      value={arModelUrl}
-                      onChange={(event) => setArModelUrl(event.target.value)}
-                      className="min-h-12 w-full rounded-xl border border-gray-300 px-4 text-gray-950 outline-none transition focus:border-[#3A8FD1] focus:ring-2 focus:ring-[#6EB9FF]/35"
-                      placeholder="https://example.com/model.glb"
-                    />
-                  </div>
-                </>
-              )}
+              <div>
+                <label htmlFor="name" className="mb-2 block text-sm font-semibold text-gray-800">
+                  Deck Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  value={deckName}
+                  onChange={(event) => setDeckName(event.target.value)}
+                  required
+                  className="min-h-12 w-full rounded-xl border border-gray-300 px-4 text-gray-950 outline-none transition focus:border-[#3A8FD1] focus:ring-2 focus:ring-[#6EB9FF]/35"
+                  placeholder="Enter deck name"
+                />
+              </div>
+              <div>
+                <label htmlFor="description" className="mb-2 block text-sm font-semibold text-gray-800">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  value={deckDescription}
+                  onChange={(event) => setDeckDescription(event.target.value)}
+                  rows={4}
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-950 outline-none transition focus:border-[#3A8FD1] focus:ring-2 focus:ring-[#6EB9FF]/35"
+                  placeholder="Enter deck description"
+                />
+              </div>
 
               <div className="flex flex-col-reverse gap-3 pt-3 sm:flex-row">
                 <button
@@ -652,62 +430,12 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
                   disabled={isSubmitting}
                   className="min-h-12 rounded-xl bg-[#247CC2] px-7 font-semibold text-white transition-colors hover:bg-[#176AA9] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55"
                 >
-                  {isSubmitting ? 'Saving...' : isCardMode ? 'Save Flashcard' : 'Save Deck'}
+                  {isSubmitting ? 'Saving...' : 'Save Deck'}
                 </button>
               </div>
             </form>
           </div>
-
-          {isCardMode && (
-            <aside className="rounded-2xl bg-white p-5 shadow-sm lg:sticky lg:top-6">
-              <div className="mb-4">
-                <h2 className="text-lg font-bold text-gray-950">Live Preview</h2>
-                <p className="mt-1 text-xs leading-5 text-gray-600">
-                  The QR code and image update automatically as you edit.
-                </p>
-              </div>
-
-              {imageUrl ? (
-                <div className="overflow-x-auto pb-2">
-                  <div className="pointer-events-none mx-auto w-80" aria-label="Generated flashcard preview">
-                    <Flashcard
-                      word={frontText.trim() || 'New card'}
-                      translation={backText.trim() || 'Answer'}
-                      bgUrl={FLASHCARD_BACKGROUND_URL}
-                      imgUrl={imageUrl}
-                      qrData={qrId.trim() || 'flashcard-preview'}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <label
-                  htmlFor="cardImage"
-                  className="flex aspect-[5/6] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 px-7 text-center"
-                >
-                  <span className="text-sm font-semibold text-gray-800">Your card will appear here</span>
-                  <span className="mt-2 text-xs leading-5 text-gray-600">Upload an image to generate the preview.</span>
-                </label>
-              )}
-
-              <button
-                type="button"
-                onClick={handleDownloadArtwork}
-                disabled={!imageUrl || !qrId.trim() || !frontText.trim() || isGenerating}
-                className="mt-4 min-h-12 w-full rounded-xl border border-[#247CC2] bg-white px-4 font-semibold text-[#176AA9] transition-colors hover:bg-blue-50 active:translate-y-px disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400"
-              >
-                {isGenerating ? 'Generating...' : 'Download images (QR + clean)'}
-              </button>
-              <p className="mt-2 text-xs leading-5 text-gray-600">
-                Saves two PNGs: <span className="font-mono">{`${safeFileName(qrId) || 'card'}.png`}</span> (clean,
-                for datasets or re-editing) and <span className="font-mono">{`${safeFileName(qrId) || 'card'}_qr.png`}</span> (with QR, for printing).
-              </p>
-
-              <div ref={qrExportRef} aria-hidden="true" className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0">
-                <QRCodeCanvas value={qrId.trim() || 'flashcard-preview'} size={256} level="H" />
-              </div>
-            </aside>
-          )}
-        </div>
+        )}
       </div>
     </AdminLayout>
   );

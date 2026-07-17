@@ -164,6 +164,28 @@ finishing-a-development-branch  ─►  git-manager (@git-manager) for branch/PR
 **Rule: Superpowers workflow first, then SDLC domain delegation.**
 Always follow the superpower skill's process discipline (brainstorm → plan → TDD → verify → review → finish). Dispatch to the mapped SDLC agent only when the skill or task calls for specialist domain work.
 
+## Read Order (Canonical)
+
+When a session starts, read these files **in this exact order**:
+
+```
+1.  .cursor/rules/superpowers-bootstrap.mdc
+        ↓  (unified pipeline + 26-skill dispatch map)
+2.  .cursor/agents/sdlc-orchestrator.md  (or whichever agent is active)
+        ↓  (agent-specific prompts + team table)
+3.  .cursor/agents/<agent-name>.md        (subagent files only when invoked)
+        ↓
+4.  AGENTS.md (workspace root)
+        ↓  (quick-reference: all skills + subagent table)
+5.  .cursor/skills/<name>/SKILL.md       (individual skills, on-demand)
+```
+
+**Rules:**
+- Files 1–4 are always read at session start (or on agent switch).
+- File 5 is **never preloaded** — read it only when a skill is triggered.
+- When a subagent is invoked via `Task`, it reads files 1 → 2 → 5 (not file 4, which is orchestrator context only).
+- If this `superpowers-bootstrap.mdc` conflicts with anything in `sdlc-orchestrator.md`, **this file wins** — it is the session entry point and the canonical pipeline authority.
+
 ## Project-Local Skills Directory
 
 `.cursor/skills/` is the **only** auto-loaded skills directory for this project. The `.agents/skills/` directory contains a large reference catalog but is **not auto-listed** — only `.cursor/skills/*/SKILL.md` is loaded by Cursor's skill system. Skills in `.agents/skills/` are available on-demand if explicitly read.

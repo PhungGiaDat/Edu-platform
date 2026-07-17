@@ -35,6 +35,7 @@ import AdminGoalSettings from "./pages/admin/GoalSettings";
 import AdminErrorBoundary from "./components/admin/AdminErrorBoundary";
 import { CourseCreatePage, CourseEditPage } from "./pages/admin/CourseEditor";
 import { DeckNewPage, DeckEditPage, CardNewPage, CardEditPage } from "./pages/admin/FlashcardEditor";
+import FlashcardView from "./pages/public/FlashcardView";
 
 // ========== Global Pet Unlock Notifier ==========
 // Listens to PET_CAN_UNLOCK (XP gate met) and PET_UNLOCKED (after actual unlock)
@@ -253,6 +254,9 @@ const App = () => {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* Public QR Code Route */}
+        <Route path="/f/:qrId" element={<FlashcardView />} />
 
         {/* Protected Routes (Wrapped in Layout) */}
         <Route path="/flashcards" element={<RequireUserAuth><Layout><FlashcardPage /></Layout></RequireUserAuth>} />
