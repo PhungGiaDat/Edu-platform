@@ -33,6 +33,17 @@ const loadImage = (src: string): Promise<HTMLImageElement> => new Promise((resol
   image.src = src;
 });
 
+const blobToBase64 = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      resolve(result.replace(/^data:image\/\w+;base64,/, ''));
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+
 const roundedRect = (
   context: CanvasRenderingContext2D,
   x: number,
@@ -281,6 +292,64 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
     event.preventDefault();
     setError(null);
     if (!validateCard()) return;
+
+    let finalImageUrl = imageUrl;
+
+    // If image is a local file (data URL), generate + upload both PNGs
+    if (imageUrl.startsWith('data:')) {
+      setIsSubmitting(true);
+      try {
+        const qrCanvas = qrExportRef.current?.querySelector('canvas') as HTMLCanvasElement | null;
+        if (!qrCanvas) {
+          setError('The QR preview is not ready yet.');
+          setIsSubmitting(false);
+          return;
+        }
+
+        const [cardImage, backgroundImage] = await Promise.all([
+          loadImage(imageUrl),
+          loadImage(FLASHCARD_BACKGROUND_URL).catch(() => null),
+        ]);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = CARD_WIDTH;
+        canvas.height = CARD_HEIGHT;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas context unavailable');
+
+        const artwork: CardArtwork = {
+          cardImage,
+          backgroundImage,
+          frontText: frontText.trim(),
+          backText: backText.trim(),
+        };
+
+        // Export #1: clean card (saved to MongoDB)
+        drawCardBase(ctx, artwork);
+        const cleanBlob = await canvasToPng(canvas);
+        const cleanB64 = await blobToBase64(cleanBlob);
+
+        // Export #2: with QR overlay (uploaded for reference)
+        drawQrOverlay(ctx, qrCanvas);
+        const qrBlob = await canvasToPng(canvas);
+        const qrB64 = await blobToBase64(qrBlob);
+
+        // Upload both to Supabase
+        const uploadResult = await adminFlashcardsApi.uploadFlashcardImage(
+          qrId.trim(),
+          cleanB64,
+          qrB64,
+        );
+
+        // Use the Supabase URL (clean PNG) for MongoDB
+        finalImageUrl = uploadResult.image_url;
+      } catch (uploadError) {
+        setError(uploadError instanceof Error ? uploadError.message : 'Failed to upload flashcard image.');
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     const translation = {
@@ -294,7 +363,7 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
           qr_id: qrId.trim(),
           word: frontText.trim(),
           translation,
-          image_url: imageUrl,
+          image_url: finalImageUrl,
           ar_model_url: arModelUrl.trim() || undefined,
         };
         await adminFlashcardsApi.createFlashcard(deckId, data);
@@ -302,7 +371,7 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
         const data: FlashcardUpdate = {
           word: frontText.trim(),
           translation,
-          image_url: imageUrl,
+          image_url: finalImageUrl,
           ar_model_url: arModelUrl.trim() || undefined,
         };
         await adminFlashcardsApi.updateFlashcard(cardId, data);
