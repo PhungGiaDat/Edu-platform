@@ -235,6 +235,24 @@ export const adminFlashcardsApi = {
       throw error;
     }
   },
+
+  async uploadFlashcardImage(
+    qrId: string,
+    imageWithoutQrB64: string,
+    imageWithQrB64: string,
+  ): Promise<{ image_url: string; image_with_qr_url?: string }> {
+    try {
+      const response = await apiClient.post(
+        `${ADMIN_BASE_URL}/flashcards/upload-image`,
+        { image_without_qr_b64: imageWithoutQrB64, image_with_qr_b64: imageWithQrB64 },
+        { params: { qr_id: qrId } }
+      );
+      return response as { image_url: string; image_with_qr_url?: string };
+    } catch (error) {
+      console.error('[adminFlashcardsApi.uploadFlashcardImage] Error:', error);
+      throw error;
+    }
+  },
 };
 
 /**
