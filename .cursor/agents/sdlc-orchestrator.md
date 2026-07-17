@@ -48,32 +48,52 @@ For each candidate skill, read its `SKILL.md` frontmatter (`name` + `description
 
 ### Currently Installed Skills
 
-The authoritative pipeline and full skill dispatch map live in `.cursor/rules/superpowers-bootstrap.mdc` (read first). This table is the **phase-gate slice** of that map — it tells you which skills fire at which SDLC phase.
+The authoritative pipeline and full 26-skill dispatch map (skill → agent) live in `.cursor/rules/superpowers-bootstrap.mdc` (read first). The table below is this orchestrator's **phase-gated slice** — it tells you which skills fire at which SDLC phase.
 
-Re-scan at task start with `Glob .cursor/skills/*/SKILL.md` to confirm the live set.
+Re-scan at task start with `Glob .cursor/skills/*/SKILL.md` to confirm the live set. New skills added to `.cursor/skills/` are picked up automatically — update this table when a new skill is confirmed installed.
+
+| Skill directory | Purpose | Load when… | Phase |
+|----------------|---------|-----------|-------|
+| `.cursor/skills/sdlc-workflow/` | 7-phase workflow, quality gates, estimation | Starting any multi-phase task | 1, 4–7 |
+| `.cursor/skills/requirements-analysis/` | Gather, clarify, structure requirements | Phase 1 — gathering requirements | 1 |
+| `.cursor/skills/technology-evaluation/` | Compare libraries, frameworks, runtimes | Phase 1 — tech research | 1 |
+| `.cursor/skills/scout/` | Codebase exploration & semantic search (qmd) | Phase 1 — index-codebase step | 1 |
+| `.cursor/skills/ui-ux-pro-max/` | UI/UX design system & wireframes | Phase 2 — design phase | 2 |
+| `.cursor/skills/fullstack-architecture/` | Frontend + backend architecture patterns | Phase 3 — designing modules | 3 |
+| `.cursor/skills/api-design/` | REST/GraphQL API design, OpenAPI | Phase 3 — designing endpoints | 3 |
+| `.cursor/skills/code-intelligence/` | LSP + AST-Grep decision framework | Phase 3–5 — surgical edits | 3, 4, 5 |
+| `.cursor/skills/ast-grep/` | `sg` CLI patterns, rule authoring, JSON output | Phase 3–4 — structural search/refactor | 3, 4 |
+| `.cursor/skills/code-review/` | Review checklist, severity rubric | Phase 4 — review pass | 4 |
+| `.cursor/skills/bug-fixing/` | Systematic debug → fix → test workflow | Bug fix workflow | all |
+| `.cursor/skills/debugging/` | Root-cause investigation techniques | Phase 4/5 — debugging | 4, 5 |
+| `.cursor/skills/testing-strategies/` | Unit / integration / E2E test design | Phase 5 — testing | 5 |
+| `.cursor/skills/devops-automation/` | CI/CD pipeline patterns | Phase 6 — deployment | 6 |
+| `.cursor/skills/docker-containerization/` | Dockerfile best practices, multi-stage builds | Phase 6 — containerize | 6 |
+| `.cursor/skills/git-workflows/` | Branch strategy, merge, release flow | Phase 3/6 — git operations | 3, 6 |
+| `.cursor/skills/postgres-best-practices/` | Postgres / Supabase query, index, RLS patterns | Phase 3–5 — backend DB work | 3, 4, 5 |
+| `.cursor/skills/technical-writing/` | README, API docs, user guides | Phase 7 — documentation | 7 |
+| `.cursor/skills/brainstorming/` | Interactive design refinement before implementation | Phase 1 — before creative work | 1 |
+| `.cursor/skills/writing-plans/` | Detailed implementation plans with review checkpoints | Phase 1 — after brainstorming | 1 |
+| `.cursor/skills/test-driven-development/` | RED-GREEN-REFACTOR cycle | Phase 3 — during implementation | 3 |
+| `.cursor/skills/systematic-debugging/` | 4-phase root cause investigation | Bug investigation | all |
+| `.cursor/skills/verification-before-completion/` | Pre-commit checklist before opening PR | Pre-merge | all |
+| `.cursor/skills/receiving-code-review/` | Process review feedback, implement fixes | After review lands | 4 |
+| `.cursor/skills/finishing-a-development-branch/` | Merge/PR decision workflow | Pre-merge | all |
+| `.cursor/skills/using-git-worktrees/` | Parallel isolated development branches | Multi-attempt work | all |
+| `.cursor/skills/dispatching-parallel-agents/` | Concurrent subagent workflows | Independent tasks | all |
+| `.cursor/skills/using-superpowers/` | Skill discovery and chaining | Meta — at session start | all |
+
+**A skill you have not yet seen in this conversation is still available** — re-run `Glob .cursor/skills/*/SKILL.md` and read its `SKILL.md` if your task seems to need it. New skills can be added at any time without updating this file (Cursor's skill registry picks them up automatically from the frontmatter), but this table is the canonical map for this project's `.cursor/skills/` directory as of session start. Always re-confirm the list at task start — never rely on memory of an old list.
 
 ### Skill Loading Rules
 
-The authoritative reference is `.cursor/rules/superpowers-bootstrap.mdc` (read order #1). This section is the orchestrator-specific slice.
+The authoritative reference for skill → agent dispatch is `.cursor/rules/superpowers-bootstrap.mdc`. These rules are the orchestrator's **phase-specific** loading guidance.
 
 1. **Bootstrap first** — at session start, read `superpowers-bootstrap.mdc` for the unified pipeline and 26-skill dispatch map.
-2. **Match skill to phase** — use the phase-gated skill table below (or the skill's `description` field) to decide which skills are relevant. Do not load skills that have no relation to the current phase — they waste context budget.
+2. **Match skill to phase** — use the `Phase` column in the table above (or the skill's own `description` field) to decide which skills are relevant. Do not load skills that have no relation to the current phase — they waste context budget.
 3. **Load fully only when triggered** — read the entire `SKILL.md` **only when** the skill is being applied. The exception: `sdlc-workflow` and `code-intelligence` should be loaded at the start of any non-trivial task because they govern the orchestrator's own behavior and tool selection.
-4. **Delegate with skill path** — when invoking a subagent, include `Load skill: .cursor/skills/<name>/SKILL.md` in its prompt. The subagent must issue the `Read` tool call itself — do not paste skill content into the prompt, as it duplicates tokens and goes stale.
-5. **Conflict resolution** — more specific skill wins. If still ambiguous, ask the user before proceeding.
-
-### Phase-Gated Skill Map
-
-| Phase | Skills to load |
-|-------|----------------|
-| Planning | `sdlc-workflow`, `requirements-analysis`, `scout`, `brainstorming`, `writing-plans` |
-| Design | `ui-ux-pro-max`, `anthropic-frontend-design` |
-| Development | `api-design`, `fullstack-architecture`, `code-intelligence`, `ast-grep`, `test-driven-development` |
-| Review | `code-review`, `systematic-debugging`, `receiving-code-review` |
-| Testing | `testing-strategies`, `verification-before-completion` |
-| Deployment | `devops-automation`, `docker-containerization`, `git-workflows` |
-| Documentation | `technical-writing` |
-| Any phase | `using-superpowers`, `using-git-worktrees`, `finishing-a-development-branch`, `dispatching-parallel-agents` |
+4. **Delegate with skill path** — when a subagent (e.g. `tester`, `reviewer`, `devops`) is invoked, mention the specific `.cursor/skills/<name>/SKILL.md` path that subagent should load before performing its work. Subagents do not inherit the orchestrator's context automatically — they must Read the file themselves. Format the delegation as `Load skill: .cursor/skills/<name>/SKILL.md` so the subagent's prompt explicitly contains the path and the subagent issues a Read tool call for it before starting work. Example delegation snippet for the `tester` agent: `"Load skill: .cursor/skills/testing-strategies/SKILL.md"` followed by `"Then run the regression suite per the skill's Test Strategy section"`. The Read tool call itself must come from the subagent, not the orchestrator — passing skill content via the prompt would duplicate it in both contexts and waste tokens. This guidance applies to any agent that needs a skill — each must Read its own copy rather than relying on a copy baked into a prompt by another agent. This keeps the skill source of truth on disk and avoids stale duplication when a skill file is updated mid-project.
+5. **Conflict resolution** — if two skills give conflicting advice, the more specific skill wins (e.g. `ast-grep` overrides generic `code-intelligence` for AST-specific questions; `devops-automation` overrides generic guidance for CI/CD). If still ambiguous, ask the user with AskQuestion before proceeding rather than guessing — especially if the conflict affects CI behavior, security, or destructive operations, where a wrong guess has higher blast radius than a clarification prompt.
 
 ---
 
