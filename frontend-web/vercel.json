@@ -48,6 +48,10 @@
         {
           "key": "Referrer-Policy",
           "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.sentry.io https://*.ingest.de.sentry.io https://*.vercel-scripts.com https://*.vercel-insights.com https://*.vercel.com; connect-src 'self' https://*.sentry.io https://*.ingest.de.sentry.io https://edu-platform-api-do20.onrender.com https://o4511704263622656.ingest.de.sentry.io wss://*.onrender.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; worker-src 'self' blob:; frame-src 'self' https://js.stripe.com"
         }
       ]
     }
