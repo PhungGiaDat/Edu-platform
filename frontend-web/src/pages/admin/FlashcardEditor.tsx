@@ -10,7 +10,13 @@ import FlashcardCanvas from '../../components/flashcard-editor/FlashcardCanvas';
 import EditorToolbar from '../../components/flashcard-editor/EditorToolbar';
 import PropertiesPanel from '../../components/flashcard-editor/PropertiesPanel';
 import { exportDualImages, base64ToPlain } from '../../utils/flashcard-export';
-import type { FlashcardCreate, FlashcardUpdate } from '../../types/admin';
+import type { FlashcardCreate, FlashcardUpdate, LocalizedString } from '../../types/admin';
+
+const extractText = (value: string | LocalizedString | undefined | null, fallback = ''): string => {
+  if (!value) return fallback;
+  if (typeof value === 'string') return value;
+  return value.vi || value.en || Object.values(value).find(Boolean) || fallback;
+};
 
 interface FlashcardEditorProps {
   mode: 'deck-new' | 'deck-edit' | 'card-new' | 'card-edit';
@@ -56,8 +62,8 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
         if (mode === 'deck-edit' && deckId) {
           const deck = await adminDecksApi.getDeck(deckId);
           if (!cancelled) {
-            setDeckName(deck.name);
-            setDeckDescription(deck.description || '');
+            setDeckName(extractText(deck.name));
+            setDeckDescription(extractText(deck.description));
           }
         }
 
