@@ -389,21 +389,55 @@ class LearningGoalDocument(Document):
 
 class FlashcardDeckCreate(BaseModel):
     """Schema for creating a flashcard deck"""
-    name: Dict[str, str]
-    description: Optional[Dict[str, str]] = None
+    name: str | Dict[str, str] = "New Deck"
+    description: Optional[str | Dict[str, str]] = None
     cover_image_url: Optional[str] = None
     category: str = "general"
     tags: List[str] = Field(default_factory=list)
 
+    @field_validator('name', mode='before')
+    @classmethod
+    def normalize_name(cls, v):
+        if isinstance(v, str):
+            return {"en": v, "vi": v}
+        return v
+
+    @field_validator('description', mode='before')
+    @classmethod
+    def normalize_description(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            return {"en": v, "vi": v}
+        return v
+
 
 class FlashcardDeckUpdate(BaseModel):
     """Schema for updating a flashcard deck"""
-    name: Optional[Dict[str, str]] = None
-    description: Optional[Dict[str, str]] = None
+    name: Optional[str | Dict[str, str]] = None
+    description: Optional[str | Dict[str, str]] = None
     cover_image_url: Optional[str] = None
     category: Optional[str] = None
     tags: Optional[List[str]] = None
     is_active: Optional[bool] = None
+
+    @field_validator('name', mode='before')
+    @classmethod
+    def normalize_name(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            return {"en": v, "vi": v}
+        return v
+
+    @field_validator('description', mode='before')
+    @classmethod
+    def normalize_description(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            return {"en": v, "vi": v}
+        return v
 
 
 class FlashcardDeckResponse(BaseModel):
