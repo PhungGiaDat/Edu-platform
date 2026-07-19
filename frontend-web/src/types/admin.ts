@@ -113,8 +113,8 @@ export interface CourseUpdate {
 export interface FlashcardDeck {
   deck_id: string;
   teacher_id: string;
-  name: string;
-  description?: string;
+  name: string | LocalizedString;
+  description?: string | LocalizedString;
   cover_image_url?: string;
   category?: string;
   tags?: string[];
