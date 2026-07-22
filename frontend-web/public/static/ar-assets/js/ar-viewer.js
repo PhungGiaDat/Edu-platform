@@ -47,6 +47,20 @@
 
     // ============ URL PARAMS ============
     const params = new URLSearchParams(window.location.search);
+
+    // ── Listen for Semantic Manager combo events ───────────────────────────────────
+    document.addEventListener('ar:semantic-combo', function(e) {
+        var result = e.detail || {};
+        console.log('[AR-Viewer] Semantic combo event received:', result);
+        if (result.animation || result.sound || result.phrase) {
+            console.log('[AR-Viewer] Combo effect:', result.animation, result.sound, result.phrase);
+        }
+        if (result.model_3d_url) {
+            console.log('[AR-Viewer] Loading semantic combo model:', result.model_3d_url);
+            // Trigger combo model load at origin (0,0,0) — midpoint will be updated
+            loadComboModel(new THREE.Vector3(0, 0, 0));
+        }
+    });
     const PALM_TREE_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb';
     const PALM_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg';
     const ELEPHANT_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg';
@@ -869,6 +883,11 @@
                     timestamp: Date.now()
                 });
 
+                // ── Freeze Pose: feed pose sample to stability gate ──────────────────
+                if (window.__arViewerIntegration) {
+                    window.__arViewerIntegration.startStabilizing(index);
+                }
+
                 sendToParent('TARGET_FOUND', {
                     targetIndex: index,
                     confidence: 1.0
@@ -1561,6 +1580,12 @@
         if (activeTargets.size < COMBO_THRESHOLD) {
             stopProximityCheck();
             return;
+        }
+
+        // ── Semantic Manager: update detected cards for combo matching ─────────────
+        if (window.__arViewerIntegration) {
+            var cardIds = Array.from(activeTargets.keys()).map(function(idx) { return 'target-' + idx; });
+            window.__arViewerIntegration.updateDetectedCards(cardIds);
         }
 
         log('🔗', `Multi-target detected - ${activeTargets.size} targets active`);

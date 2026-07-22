@@ -23,6 +23,7 @@ from models.user_session import UserSession
 from models.cache_session import RedisCache
 from models.profile import ProfileContentDocument
 from models.flashcard_editor import FlashcardEditor
+from models.ar_combination import ARCombination  # NEW: Beanie Document for ar_combinations
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +125,8 @@ async def connect_to_database():
         ProfileContentDocument,
         # NEW: Flashcard Editor model
         FlashcardEditor,
+        # NEW: AR Combinations model
+        ARCombination,
     ]
     
     try:
