@@ -83,6 +83,10 @@
                 });
             }
 
+            async function loadESModule(src) {
+                return await import(src);
+            }
+
             function receiveMindBuffer() {
                 return new Promise(function (resolve, reject) {
                     var requestIntervalId;
@@ -145,6 +149,40 @@
                 scene.setAttribute('mindar-image', config);
                 document.body.appendChild(scene);
                 await loadScript('/static/ar-assets/js/ar-viewer.js');
+
+                // ── Freeze Pose + Semantic Manager Integration ──────────────────────
+                var enableFreezePose = params.get('freezePose') === 'true';
+                var enableSemantic = params.get('semanticManager') === 'true';
+
+                if (enableFreezePose || enableSemantic) {
+                    try {
+                        var integrationModule = await loadESModule('/static/ar-assets/js/integration/ar-viewer-integration.js');
+                        window.__arViewerIntegration = new integrationModule.ARViewerIntegration({
+                            enableFreezePose: enableFreezePose,
+                            enableSemantic: enableSemantic,
+                            apiBase: '/api/v1/ar',
+                            onStable: function(targetIndex, frozenPose) {
+                                console.log('[AR-Viewer] Pose stabilized!', targetIndex, frozenPose);
+                                document.dispatchEvent(new CustomEvent('ar:target-stable', {
+                                    detail: { targetIndex: targetIndex, pose: frozenPose }
+                                }));
+                            },
+                            onCombo: function(result) {
+                                console.log('[AR-Viewer] Combo detected via semantic manager!', result);
+                                document.dispatchEvent(new CustomEvent('ar:semantic-combo', {
+                                    detail: result
+                                }));
+                            }
+                        });
+                        await window.__arViewerIntegration.init();
+                        console.log('[AR-Viewer] ARViewerIntegration initialized', {
+                            freezePose: enableFreezePose,
+                            semantic: enableSemantic
+                        });
+                    } catch (err) {
+                        console.error('[AR-Viewer] Failed to load ARViewerIntegration:', err);
+                    }
+                }
             }
 
             window.addEventListener('beforeunload', function () {

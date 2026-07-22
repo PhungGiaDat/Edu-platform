@@ -52,6 +52,8 @@ from api.reports import router as reports_router
 from api.debug import router as debug_router
 from api.flashcard_editor import router as flashcard_editor_router
 from api.public import router as public_router
+from api.ar_stability import router as ar_stability_router
+from api.semantic_rules import router as semantic_rules_router
 
 # Configure logging
 logging.basicConfig(
@@ -291,6 +293,20 @@ app.include_router(
 app.include_router(
     public_router,
     tags=["Public"]
+)
+
+# AR Stability router
+app.include_router(
+    ar_stability_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["AR"]
+)
+
+# Semantic Rules router
+app.include_router(
+    semantic_rules_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["AR"]
 )
 
 logger.info("✅ All routers registered")

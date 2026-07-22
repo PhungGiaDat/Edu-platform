@@ -554,6 +554,8 @@ export default function LearnARV2() {
 
     // Track whether the AR target marker is visible (for 2D overlay)
     const [markerFound, setMarkerFound] = useState(false);
+    // Freeze Pose: track which target is currently stabilized
+    const [stableTarget, setStableTarget] = useState<number | null>(null);
     const detectedQrIdRef = useRef<string | null>(null);
     const isAddingCardRef = useRef(false);
     const qrGateRef = useRef<Map<string, number>>(new Map());
@@ -1348,6 +1350,17 @@ export default function LearnARV2() {
         window.addEventListener('message', handleARMessage);
         return () => window.removeEventListener('message', handleARMessage);
     }, [handleARMessage]);
+
+    // ── Freeze Pose: listen for ar:target-stable events ───────────────────────────
+    useEffect(() => {
+        const handleStable = (e: Event) => {
+            const detail = (e as CustomEvent).detail;
+            console.log('[LearnARV2] ar:target-stable', detail);
+            setStableTarget(detail?.targetIndex ?? null);
+        };
+        document.addEventListener('ar:target-stable', handleStable);
+        return () => document.removeEventListener('ar:target-stable', handleStable);
+    }, []);
 
     // Pet chat popup — listen for tap on pet in ARGamificationPanel
     useEffect(() => {

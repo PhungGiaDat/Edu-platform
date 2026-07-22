@@ -4,7 +4,11 @@ Models Package - Pydantic Request/Response Schemas
 """
 from .flashcard import FlashcardSchema
 from .ar_object import ArObjectSchema
-from .ar_combination import ArCombinationSchema, TransformSchema
+from .ar_combination import (
+    ARCombination,          # Beanie Document
+    ArCombinationSchema,    # Pydantic DTO
+    TransformSchema,
+)
 from .ar_experience import ARExperienceResponseSchema
 from .quiz import QuizQuestion, QuizSessionSchema
 from .game import MemoryPair, GameChallenge, GameSessionSchema
@@ -78,7 +82,8 @@ __all__ = [
     # AR Object
     "ArObjectSchema",
     # AR Combination
-    "ArCombinationSchema",
+    "ARCombination",        # Beanie Document
+    "ArCombinationSchema",  # Pydantic DTO
     "TransformSchema",
     # AR Experience
     "ARExperienceResponseSchema",
