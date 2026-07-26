@@ -33,10 +33,10 @@ export const PetSelector: React.FC<PetSelectorProps> = ({
     contentContainerStyle={styles.content}
   >
     {pets.map((pet) => (
-      <View key={pet.id} style={styles.itemWrap}>
+      <View key={pet.pet_id} style={styles.itemWrap}>
         <PetCard
           pet={pet}
-          selected={pet.id === selectedPetId}
+          selected={pet.pet_id === selectedPetId}
           onPress={() => onSelect(pet)}
           style={styles.card}
         />

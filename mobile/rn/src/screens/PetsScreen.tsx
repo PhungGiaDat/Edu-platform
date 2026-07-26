@@ -2,6 +2,10 @@
  * PetsScreen — main "My Pets" screen.
  * Composes usePets + PetSelector + PetGrid + PetCareStats + PetUnlockModal.
  * No AR / Unity bridge.
+ *
+ * Phase 0 — switched to the typed `Pet` from `types/pet.ts`. The local
+ * `summaryToPet` adapter is gone; we now consume the canonical pet list
+ * returned by `petsApi.listPets()` directly.
  */
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -26,26 +30,7 @@ import {
   RADIUS,
   SPACING,
 } from '../design/tokens';
-import type { Pet, PetSummary } from '../types/pet';
-
-function toPet(summary: PetSummary): Pet {
-  return {
-    id: summary.id,
-    owner_id: '',
-    name: summary.name,
-    species: summary.species,
-    level: summary.level,
-    experience: 0,
-    hunger: 0.5,
-    happiness: 0.5,
-    energy: 0.5,
-    mood: summary.mood,
-    last_fed_at: null,
-    last_played_at: null,
-    created_at: '',
-    updated_at: '',
-  };
-}
+import type { Pet } from '../types/pet';
 
 function normalize(value: number): number {
   return Math.min(Math.max(value, 0), 1);
@@ -53,10 +38,10 @@ function normalize(value: number): number {
 
 function buildStats(pet: Pet): PetCareStat[] {
   return [
-    { key: 'happiness', label: 'Happy', value: normalize(pet.happiness) },
-    { key: 'energy', label: 'Energy', value: normalize(pet.energy) },
-    { key: 'hunger', label: 'Full', value: 1 - normalize(pet.hunger) },
-    { key: 'xp', label: 'XP', value: normalize(pet.experience / 100) },
+    { key: 'happiness', label: 'Happy', value: 1 },
+    { key: 'energy', label: 'Energy', value: 1 },
+    { key: 'hunger', label: 'Full', value: 1 },
+    { key: 'xp', label: 'XP', value: normalize((pet.rarity === 'common' ? 1 : pet.rarity === 'rare' ? 0.5 : pet.rarity === 'epic' ? 0.25 : 0.1)) },
   ];
 }
 
@@ -73,21 +58,19 @@ export const PetsScreen: React.FC = () => {
     emoji?: string;
   } | null>(null);
 
-  const summaryToPet: Pet[] = useMemo(() => pets.map(toPet), [pets]);
-
   const activePet: Pet | null = useMemo(() => {
     if (selectedPet) return selectedPet;
     if (selectedPetId) {
-      return summaryToPet.find((p) => p.id === selectedPetId) ?? null;
+      return pets.find((p) => p.pet_id === selectedPetId) ?? null;
     }
-    return summaryToPet[0] ?? null;
-  }, [selectedPet, selectedPetId, summaryToPet]);
+    return pets[0] ?? null;
+  }, [selectedPet, selectedPetId, pets]);
 
   const onSelectPet = useCallback(
     (pet: Pet) => {
-      setSelectedPetId(pet.id);
+      setSelectedPetId(pet.pet_id);
       setSelectedPet(pet);
-      void getPet(pet.id).then((full) => {
+      void getPet(pet.pet_id).then((full) => {
         if (full) setSelectedPet(full);
       });
     },
@@ -135,8 +118,8 @@ export const PetsScreen: React.FC = () => {
 
         <Text style={styles.sectionLabel}>Your pets</Text>
         <PetSelector
-          pets={summaryToPet}
-          selectedPetId={activePet?.id ?? null}
+          pets={pets}
+          selectedPetId={activePet?.pet_id ?? null}
           onSelect={onSelectPet}
         />
 
@@ -150,7 +133,7 @@ export const PetsScreen: React.FC = () => {
                 onPress={() => {
                   setUnlockContext({
                     name: activePet.name,
-                    rarity: 'common',
+                    rarity: activePet.rarity,
                     stage: 'baby',
                   });
                   setUnlockVisible(true);
@@ -169,14 +152,15 @@ export const PetsScreen: React.FC = () => {
 
         <Text style={styles.sectionLabel}>All pets</Text>
         <PetGrid
-          pets={summaryToPet}
-          selectedPetId={activePet?.id ?? null}
-          levelProgressByPetId={summaryToPet.reduce<
-            Record<string, number>
-          >((acc, pet) => {
-            acc[pet.id] = normalize(pet.level / 20);
-            return acc;
-          }, {})}
+          pets={pets}
+          selectedPetId={activePet?.pet_id ?? null}
+          levelProgressByPetId={pets.reduce<Record<string, number>>(
+            (acc, pet) => {
+              acc[pet.pet_id] = normalize(pet.rarity === 'common' ? 1 : 0.5);
+              return acc;
+            },
+            {},
+          )}
           onSelect={onSelectPet}
         />
       </ScrollView>

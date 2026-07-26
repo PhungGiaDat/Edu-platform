@@ -42,7 +42,7 @@ export const CourseListScreen: React.FC = () => {
     ({ item }) => (
       <CourseCard
         course={item}
-        onPress={() => goToCourseDetail(item.id, item.title)}
+        onPress={() => goToCourseDetail(item.course_id, item.title)}
       />
     ),
     [goToCourseDetail],
@@ -77,7 +77,7 @@ export const CourseListScreen: React.FC = () => {
 
       <FlatList
         data={courses}
-        keyExtractor={(c) => c.id}
+        keyExtractor={(c) => c.course_id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         refreshControl={

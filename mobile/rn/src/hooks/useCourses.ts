@@ -1,6 +1,9 @@
 /**
  * useCourses — list courses and lazily fetch lessons for a selected course.
  * RN-compatible; no eventBus / AR bridge.
+ *
+ * Phase 0 — switched to snake_case Course / Lesson fields. Selectors accept
+ * `course_id` strings and the lessons array is keyed by `lesson_id`.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { courseService } from '../services/courseService';

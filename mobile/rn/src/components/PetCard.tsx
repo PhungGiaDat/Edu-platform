@@ -20,7 +20,7 @@ import {
   SPACING,
   type PetRarity,
   type PetStage,
-} from '../design/tokens';import type { Pet, PetMood } from '../types/pet';
+} from '../design/tokens';import type { Pet } from '../types/pet';
 
 const KNOWN_RARITIES = Object.keys(RARITY_COLORS) as PetRarity[];
 const KNOWN_STAGES = Object.keys(STAGE_GRADIENTS) as PetStage[];
@@ -42,7 +42,7 @@ function resolveStage(pet: Pet): PetStage {
     : FALLBACK_STAGE;
 }
 
-const MOOD_LABEL: Record<PetMood, string> = {
+const MOOD_LABEL: Record<string, string> = {
   idle: 'Idle',
   anticipating: 'Anticipating',
   eating: 'Eating',
@@ -114,10 +114,10 @@ export const PetCard: React.FC<PetCardProps> = ({
             {pet.name}
           </Text>
           <Text style={styles.species} numberOfLines={1}>
-            {pet.species} · Lv.{pet.level}
+            {pet.name_vi} · {pet.rarity}
           </Text>
           <Text style={styles.mood} numberOfLines={1}>
-            {MOOD_LABEL[pet.mood] ?? pet.mood}
+            {pet.is_active ? 'Active' : pet.is_unlocked ? 'Unlocked' : 'Locked'}
           </Text>
           {typeof levelProgress === 'number' ? (
             <View style={styles.progressRow}>
@@ -143,7 +143,7 @@ export const PetCard: React.FC<PetCardProps> = ({
               {rarity.toUpperCase()}
             </Text>
           </View>
-          <StreakBadge days={Math.min(pet.level, 99)} size="sm" />
+          <StreakBadge days={0} size="sm" />
         </View>
       </View>
     </ClayCard>

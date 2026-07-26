@@ -46,7 +46,7 @@ export const CourseDetailScreen: React.FC = () => {
   const onLessonPress = useCallback(
     (lesson: Lesson) => {
       nav.navigate('LessonPlayer', {
-        lessonId: lesson.id,
+        lessonId: lesson.lesson_id,
         lessonTitle: lesson.title,
         qrCode: lesson.qr_code,
       });
@@ -98,7 +98,7 @@ export const CourseDetailScreen: React.FC = () => {
 
       <FlatList
         data={lessons}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.lesson_id}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
