@@ -34,8 +34,8 @@ export const PetGrid: React.FC<PetGridProps> = ({
     <View style={styles.column}>
       <PetCard
         pet={item}
-        levelProgress={levelProgressByPetId?.[item.id]}
-        selected={item.id === selectedPetId}
+        levelProgress={levelProgressByPetId?.[item.pet_id]}
+        selected={item.pet_id === selectedPetId}
         onPress={onSelect ? () => onSelect(item) : undefined}
       />
     </View>
@@ -44,7 +44,7 @@ export const PetGrid: React.FC<PetGridProps> = ({
   return (
     <FlatList
       data={pets}
-      keyExtractor={(p) => p.id}
+      keyExtractor={(p) => p.pet_id}
       numColumns={2}
       renderItem={renderItem}
       columnWrapperStyle={styles.row}

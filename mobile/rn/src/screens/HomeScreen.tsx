@@ -1,14 +1,10 @@
 /**
  * HomeScreen — entry point dashboard for the post-login experience.
  *
- * Updated (Sub-task E) to render:
- *   - XP bar (ProgressTracker)
- *   - Streak (StreakBadge) from gamification
- *   - Two claymorphic entry-point cards (Courses + Pets) that navigate via
- *     the parent stack
- *   - Claymorphic bottom-tabs strip (Home / Courses / Pets / Profile)
- *
- * In `profileMode`, the screen renders a profile summary + sign-out button.
+ * Updated (Phase 0) to consume `useUser()` for the unified
+ * `{userId, stats, streak, activePet, refresh}` view instead of the old
+ * `MOCK_USER_XP` constant. The XP/streak/level card is now backed by real
+ * `/gamification/user/{user_id}` + `/gamification/streak/{user_id}` data.
  *
  * No AR / Unity bridge. No raw hex colors.
  */
@@ -27,7 +23,7 @@ import { ClayButton } from '../components/ClayButton';
 import { ProgressTracker } from '../components/ProgressTracker';
 import { StreakBadge } from '../components/StreakBadge';
 import { useCourses } from '../hooks/useCourses';
-import { useGamification } from '../hooks/useGamification';
+import { useUser } from '../hooks/useUser';
 import { useLocale } from '../i18n/useLocale';
 import { usePets } from '../hooks/usePets';
 import { BottomTabs, type BottomTabKey } from '../navigation/BottomTabs';
@@ -67,8 +63,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     [nav],
   );
 
-  const { profile, loading: gamificationLoading, refresh: refreshGamification } =
-    useGamification();
+  const { stats, streak, activePet, loading: userLoading, refresh: refreshUser } =
+    useUser();
   const { pets, refresh: refreshPets } = usePets();
   const { courses, refresh: refreshCourses } = useCourses();
 
@@ -76,26 +72,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([
-      refreshGamification(),
-      refreshPets(),
-      refreshCourses(),
-    ]);
+    await Promise.all([refreshUser(), refreshPets(), refreshCourses()]);
     setRefreshing(false);
-  }, [refreshCourses, refreshGamification, refreshPets]);
+  }, [refreshCourses, refreshPets, refreshUser]);
 
-  const xpCurrent = useMemo(
-    () => profile?.current_xp ?? 0,
-    [profile?.current_xp],
-  );
+  const xpCurrent = useMemo(() => stats?.total_points ?? 0, [stats?.total_points]);
   const xpMax = useMemo(
-    () => Math.max(profile?.xp_to_next_level ?? xpCurrent, xpCurrent, 100),
-    [profile?.xp_to_next_level, xpCurrent],
+    () => Math.max(stats?.xp_to_next_level ?? xpCurrent, xpCurrent, 100),
+    [stats?.xp_to_next_level, xpCurrent],
   );
-  const level = useMemo(() => profile?.level ?? 1, [profile?.level]);
+  const level = useMemo(() => stats?.level ?? 1, [stats?.level]);
   const streakDays = useMemo(
-    () => profile?.streak_days ?? 0,
-    [profile?.streak_days],
+    () => streak?.current_streak ?? 0,
+    [streak?.current_streak],
   );
 
   if (profileMode) {
@@ -114,14 +103,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           <View style={styles.header}>
             <Text style={styles.title}>Profile</Text>
             <Text style={styles.subtitle}>
-              {gamificationLoading ? 'Loading…' : `Level ${level}`}
+              {userLoading ? 'Loading…' : `Level ${level}`}
             </Text>
           </View>
           <ClayCard variant="md" color="white" style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Gamification</Text>
             <View style={styles.statRow}>
               <Text style={styles.statLabel}>Total XP</Text>
-              <Text style={styles.statValue}>{profile?.total_xp ?? 0}</Text>
+              <Text style={styles.statValue}>{stats?.total_points ?? 0}</Text>
             </View>
             <View style={styles.statRow}>
               <Text style={styles.statLabel}>Current level</Text>
@@ -149,7 +138,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     );
   }
 
-  if (gamificationLoading && !profile) {
+  if (userLoading && !stats) {
     return (
       <View style={styles.container}>
         <View style={styles.centered}>
@@ -173,7 +162,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>{t('common.empty').length ? 'Home' : 'Home'}</Text>
+          <Text style={styles.title}>Home</Text>
           <View style={styles.streakRow}>
             <StreakBadge days={streakDays} />
           </View>
@@ -239,6 +228,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <Text style={styles.statLabel}>Streak</Text>
             <Text style={styles.statValue}>{streakDays} days</Text>
           </View>
+          {activePet ? (
+            <View style={styles.statRow}>
+              <Text style={styles.statLabel}>Active pet</Text>
+              <Text style={styles.statValue}>{activePet.name}</Text>
+            </View>
+          ) : null}
         </ClayCard>
 
         <ClayButton

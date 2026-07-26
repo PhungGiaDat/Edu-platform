@@ -1,35 +1,33 @@
 /**
  * usePets — RN-compatible pet state.
  * No eventBus, no AR bridge. Pure API consumption.
+ *
+ * Phase 0 — switched to the typed `Pet` (snake_case fields, no `id`).
+ * Actions that don't exist in the new contract (feed/play on the old
+ * per-pet routes) are removed; the plan §1.3 endpoints live in `petsApi`
+ * and are exposed through new helpers added in Task 0.4 / Phase 3.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { petService } from '../services/petService';
-import type {
-  FeedPetRequest,
-  Pet,
-  PetSummary,
-  PlayWithPetRequest,
-} from '../types/pet';
+import type { Pet } from '../types/pet';
 
 export interface UsePetsResult {
-  pets: PetSummary[];
+  pets: Pet[];
   loading: boolean;
   refreshing: boolean;
   error: string | null;
   refresh: () => Promise<void>;
   getPet: (petId: string) => Promise<Pet | null>;
-  feedPet: (petId: string, body: FeedPetRequest) => Promise<Pet | null>;
-  playWithPet: (petId: string, body: PlayWithPetRequest) => Promise<Pet | null>;
 }
 
 export const usePets = (): UsePetsResult => {
-  const [pets, setPets] = useState<PetSummary[]>([]);
+  const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchList = useCallback(
-    async (isRefresh: boolean): Promise<PetSummary[]> => {
+    async (isRefresh: boolean): Promise<Pet[]> => {
       if (isRefresh) {
         setRefreshing(true);
       } else {
@@ -70,32 +68,6 @@ export const usePets = (): UsePetsResult => {
     }
   }, []);
 
-  const feedPet = useCallback(
-    async (petId: string, body: FeedPetRequest): Promise<Pet | null> => {
-      try {
-        const response = await petService.feedPet(petId, body);
-        return response.data;
-      } catch (err) {
-        console.error('usePets: feedPet failed', err);
-        return null;
-      }
-    },
-    []
-  );
-
-  const playWithPet = useCallback(
-    async (petId: string, body: PlayWithPetRequest): Promise<Pet | null> => {
-      try {
-        const response = await petService.playWithPet(petId, body);
-        return response.data;
-      } catch (err) {
-        console.error('usePets: playWithPet failed', err);
-        return null;
-      }
-    },
-    []
-  );
-
   return {
     pets,
     loading,
@@ -103,7 +75,5 @@ export const usePets = (): UsePetsResult => {
     error,
     refresh,
     getPet,
-    feedPet,
-    playWithPet,
   };
 };
