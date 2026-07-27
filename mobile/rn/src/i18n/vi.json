@@ -1,0 +1,44 @@
+{
+  "common": {
+    "loading": "Đang tải…",
+    "retry": "Thử lại",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "close": "Đóng",
+    "error": "Đã xảy ra lỗi",
+    "empty": "Chưa có gì ở đây"
+  },
+  "courses": {
+    "title": "Bài học của tôi",
+    "loadFailed": "Không tải được khóa học",
+    "lessonsCount": "{count} bài học",
+    "lessonsHeader": "Bài học",
+    "expand": "Hiện bài học",
+    "collapse": "Ẩn bài học"
+  },
+  "pets": {
+    "title": "Thú cưng của tôi",
+    "mood": {
+      "idle": "Đang nghỉ",
+      "anticipating": "Đang chờ",
+      "eating": "Đang ăn",
+      "satisfied": "Đã no",
+      "sleeping": "Đang ngủ"
+    },
+    "actions": {
+      "feed": "Cho ăn",
+      "play": "Chơi"
+    },
+    "loadFailed": "Không tải được thú cưng"
+  },
+  "gamification": {
+    "level": "Cấp {level}",
+    "xp": "{current} / {max} XP",
+    "streak": "Chuỗi {days} ngày",
+    "badges": "Huy hiệu",
+    "awardXpFailed": "Không thể cộng XP"
+  },
+  "auth": {
+    "loginFailed": "Đăng nhập thất bại. Vui lòng kiểm tra thông tin."
+  }
+}
