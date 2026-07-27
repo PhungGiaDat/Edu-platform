@@ -1,0 +1,113 @@
+---
+description: mobile-AR branch scope — restrict agent work to mobile-AR features, Unity-RN AR pipeline, and AR docs in docs/mobile-AR/
+globs:
+  - mobile/**
+  - docs/mobile-AR/**
+  - docs/ar-poc/**
+  - docs/implementation-log/PHASE2-*.md
+  - docs/superpowers/specs/*unity-rn-mobile-ar*.md
+  - docs/superpowers/plans/*unity-rn-mobile-ar*.md
+alwaysApply: true
+---
+
+# mobile-AR — Branch Scope Rule
+
+This rule applies **whenever the agent is working inside the `mobile-AR` branch**.
+It is the canonical contract for every agent (orchestrator, planner, fix, tester, documenter, etc.)
+operating on this branch.
+
+## 1. Branch identity
+
+- Active branch **must** be `mobile-AR` for the rule to apply.
+- Verify with `git rev-parse --abbrev-ref HEAD` before any non-trivial action.
+  - If a different branch is checked out (e.g. `main`, `develop`, `feature/*`), **stop** and tell the user:
+    > "mobile-AR rules are active, but you're on `<branch>`. Switch to `mobile-AR` or confirm you want to disable this rule for the current task."
+- The branch tracks `origin/main`. Rebase or merge from `main` is allowed; **do not** push to any other remote branch from `mobile-AR`.
+
+## 2. Scope of work (what agents MAY do on this branch)
+
+Only the following areas are in-scope:
+
+| Allowed | Path / Area |
+|---|---|
+| Unity AR Foundation scripts | `mobile/unity/Assets/AR/**`, `mobile/unity/Assets/Bridge/**`, `mobile/unity/Assets/Scenes/AR*.unity` |
+| Unity–React Native bridge | `mobile/unity/Assets/Bridge/RN*`, `mobile/rn/src/bridge/**` |
+| React Native AR shell | `mobile/rn/src/**` (claymorphic components, screens, hooks, services) |
+| AR-specific docs | `docs/mobile-AR/**` (canonical home — see §4) |
+| AR POC docs (legacy) | `docs/ar-poc/**` |
+| AR phase-2 logs | `docs/implementation-log/PHASE2-*.md` (read-only reference, append-only) |
+| AR specs / plans | `docs/superpowers/specs/*unity-rn-mobile-ar*.md`, `docs/superpowers/plans/*unity-rn-mobile-ar*.md` |
+| Build / CI for mobile | `codemagic.yaml`, `mobile/rn/.codemagic/**`, Unity `Packages/manifest.json`, `mobile/unity/ProjectSettings/**` |
+| Documentation index | `docs/mobile-AR/README.md` (must be kept current) |
+
+## 3. Out of scope (what agents MUST NOT touch on this branch)
+
+| Forbidden | Reason |
+|---|---|
+| Backend (`backend/**`, `server/**`, API routes) | Not part of mobile-AR MVP |
+| Web frontend (`frontend/**`, `admin/**`, learner pages) | Out of branch scope |
+| Database migrations / Beanie models | Out of branch scope |
+| Other branches' files (e.g. `feature/courses-pets-rn-migration`-only changes) | Use a new branch for those |
+| `.cursor/rules/superpowers-bootstrap.mdc` | Project-wide rule — do not modify from a feature branch |
+| `.agents/skills-disabled/**` | Reference catalog only |
+
+If a task requires touching out-of-scope files, **stop and tell the user**, do not silently expand scope.
+
+## 4. The "no code without a doc" rule (HARD GATE)
+
+For every code change on `mobile-AR`:
+
+1. **Before writing code**, open or create the matching doc in `docs/mobile-AR/`.
+   - The doc must describe the **why** (intent, design choice, trade-off) and the **what** (what the code will do at a high level).
+   - If the change is small (< 20 lines, single file, no new abstraction), a 3–10 line note appended to the relevant existing doc is enough.
+2. **During implementation**, keep the doc in sync — update it the moment a design decision changes.
+3. **Before commit**, the doc and code must agree. The commit message **must reference** the doc path, e.g.:
+   ```
+   feat(ar): runtime anchor persistence
+
+   Updates docs/mobile-AR/anchors.md with the persistence schema and
+   eviction policy before code is added.
+
+   Docs: docs/mobile-AR/anchors.md
+   ```
+
+### `docs/mobile-AR/` layout (canonical)
+
+```
+docs/mobile-AR/
+  README.md                 # index of all AR docs (required, keep current)
+  architecture.md           # Unity-RN bridge, data flow, scene/component map
+  anchors.md                # anchor persistence + eviction policy
+  tracking.md               # image / plane / object tracking notes
+  interactions.md           # gestures, combos, food/pet logic
+  bridge.md                 # RN ↔ Unity message protocol (arMessages.ts + RN*Bridge*.cs)
+  build.md                  # Codemagic pipeline + local build steps
+  decisions/                # ADRs (Architecture Decision Records)
+    NNNN-title.md
+  phase-logs/               # per-phase implementation logs (append-only)
+    YYYY-MM-DD-phase-NN.md
+```
+
+When the first doc for a new sub-area is written, also add an entry to `docs/mobile-AR/README.md`.
+
+## 5. Branch workflow
+
+1. **Plan first** — every non-trivial change starts with `brainstorming` → `writing-plans`.
+2. **TDD where it pays off** — RN-side code with logic (services, hooks) gets tests; Unity C# glue code is mostly verified by static review + Unity build.
+3. **Update docs alongside code** — §4 above is non-negotiable.
+4. **One focused commit per logical change** — never bundle an unrelated doc sweep with a feature commit.
+5. **Before opening a PR to `main`** — run `verification-before-completion`, ensure `docs/mobile-AR/README.md` index is current, then use `finishing-a-development-branch`.
+
+## 6. What this rule does NOT do
+
+- It does **not** block commits to other branches. The rule's contract is *advisory when off-branch* and *binding when on `mobile-AR`*.
+- It does **not** prevent reading out-of-scope files for context — agents may `Read` anything they need to understand a task.
+- It does **not** replace the superpowers pipeline (`brainstorming` → `writing-plans` → `test-driven-development` → `systematic-debugging` → `verification-before-completion` → `requesting-code-review` → `finishing-a-development-branch`). That pipeline still wins when both apply.
+
+## 7. How to disable (rare)
+
+If a user explicitly asks to disable this rule for a specific task (e.g. emergency hotfix on a different branch), confirm the intent in chat, then proceed. Do not silently bypass it.
+
+---
+
+**TL;DR for the agent:** *On `mobile-AR`, only AR work, and every code change needs a matching doc in `docs/mobile-AR/`. Commit messages must reference the doc path.*
