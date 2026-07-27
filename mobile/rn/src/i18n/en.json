@@ -1,0 +1,44 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "error": "Something went wrong",
+    "empty": "Nothing here yet"
+  },
+  "courses": {
+    "title": "My Lessons",
+    "loadFailed": "Failed to load courses",
+    "lessonsCount": "{count} lessons",
+    "lessonsHeader": "Lessons",
+    "expand": "Show lessons",
+    "collapse": "Hide lessons"
+  },
+  "pets": {
+    "title": "My Pets",
+    "mood": {
+      "idle": "Idle",
+      "anticipating": "Anticipating",
+      "eating": "Eating",
+      "satisfied": "Satisfied",
+      "sleeping": "Sleeping"
+    },
+    "actions": {
+      "feed": "Feed",
+      "play": "Play"
+    },
+    "loadFailed": "Failed to load pets"
+  },
+  "gamification": {
+    "level": "Level {level}",
+    "xp": "{current} / {max} XP",
+    "streak": "{days}-day streak",
+    "badges": "Badges",
+    "awardXpFailed": "Could not award XP"
+  },
+  "auth": {
+    "loginFailed": "Login failed. Please check your credentials."
+  }
+}

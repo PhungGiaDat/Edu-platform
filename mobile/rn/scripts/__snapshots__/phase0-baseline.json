@@ -1,0 +1,6 @@
+{
+  "_comment": "Phase-0 baseline snapshot — frozen reference of /api/v1/courses and /api/v1/pets response shapes captured when this commit landed. The smoke test re-runs against EXPO_PUBLIC_API_URL and overwrites this file on every run; the prior contents are kept in git history for diff review.",
+  "captured_at": "2026-07-26",
+  "course_detail": null,
+  "pets": null
+}
