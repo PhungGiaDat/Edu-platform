@@ -67,6 +67,7 @@ interface FlashcardData {
     qrId: string;
     arTag: string;
     word: string;
+    category: string; // NEW - category from API response
     model3dUrl: string;
     image2dUrl: string;
     textureUrl?: string;
@@ -193,6 +194,7 @@ export function useMultiFlashcard() {
                 qrId,
                 arTag: arObject?.ar_tag || flashcard.ar_tag || `tag_${qrId}`,
                 word: flashcard.word || qrId,
+                category: flashcard.category || 'unknown', // NEW - store category
                 model3dUrl: buildUrl(arObject?.model_3d_url) || '',
                 image2dUrl: buildUrl(arObject?.image_2d_url) || '',
                 textureUrl: buildUrl(arObject?.texture_url),
@@ -298,6 +300,29 @@ export function useMultiFlashcard() {
 
         const arTags = flashcards.map(card => card.arTag);
         const comboKey = [...arTags].sort().join('|');
+
+        // NEW: Check 1 - Validate categories match before checking combo
+        const [card1, card2] = flashcards;
+        if (card1.category !== card2.category) {
+            console.log('[MultiFlashcard] 🔍 Different categories, skipping combo check:',
+                card1.category, 'vs', card2.category);
+            emitArDebug('COMBO_CATEGORY_MISMATCH', {
+                arTags,
+                category1: card1.category,
+                category2: card2.category
+            });
+            setState(prev => prev.comboResolution.key !== comboKey ? prev : ({
+                ...prev,
+                isCheckingCombo: false,
+                comboResolution: {
+                    key: comboKey,
+                    status: 'not_found',
+                    reason: 'different_categories'
+                }
+            }));
+            return null;
+        }
+
         if (snapshot.comboResolution.key === comboKey && snapshot.comboResolution.status !== 'idle') return null;
 
         emitArDebug('COMBO_LOOKUP_STARTED', { arTags, comboKey });
@@ -318,10 +343,18 @@ export function useMultiFlashcard() {
 
             const data = await response.json();
             if (!data.found || !data.combo) {
-                emitArDebug('COMBO_RESOLUTION_CHANGED', { comboKey, status: 'not_found' });
+                // Always extract combo_mind_url from backend response — even when combo
+                // is not found locally, the backend may have pre-built combo mind files.
+                // We store it so LearnARV2 can decide to use it instead of merging.
+                const backendMindUrl = data.combo?.combo_mind_url
+                    ? buildUrl(data.combo.combo_mind_url) || null
+                    : null;
+                emitArDebug('COMBO_RESOLUTION_CHANGED', { comboKey, status: 'not_found', backendMindUrl });
                 setState(prev => prev.comboResolution.key !== comboKey ? prev : ({
                     ...prev,
                     isCheckingCombo: false,
+                    // Store backend combo_mind_url even if combo not found locally
+                    comboMindUrl: backendMindUrl ?? prev.comboMindUrl,
                     comboResolution: { key: comboKey, status: 'not_found' }
                 }));
                 return null;
@@ -635,6 +668,22 @@ export function useMultiFlashcard() {
         return Array.from(state.detectedFlashcards.values()).map(f => f.arTag);
     }, [state.detectedFlashcards]);
 
+    /**
+     * Get unique categories from detected flashcards
+     */
+    const getCategories = useCallback((): string[] => {
+        const categories = Array.from(state.detectedFlashcards.values()).map(f => f.category);
+        return [...new Set(categories)];
+    }, [state.detectedFlashcards]);
+
+    /**
+     * Check if all detected flashcards have the same category
+     */
+    const hasSameCategory = useCallback((): boolean => {
+        const categories = getCategories();
+        return categories.length === 1;
+    }, [getCategories]);
+
     return {
         // State
         detectedFlashcards: state.detectedFlashcards,
@@ -665,14 +714,21 @@ export function useMultiFlashcard() {
         getFlashcardByIndex,
         getFlashcardByTag,
         getArTags,
+        getCategories,
+        hasSameCategory,
 
         // Derived
         hasCombo: !!state.activeCombo,
         isMultiMode: state.mode === 'MULTI' || state.mode === 'COMBO' || state.mode === 'PROXIMITY_COMBO',
         isProximityCombo: state.mode === 'PROXIMITY_COMBO',
+        // Use backend combo_mind_url when available — no merge needed
+        shouldUseComboMindUrl: state.detectedFlashcards.size === 2 &&
+            state.comboMindUrl !== null,
+        // Fallback: merge 2 separate .mind files only when no combo_mind_url from backend
         shouldPrepareIndependentMulti: state.detectedFlashcards.size === 2 &&
             state.comboResolution.key !== null &&
-            ['not_found', 'rejected', 'error', 'found'].includes(state.comboResolution.status)
+            state.comboMindUrl === null &&
+            ['not_found', 'rejected', 'error'].includes(state.comboResolution.status)
     };
 }
 
