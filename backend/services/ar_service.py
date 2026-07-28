@@ -1,11 +1,14 @@
 """
 AR Service - Business logic for AR experience orchestration
 """
+import logging
 from typing import Optional, Dict, Any
 
 from repositories.flashcard_repository import FlashcardRepository, get_flashcard_repository
 from repositories.ar_object_repository import ARObjectRepository, get_ar_object_repository
 from repositories.ar_combination_repository import ARCombinationRepository, get_ar_combination_repository
+
+logger = logging.getLogger(__name__)
 
 
 class ARService:
@@ -59,18 +62,54 @@ class ARService:
     async def check_combo(self, ar_tags: list[str]) -> Optional[Dict[str, Any]]:
         """
         Check if a set of AR tags form a valid combo.
-        
+
         Args:
             ar_tags: List of ar_tag identifiers
-            
+
         Returns:
             Combo document if found, None otherwise
+
+        Rules:
+        1. Combo must exist with matching required_tags
+        2. If cross_category_allowed=False, all flashcards must have same category
+        3. Combo must be active
         """
         if len(ar_tags) < 2:
             return None
-        
+
         combos = await self.ar_combination_repo.find_by_tags(ar_tags)
-        return combos[0] if combos else None
+        if not combos:
+            return None
+
+        # Sort by priority (higher first) and select best match
+        combos.sort(key=lambda x: x.get("priority", 0), reverse=True)
+        combo = combos[0]
+
+        # Validate categories if cross_category_allowed is False
+        # Handle None/missing field as False (backward compatibility)
+        cross_category_allowed = combo.get("cross_category_allowed", False)
+        if not cross_category_allowed:
+            # Fetch flashcards to check their categories
+            flashcards = []
+            for tag in ar_tags:
+                fc = await self.flashcard_repo.get_by_ar_tag(tag)
+                if fc:
+                    flashcards.append(fc)
+
+            if flashcards:
+                categories = set(
+                    fc.get("category") for fc in flashcards
+                    if fc.get("category")
+                )
+                # If multiple categories found and cross_category not allowed, reject
+                if len(categories) > 1:
+                    logger.info(
+                        f"[ARService] Combo {combo.get('combo_id')} rejected: "
+                        f"different categories {categories}, cross_category_allowed=False"
+                    )
+                    return None
+
+        return combo
     
     async def get_combo_by_id(self, combo_id: str) -> Optional[Dict[str, Any]]:
         """
