@@ -1,24 +1,22 @@
-# Frontend Combo Category Filter + Backend Enhancement Plan
+# Frontend Combo Category Filter + UX Enhancement Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add category filtering to prevent invalid combo checks when flashcards from different categories are scanned together. Includes both frontend (MindAR) and backend enhancements.
+**Goal:** 
+1. Add category filtering to prevent invalid combo checks
+2. Optimize `.mind` file loading - same category cards share 1 `.mind` file
+3. **UX Enhancement:** 1-shot auto-scanning (like lumio.vn) - no button click needed
+4. Handle MongoDB schema migration safely
 
-**Architecture:**
-- **Frontend:** Filter combos at `useMultiFlashcard.ts` level before backend call
-- **Backend:** Add `cross_category_allowed` field to combo model + index on categories
-- **Pattern:** Frontend provides UX filtering + backend enforces business rules
-
-**Tech Stack:** TypeScript (Frontend), Python/FastAPI (Backend), MongoDB/Beanie
+**Tech Stack:** TypeScript (Frontend MindAR), Python/FastAPI (Backend), MongoDB/Beanie
 
 ---
 
 ## Global Constraints
 
-- Follow existing code patterns in both `useMultiFlashcard.ts` and `backend/models/ar_combination.py`
-- Keep API backward compatible (add optional fields only)
-- Add debug logging for troubleshooting
-- Use existing `comboResolution` state pattern
+- **MongoDB Data Consistency:** When adding new fields, existing documents have `null` values. Use `Field(default=False)` for backward compatibility.
+- **Backward Compatibility:** API responses must not break existing clients
+- Follow existing code patterns in `useMultiFlashcard.ts`
 
 ---
 
@@ -27,336 +25,275 @@
 | Component | Included |
 |-----------|----------|
 | `frontend-web/src/hooks/useMultiFlashcard.ts` | ✅ |
+| `frontend-web/src/pages/LearnARV2.tsx` | ✅ |
 | `backend/models/ar_combination.py` | ✅ |
 | `backend/services/ar_service.py` | ✅ |
-| `backend/api/combos.py` | ❌ (no changes needed) |
 | Mobile RN / Unity | ❌ |
 
 ---
 
-# PART 1: BACKEND CHANGES
+# PART 1: UX ENHANCEMENT - 1-SHOT AUTO SCANNING
 
 ---
 
-## Task B1: Update ARCombination Model
+## Task U1: Update UX Flow
 
-**Files:**
-- Modify: `backend/models/ar_combination.py`
-
-**Interfaces:**
-- Consumes: Existing MongoDB schema
-- Produces: Updated `ArCombination` Beanie Document with `cross_category_allowed`
-
-**Steps:**
-
-- [ ] **Step 1: Add `cross_category_allowed` field to ArCombination Document**
-
-Find the `ArCombination` class (around line 15-30) and add the new field after `active`:
-
-```python
-class ArCombination(Document):
-    """
-    AR Combination Document - stored in MongoDB
-    Collection: ar_combinations
-    """
-    combo_id: Indexed(str, unique=True)
-    description: str
-    required_tags: List[str] = Field(default_factory=list)
-    target_order: Optional[List[str]] = None
-    
-    # Assets
-    model_3d_url: Optional[str] = None
-    image_2d_url: Optional[str] = None
-    texture_url: Optional[str] = None
-    combo_mind_url: Optional[str] = None
-    
-    # Rewards
-    reward_xp: int = Field(default=100)
-    
-    # Animation & Sound
-    animation: Optional[str] = None
-    sound: Optional[str] = None
-    phrase: Optional[str] = None
-    
-    # NEW: Allow/disallow cross-category combos
-    # True = combo works across different categories (e.g., animal + plant)
-    # False = only same-category flashcards
-    cross_category_allowed: bool = Field(default=False)
-    
-    # Metadata
-    priority: int = Field(default=0)
-    active: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: Optional[datetime] = None
+### Current Flow (Button-Based)
+```
+SCANNING state → Scan QR 1 → VIEWING state → Click "+ Add card" → SCANNING state → Scan QR 2 → Done
 ```
 
-- [ ] **Step 2: Update Pydantic schemas for API**
-
-Find `ArCombinationSchema` (around line 60-80) and add the field:
-
-```python
-class ArCombinationSchema(BaseModel):
-    """Schema for API responses"""
-    combo_id: str
-    description: str
-    required_tags: List[str]
-    target_order: Optional[List[str]]
-    model_3d_url: Optional[str] = None
-    image_2d_url: Optional[str] = None
-    texture_url: Optional[str] = None
-    combo_mind_url: Optional[str] = None
-    bonus_xp: int = Field(default=100, alias="reward_xp")
-    
-    # Semantic fields
-    semantic_result: Optional[str] = None
-    animation: Optional[str] = None
-    sound: Optional[str] = None
-    phrase: Optional[str] = None
-    
-    # NEW
-    cross_category_allowed: bool = Field(default=False)
-    
-    priority: int = Field(default=0)
-    active: bool = Field(default=True)
-    flashcard_set: Optional[str] = None
-    
-    class Config:
-        from_attributes = True
-        populate_by_name = True
+### New Flow (1-Shot Auto-Scan)
+```
+SCANNING state → Scan QR 1 → STAY IN SCANNING → Scan QR 2 → Auto-add both → Done
 ```
 
-- [ ] **Step 3: Add index on required_tags for faster lookups**
-
-Find the `Settings` class and add compound index:
-
-```python
-class Settings:
-    name = "ar_combinations"
-    indexes: list = [
-        [("combo_id", 1)],  # Unique
-        [("required_tags", 1)],  # For combo lookup
-        [("active", 1), ("priority", -1)],  # Active combos sorted by priority
-    ]
-```
+**Key Changes:**
+- Remove `isAddingCard` button flow
+- Keep scanner active after first scan
+- Auto-add when 2 cards detected (after cooldown)
+- Show "Scanning..." overlay with progress
 
 ---
 
-## Task B2: Update ARService Combo Check Logic
+## Task U2: Update LearnARV2 State Flow
 
 **Files:**
-- Modify: `backend/services/ar_service.py`
+- Modify: `frontend-web/src/pages/LearnARV2.tsx`
 
-**Interfaces:**
-- Consumes: `ArCombination` model, flashcard categories
-- Produces: Category mismatch detection
+### State Machine Change
 
-**Steps:**
+**Before:**
+```typescript
+type AppState = 'SCANNING' | 'LOADING' | 'VIEWING' | 'QUIZ' | 'GAME' | 'PRONUNCIATION' | 'ERROR';
 
-- [ ] **Step 1: Add category validation in check_combo**
+// Transition: SCANNING → (first QR) → LOADING → VIEWING
+// Transition: VIEWING → (click +Add card) → SCANNING → (second QR) → VIEWING
+```
 
-Find the `check_combo` method (around line 80-120) and add category checking:
+**After:**
+```typescript
+type AppState = 'SCANNING' | 'LOADING' | 'VIEWING' | 'QUIZ' | 'GAME' | 'PRONUNCIATION' | 'ERROR';
+type ScanMode = 'IDLE' | 'SCANNING_FOR_SECOND'; // NEW: track scanning mode
 
-```python
-async def check_combo(self, tags: List[str]) -> Optional[Dict]:
-    """
-    Check if the given tags form a valid combo.
-    
-    Rules:
-    1. Combo must exist with matching required_tags
-    2. If cross_category_allowed=False, all flashcards must have same category
-    3. Target order must be valid
-    4. Combo must be active
-    """
-    if len(tags) < 2:
-        return None
-    
-    # Find combo with matching tags (unordered match)
-    query = {
-        "required_tags": {"$all": tags},
-        "active": True
+// Transition: SCANNING → (first QR, auto-continue) → STAY SCANNING
+// Transition: SCANNING → (second QR detected) → LOADING → VIEWING
+// Auto-switch to VIEWING when 2 cards ready
+```
+
+### Steps:
+
+- [ ] **Step 1: Add ScanMode state**
+
+```typescript
+const [scanMode, setScanMode] = useState<ScanMode>('IDLE');
+```
+
+- [ ] **Step 2: Update handleQRDetected to auto-continue scanning**
+
+Find `handleQRDetected` (line 1081) and modify:
+
+```typescript
+const handleQRDetected = useCallback((qrId: string) => {
+    console.log('[LearnARV2] QR Detected:', qrId);
+    if (!qrId) return;
+
+    const now = Date.now();
+    const lastSeenAt = qrGateRef.current.get(qrId) || 0;
+    if (now - lastSeenAt < 2500) {
+        console.log('[LearnARV2] QR ignored during cooldown:', qrId);
+        return;
     }
-    
-    combos = await ArCombination.find(query).to_list()
-    
-    if not combos:
-        return None
-    
-    # Sort by priority (highest first)
-    combos.sort(key=lambda x: x.priority, reverse=True)
-    combo = combos[0]
-    
-    # NEW: Validate categories
-    # Get all flashcards for these tags
-    flashcards = await Flashcard.find(
-        Flashcard.ar_tag.in_(tags)
-    ).to_list()
-    
-    if not flashcards:
-        return None
-    
-    # Get unique categories
-    categories = set(fc.category for fc in flashcards if fc.category)
-    
-    # Check if cross-category is allowed
-    if len(categories) > 1 and not combo.cross_category_allowed:
-        logger.info(f"[ARService] Combo {combo.combo_id} rejected: different categories {categories}")
-        return None
-    
-    return combo.model_dump()
+    qrGateRef.current.set(qrId, now);
+
+    const isFirstQr = !detectedQrIdRef.current;
+    void addFlashcard(qrId).then((flashcardData) => {
+        if (!flashcardData) {
+            console.warn('[LearnARV2] Ignoring QR without validated flashcard data:', qrId);
+            return;
+        }
+
+        if (isFirstQr) {
+            // First card: switch to loading briefly, then stay in scanning mode
+            detectedQrIdRef.current = qrId;
+            setDetectedQrId(qrId);
+            setAppState('LOADING');
+            setScanMode('SCANNING_FOR_SECOND'); // NEW: tell user to scan second card
+            
+            // Don't switch to VIEWING yet - wait for second card
+            // The useEffect will handle transition when flashcardCount === 2
+        }
+        
+        // If second card detected, useEffect will handle auto-transition
+        trackFlashcardView();
+    });
+}, [trackFlashcardView, addFlashcard]);
 ```
 
-- [ ] **Step 2: Add category field to flashcard lookup**
+- [ ] **Step 3: Add useEffect for auto-transition to VIEWING**
 
-Ensure the `Flashcard` model is imported at the top:
+```typescript
+// Auto-switch to VIEWING when 2 cards are detected
+useEffect(() => {
+    if (flashcardCount === 2 && appState === 'LOADING' && scanMode === 'SCANNING_FOR_SECOND') {
+        console.log('[LearnARV2] 2 cards detected, switching to VIEWING');
+        setAppState('VIEWING');
+        setScanMode('IDLE');
+        window.setTimeout(() => {
+            eventBus.emit('AR_SWITCH_TO_VIEWER' as any, {});
+        }, 100);
+    }
+}, [flashcardCount, appState, scanMode]);
+```
 
-```python
-from models.flashcard import Flashcard
+- [ ] **Step 4: Remove "+ Add card" button**
+
+Remove the button at line 1470-1493:
+
+```typescript
+// REMOVED: + Add card button
+// The scanner now stays active after first scan
+```
+
+- [ ] **Step 5: Update SCANNING overlay to show progress**
+
+Replace the `isAddingCard` overlay (line 1532-1569) with new scan progress:
+
+```typescript
+// NEW: Show scanning progress when waiting for second card
+{scanMode === 'SCANNING_FOR_SECOND' && flashcardCount === 1 && (
+    <div
+        style={{
+            position: 'fixed',
+            top: 'max(92px, env(safe-area-inset-top))',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 100004,
+            width: 'min(92vw, 360px)',
+            padding: '14px 18px',
+            borderRadius: 18,
+            background: 'rgba(15,23,42,0.88)',
+            color: '#fff',
+            fontWeight: 800,
+            fontSize: 15,
+            textAlign: 'center',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+            animation: 'scanPulse 1.5s ease-in-out infinite'
+        }}
+    >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 20 }}>📷</span>
+            <span>Scanning for second card...</span>
+        </div>
+        <div style={{ 
+            fontSize: 12, 
+            color: 'rgba(255,255,255,0.7)',
+            marginBottom: 8
+        }}>
+            Point camera at another flashcard
+        </div>
+        {/* Card count indicator */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
+            <div style={{
+                width: 40, height: 6, borderRadius: 3,
+                background: '#22c55e'
+            }} />
+            <div style={{
+                width: 40, height: 6, borderRadius: 3,
+                background: flashcardCount >= 2 ? '#22c55e' : 'rgba(255,255,255,0.3)',
+                animation: flashcardCount < 2 ? 'dotPulse 1s infinite' : 'none'
+            }} />
+        </div>
+    </div>
+)}
+```
+
+- [ ] **Step 6: Remove handleAddCardScan handler**
+
+Since we no longer need the button, we can simplify:
+
+```typescript
+// handleAddCardScan - NO LONGER NEEDED (removed)
+```
+
+- [ ] **Step 7: Add CSS animations**
+
+```typescript
+<style>{`
+    @keyframes scanPulse {
+        0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+        50% { opacity: 0.9; transform: translateX(-50%) scale(1.02); }
+    }
+    @keyframes dotPulse {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 1; }
+    }
+`}</style>
 ```
 
 ---
 
-## Task B3: Backend Test
+## Task U3: Update useMultiFlashcard Hook
 
 **Files:**
-- Modify: `backend/tests/test_ar_service.py` (create if not exists)
+- Modify: `frontend-web/src/hooks/useMultiFlashcard.ts`
 
-**Steps:**
+- [ ] **Step 1: Add `scanMode` to state**
 
-- [ ] **Step 1: Write test for same-category combo (allowed)**
-
-```python
-async def test_combo_same_category_allowed():
-    """Same category combos should work regardless of cross_category_allowed flag"""
-    # Create test flashcards
-    fc1 = await Flashcard.create(
-        qr_id="test_cat1",
-        word="test1",
-        translation={"en": "test1"},
-        category="animals",
-        ar_tag="tag_animal_1"
-    )
-    fc2 = await Flashcard.create(
-        qr_id="test_cat2", 
-        word="test2",
-        translation={"en": "test2"},
-        category="animals",
-        ar_tag="tag_animal_2"
-    )
-    
-    # Create combo (cross_category_allowed defaults to False)
-    combo = await ArCombination.create(
-        combo_id="test_combo_same",
-        description="Same category test",
-        required_tags=["tag_animal_1", "tag_animal_2"],
-        cross_category_allowed=False
-    )
-    
-    result = await ar_service.check_combo(["tag_animal_1", "tag_animal_2"])
-    assert result is not None
-    assert result["combo_id"] == "test_combo_same"
+```typescript
+interface MultiFlashcardState {
+    detectedFlashcards: Map<string, FlashcardData>;
+    activeCombo: ComboData | null;
+    isCheckingCombo: boolean;
+    comboMindUrl: string | null;
+    mode: 'SINGLE' | 'MULTI' | 'COMBO' | 'PROXIMITY_COMBO';
+    proximity: ProximityData;
+    comboTriggered: boolean;
+    comboResolution: ComboResolutionState;
+    scanMode: 'IDLE' | 'SCANNING'; // NEW: track if we're actively scanning
+}
 ```
 
-- [ ] **Step 2: Write test for cross-category combo (rejected)**
+- [ ] **Step 2: Initialize with scanMode**
 
-```python
-async def test_combo_cross_category_rejected():
-    """Different categories should be rejected when cross_category_allowed=False"""
-    fc1 = await Flashcard.create(
-        qr_id="test_dog",
-        word="dog",
-        translation={"en": "dog"},
-        category="animals",
-        ar_tag="tag_dog"
-    )
-    fc2 = await Flashcard.create(
-        qr_id="test_apple",
-        word="apple", 
-        translation={"en": "apple"},
-        category="fruits",
-        ar_tag="tag_apple"
-    )
-    
-    # Create combo without cross_category_allowed
-    combo = await ArCombination.create(
-        combo_id="test_combo_cross",
-        description="Cross category test",
-        required_tags=["tag_dog", "tag_apple"],
-        cross_category_allowed=False
-    )
-    
-    result = await ar_service.check_combo(["tag_dog", "tag_apple"])
-    assert result is None  # Should be rejected
+```typescript
+const [state, setState] = useState<MultiFlashcardState>({
+    detectedFlashcards: new Map(),
+    activeCombo: null,
+    isCheckingCombo: false,
+    comboMindUrl: null,
+    mode: 'SINGLE',
+    proximity: {
+        isClose: false,
+        distance: Infinity,
+        midpoint: null,
+        lastDetected: 0
+    },
+    comboTriggered: false,
+    comboResolution: { key: null, status: 'idle' },
+    scanMode: 'SCANNING' // NEW: start in scanning mode
+});
 ```
 
-- [ ] **Step 3: Write test for cross-category combo (allowed)**
+- [ ] **Step 3: Auto-set scanMode based on flashcard count**
 
-```python
-async def test_combo_cross_category_allowed():
-    """Different categories should be allowed when cross_category_allowed=True"""
-    fc1 = await Flashcard.create(
-        qr_id="test_elephant",
-        word="elephant",
-        translation={"en": "elephant"},
-        category="animals",
-        ar_tag="tag_elephant"
-    )
-    fc2 = await Flashcard.create(
-        qr_id="test_palm",
-        word="palm",
-        translation={"en": "palm"},
-        category="plants",
-        ar_tag="tag_palm"
-    )
-    
-    # Create combo with cross_category_allowed=True
-    combo = await ArCombination.create(
-        combo_id="test_combo_eco",
-        description="Eco system combo",
-        required_tags=["tag_elephant", "tag_palm"],
-        cross_category_allowed=True
-    )
-    
-    result = await ar_service.check_combo(["tag_elephant", "tag_palm"])
-    assert result is not None
-    assert result["combo_id"] == "test_combo_eco"
+```typescript
+// When we have 2+ flashcards, exit scanning mode
+if (newMap.size >= 2 && state.scanMode === 'SCANNING') {
+    // Transition to MULTI mode, stop active scanning
+}
 ```
 
 ---
 
-## Task B4: Backend Commit
-
-**Steps:**
-
-- [ ] **Step 1: Stage backend changes**
-
-```bash
-git add backend/models/ar_combination.py backend/services/ar_service.py
-```
-
-- [ ] **Step 2: Commit**
-
-```bash
-git commit -m "feat(backend): add cross_category_allowed field to AR combos
-
-- Add cross_category_allowed bool field to ArCombination model
-- Validate flashcard categories in check_combo service
-- Reject cross-category combos when flag is False
-- Add index on required_tags for faster lookups
-- Update Pydantic schema for API response"
-```
+# PART 2: CATEGORY FILTERING
 
 ---
 
-# PART 2: FRONTEND CHANGES (MindAR)
-
----
-
-## Task F1: Update FlashcardData Interface
+## Task F1: Add Category Field to FlashcardData
 
 **Files:**
 - Modify: `frontend-web/src/hooks/useMultiFlashcard.ts:66-75`
-
-**Steps:**
 
 - [ ] **Step 1: Add `category` field to FlashcardData interface**
 
@@ -365,7 +302,7 @@ interface FlashcardData {
     qrId: string;
     arTag: string;
     word: string;
-    category: string; // NEW
+    category: string; // NEW - from API response
     model3dUrl: string;
     image2dUrl: string;
     textureUrl?: string;
@@ -374,16 +311,7 @@ interface FlashcardData {
 }
 ```
 
----
-
-## Task F2: Store Category from API Response
-
-**Files:**
-- Modify: `frontend-web/src/hooks/useMultiFlashcard.ts:191-201`
-
-**Steps:**
-
-- [ ] **Step 1: Extract category from API response**
+- [ ] **Step 2: Store category from API response (line ~191-201)**
 
 ```typescript
 const flashcardData: FlashcardData = {
@@ -399,29 +327,14 @@ const flashcardData: FlashcardData = {
 };
 ```
 
-- [ ] **Step 2: Add debug logging**
-
-```typescript
-emitArDebug('FLASHCARD_RESOLVED', {
-    qrId,
-    arTag: flashcardData.arTag,
-    category: flashcardData.category, // NEW
-    mindUrl: flashcardData.mindUrl,
-    model3dUrl: flashcardData.model3dUrl,
-    image2dUrl: flashcardData.image2dUrl
-});
-```
-
 ---
 
-## Task F3: Implement Category Filter in checkCombo
+## Task F2: Implement Category Filter Logic
 
 **Files:**
 - Modify: `frontend-web/src/hooks/useMultiFlashcard.ts:294-320`
 
-**Steps:**
-
-- [ ] **Step 1: Add category validation at start of checkCombo**
+- [ ] **Step 1: Add category validation before combo check**
 
 After `if (flashcards.length !== 2) return null;`, add:
 
@@ -451,188 +364,426 @@ if (card1.category !== card2.category) {
 
 ---
 
+## Task F3: Optimize Mind File Loading (Same Category = Same Mind File)
+
+**Files:**
+- Modify: `frontend-web/src/hooks/useMultiFlashcard.ts`
+
+**Logic:**
+- **Same category** (e.g., dog + cat): Use **shared `.mind` file** (pre-built combo)
+- **Different category** (e.g., dog + apple): Skip combo check, use individual cards
+
+- [ ] **Step 1: Update shouldUseComboMindUrl logic**
+
+```typescript
+shouldUseComboMindUrl: state.detectedFlashcards.size === 2 &&
+    state.comboMindUrl !== null,
+
+// Fallback: merge 2 separate .mind files only when no combo_mind_url from backend
+shouldPrepareIndependentMulti: state.detectedFlashcards.size === 2 &&
+    state.comboResolution.key !== null &&
+    state.comboMindUrl === null &&
+    ['not_found', 'rejected', 'error'].includes(state.comboResolution.status)
+```
+
+- [ ] **Step 2: Add debug logging**
+
+```typescript
+emitArDebug('MIND_FILE_DECISION', {
+    category1: card1.category,
+    category2: card2.category,
+    sameCategory: card1.category === card2.category,
+    hasComboMindUrl: !!comboMindUrl,
+    decision: comboMindUrl ? 'USE_SHARED_MIND' : 'NEED_INDIVIDUAL'
+});
+```
+
+---
+
 ## Task F4: Add Helper Functions
 
 **Files:**
 - Modify: `frontend-web/src/hooks/useMultiFlashcard.ts`
 
-**Steps:**
-
 - [ ] **Step 1: Add getCategories helper**
 
 ```typescript
-/**
- * Get all unique categories from detected flashcards
- */
 const getCategories = useCallback((): string[] => {
     const categories = Array.from(state.detectedFlashcards.values()).map(f => f.category);
     return [...new Set(categories)];
 }, [state.detectedFlashcards]);
 ```
 
-- [ ] **Step 2: Export in return object**
+- [ ] **Step 2: Add hasSameCategory helper**
 
-Add `getCategories` to the return object.
+```typescript
+const hasSameCategory = useCallback((): boolean => {
+    const categories = getCategories();
+    return categories.length === 1;
+}, [getCategories]);
+```
+
+- [ ] **Step 3: Export in return object**
+
+```typescript
+return {
+    // ... existing exports ...
+    getCategories,
+    hasSameCategory,
+    // ... existing exports ...
+};
+```
 
 ---
 
-## Task F5: Frontend Test Verification
-
-**Steps:**
-
-- [ ] **Step 1: Verify debug output**
-
-Open DevTools console, filter `[MultiFlashcard]`:
-
-| Scenario | Expected Console |
-|----------|-----------------|
-| Animals + Fruits | `COMBO_CATEGORY_MISMATCH` |
-| Elephant + Palm | `COMBO_LOOKUP_STARTED` |
-| Apple + Banana | `COMBO_LOOKUP_STARTED` |
+# PART 3: FRONTEND COMMIT
 
 ---
 
-## Task F6: Frontend Commit
-
-**Steps:**
+## Task F5: Frontend Commit
 
 - [ ] **Step 1: Stage frontend changes**
 
 ```bash
-git add frontend-web/src/hooks/useMultiFlashcard.ts
+git add frontend-web/src/hooks/useMultiFlashcard.ts frontend-web/src/pages/LearnARV2.tsx
 ```
 
 - [ ] **Step 2: Commit**
 
 ```bash
-git commit -m "feat(frontend): add category filtering to combo detection
+git commit -m "feat(frontend): 1-shot auto-scan + category filter + shared mind loading
 
-- Add category field to FlashcardData interface
-- Extract category from API response
-- Skip backend combo check when categories differ
-- Add debug logging for category mismatches
-- Add getCategories helper for debugging"
+UX Enhancement:
+- Remove + Add card button, scanner auto-continues after first scan
+- 1-shot flow: scan 2 cards = auto transition to viewing
+- Show scanning progress overlay with card count indicator
+
+Category Filter:
+- Add category field to FlashcardData
+- Skip combo check when categories differ
+- Same category = shared .mind file
+
+Debug:
+- Add COMBO_CATEGORY_MISMATCH event
+- Add MIND_FILE_DECISION event
+- Add getCategories and hasSameCategory helpers"
 ```
 
 ---
 
-# PART 3: INTEGRATION
+# PART 4: BACKEND CHANGES (Phase 2)
 
 ---
 
-## Task I1: Update Existing Combos
+## Task B1: Update ARCombination Model (Safe Migration)
 
 **Files:**
-- Create: `backend/scripts/migrate_combos_cross_category.py`
+- Modify: `backend/models/ar_combination.py`
 
-**Steps:**
+- [ ] **Step 1: Add `cross_category_allowed` field with default**
+
+```python
+class ArCombination(Document):
+    combo_id: Indexed(str, unique=True)
+    description: str
+    required_tags: List[str] = Field(default_factory=list)
+    target_order: Optional[List[str]] = None
+    
+    # Assets
+    model_3d_url: Optional[str] = None
+    image_2d_url: Optional[str] = None
+    texture_url: Optional[str] = None
+    combo_mind_url: Optional[str] = None
+    
+    # Rewards
+    reward_xp: int = Field(default=100)
+    
+    # Animation & Sound
+    animation: Optional[str] = None
+    sound: Optional[str] = None
+    phrase: Optional[str] = None
+    
+    # NEW: Allow/disallow cross-category combos
+    cross_category_allowed: bool = Field(default=False)
+    
+    # Metadata
+    priority: int = Field(default=0)
+    active: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
+```
+
+- [ ] **Step 2: Update Pydantic schema**
+
+```python
+class ArCombinationSchema(BaseModel):
+    # ... existing fields ...
+    cross_category_allowed: bool = Field(default=False)
+    # ... existing fields ...
+```
+
+---
+
+## Task B2: Update ARService with Category Validation
+
+**Files:**
+- Modify: `backend/services/ar_service.py`
+
+- [ ] **Step 1: Add category validation in check_combo**
+
+```python
+async def check_combo(self, tags: List[str]) -> Optional[Dict]:
+    """
+    Check if the given tags form a valid combo.
+    
+    Rules:
+    1. Combo must exist with matching required_tags
+    2. If cross_category_allowed=False, all flashcards must have same category
+    3. Target order must be valid
+    4. Combo must be active
+    """
+    if len(tags) < 2:
+        return None
+    
+    query = {
+        "required_tags": {"$all": tags},
+        "active": True
+    }
+    
+    combos = await ArCombination.find(query).to_list()
+    
+    if not combos:
+        return None
+    
+    combos.sort(key=lambda x: x.priority, reverse=True)
+    combo = combos[0]
+    
+    # NEW: Validate categories
+    flashcards = await Flashcard.find(
+        Flashcard.ar_tag.in_(tags)
+    ).to_list()
+    
+    if not flashcards:
+        return None
+    
+    categories = set(fc.category for fc in flashcards if fc.category)
+    
+    # Handle None (existing docs) as False
+    if len(categories) > 1 and not (combo.cross_category_allowed or False):
+        logger.info(f"[ARService] Combo {combo.combo_id} rejected: different categories {categories}")
+        return None
+    
+    return combo.model_dump()
+```
+
+---
+
+## Task B3: Backend Migration Script
+
+**Files:**
+- Create: `backend/scripts/migrate_cross_category_flag.py`
 
 - [ ] **Step 1: Create migration script**
 
 ```python
 """
-Migration: Set cross_category_allowed=True for existing jungle/nature combos
+Migration: Set cross_category_allowed=True for existing cross-category combos
+Run: python -m backend.scripts.migrate_cross_category_flag
 """
 from models.ar_combination import ArCombination
 
-async def migrate():
-    # Jungle ecosystem combos (elephant + palm tree)
-    jungle_combos = await ArCombination.find(
-        ArCombination.description.contains("jungle") |
-        ArCombination.description.contains("ecosystem") |
-        ArCombination.combo_id.contains("elephant")
-    ).to_list()
+async def migrate_cross_category_combos():
+    """Set cross_category_allowed=True for existing jungle/nature combos."""
+    print("[Migration] Starting cross_category_allowed migration...")
     
-    for combo in jungle_combos:
-        combo.cross_category_allowed = True
-        await combo.save()
-        print(f"Updated: {combo.combo_id}")
+    target_patterns = ['jungle', 'ecosystem', 'nature', 'eco', 'animal', 'plant']
     
-    print(f"Total updated: {len(jungle_combos)}")
-```
-
-- [ ] **Step 2: Run migration**
-
-```bash
-python -m backend.scripts.migrate_combos_cross_category
+    updated_count = 0
+    for pattern in target_patterns:
+        query = {
+            "$or": [
+                {"description": {"$regex": pattern, "$options": "i"}},
+                {"combo_id": {"$regex": pattern, "$options": "i"}}
+            ],
+            "$or": [
+                {"cross_category_allowed": {"$exists": False}},
+                {"cross_category_allowed": None},
+                {"cross_category_allowed": False}
+            ]
+        }
+        
+        combos = await ArCombination.find(query).to_list()
+        
+        for combo in combos:
+            combo.cross_category_allowed = True
+            await combo.save()
+            updated_count += 1
+            print(f"  Updated: {combo.combo_id}")
+    
+    print(f"[Migration] Complete. Updated {updated_count} combos.")
 ```
 
 ---
 
-## Task I2: Final Verification
+## Task B4: Backend Tests
 
-**Steps:**
+**Files:**
+- Create: `backend/tests/test_ar_service.py`
 
-- [ ] **Step 1: Test flow**
+- [ ] **Step 1: Write test for same-category combo**
 
-1. Scan Elephant flashcard (category: animals)
-2. Scan Palm flashcard (category: plants)
-3. Verify: Backend receives combo check request
-4. Verify: Backend returns combo with `cross_category_allowed: true`
-5. Verify: Frontend loads combo `.mind` file
+```python
+async def test_combo_same_category_allowed():
+    """Same category combos should work regardless of cross_category_allowed flag"""
+    # Create test flashcards
+    fc1 = await Flashcard.create(
+        qr_id="test_cat1",
+        word="test1",
+        category="animals",
+        ar_tag="tag_animal_1"
+    )
+    fc2 = await Flashcard.create(
+        qr_id="test_cat2", 
+        word="test2",
+        category="animals",
+        ar_tag="tag_animal_2"
+    )
+    
+    combo = await ArCombination.create(
+        combo_id="test_combo_same",
+        description="Same category test",
+        required_tags=["tag_animal_1", "tag_animal_2"],
+        cross_category_allowed=False
+    )
+    
+    result = await ar_service.check_combo(["tag_animal_1", "tag_animal_2"])
+    assert result is not None
+```
 
-- [ ] **Step 2: Test rejection flow**
+- [ ] **Step 2: Write test for cross-category combo rejected**
 
-1. Scan Dog flashcard (category: animals)
-2. Scan Apple flashcard (category: fruits)
-3. Verify: Frontend skips API call OR backend returns no combo
-4. Verify: Console shows `COMBO_CATEGORY_MISMATCH`
+```python
+async def test_combo_cross_category_rejected():
+    """Different categories should be rejected when cross_category_allowed=False"""
+    fc1 = await Flashcard.create(
+        qr_id="test_dog",
+        word="dog",
+        category="animals",
+        ar_tag="tag_dog"
+    )
+    fc2 = await Flashcard.create(
+        qr_id="test_apple",
+        word="apple", 
+        category="fruits",
+        ar_tag="tag_apple"
+    )
+    
+    combo = await ArCombination.create(
+        combo_id="test_combo_cross",
+        description="Cross category test",
+        required_tags=["tag_dog", "tag_apple"],
+        cross_category_allowed=False
+    )
+    
+    result = await ar_service.check_combo(["tag_dog", "tag_apple"])
+    assert result is None  # Rejected
+```
+
+- [ ] **Step 3: Write test for cross-category combo allowed**
+
+```python
+async def test_combo_cross_category_allowed():
+    """Different categories should be allowed when cross_category_allowed=True"""
+    fc1 = await Flashcard.create(
+        qr_id="test_elephant",
+        word="elephant",
+        category="animals",
+        ar_tag="tag_elephant"
+    )
+    fc2 = await Flashcard.create(
+        qr_id="test_palm",
+        word="palm",
+        category="plants",
+        ar_tag="tag_palm"
+    )
+    
+    combo = await ArCombination.create(
+        combo_id="test_combo_eco",
+        description="Eco system combo",
+        required_tags=["tag_elephant", "tag_palm"],
+        cross_category_allowed=True
+    )
+    
+    result = await ar_service.check_combo(["tag_elephant", "tag_palm"])
+    assert result is not None
+```
 
 ---
 
-## Task I3: Final Commit
+## Task B5: Backend Commit
 
-**Steps:**
-
-- [ ] **Step 1: Stage all changes**
+- [ ] **Step 1: Stage backend changes**
 
 ```bash
-git add backend/scripts/migrate_combos_cross_category.py
+git add backend/models/ar_combination.py backend/services/ar_service.py
 ```
 
 - [ ] **Step 2: Commit**
 
 ```bash
-git commit -m "chore: add migration script for cross_category_allowed flag"
+git commit -m "feat(backend): add cross_category_allowed field with migration
+
+- Add cross_category_allowed bool field (default False)
+- Handle None from MongoDB as False (backward compatibility)
+- Validate flashcard categories in check_combo service
+- Add migration script for existing combos
+- Add 3 test cases"
 ```
 
 ---
 
 # Summary
 
+## UX Flow Comparison
+
+| Aspect | Before (Button) | After (1-Shot) |
+|--------|-----------------|----------------|
+| First scan | → VIEWING | → STAY SCANNING |
+| Add second card | Click button | Auto-detect |
+| Transition | Manual button click | Auto when 2 cards |
+| User action | 2 clicks + 2 scans | 2 scans only |
+
 ## Changes by Component
 
 | Component | File | Changes |
 |-----------|------|---------|
-| **Backend Model** | `backend/models/ar_combination.py` | Add `cross_category_allowed` field, index |
-| **Backend Service** | `backend/services/ar_service.py` | Category validation in `check_combo` |
-| **Backend Test** | `backend/tests/test_ar_service.py` | 3 test cases |
-| **Backend Script** | `backend/scripts/migrate_combos_cross_category.py` | Migration for existing combos |
-| **Frontend Hook** | `frontend-web/src/hooks/useMultiFlashcard.ts` | Category filter, debug logging |
+| **LearnARV2** | `LearnARV2.tsx` | Remove +Add button, add scanMode, auto-transition |
+| **Hook** | `useMultiFlashcard.ts` | Category filter, helper functions |
+| **Backend Model** | `ar_combination.py` | `cross_category_allowed` field |
+| **Backend Service** | `ar_service.py` | Category validation |
+| **Migration** | `migrate_*.py` | Migration for existing combos |
 
-## Task Order
+## Implementation Order
 
-| Phase | Task | Description |
-|-------|------|-------------|
-| 1 | B1-B4 | Backend changes first |
-| 2 | F1-F6 | Frontend changes |
-| 3 | I1-I3 | Integration + migration |
+| Phase | Tasks | Description |
+|-------|-------|-------------|
+| 1 | U1-U3, F1-F4 | **UX + Category (Frontend)** |
+| 2 | B1-B5 | Backend changes |
 
-## Total Estimated Changes
+## Debug Events
 
-- **Backend:** ~80 lines
-- **Frontend:** ~30 lines
-- **Tests:** ~60 lines
-- **Migration:** ~20 lines
+| Event | When | Data |
+|-------|------|------|
+| `COMBO_CATEGORY_MISMATCH` | Categories differ | `{category1, category2}` |
+| `MIND_FILE_DECISION` | Checking mind file | `{sameCategory, decision}` |
+| `LEARNAR_QR_GATE_COOLDOWN` | QR ignored | `{qrId, msSinceLastSeen}` |
 
 ---
 
-## Phase 2 (Optional Future Work)
+## Phase 3 (Optional Future Work)
 
 If offline combo validation is needed:
 
 1. Create `frontend-web/src/data/combo-rules.ts` with local combo rules
 2. Implement sorted-key lookup for instant local filtering
 3. Fall back to backend for unknown combos
-
-This is out of scope for current implementation.
