@@ -4,11 +4,15 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
 .opencode    
-scripts
+/scripts/
 !backend/scripts/
 backend/scripts/*
 !backend/scripts/create_admin.py
 !backend/scripts/repair_momo_course_unicode.py
+# Re-include Unity's Scripts folders (case-insensitive). The bare "scripts" pattern
+# above would otherwise match any directory named "Scripts" anywhere in the tree,
+# including Unity's Assets/Scripts/. Unity requires these C# scripts to be tracked.
+!mobile/unity/Assets/Scripts/
 .git
 backend/generated/
 
@@ -98,6 +102,11 @@ StyleCopReport.xml
 *.rsp
 # but not Directory.Build.rsp, as it configures directory-level build defaults
 !Directory.Build.rsp
+# Re-include Unity .meta files (essential for Unity project to work on other machines,
+# including Codemagic's Mac builder). The *.meta rule above is for Visual Studio C++
+# build artifacts, but it would otherwise catch Unity's per-asset meta files.
+!mobile/unity/**/*.meta
+!mobile/unity/**/.meta
 *.sbr
 *.tlb
 *.tli
@@ -217,6 +226,12 @@ PublishScripts/
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
+# Re-include Unity's Packages/ folder (manifest.json, packages-lock.json).
+# The pattern above would otherwise catch Unity's Package Manager folder,
+# which is required to be committed so the Unity project resolves correctly
+# on Codemagic's Mac builder.
+!mobile/unity/Packages/
+!mobile/unity/Packages/**
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files

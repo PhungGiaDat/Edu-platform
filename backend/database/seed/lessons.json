@@ -1,0 +1,51 @@
+[
+  {
+    "lesson_id": "animals_001",
+    "name": "Animal Friends",
+    "description": "Learn about animals in the jungle",
+    "category": "animals",
+    "mind_file_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/animals_targets.mind",
+    "target_map": {
+      "0": "elephant_marker_01",
+      "1": "shiba_marker_01"
+    },
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "lesson_id": "fruits_001",
+    "name": "Yummy Fruits",
+    "description": "Learn about different fruits",
+    "category": "fruits",
+    "mind_file_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/fruits_targets.mind",
+    "target_map": {
+      "0": "apple_marker_01",
+      "1": "banana_marker_01"
+    },
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "lesson_id": "nature_001",
+    "name": "Nature Walk",
+    "description": "Discover plants and trees",
+    "category": "nature",
+    "mind_file_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/nature_targets.mind",
+    "target_map": {
+      "0": "palm_marker_01",
+      "1": "tree_marker_01",
+      "2": "flower_marker_01"
+    },
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "lesson_id": "combo_jungle_001",
+    "name": "Jungle Adventure",
+    "description": "Elephant in the jungle - a special combo",
+    "category": "combos",
+    "mind_file_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/combo_targets.mind",
+    "target_map": {
+      "0": "elephant_marker_01",
+      "1": "jungle_marker_01"
+    },
+    "created_at": "2025-07-03T12:00:00Z"
+  }
+]

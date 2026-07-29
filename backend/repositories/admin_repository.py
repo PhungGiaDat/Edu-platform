@@ -36,6 +36,7 @@ class AdminRepository:
         self.usage_sessions_collection = mongo_connector.get_collection("usage_sessions")
         self.learning_goals_collection = mongo_connector.get_collection("learning_goals")
         self.users_collection = mongo_connector.get_collection("users")
+        self.ar_objects_collection = mongo_connector.get_collection("ar_objects")
         
         logger.debug(f"[AdminRepo] Initialized for teacher: {teacher_id}")
     
@@ -299,21 +300,66 @@ class AdminRepository:
         return card
     
     async def create_flashcard(self, card_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create a new flashcard"""
+        """Create a new flashcard and auto-create ar_object if ar_tag provided"""
         card_data["teacher_id"] = self.teacher_id
         card_data["created_at"] = datetime.utcnow()
         card_data["updated_at"] = datetime.utcnow()
         card_data["is_active"] = True
-        
+
+        # Auto-generate ar_tag from qr_id if not provided
+        if not card_data.get("ar_tag") and card_data.get("qr_id"):
+            card_data["ar_tag"] = card_data["qr_id"].lower().replace("-", "_") + "_marker"
+
         await self.flashcards_collection.insert_one(card_data)
-        
+
         # Update deck card count
         if card_data.get("deck_id"):
             await self._update_deck_card_count(card_data["deck_id"])
-        
+
+        # Auto-create ar_object if ar_tag is provided
+        ar_tag = card_data.get("ar_tag")
+        if ar_tag:
+            await self._ensure_ar_object(ar_tag, card_data.get("image_url"))
+
         card_data["_id"] = str(card_data.get("_id", ""))
-        
+
         return card_data
+
+    async def _ensure_ar_object(self, ar_tag: str, image_url: Optional[str] = None) -> None:
+        """
+        Create ar_object if it doesn't exist.
+        This enables AR tracking for flashcards with ar_tag.
+        """
+        existing = await self.ar_objects_collection.find_one({"ar_tag": ar_tag})
+        if existing:
+            logger.debug(f"[AdminRepo] AR object already exists for tag: {ar_tag}")
+            return
+
+        # Generate a placeholder nft_base_url from the ar_tag
+        # The actual .mind file will be generated separately
+        nft_base_url = f"https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/{ar_tag}.mind"
+
+        ar_object = {
+            "ar_tag": ar_tag,
+            "description": f"AR object for {ar_tag}",
+            "animation_type": "idle",
+            "glb_size": 0,
+            "nft_base_url": nft_base_url,
+            "model_3d_url": "",
+            "texture_url": None,
+            "image_2d_url": image_url or "",
+            "position": '{"x": 0, "y": 0, "z": 0}',
+            "rotation": '{"x": 0, "y": 0, "z": 0}',
+            "scale": '{"x": 1, "y": 1, "z": 1}',
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        }
+
+        try:
+            await self.ar_objects_collection.insert_one(ar_object)
+            logger.info(f"[AdminRepo] Created ar_object for tag: {ar_tag}")
+        except Exception as e:
+            logger.error(f"[AdminRepo] Failed to create ar_object for {ar_tag}: {e}")
     
     async def update_flashcard(self, qr_id: str, update_data: Dict[str, Any]) -> bool:
         """Update a flashcard"""

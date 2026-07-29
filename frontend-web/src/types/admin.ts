@@ -178,6 +178,7 @@ export interface FlashcardCreate {
   category?: string;
   difficulty?: string;
   tags?: string[];
+  ar_tag?: string;
 }
 
 export interface FlashcardUpdate {
@@ -192,6 +193,7 @@ export interface FlashcardUpdate {
   difficulty?: string;
   tags?: string[];
   is_active?: boolean;
+  ar_tag?: string;
 }
 
 // ========== Student Types ==========

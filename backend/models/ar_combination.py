@@ -105,6 +105,12 @@ class ARCombination(Document):
     # Beanie requires an id field; None means MongoDB auto-generates one
     id: Optional[PydanticObjectId] = Field(default=None, alias="_id")
 
+    # NEW: Allow/disallow cross-category combos
+    cross_category_allowed: bool = Field(
+        default=False,
+        description="Whether this combo allows flashcards from different categories"
+    )
+
     class Settings:
         name = "ar_combinations"
         indexes = [
@@ -148,5 +154,6 @@ class ArCombinationSchema(BaseModel):
     priority: int = 0
     active: bool = True
     flashcard_set: Optional[str] = None
+    cross_category_allowed: bool = Field(default=False, description="Allow combo across different categories")
 
     model_config = ConfigDict(extra="forbid", from_attributes=True)

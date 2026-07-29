@@ -470,6 +470,10 @@ class AdminFlashcardCreate(BaseModel):
     category: str = "general"
     difficulty: str = "beginner"
     tags: List[str] = Field(default_factory=list)
+    ar_tag: Optional[str] = Field(
+        default=None,
+        description="AR marker tag (auto-generated from qr_id if not provided)"
+    )
 
 
 class AdminFlashcardUpdate(BaseModel):
@@ -483,6 +487,7 @@ class AdminFlashcardUpdate(BaseModel):
     category: Optional[str] = None
     difficulty: Optional[str] = None
     tags: Optional[List[str]] = None
+    ar_tag: Optional[str] = None
     is_active: Optional[bool] = None
 
 
@@ -500,6 +505,7 @@ class AdminFlashcardResponse(BaseModel):
     category: str
     difficulty: str
     tags: List[str]
+    ar_tag: Optional[str]
     is_active: bool
     created_at: datetime
 

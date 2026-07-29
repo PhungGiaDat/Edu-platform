@@ -17,6 +17,23 @@
     "created_at": "2025-07-03T12:00:00Z"
   },
   {
+    "qr_id": "dog123",
+    "word": "shiba dog",
+    "translation": {
+      "en": "shiba dog",
+      "vi": "chó shiba"
+    },
+    "definition": "Shiba dog (chó shiba): A small, alert, and very loyal dog breed from Japan with a curly tail, pointed ears, and a thick double coat. Shibas are known for being bold, friendly, and clean. Chủ đề: animals. Cấp độ: medium. Trẻ em học từ vựng tiếng Anh về động vật và các giống chó.",
+    "category": "animals",
+    "image_url": "/assets/flashcards/shiba_dog.jpg",
+    "audio_url": null,
+    "difficulty": "medium",
+    "ar_tag": "shiba_marker_01",
+    "image_animation_type": "wiggle",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
     "qr_id": "apple01",
     "word": "apple",
     "translation": {
