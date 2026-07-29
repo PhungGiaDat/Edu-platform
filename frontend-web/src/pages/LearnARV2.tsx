@@ -555,7 +555,7 @@ export default function LearnARV2() {
     // Track whether the AR target marker is visible (for 2D overlay)
     const [markerFound, setMarkerFound] = useState(false);
     // Freeze Pose: track which target is currently stabilized
-    const [stableTarget, setStableTarget] = useState<number | null>(null);
+    const [_stableTarget, setStableTarget] = useState<number | null>(null);
     const detectedQrIdRef = useRef<string | null>(null);
     const isAddingCardRef = useRef(false);
     const qrGateRef = useRef<Map<string, number>>(new Map());
