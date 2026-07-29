@@ -13,6 +13,19 @@
     "created_at": "2025-07-03T12:00:00Z"
   },
   {
+    "ar_tag": "shiba_marker_01",
+    "description": "A small, alert Japanese shiba dog 3D model with idle wiggle animation for AR vocabulary learning",
+    "animation_type": "wiggle",
+    "glb_size": 1.0,
+    "nft_base_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/shiba_targets.mind",
+    "model_3d_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/models/shiba_dog.glb",
+    "image_2d_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/frontend/model2D/shiba_dog.jpg",
+    "position": "0 0.1 0",
+    "rotation": "0 180 0",
+    "scale": "0.5 0.5 0.5",
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
     "ar_tag": "apple_marker_01",
     "description": "A shiny red apple 3D model for fruits vocabulary learning",
     "animation_type": "rotate",

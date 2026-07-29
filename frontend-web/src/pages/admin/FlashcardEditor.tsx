@@ -31,6 +31,7 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
   const [deckDescription, setDeckDescription] = useState('');
 
   const [qrId, setQrId] = useState('');
+  const [arTag, setArTag] = useState('');
   const [isLoadingInitial, setIsLoadingInitial] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +111,20 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
     saveToHistory();
   }, [setStoreQrId, saveToHistory]);
 
+  // Handle AR Tag changes — auto-generate from QR ID if empty
+  const handleArTagChange = useCallback((value: string) => {
+    setArTag(value);
+    saveToHistory();
+  }, [saveToHistory]);
+
+  // Auto-generate ar_tag from qr_id when qr_id changes and ar_tag is empty
+  useEffect(() => {
+    if (qrId && !arTag) {
+      const autoTag = qrId.toLowerCase().replace(/[^a-z0-9]+/g, '_') + '_marker';
+      setArTag(autoTag);
+    }
+  }, [qrId]);
+
   // Handle deck submit
   const handleDeckSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -182,6 +197,7 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
           word: frontText.trim(),
           translation,
           image_url: uploadResult.image_url,
+          ar_tag: arTag.trim() || undefined,
         };
         await adminFlashcardsApi.createFlashcard(deckId, data);
       } else if (mode === 'card-edit' && cardId) {
@@ -189,6 +205,7 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
           word: frontText.trim(),
           translation,
           image_url: uploadResult.image_url,
+          ar_tag: arTag.trim() || undefined,
         };
         await adminFlashcardsApi.updateFlashcard(cardId, data);
       }
@@ -279,6 +296,23 @@ const FlashcardEditor: React.FC<FlashcardEditorProps> = ({ mode }) => {
                         pattern="[A-Za-z0-9_-]+"
                         className="min-h-10 w-full rounded-lg border border-gray-300 px-3 font-mono text-sm text-gray-950 outline-none transition focus:border-[#3A8FD1] focus:ring-2 focus:ring-[#6EB9FF]/35 disabled:cursor-not-allowed disabled:bg-gray-100"
                       />
+                    </div>
+                    <div>
+                      <label htmlFor="arTag" className="mb-2 block text-sm font-semibold text-gray-800">
+                        AR Tag *
+                      </label>
+                      <input
+                        type="text"
+                        id="arTag"
+                        value={arTag}
+                        onChange={(e) => handleArTagChange(e.target.value)}
+                        required
+                        placeholder="e.g., elephant_01_marker"
+                        className="min-h-10 w-full rounded-lg border border-gray-300 px-3 font-mono text-sm text-gray-950 outline-none transition focus:border-[#3A8FD1] focus:ring-2 focus:ring-[#6EB9FF]/35"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        Auto-generated from QR ID. Change if needed for combo matching.
+                      </p>
                     </div>
                     <div>
                       <label htmlFor="frontText" className="mb-2 block text-sm font-semibold text-gray-800">

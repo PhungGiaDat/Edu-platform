@@ -1,0 +1,11 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes: []
+  m_configObjects:
+    UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: 4667f44297f265a4998bbe44ffe949e1, type: 2}
+    com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 0300855675c86824ca485bbc49790727, type: 2}
+  m_UseUCBPForAssetBundles: 0
