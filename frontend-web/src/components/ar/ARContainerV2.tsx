@@ -22,7 +22,7 @@ export type ARPhase = 'IDLE' | 'SCANNING' | 'LOADING' | 'VIEWING' | 'ERROR'
 
 interface ARContainerV2Props {
     initialPhase?: ARPhase;
-    mindUrl?: string;
+    mindUrl?: string | null;
     mindBuffer?: Uint8Array | null;
     modelUrl?: string;
     imageUrl?: string;
