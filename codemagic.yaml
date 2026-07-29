@@ -1,0 +1,67 @@
+# Codemagic CI pipeline: Unity -> iOS device build (IPA) for the Runtime Image Tracking POC.
+#
+# Prerequisites configured in the Codemagic UI (see docs/ar-poc/CODEMAGIC-SETUP.md):
+#   - Unity Personal/Plus/Pro license as env vars: UNITY_SERIAL, UNITY_USERNAME, UNITY_PASSWORD
+#     (group: "unity") — OR use Unity license file activation.
+#   - Apple code signing set up via codemagic integration (App Store Connect API key).
+#   - Bundle id registered with an AR-capable provisioning profile.
+#
+# NOTE: This build requires a real iOS device. ARKit does NOT run in the simulator.
+
+workflows:
+  unity-ios-poc:
+    name: Unity iOS AR POC
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      groups:
+        - unity        # UNITY_SERIAL, UNITY_USERNAME, UNITY_PASSWORD
+        - appstore     # Apple signing credentials
+      vars:
+        UNITY_BIN: /Applications/Unity/Hub/Editor/6000.0.0f1/Unity.app/Contents/MacOS/Unity
+        UNITY_PROJECT_PATH: mobile/unity
+        XCODE_PROJECT_PATH: mobile/unity/build/ios
+        BUNDLE_ID: com.eduplatform.arpoc
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Activate Unity license
+        script: |
+          "$UNITY_BIN" -batchmode -quit -nographics \
+            -serial "$UNITY_SERIAL" -username "$UNITY_USERNAME" -password "$UNITY_PASSWORD" \
+            -logFile /dev/stdout || true
+      - name: Build Unity iOS Xcode project
+        script: |
+          "$UNITY_BIN" -batchmode -quit -nographics \
+            -projectPath "$UNITY_PROJECT_PATH" \
+            -executeMethod POCBuildScript.BuildIOS \
+            -logFile /dev/stdout
+      - name: Install CocoaPods (if generated)
+        script: |
+          if [ -f "$XCODE_PROJECT_PATH/Podfile" ]; then
+            cd "$XCODE_PROJECT_PATH" && pod install
+          fi
+      - name: Set up code signing
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_DEVELOPMENT --create
+          keychain add-certificates
+          xcode-project use-profiles
+      - name: Archive and export IPA
+        script: |
+          cd "$XCODE_PROJECT_PATH"
+          xcode-project build-ipa \
+            --project "Unity-iPhone.xcodeproj" \
+            --scheme "Unity-iPhone"
+    artifacts:
+      - build/ios/**/*.ipa
+      - $XCODE_PROJECT_PATH/build/ios/**/*.app
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: true

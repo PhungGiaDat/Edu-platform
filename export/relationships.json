@@ -1,0 +1,102 @@
+{
+  "edu_platform.flashcard_decks": [
+    "_id",
+    "deck_id",
+    "teacher_id"
+  ],
+  "edu_platform.redis_cache": [],
+  "edu_platform.pets": [
+    "_id",
+    "pet_id"
+  ],
+  "edu_platform.lesson_sessions": [
+    "_id",
+    "course_id",
+    "current_step_id",
+    "lesson_id",
+    "session_id",
+    "user_id"
+  ],
+  "edu_platform.courses": [
+    "_id",
+    "course_id"
+  ],
+  "edu_platform.session_logs": [
+    "_id",
+    "user_id"
+  ],
+  "edu_platform.users": [
+    "_id"
+  ],
+  "edu_platform.ai_feedback": [
+    "_id",
+    "user_id"
+  ],
+  "edu_platform.learning_paths": [],
+  "edu_platform.course_lessons": [],
+  "edu_platform.user_course_progress": [
+    "_id",
+    "course_id",
+    "current_lesson_id",
+    "user_id"
+  ],
+  "edu_platform.user_sessions": [],
+  "edu_platform.rag_cache": [],
+  "edu_platform.quiz_questions": [
+    "_id",
+    "flashcard_qr_id"
+  ],
+  "edu_platform.combos": [
+    "_id",
+    "combo_id"
+  ],
+  "edu_platform.mini_game_bank": [
+    "_id",
+    "flashcard_qr_id"
+  ],
+  "edu_platform.lesson_step_attempts": [],
+  "edu_platform.ar_combinations": [
+    "_id",
+    "combo_id"
+  ],
+  "edu_platform.pronunciation_attempts": [],
+  "edu_platform.word_mastery": [],
+  "edu_platform.chat_logs": [],
+  "edu_platform.quiz_attempts": [],
+  "edu_platform.learning_progress": [],
+  "edu_platform.media_assets": [
+    "_id",
+    "course_id",
+    "lesson_id",
+    "section_id"
+  ],
+  "edu_platform.flashcard_editor": [],
+  "edu_platform.feedback_templates": [],
+  "edu_platform.user_points": [
+    "_id",
+    "user_id"
+  ],
+  "edu_platform.ar_objects": [
+    "_id"
+  ],
+  "edu_platform.flashcards": [
+    "_id",
+    "qr_id"
+  ],
+  "edu_platform.profile_content": [],
+  "eduplatform.learning_progress": [],
+  "eduplatform.pronunciation_attempts": [],
+  "eduplatform.course_lessons": [],
+  "eduplatform.learning_paths": [],
+  "eduplatform.ar_combinations": [],
+  "eduplatform.user_sessions": [],
+  "eduplatform.profile_content": [],
+  "eduplatform.pets": [],
+  "eduplatform.users": [],
+  "eduplatform.quiz_attempts": [],
+  "eduplatform.flashcards": [],
+  "eduplatform.redis_cache": [],
+  "eduplatform.feedback_templates": [],
+  "eduplatform.flashcard_editor": [],
+  "eduplatform.session_logs": []
+}
