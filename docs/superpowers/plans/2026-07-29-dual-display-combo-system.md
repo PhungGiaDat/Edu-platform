@@ -10,14 +10,19 @@
 
 ---
 
+
+
 ## Global Constraints
 
 - Deadline: 3 ngày (MVP target)
+- MindAR .mind file tracking (image targets, không phải NFT)
 - Single animation per combo model (no multiple animation switching)
 - Performance: 30+ FPS on mid-range mobile devices
-- Compatibility: MindAR NFT markers + WebXR
+- Combo animals: elephant + dog, elephant + cat, elephant + giraffe, elephant + hippo
 
 ---
+
+
 
 ## File Structure
 
@@ -25,7 +30,7 @@
 frontend-web/src/
 ├── lib/
 │   └── combo/
-│       └── combo-db.json              # Combo definitions (10+ combos)
+│       └── combo-db.json              # Combo definitions (4 elephant combos)
 ├── stores/
 │   ├── dualDisplay.store.ts           # Multi-marker state (Zustand)
 │   └── markerHealth.store.ts          # Per-marker tracking health
@@ -45,13 +50,17 @@ frontend-web/src/
 
 ---
 
+
+
 ## Task 1: Create Combo Database
 
 **Files:**
+
 - Create: `frontend-web/src/lib/combo/combo-db.json`
 - Create: `frontend-web/src/lib/combo/types.ts`
 
 **Interfaces:**
+
 - Produces: `ComboDefinition[]`, `getComboByTags()`, `COMBO_DB`
 
 ```typescript
@@ -70,113 +79,56 @@ interface ComboDefinition {
 
 **Steps:**
 
-- [ ] **Step 1: Create combo-db.json with 10+ combos**
+- [ ] **Step 1: Create combo-db.json with 4 elephant combos**
 
 ```json
 {
   "combos": [
     {
-      "combo_id": "deer-grass",
-      "name": "Deer Eating Grass",
-      "required_tags": ["deer", "grass"],
-      "model_url": "https://example.com/models/deer_eating.glb",
-      "image_url": "https://example.com/images/deer_grass_combo.png",
-      "animation_clip": "eating",
-      "category": "animals",
-      "difficulty": "easy"
-    },
-    {
-      "combo_id": "cat-yarn",
-      "name": "Cat Playing with Yarn",
-      "required_tags": ["cat", "yarn"],
-      "model_url": "https://example.com/models/cat_playing.glb",
-      "image_url": "https://example.com/images/cat_yarn_combo.png",
-      "animation_clip": "playing",
-      "category": "animals",
-      "difficulty": "easy"
-    },
-    {
-      "combo_id": "fish-water",
-      "name": "Fish Swimming",
-      "required_tags": ["fish", "water"],
-      "model_url": "https://example.com/models/fish_swimming.glb",
-      "image_url": "https://example.com/images/fish_water_combo.png",
-      "animation_clip": "swimming",
-      "category": "animals",
-      "difficulty": "easy"
-    },
-    {
-      "combo_id": "dog-bone",
-      "name": "Dog Chewing Bone",
-      "required_tags": ["dog", "bone"],
-      "model_url": "https://example.com/models/dog_chewing.glb",
-      "image_url": "https://example.com/images/dog_bone_combo.png",
-      "animation_clip": "chewing",
-      "category": "animals",
-      "difficulty": "easy"
-    },
-    {
-      "combo_id": "bird-tree",
-      "name": "Bird on Tree",
-      "required_tags": ["bird", "tree"],
-      "model_url": "https://example.com/models/bird_perched.glb",
-      "image_url": "https://example.com/images/bird_tree_combo.png",
+      "combo_id": "elephant-dog",
+      "name": "Elephant and Dog",
+      "required_tags": ["elephant", "dog"],
+      "model_url": "https://example.com/models/elephant_dog.glb",
+      "image_url": "https://example.com/images/elephant_dog_combo.png",
       "animation_clip": "idle",
       "category": "animals",
       "difficulty": "medium"
     },
     {
-      "combo_id": "rabbit-carrot",
-      "name": "Rabbit Eating Carrot",
-      "required_tags": ["rabbit", "carrot"],
-      "model_url": "https://example.com/models/rabbit_eating.glb",
-      "image_url": "https://example.com/images/rabbit_carrot_combo.png",
-      "animation_clip": "eating",
-      "category": "animals",
-      "difficulty": "easy"
-    },
-    {
-      "combo_id": "elephant-jungle",
-      "name": "Elephant in Jungle",
-      "required_tags": ["elephant", "jungle"],
-      "model_url": "https://example.com/models/elephant_jungle.glb",
-      "image_url": "https://example.com/images/elephant_jungle_combo.png",
-      "animation_clip": "walking",
-      "category": "animals",
-      "difficulty": "medium"
-    },
-    {
-      "combo_id": "butterfly-flower",
-      "name": "Butterfly on Flower",
-      "required_tags": ["butterfly", "flower"],
-      "model_url": "https://example.com/models/butterfly_flower.glb",
-      "image_url": "https://example.com/images/butterfly_flower_combo.png",
-      "animation_clip": "fluttering",
-      "category": "nature",
-      "difficulty": "easy"
-    },
-    {
-      "combo_id": "frog-pond",
-      "name": "Frog by Pond",
-      "required_tags": ["frog", "pond"],
-      "model_url": "https://example.com/models/frog_pond.glb",
-      "image_url": "https://example.com/images/frog_pond_combo.png",
+      "combo_id": "elephant-cat",
+      "name": "Elephant and Cat",
+      "required_tags": ["elephant", "cat"],
+      "model_url": "https://example.com/models/elephant_cat.glb",
+      "image_url": "https://example.com/images/elephant_cat_combo.png",
       "animation_clip": "idle",
       "category": "animals",
       "difficulty": "easy"
     },
     {
-      "combo_id": "monkey-banana",
-      "name": "Monkey Eating Banana",
-      "required_tags": ["monkey", "banana"],
-      "model_url": "https://example.com/models/monkey_banana.glb",
-      "image_url": "https://example.com/images/monkey_banana_combo.png",
-      "animation_clip": "eating",
+      "combo_id": "elephant-giraffe",
+      "name": "Elephant and Giraffe",
+      "required_tags": ["elephant", "giraffe"],
+      "model_url": "https://example.com/models/elephant_giraffe.glb",
+      "image_url": "https://example.com/images/elephant_giraffe_combo.png",
+      "animation_clip": "idle",
       "category": "animals",
       "difficulty": "medium"
+    },
+    {
+      "combo_id": "elephant-hippo",
+      "name": "Elephant and Hippo",
+      "required_tags": ["elephant", "hippo"],
+      "model_url": "https://example.com/models/elephant_hippo.glb",
+      "image_url": "https://example.com/images/elephant_hippo_combo.png",
+      "animation_clip": "idle",
+      "category": "animals",
+      "difficulty": "hard"
     }
   ]
 }
+```
+
+**Note:** MindAR uses `.mind` files for image target tracking. Each animal (elephant, dog, cat, giraffe, hippo) được scan qua flashcard riêng. Khi 2 flashcards (ví dụ elephant + dog) được quét, system sẽ check combo và hiển thị model kết hợp.
 ```
 
 - [ ] **Step 2: Create types.ts for combo**
@@ -234,18 +186,22 @@ export function getCombosForTag(tag: string): ComboDefinition[] {
 ```bash
 cd "e:\University\Graduted Project\Edu-platform"
 git add frontend-web/src/lib/combo/
-git commit -m "feat: add combo database with 10+ animal combos"
+git commit -m "feat: add combo database with 4 elephant-based combos"
 ```
 
 ---
 
+
+
 ## Task 2: Create Zustand Stores
 
 **Files:**
+
 - Create: `frontend-web/src/stores/dualDisplay.store.ts`
 - Create: `frontend-web/src/stores/markerHealth.store.ts`
 
 **Interfaces:**
+
 - Produces: `dualDisplayStore`, `markerHealthStore`
 
 **Steps:**
@@ -449,15 +405,19 @@ git commit -m "feat: add Zustand stores for dual-display state management"
 
 ---
 
+
+
 ## Task 3: Create Core Runtime Managers
 
 **Files:**
+
 - Create: `frontend-web/src/runtime/PerformanceMonitor.ts`
 - Create: `frontend-web/src/runtime/PositionCalculator.ts`
 - Create: `frontend-web/src/runtime/ComboDetector.ts`
 - Create: `frontend-web/src/runtime/DualDisplayManager.ts`
 
 **Interfaces:**
+
 - Consumes: `dualDisplayStore`, `markerHealthStore`, `COMBO_DB`
 - Produces: `PerformanceMonitor`, `PositionCalculator`, `ComboDetector`, `DualDisplayManager`
 
@@ -772,6 +732,8 @@ export const comboDetector = new ComboDetector();
 
 - [ ] **Step 4: Create DualDisplayManager.ts**
 
+
+
 ```typescript
 // frontend-web/src/runtime/DualDisplayManager.ts
 import { eventBus } from './EventBus';
@@ -1013,14 +975,18 @@ git commit -m "feat: add dual-display runtime managers (PerformanceMonitor, Posi
 
 ---
 
+
+
 ## Task 4: Create React Hooks
 
 **Files:**
+
 - Create: `frontend-web/src/hooks/useDualDisplay.ts`
 - Create: `frontend-web/src/hooks/usePerformanceMonitor.ts`
 - Create: `frontend-web/src/hooks/useComboDetection.ts`
 
 **Interfaces:**
+
 - Consumes: `dualDisplayStore`, `markerHealthStore`, `DualDisplayManager`
 - Produces: React hooks
 
@@ -1196,12 +1162,16 @@ git commit -m "feat: add React hooks for dual-display system"
 
 ---
 
+
+
 ## Task 5: Integrate with ARContainerV2
 
 **Files:**
+
 - Modify: `frontend-web/src/components/ar/ARContainerV2.tsx`
 
 **Interfaces:**
+
 - Consumes: `useDualDisplay`, `useComboDetection`
 - Produces: Updated ARContainerV2 with dual-display support
 
@@ -1316,12 +1286,16 @@ git commit -m "feat: integrate dual-display system with ARContainerV2"
 
 ---
 
+
+
 ## Task 6: Update ar-viewer.html for Animation Support
 
 **Files:**
+
 - Modify: `frontend-web/public/ar-viewer.html`
 
 **Interfaces:**
+
 - Consumes: URL params (comboModel, comboAnimation)
 - Produces: Combo model with animation
 
@@ -1394,9 +1368,12 @@ git commit -m "feat: add animation support in ar-viewer for combo models"
 
 ---
 
+
+
 ## Task 7: Testing & Verification
 
 **Files:**
+
 - Create: `frontend-web/src/__tests__/runtime/DualDisplayManager.test.ts`
 - Create: `frontend-web/src/__tests__/runtime/ComboDetector.test.ts`
 - Create: `frontend-web/src/__tests__/runtime/PositionCalculator.test.ts`
@@ -1537,9 +1514,11 @@ git commit -m "test: add unit tests for dual-display system"
 
 ---
 
+
+
 ## Verification Checklist
 
-- [ ] Combo database có 10+ combos
+- [ ] Combo database có 4 combos (elephant + dog/cat/giraffe/hippo)
 - [ ] Stores update correctly khi markers found/lost
 - [ ] PerformanceMonitor tracking FPS
 - [ ] Unhealthy markers auto-clear
@@ -1554,13 +1533,17 @@ git commit -m "test: add unit tests for dual-display system"
 
 ---
 
+
+
 ## Timeline Summary
 
-| Day | Tasks |
-|-----|-------|
-| Day 1 | Task 1, 2 (Database + Stores) |
-| Day 2 | Task 3, 4 (Runtime Managers + Hooks) |
+
+| Day   | Tasks                                            |
+| ----- | ------------------------------------------------ |
+| Day 1 | Task 1, 2 (Database + Stores)                    |
+| Day 2 | Task 3, 4 (Runtime Managers + Hooks)             |
 | Day 3 | Task 5, 6, 7 (Integration + Animation + Testing) |
+
 
 ---
 
