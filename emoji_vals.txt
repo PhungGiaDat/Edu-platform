@@ -1,0 +1,1 @@
+['apple', 'baby', 'bag', 'bed', 'big', 'bird', 'blue', 'book', 'chair', 'clap', 'clean', 'cookie', 'dad', 'egg', 'elephant', 'fly', 'green', 'hand', 'happy', 'juice', 'jump', 'leaf', 'milk', 'mom', 'one', 'pencil', 'red', 'rice', 'river', 'run', 'sad', 'sky', 'small', 'smile', 'soap', 'sun', 'three', 'toy', 'tree', 'trunk', 'two', 'water', 'yellow']

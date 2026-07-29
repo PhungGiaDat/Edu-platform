@@ -1,0 +1,1580 @@
+{
+  "edu_platform.flashcard_decks": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    }
+  ],
+  "edu_platform.redis_cache": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "cache_key": 1
+      },
+      "name": "cache_key_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "cache_type": 1
+      },
+      "name": "cache_type_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "cache_type": 1,
+        "expires_at": 1
+      },
+      "name": "cache_type_1_expires_at_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "cache_type": 1,
+        "created_at": 1
+      },
+      "name": "cache_type_1_created_at_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "expires_at": 1
+      },
+      "name": "cache_ttl",
+      "expireAfterSeconds": 0
+    }
+  ],
+  "edu_platform.pets": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "pet_id": 1
+      },
+      "name": "pet_id_1",
+      "unique": true
+    }
+  ],
+  "edu_platform.lesson_sessions": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "course_id": 1,
+        "lesson_id": 1
+      },
+      "name": "lesson_session_user_course_lesson_unique",
+      "unique": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "session_id": 1
+      },
+      "name": "lesson_session_id_unique",
+      "unique": true,
+      "sparse": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "status": 1,
+        "updated_at": -1
+      },
+      "name": "lesson_session_user_status_updated"
+    }
+  ],
+  "edu_platform.courses": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "course_id": 1
+      },
+      "name": "course_id_unique",
+      "unique": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "is_published": 1
+      },
+      "name": "course_is_published"
+    },
+    {
+      "v": 2,
+      "key": {
+        "category_key": 1
+      },
+      "name": "course_category_key"
+    }
+  ],
+  "edu_platform.session_logs": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1
+      },
+      "name": "user_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "started_at": -1
+      },
+      "name": "user_id_1_started_at_-1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "active_topic": 1,
+        "started_at": -1
+      },
+      "name": "active_topic_1_started_at_-1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "started_at": 1
+      },
+      "name": "session_logs_ttl",
+      "expireAfterSeconds": 2592000
+    }
+  ],
+  "edu_platform.users": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "email": 1
+      },
+      "name": "email_1",
+      "unique": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "username": 1
+      },
+      "name": "username_1",
+      "unique": true
+    }
+  ],
+  "edu_platform.ai_feedback": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    }
+  ],
+  "edu_platform.learning_paths": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1
+      },
+      "name": "user_id_1"
+    }
+  ],
+  "edu_platform.course_lessons": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "lesson_id": 1
+      },
+      "name": "lesson_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "course_id": 1
+      },
+      "name": "course_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "created_by": 1
+      },
+      "name": "created_by_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "course_id": 1,
+        "order": 1
+      },
+      "name": "course_id_1_order_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "status": 1
+      },
+      "name": "status_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "lesson_type": 1
+      },
+      "name": "lesson_type_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "status": 1,
+        "lesson_type": 1
+      },
+      "name": "status_1_lesson_type_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "created_by": 1,
+        "status": 1
+      },
+      "name": "created_by_1_status_1"
+    }
+  ],
+  "edu_platform.user_course_progress": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    }
+  ],
+  "edu_platform.user_sessions": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "session_id": 1
+      },
+      "name": "session_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1
+      },
+      "name": "user_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "status": 1
+      },
+      "name": "user_id_1_status_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "started_at": 1
+      },
+      "name": "user_id_1_started_at_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "status": 1
+      },
+      "name": "status_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "status": 1,
+        "started_at": 1
+      },
+      "name": "status_1_started_at_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "course_id": 1,
+        "started_at": 1
+      },
+      "name": "course_id_1_started_at_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "lesson_id": 1,
+        "started_at": 1
+      },
+      "name": "lesson_id_1_started_at_1"
+    }
+  ],
+  "edu_platform.rag_cache": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "key": 1
+      },
+      "name": "rag_cache_key_unique",
+      "unique": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "expires_at": 1
+      },
+      "name": "rag_cache_ttl",
+      "expireAfterSeconds": 0
+    }
+  ],
+  "edu_platform.quiz_questions": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    }
+  ],
+  "edu_platform.combos": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    }
+  ],
+  "edu_platform.mini_game_bank": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    }
+  ],
+  "edu_platform.lesson_step_attempts": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "session_id": 1,
+        "attempted_at": -1
+      },
+      "name": "lesson_attempt_session_attempted"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "course_id": 1,
+        "lesson_id": 1,
+        "step_id": 1
+      },
+      "name": "lesson_attempt_user_course_lesson_step"
+    }
+  ],
+  "edu_platform.ar_combinations": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "combo_id": 1
+      },
+      "name": "combo_id_1",
+      "unique": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "required_tags": 1
+      },
+      "name": "required_tags_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "flashcard_set": 1,
+        "active": 1
+      },
+      "name": "flashcard_set_1_active_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "semantic_result": 1
+      },
+      "name": "semantic_result_1"
+    }
+  ],
+  "edu_platform.pronunciation_attempts": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1
+      },
+      "name": "user_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "flashcard_qr_id": 1
+      },
+      "name": "flashcard_qr_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "flashcard_qr_id": 1
+      },
+      "name": "user_id_1_flashcard_qr_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "attempted_at": -1
+      },
+      "name": "user_id_1_attempted_at_-1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "course_id": 1,
+        "lesson_id": 1,
+        "section_id": 1,
+        "attempted_at": -1
+      },
+      "name": "pronunciation_course_lesson_section_attempted"
+    },
+    {
+      "v": 2,
+      "key": {
+        "session_id": 1,
+        "attempted_at": -1
+      },
+      "name": "pronunciation_session_attempted",
+      "sparse": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "attempt_id": 1
+      },
+      "name": "attempt_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "course_id": 1,
+        "lesson_id": 1
+      },
+      "name": "course_id_1_lesson_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "status": 1
+      },
+      "name": "processing_status_partial",
+      "partialFilterExpression": {
+        "status": "processing"
+      }
+    },
+    {
+      "v": 2,
+      "key": {
+        "attempted_at": 1
+      },
+      "name": "pronunciation_attempts_ttl",
+      "expireAfterSeconds": 7776000
+    }
+  ],
+  "edu_platform.word_mastery": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "course_id": 1,
+        "lesson_id": 1,
+        "word": 1
+      },
+      "name": "word_mastery_user_course_lesson_word_unique",
+      "unique": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "updated_at": -1
+      },
+      "name": "word_mastery_user_updated"
+    }
+  ],
+  "edu_platform.chat_logs": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "session_id": 1,
+        "sender": 1,
+        "timestamp": -1
+      },
+      "name": "chat_logs_session_sender_time"
+    }
+  ],
+  "edu_platform.quiz_attempts": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1
+      },
+      "name": "user_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "quiz_type": 1
+      },
+      "name": "quiz_type_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "attempted_at": -1
+      },
+      "name": "user_id_1_attempted_at_-1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "quiz_type": 1
+      },
+      "name": "user_id_1_quiz_type_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "attempted_at": 1
+      },
+      "name": "quiz_attempts_ttl",
+      "expireAfterSeconds": 7776000
+    }
+  ],
+  "edu_platform.learning_progress": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1
+      },
+      "name": "user_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "flashcard_qr_id": 1
+      },
+      "name": "flashcard_qr_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "flashcard_qr_id": 1
+      },
+      "name": "user_id_1_flashcard_qr_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "mastery_level": -1
+      },
+      "name": "user_id_1_mastery_level_-1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "mastery_level": -1
+      },
+      "name": "mastered_items_partial",
+      "partialFilterExpression": {
+        "mastery_level": {
+          "$gte": 3
+        }
+      }
+    },
+    {
+      "v": 2,
+      "key": {
+        "next_review_at": 1
+      },
+      "name": "next_review_at_1"
+    }
+  ],
+  "edu_platform.media_assets": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "course_id": 1,
+        "lesson_id": 1,
+        "section_id": 1,
+        "asset_key": 1,
+        "path": 1
+      },
+      "name": "media_asset_course_lesson_section_key_path_unique",
+      "unique": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "course_id": 1,
+        "lesson_id": 1,
+        "section_id": 1
+      },
+      "name": "media_asset_course_lesson_section"
+    }
+  ],
+  "edu_platform.flashcard_editor": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "flashcard_id": 1
+      },
+      "name": "flashcard_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "created_by": 1
+      },
+      "name": "created_by_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "created_at": -1
+      },
+      "name": "created_at_-1"
+    }
+  ],
+  "edu_platform.feedback_templates": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "category": 1
+      },
+      "name": "category_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "language": 1
+      },
+      "name": "language_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "is_active": 1
+      },
+      "name": "is_active_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "category": 1,
+        "language": 1,
+        "is_active": 1
+      },
+      "name": "category_1_language_1_is_active_1"
+    }
+  ],
+  "edu_platform.user_points": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    }
+  ],
+  "edu_platform.ar_objects": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "ar_tag": 1
+      },
+      "name": "ar_tag_1",
+      "unique": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "animation_type": 1
+      },
+      "name": "animation_type_1"
+    }
+  ],
+  "edu_platform.flashcards": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "qr_id": 1
+      },
+      "name": "qr_id_1",
+      "unique": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "category": 1
+      },
+      "name": "category_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "difficulty": 1
+      },
+      "name": "difficulty_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "is_active": 1
+      },
+      "name": "is_active_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "deck_id": 1,
+        "created_at": 1
+      },
+      "name": "deck_id_1_created_at_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "teacher_id": 1
+      },
+      "name": "teacher_id_1"
+    }
+  ],
+  "edu_platform.profile_content": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "key": 1
+      },
+      "name": "key_1",
+      "unique": true
+    }
+  ],
+  "eduplatform.learning_progress": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1
+      },
+      "name": "user_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "flashcard_qr_id": 1
+      },
+      "name": "flashcard_qr_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "flashcard_qr_id": 1
+      },
+      "name": "user_id_1_flashcard_qr_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "mastery_level": -1
+      },
+      "name": "user_id_1_mastery_level_-1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "mastery_level": -1
+      },
+      "name": "mastered_items_partial",
+      "partialFilterExpression": {
+        "mastery_level": {
+          "$gte": 3
+        }
+      }
+    },
+    {
+      "v": 2,
+      "key": {
+        "next_review_at": 1
+      },
+      "name": "next_review_at_1"
+    }
+  ],
+  "eduplatform.pronunciation_attempts": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "attempt_id": 1
+      },
+      "name": "attempt_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1
+      },
+      "name": "user_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "flashcard_qr_id": 1
+      },
+      "name": "flashcard_qr_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "flashcard_qr_id": 1
+      },
+      "name": "user_id_1_flashcard_qr_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "attempted_at": -1
+      },
+      "name": "user_id_1_attempted_at_-1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "course_id": 1,
+        "lesson_id": 1
+      },
+      "name": "course_id_1_lesson_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "status": 1
+      },
+      "name": "processing_status_partial",
+      "partialFilterExpression": {
+        "status": "processing"
+      }
+    },
+    {
+      "v": 2,
+      "key": {
+        "attempted_at": 1
+      },
+      "name": "pronunciation_attempts_ttl",
+      "expireAfterSeconds": 7776000
+    }
+  ],
+  "eduplatform.course_lessons": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "lesson_id": 1
+      },
+      "name": "lesson_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "course_id": 1
+      },
+      "name": "course_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "created_by": 1
+      },
+      "name": "created_by_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "course_id": 1,
+        "order": 1
+      },
+      "name": "course_id_1_order_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "status": 1
+      },
+      "name": "status_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "lesson_type": 1
+      },
+      "name": "lesson_type_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "status": 1,
+        "lesson_type": 1
+      },
+      "name": "status_1_lesson_type_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "created_by": 1,
+        "status": 1
+      },
+      "name": "created_by_1_status_1"
+    }
+  ],
+  "eduplatform.learning_paths": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1
+      },
+      "name": "user_id_1"
+    }
+  ],
+  "eduplatform.ar_combinations": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "combo_id": 1
+      },
+      "name": "combo_id_1",
+      "unique": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "required_tags": 1
+      },
+      "name": "required_tags_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "flashcard_set": 1,
+        "active": 1
+      },
+      "name": "flashcard_set_1_active_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "semantic_result": 1
+      },
+      "name": "semantic_result_1"
+    }
+  ],
+  "eduplatform.user_sessions": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "session_id": 1
+      },
+      "name": "session_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1
+      },
+      "name": "user_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "status": 1
+      },
+      "name": "user_id_1_status_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "started_at": 1
+      },
+      "name": "user_id_1_started_at_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "status": 1
+      },
+      "name": "status_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "status": 1,
+        "started_at": 1
+      },
+      "name": "status_1_started_at_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "course_id": 1,
+        "started_at": 1
+      },
+      "name": "course_id_1_started_at_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "lesson_id": 1,
+        "started_at": 1
+      },
+      "name": "lesson_id_1_started_at_1"
+    }
+  ],
+  "eduplatform.profile_content": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "key": 1
+      },
+      "name": "key_1",
+      "unique": true
+    }
+  ],
+  "eduplatform.pets": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "pet_id": 1
+      },
+      "name": "pet_id_1",
+      "unique": true
+    }
+  ],
+  "eduplatform.users": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "email": 1
+      },
+      "name": "email_1",
+      "unique": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "username": 1
+      },
+      "name": "username_1",
+      "unique": true
+    }
+  ],
+  "eduplatform.quiz_attempts": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1
+      },
+      "name": "user_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "quiz_type": 1
+      },
+      "name": "quiz_type_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "attempted_at": -1
+      },
+      "name": "user_id_1_attempted_at_-1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "quiz_type": 1
+      },
+      "name": "user_id_1_quiz_type_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "attempted_at": 1
+      },
+      "name": "quiz_attempts_ttl",
+      "expireAfterSeconds": 7776000
+    }
+  ],
+  "eduplatform.flashcards": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "qr_id": 1
+      },
+      "name": "qr_id_1",
+      "unique": true
+    },
+    {
+      "v": 2,
+      "key": {
+        "category": 1
+      },
+      "name": "category_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "difficulty": 1
+      },
+      "name": "difficulty_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "is_active": 1
+      },
+      "name": "is_active_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "deck_id": 1,
+        "created_at": 1
+      },
+      "name": "deck_id_1_created_at_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "teacher_id": 1
+      },
+      "name": "teacher_id_1"
+    }
+  ],
+  "eduplatform.redis_cache": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "cache_key": 1
+      },
+      "name": "cache_key_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "cache_type": 1
+      },
+      "name": "cache_type_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "cache_type": 1,
+        "expires_at": 1
+      },
+      "name": "cache_type_1_expires_at_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "cache_type": 1,
+        "created_at": 1
+      },
+      "name": "cache_type_1_created_at_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "expires_at": 1
+      },
+      "name": "cache_ttl",
+      "expireAfterSeconds": 0
+    }
+  ],
+  "eduplatform.feedback_templates": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "category": 1
+      },
+      "name": "category_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "language": 1
+      },
+      "name": "language_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "is_active": 1
+      },
+      "name": "is_active_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "category": 1,
+        "language": 1,
+        "is_active": 1
+      },
+      "name": "category_1_language_1_is_active_1"
+    }
+  ],
+  "eduplatform.flashcard_editor": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "flashcard_id": 1
+      },
+      "name": "flashcard_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "created_by": 1
+      },
+      "name": "created_by_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "created_at": -1
+      },
+      "name": "created_at_-1"
+    }
+  ],
+  "eduplatform.session_logs": [
+    {
+      "v": 2,
+      "key": {
+        "_id": 1
+      },
+      "name": "_id_"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1
+      },
+      "name": "user_id_1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "user_id": 1,
+        "started_at": -1
+      },
+      "name": "user_id_1_started_at_-1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "active_topic": 1,
+        "started_at": -1
+      },
+      "name": "active_topic_1_started_at_-1"
+    },
+    {
+      "v": 2,
+      "key": {
+        "started_at": 1
+      },
+      "name": "session_logs_ttl",
+      "expireAfterSeconds": 2592000
+    }
+  ]
+}

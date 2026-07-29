@@ -1,0 +1,182 @@
+PROJECT METADATA,,
+Project Name,AR Food Education App - Engine Build,
+Project ID,AR-EDU-2026-001,
+Start Date,2026-07-25,
+Target Completion,2026-08-19,
+Total Working Days,20,
+Mac Day,2026-08-07 (Day 13),
+Project Manager,Me,
+Status,Active,
+Demo Date,2026-08-19,
+Demo Type,Local iOS only,
+Stack,"React Native + Unity 6.0 + ARFoundation 6.3.5",
+,
+
+=== SECTION 1: MILESTONES ===
+Milestone_ID,Milestone_Name,Target_Date,Done,%_Complete,Status,Dependencies,Risk_Level,Sign_Off,Notes
+M0,Foundation Audit,2026-07-25,FALSE,0,Not Started,None,Green,FALSE,Day 1 gate
+M1,Foundation Complete,2026-07-27,FALSE,0,Not Started,M0,Green,FALSE,Day 2 gate
+M2,Unity AR Working,2026-07-29,FALSE,0,Not Started,M1,Green,FALSE,Day 4 gate
+M3,Bridge Functional,2026-07-31,FALSE,0,Not Started,M2,Green,FALSE,Day 6 gate
+M4,API Integrated,2026-08-03,FALSE,0,Not Started,M3,Green,FALSE,Day 8 gate
+M5,UI Complete,2026-08-05,FALSE,0,Not Started,M4,Green,FALSE,Day 10 gate
+M6,Code Freeze,2026-08-09,FALSE,0,Not Started,M5,Green,FALSE,Day 12 gate
+M7,Demo Ready,2026-08-19,FALSE,0,Not Started,M6,Green,FALSE,Day 20 final
+,
+
+=== SECTION 2: REQUIREMENTS (Priority Order) ===
+Req_ID,Category,Requirement_Description,Priority,MoSCoW,Status,Done,Verification_Method,Notes
+REQ-001,Functional,"RN App shall launch to a Home screen with 3 lesson cards",Critical,Must,Not Started,FALSE,Manual test on iOS,
+REQ-002,Functional,"App shall scan for AR image targets using ARKit",Critical,Must,Not Started,FALSE,Scan elephant printout,
+REQ-003,Functional,"On image detection, Unity shall spawn 3D elephant model",Critical,Must,Not Started,FALSE,Visual confirmation,
+REQ-004,Functional,"On detection, jungle scene shall appear around elephant",Critical,Must,Not Started,FALSE,Visual confirmation,
+REQ-005,Functional,"User shall see word + translation overlay in RN",Critical,Must,Not Started,FALSE,Visual confirmation,
+REQ-006,Functional,"RN ↔ Unity bridge shall pass messages both directions",Critical,Must,Not Started,FALSE,Test bridge,
+REQ-007,Functional,"App shall fetch food data from web API",Critical,Must,Not Started,FALSE,curl API endpoint,
+REQ-013,Non-Functional,"App shall not crash during 5-min demo",Critical,Must,Not Started,FALSE,5-min stress test,
+REQ-014,Non-Functional,"Code shall compile without errors on Mac Day",Critical,Must,Not Started,FALSE,Xcode build success,
+REQ-015,Non-Functional,"iOS .ipa shall install via Xcode",Critical,Must,Not Started,FALSE,Xcode install,
+REQ-016,Technical,"Use Unity 6.0 (6000.3.20f1)",Critical,Must,Not Started,FALSE,Check Editor version,
+REQ-017,Technical,"Use ARFoundation 6.3.5",Critical,Must,Not Started,FALSE,Check manifest.json,
+REQ-019,Technical,"GLBLoader.cs shall exist and parse .glb files",Critical,Must,Not Started,FALSE,Unity Console clean,MISSING - must create
+REQ-020,Technical,"ModelSpawner.cs shall instantiate prefabs on image track",Critical,Must,Not Started,FALSE,Elephant spawns,MISSING - must create
+REQ-021,Technical,"AnimationController.cs shall play walk/idle anims",Critical,Must,Not Started,FALSE,Anim plays,MISSING - must create
+REQ-022,Technical,"iOS Swift bridge shall connect RN to Unity",Critical,Must,Not Started,FALSE,Bridge test,MISSING - must create
+REQ-029,Demo,"Demo video (3 min) shall be recorded as backup",Critical,Must,Not Started,FALSE,Video file exists,
+REQ-030,Demo,"Slides (5-7) shall explain architecture",Critical,Must,Not Started,FALSE,Slides file,
+REQ-033,Demo,"Printed elephant image shall be on hand",Critical,Must,Not Started,FALSE,Print,
+REQ-008,Functional,"On elephant tap, nutrition info shall display",High,Should,Not Started,FALSE,Tap to show data,
+REQ-010,Functional,"App shall handle no-internet state gracefully",High,Should,Not Started,FALSE,Turn off WiFi test,
+REQ-012,Non-Functional,"AR tracking shall lock onto image within 2 seconds",High,Should,Not Started,FALSE,Timer from detect to spawn,
+REQ-018,Technical,"Use React Native 0.73+",High,Should,Not Started,FALSE,Check package.json,
+REQ-023,Technical,"API service shall use fetch with error handling",High,Should,Not Started,FALSE,API call works,
+REQ-024,UX,"Home screen shall display lesson cards in grid",High,Should,Not Started,FALSE,Visual,
+REQ-027,UX,"AR camera shall have close button to exit",High,Should,Not Started,FALSE,Tap close,
+REQ-031,Demo,"Demo script shall be rehearsed (3x)",High,Should,Not Started,FALSE,Practice run,
+REQ-032,Demo,"Backup iPhone shall be charged and ready",High,Should,Not Started,FALSE,Charge + test,
+REQ-009,Functional,"Audio shall play when elephant spawns",Medium,Should,Not Started,FALSE,Listen for audio,
+REQ-011,Non-Functional,"App shall load Home screen in < 3 seconds",Medium,Should,Not Started,FALSE,Timer test,
+REQ-025,UX,"Loading state shall show spinner during fetch",Medium,Should,Not Started,FALSE,Visual,
+REQ-026,UX,"Error state shall show retry button",Medium,Should,Not Started,FALSE,Visual,
+REQ-034,Demo,"README shall explain how to run the app",Medium,Should,Not Started,FALSE,README exists,
+REQ-028,UX,"Nutrition info shall animate in (fade)",Low,Could,Not Started,FALSE,Visual,
+,
+
+=== SECTION 3: WBS TASKS (Priority Order) ===
+WBS_ID,Task_Name,Description,Priority,Effort_Hours,Start_Date,End_Date,Predecessors,Done,Status,Blockers,Milestone,Notes
+1.1,Verify Unity 6.0 installed,Check Unity Hub for 6000.3.20f1,Critical,0.5,2026-07-25,2026-07-25,,FALSE,Not Started,,M0,
+1.2,Run npm install in mobile/,Install RN deps,Critical,1,2026-07-25,2026-07-25,,FALSE,Not Started,,M0,
+1.3,Capture user inputs U-1 to U-10,Get API URL and key info,Critical,1,2026-07-25,2026-07-25,,FALSE,Not Started,,M0,
+2.1,Verify ARFoundation 6.3.5,Check manifest.json,Critical,0.25,2026-07-27,2026-07-27,1.0,FALSE,Not Started,,M1,
+2.2,Verify RuntimeImageTrackingPOC.cs,Check AF6 API usage,Critical,0.5,2026-07-27,2026-07-27,2.1,FALSE,Not Started,,M1,
+2.3,Verify ARSessionManager.cs,Check AF6 API usage,Critical,0.5,2026-07-27,2026-07-27,2.1,FALSE,Not Started,,M1,
+2.4,Verify AnchorManager.cs,Check AF6 API usage,Critical,0.5,2026-07-27,2026-07-27,2.1,FALSE,Not Started,,M1,
+2.5,Verify PlaneDetection.cs,Check AF6 API usage,Critical,0.5,2026-07-27,2026-07-27,2.1,FALSE,Not Started,,M1,
+2.7,Create GLBLoader.cs,NEW - parse .glb files,Critical,3,2026-07-28,2026-07-28,2.1,FALSE,Not Started,,M1,MISSING
+2.8,Create ModelSpawner.cs,NEW - instantiate prefabs,Critical,2,2026-07-28,2026-07-28,2.7,FALSE,Not Started,,M1,MISSING
+2.9,Create AnimationController.cs,NEW - play animations,Critical,2,2026-07-28,2026-07-28,2.8,FALSE,Not Started,,M1,MISSING
+2.10,Test AR on iPhone,Print elephant scan,Critical,3,2026-07-29,2026-07-29,2.9,FALSE,Not Started,,M2,
+3.1,Update RNMessageReceiver.cs,Unity 6.x API,Critical,1,2026-07-30,2026-07-30,2.0,FALSE,Not Started,,M3,
+3.2,Update RNEventEmitter.cs,Unity 6.x API,Critical,1,2026-07-30,2026-07-30,2.0,FALSE,Not Started,,M3,
+3.3,Create iOS Swift bridge,RNMessageReceiverBridge.swift,Critical,3,2026-07-30,2026-07-30,3.1,FALSE,Not Started,,M3,MISSING
+3.4,Test RN→Unity send message,One-way bridge test,Critical,2,2026-07-31,2026-07-31,3.3,FALSE,Not Started,,M3,
+3.5,Test Unity→RN send message,Other-way bridge test,Critical,2,2026-07-31,2026-07-31,3.4,FALSE,Not Started,,M3,
+4.1,Get API base URL from user,Confirm endpoint,Critical,0.5,2026-08-01,2026-08-01,,FALSE,Not Started,,M4,API URL needed
+4.2,Test API with curl,Verify endpoint works,Critical,0.5,2026-08-01,2026-08-01,4.1,FALSE,Not Started,,M4,
+4.3,Create api.ts service,RN fetch wrapper,Critical,2,2026-08-01,2026-08-01,4.1,FALSE,Not Started,,M4,
+4.4,Wire Home screen to API,Fetch and display,Critical,3,2026-08-02,2026-08-02,4.3,FALSE,Not Started,,M4,
+6.2,Mac Day - Unity iOS build,Generate Xcode project,Critical,3,2026-08-07,2026-08-07,6.1,FALSE,Not Started,Mac required,M6,
+6.3,Mac Day - Xcode build,Compile to .ipa,Critical,2,2026-08-07,2026-08-07,6.2,FALSE,Not Started,Mac required,M6,
+6.4,Install on iPhone,Xcode local install,Critical,1,2026-08-07,2026-08-07,6.3,FALSE,Not Started,,M6,
+6.5,Smoke test on device,Run app scan test,Critical,1,2026-08-07,2026-08-07,6.4,FALSE,Not Started,,M6,
+7.1,Bug fixes from on-device test,Fix top 5 bugs,Critical,4,2026-08-08,2026-08-08,6.5,FALSE,Not Started,,M7,
+7.6,Print elephant image,Test target,Critical,1,2026-08-18,2026-08-18,,FALSE,Not Started,,M7,
+7.7,Final defense,Present to committee,Critical,2,2026-08-19,2026-08-19,7.5,FALSE,Not Started,,M7,
+1.4,Confirm Mac Day booked,Schedule 1 Mac day,High,0.5,2026-07-25,2026-07-25,,FALSE,Not Started,,M0,
+2.6,Verify ARGestureHandler.cs,Check gesture handling,High,1,2026-07-27,2026-07-27,2.1,FALSE,Not Started,,M1,
+4.5,Add loading state,Spinner component,High,1,2026-08-02,2026-08-02,4.4,FALSE,Not Started,,M4,
+4.6,Add error state,Retry button,High,1,2026-08-03,2026-08-03,4.5,FALSE,Not Started,,M4,
+5.1,Home screen layout,Grid of cards,High,2,2026-08-04,2026-08-04,4.4,FALSE,Not Started,,M5,
+5.2,AR camera screen,Unity container,High,3,2026-08-04,2026-08-04,5.1,FALSE,Not Started,,M5,
+5.3,Food details screen,Nutrition display,High,2,2026-08-05,2026-08-05,5.2,FALSE,Not Started,,M5,
+5.4,Add navigation,React Navigation,High,2,2026-08-05,2026-08-05,5.3,FALSE,Not Started,,M5,
+6.1,Pre-Mac prep,Sync code to repo,High,1,2026-08-06,2026-08-06,5.0,FALSE,Not Started,,M6,
+7.2,Record demo video (3 min),Backup video,High,2,2026-08-10,2026-08-10,7.1,FALSE,Not Started,,M7,
+7.4,Create slides (5-7),Architecture + demo,High,3,2026-08-15,2026-08-15,7.2,FALSE,Not Started,,M7,
+7.5,Rehearse demo (3x),Practice run,High,2,2026-08-18,2026-08-18,7.4,FALSE,Not Started,,M7,
+5.5,Style polish,Basic CSS,Medium,1,2026-08-05,2026-08-05,5.4,FALSE,Not Started,,M5,
+7.3,Write README,How to run,Medium,2,2026-08-12,2026-08-12,7.1,FALSE,Not Started,,M7,
+,
+
+=== SECTION 4: DAILY CHECKLIST (Day 1-20) ===
+Day,Date,Day_Name,Focus_Area,Tasks_Today,Done,Hours_Logged,Blockers,EOD_Status,Milestone
+1,2026-07-25,Saturday,Foundation,"Verify Unity; npm install; capture inputs; book Mac Day; print elephant",FALSE,0,,,M0
+2,2026-07-27,Monday,Unity Foundation,"Verify manifest.json; verify 5 C# scripts",FALSE,0,,,M1
+3,2026-07-28,Tuesday,Unity Scripts,"Create GLBLoader; create ModelSpawner; create AnimationController",FALSE,0,,,M1
+4,2026-07-29,Wednesday,AR Test,"Open Unity; check Console; test AR on iPhone with elephant printout",FALSE,0,,,M2
+5,2026-07-30,Thursday,Bridge,"Update RNMessageReceiver; update RNEventEmitter; create iOS Swift bridge",FALSE,0,,,M3
+6,2026-07-31,Friday,Bridge Test,"Test RN→Unity; test Unity→RN; verify 2-way bridge",FALSE,0,,,M3
+7,2026-08-01,Saturday,API Setup,"Get API URL; test with curl; create api.ts; wire Home screen",FALSE,0,,,M4
+8,2026-08-02,Sunday,API Integration,"Add loading state; add error state; verify data flows",FALSE,0,,,M4
+9,2026-08-03,Monday,UI Screens,"Home screen; AR camera screen; Food details screen",FALSE,0,,,M5
+10,2026-08-04,Tuesday,UI Polish,"Add React Navigation; style polish; verify 3 screens",FALSE,0,,,M5
+11,2026-08-05,Wednesday,Code Freeze,"Final code review; commit to git; tag v1.0",FALSE,0,,,M6
+12,2026-08-06,Thursday,Pre-Mac Prep,"Sync code; verify Mac access; pre-build check",FALSE,0,,,M6
+13,2026-08-07,Friday,Mac Day,"Unity iOS build; Xcode compile; install on iPhone; smoke test",FALSE,0,Mac required,,M6
+14,2026-08-08,Saturday,Bug Fixes,"Test on real device; fix top 5 bugs; re-test",FALSE,0,,,M7
+15,2026-08-10,Monday,Demo Video,"Record 3-min demo video; save as backup",FALSE,0,,,M7
+16,2026-08-12,Wednesday,README,"Write README; architecture doc; setup instructions",FALSE,0,,,M7
+17,2026-08-15,Saturday,Slides,"Create 5-7 slides; architecture diagram; demo flow",FALSE,0,,,M7
+18,2026-08-18,Tuesday,Rehearsal,"Practice demo 3x; print elephant; charge spare phone",FALSE,0,,,M7
+19,2026-08-19,Wednesday,Final Prep,"Charge all devices; backup iPhone ready; video ready",FALSE,0,,,M7
+20,2026-08-19,Wednesday,Defense,"Present to committee; demo live; answer questions",FALSE,0,,,M7
+,
+
+=== SECTION 5: RISK REGISTER (Priority Order) ===
+Risk_ID,Risk_Description,Category,Probability,Impact,Risk_Score,Mitigation_Strategy,Contingency_Plan,Owner,Status,Notes
+R-016,Missing C# scripts not discovered,Technical,High,Critical,Critical,"Inventory repo Day 1; create GLBLoader/ModelSpawner/AnimationController Day 3",Use placeholder scripts,Me,Open,Known gap
+R-014,Time overrun on critical path,Schedule,High,High,High,"Daily standups; early escalation","Cut scope to 1 model only",Me,Open,Most likely risk
+R-017,Bugs found late in Mac Day,Technical,High,High,High,"Pre-Mac prep on Day 12","Patch and ship anyway",Me,Open,
+R-002,Mac not available for build,Schedule,Medium,Critical,High,"Book Mac Day now; have backup Mac identified","Skip iOS build use Android",Me,Open,Critical gate
+R-003,API URL not provided,External,Medium,Critical,High,"Ask user for U-1 on Day 1","Use mock data with hardcoded responses",Me,Open,Blocker for Day 7
+R-008,iOS code signing fails,Technical,Medium,Critical,High,"Set up Apple ID Day 1; verify certs","Use development cert workaround",Me,Open,Mac Day critical
+R-011,Unity-RN bridge doesn't communicate,Technical,Medium,Critical,High,"Test bridge Day 6 with simple message","Use deep linking as fallback",Me,Open,Critical for demo
+R-012,iOS .ipa install fails on device,Technical,Medium,Critical,High,"Test install Day 7 immediately","Use simulator for demo",Me,Open,
+R-013,App crashes during demo,Technical,Medium,Critical,High,"Stress test Day 14; record backup video","Show video instead of live demo",Me,Open,Critical
+R-018,Build environment misconfigured,Technical,Medium,Critical,High,"Test build Day 3 to fail fast","Rebuild from scratch",Me,Open,
+R-001,Unity 6000.3.20f1 not installed,Technical,Low,Critical,Medium,"Install via Unity Hub early on Day 1",Use alternative version,Me,Open,Low risk - quick fix
+R-004,API endpoint changes during sprint,External,Low,High,Medium,"Lock API spec before Day 7","Use cached response data",Me,Open,
+R-005,Elephant .glb model incompatible,Technical,Low,High,Medium,"Test import in Unity Day 1","Use cube primitive as fallback",Me,Open,Quick check Day 1
+R-006,Jungle scene missing or broken,Technical,Low,High,Medium,"Verify scene exists Day 1","Use simple plane background",Me,Open,
+R-007,ARFoundation 6.3.5 package not resolving,Technical,Low,Critical,Medium,"Verify manifest.json Day 2","Downgrade to 6.3.4",Me,Open,
+R-009,iPhone device not available,Resource,Low,Critical,Medium,"Confirm iPhone + iOS version Day 1","Borrow friend's iPhone",Me,Open,Required for testing
+R-010,ARKit not supported on test device,Technical,Low,Critical,Medium,"Check device compatibility Day 1","Use Android with ARCore instead",Me,Open,Need A12+ chip
+R-015,Scope creep mid-sprint,Schedule,Medium,Medium,Medium,"Lock scope at M6 code freeze","Reject new features",Me,Open,
+R-019,Egypt timezone conflict for support,External,Low,Low,Low,"Plan ahead; batch questions","Proceed with defaults",Me,Open,
+R-020,Printer not available for elephant image,Resource,Low,Medium,Low,"Confirm printer Day 1","Print at copy shop",Me,Open,Required Day 18
+,
+
+=== SECTION 6: STATUS UPDATE LOG (Fill Daily) ===
+Date,Milestone,Status,Hours_Logged,Blockers,Next_Day_Plan
+2026-07-25,M0,,,, 
+2026-07-27,M1,,,, 
+2026-07-28,M1,,,, 
+2026-07-29,M2,,,, 
+2026-07-30,M3,,,, 
+2026-07-31,M3,,,, 
+2026-08-01,M4,,,, 
+2026-08-02,M4,,,, 
+2026-08-03,M5,,,, 
+2026-08-04,M5,,,, 
+2026-08-05,M6,,,, 
+2026-08-06,M6,,,, 
+2026-08-07,M6,,,, 
+2026-08-08,M7,,,, 
+2026-08-10,M7,,,, 
+2026-08-12,M7,,,, 
+2026-08-15,M7,,,, 
+2026-08-18,M7,,,, 
+2026-08-19,M7,,,, 
+,
+
+=== END OF FILE ===

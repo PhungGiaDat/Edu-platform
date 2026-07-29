@@ -81,3 +81,44 @@ After reviewing, output a structured **Issue List**:
 - **Critical** — Security vulnerabilities, data loss, breaking bugs — MUST FIX
 - **Important** — Performance issues, maintainability — SHOULD FIX
 - **Suggestion** — Style improvements, minor optimizations — NICE TO HAVE
+
+---
+
+## Claymorphic Compliance Checklist (REQ-CLAY-001)
+
+> **Source of truth:** `docs/superpowers/plans/2026-07-25-courses-pets-rn-migration-plan.md` §Design System + §12. **Required by:** WBS 2.0 of `docs/pm-excel/COURSES_PETS_MIGRATION_TRACKER.xlsx` and **REQ-CLAY-001** (Critical, Must).
+
+Run **all** of the following checks on every PR that modifies `mobile/rn/src/screens/**`, `mobile/rn/src/components/**`, or `mobile/rn/src/components/pets/**`. Each item is **blocking** unless explicitly waived by the orchestrator.
+
+### Static checks (run as part of the review)
+
+1. **No raw `<View style={{ backgroundColor: '#xxx' }}` colors.** Grep `mobile/rn/src` for `backgroundColor: '#[0-9a-fA-F]{3,6}'` and `color: '#[0-9a-fA-F]{3,6}'`. The only allowed files are `mobile/rn/src/design/tokens.ts` and the three clay primitives (`ClayCard`, `ClayButton`, `ClayProgressBar`).
+2. **No raw inline shadows.** Every `shadow*` property must originate from `SHADOWS.claySm | clayMd | clayLg` or `CLAY_TONE_SHADOWS[*].*`. Reject any file that hand-rolls `shadowOffset`, `shadowOpacity`, `shadowRadius`, or `elevation` outside `tokens.ts` and the clay primitives.
+3. **Pet rarity color comes from `RARITY_COLORS`.** Every `PetCard` / `PetCollectionCard` / `PetGrid` consumer must read `RARITY_COLORS[pet.rarity]`. Reject hardcoded `#9CA3AF`, `#60A5FA`, `#A78BFA`, `#FBBF24`, or any equivalent palette literal.
+4. **Pet evolution uses `STAGE_GRADIENTS` + `EVOLUTION_EMOJI`.** Every `PetEvolutionToast` / `EvolutionModal` / stage indicator must use `STAGE_GRADIENTS[stage]` and `EVOLUTION_EMOJI[stage]`. Reject hardcoded gradients or emoji constants.
+5. **Course category color comes from `CATEGORY_COLORS`.** Every `CourseCard` / `CourseHero` / category chip must read `CATEGORY_COLORS[course.category_key]` (fall back to `home_family` if unknown). Reject hardcoded `#FFF1D7`, `#EAF5FF`, `#EEF9E7`, `#FFE7E3`.
+6. **Pet care stat colors come from `CARE_STAT_COLORS`.** Every `ProgressBar` (happiness/energy/hunger) consumer must read `CARE_STAT_COLORS.{happiness|energy|hunger|xp|streak}`. Reject `'#5B8DEF'`, `'#7BC67E'`, `'#FFB347'`, `'#FF9F9F'`.
+7. **Animation timings use `MOTION` / `CLAYMORPHIC_SPRINGS`.** Every `withTiming`, `withSpring`, `withDelay`, or `Animated.timing` call must use the matching preset. Reject magic numbers like `duration: 500` without a token reference.
+8. **No new visual primitives.** Reject any new file under `mobile/rn/src/components/` that imports `expo-blur`, `react-native-blur`, `MaskedViewIOS`, or hard-rolls a `LinearGradient` outside the clay primitives' highlight layers. Any new component must compose `ClayCard` / `ClayButton` / `ClayProgressBar` / `ProgressTracker` or use tokens directly.
+9. **No new font families.** Reject any `fontFamily` outside `FONT.primary`. Reject any new size outside `FONT.sizes`.
+10. **No new shadow presets.** Reject any new keys in `SHADOWS` or `CLAY_TONE_SHADOWS` unless the equivalent `frontend-web/src/design-tokens/claymorphic.ts` file is updated in the same PR.
+11. **Existing primitives are not modified.** `ClayCard`, `ClayButton`, `ClayProgressBar`, `ProgressTracker` public API must be unchanged. Reject PRs that add new props or change default behavior of these primitives.
+12. **No Unity/AR coupling.** `mobile/rn/src/screens/**` and `mobile/rn/src/components/**` (new files) must not import from `mobile/rn/src/bridge/**`, `mobile/rn/src/hooks/useARSession.ts`, `mobile/rn/src/components/UnityView.tsx`, or `mobile/rn/src/components/PetStatusOverlay.tsx`. Frozen-path CI guard also runs.
+
+### Visual checks (run on the iOS simulator build)
+
+13. **CourseListScreen** renders the same hero / path-card / stat-card composition as `frontend-web/src/pages/CourseList.tsx`.
+14. **CourseDetailScreen** hero card, lesson list, and "Start learning" / "Continue learning" CTA match the web CTAs.
+15. **PetsScreen** hero, gallery, evolution modal, and reward celebration match the web pages.
+16. **PetCard** rarity gradient + lock overlay + progress bar match the web `PetCard.tsx`.
+17. **RewardCelebration** clay modal matches the web reward modal (XP delta + sticker + badge).
+
+### Reporting
+
+Each failed check must be recorded as an `ISSUE-NNN` with severity:
+
+- **Critical** — any of items 1, 2, 3, 4, 5, 6, 8, 11, 12 (visual language violation).
+- **Important** — items 7, 9, 10 (token drift but visually equivalent).
+- **Suggestion** — items 13–17 (visual deltas from the web reference).
+
+The Reviewer must refuse to mark the WBS task "Done" until every Critical item is closed.
