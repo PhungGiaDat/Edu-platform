@@ -647,6 +647,7 @@ export default function LearnARV2() {
         comboTriggered,
         comboKey,
         comboResolution,
+        shouldUseComboMindUrl,
         shouldPrepareIndependentMulti,
         proximity: _proximity, // eslint-disable-line @typescript-eslint/no-unused-vars
         handleProximityDetected,
@@ -726,6 +727,32 @@ export default function LearnARV2() {
     const scannedTarget0 = flashcardSnapshot.card0;
     const scannedTarget1 = flashcardSnapshot.card1;
     const scannedTargets = Array.from(detectedFlashcards.values()).slice(0, MAX_AR_TRACKS);
+
+    // Effect: Use backend combo_mind_url directly (no merge needed)
+    useEffect(() => {
+        if (!shouldUseComboMindUrl || !comboMindUrl || !comboKey) return;
+
+        emitMobileDebug('COMBO_MIND_URL_FROM_BACKEND', {
+            comboKey,
+            comboMindUrl,
+            flashcardCount
+        });
+
+        // Use the backend-provided combo mind URL directly — no merge needed.
+        // This is the pre-built combo .mind file that contains both target images.
+        setMultiPreparation(prev => {
+            // Skip if already preparing or committed for this combo
+            if (prev.key === comboKey && prev.status !== 'idle') return prev;
+            return {
+                key: comboKey,
+                status: 'ready',
+                mindUrl: comboMindUrl,
+                mindBuffer: null, // Not using buffer — using URL directly
+                progress: 100,
+                error: null
+            };
+        });
+    }, [shouldUseComboMindUrl, comboMindUrl, comboKey, emitMobileDebug]);
 
     useEffect(() => {
         if (!shouldPrepareIndependentMulti || !comboKey || !scannedTarget0 || !scannedTarget1) return;
@@ -885,8 +912,11 @@ export default function LearnARV2() {
         !isComboViewer
     );
 
+    // Reset multiPreparation when comboKey changes or card count drops below 2
+    // Keep multiPreparation alive when in combo mode (either viewer or merging)
     useEffect(() => {
-        if (!isComboViewer && flashcardCount === 2 && comboKey === multiPreparation.key) return;
+        if (isComboViewer) return;
+        if (flashcardCount === 2 && comboKey === multiPreparation.key) return;
         // Operation id is no longer incremented here — the prepare effect owns
         // its own cancellation via `multiAbortRef`, and bumping it during the
         // cleanup window would race with the prepare's catch handler (see
@@ -908,8 +938,13 @@ export default function LearnARV2() {
         multiAbortRef.current?.abort();
     }, []);
 
-    const mindUrl = (isMultiViewer || comboResolution === 'found') && multiPreparation.mindUrl
-        ? multiPreparation.mindUrl
+    // Determine which mind URL to use:
+    // 1. Combo mode (isComboViewer) → use combo_mind_url from backend
+    // 2. Multi mode (isMultiViewer) → use merged mind buffer
+    // 3. Single card → use first card's mindUrl
+    const useMultiMind = (isMultiViewer || isComboViewer) && multiPreparation.status === 'committed';
+    const mindUrl = useMultiMind
+        ? (multiPreparation.mindBuffer ? 'runtime-buffer' : multiPreparation.mindUrl)
         : resolveMindUrl(scannedTarget0?.mindUrl || arData?.targets?.[0]?.nft_base_url);
 
     const comboTarget0 = scannedTarget0;
