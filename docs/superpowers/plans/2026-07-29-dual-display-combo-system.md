@@ -18,7 +18,9 @@
 - MindAR .mind file tracking (image targets, không phải NFT)
 - Single animation per combo model (no multiple animation switching)
 - Performance: 30+ FPS on mid-range mobile devices
-- Combo animals: elephant + dog, elephant + cat, elephant + giraffe, elephant + hippo
+- Combo animals: elephant, dog, cat, giraffe, hippo
+- Combo foods: banana, bone, fish, leaves, watermelon
+- Combo = 1 animal + 1 food
 
 ---
 
@@ -85,42 +87,52 @@ interface ComboDefinition {
 {
   "combos": [
     {
-      "combo_id": "elephant-dog",
-      "name": "Elephant and Dog",
-      "required_tags": ["elephant", "dog"],
-      "model_url": "https://example.com/models/elephant_dog.glb",
-      "image_url": "https://example.com/images/elephant_dog_combo.png",
-      "animation_clip": "idle",
-      "category": "animals",
-      "difficulty": "medium"
-    },
-    {
-      "combo_id": "elephant-cat",
-      "name": "Elephant and Cat",
-      "required_tags": ["elephant", "cat"],
-      "model_url": "https://example.com/models/elephant_cat.glb",
-      "image_url": "https://example.com/images/elephant_cat_combo.png",
-      "animation_clip": "idle",
+      "combo_id": "elephant-banana",
+      "name": "Elephant Eating Banana",
+      "required_tags": ["elephant", "banana"],
+      "model_url": "https://example.com/models/elephant_banana.glb",
+      "image_url": "https://example.com/images/elephant_banana_combo.png",
+      "animation_clip": "eating",
       "category": "animals",
       "difficulty": "easy"
     },
     {
-      "combo_id": "elephant-giraffe",
-      "name": "Elephant and Giraffe",
-      "required_tags": ["elephant", "giraffe"],
-      "model_url": "https://example.com/models/elephant_giraffe.glb",
-      "image_url": "https://example.com/images/elephant_giraffe_combo.png",
-      "animation_clip": "idle",
+      "combo_id": "dog-bone",
+      "name": "Dog Chewing Bone",
+      "required_tags": ["dog", "bone"],
+      "model_url": "https://example.com/models/dog_bone.glb",
+      "image_url": "https://example.com/images/dog_bone_combo.png",
+      "animation_clip": "chewing",
+      "category": "animals",
+      "difficulty": "easy"
+    },
+    {
+      "combo_id": "cat-fish",
+      "name": "Cat Eating Fish",
+      "required_tags": ["cat", "fish"],
+      "model_url": "https://example.com/models/cat_fish.glb",
+      "image_url": "https://example.com/images/cat_fish_combo.png",
+      "animation_clip": "eating",
+      "category": "animals",
+      "difficulty": "easy"
+    },
+    {
+      "combo_id": "giraffe-leaves",
+      "name": "Giraffe Eating Leaves",
+      "required_tags": ["giraffe", "leaves"],
+      "model_url": "https://example.com/models/giraffe_leaves.glb",
+      "image_url": "https://example.com/images/giraffe_leaves_combo.png",
+      "animation_clip": "eating",
       "category": "animals",
       "difficulty": "medium"
     },
     {
-      "combo_id": "elephant-hippo",
-      "name": "Elephant and Hippo",
-      "required_tags": ["elephant", "hippo"],
-      "model_url": "https://example.com/models/elephant_hippo.glb",
-      "image_url": "https://example.com/images/elephant_hippo_combo.png",
-      "animation_clip": "idle",
+      "combo_id": "hippo-watermelon",
+      "name": "Hippo Eating Watermelon",
+      "required_tags": ["hippo", "watermelon"],
+      "model_url": "https://example.com/models/hippo_watermelon.glb",
+      "image_url": "https://example.com/images/hippo_watermelon_combo.png",
+      "animation_clip": "eating",
       "category": "animals",
       "difficulty": "hard"
     }
@@ -128,7 +140,7 @@ interface ComboDefinition {
 }
 ```
 
-**Note:** MindAR uses `.mind` files for image target tracking. Each animal (elephant, dog, cat, giraffe, hippo) được scan qua flashcard riêng. Khi 2 flashcards (ví dụ elephant + dog) được quét, system sẽ check combo và hiển thị model kết hợp.
+**Note:** MindAR uses `.mind` files for image target tracking. User có 5 animal flashcards (elephant, dog, cat, giraffe, hippo) và 5 food flashcards (banana, bone, fish, leaves, watermelon). Khi 1 animal flashcard + 1 food flashcard được quét, system check combo và hiển thị animal đang ăn food đó.
 ```
 
 - [ ] **Step 2: Create types.ts for combo**
