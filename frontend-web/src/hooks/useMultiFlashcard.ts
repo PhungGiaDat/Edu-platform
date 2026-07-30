@@ -323,6 +323,10 @@ export function useMultiFlashcard() {
             return null;
         }
 
+        // NOTE: Category validation is handled by backend in check_combo().
+        // If categories differ and cross_category_allowed=False, backend returns null.
+        // So we proceed to combo check and let backend reject if needed.
+        
         if (snapshot.comboResolution.key === comboKey && snapshot.comboResolution.status !== 'idle') return null;
 
         emitArDebug('COMBO_LOOKUP_STARTED', { arTags, comboKey });
@@ -342,19 +346,18 @@ export function useMultiFlashcard() {
             }
 
             const data = await response.json();
+            
+            // FIX: Only set comboMindUrl when combo is FOUND
+            // Previously we set it even when not_found, causing shouldUseComboMindUrl 
+            // to trigger incorrectly (loading combo .mind while using individual minds)
             if (!data.found || !data.combo) {
-                // Always extract combo_mind_url from backend response — even when combo
-                // is not found locally, the backend may have pre-built combo mind files.
-                // We store it so LearnARV2 can decide to use it instead of merging.
-                const backendMindUrl = data.combo?.combo_mind_url
-                    ? buildUrl(data.combo.combo_mind_url) || null
-                    : null;
-                emitArDebug('COMBO_RESOLUTION_CHANGED', { comboKey, status: 'not_found', backendMindUrl });
+                emitArDebug('COMBO_RESOLUTION_CHANGED', { comboKey, status: 'not_found' });
                 setState(prev => prev.comboResolution.key !== comboKey ? prev : ({
                     ...prev,
                     isCheckingCombo: false,
-                    // Store backend combo_mind_url even if combo not found locally
-                    comboMindUrl: backendMindUrl ?? prev.comboMindUrl,
+                    // Do NOT set comboMindUrl here - keep it null
+                    // This ensures shouldUseComboMindUrl = false and shouldPrepareIndependentMulti = true
+                    comboMindUrl: null,
                     comboResolution: { key: comboKey, status: 'not_found' }
                 }));
                 return null;
@@ -721,10 +724,13 @@ export function useMultiFlashcard() {
         hasCombo: !!state.activeCombo,
         isMultiMode: state.mode === 'MULTI' || state.mode === 'COMBO' || state.mode === 'PROXIMITY_COMBO',
         isProximityCombo: state.mode === 'PROXIMITY_COMBO',
-        // Use backend combo_mind_url when available — no merge needed
+        // Use backend combo_mind_url ONLY when combo is actually found
+        // Safety check: require both comboMindUrl AND confirmed 'found' status
         shouldUseComboMindUrl: state.detectedFlashcards.size === 2 &&
-            state.comboMindUrl !== null,
+            state.comboMindUrl !== null &&
+            state.comboResolution.status === 'found',
         // Fallback: merge 2 separate .mind files only when no combo_mind_url from backend
+        // AND combo check returned not_found/rejected/error (meaning no valid combo exists)
         shouldPrepareIndependentMulti: state.detectedFlashcards.size === 2 &&
             state.comboResolution.key !== null &&
             state.comboMindUrl === null &&

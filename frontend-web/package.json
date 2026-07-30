@@ -44,6 +44,7 @@
     "@types/three": "^0.158.3",
     "@vitejs/plugin-react": "^4.6.0",
     "autoprefixer": "^10.4.21",
+    "canvas": "^3.2.3",
     "concurrently": "^9.2.1",
     "eslint": "^9.30.1",
     "eslint-plugin-react-hooks": "^5.2.0",

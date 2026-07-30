@@ -15,6 +15,11 @@ import {
     createMessage,
     normalizeMessage
 } from '@/core/types/ARMessages';
+import { useDualDisplay } from '@/hooks/useDualDisplay';
+import { useComboDetection } from '@/hooks/useComboDetection';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
+import { dualDisplayManager } from '@/runtime/DualDisplayManager';
+import { ComboDefinition } from '@/lib/combo/types';
 
 // ========== TYPES ==========
 export type ARPhase = 'IDLE' | 'SCANNING' | 'LOADING' | 'VIEWING' | 'ERROR'
@@ -47,6 +52,10 @@ interface ARContainerV2Props {
     onModelClick?: (modelId: string, targetIndex?: number) => void;
     onComboDetected?: (targets: number[]) => void;
     onViewerAssetError?: (data: { code?: string; error: string; url?: string }) => void;
+    // Dual display props
+    onComboActivated?: (combo: ComboDefinition) => void;
+    onComboDeactivated?: () => void;
+    onDualDisplayModeChange?: (mode: 'single' | 'dual' | 'combo') => void;
     children?: React.ReactNode;
 }
 
@@ -102,11 +111,34 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     onModelClick,
     onComboDetected,
     onViewerAssetError,
+    onComboActivated,
+    onComboDeactivated,
+    onDualDisplayModeChange,
     children
 }) => {
     const [phase, setPhase] = useState<ARPhase>(initialPhase);
     const [error, setError] = useState<string | null>(null);
     const [isReady, setIsReady] = useState(false);
+
+    // Dual display hooks
+    const {
+        displayMode,
+        isCombo,
+        getDisplayInfo,
+    } = useDualDisplay();
+
+    const {
+        hasActiveCombo,
+        activeCombo: combo,
+    } = useComboDetection();
+
+    const {
+        fps,
+        isHealthy,
+    } = usePerformanceMonitor();
+
+    // Get combo info from store
+    const comboData = getDisplayInfo();
 
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const pipRef = useRef<HTMLIFrameElement>(null);
@@ -143,7 +175,10 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         onModelClick,
         onComboDetected,
         onViewerAssetError,
-        onPhaseChange
+        onPhaseChange,
+        onComboActivated,
+        onComboDeactivated,
+        onDualDisplayModeChange
     });
 
     useEffect(() => {
@@ -154,9 +189,12 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             onModelClick,
             onComboDetected,
             onViewerAssetError,
-            onPhaseChange
+            onPhaseChange,
+            onComboActivated,
+            onComboDeactivated,
+            onDualDisplayModeChange
         };
-    }, [onQRDetected, onTargetFound, onTargetLost, onModelClick, onComboDetected, onViewerAssetError, onPhaseChange]);
+    }, [onQRDetected, onTargetFound, onTargetLost, onModelClick, onComboDetected, onViewerAssetError, onPhaseChange, onComboActivated, onComboDeactivated, onDualDisplayModeChange]);
 
     const transitionTo = useCallback((newPhase: ARPhase) => {
         if (newPhase === phase) return;
@@ -294,7 +332,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             onTargetFound: cbFound,
             onTargetLost: cbLost,
             onModelClick: cbClick,
-            onComboDetected: cbCombo
+            onComboDetected: cbCombo,
+            onComboActivated: cbComboActivated,
         } = callbacksRef.current;
 
         switch (type) {
@@ -364,6 +403,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 });
                 cbFound?.(data.targetIndex);
                 eventBus.emit(AREvent.MARKER_FOUND, { markerId: `target-${data.targetIndex}`, target: null } as any);
+
+                // Also notify dual display manager
+                dualDisplayManager.onMarkerFound(`target-${data.targetIndex}`);
                 break;
             }
 
@@ -376,6 +418,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 });
                 cbLost?.(data.targetIndex);
                 eventBus.emit(AREvent.MARKER_LOST, { markerId: `target-${data.targetIndex}` } as any);
+
+                // Also notify dual display manager
+                dualDisplayManager.onMarkerLost(`target-${data.targetIndex}`);
                 break;
             }
 
@@ -389,10 +434,20 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             case 'COMBO_DETECTED': {
                 const data = payload as ARMessagePayloadMap['COMBO_DETECTED'];
                 cbCombo?.(data.targets);
+
+                // Call dual display manager
+                dualDisplayManager.onMarkerFound(`target-${data.targets[0]}`);
+                dualDisplayManager.onMarkerFound(`target-${data.targets[1]}`);
+
                 eventBus.emit(AREvent.COMBO_ACTIVATED, {
                     tag1: `target-${data.targets[0]}`,
                     tag2: `target-${data.targets[1]}`
                 } as any);
+
+                // Call callback
+                if (hasActiveCombo && combo) {
+                    cbComboActivated?.(combo);
+                }
                 break;
             }
 
@@ -509,6 +564,26 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         }
     }, [phase, mindUrl, transitionTo]);
 
+    // Debug overlay for development
+    const debugOverlay = process.env.NODE_ENV === 'development' ? (
+        <div style={{
+            position: 'absolute',
+            top: 10,
+            left: 10,
+            background: 'rgba(0,0,0,0.7)',
+            color: 'white',
+            padding: 8,
+            borderRadius: 8,
+            fontSize: 12,
+            zIndex: 1000,
+        }}>
+            <div>FPS: {fps} {isHealthy ? 'OK' : 'WARN'}</div>
+            <div>Mode: {displayMode}</div>
+            {isCombo && <div>Combo: {combo?.name}</div>}
+            <div>Markers: {comboData.markerCount}</div>
+        </div>
+    ) : null;
+
     return (
         <div
             className="ar-container-v2"
@@ -550,6 +625,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
             {/* Overlays */}
             <div style={{ position: 'relative', zIndex: 100 }}>{children}</div>
+
+            {/* Debug overlay */}
+            {debugOverlay}
         </div>
     );
 };
