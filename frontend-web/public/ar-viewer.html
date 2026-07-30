@@ -64,6 +64,11 @@
             var params = new URLSearchParams(window.location.search);
             var runtimeMindUrl = null;
 
+            // Combo model parameters
+            var comboModelUrl = params.get('comboModel');
+            var comboAnimation = params.get('comboAnimation') || 'idle';
+            var comboImageUrl = params.get('comboImage');
+
             function postToParent(type, payload) {
                 window.parent.postMessage({
                     type: type,
@@ -121,6 +126,57 @@
                 });
             }
 
+            // Load combo model with animation
+            function loadComboModel(url, animationClip) {
+                var scene = document.querySelector('a-scene');
+                if (!scene || !url) return;
+
+                // Create combo entity
+                var comboEntity = document.createElement('a-entity');
+                comboEntity.setAttribute('id', 'combo-model');
+                comboEntity.setAttribute('gltf-model', url);
+                comboEntity.setAttribute('position', '0 0.5 0');
+                comboEntity.setAttribute('scale', '0.3 0.3 0.3');
+                comboEntity.setAttribute('visible', 'false');
+
+                // Add animation-mixer for GLTF animations
+                comboEntity.setAttribute('animation-mixer', 'clip: ' + animationClip + '; loop: repeat');
+
+                // Hide initially
+                scene.addEventListener('loaded', function() {
+                    comboEntity.setAttribute('visible', 'true');
+                });
+
+                // Add to scene
+                scene.appendChild(comboEntity);
+
+                console.log('✅ Combo model loaded with animation:', animationClip);
+                postToParent('AR_DEBUG', {
+                    label: 'COMBO_MODEL_LOADED',
+                    details: { url: url, animation: animationClip },
+                    source: 'ar-viewer'
+                });
+            }
+
+            // Update combo position based on marker positions
+            function updateComboPosition(marker1Pos, marker2Pos) {
+                var comboEntity = document.getElementById('combo-model');
+                if (!comboEntity) return;
+
+                // Calculate center
+                var centerX = (marker1Pos.x + marker2Pos.x) / 2;
+                var centerY = Math.max(marker1Pos.y, marker2Pos.y) + 0.3;
+                var centerZ = (marker1Pos.z + marker2Pos.z) / 2;
+
+                // Update position with animation
+                comboEntity.setAttribute('animation', {
+                    property: 'position',
+                    to: centerX + ' ' + centerY + ' ' + centerZ,
+                    dur: 300,
+                    easing: 'easeOutQuad'
+                });
+            }
+
             async function bootstrap() {
                 var requestedMind = params.get('mind') || '';
                 var mindUrl = requestedMind === 'runtime-buffer'
@@ -149,6 +205,40 @@
                 scene.setAttribute('mindar-image', config);
                 document.body.appendChild(scene);
                 await loadScript('/static/ar-assets/js/ar-viewer.js');
+
+                // Load combo model if URL params provided
+                if (comboModelUrl) {
+                    // Wait for scene to load before adding combo model
+                    scene.addEventListener('loaded', function() {
+                        loadComboModel(comboModelUrl, comboAnimation);
+                    });
+                }
+
+                // Listen for combo activation from parent
+                document.addEventListener('COMBO_ACTIVATED', function(e) {
+                    var comboEntity = document.getElementById('combo-model');
+                    if (comboEntity) {
+                        comboEntity.setAttribute('visible', 'true');
+                        postToParent('AR_DEBUG', {
+                            label: 'COMBO_ENTITY_SHOWN',
+                            details: e.detail || {},
+                            source: 'ar-viewer'
+                        });
+                    }
+                });
+
+                // Listen for combo deactivation
+                document.addEventListener('COMBO_DEACTIVATED', function(e) {
+                    var comboEntity = document.getElementById('combo-model');
+                    if (comboEntity) {
+                        comboEntity.setAttribute('visible', 'false');
+                        postToParent('AR_DEBUG', {
+                            label: 'COMBO_ENTITY_HIDDEN',
+                            details: e.detail || {},
+                            source: 'ar-viewer'
+                        });
+                    }
+                });
 
                 // ── Freeze Pose + Semantic Manager Integration ──────────────────────
                 var enableFreezePose = params.get('freezePose') === 'true';
