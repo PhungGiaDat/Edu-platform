@@ -4,7 +4,7 @@
     "name": "Animal Friends",
     "description": "Learn about animals in the jungle",
     "category": "animals",
-    "mind_file_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/animals_targets.mind",
+    "mind_file_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/assets/mind-files/animals_targets.mind",
     "target_map": {
       "0": "elephant_marker_01",
       "1": "shiba_marker_01"
@@ -16,7 +16,7 @@
     "name": "Yummy Fruits",
     "description": "Learn about different fruits",
     "category": "fruits",
-    "mind_file_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/fruits_targets.mind",
+    "mind_file_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/assets/mind-files/fruits_targets.mind",
     "target_map": {
       "0": "apple_marker_01",
       "1": "banana_marker_01"
@@ -28,7 +28,7 @@
     "name": "Nature Walk",
     "description": "Discover plants and trees",
     "category": "nature",
-    "mind_file_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/nature_targets.mind",
+    "mind_file_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/assets/mind-files/nature_targets.mind",
     "target_map": {
       "0": "palm_marker_01",
       "1": "tree_marker_01",
@@ -41,7 +41,7 @@
     "name": "Jungle Adventure",
     "description": "Elephant in the jungle - a special combo",
     "category": "combos",
-    "mind_file_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/combo_targets.mind",
+    "mind_file_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/assets/mind-files/combo_targets.mind",
     "target_map": {
       "0": "elephant_marker_01",
       "1": "jungle_marker_01"
