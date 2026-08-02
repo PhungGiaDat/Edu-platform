@@ -173,15 +173,28 @@ class Settings(BaseSettings):
         """Build the effective CORS origin list.
 
         Rules:
-        - ALLOWED_ORIGINS="*" is honored when it is the literal "*".
-          (Note: Starlette rejects "*" with allow_credentials=True; that's a
-          deployment-time concern, not a settings one.)
+        - ALLOWED_ORIGINS="*" is honored as the literal list ``["*"]`` ONLY when
+          no credentials are required. With ``allow_credentials=True`` the
+          browser blocks ``*`` (Starlette raises at startup too), so we always
+          narrow to the explicit list in that case.
         - Always include DEFAULT_FRONTEND_ORIGIN + the canonical Vercel origin.
         - When DEBUG=true, append the parsed DEV_ORIGINS list.
         - Order preserved, deduped.
         """
+        # When ALLOWED_ORIGINS is a literal "*" we honor the wildcard intent
+        # ONLY when no credentials are required. main.py always sets
+        # allow_credentials=True; treat that as the conservative default and
+        # narrow to the explicit list.
         if self.ALLOWED_ORIGINS.strip() == "*":
-            return ["*"]
+            explicit = [
+                self.DEFAULT_FRONTEND_ORIGIN.rstrip("/"),
+                "https://edu-platform-dun.vercel.app",
+            ]
+            if self.DEBUG:
+                explicit.extend(
+                    o.strip() for o in self.DEV_ORIGINS.split(",") if o.strip()
+                )
+            return list(dict.fromkeys(explicit))
 
         always = [
             self.DEFAULT_FRONTEND_ORIGIN.rstrip("/"),
