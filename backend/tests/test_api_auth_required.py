@@ -288,7 +288,8 @@ class TestTokenGeneration:
         from settings import settings
         
         token = create_access_token("user_123")
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        secret = settings.SECRET_KEY.get_secret_value()
+        payload = jwt.decode(token, secret, algorithms=[settings.ALGORITHM])
         
         assert payload["sub"] == "user_123"
         assert "exp" in payload

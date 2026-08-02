@@ -91,7 +91,8 @@ def create_access_token(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
     to_encode = {"exp": expire, "sub": str(subject)}
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    secret = settings.SECRET_KEY.get_secret_value()
+    encoded_jwt = jwt.encode(to_encode, secret, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
 # ========== Current User Dependency ==========
@@ -108,8 +109,9 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
+        secret = settings.SECRET_KEY.get_secret_value()
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token, secret, algorithms=[settings.ALGORITHM]
         )
         user_id: str = payload.get("sub")
         if user_id is None:
