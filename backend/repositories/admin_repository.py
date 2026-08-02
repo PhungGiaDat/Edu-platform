@@ -7,6 +7,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from database.base_repo import BaseRepository
 from database.db import mongo_connector
+from core.url_builders import mind_file_url
 import logging
 import asyncio
 import re
@@ -337,7 +338,7 @@ class AdminRepository:
 
         # Generate a placeholder nft_base_url from the ar_tag
         # The actual .mind file will be generated separately
-        nft_base_url = f"https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/{ar_tag}.mind"
+        nft_base_url = mind_file_url(f"assets/mind-files/{ar_tag}.mind")
 
         ar_object = {
             "ar_tag": ar_tag,
