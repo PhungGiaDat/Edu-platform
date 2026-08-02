@@ -3,7 +3,6 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import quote
 
 from models.gamification_model import BADGE_DEFINITIONS
 from models.profile import (
@@ -54,10 +53,8 @@ class ProfileService:
 
     @staticmethod
     def _avatar(username: str, avatar_url: Optional[str] = None) -> str:
-        return avatar_url or (
-            "https://api.dicebear.com/7.x/avataaars/svg?seed="
-            f"{quote(username)}&backgroundColor=b6e3f4"
-        )
+        from core.url_builders import default_avatar_url
+        return avatar_url or default_avatar_url(username)
 
     @staticmethod
     def _is_today(value: Any) -> bool:
