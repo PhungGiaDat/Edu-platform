@@ -37,20 +37,29 @@ def supabase_base_url() -> str:
 def mind_file_url(path: str) -> str:
     """Return a public URL for a MindAR ``.mind`` file.
 
-    The path is relative to the ``assets/mind-files/`` folder inside the
-    configured storage bucket.
+    ``path`` is relative to the storage bucket root and typically starts with
+    ``assets/mind-files/`` (callers may pass the bare filename as well — both
+    work because the helper does not prepend a fixed prefix).
     """
-    return f"{supabase_base_url()}/assets/mind-files/{path.lstrip('/')}"
+    return f"{supabase_base_url()}/{path.lstrip('/')}"
 
 
 def model_3d_url(path: str) -> str:
-    """Return a public URL for a 3D model (``.glb``)."""
-    return f"{supabase_base_url()}/models/{path.lstrip('/')}"
+    """Return a public URL for a 3D model (``.glb``).
+
+    ``path`` is relative to the storage bucket root and typically starts with
+    ``models/``.
+    """
+    return f"{supabase_base_url()}/{path.lstrip('/')}"
 
 
 def image_2d_url(path: str) -> str:
-    """Return a public URL for a 2D flashcard image."""
-    return f"{supabase_base_url()}/images/{path.lstrip('/')}"
+    """Return a public URL for a 2D flashcard image.
+
+    ``path`` is relative to the storage bucket root and typically starts with
+    ``images/``.
+    """
+    return f"{supabase_base_url()}/{path.lstrip('/')}"
 
 
 def default_avatar_url(username: str) -> str:
