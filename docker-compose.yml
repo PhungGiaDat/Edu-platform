@@ -60,7 +60,8 @@ services:
     environment:
       - MONGO_URL=mongodb://mongodb:27017
       - MONGO_DB=edu_platform
-      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      # Refusing to start with a default SECRET_KEY — set one in .env or shell.
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set in .env or shell environment}
       - DEBUG=${DEBUG:-false}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
@@ -69,6 +70,11 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - REDIS_TTL=${REDIS_TTL:-300}
       - APP_LOCK_TIMEOUT=${APP_LOCK_TIMEOUT:-1500}
+      # New env-driven configuration (see backend/.env.example)
+      - SUPABASE_PROJECT_URL=${SUPABASE_PROJECT_URL:?SUPABASE_PROJECT_URL must be set in .env or shell environment}
+      - SUPABASE_STORAGE_BUCKET=${SUPABASE_STORAGE_BUCKET:-AR_models}
+      - AVATAR_SERVICE_URL=${AVATAR_SERVICE_URL:-https://api.dicebear.com/7.x/avataaars/svg}
+      - DEFAULT_FRONTEND_ORIGIN=${DEFAULT_FRONTEND_ORIGIN:-http://localhost:5173}
     ports:
       - "8000:8000"
     volumes:
