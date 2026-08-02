@@ -15,7 +15,6 @@ Run with:
 
 For integration tests against a real DB, see database/migrations/ test suite.
 """
-import os
 import pytest
 from unittest.mock import AsyncMock, patch
 from pydantic import ValidationError
@@ -25,20 +24,6 @@ from models.ar_combination import (
     ArCombinationSchema,  # Pydantic DTO — fully testable without DB
     TransformSchema,
 )
-
-
-# ===========================================================================
-# Ensure settings can be imported without MONGO_URL (set dummy for repo tests)
-# ===========================================================================
-
-@pytest.fixture(autouse=True, scope="session")
-def mock_mongo_url():
-    """Set dummy MONGO_URL/MONGO_DB before any imports so settings doesn't crash."""
-    os.environ["MONGO_URL"] = "mongodb://localhost:27017"
-    os.environ["MONGO_DB"] = "test_eduplatform"
-    yield
-    os.environ.pop("MONGO_URL", None)
-    os.environ.pop("MONGO_DB", None)
 
 
 # ===========================================================================

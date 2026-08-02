@@ -1,11 +1,54 @@
 """
 Pytest configuration and fixtures for backend tests.
 """
+import os
+
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timedelta
 from typing import Dict, Any
+
+
+# Test-time defaults installed at conftest load time. This runs *before* pytest
+# collects test modules, so any top-level `import settings` / `from settings
+# import settings` inside a test file sees these env vars. The per-test
+# autouse monkeypatch below re-asserts the same values inside the test
+# scope (so they are cleaned up automatically by pytest).
+_TEST_ENV: Dict[str, str] = {
+    "MONGO_URL": "mongodb://localhost:27017",
+    "MONGO_DB": "test_eduplatform",
+    # 32+ char dummy secret (Settings.SECRET_KEY validator requires this)
+    "SECRET_KEY": "x" * 64,
+    "SUPABASE_PROJECT_URL": "https://test.supabase.co",
+    "SUPABASE_STORAGE_BUCKET": "AR_models",
+    "AVATAR_SERVICE_URL": "https://api.dicebear.com/7.x/avataaars/svg",
+    "DEFAULT_FRONTEND_ORIGIN": "http://localhost:5173",
+    "ALLOWED_ORIGINS": "*",
+    "DEV_ORIGINS": "http://localhost:3000,http://localhost:5173",
+}
+for _k, _v in _TEST_ENV.items():
+    os.environ.setdefault(_k, _v)
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Run once at pytest startup. Optional services disabled by default."""
+    for k in ("GOOGLE_API_KEY", "OPENAI_API_KEY",
+              "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"):
+        os.environ.pop(k, None)
+
+
+@pytest.fixture(autouse=True)
+def _dummy_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Re-assert the dummy env vars for every test.
+
+    The autouse `monkeypatch` is the user-approved fixture pattern: it
+    auto-applies to every test and auto-reverts on teardown, so tests that
+    need to override a value can do so with their own `monkeypatch.setenv`
+    (the inner scope wins) and leak nothing.
+    """
+    for k, v in _TEST_ENV.items():
+        monkeypatch.setenv(k, v)
 
 
 @pytest.fixture(scope="session")
