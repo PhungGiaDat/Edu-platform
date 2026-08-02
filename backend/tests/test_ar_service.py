@@ -9,13 +9,8 @@ Tests:
 Run with:
     pytest backend/tests/test_ar_service.py -v
 """
-import os
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-
-# Set dummy env vars before importing modules
-os.environ["MONGO_URL"] = "mongodb://localhost:27017"
-os.environ["MONGO_DB"] = "test_eduplatform"
 
 
 @pytest.fixture
