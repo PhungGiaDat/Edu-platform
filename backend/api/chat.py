@@ -35,7 +35,7 @@ class RAGChatRequest(BaseModel):
 class RAGChatResponse(BaseModel):
     """Response schema for RAG chat"""
     response: str
-    sources: List[Dict[str, Any]]  # Retrieved flashcard words with scores
+    sources: List[Dict[str, Any]]  # Retrieved Qdrant animal-document sources with scores
     session_id: str
 
 
@@ -63,7 +63,7 @@ async def rag_chat(
     Flow:
     1. Check MongoDB rag_cache (24h TTL) — return immediately if hit
     2. PLANNER: Query user learning progress → determine topic/keywords/difficulty
-    3. GENERATOR: Vector-search flashcards + LLM draft response
+    3. GENERATOR: Retrieve Qdrant animal documents + LLM draft response
     4. VALIDATOR: Quality check, age-appropriateness, dedup vs session history
     5. Cache result and log conversation
 

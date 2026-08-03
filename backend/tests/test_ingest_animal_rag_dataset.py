@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from scripts import ingest_animal_rag_dataset as ingestion
 from services.animal_rag_dataset import AnimalRAGDocument
+from services.qdrant_rag_service import QdrantRAGUnavailable
 
 
 def document() -> AnimalRAGDocument:
@@ -55,3 +56,28 @@ def test_main_apply_loads_once_then_ensures_uploads_and_verifies(monkeypatch, tm
     service.upsert_documents.assert_called_once_with(documents)
     service.verify_document_ids.assert_called_once_with([documents[0].point_id])
     assert capsys.readouterr().out == "Applied 1 documents to kids_english_animals_minilm_v1\n"
+
+
+def test_main_apply_prints_only_sanitized_qdrant_error_without_traceback_or_cause(
+    monkeypatch, tmp_path, capsys
+):
+    fake_secret = "api_key=fake-secret"
+    service = Mock()
+
+    def fail_upsert(_documents):
+        try:
+            raise RuntimeError(fake_secret)
+        except RuntimeError as cause:
+            raise QdrantRAGUnavailable("Qdrant upsert failed") from cause
+
+    service.upsert_documents.side_effect = fail_upsert
+    monkeypatch.setattr(ingestion, "load_animal_dataset", Mock(return_value=[document()]))
+    monkeypatch.setattr(ingestion, "_new_qdrant_service", Mock(return_value=service), raising=False)
+
+    assert ingestion.main(["--dataset-path", str(tmp_path), "--apply"]) == 1
+
+    captured = capsys.readouterr()
+    terminal_output = captured.out + captured.err
+    assert captured.err == "Qdrant upsert failed\n"
+    assert fake_secret not in terminal_output
+    assert "Traceback" not in terminal_output

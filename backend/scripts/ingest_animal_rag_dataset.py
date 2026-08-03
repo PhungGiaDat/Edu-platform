@@ -45,10 +45,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Dry run validated {len(documents)} documents")
         return 0
 
-    service = _new_qdrant_service()
-    service.ensure_collection()
-    service.upsert_documents(documents)
-    service.verify_document_ids([document.point_id for document in documents])
+    from services.qdrant_rag_service import QdrantRAGUnavailable
+
+    try:
+        service = _new_qdrant_service()
+        service.ensure_collection()
+        service.upsert_documents(documents)
+        service.verify_document_ids([document.point_id for document in documents])
+    except QdrantRAGUnavailable as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
     from settings import settings
 
     print(f"Applied {len(documents)} documents to {settings.QDRANT_COLLECTION}")
