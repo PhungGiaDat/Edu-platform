@@ -24,12 +24,13 @@ class QdrantRAGService:
             return self._client
 
         api_key = settings.QDRANT_API_KEY
-        if not settings.QDRANT_URL or api_key is None:
+        api_key_value = api_key.get_secret_value() if api_key is not None else ""
+        if not settings.QDRANT_URL or not api_key_value.strip():
             raise QdrantRAGUnavailable("Qdrant is not configured")
 
         self._client = QdrantClient(
             url=settings.QDRANT_URL,
-            api_key=api_key.get_secret_value(),
+            api_key=api_key_value,
             cloud_inference=True,
             timeout=30,
         )
