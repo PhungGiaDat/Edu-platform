@@ -17,7 +17,6 @@ import logging
 
 from services.ai_service import AIService, get_ai_service
 from services.agentic_rag_service import AgenticRAGService, get_agentic_rag_service
-from repositories.flashcard_repository import FlashcardRepository, get_flashcard_repository
 from models.chat_log import ChatLog
 
 logger = logging.getLogger(__name__)
@@ -57,7 +56,6 @@ async def chat_message(
 async def rag_chat(
     request: RAGChatRequest,
     agentic_rag: AgenticRAGService = Depends(get_agentic_rag_service),
-    flashcard_repo: FlashcardRepository = Depends(get_flashcard_repository)
 ):
     """
     Agentic RAG chat — Planner → Generator → Validator pipeline.
@@ -78,7 +76,6 @@ async def rag_chat(
         question=request.question,
         user_id=request.user_id,
         session_id=session_id,
-        flashcard_repo=flashcard_repo,
     )
 
     logger.info(
