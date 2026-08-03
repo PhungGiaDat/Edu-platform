@@ -8,8 +8,6 @@
 import React from 'react';
 import type {
   VocabularyItem,
-  SectionGame,
-  Activity,
   QuizQuestion,
   Reward,
   ReadAloudStory,

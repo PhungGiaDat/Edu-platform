@@ -178,7 +178,7 @@ export const AnimalsAdventure: React.FC = () => {
   const { locale } = useLocale();
   const ui = copy[locale as Locale] || copy.en;
 
-  const { data: course, isLoading, error, refetch } = useAnimalsCourse();
+  const { data: course, isLoading } = useAnimalsCourse();
   const { data: progress } = useAnimalsProgress(user?.id);
 
   const displayCourse = course || fallbackCourse;

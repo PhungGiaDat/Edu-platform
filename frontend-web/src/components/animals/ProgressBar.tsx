@@ -12,7 +12,7 @@
  */
 
 import React from 'react';
-import { colors, shadows, radius } from '../../design-tokens/claymorphic';
+import { colors, radius } from '../../design-tokens/claymorphic';
 
 interface Section {
   id: string;

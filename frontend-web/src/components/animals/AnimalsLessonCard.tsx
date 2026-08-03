@@ -20,7 +20,6 @@ interface AnimalsLessonCardProps {
 }
 
 export const AnimalsLessonCard: React.FC<AnimalsLessonCardProps> = ({
-  lessonId,
   title,
   thumbnailUrl,
   vocabPreview,
