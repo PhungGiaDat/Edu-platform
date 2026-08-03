@@ -3,7 +3,7 @@ Agentic RAG Service — Planner → Generator → Validator Pipeline
 
 Architecture:
   1. PLANNER   — Queries MongoDB for user learning progress → determines topic/difficulty/focus
-  2. GENERATOR — Vector-searches flashcards using plan, calls LLM to draft response
+  2. GENERATOR — Retrieves approved Qdrant context using the plan, calls LLM to draft response
   3. VALIDATOR — Checks quality, age-appropriateness, dedup vs recent chat history
 
 Free-tier Gemini constraints:
@@ -24,14 +24,17 @@ import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
-from google import genai as google_genai
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from database.connection import db_manager
-from repositories.flashcard_repository import FlashcardRepository
 from settings import settings
+from services.qdrant_rag_service import (
+    QdrantRAGService,
+    QdrantRAGUnavailable,
+    get_qdrant_rag_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -81,8 +84,8 @@ async def _call_llm_with_retry(chain, inputs: Dict[str, Any], agent_name: str) -
 # ──────────────────────────────────────────────
 # Helper: cache key
 # ──────────────────────────────────────────────
-def _cache_key(question: str, user_id: Optional[str]) -> str:
-    raw = f"{question.strip().lower()}|{user_id or 'anon'}"
+def _cache_key(question: str, user_id: Optional[str], retrieval_version: str) -> str:
+    raw = f"{question.strip().lower()}|{user_id or 'anon'}|{retrieval_version}"
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
@@ -95,7 +98,7 @@ class AgenticRAGService:
 
     Usage:
         service = AgenticRAGService()
-        result = await service.run(question, user_id, session_id, flashcard_repo)
+        result = await service.run(question, user_id, session_id)
         # result: {"response": str, "sources": list, "cached": bool, "agent_trace": list}
     """
 
@@ -106,7 +109,7 @@ class AgenticRAGService:
          "Bạn là AI lập kế hoạch học tập cho trẻ em. "
          "Phân tích câu hỏi và dữ liệu tiến trình học để xác định:\n"
          "1. Chủ đề chính (topic)\n"
-         "2. Từ khóa tìm kiếm (keywords, tối đa 5 từ)\n"
+         "2. Từ khóa tìm kiếm (keywords, tối đa 5 từ). Keywords must be short English retrieval search terms, even when the child asks in Vietnamese.\n"
          "3. Mức độ khó phù hợp (difficulty: easy/medium/hard)\n"
          "4. Ngôn ngữ trả lời (vi/en/bilingual)\n"
          "Chỉ trả lời JSON, ví dụ:\n"
@@ -148,8 +151,9 @@ class AgenticRAGService:
 
     # ── Init ─────────────────────────────────────────────────────────────────
 
-    def __init__(self):
+    def __init__(self, retriever: Optional[QdrantRAGService] = None):
         self._parser = StrOutputParser()
+        self._retriever = retriever or get_qdrant_rag_service()
 
     def _get_llm(self) -> Optional[ChatGoogleGenerativeAI]:
         """Always read API key from settings at call time — supports key rotation."""
@@ -300,53 +304,45 @@ class AgenticRAGService:
         self,
         question: str,
         plan: Dict[str, Any],
-        flashcard_repo: FlashcardRepository,
         llm: ChatGoogleGenerativeAI,
         agent_trace: List[str],
     ) -> Tuple[str, List[Dict[str, Any]]]:
         """
-        Generator Agent: Vector-search flashcards using plan keywords, build LLM response.
+        Generator Agent: Retrieve approved Qdrant context using plan keywords, build LLM response.
         Returns (draft_response, sources)
         """
         logger.info("[AgenticRAG] ⚡ Generator agent starting...")
         agent_trace.append("generator:start")
 
-        # Build enriched search query from plan keywords
-        keywords = plan.get("keywords", [])
-        topic = plan.get("topic", "")
-        search_query = " ".join([topic] + keywords) if keywords else question
-
-        # Generate embedding for the enriched query
-        api_key = settings.GOOGLE_API_KEY
-        context_flashcards: List[Dict[str, Any]] = []
-        if api_key:
+        # Build an English retrieval query from the Planner result.
+        raw_keywords = plan.get("keywords", [])
+        if isinstance(raw_keywords, str):
+            raw_keywords = [raw_keywords]
+        elif raw_keywords is None:
+            raw_keywords = []
+        else:
             try:
-                genai_client = google_genai.Client(api_key=api_key)
-                embed_result = genai_client.models.embed_content(
-                    model="models/gemini-embedding-001",
-                    contents=search_query,
-                    config={"task_type": "RETRIEVAL_QUERY"}
-                )
-                query_vector = list(embed_result.embeddings[0].values)
-                context_flashcards = await flashcard_repo.vector_search(
-                    query_vector=query_vector,
-                    limit=3
-                )
-                logger.info(f"[AgenticRAG] Generator found {len(context_flashcards)} flashcards")
-            except Exception as e:
-                logger.warning(f"[AgenticRAG] Generator embedding/search failed: {e}")
+                raw_keywords = list(raw_keywords)
+            except TypeError:
+                raw_keywords = [raw_keywords]
+
+        topic = str(plan.get("topic") or "").strip()
+        keywords = [str(keyword).strip() for keyword in raw_keywords if str(keyword).strip()]
+        search_query = " ".join(part for part in [topic, *keywords] if part) or question
+
+        context_documents: List[Dict[str, Any]] = []
+        try:
+            context_documents = await self._retriever.retrieve(search_query)
+            logger.info(f"[AgenticRAG] Generator found {len(context_documents)} Qdrant documents")
+        except QdrantRAGUnavailable:
+            # Do not interpolate exception details: they can contain remote URLs or credentials.
+            logger.warning("[AgenticRAG] Qdrant retrieval unavailable; continuing without context")
 
         # Build context string
-        if context_flashcards:
-            parts = []
-            for i, fc in enumerate(context_flashcards, 1):
-                word = fc.get("word", "N/A")
-                vi = fc.get("translation", {}).get("vi", "")
-                en = fc.get("translation", {}).get("en", word)
-                definition = fc.get("definition", "")
-                parts.append(
-                    f"{i}. {word}: EN={en}, VI={vi}. {definition}"
-                )
+        context_texts = [str(document.get("text") or "").strip() for document in context_documents]
+        context_texts = [text for text in context_texts if text]
+        if context_texts:
+            parts = [f"{index}. {text}" for index, text in enumerate(context_texts, 1)]
             context = "\n".join(parts)
         else:
             context = "Không tìm thấy flashcard liên quan."
@@ -359,15 +355,15 @@ class AgenticRAGService:
                 {"question": question, "context": context},
                 agent_name="Generator"
             )
-            agent_trace.append(f"generator:done sources={len(context_flashcards)}")
+            agent_trace.append(f"generator:done sources={len(context_documents)}")
         except Exception as e:
             logger.error(f"[AgenticRAG] Generator LLM failed: {e}")
             draft = "Xin lỗi, mình gặp sự cố. Bạn thử lại nhé! 🙏"
             agent_trace.append("generator:error")
 
         sources = [
-            {"word": fc.get("word"), "score": fc.get("score", 0)}
-            for fc in context_flashcards
+            {"word": document.get("animal_en"), "score": float(document.get("score", 0))}
+            for document in context_documents
         ]
         return draft, sources
 
@@ -411,7 +407,6 @@ class AgenticRAGService:
         question: str,
         user_id: Optional[str],
         session_id: str,
-        flashcard_repo: FlashcardRepository,
     ) -> Dict[str, Any]:
         """
         Run the full Planner → Generator → Validator pipeline.
@@ -427,7 +422,7 @@ class AgenticRAGService:
         agent_trace: List[str] = []
 
         # ── 1. Check cache first ──────────────────────────────────────────────
-        cache_key = _cache_key(question, user_id)
+        cache_key = _cache_key(question, user_id, settings.qdrant_retrieval_version)
         cached = await self._get_cache(cache_key)
         if cached:
             cached["cached"] = True
@@ -452,7 +447,7 @@ class AgenticRAGService:
 
         # ── 4. GENERATOR ─────────────────────────────────────────────────────
         draft_response, sources = await self._generator(
-            question, plan, flashcard_repo, llm, agent_trace
+            question, plan, llm, agent_trace
         )
 
         # Delay between agents
