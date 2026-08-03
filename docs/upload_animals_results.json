@@ -1,0 +1,121 @@
+{
+  "uploaded": [
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\course-cover.svg",
+      "remote": "courses/animals-adventure/course-cover.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\mascots\\cat.svg",
+      "remote": "courses/animals-adventure/mascots/cat.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\mascots\\dog.svg",
+      "remote": "courses/animals-adventure/mascots/dog.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\mascots\\bird.svg",
+      "remote": "courses/animals-adventure/mascots/bird.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\mascots\\fish.svg",
+      "remote": "courses/animals-adventure/mascots/fish.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\mascots\\rabbit.svg",
+      "remote": "courses/animals-adventure/mascots/rabbit.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\mascots\\cat-vocab.svg",
+      "remote": "courses/animals-adventure/vocab/cat.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\mascots\\dog-vocab.svg",
+      "remote": "courses/animals-adventure/vocab/dog.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\mascots\\bird-vocab.svg",
+      "remote": "courses/animals-adventure/vocab/bird.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\mascots\\fish-vocab.svg",
+      "remote": "courses/animals-adventure/vocab/fish.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\mascots\\rabbit-vocab.svg",
+      "remote": "courses/animals-adventure/vocab/rabbit.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\stickers\\cat-king.svg",
+      "remote": "courses/animals-adventure/stickers/cat-king.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\stickers\\dog-hero.svg",
+      "remote": "courses/animals-adventure/stickers/dog-hero.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\stickers\\bird-sky.svg",
+      "remote": "courses/animals-adventure/stickers/bird-sky.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\stickers\\fish-friend.svg",
+      "remote": "courses/animals-adventure/stickers/fish-friend.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\stickers\\rabbit-jump.svg",
+      "remote": "courses/animals-adventure/stickers/rabbit-jump.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\scenes\\warmup.svg",
+      "remote": "courses/animals-adventure/scenes/warmup.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\scenes\\vocab.svg",
+      "remote": "courses/animals-adventure/scenes/vocab.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\scenes\\listen.svg",
+      "remote": "courses/animals-adventure/scenes/listen.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\scenes\\match.svg",
+      "remote": "courses/animals-adventure/scenes/match.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\scenes\\games.svg",
+      "remote": "courses/animals-adventure/scenes/games.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\scenes\\quiz.svg",
+      "remote": "courses/animals-adventure/scenes/quiz.svg",
+      "message": "Uploaded (200)"
+    },
+    {
+      "local": "E:\\University\\Graduted Project\\Edu-platform\\frontend-web\\public\\assets\\animals\\scenes\\reward.svg",
+      "remote": "courses/animals-adventure/scenes/reward.svg",
+      "message": "Uploaded (200)"
+    }
+  ],
+  "skipped": [],
+  "failed": []
+}
