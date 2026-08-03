@@ -13,13 +13,13 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { colors, shadows, radius } from '../../design-tokens/claymorphic';
-import { useAuth } from '../../contexts/AuthContext';
-import { VocabularyCard } from '../../components/animals/VocabularyCard';
-import { QuizQuestion } from '../../components/animals/QuizQuestion';
-import { ProgressBar } from '../../components/animals/ProgressBar';
-import { RewardAnimation } from '../../components/animals/RewardAnimation';
-import type { Lesson, LessonSession, VocabularyItem } from '../../types/course';
+import { colors, shadows, radius } from '../design-tokens/claymorphic';
+import { useAuth } from '../contexts/AuthContext';
+import { VocabularyCard } from '../components/animals/VocabularyCard';
+import { QuizQuestion } from '../components/animals/QuizQuestion';
+import { ProgressBar } from '../components/animals/ProgressBar';
+import { RewardAnimation } from '../components/animals/RewardAnimation';
+import type { Lesson, LessonSession, VocabularyItem } from '../types/course';
 
 const getLearnerId = (userId?: string | null) => userId || 'guest-learner';
 
