@@ -111,7 +111,7 @@ async def test_generator_sanitizes_qdrant_unavailability_and_keeps_safe_no_conte
 
     assert draft == "draft"
     assert sources == []
-    assert captured_inputs["context"] == "Kh\u00f4ng t\u00ecm th\u1ea5y flashcard li\u00ean quan."
+    assert captured_inputs["context"] == "Kh\u00f4ng t\u00ecm th\u1ea5y t\u00e0i li\u1ec7u \u0111\u1ed9ng v\u1eadt Qdrant li\u00ean quan."
     assert "https://secret.example" not in caplog.text
     assert "Qdrant retrieval unavailable; continuing without context" in caplog.text
 
