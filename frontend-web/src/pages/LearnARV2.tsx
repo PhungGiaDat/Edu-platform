@@ -44,7 +44,7 @@ import { SoundEffectService } from '@/services/SoundEffectService';
 import { SpeechService } from '@/services/SpeechService';
 import { AudioService } from '@/services/AudioService';
 import { eventBus } from '@/runtime/EventBus';
-import { getApiBase } from '@/config';
+import { getApiBase, AR_SESSION_LIMIT_MINS, AR_SESSION_WARNING_MINS, AR_MAX_TRACKS } from '@/config';
 import { apiClient } from '@/services/apiClient';
 import { useAuth } from '@/contexts/AuthContext';
 import type { DisplayMode, AppMode } from '@/hooks/useDisplayMode';
@@ -56,10 +56,6 @@ const API_BASE = getApiBase();
 const QuizOverlay = lazy(() => import('@/components/Quiz').then(m => ({ default: m.QuizOverlay })));
 const GameOverlay = lazy(() => import('@/components/GameOverlay').then(m => ({ default: m.GameOverlay })));
 
-// Session limits (in minutes)
-const SESSION_LIMIT_MINS = 30;
-const SESSION_WARNING_MINS = 25;
-const MAX_AR_TRACKS = 2;
 const RECOVERABLE_AR_ERROR_CODES = new Set([
     'MODEL_LOAD_ERROR',
     'IMAGE_LOAD_ERROR',
@@ -583,8 +579,8 @@ export default function LearnARV2() {
 
     // ========== SESSION TIMER ==========
     const sessionTimer = useSessionTimer({
-        limitMins: SESSION_LIMIT_MINS,
-        warningMins: SESSION_WARNING_MINS,
+        limitMins: AR_SESSION_LIMIT_MINS,
+        warningMins: AR_SESSION_WARNING_MINS,
         onWarning: () => setShowBreakReminder(true),
         onLimitReached: () => setShowBreakReminder(true),
     });
@@ -726,7 +722,7 @@ export default function LearnARV2() {
     const flashcardSnapshot = useFlashcardSnapshot((i) => getFlashcardByIndex(i));
     const scannedTarget0 = flashcardSnapshot.card0;
     const scannedTarget1 = flashcardSnapshot.card1;
-    const scannedTargets = Array.from(detectedFlashcards.values()).slice(0, MAX_AR_TRACKS);
+    const scannedTargets = Array.from(detectedFlashcards.values()).slice(0, AR_MAX_TRACKS);
 
     // Effect: Use backend combo_mind_url directly (no merge needed)
     useEffect(() => {
@@ -1467,7 +1463,7 @@ export default function LearnARV2() {
                         onAppModeSwitch={handleAppModeChange}
                     />
                 )}
-                {appState === 'VIEWING' && !isComboViewer && flashcardCount < MAX_AR_TRACKS && (
+                {appState === 'VIEWING' && !isComboViewer && flashcardCount < AR_MAX_TRACKS && (
                     <button
                         type="button"
                         onClick={handleAddCardScan}
