@@ -1,10 +1,13 @@
 """Behavioral tests for Lexi's Qdrant retrieval boundary."""
 
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
+from pydantic import SecretStr
 from qdrant_client import models
 
+import services.qdrant_rag_service as qdrant_rag_service
 from services.qdrant_rag_service import QdrantRAGService, QdrantRAGUnavailable
 from settings import settings
 
@@ -107,6 +110,21 @@ async def test_retrieve_rejects_missing_configuration_without_client():
 
     with pytest.raises(QdrantRAGUnavailable, match="^Qdrant is not configured$"):
         await service.retrieve("animals")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("empty_api_key", ["", "   "])
+async def test_retrieve_rejects_empty_qdrant_api_key_without_constructing_client(
+    monkeypatch, configured_settings, empty_api_key
+):
+    constructor = Mock()
+    monkeypatch.setattr(settings, "QDRANT_API_KEY", SecretStr(empty_api_key))
+    monkeypatch.setattr(qdrant_rag_service, "QdrantClient", constructor)
+
+    with pytest.raises(QdrantRAGUnavailable, match="^Qdrant is not configured$"):
+        await QdrantRAGService().retrieve("animals")
+
+    constructor.assert_not_called()
 
 
 @pytest.mark.asyncio
