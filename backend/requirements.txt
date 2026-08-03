@@ -40,6 +40,9 @@ langchain-core>=0.3.0
 langchain-google-genai>=2.0.0
 google-generativeai>=0.8.0
 
+# === Vector Search - Qdrant Cloud Inference (no local embedding model) ===
+qdrant-client>=1.14.2,<2.0.0
+
 # === Speech-to-Text (Server-side fallback for Safari/Firefox) ===
 # faster-whisper uses CTranslate2 for efficient CPU inference
 # Only ~150MB RAM for 'tiny' model

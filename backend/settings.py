@@ -83,6 +83,16 @@ class Settings(BaseSettings):
     AI_DYNAMIC_CONTENT_ENABLED: bool = True
     AI_CONTENT_TIMEOUT_SECONDS: float = 8.0
     AI_CONTENT_RETRIES: int = 2
+
+    # ========== Qdrant RAG (Optional) ==========
+    QDRANT_URL: Optional[str] = None
+    QDRANT_API_KEY: Optional[SecretStr] = None
+    QDRANT_COLLECTION: str = "kids_english_animals_minilm_v1"
+    QDRANT_EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
+    QDRANT_VECTOR_SIZE: int = 384
+    QDRANT_SCORE_THRESHOLD: float = 0.35
+    QDRANT_RETRIEVAL_LIMIT: int = 8
+    QDRANT_CONTEXT_LIMIT: int = 3
     
     # ========== Redis Configuration ==========
     REDIS_HOST: str = "localhost"
@@ -167,6 +177,11 @@ class Settings(BaseSettings):
     def is_redis_configured(self) -> bool:
         """Check if Redis is properly configured."""
         return bool(self.REDIS_URL or self.REDIS_HOST != "localhost")
+
+    @property
+    def qdrant_retrieval_version(self) -> str:
+        """Stable identifier for the active Qdrant retrieval configuration."""
+        return f"qdrant:{self.QDRANT_COLLECTION}:{self.QDRANT_EMBEDDING_MODEL}"
 
     @property
     def cors_origins(self) -> list[str]:
