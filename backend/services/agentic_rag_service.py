@@ -129,7 +129,7 @@ class AgenticRAGService:
          "- Dựa vào Context để trả lời chính xác\n"
          "- Nếu không tìm thấy: 'Mình chưa biết từ này, hỏi thầy cô nhé! 📚'\n"
          "- Không bịa đặt\n"
-         "Context flashcard:\n{context}"
+         "Qdrant animal-document context:\n{context}"
         ),
         ("human", "Câu hỏi: {question}")
     ])
@@ -345,7 +345,7 @@ class AgenticRAGService:
             parts = [f"{index}. {text}" for index, text in enumerate(context_texts, 1)]
             context = "\n".join(parts)
         else:
-            context = "Không tìm thấy flashcard liên quan."
+            context = "Không tìm thấy tài liệu động vật Qdrant liên quan."
 
         # LLM call
         chain = self.GENERATOR_PROMPT | llm | self._parser
@@ -414,7 +414,7 @@ class AgenticRAGService:
         Returns:
             {
                 "response": str,       # Final validated response
-                "sources": list,       # Flashcard sources used
+                "sources": list,       # Qdrant animal-document sources used
                 "cached": bool,        # True if served from cache
                 "agent_trace": list,   # Debug trace of agent steps
             }
