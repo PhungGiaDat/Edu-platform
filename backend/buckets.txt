@@ -1,0 +1,11 @@
+﻿Bucket list HTTP status: 400
+{
+  "statusCode": "403",
+  "error": "Unauthorized",
+  "message": "Invalid Compact JWS",
+  "code": "AccessDenied"
+}
+
+============================================================
+Test public URL access for each bucket
+============================================================

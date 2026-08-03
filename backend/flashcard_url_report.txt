@@ -1,0 +1,79 @@
+﻿======================================================================
+Flashcards related to animals (hippo, cat, dog, giraffe, etc.)
+======================================================================
+
+[1] word: elephant
+    qr_id: ele123
+    category: animals
+    image_url: /assets/flashcards/ele123_card.png
+    ar_tag: elephant_marker_01
+
+[2] word: shiba dog
+    qr_id: dog123
+    category: animals
+    image_url: /assets/flashcards/shiba_dog.jpg
+    ar_tag: shiba_marker_01
+
+[3] word: cat
+    qr_id: cat001
+    category: animals
+    image_url: https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/cats.jpg
+    ar_tag: cat_marker_01
+
+[4] word: hamster
+    qr_id: hama001
+    category: animals
+    image_url: https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/hama.jpg
+    ar_tag: hama_marker_01
+
+[5] word: giraffe
+    qr_id: giraffe001
+    category: animals
+    image_url: https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/giraffe.jpg
+    ar_tag: giraffe_marker_01
+
+[6] word: hippopotamus
+    qr_id: hippo001
+    category: animals
+    image_url: https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/hippo.jpg
+    ar_tag: hippo_marker_01
+
+[7] word: British Shorthair cat
+    qr_id: britishshorthair001
+    category: animals
+    image_url: https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/britishshorthair.jpg
+    ar_tag: britishshorthair_marker_01
+
+[8] word: cat and cow
+    qr_id: catcow001
+    category: animals
+    image_url: https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/catcow.jpg
+    ar_tag: catcow_marker_01
+
+[9] word: Fred the cat
+    qr_id: fredcat001
+    category: animals
+    image_url: https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcards/fredcat.jpg
+    ar_tag: fredcat_marker_01
+
+======================================================================
+Total: 9 flashcards found
+
+======================================================================
+All unique categories in flashcards collection:
+======================================================================
+  - animals: 9 cards
+  - combos: 1 cards
+  - food: 2 cards
+  - fruits: 2 cards
+  - nature: 8 cards
+  - vehicles: 3 cards
+
+======================================================================
+All flashcard URL patterns (sample 5):
+======================================================================
+  elephant: /assets/flashcards/ele123_card.png
+  palm tree: /assets/flashcards/palm01_card.png
+  apple: /assets/flashcards/apple01_card.png
+  banana: /assets/flashcards/banana01_card.png
+  cake: /assets/flashcards/cake01_card.png
