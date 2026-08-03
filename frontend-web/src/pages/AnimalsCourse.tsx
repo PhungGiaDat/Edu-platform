@@ -116,6 +116,7 @@ export const AnimalsCourse: React.FC<AnimalsCourseProps> = () => {
       description: `Learn about ${animal.label.toLowerCase()}!`,
       order: index + 1,
       duration_minutes: 10 + index * 2,
+      video_duration: 0,
       vocabulary: [
         {
           word_en: animal.label,

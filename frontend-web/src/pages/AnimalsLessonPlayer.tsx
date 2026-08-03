@@ -14,14 +14,11 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { colors, shadows, radius } from '../design-tokens/claymorphic';
-import { useAuth } from '../contexts/AuthContext';
 import { VocabularyCard } from '../components/animals/VocabularyCard';
 import { QuizQuestion } from '../components/animals/QuizQuestion';
 import { ProgressBar } from '../components/animals/ProgressBar';
 import { RewardAnimation } from '../components/animals/RewardAnimation';
-import type { Lesson, LessonSession, VocabularyItem } from '../types/course';
-
-const getLearnerId = (userId?: string | null) => userId || 'guest-learner';
+import type { Lesson } from '../types/course';
 
 interface Section {
   id: string;
@@ -56,9 +53,8 @@ interface QuizState {
 }
 
 export const AnimalsLessonPlayer: React.FC = () => {
-  const { courseId, lessonId } = useParams();
+  const { lessonId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
@@ -120,14 +116,15 @@ export const AnimalsLessonPlayer: React.FC = () => {
         description: `Learn about ${animal}!`,
         order: 1,
         duration_minutes: 10,
+        video_duration: 0,
         vocabulary: [
           { word_en: animal, word_vi: animal === 'cat' ? 'Meo' : animal === 'dog' ? 'Cho' : animal === 'bird' ? 'Chim' : animal === 'fish' ? 'Ca' : 'Thu', emoji: mascot.emoji, image: { bucket: '', path: '', type: 'image', status: 'ready' }, audio: { bucket: '', path: '', type: 'audio', status: 'ready' }, simple_sentence: `A ${animal} is cute!` },
           { word_en: 'animal', word_vi: 'Dong vat', emoji: '🐾', image: { bucket: '', path: '', type: 'image', status: 'ready' }, audio: { bucket: '', path: '', type: 'audio', status: 'ready' }, simple_sentence: 'All animals are amazing!' },
           { word_en: 'pet', word_vi: 'Thu cung', emoji: '🏠', image: { bucket: '', path: '', type: 'image', status: 'ready' }, audio: { bucket: '', path: '', type: 'audio', status: 'ready' }, simple_sentence: 'A pet is a friend!' },
         ],
         quiz: [
-          { question_id: 'q1', type: 'image_choice', prompt_vi: `${mascot.emoji} La con gi?`, questionAudioText: animal, options: [{ optionId: 'a', label: animal }, { optionId: 'b', label: 'dog' }, { optionId: 'c', label: 'bird' }, { optionId: 'd', label: 'fish' }], correctOptionId: 'a', feedbackCorrect: 'Dung roi!', feedbackIncorrect: 'Thu lai nhe!' },
-          { question_id: 'q2', type: 'image_choice', prompt_vi: 'Con gi nay?', questionAudioText: 'animal', options: [{ optionId: 'a', label: 'animal' }, { optionId: 'b', label: 'plant' }, { optionId: 'c', label: 'food' }, { optionId: 'd', label: 'car' }], correctOptionId: 'a', feedbackCorrect: 'Gioi qua!', feedbackIncorrect: 'Sai roi!' },
+          { question_id: 'q1', type: 'image_choice', prompt_vi: `${mascot.emoji} La con gi?`, questionAudioText: animal, options: [{ option_id: 'a', label: animal }, { option_id: 'b', label: 'dog' }, { option_id: 'c', label: 'bird' }, { option_id: 'd', label: 'fish' }], correctOptionId: 'a', feedbackCorrect: 'Dung roi!', feedbackIncorrect: 'Thu lai nhe!' },
+          { question_id: 'q2', type: 'image_choice', prompt_vi: 'Con gi nay?', questionAudioText: 'animal', options: [{ option_id: 'a', label: 'animal' }, { option_id: 'b', label: 'plant' }, { option_id: 'c', label: 'food' }, { option_id: 'd', label: 'car' }], correctOptionId: 'a', feedbackCorrect: 'Gioi qua!', feedbackIncorrect: 'Sai roi!' },
         ],
         reward: { xp: 50, sticker: { bucket: '', path: '', type: 'sticker', status: 'ready' }, badgeTitle: `${animal} Master`, message_vi: 'Ban da hoan thanh!' },
         images: [],
@@ -192,33 +189,14 @@ export const AnimalsLessonPlayer: React.FC = () => {
 
   const handleQuizAnswer = (questionId: string, answer: string) => {
     setQuizAnswers(prev => ({ ...prev, [questionId]: answer }));
-    setQuizResults(prev => ({ 
-      ...prev, 
-      [questionId]: { 
-        questionId, 
-        selectedAnswer: answer, 
-        isCorrect: false, 
-        isSubmitted: false 
-      } 
-    }));
-  };
-
-  const handleQuizSubmit = (questionId: string) => {
-    const question = lesson?.quiz.find(q => q.question_id === questionId);
-    if (!question) return;
-
-    const selectedAnswer = quizAnswers[questionId];
-    const isCorrect = question.options.find(o => o.optionId === selectedAnswer)?.label === 
-                      question.options.find(o => o.optionId === question.correctOptionId)?.label;
-
     setQuizResults(prev => ({
       ...prev,
       [questionId]: {
         questionId,
-        selectedAnswer,
-        isCorrect,
-        isSubmitted: true,
-      },
+        selectedAnswer: answer,
+        isCorrect: false,
+        isSubmitted: false
+      }
     }));
   };
 
@@ -379,8 +357,8 @@ export const AnimalsLessonPlayer: React.FC = () => {
                 ))}
               </div>
               <div className="lesson-section__match-images">
-                {lesson.vocabulary.map((item, index) => (
-                  <div 
+                {lesson.vocabulary.map((item, _index) => (
+                  <div
                     key={`image-${item.word_en}`}
                     className={`lesson-section__match-image ${Object.values(matchPairs).includes(item.word_en) ? 'lesson-section__match-image--matched' : ''}`}
                     onClick={() => {
@@ -468,7 +446,11 @@ export const AnimalsLessonPlayer: React.FC = () => {
                   questionAudioText={question.questionAudioText}
                   questionNumber={index + 1}
                   totalQuestions={lesson.quiz.length}
-                  options={question.options}
+                  options={question.options.map((o) => ({
+                    optionId: o.option_id,
+                    label: o.label,
+                    imageUrl: o.image?.path ? `/assets/${o.image.path}` : undefined,
+                  }))}
                   selectedAnswer={quizAnswers[question.question_id]}
                   isCorrect={quizResults[question.question_id]?.isCorrect}
                   isSubmitted={quizResults[question.question_id]?.isSubmitted}
