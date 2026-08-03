@@ -13,10 +13,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { colors, shadows, radius } from '../../design-tokens/claymorphic';
-import { useAuth } from '../../contexts/AuthContext';
-import { courseService } from '../../services/CourseService';
-import type { Course, Lesson, UserProgress } from '../../types/course';
+import { colors, shadows, radius } from '../design-tokens/claymorphic';
+import { useAuth } from '../contexts/AuthContext';
+import { courseService } from '../services/CourseService';
+import type { Course, Lesson, UserProgress } from '../types/course';
 
 interface AnimalsCourseProps {
   // Accept optional props for customization
@@ -110,7 +110,7 @@ export const AnimalsCourse: React.FC<AnimalsCourseProps> = () => {
 
   const createMockCourse = (): Course => {
     const lessons: Lesson[] = ANIMAL_MASCOTS.map((animal, index) => ({
-      lesson_id: `lesson-${animal.name}`,
+      lesson_id: `learn-the-${animal.name}`,
       title: `Learn the ${animal.label}`,
       title_vi: `Hoc tu ${animal.word}`,
       description: `Learn about ${animal.label.toLowerCase()}!`,
@@ -163,7 +163,7 @@ export const AnimalsCourse: React.FC<AnimalsCourseProps> = () => {
 
   const handleLessonClick = (lesson: Lesson) => {
     if (!course) return;
-    navigate(`/courses/animals-course/lessons/${lesson.lesson_id}`);
+    navigate(`/courses/animals/lessons/${lesson.lesson_id}`);
   };
 
   const handleStartJourney = () => {
@@ -177,7 +177,7 @@ export const AnimalsCourse: React.FC<AnimalsCourseProps> = () => {
       || course.lessons[0]?.lesson_id;
     
     if (nextLessonId) {
-      navigate(`/courses/animals-course/lessons/${nextLessonId}`);
+      navigate(`/courses/animals/lessons/${nextLessonId}`);
     }
   };
 

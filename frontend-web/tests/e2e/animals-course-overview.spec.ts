@@ -44,10 +44,8 @@ test.describe('Animals Course overview', () => {
   });
 
   test('lesson cards navigate to the lesson player', async ({ page }) => {
-    test.fixme(true, 'BUG: AnimalsCourse lesson cards do not navigate (commit 4500219 routing issue). Tracked separately.');
-
     await openGuestPage(page, '/courses/animals');
     await page.locator('.animals-course__lesson-card').first().click();
-    await expect(page).toHaveURL(/\/courses\/animals\/lessons\//);
+    await expect(page).toHaveURL(/\/courses\/animals\/lessons\/learn-the-(cat|dog|bird|fish|rabbit)/);
   });
 });
