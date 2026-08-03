@@ -131,6 +131,7 @@ class QdrantRAGService:
         if not documents:
             return 0
 
+        completed_documents = 0
         try:
             points = [
                 models.PointStruct(
@@ -139,19 +140,28 @@ class QdrantRAGService:
                         text=document.text,
                         model=settings.QDRANT_EMBEDDING_MODEL,
                     ),
-                    payload=build_qdrant_payload(document),
+                    payload=build_qdrant_payload(
+                        document,
+                        embedding_model=settings.QDRANT_EMBEDDING_MODEL,
+                    ),
                 )
                 for document in documents
             ]
             client = self._get_client()
             for start in range(0, len(points), 32):
+                batch = points[start:start + 32]
                 client.upsert(
                     collection_name=settings.QDRANT_COLLECTION,
-                    points=points[start:start + 32],
+                    points=batch,
                     wait=True,
                 )
+                completed_documents += len(batch)
+        except QdrantRAGUnavailable:
+            raise
         except Exception as exc:
-            raise QdrantRAGUnavailable("Qdrant upsert failed") from exc
+            raise QdrantRAGUnavailable(
+                f"Qdrant upsert failed after {completed_documents} of {len(documents)} documents"
+            ) from exc
         return len(points)
 
     def verify_document_ids(self, point_ids: Sequence[str]) -> None:

@@ -210,7 +210,12 @@ def test_rejects_symlink_escape_after_resolving_source_path(tmp_path: Path):
 
 
 def test_loads_valid_document_with_stable_id_hash_and_canonical_group(tmp_path: Path):
-    record = _manifest_record(doc_id="ant-001", animal_en="ant", relative_path="data/ant.txt")
+    record = _manifest_record(
+        doc_id="ant-001",
+        animal_en="  ANT  ",
+        topic="  Habitat_Note  ",
+        relative_path="data/ant.txt",
+    )
     root = _write_dataset(tmp_path, [record], {"data/ant.txt": "A ant is an insect."})
 
     documents = load_animal_dataset(root)
@@ -219,7 +224,7 @@ def test_loads_valid_document_with_stable_id_hash_and_canonical_group(tmp_path: 
     assert documents[0].point_id == deterministic_point_id("ant-001")
     assert documents[0].text == "An ant is an insect."
     assert documents[0].content_hash == "28420b5fc4dd654fa22e6bb14f38d402bea03eb60ebb5ffe71d0865227691b85"
-    assert documents[0].canonical_group == "ant"
+    assert documents[0].canonical_group == "ant:habitat_note"
 
 
 def test_build_qdrant_payload_contains_exact_runtime_and_audit_metadata():
@@ -227,7 +232,7 @@ def test_build_qdrant_payload_contains_exact_runtime_and_audit_metadata():
         point_id="id", doc_id="ant-001", file_name="ant.txt", relative_path="data/ant.txt",
         file_format="txt", animal_en="ant", animal_vi="kien", topic="vocabulary_card",
         level="A0", age_range="6-8", safety_label="clean", text="An ant.",
-        content_hash="hash", canonical_group="ant",
+        content_hash="hash", canonical_group="ant:vocabulary_card",
     )
 
     assert build_qdrant_payload(document) == {
@@ -236,7 +241,20 @@ def test_build_qdrant_payload_contains_exact_runtime_and_audit_metadata():
         "animal_vi": "kien", "topic": "vocabulary_card", "level": "A0",
         "age_range": "6-8", "safety_label": "clean",
         "source_type": "synthetic_child_safe_learning_material", "chunk_index": 0,
-        "content_hash": "hash", "canonical_group": "ant",
+        "content_hash": "hash", "canonical_group": "ant:vocabulary_card",
         "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
         "dataset_version": "2026-08-03",
     }
+
+
+def test_build_qdrant_payload_uses_explicit_active_embedding_model():
+    document = AnimalRAGDocument(
+        point_id="id", doc_id="ant-001", file_name="ant.txt", relative_path="data/ant.txt",
+        file_format="txt", animal_en="ant", animal_vi="kien", topic="vocabulary_card",
+        level="A0", age_range="6-8", safety_label="clean", text="An ant.",
+        content_hash="hash", canonical_group="ant:vocabulary_card",
+    )
+
+    assert build_qdrant_payload(document, embedding_model="custom/active-model")["embedding_model"] == (
+        "custom/active-model"
+    )

@@ -248,7 +248,8 @@ def test_ensure_collection_sanitizes_client_errors(configured_settings):
         QdrantRAGService(client=client).ensure_collection()
 
 
-def test_upsert_documents_batches_validated_documents_with_cloud_inference(configured_settings):
+def test_upsert_documents_batches_validated_documents_with_cloud_inference(configured_settings, monkeypatch):
+    monkeypatch.setattr(settings, "QDRANT_EMBEDDING_MODEL", "custom/configured-upload-model")
     client = FakeCollectionClient()
     documents = [document(index) for index in range(1, 34)]
     service = QdrantRAGService(client=client)
@@ -258,10 +259,14 @@ def test_upsert_documents_batches_validated_documents_with_cloud_inference(confi
 
     first_point = client.upserts[0]["points"][0]
     assert first_point.id == documents[0].point_id
-    assert first_point.payload == build_qdrant_payload(documents[0])
+    assert first_point.payload == build_qdrant_payload(
+        documents[0],
+        embedding_model="custom/configured-upload-model",
+    )
     assert client.upserts[0]["wait"] is True
     assert type(first_point.vector).__name__ == "Document"
-    assert first_point.vector.model == settings.QDRANT_EMBEDDING_MODEL
+    assert first_point.vector.model == "custom/configured-upload-model"
+    assert first_point.payload["embedding_model"] == "custom/configured-upload-model"
 
 
 def test_upsert_documents_is_idempotent_for_repeatable_point_ids(configured_settings):
@@ -280,6 +285,20 @@ def test_upsert_documents_skips_empty_input(configured_settings):
 
     assert QdrantRAGService(client=client).upsert_documents([]) == 0
     assert client.upserts == []
+
+
+def test_upsert_documents_reports_completed_and_total_documents_without_client_secret(configured_settings):
+    client = FakeCollectionClient()
+    secret = "api_key=fake-secret"
+    client.upsert = Mock(side_effect=[None, RuntimeError(secret)])
+
+    with pytest.raises(QdrantRAGUnavailable) as error:
+        QdrantRAGService(client=client).upsert_documents([document(index) for index in range(1, 34)])
+
+    assert str(error.value) == "Qdrant upsert failed after 32 of 33 documents"
+    assert secret not in str(error.value)
+    assert isinstance(error.value.__cause__, RuntimeError)
+    assert client.upsert.call_count == 2
 
 
 def test_verify_document_ids_retrieves_batched_normalized_ids(configured_settings):

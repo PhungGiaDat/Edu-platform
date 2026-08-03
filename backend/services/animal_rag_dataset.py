@@ -28,6 +28,7 @@ _ARTICLE_CORRECTIONS = {
     r"\ba insect\b": "an insect",
 }
 _NATURAL_NUMBER = re.compile(r"(\d+)")
+_DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 
 @dataclass(frozen=True)
@@ -71,6 +72,13 @@ def normalize_index_text(text: str) -> str:
 def deterministic_point_id(doc_id: str) -> str:
     """Return the stable Qdrant point UUID for an audited document ID."""
     return str(uuid.uuid5(uuid.NAMESPACE_URL, f"edu-platform:animal-rag:{doc_id}"))
+
+
+def _canonical_group(animal_en: str, topic: str) -> str:
+    """Return a normalized retrieval-diversification key for one animal topic."""
+    normalized_animal = " ".join(animal_en.casefold().split())
+    normalized_topic = " ".join(topic.casefold().split())
+    return f"{normalized_animal}:{normalized_topic}"
 
 
 def _extract_docx(archive: zipfile.ZipFile) -> str:
@@ -244,12 +252,15 @@ def load_animal_dataset(dataset_root: Path) -> list[AnimalRAGDocument]:
             safety_label=record["safety_label"],
             text=text,
             content_hash=sha256(text.encode("utf-8")).hexdigest(),
-            canonical_group=" ".join(record["animal_en"].casefold().split()),
+            canonical_group=_canonical_group(record["animal_en"], record["topic"]),
         ))
     return documents
 
 
-def build_qdrant_payload(document: AnimalRAGDocument) -> dict[str, Any]:
+def build_qdrant_payload(
+    document: AnimalRAGDocument,
+    embedding_model: str = _DEFAULT_EMBEDDING_MODEL,
+) -> dict[str, Any]:
     """Map one validated source document to its stable Qdrant payload."""
     return {
         "text": document.text,
@@ -267,6 +278,6 @@ def build_qdrant_payload(document: AnimalRAGDocument) -> dict[str, Any]:
         "chunk_index": 0,
         "content_hash": document.content_hash,
         "canonical_group": document.canonical_group,
-        "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+        "embedding_model": embedding_model,
         "dataset_version": "2026-08-03",
     }
