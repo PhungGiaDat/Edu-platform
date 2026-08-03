@@ -8,6 +8,7 @@ from pydantic import SecretStr
 from qdrant_client import models
 
 import services.qdrant_rag_service as qdrant_rag_service
+from services.animal_rag_dataset import AnimalRAGDocument, build_qdrant_payload
 from services.qdrant_rag_service import QdrantRAGService, QdrantRAGUnavailable
 from settings import settings
 
@@ -26,15 +27,20 @@ class FakeQdrantClient:
 
 
 class FakeCollectionClient(FakeQdrantClient):
-    def __init__(self, exists=False, vector_size=384, distance=models.Distance.COSINE):
+    def __init__(self, exists=False, vector_size=384, distance=models.Distance.COSINE, error=None):
         super().__init__()
         self.exists = exists
         self.vector_size = vector_size
         self.distance = distance
+        self.error = error
         self.created = []
         self.upserts = []
+        self.retrieves = []
+        self.available_ids = set()
 
     def collection_exists(self, collection_name):
+        if self.error:
+            raise self.error
         return self.exists
 
     def create_collection(self, **kwargs):
@@ -42,6 +48,8 @@ class FakeCollectionClient(FakeQdrantClient):
         self.exists = True
 
     def get_collection(self, collection_name):
+        if self.error:
+            raise self.error
         return SimpleNamespace(
             config=SimpleNamespace(
                 params=SimpleNamespace(
@@ -51,7 +59,34 @@ class FakeCollectionClient(FakeQdrantClient):
         )
 
     def upsert(self, **kwargs):
+        if self.error:
+            raise self.error
         self.upserts.append(kwargs)
+
+    def retrieve(self, **kwargs):
+        if self.error:
+            raise self.error
+        self.retrieves.append(kwargs)
+        return [SimpleNamespace(id=point_id) for point_id in kwargs["ids"] if str(point_id) in self.available_ids]
+
+
+def document(index: int = 1) -> AnimalRAGDocument:
+    return AnimalRAGDocument(
+        point_id=f"00000000-0000-0000-0000-{index:012d}",
+        doc_id=f"animal-{index:03d}",
+        file_name=f"animal-{index:03d}.txt",
+        relative_path=f"data/animal-{index:03d}.txt",
+        file_format="txt",
+        animal_en="ant",
+        animal_vi="kien",
+        topic="vocabulary_card",
+        level="A0",
+        age_range="6-8",
+        safety_label="clean",
+        text=f"An ant fact {index}.",
+        content_hash=f"hash-{index}",
+        canonical_group="ant",
+    )
 
 
 def point(score, **payload):
@@ -161,23 +196,92 @@ def test_ensure_collection_never_recreates_incompatible_existing_collection(conf
     assert client.created == []
 
 
-def test_upsert_documents_uses_repeatable_document_points(configured_settings):
+def test_ensure_collection_rejects_non_cosine_existing_collection_without_recreating(configured_settings):
+    client = FakeCollectionClient(exists=True, distance=models.Distance.DOT)
+
+    with pytest.raises(QdrantRAGUnavailable, match="^Qdrant collection configuration mismatch$"):
+        QdrantRAGService(client=client).ensure_collection()
+
+    assert client.created == []
+
+
+def test_ensure_collection_accepts_serialized_unnamed_vector_configuration(configured_settings):
+    client = FakeCollectionClient(exists=True)
+    client.get_collection = Mock(return_value=SimpleNamespace(
+        config=SimpleNamespace(params=SimpleNamespace(vectors={
+            "size": settings.QDRANT_VECTOR_SIZE,
+            "distance": "Cosine",
+        }))
+    ))
+
+    QdrantRAGService(client=client).ensure_collection()
+
+    assert client.created == []
+
+
+def test_ensure_collection_sanitizes_client_errors(configured_settings):
+    client = FakeCollectionClient(error=RuntimeError("https://secret.example/api-key"))
+
+    with pytest.raises(QdrantRAGUnavailable, match="^Qdrant collection setup failed$"):
+        QdrantRAGService(client=client).ensure_collection()
+
+
+def test_upsert_documents_batches_validated_documents_with_cloud_inference(configured_settings):
     client = FakeCollectionClient()
-    documents = [{
-        "text": "Elephants have trunks.",
-        "animal_en": "elephant",
-        "canonical_group": "elephant",
-        "safety_label": "clean",
-        "doc_id": "elephant-1",
-        "topic": "animals",
-    }]
+    documents = [document(index) for index in range(1, 34)]
     service = QdrantRAGService(client=client)
 
+    assert service.upsert_documents(documents) == 33
+    assert [len(call["points"]) for call in client.upserts] == [32, 1]
+
+    first_point = client.upserts[0]["points"][0]
+    assert first_point.id == documents[0].point_id
+    assert first_point.payload == build_qdrant_payload(documents[0])
+    assert client.upserts[0]["wait"] is True
+    assert type(first_point.vector).__name__ == "Document"
+    assert first_point.vector.model == settings.QDRANT_EMBEDDING_MODEL
+
+
+def test_upsert_documents_is_idempotent_for_repeatable_point_ids(configured_settings):
+    client = FakeCollectionClient()
+    service = QdrantRAGService(client=client)
+    documents = [document()]
+
     assert service.upsert_documents(documents) == 1
     assert service.upsert_documents(documents) == 1
 
-    first_point = client.upserts[0]["points"][0]
-    second_point = client.upserts[1]["points"][0]
-    assert first_point.id == second_point.id
-    assert type(first_point.vector).__name__ == "Document"
-    assert first_point.vector.model == settings.QDRANT_EMBEDDING_MODEL
+    assert client.upserts[0]["points"][0].id == client.upserts[1]["points"][0].id == documents[0].point_id
+
+
+def test_upsert_documents_skips_empty_input(configured_settings):
+    client = FakeCollectionClient()
+
+    assert QdrantRAGService(client=client).upsert_documents([]) == 0
+    assert client.upserts == []
+
+
+def test_verify_document_ids_retrieves_batched_normalized_ids(configured_settings):
+    point_ids = [f"00000000-0000-0000-0000-{index:012d}" for index in range(1, 66)]
+    client = FakeCollectionClient()
+    client.available_ids = set(point_ids)
+
+    QdrantRAGService(client=client).verify_document_ids(point_ids)
+
+    assert [len(call["ids"]) for call in client.retrieves] == [32, 32, 1]
+    assert all(call["with_payload"] is False for call in client.retrieves)
+    assert all(call["with_vectors"] is False for call in client.retrieves)
+
+
+def test_verify_document_ids_reports_missing_ids_without_client_details(configured_settings):
+    client = FakeCollectionClient()
+    client.available_ids = {document().point_id}
+
+    with pytest.raises(QdrantRAGUnavailable, match="^Qdrant verification failed: 1 document IDs are missing$"):
+        QdrantRAGService(client=client).verify_document_ids([document().point_id, document(2).point_id])
+
+
+def test_verify_document_ids_sanitizes_client_errors(configured_settings):
+    client = FakeCollectionClient(error=RuntimeError("api_key=real-secret"))
+
+    with pytest.raises(QdrantRAGUnavailable, match="^Qdrant verification failed$"):
+        QdrantRAGService(client=client).verify_document_ids([document().point_id])
