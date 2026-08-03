@@ -1,12 +1,12 @@
 """Small, safe boundary around Qdrant Cloud Inference for Lexi retrieval."""
 
 import asyncio
-import uuid
 from typing import Any, Optional, Sequence
 
 from qdrant_client import QdrantClient, models
 
 from settings import settings
+from services.animal_rag_dataset import AnimalRAGDocument, build_qdrant_payload
 
 
 class QdrantRAGUnavailable(RuntimeError):
@@ -87,8 +87,8 @@ class QdrantRAGService:
 
     def ensure_collection(self) -> None:
         """Create the collection once, or reject an incompatible existing one."""
-        client = self._get_client()
         try:
+            client = self._get_client()
             if not client.collection_exists(settings.QDRANT_COLLECTION):
                 client.create_collection(
                     collection_name=settings.QDRANT_COLLECTION,
@@ -102,10 +102,17 @@ class QdrantRAGService:
             collection = client.get_collection(settings.QDRANT_COLLECTION)
             vectors = collection.config.params.vectors
             if isinstance(vectors, dict):
-                vectors = next(iter(vectors.values()), None)
+                if not {"size", "distance"}.issubset(vectors):
+                    raise QdrantRAGUnavailable("Qdrant collection configuration mismatch")
+                size = vectors["size"]
+                distance = vectors["distance"]
+            else:
+                size = getattr(vectors, "size", None)
+                distance = getattr(vectors, "distance", None)
+            normalized_distance = getattr(distance, "value", distance)
             if (
-                getattr(vectors, "size", None) != settings.QDRANT_VECTOR_SIZE
-                or getattr(vectors, "distance", None) != models.Distance.COSINE
+                size != settings.QDRANT_VECTOR_SIZE
+                or str(normalized_distance).casefold() != models.Distance.COSINE.value.casefold()
             ):
                 raise QdrantRAGUnavailable("Qdrant collection configuration mismatch")
         except QdrantRAGUnavailable:
@@ -113,38 +120,63 @@ class QdrantRAGService:
         except Exception as exc:
             raise QdrantRAGUnavailable("Qdrant collection setup failed") from exc
 
-    def upsert_documents(self, documents: Sequence[dict[str, Any]]) -> int:
+    def upsert_documents(self, documents: Sequence[AnimalRAGDocument]) -> int:
         """Idempotently write inference documents with deterministic point IDs."""
         if not documents:
             return 0
 
-        self.ensure_collection()
-        points: list[models.PointStruct] = []
-        for document in documents:
-            text = document.get("text")
-            doc_id = document.get("doc_id")
-            if not isinstance(text, str) or not text.strip() or not doc_id:
-                raise ValueError("Qdrant documents require non-empty text and doc_id")
-            points.append(
+        try:
+            points = [
                 models.PointStruct(
-                    id=str(uuid.uuid5(uuid.NAMESPACE_URL, str(doc_id))),
+                    id=document.point_id,
                     vector=models.Document(
-                        text=text,
+                        text=document.text,
                         model=settings.QDRANT_EMBEDDING_MODEL,
                     ),
-                    payload=dict(document),
+                    payload=build_qdrant_payload(document),
                 )
-            )
-
-        try:
-            self._get_client().upsert(
-                collection_name=settings.QDRANT_COLLECTION,
-                points=points,
-                wait=True,
-            )
+                for document in documents
+            ]
+            client = self._get_client()
+            for start in range(0, len(points), 32):
+                client.upsert(
+                    collection_name=settings.QDRANT_COLLECTION,
+                    points=points[start:start + 32],
+                    wait=True,
+                )
         except Exception as exc:
             raise QdrantRAGUnavailable("Qdrant upsert failed") from exc
         return len(points)
+
+    def verify_document_ids(self, point_ids: Sequence[str]) -> None:
+        """Confirm that every deterministic point ID can be retrieved."""
+        if not point_ids:
+            return
+
+        normalized_ids = [str(point_id) for point_id in point_ids]
+        found_ids: set[str] = set()
+        try:
+            client = self._get_client()
+            for start in range(0, len(normalized_ids), 32):
+                response = client.retrieve(
+                    collection_name=settings.QDRANT_COLLECTION,
+                    ids=normalized_ids[start:start + 32],
+                    with_payload=False,
+                    with_vectors=False,
+                )
+                records = getattr(response, "points", response)
+                for record in records:
+                    point_id = record.get("id") if isinstance(record, dict) else getattr(record, "id", None)
+                    if point_id is not None:
+                        found_ids.add(str(point_id))
+        except Exception as exc:
+            raise QdrantRAGUnavailable("Qdrant verification failed") from exc
+
+        missing_count = sum(point_id not in found_ids for point_id in normalized_ids)
+        if missing_count:
+            raise QdrantRAGUnavailable(
+                f"Qdrant verification failed: {missing_count} document IDs are missing"
+            )
 
 def get_qdrant_rag_service() -> QdrantRAGService:
     """FastAPI dependency factory for the Qdrant retrieval boundary."""
