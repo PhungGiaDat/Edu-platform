@@ -449,3 +449,6 @@ FodyWeavers.xsd
 **/models/3d/
 **/assets/models/
 **/public/models/
+
+# Isolated Codex feature worktrees
+.worktrees/
