@@ -44,9 +44,15 @@ export const getSupabaseStorageBase = (): string => {
   return 'https://rofprrtoeyirssfndxag.supabase.co';
 };
 
+/** Maximum AR session duration before the session is ended. */
+export const AR_SESSION_LIMIT_MINS = 30;
+/** Warning threshold displayed before the AR session limit. */
+export const AR_SESSION_WARNING_MINS = 25;
+/** Maximum number of AR tracks processed simultaneously. */
+export const AR_MAX_TRACKS = 2;
+
 /**
  * Get WebSocket URL based on current environment
- * Priority:
  * 1. VITE_WS_URL env variable
  * 2. Derive from API base URL
  * 3. Localhost fallback
