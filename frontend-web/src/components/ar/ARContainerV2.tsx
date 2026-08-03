@@ -8,6 +8,7 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { eventBus } from '@/runtime/EventBus';
 import { AREvent } from '@/core/types/AREvents';
+import { getSupabaseStorageBase } from '../../config';
 import {
     ARMessage,
     ARMessageType,
@@ -66,11 +67,12 @@ interface ARViewerTarget {
     word?: string;
 }
 
-const PALM_TREE_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb';
-const PALM_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg';
-const ELEPHANT_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg';
-const COMBO_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb';
-const COMBO_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png';
+const SUPABASE_BASE = getSupabaseStorageBase();
+const PALM_TREE_MODEL_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb`;
+const PALM_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg`;
+const ELEPHANT_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg`;
+const COMBO_MODEL_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb`;
+const COMBO_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png`;
 
 function normalizeViewerAssetUrl(url?: string): string | undefined {
     if (!url) return undefined;
@@ -209,6 +211,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         if (!mindUrl && !mindBuffer) return null;
         const params = new URLSearchParams();
         params.set('mind', mindBuffer ? 'runtime-buffer' : mindUrl!);
+        params.set('supabaseBase', SUPABASE_BASE);
 
         const viewerTargets = targets?.length
             ? targets.slice(0, 5)
