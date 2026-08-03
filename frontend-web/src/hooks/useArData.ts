@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import type { ARTarget, ARCombo } from '../types';
-import { getApiBase } from '../config';
+import { getApiBase, getSupabaseStorageBase } from '../config';
 import { eventBus } from '@/runtime/EventBus';
 
 const API_BASE = getApiBase();
-const PALM_TREE_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb';
-const PALM_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg';
+const SUPABASE_BASE = getSupabaseStorageBase();
+const PALM_TREE_MODEL_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb`;
+const PALM_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg`;
 
 function normalizeArAssetUrl(url?: string): string | undefined {
   if (!url) return undefined;

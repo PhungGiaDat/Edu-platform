@@ -9,17 +9,18 @@
  * 5. Trigger combo effects when cards are close together
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { getApiBase } from '../config';
+import { getApiBase, getSupabaseStorageBase } from '../config';
 import { HapticService } from '../services/HapticService';
 import { SoundEffectService } from '../services/SoundEffectService';
 
 const API_BASE = getApiBase();
-const PALM_TREE_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb';
-const PALM_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg';
-const ELEPHANT_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg';
-const COMBO_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb';
-const COMBO_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png';
-const COMBO_MIND_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/combo_targets.mind';
+const SUPABASE_BASE = getSupabaseStorageBase();
+const PALM_TREE_MODEL_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb`;
+const PALM_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg`;
+const ELEPHANT_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg`;
+const COMBO_MODEL_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb`;
+const COMBO_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png`;
+const COMBO_MIND_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/mind-files/combo_targets.mind`;
 
 function normalizeArAssetUrl(url?: string): string | undefined {
     if (!url) return undefined;

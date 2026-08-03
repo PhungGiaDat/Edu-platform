@@ -9,7 +9,7 @@
 export const getApiBase = (): string => {
   // Always prioritize VITE_API_BASE if set
   const envApiBase = import.meta.env.VITE_API_BASE;
-  
+
   if (envApiBase) {
     // Ensure proper protocol
     if (!envApiBase.startsWith('http://') && !envApiBase.startsWith('https://')) {
@@ -20,6 +20,28 @@ export const getApiBase = (): string => {
 
   // Fallback for local development without .env
   return 'http://localhost:8000';
+};
+
+/**
+ * Get Supabase public-storage base URL for AR assets (3D models, MIND files,
+ * combo images, fallbacks).
+ *
+ * Priority:
+ * 1. VITE_SUPABASE_STORAGE_BASE env variable (set in Vercel/local .env)
+ * 2. Dev fallback pointing at the project's primary Supabase bucket
+ *
+ * The returned URL has no trailing slash. Callers append `/storage/v1/object/public/<bucket>/<path>`.
+ */
+export const getSupabaseStorageBase = (): string => {
+  const envBase = import.meta.env.VITE_SUPABASE_STORAGE_BASE;
+
+  if (envBase) {
+    return envBase.replace(/\/$/, '');
+  }
+
+  // Fallback for local development without .env. The bucket is the same
+  // default the backend uses (see backend/settings.py -> SUPABASE_STORAGE_BUCKET).
+  return 'https://rofprrtoeyirssfndxag.supabase.co';
 };
 
 /**

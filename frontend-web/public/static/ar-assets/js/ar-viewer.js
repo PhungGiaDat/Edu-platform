@@ -48,6 +48,11 @@
     // ============ URL PARAMS ============
     const params = new URLSearchParams(window.location.search);
 
+    // Resolve Supabase storage base from parent-provided param; fall back to
+    // the project's primary dev bucket so the iframe still works when the
+    // parent cannot inject a base URL (e.g. debugging or legacy embed paths).
+    const SUPABASE_BASE = (params.get('supabaseBase') || 'https://rofprrtoeyirssfndxag.supabase.co').replace(/\/$/, '');
+
     // ── Listen for Semantic Manager combo events ───────────────────────────────────
     document.addEventListener('ar:semantic-combo', function(e) {
         var result = e.detail || {};
@@ -61,11 +66,11 @@
             loadComboModel(new THREE.Vector3(0, 0, 0));
         }
     });
-    const PALM_TREE_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb';
-    const PALM_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg';
-    const ELEPHANT_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg';
-    const COMBO_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb';
-    const COMBO_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png';
+    const PALM_TREE_MODEL_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb`;
+    const PALM_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg`;
+    const ELEPHANT_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg`;
+    const COMBO_MODEL_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb`;
+    const COMBO_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png`;
     const FALLBACK_COLORMAP_URL = '/textures/colormap-fallback.png';
 
     function isLegacySupabaseColormapUrl(url) {
