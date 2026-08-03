@@ -34,6 +34,7 @@ class FakeCollectionClient(FakeQdrantClient):
         self.distance = distance
         self.error = error
         self.created = []
+        self.payload_indexes = []
         self.upserts = []
         self.retrieves = []
         self.available_ids = set()
@@ -57,6 +58,11 @@ class FakeCollectionClient(FakeQdrantClient):
                 )
             )
         )
+
+    def create_payload_index(self, **kwargs):
+        if self.error:
+            raise self.error
+        self.payload_indexes.append(kwargs)
 
     def upsert(self, **kwargs):
         if self.error:
@@ -140,7 +146,9 @@ async def test_retrieve_returns_empty_for_blank_query_without_calling_qdrant(con
 
 
 @pytest.mark.asyncio
-async def test_retrieve_rejects_missing_configuration_without_client():
+async def test_retrieve_rejects_missing_configuration_without_client(monkeypatch):
+    monkeypatch.setattr(settings, "QDRANT_URL", None)
+    monkeypatch.setattr(settings, "QDRANT_API_KEY", None)
     service = QdrantRAGService()
 
     with pytest.raises(QdrantRAGUnavailable, match="^Qdrant is not configured$"):
@@ -185,6 +193,20 @@ def test_ensure_collection_creates_expected_cosine_vector_collection(configured_
     vector_config = client.created[0]["vectors_config"]
     assert vector_config.size == 384
     assert vector_config.distance == models.Distance.COSINE
+
+
+@pytest.mark.parametrize("exists", [False, True])
+def test_ensure_collection_ensures_keyword_index_for_safety_filter(configured_settings, exists):
+    client = FakeCollectionClient(exists=exists)
+
+    QdrantRAGService(client=client).ensure_collection()
+
+    assert client.payload_indexes == [{
+        "collection_name": settings.QDRANT_COLLECTION,
+        "field_name": "safety_label",
+        "field_schema": models.PayloadSchemaType.KEYWORD,
+        "wait": True,
+    }]
 
 
 def test_ensure_collection_never_recreates_incompatible_existing_collection(configured_settings):

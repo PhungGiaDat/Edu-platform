@@ -97,24 +97,30 @@ class QdrantRAGService:
                         distance=models.Distance.COSINE,
                     ),
                 )
-                return
-
-            collection = client.get_collection(settings.QDRANT_COLLECTION)
-            vectors = collection.config.params.vectors
-            if isinstance(vectors, dict):
-                if not {"size", "distance"}.issubset(vectors):
-                    raise QdrantRAGUnavailable("Qdrant collection configuration mismatch")
-                size = vectors["size"]
-                distance = vectors["distance"]
             else:
-                size = getattr(vectors, "size", None)
-                distance = getattr(vectors, "distance", None)
-            normalized_distance = getattr(distance, "value", distance)
-            if (
-                size != settings.QDRANT_VECTOR_SIZE
-                or str(normalized_distance).casefold() != models.Distance.COSINE.value.casefold()
-            ):
-                raise QdrantRAGUnavailable("Qdrant collection configuration mismatch")
+                collection = client.get_collection(settings.QDRANT_COLLECTION)
+                vectors = collection.config.params.vectors
+                if isinstance(vectors, dict):
+                    if not {"size", "distance"}.issubset(vectors):
+                        raise QdrantRAGUnavailable("Qdrant collection configuration mismatch")
+                    size = vectors["size"]
+                    distance = vectors["distance"]
+                else:
+                    size = getattr(vectors, "size", None)
+                    distance = getattr(vectors, "distance", None)
+                normalized_distance = getattr(distance, "value", distance)
+                if (
+                    size != settings.QDRANT_VECTOR_SIZE
+                    or str(normalized_distance).casefold() != models.Distance.COSINE.value.casefold()
+                ):
+                    raise QdrantRAGUnavailable("Qdrant collection configuration mismatch")
+
+            client.create_payload_index(
+                collection_name=settings.QDRANT_COLLECTION,
+                field_name="safety_label",
+                field_schema=models.PayloadSchemaType.KEYWORD,
+                wait=True,
+            )
         except QdrantRAGUnavailable:
             raise
         except Exception as exc:
