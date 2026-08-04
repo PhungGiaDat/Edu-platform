@@ -32,14 +32,20 @@
 
 - [ ] **Step 1: Write the failing endpoint regression test**
 
-Create a small FastAPI app containing only `flashcard_router`, override
-`get_ar_service` with an `AsyncMock`, and return a complete flashcard, target,
-and raw combo containing `id`, `_id`, and `center_transform`:
+Create a small FastAPI app containing only `flashcard_router`. Build a real
+`ARService` with three mocked repositories so the test exercises the exact
+repository → service → FastAPI response boundary. Return a complete flashcard,
+target, and raw combo containing `id`, `_id`, and `center_transform`:
 
 ```python
 def test_flashcard_with_related_combo_returns_public_combo_contract():
-    service = AsyncMock()
-    service.get_ar_experience.return_value = ar_experience_with_raw_combo()
+    flashcards = AsyncMock()
+    flashcards.get_by_qr_id.return_value = elephant_flashcard()
+    ar_objects = AsyncMock()
+    ar_objects.get_by_tag.return_value = elephant_ar_object()
+    combos = AsyncMock()
+    combos.find_by_tag.return_value = [raw_jungle_combo()]
+    service = ARService(flashcards, ar_objects, combos)
     app.dependency_overrides[get_ar_service] = lambda: service
     response = TestClient(app, raise_server_exceptions=False).get(
         "/api/v1/flashcard/ele123"
