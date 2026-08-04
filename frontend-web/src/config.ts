@@ -55,6 +55,8 @@ export const AR_MAX_TRACKS = 2;
 export const SESSION_LIMIT_SECS = 30 * 60;
 /** Warning threshold shown before hard lock (25 minutes = 1500 seconds). */
 export const SESSION_WARNING_SECS = 25 * 60;
+/** Mandatory cooldown after a completed learning session (5 minutes). */
+export const SESSION_BREAK_SECS = 5 * 60;
 /** Keep aliases for backward compat with LearnARV2 */
 export const AR_SESSION_LIMIT_SECS = SESSION_LIMIT_SECS;
 export const AR_SESSION_WARNING_SECS = SESSION_WARNING_SECS;
