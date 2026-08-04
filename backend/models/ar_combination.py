@@ -13,7 +13,7 @@ default extra="ignore" passes reads silently and blocks writes of unknown fields
 """
 from beanie import Document, Indexed, PydanticObjectId
 from pydantic import BaseModel, ConfigDict, Field
-from typing import List, Optional
+from typing import Any, List, Mapping, Optional
 
 
 # ---------------------------------------------------------------------------
@@ -145,6 +145,7 @@ class ArCombinationSchema(BaseModel):
     image_2d_url: str
     combo_mind_url: Optional[str] = None
     bonus_xp: int = 100
+    center_transform: Optional[TransformSchema] = None
 
     # ---- Semantic fields (migrated from semantic_rules) ----
     semantic_result: Optional[str] = None
@@ -157,3 +158,15 @@ class ArCombinationSchema(BaseModel):
     cross_category_allowed: bool = Field(default=False, description="Allow combo across different categories")
 
     model_config = ConfigDict(extra="forbid", from_attributes=True)
+
+
+def serialize_ar_combination(combo: Mapping[str, Any]) -> ArCombinationSchema:
+    """Convert persistence/repository data to the strict public combo DTO."""
+    payload = {
+        field: combo[field]
+        for field in ArCombinationSchema.model_fields
+        if field in combo
+    }
+    if "bonus_xp" not in payload and "reward_xp" in combo:
+        payload["bonus_xp"] = combo["reward_xp"]
+    return ArCombinationSchema.model_validate(payload)
