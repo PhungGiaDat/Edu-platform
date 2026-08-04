@@ -38,15 +38,15 @@ import { usePets } from '@/hooks/usePets';
 import { useGamification } from '@/hooks/useGamification';
 import { useMultiFlashcard } from '@/hooks/useMultiFlashcard';
 import { useFlashcardSnapshot } from '@/hooks/useFlashcardSnapshot';
-import { useSessionTimer } from '@/hooks/useSessionTimer';
 import { HapticService } from '@/services/HapticService';
 import { SoundEffectService } from '@/services/SoundEffectService';
 import { SpeechService } from '@/services/SpeechService';
 import { AudioService } from '@/services/AudioService';
 import { eventBus } from '@/runtime/EventBus';
-import { getApiBase, AR_SESSION_LIMIT_MINS, AR_SESSION_WARNING_MINS, AR_MAX_TRACKS } from '@/config';
+import { getApiBase, AR_MAX_TRACKS } from '@/config';
 import { apiClient } from '@/services/apiClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSession } from '@/context/SessionContext';
 import type { DisplayMode, AppMode } from '@/hooks/useDisplayMode';
 import type { GameDifficulty, GameType } from '@/types';
 
@@ -578,12 +578,12 @@ export default function LearnARV2() {
     const [showGameSelector, setShowGameSelector] = useState(false);
 
     // ========== SESSION TIMER ==========
-    const sessionTimer = useSessionTimer({
-        limitMins: AR_SESSION_LIMIT_MINS,
-        warningMins: AR_SESSION_WARNING_MINS,
-        onWarning: () => setShowBreakReminder(true),
-        onLimitReached: () => setShowBreakReminder(true),
-    });
+    const {
+        isWarning: timerWarning,
+        isLimitReached: timerLimitReached,
+        remainingSeconds,
+        extendLock,
+    } = useSession();
 
     // Keep ref in sync with state so unmount cleanup can read the latest value
     useEffect(() => {
@@ -1334,14 +1334,10 @@ export default function LearnARV2() {
     }, []);
 
     // Break reminder handlers
-    const handleBreakContinue = useCallback(() => {
-        setShowBreakReminder(false);
-    }, []);
-
     const handleBreakExtend = useCallback((mins: number) => {
-        sessionTimer.extendTime(mins);
+        extendLock(mins);
         setShowBreakReminder(false);
-    }, [sessionTimer]);
+    }, [extendLock]);
 
     const handleBreakExit = useCallback(async () => {
         // End session on backend
@@ -1728,10 +1724,10 @@ export default function LearnARV2() {
 
             {/* Break Reminder Overlay */}
             <BreakReminder
-                remainingMins={sessionTimer.remainingMins}
-                isWarning={showBreakReminder && !sessionTimer.isLimitReached}
-                isLimitReached={showBreakReminder && sessionTimer.isLimitReached}
-                onContinue={handleBreakContinue}
+                remainingSeconds={remainingSeconds}
+                isWarning={timerWarning}
+                isLimitReached={timerLimitReached}
+                onContinue={() => setShowBreakReminder(false)}
                 onExtend={handleBreakExtend}
                 onExit={handleBreakExit}
             />

@@ -51,6 +51,14 @@ export const AR_SESSION_WARNING_MINS = 25;
 /** Maximum number of AR tracks processed simultaneously. */
 export const AR_MAX_TRACKS = 2;
 
+/** Maximum session duration before hard lock (30 minutes = 1800 seconds). */
+export const SESSION_LIMIT_SECS = 30 * 60;
+/** Warning threshold shown before hard lock (25 minutes = 1500 seconds). */
+export const SESSION_WARNING_SECS = 25 * 60;
+/** Keep aliases for backward compat with LearnARV2 */
+export const AR_SESSION_LIMIT_SECS = SESSION_LIMIT_SECS;
+export const AR_SESSION_WARNING_SECS = SESSION_WARNING_SECS;
+
 /**
  * Get WebSocket URL based on current environment
  * 1. VITE_WS_URL env variable
