@@ -9,13 +9,15 @@ GET    /session-lock/status       — Get current lock status
 POST   /session-lock/end         — End session and cleanup
 """
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
+from datetime import datetime
+from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
 import logging
 
 from models.user_mongo import UserDocument
 from core.security import get_current_user
 from utils.session_service import get_session_service, SessionService
+from services.lock_service import lock_service
 
 router = APIRouter(prefix="/session-lock", tags=["Session Lock"])
 logger = logging.getLogger(__name__)
@@ -34,6 +36,17 @@ class SessionHeartbeatRequest(BaseModel):
 
 class LockRequest(BaseModel):
     reason: Optional[str] = "manual"
+
+
+class SessionExtendRequest(BaseModel):
+    extra_minutes: int = Field(10, ge=1, le=120)
+    extended_by: str = "parent"
+
+
+class UsageTodayResponse(BaseModel):
+    date: str
+    total_minutes: int
+    sessions: list[dict]
 
 
 class SessionStatusResponse(BaseModel):
@@ -158,6 +171,90 @@ async def unlock_app(
     await session_service.unlock(user_id)
 
     return {"success": True, "message": "App unlocked", "is_locked": False}
+
+
+# ========== Session Lock Extension, Pause, Resume & Usage ==========
+
+@router.post("/extend")
+async def extend_session_lock(
+    payload: SessionExtendRequest,
+    current_user: UserDocument = Depends(get_current_user),
+):
+    """
+    Extend the current session by extra_minutes (parent override).
+    """
+    user_id = str(current_user.id)
+    logger.info(f"[SessionLock] Extend requested by {payload.extended_by} for user={user_id}")
+
+    result = lock_service.extend_lock(
+        user_id=user_id,
+        extra_minutes=payload.extra_minutes,
+        extended_by=payload.extended_by,
+    )
+
+    if not result:
+        raise HTTPException(status_code=400, detail="No active session to extend")
+
+    return {
+        "user_id": user_id,
+        "is_active": True,
+        "is_locked": False,
+        "duration_seconds": result.get("ttl_seconds", 0),
+        "started_at": result.get("started_at"),
+        "last_activity": result.get("last_activity"),
+        "active_topic": result.get("metadata", {}).get("active_topic"),
+        "idle_seconds": 0,
+        "lock_reason": None,
+    }
+
+
+@router.get("/usage/today")
+async def get_usage_today(
+    current_user: UserDocument = Depends(get_current_user),
+):
+    """
+    Get today's usage statistics for the current user.
+    """
+    user_id = str(current_user.id)
+    usage = lock_service.get_usage_today(user_id)
+
+    return {
+        "date": datetime.utcnow().strftime("%Y-%m-%d"),
+        "total_minutes": usage.get("total_minutes", 0),
+        "sessions": usage.get("sessions", []),
+    }
+
+
+@router.post("/pause")
+async def pause_session_lock(
+    current_user: UserDocument = Depends(get_current_user),
+):
+    """
+    Pause the session timer.
+    """
+    user_id = str(current_user.id)
+    success = lock_service.pause_lock(user_id)
+
+    if not success:
+        raise HTTPException(status_code=400, detail="No active session to pause")
+
+    return {"success": True, "is_paused": True}
+
+
+@router.post("/resume")
+async def resume_session_lock(
+    current_user: UserDocument = Depends(get_current_user),
+):
+    """
+    Resume the session timer.
+    """
+    user_id = str(current_user.id)
+    success = lock_service.resume_lock(user_id)
+
+    if not success:
+        raise HTTPException(status_code=400, detail="No paused session to resume")
+
+    return {"success": True, "is_paused": False}
 
 
 @router.get("/status", response_model=SessionStatusResponse)
