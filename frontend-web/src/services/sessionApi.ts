@@ -7,14 +7,20 @@
 import { api } from './axiosConfig';
 
 export interface LockState {
-  state: 'active' | 'warning' | 'locked' | 'paused' | 'unlocked';
   user_id: string;
-  started_at: string;
-  expires_at: string;
-  ttl_seconds: number;
-  warning_threshold_seconds: number;
-  is_paused: boolean;
-  remaining_seconds: number;
+  is_active: boolean;
+  is_locked: boolean;
+  started_at?: string;
+  last_activity?: string;
+  active_topic?: string;
+  idle_seconds?: number;
+  duration_seconds?: number;
+  lock_reason?: string;
+  state?: 'active' | 'warning' | 'locked' | 'paused' | 'unlocked';
+  ttl_seconds?: number;
+  remaining_seconds?: number;
+  warning_threshold_seconds?: number;
+  is_paused?: boolean;
   metadata?: Record<string, unknown>;
 }
 
@@ -48,29 +54,26 @@ export interface RateLimitInfo {
 }
 
 class SessionApiService {
-  private sessionId: string | null = null;
-  private keepAliveInterval: number | null = null;
-
   /**
-   * Start a new app lock session.
+   * Start a new app lock session (POST /session-lock/start).
    */
   async startLock(
     ttlMinutes?: number,
     metadata?: Record<string, unknown>
   ): Promise<LockState> {
     const response = await api.post('/api/v1/session-lock/start', {
-      ttl_minutes: ttlMinutes,
-      metadata,
+      active_topic: metadata?.active_topic as string | undefined,
+      device_info: metadata?.device_info as Record<string, unknown> | undefined,
     });
     return response.data;
   }
 
   /**
-   * Get current lock state.
+   * Get current lock status (GET /session-lock/status).
    */
   async getLockState(): Promise<LockState | null> {
     try {
-      const response = await api.get('/api/v1/session-lock/state');
+      const response = await api.get('/api/v1/session-lock/status');
       return response.data;
     } catch {
       return null;
@@ -78,19 +81,22 @@ class SessionApiService {
   }
 
   /**
-   * Check if user is locked.
+   * Send heartbeat to keep session alive (POST /session-lock/heartbeat).
+   * Called every 60s by SessionContext.
    */
-  async isLocked(): Promise<boolean> {
+  async heartbeat(activeTopic?: string): Promise<unknown> {
     try {
-      const response = await api.get('/api/v1/session-lock/is-locked');
-      return response.data.is_locked;
+      const response = await api.post('/api/v1/session-lock/heartbeat', {
+        active_topic: activeTopic,
+      });
+      return response.data;
     } catch {
-      return false;
+      return null;
     }
   }
 
   /**
-   * Pause the lock timer.
+   * Pause the session timer (POST /session-lock/pause).
    */
   async pauseLock(): Promise<boolean> {
     try {
@@ -102,7 +108,7 @@ class SessionApiService {
   }
 
   /**
-   * Resume the lock timer.
+   * Resume the session timer (POST /session-lock/resume).
    */
   async resumeLock(): Promise<boolean> {
     try {
@@ -114,12 +120,11 @@ class SessionApiService {
   }
 
   /**
-   * Unlock/end the session.
+   * End/unlock session (POST /session-lock/unlock).
    */
   async unlock(): Promise<boolean> {
     try {
       await api.post('/api/v1/session-lock/unlock');
-      this.stopKeepAlive();
       return true;
     } catch {
       return false;
@@ -127,7 +132,7 @@ class SessionApiService {
   }
 
   /**
-   * Extend lock time (parent override).
+   * Extend lock time by extra_minutes (POST /session-lock/extend).
    */
   async extendLock(
     extraMinutes: number,
@@ -145,11 +150,11 @@ class SessionApiService {
   }
 
   /**
-   * Record activity to keep session active.
+   * End tracked session (POST /session-lock/end).
    */
-  async recordActivity(): Promise<boolean> {
+  async endSession(): Promise<boolean> {
     try {
-      await api.post('/api/v1/session-lock/activity');
+      await api.post('/api/v1/session-lock/end');
       return true;
     } catch {
       return false;
@@ -157,141 +162,15 @@ class SessionApiService {
   }
 
   /**
-   * Get usage statistics for today.
+   * Get today's usage statistics (GET /session-lock/usage/today).
    */
-  async getUsageToday(): Promise<UsageStats> {
-    const response = await api.get('/api/v1/session-lock/usage/today');
-    return response.data;
-  }
-
-  /**
-   * Get usage statistics for a date range.
-   */
-  async getUsageRange(startDate: string, endDate: string): Promise<{
-    start_date: string;
-    end_date: string;
-    total_minutes: number;
-    daily_breakdown: Array<{ date: string; minutes: number }>;
-  }> {
-    const response = await api.get('/api/v1/session-lock/usage/range', {
-      params: { start_date: startDate, end_date: endDate },
-    });
-    return response.data;
-  }
-
-  // ==================== Session Management ====================
-
-  /**
-   * Create a new session (after login).
-   */
-  async createSession(jti: string, metadata?: Record<string, unknown>): Promise<SessionData> {
-    const response = await api.post('/api/v1/sessions', {
-      jti,
-      metadata,
-    });
-    this.sessionId = response.data.session_id;
-    this.startKeepAlive();
-    return response.data;
-  }
-
-  /**
-   * Validate current session.
-   */
-  async validateSession(): Promise<SessionData | null> {
-    if (!this.sessionId) return null;
-    
+  async getUsageToday(): Promise<UsageStats | null> {
     try {
-      const response = await api.get(`/api/v1/sessions/${this.sessionId}`);
+      const response = await api.get('/api/v1/session-lock/usage/today');
       return response.data;
     } catch {
-      this.sessionId = null;
       return null;
     }
-  }
-
-  /**
-   * Refresh session to extend TTL.
-   */
-  async refreshSession(): Promise<boolean> {
-    if (!this.sessionId) return false;
-    
-    try {
-      await api.post(`/api/v1/sessions/${this.sessionId}/refresh`);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Delete/logout session.
-   */
-  async deleteSession(): Promise<boolean> {
-    if (!this.sessionId) return true;
-    
-    try {
-      await api.delete(`/api/v1/sessions/${this.sessionId}`);
-      this.stopKeepAlive();
-      this.sessionId = null;
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Get all sessions for current user.
-   */
-  async getUserSessions(): Promise<SessionData[]> {
-    const response = await api.get('/api/v1/sessions');
-    return response.data;
-  }
-
-  /**
-   * Logout from all devices.
-   */
-  async logoutAllSessions(): Promise<boolean> {
-    try {
-      await api.delete('/api/v1/sessions/all');
-      this.stopKeepAlive();
-      this.sessionId = null;
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  // ==================== Keep Alive ====================
-
-  /**
-   * Start periodic keep-alive to maintain session.
-   */
-  private startKeepAlive(): void {
-    if (this.keepAliveInterval) return;
-
-    // Send keep-alive every 5 minutes
-    this.keepAliveInterval = window.setInterval(async () => {
-      await this.recordActivity();
-      await this.refreshSession();
-    }, 5 * 60 * 1000);
-  }
-
-  /**
-   * Stop periodic keep-alive.
-   */
-  private stopKeepAlive(): void {
-    if (this.keepAliveInterval) {
-      clearInterval(this.keepAliveInterval);
-      this.keepAliveInterval = null;
-    }
-  }
-
-  /**
-   * Manually trigger keep-alive.
-   */
-  async keepAlive(): Promise<void> {
-    await this.recordActivity();
-    await this.refreshSession();
   }
 }
 
