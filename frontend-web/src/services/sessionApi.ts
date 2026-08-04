@@ -58,7 +58,7 @@ class SessionApiService {
    * Start a new app lock session (POST /session-lock/start).
    */
   async startLock(
-    ttlMinutes?: number,
+    _ttlMinutes?: number,
     metadata?: Record<string, unknown>
   ): Promise<LockState> {
     const response = await api.post('/api/v1/session-lock/start', {

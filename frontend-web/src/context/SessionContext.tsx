@@ -148,7 +148,7 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
       if (result) {
         // Extend the local start time to effectively give them more time
         const extraMs = extraMinutes * 60 * 1000;
-        setStartTime(prev => prev - elapsedSeconds * 1000 + (elapsedSeconds + extraMinutes * 60) * 1000);
+        setStartTime(prev => prev + extraMs);
         setPausedSeconds(0);
         setIsManualPaused(false);
         return;
@@ -156,10 +156,10 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
     }
     // Local-only fallback (guests)
     const extraMs = extraMinutes * 60 * 1000;
-    setStartTime(prev => prev - elapsedSeconds * 1000 + (elapsedSeconds + extraMinutes * 60) * 1000);
+    setStartTime(prev => prev + extraMs);
     setPausedSeconds(0);
     setIsManualPaused(false);
-  }, [isAuthed, elapsedSeconds]);
+  }, [isAuthed]);
 
   const reset = useCallback(() => {
     setStartTime(Date.now());
