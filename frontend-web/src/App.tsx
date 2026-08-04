@@ -26,6 +26,7 @@ import { useAuth } from "./contexts/AuthContext";
 import { getApiBase } from "./config";
 import { apiClient } from "./services/apiClient";
 import { SoundEffectService } from "./services/SoundEffectService";
+import { GlobalSessionWatcher } from "./components/GlobalSessionWatcher";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -308,6 +309,9 @@ const App = () => {
 
       {/* Global Pet Unlock Celebration Modal */}
       <GlobalPetUnlockNotifier />
+
+      {/* Global Session Break Reminder */}
+      <GlobalSessionWatcher />
     </>
   );
 };
