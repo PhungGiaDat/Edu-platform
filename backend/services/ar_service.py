@@ -7,6 +7,7 @@ from typing import Optional, Dict, Any
 from repositories.flashcard_repository import FlashcardRepository, get_flashcard_repository
 from repositories.ar_object_repository import ARObjectRepository, get_ar_object_repository
 from repositories.ar_combination_repository import ARCombinationRepository, get_ar_combination_repository
+from models.ar_combination import serialize_ar_combination
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,8 @@ class ARService:
         # Get AR combinations for this tag
         related_combos = []
         if ar_tag:
-            related_combos = await self.ar_combination_repo.find_by_tag(ar_tag)
+            raw_combos = await self.ar_combination_repo.find_by_tag(ar_tag)
+            related_combos = [serialize_ar_combination(combo) for combo in raw_combos]
         
         # Build complete AR experience response (must match ARExperienceResponseSchema)
         return {
