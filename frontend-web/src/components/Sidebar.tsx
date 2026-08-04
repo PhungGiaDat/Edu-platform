@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DailyGoal } from '@/components/Gamification/DailyGoal';
 import { StreakBadge } from '@/components/Gamification/StreakBadge';
 import { CompletedBookIcon, StickerStarIcon, XpBoltIcon } from '@/components/icons/ProgressIcons';
+import { SessionTimerBadge } from './SessionTimerBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { courseService } from '@/services/CourseService';
 import { apiClient } from '@/services/apiClient';
@@ -379,7 +380,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                 aria-label="Learning sidebar"
                 className="learner-sidebar learner-sidebar--desktop fixed left-0 top-0 z-[var(--z-nav)] hidden h-[100dvh] flex-col overflow-x-hidden border-r-4 border-white bg-[#FFF7EC] shadow-[4px_0_24px_rgba(91,141,239,0.10)] transition-[width] duration-300 md:flex motion-reduce:transition-none"
             >
-                <div className={`learner-sidebar__header flex min-w-0 shrink-0 items-center px-3 pb-1 pt-3 ${isDesktopExpanded ? 'justify-end' : 'justify-center'}`}>
+                <div className={`learner-sidebar__header flex min-w-0 shrink-0 items-center gap-2 px-3 pb-1 pt-3 ${isDesktopExpanded ? 'justify-end' : 'justify-center'}`}>
+                    <SessionTimerBadge />
                     <button
                         type="button"
                         onClick={() => onDesktopExpandedChange(!isDesktopExpanded)}
@@ -496,7 +498,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                     <div ref={mobileSheetRef} id="mobile-more-sheet" role="dialog" aria-modal="true" aria-labelledby="mobile-more-title" className="absolute bottom-0 left-0 right-0 max-h-[88dvh] overflow-x-hidden overflow-y-auto rounded-t-[36px] bg-[#FFF7EC] px-4 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-4 shadow-[0_-12px_40px_rgba(15,23,42,0.22)]">
                         <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-slate-300" />
                         <div className="mb-5 flex items-center justify-between">
-                            <h2 id="mobile-more-title" className="text-xl font-black text-slate-800">More adventures</h2>
+                            <div className="flex items-center gap-2">
+                                <SessionTimerBadge />
+                                <h2 id="mobile-more-title" className="text-xl font-black text-slate-800">More adventures</h2>
+                            </div>
                             <button type="button" onClick={() => setIsMobileMoreOpen(false)} aria-label="Close more menu" className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-[0_4px_0_#E5E7EB]"><CloseIcon /></button>
                         </div>
                         <div className="space-y-5">
