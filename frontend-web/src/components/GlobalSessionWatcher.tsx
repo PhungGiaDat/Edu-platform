@@ -11,48 +11,39 @@ import { useSession } from '../context/SessionContext';
 import { BreakReminder } from './BreakReminder';
 
 export const GlobalSessionWatcher: React.FC = () => {
-  const { isWarning, isLimitReached, remainingSeconds, pauseLock, extendLock } =
+  const { isWarning, isLimitReached, remainingSeconds, pause, extendLock } =
     useSession();
 
   // Track "has shown warning" to avoid re-showing after dismiss
   const [warningDismissed, setWarningDismissed] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (isWarning && !warningDismissed) {
-      setIsVisible(true);
-    } else if (!isWarning && !isLimitReached) {
+    if (!isWarning && !isLimitReached) {
       // Timer dropped below warning threshold (e.g. extended) — reset dismiss flag
       setWarningDismissed(false);
     }
-  }, [isWarning, isLimitReached, warningDismissed]);
+  }, [isWarning, isLimitReached]);
 
   const handleContinue = () => {
     // "Keep Going!" — just close the warning popup, clock keeps running
     setWarningDismissed(true);
-    setIsVisible(false);
   };
 
   const handleExit = () => {
     // "Take a Break" — pause the timer and go to dashboard
-    pauseLock();
+    pause();
     setWarningDismissed(true);
-    setIsVisible(false);
     window.location.href = '/profile';
   };
 
   const handleExtend = (mins: number) => {
     extendLock(mins);
     setWarningDismissed(false);
-    setIsVisible(false);
   };
-
-  const showPopup = isVisible && (isWarning || isLimitReached);
-  const remainingMins = Math.ceil(remainingSeconds / 60);
 
   return (
     <BreakReminder
-      remainingMins={remainingMins}
+      remainingSeconds={remainingSeconds}
       isWarning={isWarning && !warningDismissed}
       isLimitReached={isLimitReached}
       onContinue={isWarning ? handleContinue : undefined}

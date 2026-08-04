@@ -582,8 +582,6 @@ export default function LearnARV2() {
         isWarning: timerWarning,
         isLimitReached: timerLimitReached,
         remainingSeconds,
-        pause: sessionPause,
-        resume: sessionResume,
         extendLock,
     } = useSession();
 
