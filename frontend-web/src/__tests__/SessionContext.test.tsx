@@ -75,6 +75,30 @@ describe('SessionContext', () => {
     });
   });
 
+  it('keeps the in-memory break state when browser storage rejects writes', () => {
+    localStorage.setItem('edu_session_state_v1', JSON.stringify({
+      version: 1,
+      phase: 'limit_reached',
+    }));
+    const storageFailure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('full', 'QuotaExceededError');
+    });
+
+    try {
+      const { result } = renderHook(() => useSession(), {
+        wrapper: ({ children }) => (
+          <RouterSessionProvider initialPath="/courses/animals">{children}</RouterSessionProvider>
+        ),
+      });
+
+      act(() => result.current.takeBreak());
+
+      expect(result.current.isOnBreak).toBe(true);
+    } finally {
+      storageFailure.mockRestore();
+    }
+  });
+
   it('does not start a session on /profile', () => {
     const { result } = renderHook(() => useSession(), {
       wrapper: ({ children }) => (
