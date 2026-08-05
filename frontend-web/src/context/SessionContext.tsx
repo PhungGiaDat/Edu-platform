@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useIdleDetector } from '../hooks/useIdleDetector';
 import {
   beginLearningSession,
+  getBrowserSessionStorage,
   getSessionSnapshot,
   isLearningPath,
   readSessionState,
@@ -47,7 +48,9 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
   const { isIdle } = useIdleDetector(5 * 60 * 1000);
   const [isTabHidden, setIsTabHidden] = useState(() => document.hidden);
   const [clockNow, setClockNow] = useState(() => Date.now());
-  const [sessionState, setSessionState] = useState(() => readSessionState(localStorage, Date.now()));
+  const [sessionState, setSessionState] = useState(() => (
+    readSessionState(getBrowserSessionStorage(), Date.now())
+  ));
 
   const shouldRun = learningPath && !isTabHidden && !isIdle;
   const shouldTick =
@@ -77,7 +80,7 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
   }, [shouldRun]);
 
   useEffect(() => {
-    writeSessionState(localStorage, sessionState);
+    writeSessionState(getBrowserSessionStorage(), sessionState);
   }, [sessionState]);
 
   useEffect(() => {
@@ -100,7 +103,7 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
     const next = takeSessionBreak(now);
     setClockNow(now);
     setSessionState(next);
-    writeSessionState(localStorage, next);
+    writeSessionState(getBrowserSessionStorage(), next);
     if (isAuthed) {
       void sessionApi.endSession().then(success => {
         if (!success) console.warn('[SessionContext] backend cleanup failed');
