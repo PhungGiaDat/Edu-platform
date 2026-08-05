@@ -21,6 +21,7 @@ import { useComboDetection } from '@/hooks/useComboDetection';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { dualDisplayManager } from '@/runtime/DualDisplayManager';
 import { ComboDefinition } from '@/lib/combo/types';
+import { armViewerBootstrapWatchdog } from './viewerBootstrapWatchdog';
 
 // ========== TYPES ==========
 export type ARPhase = 'IDLE' | 'SCANNING' | 'LOADING' | 'VIEWING' | 'ERROR'
@@ -73,6 +74,7 @@ const PALM_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/asse
 const ELEPHANT_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg`;
 const COMBO_MODEL_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb`;
 const COMBO_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png`;
+const VIEWER_BOOTSTRAP_TIMEOUT_MS = 15_000;
 
 function normalizeViewerAssetUrl(url?: string): string | undefined {
     if (!url) return undefined;
@@ -144,6 +146,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const pipRef = useRef<HTMLIFrameElement>(null);
+    const cancelViewerBootstrapWatchdogRef = useRef<(() => void) | null>(null);
 
     // Ref-held buffer so the long-lived MIND_BUFFER_REQUEST listener (see the
     // stable handler below) can ship the latest merged buffer to the iframe
@@ -374,6 +377,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             }
 
             case 'AR_READY':
+                if (fromPiP || phase !== 'VIEWING' || event.source !== iframeRef.current?.contentWindow) break;
+                cancelViewerBootstrapWatchdogRef.current?.();
+                cancelViewerBootstrapWatchdogRef.current = null;
                 emitDebug('PARENT_AR_READY', {
                     payload,
                     fromPiP,
@@ -460,7 +466,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
             case 'SYSTEM_ERROR':
             case 'AR_ERROR' as any: {
-                const data = payload as { code?: string; error?: string; message?: string; url?: string };
+                const fromActiveViewer = event.source === iframeRef.current?.contentWindow;
+                if (!fromActiveViewer || fromPiP) break;
+                const data = payload as { code?: string; error?: string; message?: string; url?: string; stage?: string; elapsedMs?: number };
                 const errorMsg = data.error || data.message || 'Unknown error';
                 callbacksRef.current.onViewerAssetError?.({
                     code: data.code,
@@ -487,7 +495,10 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                     });
                     break;
                 }
+                cancelViewerBootstrapWatchdogRef.current?.();
+                cancelViewerBootstrapWatchdogRef.current = null;
                 setError(errorMsg);
+                transitionTo('ERROR');
                 eventBus.emit(AREvent.AR_ERROR, { error: new Error(errorMsg) } as any);
                 break;
             }
@@ -567,6 +578,38 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         }
     }, [phase, mindUrl, transitionTo]);
 
+    useEffect(() => {
+        cancelViewerBootstrapWatchdogRef.current?.();
+        cancelViewerBootstrapWatchdogRef.current = null;
+
+        if (phase !== 'VIEWING' || !viewerSrc) return;
+
+        cancelViewerBootstrapWatchdogRef.current = armViewerBootstrapWatchdog({
+            timeoutMs: VIEWER_BOOTSTRAP_TIMEOUT_MS,
+            onTimeout: () => {
+                emitDebug('PARENT_VIEWER_BOOTSTRAP_TIMEOUT', {
+                    timeoutMs: VIEWER_BOOTSTRAP_TIMEOUT_MS,
+                    viewerSrc
+                });
+                setError("AR couldn't start. Let's scan the card again.");
+                transitionTo('ERROR');
+            }
+        });
+
+        return () => {
+            cancelViewerBootstrapWatchdogRef.current?.();
+            cancelViewerBootstrapWatchdogRef.current = null;
+        };
+    }, [phase, viewerSrc, emitDebug, transitionTo]);
+
+    const handleScanAgain = useCallback(() => {
+        cancelViewerBootstrapWatchdogRef.current?.();
+        cancelViewerBootstrapWatchdogRef.current = null;
+        setError(null);
+        setIsReady(false);
+        transitionTo('SCANNING');
+    }, [transitionTo]);
+
     // Debug overlay for development
     const debugOverlay = process.env.NODE_ENV === 'development' ? (
         <div style={{
@@ -599,8 +642,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             {phase === 'ERROR' && (
                 <div style={{ position: 'absolute', inset: 0, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100000, color: '#FF6B6B', flexDirection: 'column' }}>
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
-                    <p style={{ marginTop: 16 }}>{error || 'An error occurred'}</p>
-                    <button onClick={() => transitionTo('SCANNING')} style={{ marginTop: 24, padding: '12px 24px', background: '#4ECDC4', border: 'none', borderRadius: 20, color: '#fff', cursor: 'pointer', minHeight: 48, minWidth: 120 }}>Try Again</button>
+                    <p style={{ marginTop: 16 }}>{error || "AR couldn't start. Let's scan the card again."}</p>
+                    <button onClick={handleScanAgain} style={{ marginTop: 24, padding: '12px 24px', background: '#4ECDC4', border: 'none', borderRadius: 20, color: '#fff', cursor: 'pointer', minHeight: 48, minWidth: 120 }}>Scan Again</button>
                 </div>
             )}
 
@@ -610,6 +653,10 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                     ref={iframeRef}
                     key={`main-${mindIdentityKey}`}
                     src={mainSrc}
+                    onLoad={() => emitDebug('PARENT_VIEWER_IFRAME_LOADED', {
+                        phase,
+                        src: phase === 'VIEWING' ? 'viewer' : 'scanner'
+                    })}
                     allow="camera; microphone; autoplay; fullscreen"
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', zIndex: 1 }}
                 />

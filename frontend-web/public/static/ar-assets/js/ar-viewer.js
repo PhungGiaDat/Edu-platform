@@ -33,6 +33,8 @@
 
     let currentMode = '3D';
     let isReady = false;
+    const initializationStartedAt = Date.now();
+    let initializationFailureReported = false;
     const activeTargets = new Map();
     const COMBO_THRESHOLD = 2;
     const targetLostTimers = new Map();
@@ -790,6 +792,7 @@
             log('✅', '🎉 AR READY EVENT FIRED - MindAR initialized successfully!');
             log('✅', 'Camera and tracking are now active');
             isReady = true;
+            initializationFailureReported = false;
             sendDebug('MINDAR_READY', {
                 targetCount
             });
@@ -816,6 +819,8 @@
         });
 
         scene.addEventListener('arError', (e) => {
+            if (initializationFailureReported) return;
+            initializationFailureReported = true;
             log('❌', '🚨 AR ERROR EVENT FIRED!');
             log('❌', 'AR Error details:', e.detail);
             log('❌', 'This usually means MindAR failed to initialize or MIND file is invalid');
@@ -828,7 +833,9 @@
             sendToParent('SYSTEM_ERROR', {
                 code: 'AR_ERROR',
                 message: e.detail || 'Unknown error',
-                mindUrl: mindUrl
+                mindUrl: mindUrl,
+                stage: 'mindar-initialization',
+                elapsedMs: Date.now() - initializationStartedAt
             });
         });
         
@@ -843,20 +850,25 @@
             log('🎨', 'Scene render started');
         });
 
-        // Failsafe: never leave user blocked by loading overlay
+        // Fail fast rather than leaving a child behind a permanent spinner.
         window.setTimeout(() => {
-            if (!isReady) {
+            if (!isReady && !initializationFailureReported) {
+                initializationFailureReported = true;
                 log('⚠️', '⏰ Timeout reached - AR not ready after 10 seconds');
                 log('⚠️', 'Forcing loading overlay removal');
                 const overlay = document.getElementById('ar-loading-overlay');
                 if (overlay && overlay.style.display !== 'none') {
                     const txt = document.getElementById('ar-load-text');
-                    if (txt) txt.textContent = 'Starting camera...';
-                    overlay.style.opacity = '0';
-                    setTimeout(() => { overlay.style.display = 'none'; }, 400);
+                    if (txt) txt.textContent = "AR couldn't start";
                 }
+                sendToParent('SYSTEM_ERROR', {
+                    code: 'MINDAR_INITIALIZATION_TIMEOUT',
+                    message: 'AR tracking did not start in time',
+                    stage: 'mindar-initialization',
+                    elapsedMs: Date.now() - initializationStartedAt
+                });
             }
-        }, 10000);
+        }, 12000);
 
         // Target tracking
         log('🎯', 'Setting up target tracking listeners for target-0 and target-1');
