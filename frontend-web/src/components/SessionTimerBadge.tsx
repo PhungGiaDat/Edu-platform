@@ -19,10 +19,10 @@ function formatMMSS(secs: number): string {
 }
 
 export const SessionTimerBadge: React.FC = () => {
-  const { remainingSeconds, isWarning, isLimitReached, isPaused, isInitialized } =
+  const { phase, remainingSeconds, isWarning, isLimitReached, isPaused, isInitialized } =
     useSession();
 
-  if (!isInitialized) return null;
+  if (!isInitialized || phase === null || phase === 'on_break') return null;
 
   const isCritical = isLimitReached;
   const isWarn = isWarning && !isLimitReached;
