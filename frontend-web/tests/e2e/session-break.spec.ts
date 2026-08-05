@@ -3,7 +3,7 @@
  * Playwright E2E tests for the session break reminder feature.
  * Covers the persisted child-safe break flow on desktop and Mobile Safari.
  *
- * Uses guest mode for fast, reliable test execution without requiring auth.
+ * Uses deterministic authenticated learner storage and mocked auth responses.
  * Uses /courses/animals page which has Layout with sidebar and GlobalSessionWatcher.
  *
  */
