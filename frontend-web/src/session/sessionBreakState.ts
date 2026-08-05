@@ -11,6 +11,18 @@ export const LEGACY_SESSION_KEYS = [
   'edu_session_paused_seconds',
 ] as const;
 
+export function getBrowserSessionStorage(): Storage | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 export type SessionState =
   | { version: 1; phase: 'active'; elapsedSeconds: number; runningSince: number | null }
   | { version: 1; phase: 'limit_reached' }
@@ -143,7 +155,11 @@ export function getSessionSnapshot(state: SessionState | null, now: number): Ses
   };
 }
 
-export function readSessionState(storage: Storage, now: number): SessionState | null {
+export function readSessionState(storage: Storage | null, now: number): SessionState | null {
+  if (storage === null) {
+    return null;
+  }
+
   const remove = (key: string) => {
     try {
       storage.removeItem(key);
@@ -224,7 +240,11 @@ export function readSessionState(storage: Storage, now: number): SessionState | 
   return invalid();
 }
 
-export function writeSessionState(storage: Storage, state: SessionState | null): void {
+export function writeSessionState(storage: Storage | null, state: SessionState | null): void {
+  if (storage === null) {
+    return;
+  }
+
   try {
     if (state === null) {
       storage.removeItem(SESSION_STATE_STORAGE_KEY);

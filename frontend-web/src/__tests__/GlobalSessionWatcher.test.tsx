@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -34,6 +34,22 @@ function renderWatcher(initialPath: string) {
       </SessionProvider>
     </MemoryRouter>,
   );
+}
+
+function makeLocalStorageUnavailable(): () => void {
+  const descriptor = Object.getOwnPropertyDescriptor(window, 'localStorage');
+  if (!descriptor) {
+    throw new Error('Expected window.localStorage to have an own-property descriptor');
+  }
+
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    get: () => {
+      throw new DOMException('blocked', 'SecurityError');
+    },
+  });
+
+  return () => Object.defineProperty(window, 'localStorage', descriptor);
 }
 
 describe('GlobalSessionWatcher', () => {
@@ -173,6 +189,30 @@ describe('GlobalSessionWatcher', () => {
       expect(screen.getByTestId('profile-route')).toBeInTheDocument();
     } finally {
       storageFailure.mockRestore();
+    }
+  });
+
+  it('takes a break and returns to profile when the localStorage getter is blocked', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-05T00:00:00Z'));
+    const restoreLocalStorage = makeLocalStorageUnavailable();
+
+    try {
+      renderWatcher('/courses/animals');
+
+      act(() => {
+        vi.setSystemTime(new Date('2026-08-05T00:30:00Z'));
+        vi.advanceTimersByTime(1_000);
+      });
+
+      const takeBreak = screen.getByRole('button', { name: /take a break/i });
+      fireEvent.click(takeBreak);
+
+      expect(screen.getByTestId('profile-route')).toBeInTheDocument();
+      expect(screen.queryByText('Time for a Break!')).not.toBeInTheDocument();
+    } finally {
+      restoreLocalStorage();
+      vi.useRealTimers();
     }
   });
 

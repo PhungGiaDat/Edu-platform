@@ -36,6 +36,22 @@ function RouteController({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function makeLocalStorageUnavailable(): () => void {
+  const descriptor = Object.getOwnPropertyDescriptor(window, 'localStorage');
+  if (!descriptor) {
+    throw new Error('Expected window.localStorage to have an own-property descriptor');
+  }
+
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    get: () => {
+      throw new DOMException('blocked', 'SecurityError');
+    },
+  });
+
+  return () => Object.defineProperty(window, 'localStorage', descriptor);
+}
+
 describe('SessionContext', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -96,6 +112,23 @@ describe('SessionContext', () => {
       expect(result.current.isOnBreak).toBe(true);
     } finally {
       storageFailure.mockRestore();
+    }
+  });
+
+  it('initializes an in-memory learning session when the localStorage getter is blocked', () => {
+    const restoreLocalStorage = makeLocalStorageUnavailable();
+
+    try {
+      const { result } = renderHook(() => useSession(), {
+        wrapper: ({ children }) => (
+          <RouterSessionProvider initialPath="/courses/animals">{children}</RouterSessionProvider>
+        ),
+      });
+
+      expect(result.current.phase).toBe('active');
+      expect(result.current.elapsedSeconds).toBe(0);
+    } finally {
+      restoreLocalStorage();
     }
   });
 
