@@ -3,6 +3,7 @@ import {
   SESSION_LIMIT_SECS,
   SESSION_WARNING_SECS,
 } from '../config';
+import { matchPath } from 'react-router-dom';
 
 export const SESSION_STATE_STORAGE_KEY = 'edu_session_state_v1';
 export const LEGACY_SESSION_KEYS = [
@@ -28,7 +29,7 @@ export interface SessionSnapshot {
 
 const elapsedAt = (state: Extract<SessionState, { phase: 'active' }>, now: number) =>
   state.elapsedSeconds +
-  (state.runningSince === null ? 0 : Math.max(0, Math.floor((now - state.runningSince) / 1000)));
+  (state.runningSince === null ? 0 : Math.max(0, (now - state.runningSince) / 1000));
 
 const emptySnapshot = (): SessionSnapshot => ({
   phase: null,
@@ -102,8 +103,8 @@ export function getSessionSnapshot(state: SessionState | null, now: number): Ses
 
     return {
       phase: isLimitReached ? 'limit_reached' : 'active',
-      elapsedSeconds,
-      remainingSeconds: Math.max(0, SESSION_LIMIT_SECS - elapsedSeconds),
+      elapsedSeconds: Math.floor(elapsedSeconds),
+      remainingSeconds: Math.max(0, Math.ceil(SESSION_LIMIT_SECS - elapsedSeconds)),
       breakRemainingSeconds: 0,
       isWarning: elapsedSeconds >= SESSION_WARNING_SECS && !isLimitReached,
       isLimitReached,
@@ -143,9 +144,23 @@ export function getSessionSnapshot(state: SessionState | null, now: number): Ses
 }
 
 export function readSessionState(storage: Storage, now: number): SessionState | null {
-  LEGACY_SESSION_KEYS.forEach((key) => storage.removeItem(key));
+  const remove = (key: string) => {
+    try {
+      storage.removeItem(key);
+    } catch {
+      // Browser storage can be unavailable in privacy-restricted contexts.
+    }
+  };
 
-  const raw = storage.getItem(SESSION_STATE_STORAGE_KEY);
+  LEGACY_SESSION_KEYS.forEach(remove);
+
+  let raw: string | null;
+  try {
+    raw = storage.getItem(SESSION_STATE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+
   if (raw === null) {
     return null;
   }
@@ -154,12 +169,12 @@ export function readSessionState(storage: Storage, now: number): SessionState | 
   try {
     parsed = JSON.parse(raw);
   } catch {
-    storage.removeItem(SESSION_STATE_STORAGE_KEY);
+    remove(SESSION_STATE_STORAGE_KEY);
     return null;
   }
 
   const invalid = () => {
-    storage.removeItem(SESSION_STATE_STORAGE_KEY);
+    remove(SESSION_STATE_STORAGE_KEY);
     return null;
   };
 
@@ -210,21 +225,28 @@ export function readSessionState(storage: Storage, now: number): SessionState | 
 }
 
 export function writeSessionState(storage: Storage, state: SessionState | null): void {
-  if (state === null) {
-    storage.removeItem(SESSION_STATE_STORAGE_KEY);
-    return;
-  }
+  try {
+    if (state === null) {
+      storage.removeItem(SESSION_STATE_STORAGE_KEY);
+      return;
+    }
 
-  storage.setItem(SESSION_STATE_STORAGE_KEY, JSON.stringify(state));
+    storage.setItem(SESSION_STATE_STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // Keep the in-memory state authoritative when browser storage is blocked.
+  }
 }
 
 export function isLearningPath(pathname: string): boolean {
+  const matches = (path: string) =>
+    matchPath({ path, end: true, caseSensitive: false }, pathname) !== null;
+
   return (
-    pathname === '/learn-ar' ||
-    pathname === '/flashcards' ||
-    pathname.startsWith('/flashcards/') ||
-    pathname === '/courses' ||
-    pathname.startsWith('/courses/') ||
-    /^\/f\/[^/]+$/.test(pathname)
+    matches('/learn-ar') ||
+    matches('/flashcards') ||
+    matches('/flashcards/*') ||
+    matches('/courses') ||
+    matches('/courses/*') ||
+    matches('/f/:id')
   );
 }

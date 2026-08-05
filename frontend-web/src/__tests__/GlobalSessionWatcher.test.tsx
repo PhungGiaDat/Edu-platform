@@ -18,6 +18,7 @@ function renderWatcher(initialPath: string) {
       <SessionProvider>
         <Routes>
           <Route path="/courses/animals" element={<div data-testid="course-route" />} />
+          <Route path="/learn-ar" element={<div data-testid="learn-ar-route" />} />
           <Route path="/profile" element={<div data-testid="profile-route" />} />
         </Routes>
         <GlobalSessionWatcher />
@@ -62,6 +63,38 @@ describe('GlobalSessionWatcher', () => {
     expect(screen.getByText(/\d{2}:\d{2}/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /back to profile/i }));
     expect(screen.getByTestId('profile-route')).toBeInTheDocument();
+  });
+
+  it.each(['/COURSES/animals/', '/LEARN-AR/'])('shows cooldown on a React Router learning-path variant: %s', initialPath => {
+    localStorage.setItem('edu_session_state_v1', JSON.stringify({
+      version: 1,
+      phase: 'on_break',
+      breakUntil: Date.now() + 5 * 60_000,
+    }));
+
+    renderWatcher(initialPath);
+
+    expect(screen.getByRole('dialog', { name: /break time in progress/i })).toBeInTheDocument();
+  });
+
+  it('returns to profile after take-break storage writes fail', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem('edu_session_state_v1', JSON.stringify({
+      version: 1,
+      phase: 'limit_reached',
+    }));
+    const storageFailure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('full', 'QuotaExceededError');
+    });
+
+    try {
+      renderWatcher('/courses/animals');
+
+      await user.click(screen.getByRole('button', { name: /take a break/i }));
+      expect(screen.getByTestId('profile-route')).toBeInTheDocument();
+    } finally {
+      storageFailure.mockRestore();
+    }
   });
 
   it('traps focus in the cooldown dialog and restores the prior focus on unmount', async () => {
