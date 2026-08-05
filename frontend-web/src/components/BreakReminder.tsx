@@ -11,6 +11,10 @@
 
 import React, { useEffect, useRef } from 'react';
 
+const getFocusableElements = (dialog: HTMLElement) => Array.from(dialog.querySelectorAll<HTMLElement>(
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+));
+
 // Format remaining seconds as "Xm Ys" or "X min"
 function formatTime(secs: number): string {
   const m = Math.floor(secs / 60);
@@ -162,19 +166,10 @@ export const BreakReminder: React.FC<BreakReminderProps> = ({
       ? document.activeElement
       : null;
 
-    const focusableElements = () => Array.from(dialog.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-    ));
-
-    const focusFirst = () => {
-      const [first] = focusableElements();
-      (first ?? dialog).focus();
-    };
-
     const trapFocus = (event: KeyboardEvent) => {
       if (event.key !== 'Tab') return;
 
-      const focusable = focusableElements();
+      const focusable = getFocusableElements(dialog);
       if (focusable.length === 0) {
         event.preventDefault();
         dialog.focus();
@@ -194,7 +189,6 @@ export const BreakReminder: React.FC<BreakReminderProps> = ({
       }
     };
 
-    focusFirst();
     document.addEventListener('keydown', trapFocus);
 
     return () => {
@@ -204,6 +198,14 @@ export const BreakReminder: React.FC<BreakReminderProps> = ({
       }
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!isOpen || !dialog) return;
+
+    const [first] = getFocusableElements(dialog);
+    (first ?? dialog).focus();
+  }, [isOpen, isLimitReached]);
 
   if (!isOpen) return null;
 

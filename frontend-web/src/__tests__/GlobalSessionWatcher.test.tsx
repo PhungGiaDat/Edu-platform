@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GlobalSessionWatcher } from '../components/GlobalSessionWatcher';
+import { BreakReminder } from '../components/BreakReminder';
 import { SessionProvider } from '../context/SessionContext';
 
 vi.mock('../contexts/AuthContext', () => ({
@@ -98,6 +99,46 @@ describe('GlobalSessionWatcher', () => {
       await user.click(takeBreak);
       expect(screen.getByTestId('profile-route')).toBeInTheDocument();
       expect(trigger).toHaveFocus();
+    } finally {
+      trigger.remove();
+    }
+  });
+
+  it('refocuses the hard-limit action when a warning becomes a limit', async () => {
+    const user = userEvent.setup();
+    const trigger = document.createElement('button');
+    trigger.textContent = 'Open course';
+    document.body.appendChild(trigger);
+    trigger.focus();
+
+    try {
+      const { rerender } = render(
+        <BreakReminder
+          isWarning
+          isLimitReached={false}
+          remainingSeconds={60}
+          onContinue={vi.fn()}
+          onExit={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByRole('button', { name: /keep going/i })).toHaveFocus();
+
+      rerender(
+        <BreakReminder
+          isWarning={false}
+          isLimitReached
+          remainingSeconds={0}
+          onExit={vi.fn()}
+        />,
+      );
+
+      const takeBreak = screen.getByRole('button', { name: /take a break/i });
+      expect(takeBreak).toHaveFocus();
+      await user.tab();
+      expect(takeBreak).toHaveFocus();
+      await user.tab({ shift: true });
+      expect(takeBreak).toHaveFocus();
     } finally {
       trigger.remove();
     }
