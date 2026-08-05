@@ -69,6 +69,9 @@ export interface ARMessagePayloadMap {
     SYSTEM_ERROR: {
         code: string;
         message: string;
+        stage?: string;
+        url?: string;
+        elapsedMs?: number;
     };
 
     // Scanner

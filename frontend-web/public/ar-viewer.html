@@ -63,6 +63,9 @@
         (function () {
             var params = new URLSearchParams(window.location.search);
             var runtimeMindUrl = null;
+            var BOOTSTRAP_DEADLINE_MS = 8000;
+            var bootstrapStartedAt = Date.now();
+            var bootstrapFailureReported = false;
 
             // Combo model parameters
             var comboModelUrl = params.get('comboModel');
@@ -78,12 +81,119 @@
                 }, '*');
             }
 
-            function loadScript(src) {
+            function elapsedBootstrapMs() {
+                return Date.now() - bootstrapStartedAt;
+            }
+
+            function updateLoadingText(text) {
+                var loadText = document.getElementById('ar-load-text');
+                if (loadText) loadText.textContent = text;
+            }
+
+            function reportBootstrapFailure(error) {
+                if (bootstrapFailureReported) return;
+                bootstrapFailureReported = true;
+                updateLoadingText("AR couldn't start");
+                postToParent('AR_DEBUG', {
+                    label: 'VIEWER_BOOTSTRAP_FAILED',
+                    details: {
+                        code: error.code || 'AR_VIEWER_BOOTSTRAP_FAILED',
+                        stage: error.stage || 'bootstrap',
+                        url: error.url || null,
+                        elapsedMs: elapsedBootstrapMs(),
+                        message: error.message || String(error)
+                    },
+                    source: 'ar-viewer-bootstrap'
+                });
+                postToParent('SYSTEM_ERROR', {
+                    code: error.code || 'AR_VIEWER_BOOTSTRAP_FAILED',
+                    message: error.message || String(error),
+                    stage: error.stage || 'bootstrap',
+                    url: error.url || undefined,
+                    elapsedMs: elapsedBootstrapMs()
+                });
+            }
+
+            function createBootstrapError(code, message, stage, url) {
+                var error = new Error(message);
+                error.code = code;
+                error.stage = stage;
+                error.url = url;
+                return error;
+            }
+
+            function loadScript(src, stage, deadlineAt) {
                 return new Promise(function (resolve, reject) {
+                    var remainingMs = deadlineAt - Date.now();
+                    if (remainingMs <= 0) {
+                        reject(createBootstrapError(
+                            'AR_RUNTIME_SCRIPT_TIMEOUT',
+                            'AR runtime bootstrap timed out before ' + stage + ' could start',
+                            stage,
+                            src
+                        ));
+                        return;
+                    }
+
+                    postToParent('AR_DEBUG', {
+                        label: 'AR_RUNTIME_SCRIPT_START',
+                        details: { stage: stage, url: src, remainingMs: remainingMs },
+                        source: 'ar-viewer-bootstrap'
+                    });
+
                     var script = document.createElement('script');
+                    var settled = false;
+                    var timeoutId = window.setTimeout(function () {
+                        finish(createBootstrapError(
+                            'AR_RUNTIME_SCRIPT_TIMEOUT',
+                            'Timed out loading AR runtime script: ' + stage,
+                            stage,
+                            src
+                        ));
+                    }, remainingMs);
+
+                    function finish(error) {
+                        if (settled) return;
+                        settled = true;
+                        window.clearTimeout(timeoutId);
+                        script.onload = null;
+                        script.onerror = null;
+
+                        if (error) {
+                            if (script.parentNode) script.parentNode.removeChild(script);
+                            postToParent('AR_DEBUG', {
+                                label: 'AR_RUNTIME_SCRIPT_FAILED',
+                                details: {
+                                    stage: stage,
+                                    url: src,
+                                    code: error.code || 'AR_RUNTIME_SCRIPT_LOAD_FAILED',
+                                    elapsedMs: elapsedBootstrapMs(),
+                                    message: error.message
+                                },
+                                source: 'ar-viewer-bootstrap'
+                            });
+                            reject(error);
+                            return;
+                        }
+
+                        postToParent('AR_DEBUG', {
+                            label: 'AR_RUNTIME_SCRIPT_READY',
+                            details: { stage: stage, url: src, elapsedMs: elapsedBootstrapMs() },
+                            source: 'ar-viewer-bootstrap'
+                        });
+                        resolve();
+                    }
+
                     script.src = src;
-                    script.onload = resolve;
-                    script.onerror = function () { reject(new Error('Failed to load ' + src)); };
+                    script.onload = function () { finish(null); };
+                    script.onerror = function () {
+                        finish(createBootstrapError(
+                            'AR_RUNTIME_SCRIPT_LOAD_FAILED',
+                            'Failed to load AR runtime script: ' + stage,
+                            stage,
+                            src
+                        ));
+                    };
                     document.head.appendChild(script);
                 });
             }
@@ -178,14 +288,21 @@
             }
 
             async function bootstrap() {
+                bootstrapStartedAt = Date.now();
+                var deadlineAt = bootstrapStartedAt + BOOTSTRAP_DEADLINE_MS;
                 var requestedMind = params.get('mind') || '';
+                postToParent('AR_DEBUG', {
+                    label: 'VIEWER_BOOTSTRAP_START',
+                    details: { requestedMind: requestedMind, deadlineMs: BOOTSTRAP_DEADLINE_MS },
+                    source: 'ar-viewer-bootstrap'
+                });
                 var mindUrl = requestedMind === 'runtime-buffer'
                     ? await receiveMindBuffer()
                     : requestedMind;
                 if (!mindUrl) throw new Error('No Mind target source was provided');
 
-                await loadScript('https://aframe.io/releases/1.4.2/aframe.min.js');
-                await loadScript('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js');
+                await loadScript('https://aframe.io/releases/1.4.2/aframe.min.js', 'aframe', deadlineAt);
+                await loadScript('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js', 'mindar', deadlineAt);
 
                 var maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));
                 var config = [
@@ -204,7 +321,7 @@
                 var scene = template.content.firstElementChild.cloneNode(true);
                 scene.setAttribute('mindar-image', config);
                 document.body.appendChild(scene);
-                await loadScript('/static/ar-assets/js/ar-viewer.js');
+                await loadScript('/static/ar-assets/js/ar-viewer.js', 'viewer', deadlineAt);
 
                 // Load combo model if URL params provided
                 if (comboModelUrl) {
@@ -286,10 +403,12 @@
             });
 
             bootstrap().catch(function (error) {
-                postToParent('SYSTEM_ERROR', {
-                    code: 'MIND_BUFFER_BOOTSTRAP_ERROR',
-                    message: error && error.message ? error.message : String(error)
-                });
+                reportBootstrapFailure(error || createBootstrapError(
+                    'AR_VIEWER_BOOTSTRAP_FAILED',
+                    'AR viewer bootstrap failed',
+                    'bootstrap',
+                    null
+                ));
             });
         })();
     </script>
