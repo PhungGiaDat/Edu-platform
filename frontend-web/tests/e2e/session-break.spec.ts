@@ -15,29 +15,19 @@ test.describe('Session Break Reminder', () => {
     // Enable guest mode so we can test without real auth
     await page.addInitScript(() => {
       localStorage.setItem('guestMode', 'true');
-      localStorage.removeItem('edu_session_started_at');
-      localStorage.removeItem('edu_session_paused_seconds');
-      localStorage.removeItem('edu_session_state_v1');
-    });
-  });
-
-  test.afterEach(async ({ page }) => {
-    // Clean up session storage after each test
-    await page.evaluate(() => {
-      localStorage.removeItem('edu_session_started_at');
-      localStorage.removeItem('edu_session_paused_seconds');
-      localStorage.removeItem('edu_session_state_v1');
     });
   });
 
   test('timer badge shows elapsed time in sidebar', async ({ page }) => {
     await page.addInitScript(() => {
-      localStorage.setItem('edu_session_state_v1', JSON.stringify({
-        version: 1,
-        phase: 'active',
-        elapsedSeconds: 5 * 60,
-        runningSince: null,
-      }));
+      if (localStorage.getItem('edu_session_state_v1') === null) {
+        localStorage.setItem('edu_session_state_v1', JSON.stringify({
+          version: 1,
+          phase: 'active',
+          elapsedSeconds: 5 * 60,
+          runningSince: null,
+        }));
+      }
     });
 
     await page.goto('/courses/animals', { waitUntil: 'load' });
@@ -54,12 +44,14 @@ test.describe('Session Break Reminder', () => {
 
   test('tab hidden pauses the clock', async ({ page }) => {
     await page.addInitScript(() => {
-      localStorage.setItem('edu_session_state_v1', JSON.stringify({
-        version: 1,
-        phase: 'active',
-        elapsedSeconds: 10 * 60,
-        runningSince: null,
-      }));
+      if (localStorage.getItem('edu_session_state_v1') === null) {
+        localStorage.setItem('edu_session_state_v1', JSON.stringify({
+          version: 1,
+          phase: 'active',
+          elapsedSeconds: 10 * 60,
+          runningSince: null,
+        }));
+      }
     });
 
     await page.goto('/courses/animals', { waitUntil: 'load' });
@@ -83,10 +75,12 @@ test.describe('Session Break Reminder', () => {
   test('lets a child leave the persisted limit overlay and shows cooldown only on learning routes', async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('guestMode', 'true');
-      localStorage.setItem('edu_session_state_v1', JSON.stringify({
-        version: 1,
-        phase: 'limit_reached',
-      }));
+      if (localStorage.getItem('edu_session_state_v1') === null) {
+        localStorage.setItem('edu_session_state_v1', JSON.stringify({
+          version: 1,
+          phase: 'limit_reached',
+        }));
+      }
     });
 
     await page.goto('/courses/animals');
@@ -95,8 +89,20 @@ test.describe('Session Break Reminder', () => {
     await page.getByRole('button', { name: /take a break/i }).click();
     await expect(page).toHaveURL(/\/profile$/);
     await expect(page.getByText('Time for a Break!')).toHaveCount(0);
+    const onBreakState = await page.evaluate(() => {
+      const raw = localStorage.getItem('edu_session_state_v1');
+      return raw === null ? null : JSON.parse(raw);
+    });
+    expect(onBreakState).toMatchObject({ version: 1, phase: 'on_break' });
+    expect(onBreakState?.breakUntil).toBeGreaterThan(Date.now());
     await page.reload();
     await expect(page.getByText('Time for a Break!')).toHaveCount(0);
+    const reloadedState = await page.evaluate(() => {
+      const raw = localStorage.getItem('edu_session_state_v1');
+      return raw === null ? null : JSON.parse(raw);
+    });
+    expect(reloadedState).toMatchObject({ version: 1, phase: 'on_break' });
+    expect(reloadedState?.breakUntil).toBeGreaterThan(Date.now());
     await page.goto('/courses/animals');
     await expect(page.getByText('Break time in progress')).toBeVisible();
   });
