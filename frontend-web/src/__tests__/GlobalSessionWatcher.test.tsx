@@ -1,4 +1,6 @@
 import '@testing-library/jest-dom/vitest';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -60,5 +62,44 @@ describe('GlobalSessionWatcher', () => {
     expect(screen.getByText(/\d{2}:\d{2}/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /back to profile/i }));
     expect(screen.getByTestId('profile-route')).toBeInTheDocument();
+  });
+
+  it('traps focus in the cooldown dialog and restores the prior focus on unmount', async () => {
+    const user = userEvent.setup();
+    const trigger = document.createElement('button');
+    document.body.appendChild(trigger);
+    trigger.focus();
+    localStorage.setItem('edu_session_state_v1', JSON.stringify({
+      version: 1,
+      phase: 'on_break',
+      breakUntil: Date.now() + 5 * 60_000,
+    }));
+
+    const { unmount } = renderWatcher('/courses/animals');
+    const backToProfile = screen.getByRole('button', { name: /back to profile/i });
+
+    expect(backToProfile).toHaveFocus();
+    await user.tab();
+    expect(backToProfile).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(backToProfile).toHaveFocus();
+
+    unmount();
+    expect(trigger).toHaveFocus();
+    trigger.remove();
+  });
+
+  it('keeps LearnARV2 free of a page-local break reminder', () => {
+    const learnArPath = [
+      resolve(process.cwd(), 'src/pages/LearnARV2.tsx'),
+      resolve(process.cwd(), 'frontend-web/src/pages/LearnARV2.tsx'),
+    ].find(existsSync);
+
+    expect(learnArPath).toBeDefined();
+    const learnArSource = readFileSync(learnArPath!, 'utf8');
+
+    expect(learnArSource).not.toContain('components/BreakReminder');
+    expect(learnArSource).not.toMatch(/<BreakReminder\b/);
+    expect(learnArSource).not.toMatch(/10 More Minutes \(Parent\)/);
   });
 });
