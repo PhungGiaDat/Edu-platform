@@ -136,7 +136,6 @@ interface BreakReminderProps {
   isLimitReached: boolean;
   remainingSeconds: number;
   onContinue?: () => void;
-  onExtend?: (mins: number) => void;
   onExit?: () => void;
 }
 
@@ -145,7 +144,6 @@ export const BreakReminder: React.FC<BreakReminderProps> = ({
   isLimitReached,
   remainingSeconds,
   onContinue,
-  onExtend,
   onExit,
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -251,13 +249,6 @@ export const BreakReminder: React.FC<BreakReminderProps> = ({
               {isWarning && onContinue && (
                 <ClayButton variant="green" onClick={onContinue}>
                   ✨ Keep Going!
-                </ClayButton>
-              )}
-
-              {/* "10 More Minutes (Parent)" — only in limit state */}
-              {isLimitReached && onExtend && (
-                <ClayButton variant="blue" onClick={() => onExtend?.(10)}>
-                  🔒 10 More Minutes (Parent)
                 </ClayButton>
               )}
 

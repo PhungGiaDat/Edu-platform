@@ -30,7 +30,6 @@ import { ARGamificationPanel } from '@/components/Gamification/ARGamificationPan
 import { PetSelector } from '@/components/pets/PetSelector';
 import { RewardCelebration } from '@/components/Gamification/RewardCelebration';
 import { ErrorFriendly } from '@/components/ErrorFriendly';
-import { BreakReminder } from '@/components/BreakReminder';
 import { useArData } from '@/hooks/useArData';
 import { useQuizData } from '@/hooks/useQuizData';
 import { useGameData } from '@/hooks/useGameData';
@@ -46,7 +45,6 @@ import { eventBus } from '@/runtime/EventBus';
 import { getApiBase, AR_MAX_TRACKS } from '@/config';
 import { apiClient } from '@/services/apiClient';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSession } from '@/context/SessionContext';
 import type { DisplayMode, AppMode } from '@/hooks/useDisplayMode';
 import type { GameDifficulty, GameType } from '@/types';
 
@@ -539,10 +537,6 @@ export default function LearnARV2() {
     const [isAddingCard, setIsAddingCard] = useState(false);
     const [, setIsComboActive] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [showBreakReminder, setShowBreakReminder] = useState(false);
-    // Mirror showBreakReminder in a ref so the unmount cleanup reads the latest value
-    // (the cleanup effect has an empty dep array and would otherwise capture a stale false)
-    const showBreakReminderRef = useRef(false);
 
     // Pet chat popup state
     const [petChat, setPetChat] = useState<{ petName: string; word: string } | null>(null);
@@ -577,19 +571,6 @@ export default function LearnARV2() {
     const [selectedGameType, setSelectedGameType] = useState<GameType | null>(null);
     const [showGameSelector, setShowGameSelector] = useState(false);
 
-    // ========== SESSION TIMER ==========
-    const {
-        isWarning: timerWarning,
-        isLimitReached: timerLimitReached,
-        remainingSeconds,
-        extendLock,
-    } = useSession();
-
-    // Keep ref in sync with state so unmount cleanup can read the latest value
-    useEffect(() => {
-        showBreakReminderRef.current = showBreakReminder;
-    }, [showBreakReminder]);
-
     // ── Start backend session on mount (only when authenticated) ────────────────
     useEffect(() => {
         if (!USER_ID || !token) return;
@@ -623,7 +604,7 @@ export default function LearnARV2() {
             // Fire-and-forget (page unmounting)
             apiClient.patch(
                 `/api/v1/sessions/${sid}/end`,
-                { break_reminder_sent: showBreakReminderRef.current },
+                { break_reminder_sent: false },
                 { keepalive: true }
             ).catch(() => {});
         };
@@ -1333,23 +1314,6 @@ export default function LearnARV2() {
         setAppMode('LEARNING');
     }, []);
 
-    // Break reminder handlers
-    const handleBreakExtend = useCallback((mins: number) => {
-        extendLock(mins);
-        setShowBreakReminder(false);
-    }, [extendLock]);
-
-    const handleBreakExit = useCallback(async () => {
-        // End session on backend
-        const sid = sessionIdRef.current;
-        if (sid) {
-            try {
-                await apiClient.patch(`/api/v1/sessions/${sid}/end`, { break_reminder_sent: true });
-            } catch { /* ignore */ }
-        }
-        navigate('/');
-    }, [navigate]);
-
     // ========== EFFECTS ==========
     useEffect(() => {
         if (arData && mindUrl && appState === 'LOADING') {
@@ -1721,16 +1685,6 @@ export default function LearnARV2() {
 
             {/* Reward Celebration Overlay */}
             <RewardCelebration autoListen={true} />
-
-            {/* Break Reminder Overlay */}
-            <BreakReminder
-                remainingSeconds={remainingSeconds}
-                isWarning={timerWarning}
-                isLimitReached={timerLimitReached}
-                onContinue={() => setShowBreakReminder(false)}
-                onExtend={handleBreakExtend}
-                onExit={handleBreakExit}
-            />
 
             {/* Pet Chat Popup — shown when user taps the pet */}
             {petChat && (
