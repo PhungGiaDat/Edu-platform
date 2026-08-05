@@ -17,7 +17,15 @@ function renderWatcher(initialPath: string) {
     <MemoryRouter initialEntries={[initialPath]}>
       <SessionProvider>
         <Routes>
-          <Route path="/courses/animals" element={<div data-testid="course-route" />} />
+          <Route
+            path="/courses/animals"
+            element={(
+              <>
+                <button type="button">Obscured course control</button>
+                <div data-testid="course-route" />
+              </>
+            )}
+          />
           <Route path="/learn-ar" element={<div data-testid="learn-ar-route" />} />
           <Route path="/profile" element={<div data-testid="profile-route" />} />
         </Routes>
@@ -63,6 +71,36 @@ describe('GlobalSessionWatcher', () => {
     expect(screen.getByText(/\d{2}:\d{2}/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /back to profile/i }));
     expect(screen.getByTestId('profile-route')).toBeInTheDocument();
+  });
+
+  it('contains focus in the hard-limit reminder and restores it after navigation', async () => {
+    const user = userEvent.setup();
+    const trigger = document.createElement('button');
+    trigger.textContent = 'Open course';
+    document.body.appendChild(trigger);
+    trigger.focus();
+    localStorage.setItem('edu_session_state_v1', JSON.stringify({
+      version: 1,
+      phase: 'limit_reached',
+    }));
+
+    try {
+      renderWatcher('/courses/animals');
+      const takeBreak = screen.getByRole('button', { name: /take a break/i });
+
+      expect(takeBreak).toHaveFocus();
+      await user.tab();
+      expect(takeBreak).toHaveFocus();
+      await user.tab({ shift: true });
+      expect(takeBreak).toHaveFocus();
+      expect(screen.getByRole('button', { name: /obscured course control/i })).not.toHaveFocus();
+
+      await user.click(takeBreak);
+      expect(screen.getByTestId('profile-route')).toBeInTheDocument();
+      expect(trigger).toHaveFocus();
+    } finally {
+      trigger.remove();
+    }
   });
 
   it.each(['/COURSES/animals/', '/LEARN-AR/'])('shows cooldown on a React Router learning-path variant: %s', initialPath => {
