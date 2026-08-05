@@ -10,12 +10,37 @@
 
 import { test, expect } from '@playwright/test';
 
+const testLearner = {
+  id: 'e2e-learner',
+  email: 'e2e-learner@example.test',
+  username: 'E2E Learner',
+  role: 'learner',
+  roles: ['learner'],
+  is_superuser: false,
+};
+
 test.describe('Session Break Reminder', () => {
   test.beforeEach(async ({ page }) => {
-    // Enable guest mode so we can test without real auth
-    await page.addInitScript(() => {
-      localStorage.setItem('guestMode', 'true');
-    });
+    await page.route('**/api/v1/auth/me', route =>
+      route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify(testLearner),
+      }),
+    );
+    await page.route('**/api/v1/session-lock/end', route =>
+      route.fulfill({ status: 204 }),
+    );
+    await page.addInitScript(user => {
+      const payload = btoa(JSON.stringify({
+        sub: user.id,
+        email: user.email,
+        username: user.username,
+        exp: Math.floor(Date.now() / 1000) + 60 * 60,
+      }));
+      localStorage.removeItem('guestMode');
+      localStorage.setItem('authToken', `e2e.${payload}.signature`);
+      localStorage.setItem('authUser', JSON.stringify(user));
+    }, testLearner);
   });
 
   test('timer badge shows elapsed time in sidebar', async ({ page }) => {
@@ -34,12 +59,11 @@ test.describe('Session Break Reminder', () => {
     await page.waitForSelector('body', { timeout: 10000 });
     await page.waitForTimeout(3000);
 
-    // Badge should be visible with time showing
+    // The desktop sidebar is hidden in the iPhone layout, but its timer state remains mounted.
     const badge = page.locator('[title*="remaining"]');
-    await expect(badge).toBeVisible({ timeout: 10000 });
-    const text = await badge.textContent();
-    // Should show approximately 25 minutes (30 - 5) remaining
-    expect(text).toMatch(/\d{2}:\d{2}/); // Match format like "25:00"
+    await expect(badge).toBeAttached({ timeout: 10000 });
+    await expect(badge).toHaveAttribute('title', /\d{2}:\d{2} remaining/);
+    await expect(badge).toHaveText(/\d{2}:\d{2}/);
   });
 
   test('tab hidden pauses the clock', async ({ page }) => {
@@ -58,9 +82,10 @@ test.describe('Session Break Reminder', () => {
     await page.waitForSelector('body', { timeout: 10000 });
     await page.waitForTimeout(3000);
 
-    // Badge shows normal time
+    // The timer state is mounted even though the desktop sidebar is hidden on iPhone.
     const badge = page.locator('[title*="remaining"]');
-    await expect(badge).toBeVisible({ timeout: 10000 });
+    await expect(badge).toBeAttached({ timeout: 10000 });
+    await expect(badge).toHaveAttribute('title', /\d{2}:\d{2} remaining/);
 
     // Simulate tab becoming hidden
     await page.evaluate(() => {
@@ -68,13 +93,14 @@ test.describe('Session Break Reminder', () => {
       document.dispatchEvent(new Event('visibilitychange'));
     });
 
-    // Badge should show Paused
-    await expect(page.locator('[title*="paused" i]')).toBeVisible({ timeout: 5000 });
+    const pausedBadge = page.locator('[title*="paused" i]');
+    await expect(pausedBadge).toBeAttached({ timeout: 5000 });
+    await expect(pausedBadge).toHaveAttribute('title', /session paused/i);
+    await expect(pausedBadge).toContainText('Paused');
   });
 
   test('lets a child leave the persisted limit overlay and shows cooldown only on learning routes', async ({ page }) => {
     await page.addInitScript(() => {
-      localStorage.setItem('guestMode', 'true');
       if (localStorage.getItem('edu_session_state_v1') === null) {
         localStorage.setItem('edu_session_state_v1', JSON.stringify({
           version: 1,
