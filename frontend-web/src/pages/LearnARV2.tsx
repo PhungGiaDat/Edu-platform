@@ -42,7 +42,7 @@ import { SoundEffectService } from '@/services/SoundEffectService';
 import { SpeechService } from '@/services/SpeechService';
 import { AudioService } from '@/services/AudioService';
 import { eventBus } from '@/runtime/EventBus';
-import { getApiBase, AR_MAX_TRACKS } from '@/config';
+import { getApiBase, AR_MAX_TRACKS, isPersistentMindViewerEnabled } from '@/config';
 import { apiClient } from '@/services/apiClient';
 import { useAuth } from '@/contexts/AuthContext';
 import type { DisplayMode, AppMode } from '@/hooks/useDisplayMode';
@@ -1132,14 +1132,43 @@ export default function LearnARV2() {
         });
     }, [trackFlashcardView, addFlashcard, emitMobileDebug, appState, flashcardCount]);
 
+    // Task 9: Feature flag check - fail closed if flag absent
+    const isPersistentViewerEnabled = isPersistentMindViewerEnabled();
+
+    // Task 9: Add card scan session ref for new flow
+    const addCardScanSessionRef = useRef<string | null>(null);
+
+    // Task 9: Add card status for new flow
+    const [addCardStatus, setAddCardStatus] = useState<'idle' | 'scanning' | 'success' | 'error' | 'timeout' | 'cancelled'>('idle');
+
     const handleAddCardScan = useCallback(() => {
+        // Task 9: Fail closed if persistent viewer not enabled
+        if (!isPersistentViewerEnabled) {
+            console.warn('[LearnARV2] Persistent Mind Viewer not enabled. Set VITE_PERSISTENT_MIND_VIEWER=true to use.');
+            emitMobileDebug('PERSISTENT_VIEWER_DISABLED', {});
+            return;
+        }
+
         HapticService.tap();
         SoundEffectService.play('tap');
+
+        // Task 9: New catalog activation flow - does NOT switch appState or emit AR_SWITCH_TO_SCANNER
+        const sessionId = crypto.randomUUID();
+        addCardScanSessionRef.current = sessionId;
         setIsAddingCard(true);
-        setMarkerFound(false);
-        setAppState('SCANNING');
-        eventBus.emit('AR_SWITCH_TO_SCANNER' as any, {});
-    }, []);
+        setAddCardStatus('scanning');
+
+        eventBus.emit('AR_BEGIN_ADD_CARD_SCAN' as any, {
+            sessionId,
+            excludedQrIds: Array.from(detectedFlashcards.keys()),
+            timeoutMs: 15000,
+        });
+
+        emitMobileDebug('AR_BEGIN_ADD_CARD_SCAN', {
+            sessionId,
+            excludedQrIds: Array.from(detectedFlashcards.keys()),
+        });
+    }, [isPersistentViewerEnabled, detectedFlashcards, emitMobileDebug]);
 
     const handleCancelAddCardScan = useCallback(() => {
         HapticService.tap();
