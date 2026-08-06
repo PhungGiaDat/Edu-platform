@@ -118,7 +118,7 @@ describe('resolveComboByTags', () => {
         ['elephant-first', [elephantTag, jungleTag]],
         ['jungle-first', [jungleTag, elephantTag]],
     ] as const)('activates the same combo in %s order', (_label, targets) => {
-        expect(resolveComboByTags(targets, jungleCombo)?.comboId).toBe('jungle_scene_v1');
+        expect(resolveComboByTags([...targets], jungleCombo)?.comboId).toBe('jungle_scene_v1');
     });
 
     it('does not activate wrong combo', () => {
