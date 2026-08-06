@@ -4,12 +4,14 @@
     "description": "A large cartoon elephant with idle sway animation for AR vocabulary learning",
     "animation_type": "rotate",
     "glb_size": 2.0,
-    "nft_base_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/assets/mind-files/elephant_targets.mind",
+    "nft_base_url": "/assets/target/catalogs/animals-v2.mind",
     "model_3d_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/models/elephant.glb",
     "image_2d_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/frontend/model2D/Elephant.jpg",
     "position": "0 0.5 0",
     "rotation": "0 0 0",
     "scale": "1.5 1.5 1.5",
+    "mind_catalog_id": "animals-v2",
+    "mind_target_index": 0,
     "created_at": "2025-07-03T12:00:00Z"
   },
   {
@@ -17,12 +19,14 @@
     "description": "A small, alert Japanese shiba dog 3D model with idle wiggle animation for AR vocabulary learning",
     "animation_type": "wiggle",
     "glb_size": 1.0,
-    "nft_base_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/assets/mind-files/shiba_targets.mind",
+    "nft_base_url": "/assets/target/catalogs/animals-v2.mind",
     "model_3d_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/models/shiba_dog.glb",
     "image_2d_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/frontend/model2D/shiba_dog.jpg",
     "position": "0 0.1 0",
     "rotation": "0 180 0",
     "scale": "0.5 0.5 0.5",
+    "mind_catalog_id": "animals-v2",
+    "mind_target_index": 1,
     "created_at": "2025-07-03T12:00:00Z"
   },
   {
@@ -36,7 +40,9 @@
     "position": "0 0.3 0",
     "rotation": "0 0 0",
     "scale": "0.6 0.6 0.6",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 0
   },
   {
     "ar_tag": "banana_marker_01",
@@ -49,7 +55,9 @@
     "position": "0 0.3 0",
     "rotation": "0 0 0",
     "scale": "0.7 0.7 0.7",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 1
   },
   {
     "ar_tag": "cake_marker_01",
@@ -62,7 +70,9 @@
     "position": "0 0.3 0",
     "rotation": "0 0 0",
     "scale": "0.7 0.7 0.7",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 2
   },
   {
     "ar_tag": "birthday_marker_01",
@@ -75,7 +85,9 @@
     "position": "0 0.3 0",
     "rotation": "0 0 0",
     "scale": "0.8 0.8 0.8",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 3
   },
   {
     "ar_tag": "flower_marker_01",
@@ -88,7 +100,9 @@
     "position": "0 0.2 0",
     "rotation": "0 0 0",
     "scale": "0.6 0.6 0.6",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 4
   },
   {
     "ar_tag": "mushroom_marker_01",
@@ -101,7 +115,9 @@
     "position": "0 0.2 0",
     "rotation": "0 0 0",
     "scale": "0.5 0.5 0.5",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 5
   },
   {
     "ar_tag": "palm_marker_01",
@@ -114,7 +130,9 @@
     "position": "0 0.8 0",
     "rotation": "0 0 0",
     "scale": "1.2 1.2 1.2",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 6
   },
   {
     "ar_tag": "tree_marker_01",
@@ -127,7 +145,9 @@
     "position": "0 0.8 0",
     "rotation": "0 0 0",
     "scale": "1.2 1.2 1.2",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 7
   },
   {
     "ar_tag": "cactus_marker_01",
@@ -140,7 +160,9 @@
     "position": "0 0.5 0",
     "rotation": "0 0 0",
     "scale": "0.9 0.9 0.9",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 8
   },
   {
     "ar_tag": "car_marker_01",
@@ -153,7 +175,9 @@
     "position": "0 0.1 0",
     "rotation": "0 180 0",
     "scale": "0.8 0.8 0.8",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 9
   },
   {
     "ar_tag": "suv_marker_01",
@@ -166,7 +190,9 @@
     "position": "0 0.1 0",
     "rotation": "0 180 0",
     "scale": "0.9 0.9 0.9",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 10
   },
   {
     "ar_tag": "truck_marker_01",
@@ -179,7 +205,9 @@
     "position": "0 0.2 0",
     "rotation": "0 180 0",
     "scale": "1.0 1.0 1.0",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 11
   },
   {
     "ar_tag": "jungle_marker_01",
@@ -192,7 +220,9 @@
     "position": "0 0 0",
     "rotation": "0 0 0",
     "scale": "0.3 0.3 0.3",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 12
   },
   {
     "ar_tag": "combo_ele_jungle_marker",
@@ -205,7 +235,9 @@
     "position": "0 0.5 0",
     "rotation": "0 0 0",
     "scale": "0.65 0.65 0.65",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 13
   },
   {
     "ar_tag": "cat_marker_01",
@@ -218,7 +250,9 @@
     "position": "0 0.1 0",
     "rotation": "0 0 0",
     "scale": "0.6 0.6 0.6",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 14
   },
   {
     "ar_tag": "hama_marker_01",
@@ -231,7 +265,9 @@
     "position": "0 0.05 0",
     "rotation": "0 0 0",
     "scale": "0.4 0.4 0.4",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 15
   },
   {
     "ar_tag": "coconut_marker_01",
@@ -244,7 +280,9 @@
     "position": "0 0.8 0",
     "rotation": "0 0 0",
     "scale": "1.2 1.2 1.2",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 16
   },
   {
     "ar_tag": "giraffe_marker_01",
@@ -257,7 +295,9 @@
     "position": "0 0 0",
     "rotation": "0 0 0",
     "scale": "1.5 1.5 1.5",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 17
   },
   {
     "ar_tag": "hippo_marker_01",
@@ -270,7 +310,9 @@
     "position": "0 0.3 0",
     "rotation": "0 0 0",
     "scale": "1.2 1.2 1.2",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 18
   },
   {
     "ar_tag": "britishshorthair_marker_01",
@@ -283,7 +325,9 @@
     "position": "0 0.1 0",
     "rotation": "0 0 0",
     "scale": "0.6 0.6 0.6",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 19
   },
   {
     "ar_tag": "catcow_marker_01",
@@ -296,7 +340,9 @@
     "position": "0 0 0",
     "rotation": "0 0 0",
     "scale": "0.8 0.8 0.8",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 20
   },
   {
     "ar_tag": "fredcat_marker_01",
@@ -309,6 +355,8 @@
     "position": "0 0.1 0",
     "rotation": "0 0 0",
     "scale": "0.5 0.5 0.5",
-    "created_at": "2025-07-03T12:00:00Z"
+    "created_at": "2025-07-03T12:00:00Z",
+    "mind_catalog_id": "legacy-singletons",
+    "mind_target_index": 21
   }
 ]

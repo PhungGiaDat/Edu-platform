@@ -4,7 +4,8 @@
     "name": "Animal Friends",
     "description": "Learn about animals in the jungle",
     "category": "animals",
-    "mind_file_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/assets/mind-files/animals_targets.mind",
+    "mind_catalog_id": "animals-v2",
+    "mind_file_url": "/assets/target/catalogs/animals-v2.mind",
     "target_map": {
       "0": "elephant_marker_01",
       "1": "shiba_marker_01"
