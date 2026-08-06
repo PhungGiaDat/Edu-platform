@@ -10,7 +10,11 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "ar:catalog:build": "node scripts/buildMindCatalog.mjs public/assets/target/catalogs/animals-v2.sources.json",
+    "ar:catalog:verify": "vitest run src/__tests__/mindCatalogContract.test.ts",
+    "vendor:jsqr": "node scripts/vendor-jsqr.cjs",
+    "postinstall": "node scripts/vendor-jsqr.cjs"
   },
   "dependencies": {
     "@msgpack/msgpack": "^3.1.2",
@@ -37,7 +41,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
+    "@napi-rs/canvas": "^1.0.3",
     "@playwright/test": "^1.62.1",
+    "@tensorflow/tfjs-node": "^4.22.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.5.0",
@@ -56,7 +62,11 @@
     "globals": "^16.3.0",
     "i18next": "^26.3.3",
     "jsdom": "^29.1.1",
+    "jsqr": "^1.4.0",
+    "mind-ar": "^1.2.5",
+    "msgpackr": "^2.0.5",
     "postcss": "^8.5.6",
+    "puppeteer": "^25.5.0",
     "react-i18next": "^17.0.8",
     "tailwindcss": "^4.1.11",
     "terser": "^5.46.1",
