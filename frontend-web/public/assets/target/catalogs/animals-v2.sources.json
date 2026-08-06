@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "animals-v2",
+  "mindUrl": "/assets/target/catalogs/animals-v2.mind",
+  "targets": [
+    {
+      "arTag": "elephant_marker_01",
+      "mindTargetIndex": 0,
+      "markerImage": "/assets/flashcards/ele123_card.png"
+    },
+    {
+      "arTag": "shiba_marker_01",
+      "mindTargetIndex": 1,
+      "markerImage": "/assets/flashcards/shiba_dog.jpg"
+    }
+  ]
+}
