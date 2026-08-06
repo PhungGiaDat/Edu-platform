@@ -34,8 +34,12 @@ class ARObject(Document):
     animation_type: str = Field(default="none")  # none, rotate, bounce, etc.
     glb_size: float = Field(default=1.0)
 
-    # NFT marker URLs (for AR.js NFT tracking)
-    nft_base_url: str  # Base URL for .fset, .fset3, .iset files
+    # DEPRECATED: legacy per-target MindAR URL.  Kept as an optional read-only
+    # field so existing admin responses remain backward-compatible, but
+    # new code must read ``mind_url`` from the catalog manifest, not from
+    # this document.  See catalog identity fields below for the runtime
+    # source of truth.
+    nft_base_url: Optional[str] = None
 
     # Model URLs
     model_3d_url: str  # URL to .glb/.gltf 3D model
@@ -119,7 +123,10 @@ class ARObjectCreate(_CatalogIdentityMixin):
     description: str
     animation_type: str = "none"
     glb_size: float = 1.0
-    nft_base_url: str
+    # ``nft_base_url`` is now optional on create.  Existing admin tooling
+    # that still wants to persist a per-target URL can supply it, but new
+    # flashcards must rely on the catalog manifest's ``mindUrl``.
+    nft_base_url: Optional[str] = None
     model_3d_url: str
     texture_url: Optional[str] = None
     image_2d_url: str
@@ -150,7 +157,7 @@ class ARObjectUpdate(_CatalogIdentityMixin):
     description: Optional[str] = None
     animation_type: Optional[str] = None
     glb_size: Optional[float] = None
-    nft_base_url: Optional[str] = None
+    nft_base_url: Optional[str] = None  # DEPRECATED — use manifest.mindUrl instead
     model_3d_url: Optional[str] = None
     texture_url: Optional[str] = None
     image_2d_url: Optional[str] = None
@@ -174,14 +181,20 @@ class ARObjectUpdate(_CatalogIdentityMixin):
 
 
 class ARObjectResponse(BaseModel):
-    """Schema for API responses"""
+    """Schema for API responses
+
+    ``nft_base_url`` is deprecated.  The runtime reads ``mindUrl`` from the
+    catalog manifest resolved via ``mind_catalog_id`` + ``mind_target_index``
+    on this document.  The field remains in the response payload as
+    ``Optional[str]`` so legacy clients keep parsing without errors.
+    """
 
     id: Optional[str] = Field(None, alias="_id")
     ar_tag: str
     description: str
     animation_type: str
     glb_size: float
-    nft_base_url: str
+    nft_base_url: Optional[str] = None
     model_3d_url: str
     texture_url: Optional[str] = None
     image_2d_url: str
@@ -202,6 +215,9 @@ class ArObjectSchema(BaseModel):
     """
     Legacy AR Object schema - kept for backward compatibility
     Use ARObjectResponse for new code
+
+    ``nft_base_url`` is now optional.  See ARObjectResponse for the
+    rationale (manifest.mindUrl is the runtime source of truth).
     """
 
     id: Optional[str] = Field(default=None, alias="_id")
@@ -209,7 +225,7 @@ class ArObjectSchema(BaseModel):
     description: str
     animation_type: str
     glb_size: float
-    nft_base_url: str
+    nft_base_url: Optional[str] = None
     model_3d_url: str
     texture_url: Optional[str] = None
     image_2d_url: str

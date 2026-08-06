@@ -336,8 +336,10 @@ class AdminRepository:
             logger.debug(f"[AdminRepo] AR object already exists for tag: {ar_tag}")
             return
 
-        # Generate a placeholder nft_base_url from the ar_tag
-        # The actual .mind file will be generated separately
+        # ``nft_base_url`` is deprecated.  Keep the legacy placeholder so
+        # the document still validates, but the runtime must resolve the
+        # real ``.mind`` URL through the catalog manifest referenced by
+        # ``mind_catalog_id`` below.
         nft_base_url = mind_file_url(f"assets/mind-files/{ar_tag}.mind")
 
         ar_object = {

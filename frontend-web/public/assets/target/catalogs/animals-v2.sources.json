@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "catalogId": "animals-v2",
-  "mindUrl": "/assets/target/catalogs/animals-v2.mind",
+  "mindUrl": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/mind-catalogs/animals-v2/0a43e0b170f887b302324739b686003f482c24e9b35e4cefee4bbb22ffc45884.mind",
   "targets": [
     {
       "arTag": "elephant_marker_01",

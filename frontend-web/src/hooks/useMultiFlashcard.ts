@@ -202,7 +202,11 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
         // Backend returns catalog fields inside target object, not at top level
         const mindCatalogId = arObject?.mind_catalog_id;
         const mindTargetIndex = arObject?.mind_target_index;
-        const mindUrl = arObject?.nft_base_url || '';
+        // ``nft_base_url`` is deprecated.  The catalog manifest is the single
+        // source of truth for ``mindUrl``; ``nft_base_url`` from the backend
+        // is kept only as a last-resort fallback for legacy singletons that
+        // do not yet have a published manifest.
+        const legacyMindUrl = arObject?.nft_base_url || '';
 
         // Task 9: Validate catalog fields - fail fast in persistent mode if missing
         const isPersistent = isPersistentMindViewerEnabled();
@@ -220,6 +224,12 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
                 return null;
             }
         }
+
+        // Resolve mindUrl from the catalog manifest when possible.
+        // When a catalog is associated with the card, ``manifest.mindUrl``
+        // (typically a Supabase Storage URL) is authoritative.  When no
+        // catalog exists we fall back to ``nft_base_url`` for legacy cards.
+        let mindUrl = legacyMindUrl;
 
         if (mindCatalogId && mindTargetIndex !== undefined) {
             try {
@@ -244,6 +254,9 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
                 if (model3dUrl) {
                     await preflightRequiredGlb(model3dUrl, signal);
                 }
+
+                // Manifest validated — adopt its ``mindUrl`` as the source of truth
+                mindUrl = manifest.mindUrl;
 
                 emitArDebug('FLASHCARD_CATALOG_VALIDATED', {
                     qrId,
