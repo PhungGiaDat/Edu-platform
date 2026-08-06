@@ -36,26 +36,9 @@
 
             <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-            <a-entity id="target-0" mindar-image-target="targetIndex: 0" visible="true">
-                <a-image id="mode-2d-0" class="clickable" position="0 0 0" rotation="0 0 0"
-                    width="1" height="1" visible="false"></a-image>
-                <a-entity id="mode-3d-0" class="clickable" position="0 0.05 0" rotation="0 0 0"
-                    scale="0.25 0.25 0.25"
-                    animation__hover="property: scale; to: 0.28 0.28 0.28; dur: 200; startEvents: mouseenter"
-                    animation__leave="property: scale; to: 0.25 0.25 0.25; dur: 200; startEvents: mouseleave"
-                    animation__click="property: scale; from: 0.25 0.25 0.25; to: 0.3 0.3 0.3; dir: alternate; loop: 1; dur: 150; startEvents: click"
-                    visible="true"></a-entity>
-            </a-entity>
+            <!-- Anchors are created programmatically by ensureCatalogAnchors() before MindAR starts -->
+            <!-- See: /static/ar-assets/js/ar-target-registry.js → ensureCatalogAnchors() -->
 
-            <a-entity id="target-1" mindar-image-target="targetIndex: 1" visible="true">
-                <a-image id="mode-2d-1" class="clickable" position="0 0 0" rotation="0 0 0"
-                    width="1" height="1" visible="false"></a-image>
-                <a-entity id="mode-3d-1" class="clickable" position="0 0.1 0" scale="0.5 0.5 0.5"
-                    animation__hover="property: scale; to: 0.55 0.55 0.55; dur: 200; startEvents: mouseenter"
-                    animation__leave="property: scale; to: 0.5 0.5 0.5; dur: 200; startEvents: mouseleave"
-                    animation__click="property: scale; from: 0.5 0.5 0.5; to: 0.6 0.6 0.6; dir: alternate; loop: 1; dur: 150; startEvents: click"
-                    visible="true"></a-entity>
-            </a-entity>
         </a-scene>
     </template>
 
@@ -304,6 +287,7 @@
                 await loadScript('/static/vendor/aframe-1.4.2.min.js', 'aframe', deadlineAt);
                 await loadScript('/static/vendor/mindar-image-aframe-1.2.5.prod.js', 'mindar', deadlineAt);
                 await loadScript('/static/vendor/jsQR-1.4.0.min.js', 'jsqr', deadlineAt);
+                await loadScript('/static/ar-assets/js/ar-target-registry.js', 'target-registry', deadlineAt);
                 await loadScript('/static/ar-assets/js/ar-add-card-scanner.js', 'add-card-scanner', deadlineAt);
 
                 var maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));

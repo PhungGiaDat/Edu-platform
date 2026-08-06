@@ -40,6 +40,13 @@
     const targetLostTimers = new Map();
     const TARGET_LOST_GRACE_MS = 900;
 
+    // ── Task 7: AR Target Registry (revisioned slot map) ─────────────────────
+    let targetRegistry = null;   // ARTargetRegistry instance
+    let currentCatalogId = null; // set by ensureCatalogAnchors / bootstrap
+
+    // ── Task 7: Add-card scanner ──────────────────────────────────────────────
+    let addCardScanner = null;
+
     // Proximity detection settings
     let PROXIMITY_THRESHOLD = 0.5; // Distance in 3D units to trigger combo
     const PROXIMITY_CHECK_INTERVAL = 100; // Check every 100ms
@@ -341,6 +348,18 @@
         log('📥', `Received ${type}`, payload);
 
         switch (type) {
+            // ── Task 7: SET_ACTIVE_TARGETS ────────────────────────────────────
+            case 'SET_ACTIVE_TARGETS':
+                applyActiveTargets(payload);
+                break;
+            // ── Task 7: BEGIN_ADD_CARD_SCAN ──────────────────────────────────
+            case 'BEGIN_ADD_CARD_SCAN':
+                beginAddCardScan(payload);
+                break;
+            // ── Task 7: CANCEL_ADD_CARD_SCAN ───────────────────────────────
+            case 'CANCEL_ADD_CARD_SCAN':
+                cancelAddCardScan(payload);
+                break;
             case 'SET_MODE':
                 setMode(payload.mode);
                 break;
@@ -404,6 +423,235 @@
     }
 
     window.addEventListener('message', handleParentMessage);
+
+    // ============ TASK 7: PRE-CREATE CATALOG ANCHORS ============
+    /**
+     * Called before MindAR starts to create anchor entities for every slot.
+     *
+     * Each anchor gets id="mind-target-{mindTargetIndex}" so the registry's
+     * mindTargetIndex lookup keys match the DOM id pattern used everywhere else.
+     */
+    function ensureCatalogAnchors(count) {
+        log('🎯', 'ensureCatalogAnchors: creating ' + count + ' anchor(s)');
+        for (var i = 0; i < count; i++) {
+            var anchorId = 'mind-target-' + i;
+            if (!document.getElementById(anchorId)) {
+                var anchor = document.createElement('a-entity');
+                anchor.id = anchorId;
+                anchor.setAttribute('mindar-image-target', 'targetIndex: ' + i);
+                anchor.setAttribute('visible', 'true');
+
+                // 2-D image layer
+                var img = document.createElement('a-image');
+                img.id = 'mode-2d-' + i;
+                img.classList.add('clickable');
+                img.setAttribute('position', '0 0 0');
+                img.setAttribute('rotation', '0 0 0');
+                img.setAttribute('width', '1');
+                img.setAttribute('height', '1');
+                img.setAttribute('visible', 'false');
+                anchor.appendChild(img);
+
+                // 3-D model layer
+                var modelScale = getTargetModelScale(i);
+                var modelEl = document.createElement('a-entity');
+                modelEl.id = 'mode-3d-' + i;
+                modelEl.classList.add('clickable');
+                modelEl.setAttribute('position', '0 ' + (i === 0 ? '0.05' : '0.1') + ' 0');
+                modelEl.setAttribute('rotation', '0 0 0');
+                modelEl.setAttribute('scale', modelScale + ' ' + modelScale + ' ' + modelScale);
+                modelEl.setAttribute('visible', 'true');
+                anchor.appendChild(modelEl);
+
+                scene.appendChild(anchor);
+                log('✅', 'Created anchor: ' + anchorId);
+            }
+        }
+    }
+
+    // ============ TASK 7: SET_ACTIVE_TARGETS HANDLER ============
+    /**
+     * Apply a revisioned target set sent by the parent.
+     *
+     * 1. Validate through registry.apply()
+     * 2. Load every GLB
+     * 3. Place <a-gltf-model> under mind-target-{mindTargetIndex}
+     * 4. Remove slot content not in new snapshot
+     * 5. Emit ACTIVE_TARGETS_APPLIED only after all loads resolve
+     * 6. On asset error: emit ACTIVE_TARGETS_REJECTED with MODEL_LOAD_ERROR
+     *    (do NOT call showImageFallbackForTarget)
+     */
+    function applyActiveTargets(payload) {
+        log('📥', 'applyActiveTargets', payload);
+
+        // Lazily initialise the registry on first SET_ACTIVE_TARGETS so catalogId
+        // comes from the parent's authoritative payload rather than from URL params.
+        if (!targetRegistry) {
+            targetRegistry = window.ARTargetRegistry.create({
+                catalogId: payload.catalogId,
+                targetCount: targetCount,
+            });
+            currentCatalogId = payload.catalogId;
+        }
+
+        // --- Step 1: validate ---
+        try {
+            targetRegistry.apply(payload);
+        } catch (err) {
+            var code = err === 'ACTIVE_TARGETS_STALE' ? 'ACTIVE_TARGETS_STALE' : 'ACTIVE_TARGETS_INVALID';
+            sendToParent('ACTIVE_TARGETS_REJECTED', {
+                catalogId: payload.catalogId,
+                revision: payload.revision,
+                code: code,
+                stage: 'registry-apply',
+                message: String(err),
+            });
+            return;
+        }
+
+        // --- Determine which mindTargetIndices are in the new snapshot ---
+        var newMindIndices = new Set(payload.targets.map(function(t) { return t.mindTargetIndex; }));
+
+        // Remove GLB entities for mindTargetIndices no longer in the snapshot
+        for (var oldIdx = 0; oldIdx < (currentCatalogId ? (window.__AR_VIEWER_RESOLVED_MAX_TRACK || 2) : 2); oldIdx++) {
+            if (!newMindIndices.has(oldIdx)) {
+                var staleModel = document.getElementById('slot-model-' + oldIdx);
+                if (staleModel) {
+                    staleModel.parentNode.removeChild(staleModel);
+                    log('🧹', 'Removed stale slot-model-' + oldIdx);
+                }
+            }
+        }
+
+        // --- Step 2 + 3: load GLBs and attach under anchors ---
+        var loadPromises = payload.targets.map(function(target) {
+            return loadSlotGlb(target);
+        });
+
+        // --- Step 5: emit APPLIED only after all loads resolve ---
+        Promise.all(loadPromises).then(function() {
+            sendToParent('ACTIVE_TARGETS_APPLIED', {
+                catalogId: payload.catalogId,
+                revision: payload.revision,
+                targets: payload.targets.map(function(t) {
+                    return {
+                        slotIndex: t.slotIndex,
+                        mindTargetIndex: t.mindTargetIndex,
+                        arTag: t.arTag,
+                    };
+                }),
+            });
+            log('✅', 'ACTIVE_TARGETS_APPLIED r' + payload.revision);
+        }).catch(function(err) {
+            // Step 6: reject — do NOT call showImageFallbackForTarget
+            sendToParent('ACTIVE_TARGETS_REJECTED', {
+                catalogId: payload.catalogId,
+                revision: payload.revision,
+                code: 'MODEL_LOAD_ERROR',
+                stage: 'glb-load',
+                message: err && err.message ? err.message : String(err),
+            });
+            log('❌', 'ACTIVE_TARGETS_REJECTED MODEL_LOAD_ERROR', err);
+        });
+    }
+
+    /**
+     * Load a GLB asset and place it under the correct anchor.
+     * Returns a Promise that resolves when the model is loaded or rejects on error.
+     */
+    function loadSlotGlb(target) {
+        return new Promise(function(resolve, reject) {
+            var anchorId = 'mind-target-' + target.mindTargetIndex;
+            var anchor = document.getElementById(anchorId);
+            if (!anchor) {
+                reject(new Error('Anchor not found: ' + anchorId));
+                return;
+            }
+
+            // Remove existing slot model if present
+            var existing = document.getElementById('slot-model-' + target.slotIndex);
+            if (existing) existing.parentNode.removeChild(existing);
+
+            var modelEl = document.createElement('a-entity');
+            modelEl.id = 'slot-model-' + target.slotIndex;
+            modelEl.classList.add('clickable');
+            modelEl.setAttribute('position', target.position || '0 0 0');
+            modelEl.setAttribute('rotation', target.rotation || '0 0 0');
+            var scaleStr = target.scale || (target.mindTargetIndex === 0 ? '0.25 0.25 0.25' : '0.5 0.5 0.5');
+            modelEl.setAttribute('scale', scaleStr);
+
+            var assetItem = document.createElement('a-asset-item');
+            assetItem.setAttribute('id', 'slot-asset-' + target.slotIndex);
+            assetItem.setAttribute('src', target.modelUrl);
+            assetItem.setAttribute('crossorigin', 'anonymous');
+            assetItem.setAttribute('timeout', '15000');
+
+            var assetsEl = document.querySelector('a-assets');
+            if (assetsEl) {
+                assetsEl.appendChild(assetItem);
+            } else {
+                document.body.appendChild(assetItem);
+            }
+
+            assetItem.addEventListener('loaded', function() {
+                log('✅', 'Slot GLB loaded: slot=' + target.slotIndex + ' url=' + target.modelUrl);
+                modelEl.setAttribute('gltf-model', '#slot-asset-' + target.slotIndex);
+                anchor.appendChild(modelEl);
+
+                // Wire word label
+                if (target.word) {
+                    window['_arWord' + target.slotIndex] = target.word;
+                }
+                resolve();
+            });
+
+            assetItem.addEventListener('error', function(e) {
+                log('❌', 'Slot GLB load error: ' + target.modelUrl, e);
+                // Reject — caller handles ACTIVE_TARGETS_REJECTED, not fallback
+                reject(new Error('GLB load failed: ' + target.modelUrl));
+            });
+        });
+    }
+
+    // ============ TASK 7: ADD-CARD SCANNER WIRING ============
+    /**
+     * Wire BEGIN_ADD_CARD_SCAN to the ARAddCardScanner.
+     * Does NOT change MindAR running state.
+     */
+    function beginAddCardScan(payload) {
+        if (!window.ARAddCardScanner) {
+            log('⚠️', 'ARAddCardScanner not loaded');
+            return;
+        }
+        if (addCardScanner) {
+            addCardScanner.cancel();
+        }
+        addCardScanner = window.ARAddCardScanner.create({
+            getVideo: function() { return document.querySelector('video'); },
+            decode: globalThis.jsQR,
+            emit: function(evt) {
+                // Forward scanner events to parent with sessionId
+                sendToParent(evt.type, Object.assign({}, evt, { sessionId: payload.sessionId }));
+            },
+        });
+        addCardScanner.start({
+            sessionId: payload.sessionId,
+            excludedQrIds: payload.excludedQrIds || [],
+            timeoutMs: payload.timeoutMs || 15000,
+        });
+    }
+
+    /**
+     * Cancel an in-progress add-card scan.
+     * Does NOT change MindAR running state.
+     */
+    function cancelAddCardScan(payload) {
+        if (addCardScanner) {
+            addCardScanner.cancel();
+            addCardScanner = null;
+            log('🛑', 'Add-card scan cancelled');
+        }
+    }
 
     // ============ INIT ============
     function init() {
@@ -476,7 +724,12 @@
             activeConfig: scene.getAttribute('mindar-image')
         });
 
-        ensureDynamicTargets();
+        // ── Task 7: pre-create every catalog anchor before MindAR starts ──
+        if (window.ARTargetRegistry) {
+            targetRegistry = window.ARTargetRegistry.create({ catalogId: currentCatalogId, targetCount: targetCount });
+        }
+        ensureCatalogAnchors(targetCount);
+
         sendDebug('DYNAMIC_TARGETS_READY', {
             targetCount,
             targets: targetConfigs.map(target => ({
@@ -905,10 +1158,18 @@
                     window.__arViewerIntegration.startStabilizing(index);
                 }
 
-                sendToParent('TARGET_FOUND', {
+                // ── Task 7: enrich event with registry identity ─────────────────────
+                var entry = targetRegistry ? targetRegistry.getByMindIndex(index) : null;
+                var parentPayload = {
                     targetIndex: index,
-                    confidence: 1.0
-                });
+                    confidence: 1.0,
+                };
+                if (entry) {
+                    parentPayload.slotIndex = entry.slotIndex;
+                    parentPayload.mindTargetIndex = entry.mindTargetIndex;
+                    parentPayload.arTag = entry.arTag;
+                }
+                sendToParent('TARGET_FOUND', parentPayload);
                 sendTrackingState(`target-${index}-found`);
                 sendRenderSnapshot('TARGET_RENDER_STATE_FOUND', {
                     targetIndex: index,
@@ -930,9 +1191,15 @@
 
                     activeTargets.delete(index);
 
-                    sendToParent('TARGET_LOST', {
-                        targetIndex: index
-                    });
+                    // ── Task 7: enrich with registry identity ─────────────────────────
+                    var lostEntry = targetRegistry ? targetRegistry.getByMindIndex(index) : null;
+                    var lostPayload = { targetIndex: index };
+                    if (lostEntry) {
+                        lostPayload.slotIndex = lostEntry.slotIndex;
+                        lostPayload.mindTargetIndex = lostEntry.mindTargetIndex;
+                        lostPayload.arTag = lostEntry.arTag;
+                    }
+                    sendToParent('TARGET_LOST', lostPayload);
                     sendTrackingState(`target-${index}-lost`);
                     sendRenderSnapshot('TARGET_RENDER_STATE_LOST', { targetIndex: index });
 
@@ -1017,11 +1284,18 @@
                 log('🔊', `Speaking: "${wordToSpeak}"`);
             }
 
-            // Notify React parent
-            sendToParent('MODEL_CLICKED', {
+            // Notify React parent — enrich with Task 7 registry identity
+            var clickEntry = targetRegistry ? targetRegistry.getByMindIndex(targetIndex) : null;
+            var clickPayload = {
                 modelId: el.id,
-                targetIndex
-            });
+                targetIndex: targetIndex,
+            };
+            if (clickEntry) {
+                clickPayload.slotIndex = clickEntry.slotIndex;
+                clickPayload.mindTargetIndex = clickEntry.mindTargetIndex;
+                clickPayload.arTag = clickEntry.arTag;
+            }
+            sendToParent('MODEL_CLICKED', clickPayload);
         });
 
         // ============ TOUCH GESTURE SYSTEM ============
