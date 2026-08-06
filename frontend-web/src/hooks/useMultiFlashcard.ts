@@ -73,6 +73,9 @@ interface FlashcardData {
     image2dUrl: string;
     textureUrl?: string;
     mindUrl: string;
+    // Task 9: catalog activation fields
+    mindCatalogId?: string;
+    mindTargetIndex?: number;
     detectedAt: number;
 }
 
@@ -158,92 +161,147 @@ export function useMultiFlashcard() {
     }, []);
 
     /**
-     * Add a newly detected flashcard
-     */
-    const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): Promise<FlashcardData | null> => {
-        // Skip if already detected
-        const existing = stateRef.current.detectedFlashcards.get(qrId);
-        if (existing) {
-            console.log('[MultiFlashcard] QR already detected:', qrId);
-            return existing;
-        }
-        if (stateRef.current.detectedFlashcards.size >= 2) {
-            emitArDebug('FLASHCARD_LIMIT_REACHED', { qrId, limit: 2 });
+ * Add a newly detected flashcard
+ * 
+ * Task 9: Validates card against catalog manifest before adding.
+ * On failure, emits FLASHCARD_CATALOG_REJECTED with error code.
+ */
+const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): Promise<FlashcardData | null> => {
+    // Skip if already detected
+    const existing = stateRef.current.detectedFlashcards.get(qrId);
+    if (existing) {
+        console.log('[MultiFlashcard] QR already detected:', qrId);
+        return existing;
+    }
+    if (stateRef.current.detectedFlashcards.size >= 2) {
+        emitArDebug('FLASHCARD_LIMIT_REACHED', { qrId, limit: 2 });
+        return null;
+    }
+
+    console.log('[MultiFlashcard] 📱 New QR detected:', qrId);
+
+    // Fetch flashcard data
+    try {
+        const response = await fetch(`${API_BASE}/api/v1/flashcard/${qrId}`, { signal });
+        if (!response.ok) {
+            console.error('[MultiFlashcard] Failed to fetch flashcard:', qrId);
             return null;
         }
 
-        console.log('[MultiFlashcard] 📱 New QR detected:', qrId);
+        const data = await response.json();
+        if (!data || !data.flashcard) {
+            console.error('[MultiFlashcard] Flashcard data missing in response:', qrId);
+            return null;
+        }
 
-        // Fetch flashcard data
-        try {
-            const response = await fetch(`${API_BASE}/api/v1/flashcard/${qrId}`, { signal });
-            if (!response.ok) {
-                console.error('[MultiFlashcard] Failed to fetch flashcard:', qrId);
-                return null;
-            }
+        const flashcard = data.flashcard;
+        const arObject = data.target || data.ar_objects?.[0];
 
-            const data = await response.json();
-            if (!data || !data.flashcard) {
-                console.error('[MultiFlashcard] Flashcard data missing in response:', qrId);
-                return null;
-            }
+        const mindCatalogId = data.mindCatalogId;
+        const mindTargetIndex = data.mindTargetIndex;
+        const mindUrl = arObject?.nft_base_url || '';
 
-            const flashcard = data.flashcard;
-            const arObject = data.target || data.ar_objects?.[0];
+        // Task 9: Validate catalog fields if present
+        if (mindCatalogId && mindTargetIndex !== undefined) {
+            try {
+                // Import catalog validation functions
+                const { loadMindCatalog, validateCardForCatalog, preflightRequiredGlb } = await import('@/components/ar/arCatalogContract');
 
-            const flashcardData: FlashcardData = {
-                qrId,
-                arTag: arObject?.ar_tag || flashcard.ar_tag || `tag_${qrId}`,
-                word: flashcard.word || qrId,
-                category: flashcard.category || 'unknown', // NEW - store category
-                model3dUrl: buildUrl(arObject?.model_3d_url) || '',
-                image2dUrl: buildUrl(arObject?.image_2d_url) || '',
-                textureUrl: buildUrl(arObject?.texture_url),
-                mindUrl: arObject?.nft_base_url || '',
-                detectedAt: Date.now()
-            };
+                // Load and validate manifest
+                const manifest = await loadMindCatalog(mindCatalogId, signal);
 
-            emitArDebug('FLASHCARD_RESOLVED', {
-                qrId,
-                arTag: flashcardData.arTag,
-                mindUrl: flashcardData.mindUrl,
-                model3dUrl: flashcardData.model3dUrl,
-                image2dUrl: flashcardData.image2dUrl
-            });
-
-            setState(prev => {
-                if (prev.detectedFlashcards.has(qrId)) return prev;
-
-                const newMap = new Map(prev.detectedFlashcards);
-                newMap.set(qrId, flashcardData);
-
-                const newMode = newMap.size >= 2 ? 'MULTI' : 'SINGLE';
-                const newComboKey = newMap.size === 2
-                    ? Array.from(newMap.values()).map(card => card.arTag).sort().join('|')
-                    : null;
-                console.log('[MultiFlashcard] Mode:', newMode, 'Cards:', newMap.size);
-
-                return {
-                    ...prev,
-                    detectedFlashcards: newMap,
-                    mode: newMode,
-                    activeCombo: null,
-                    comboMindUrl: null,
-                    comboResolution: { key: newComboKey, status: 'idle' }
+                // Validate card against manifest
+                const cardIdentity = {
+                    arTag: arObject?.ar_tag || flashcard.ar_tag || `tag_${qrId}`,
+                    mindTargetIndex,
+                    mindCatalogId,
+                    mindUrl: manifest.mindUrl,
                 };
-            });
 
-            return flashcardData;
+                validateCardForCatalog(cardIdentity, manifest);
 
-        } catch (error) {
-            if (error instanceof DOMException && error.name === 'AbortError') {
-                emitArDebug('FLASHCARD_FETCH_ABORTED', { qrId });
+                // Preflight GLB
+                const model3dUrl = buildUrl(arObject?.model_3d_url) || '';
+                if (model3dUrl) {
+                    await preflightRequiredGlb(model3dUrl, signal);
+                }
+
+                emitArDebug('FLASHCARD_CATALOG_VALIDATED', {
+                    qrId,
+                    mindCatalogId,
+                    mindTargetIndex,
+                    arTag: cardIdentity.arTag,
+                });
+            } catch (validationError) {
+                const errorCode = validationError instanceof Error ? validationError.message : 'FLASHCARD_CATALOG_REJECTED';
+                emitArDebug('FLASHCARD_CATALOG_REJECTED', {
+                    qrId,
+                    errorCode,
+                    mindCatalogId,
+                    mindTargetIndex,
+                });
+                // Return null — do NOT fallback to 2D
                 return null;
             }
-            console.error('[MultiFlashcard] Error fetching flashcard:', error);
+        }
+
+        const flashcardData: FlashcardData = {
+            qrId,
+            arTag: arObject?.ar_tag || flashcard.ar_tag || `tag_${qrId}`,
+            word: flashcard.word || qrId,
+            category: flashcard.category || 'unknown', // NEW - store category
+            model3dUrl: buildUrl(arObject?.model_3d_url) || '',
+            image2dUrl: buildUrl(arObject?.image_2d_url) || '',
+            textureUrl: buildUrl(arObject?.texture_url),
+            mindUrl: mindUrl,
+            mindCatalogId,
+            mindTargetIndex,
+            detectedAt: Date.now()
+        };
+
+        emitArDebug('FLASHCARD_RESOLVED', {
+            qrId,
+            arTag: flashcardData.arTag,
+            mindUrl: flashcardData.mindUrl,
+            mindCatalogId: flashcardData.mindCatalogId,
+            mindTargetIndex: flashcardData.mindTargetIndex,
+            model3dUrl: flashcardData.model3dUrl,
+            image2dUrl: flashcardData.image2dUrl
+        });
+
+        setState(prev => {
+            if (prev.detectedFlashcards.has(qrId)) return prev;
+
+            const newMap = new Map(prev.detectedFlashcards);
+            newMap.set(qrId, flashcardData);
+
+            const newMode = newMap.size >= 2 ? 'MULTI' : 'SINGLE';
+            const newComboKey = newMap.size === 2
+                ? Array.from(newMap.values()).map(card => card.arTag).sort().join('|')
+                : null;
+            console.log('[MultiFlashcard] Mode:', newMode, 'Cards:', newMap.size);
+
+            return {
+                ...prev,
+                detectedFlashcards: newMap,
+                mode: newMode,
+                activeCombo: null,
+                comboMindUrl: null,
+                comboResolution: { key: newComboKey, status: 'idle' }
+            };
+        });
+
+        return flashcardData;
+
+    } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            emitArDebug('FLASHCARD_FETCH_ABORTED', { qrId });
             return null;
         }
-    }, [buildUrl]);
+        console.error('[MultiFlashcard] Error fetching flashcard:', error);
+        return null;
+    }
+}, [buildUrl]);
 
     const addFlashcard = useCallback((qrId: string): Promise<FlashcardData | null> => {
         // 10s per-fetch safety timeout so a stuck request can't starve the

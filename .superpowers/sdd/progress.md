@@ -1,20 +1,34 @@
-# AR Freeze Pose + Semantic Manager Progress Ledger
+# Shared Mind Persistent Viewer — Progress Ledger
 # Format: Task N: status (commits range, review status)
 
-## Task Tracking
-Task 1.1: COMPLETE (math-utils.js, pose-averager.js + tests)
-Task 1.2: COMPLETE (ConfigLoader + stability-config API)
-Task 1.3: COMPLETE (StabilityGate + PoseStabilizer)
-Task 2.1: COMPLETE (semantic_rules MongoDB + RuleLoader)
-Task 2.2: COMPLETE (SemanticManager + ComboSpawner)
-Task 3.1: COMPLETE (ar-viewer-integration.js + feature flags)
-TEST-1: COMPLETE (225 tests, all passing)
-REVIEW: COMPLETE (APPROVED FOR MERGE)
+## Branch
+MindAR-Update (from main, merge-base 420953c3)
 
-## Started
-Started: 2026-07-22
+## Task Progress
+
+Tasks 1–6 + 13: COMPLETE (verified from branch commits + test runs)
+- Task 1: animals-v2.mind catalog (sources + manifest, seed alignment)
+- Task 2: backend schema (mind_catalog_id, mind_target_index)
+- Task 3: MongoDB backfill (exact mappings, dry-run safe)
+- Task 4: arCatalogContract.ts + preflight GLB (5 tests, all pass)
+- Task 5: activeTargetRevision.ts + protocol types (5 tests, all pass)
+- Task 6: ar-add-card-scanner.js + jsQR vendor (218 tests, all pass)
+- Task 13: A-Frame + MindAR vendor (1 test, pass)
+
+Task 7: COMPLETE (commit 78ede41, 20+5 tests, all pass)
+Task 8: COMPLETE (commit 016f62a, 8 tests, all pass)
+Task 9: IN PROGRESS (3 test files, 34 tests, all pass)
+Task 10: PENDING
+Task 11: PENDING
+Task 12: PENDING
+
+## Commit Reference (base for diffs)
+merge-base: 420953c3 (main)
+task-6-commit: f751e13
+task-7-base-commit: 46a98f8
 
 ## Notes
-- Plan: plan/IMPLEMENTATION_PLAN_20260722_FREEZE_POSE_SEMANTIC_MANAGER_REVISED.md
-- Branch: main (no refactor)
-- Feature flags: ?freezePose=true, ?semanticManager=true
+- Plan: docs/superpowers/plans/2026-08-06-shared-mind-persistent-viewer.md
+- Design: docs/superpowers/specs/2026-08-06-shared-mind-persistent-viewer-design.md
+- Feature flag: VITE_PERSISTENT_MIND_VIEWER
+- All vendor files in: frontend-web/public/static/vendor/

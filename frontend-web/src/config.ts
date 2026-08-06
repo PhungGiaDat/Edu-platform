@@ -102,6 +102,14 @@ export const isTunnelMode = (): boolean => {
   return typeof window !== 'undefined' && window.location.protocol === 'https:';
 };
 
+/**
+ * Task 9: Check if persistent MindAR viewer is enabled.
+ * Fails closed — returns false when flag is absent.
+ */
+export function isPersistentMindViewerEnabled(): boolean {
+  return import.meta.env.VITE_PERSISTENT_MIND_VIEWER === 'true';
+}
+
 // Export constants for debugging
 export const CONFIG = {
   get apiBase() { return getApiBase(); },
