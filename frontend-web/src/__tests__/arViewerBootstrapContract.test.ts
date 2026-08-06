@@ -15,7 +15,10 @@ describe('AR viewer bootstrap fail-fast contract', () => {
     expect(viewerHtml).toContain("'AR_RUNTIME_SCRIPT_READY'");
     expect(viewerHtml).toContain("'AR_RUNTIME_SCRIPT_FAILED'");
     expect(viewerHtml).toContain("'AR_RUNTIME_SCRIPT_TIMEOUT'");
-    expect(viewerHtml).toContain("loadScript('https://aframe.io/releases/1.4.2/aframe.min.js', 'aframe'");
-    expect(viewerHtml).toContain("loadScript('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js', 'mindar'");
+    expect(viewerHtml).toContain("'/static/vendor/aframe-1.4.2.min.js'");
+    expect(viewerHtml).toContain("'/static/vendor/mindar-image-aframe-1.2.5.prod.js'");
+    // CDN URLs must not be present in the vendor-first bootstrap
+    expect(viewerHtml).not.toContain('aframe.io/releases');
+    expect(viewerHtml).not.toContain('cdn.jsdelivr.net/npm/mind-ar');
   });
 });
