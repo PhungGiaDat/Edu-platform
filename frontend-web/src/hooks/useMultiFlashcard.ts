@@ -798,3 +798,37 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
 }
 
 export type { FlashcardData, ComboData, MultiFlashcardState, ProximityData, ComboResolution, ComboResolutionState };
+
+/**
+ * Task 10: Pure helpers for combo resolution by tag sets.
+ * Combo activation is based on tag sets, independent of scan order and MindAR indices.
+ * Never uses combo_mind_url or target_order for tracking.
+ */
+
+/**
+ * Checks if two unordered tag arrays contain the same elements.
+ * Order-independent comparison for combo tag matching.
+ */
+export function sameTagSet(left: string[], right: string[]): boolean {
+    return (
+        left.length === right.length &&
+        [...left].sort().every((tag, index) => tag === [...right].sort()[index])
+    );
+}
+
+/**
+ * Resolves whether the given combo should activate based on scanned targets.
+ * Returns the combo if the targets' arTags match the combo's requiredTags (order-independent),
+ * or null if no match.
+ *
+ * Does NOT use combo_mind_url, target_order, or any MindAR runtime fields.
+ */
+export function resolveComboByTags(
+    targets: { arTag: string }[],
+    combo: { comboId: string; requiredTags: string[] }
+): { comboId: string } | null {
+    const scannedTags = targets.map((t) => t.arTag);
+    return sameTagSet(scannedTags, combo.requiredTags)
+        ? { comboId: combo.comboId }
+        : null;
+}
