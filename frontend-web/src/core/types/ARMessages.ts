@@ -1,11 +1,41 @@
 /**
  * ARMessages.ts
- * 
+ *
  * Typed message protocol for iframe communication.
  * Used by ARBridge to send/receive typed messages between React and MindAR iframe.
  */
 
 // ========== MESSAGE TYPES ==========
+
+/**
+ * Slot index for the Shared-Mind Persistent Viewer.
+ *
+ * Only two persistent slots exist in the viewer at any time, matching
+ * the two MindAR anchors pre-created for the active catalog.  Other
+ * lessons may stack additional models via TRANSCRIPT-driven combos,
+ * but the persistent viewport itself is always ``0 | 1``.
+ */
+export type ActiveTargetSlot = 0 | 1;
+
+/**
+ * A target that has been bound to a persistent viewer slot.
+ *
+ * ``slotIndex`` is the viewer-local anchor (0 or 1) and ``mindTargetIndex``
+ * is the catalog-local slot inside the active ``.mind`` file.  The two are
+ * kept distinct on purpose so the runtime can verify catalog identity
+ * separately from anchor identity.
+ */
+export interface ActiveViewerTarget {
+  slotIndex: ActiveTargetSlot;
+  mindTargetIndex: number;
+  arTag: string;
+  modelUrl: string;
+  textureUrl?: string;
+  word: string;
+  position?: string;
+  rotation?: string;
+  scale?: string;
+}
 
 /**
  * All message types for bidirectional communication
@@ -40,7 +70,18 @@ export type ARMessageType =
     | 'RESUME_TRACKING'
     | 'LOAD_MODEL'
     | 'MIND_BUFFER'
-    | 'INITIAL_STATE';
+    | 'INITIAL_STATE'
+
+    // Catalog activation (Parent → Child)
+    | 'BEGIN_ADD_CARD_SCAN'
+    | 'CANCEL_ADD_CARD_SCAN'
+    | 'SET_ACTIVE_TARGETS'
+
+    // Catalog activation (Child → Parent)
+    | 'ADD_CARD_SCAN_STARTED'
+    | 'ADD_CARD_SCAN_TIMEOUT'
+    | 'ACTIVE_TARGETS_APPLIED'
+    | 'ACTIVE_TARGETS_REJECTED';
 
 // ========== MESSAGE INTERFACE ==========
 
@@ -95,10 +136,14 @@ export interface ARMessagePayloadMap {
         targetIndex: number;
         arTag?: string;
         confidence?: number;
+        slotIndex?: ActiveTargetSlot;
+        mindTargetIndex?: number;
     };
     TARGET_LOST: {
         targetIndex: number;
         arTag?: string;
+        slotIndex?: ActiveTargetSlot;
+        mindTargetIndex?: number;
     };
     MULTI_TARGET_DETECTED: {
         targets: number[];
@@ -115,10 +160,14 @@ export interface ARMessagePayloadMap {
     MODEL_CLICKED: {
         modelId: string;
         targetIndex?: number;
+        slotIndex?: ActiveTargetSlot;
+        mindTargetIndex?: number;
+        arTag?: string;
     };
     ANIMATION_COMPLETE: {
         clip: string;
         targetIndex?: number;
+        slotIndex?: ActiveTargetSlot;
     };
     AUDIO_COMPLETE: {
         url: string;
@@ -129,10 +178,12 @@ export interface ARMessagePayloadMap {
         clip: string;
         loop?: boolean;
         crossFadeDuration?: number;
+        slotIndex?: ActiveTargetSlot;
     };
     UPDATE_TEXTURE: {
         dataUrl: string;
         targetMesh?: string;
+        slotIndex?: ActiveTargetSlot;
     };
     PLAY_AUDIO: {
         url: string;
@@ -155,6 +206,41 @@ export interface ARMessagePayloadMap {
     };
     INITIAL_STATE: {
         config: Record<string, unknown>;
+    };
+
+    // Catalog activation (Parent → Child)
+    BEGIN_ADD_CARD_SCAN: {
+        sessionId: string;
+        excludedQrIds: string[];
+        timeoutMs: 15000;
+    };
+    CANCEL_ADD_CARD_SCAN: {
+        sessionId: string;
+    };
+    SET_ACTIVE_TARGETS: {
+        catalogId: string;
+        revision: number;
+        targets: ActiveViewerTarget[];
+    };
+
+    // Catalog activation (Child → Parent)
+    ADD_CARD_SCAN_STARTED: {
+        sessionId: string;
+    };
+    ADD_CARD_SCAN_TIMEOUT: {
+        sessionId: string;
+    };
+    ACTIVE_TARGETS_APPLIED: {
+        catalogId: string;
+        revision: number;
+        targets: Array<Pick<ActiveViewerTarget, 'slotIndex' | 'mindTargetIndex' | 'arTag'>>;
+    };
+    ACTIVE_TARGETS_REJECTED: {
+        catalogId: string;
+        revision: number;
+        code: string;
+        stage: string;
+        message: string;
     };
 }
 
