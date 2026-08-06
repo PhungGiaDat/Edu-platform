@@ -635,6 +635,9 @@ export default function LearnARV2() {
         getFlashcardByIndex,
     } = useMultiFlashcard();
 
+    // ========== PERSISTENT VIEWER FLAG (must be before other refs/constants that use it) ==========
+    const isPersistentViewerEnabled = isPersistentMindViewerEnabled();
+
     // ========== DATA HOOKS ==========
     const { arData, error: arError } = useArData(detectedQrId);
     const { quizData } = useQuizData(detectedQrId, selectedDifficulty);
@@ -685,10 +688,16 @@ export default function LearnARV2() {
         };
     }, [hasCombo, activeCombo, comboMindUrl, flashcardCount, committedComboId]);
 
+    // Task 10: Combo viewer is active when:
+    // - Legacy mode: combo found + merge committed (no pending add)
+    // - Persistent mode: combo found + not in add mode (no merge needed)
     const isComboViewer = Boolean(
         comboResolution === 'found' &&
-        multiPreparation.status === 'committed' &&
-        !isAddingCard
+        !isAddingCard &&
+        (
+            (!isPersistentViewerEnabled && multiPreparation.status === 'committed') ||
+            (isPersistentViewerEnabled)
+        )
     );
 
     useEffect(() => {
@@ -706,8 +715,13 @@ export default function LearnARV2() {
     const scannedTargets = Array.from(detectedFlashcards.values()).slice(0, AR_MAX_TRACKS);
 
     // Effect: Use backend combo_mind_url directly (no merge needed)
+    // Task 9: Skip this effect when persistent viewer is enabled - combos use tag resolution instead
     useEffect(() => {
         if (!shouldUseComboMindUrl || !comboMindUrl || !comboKey) return;
+        if (isPersistentViewerEnabled) {
+            emitMobileDebug('PERSISTENT_SKIP_COMBO_MIND_URL', { comboKey });
+            return;
+        }
 
         emitMobileDebug('COMBO_MIND_URL_FROM_BACKEND', {
             comboKey,
@@ -729,7 +743,7 @@ export default function LearnARV2() {
                 error: null
             };
         });
-    }, [shouldUseComboMindUrl, comboMindUrl, comboKey, emitMobileDebug]);
+    }, [shouldUseComboMindUrl, comboMindUrl, comboKey, isPersistentViewerEnabled, emitMobileDebug]);
 
     useEffect(() => {
         if (!shouldPrepareIndependentMulti || !comboKey || !scannedTarget0 || !scannedTarget1) return;
@@ -788,6 +802,13 @@ export default function LearnARV2() {
         };
 
         void (async () => {
+            // Task 9: Skip runtime merge when persistent viewer is enabled
+            // In persistent mode, catalog targets are sent via SET_ACTIVE_TARGETS instead
+            if (isPersistentViewerEnabled) {
+                emitMobileDebug('PERSISTENT_VIEWER_SKIP_MERGE', { comboKey });
+                return;
+            }
+
             try {
                 const [first, second] = await Promise.all([
                     fetchMind(scannedTarget0.mindUrl, 0),
@@ -1132,8 +1153,33 @@ export default function LearnARV2() {
         });
     }, [trackFlashcardView, addFlashcard, emitMobileDebug, appState, flashcardCount]);
 
-    // Task 9: Feature flag check - fail closed if flag absent
-    const isPersistentViewerEnabled = isPersistentMindViewerEnabled();
+    // Task 9: Callbacks for revision ACK/reject from persistent viewer
+    const handleActiveTargetsApplied = useCallback((revision: number) => {
+        emitMobileDebug('PERSISTENT_TARGETS_APPLIED', { revision });
+    }, [emitMobileDebug]);
+
+    const handleActiveTargetsRejected = useCallback((error: { revision: number; code: string; stage: string; message: string }) => {
+        emitMobileDebug('PERSISTENT_TARGETS_REJECTED', error);
+    }, [emitMobileDebug]);
+
+    // Task 9: Derive catalog props from the first card's flashcard data
+    // The catalog is shared across all cards in a lesson, so we use the first card's catalog identity
+    const catalogId = scannedTarget0?.mindCatalogId || null;
+    const catalogMindUrl = scannedTarget0?.mindUrl || null;
+
+    // Task 9: Derive activeTargets from scanned flashcards
+    // slotIndex follows scan order (0, 1), mindTargetIndex comes from flashcard data
+    const activeTargets: import('@/core/types/ARMessages').ActiveViewerTarget[] | undefined =
+        scannedTargets.length > 0 && catalogId && catalogMindUrl
+            ? scannedTargets.map((target, index) => ({
+                slotIndex: index as 0 | 1,
+                mindTargetIndex: target.mindTargetIndex ?? index,
+                arTag: target.arTag,
+                modelUrl: target.model3dUrl,
+                textureUrl: target.textureUrl,
+                word: target.word,
+              }))
+            : undefined;
 
     // Task 9: Add card scan session ref for new flow
     const addCardScanSessionRef = useRef<string | null>(null);
@@ -1417,8 +1463,15 @@ export default function LearnARV2() {
             {/* AR Container with iframe swapping */}
             <ARContainerV2
                 initialPhase={detectedQrId ? 'VIEWING' : 'SCANNING'}
-                mindUrl={mindUrl}
-                mindBuffer={isMultiViewer ? multiPreparation.mindBuffer : null}
+                // Task 9: Pass catalog props when persistent viewer is enabled and we have catalog data
+                catalogId={isPersistentViewerEnabled ? catalogId : undefined}
+                mindUrl={isPersistentViewerEnabled ? catalogMindUrl : mindUrl}
+                catalogTargetCount={isPersistentViewerEnabled ? 2 : undefined}
+                activeTargets={isPersistentViewerEnabled ? activeTargets : undefined}
+                onActiveTargetsApplied={isPersistentViewerEnabled ? handleActiveTargetsApplied : undefined}
+                onActiveTargetsRejected={isPersistentViewerEnabled ? handleActiveTargetsRejected : undefined}
+                // Legacy props: only used when persistent viewer is disabled
+                mindBuffer={isPersistentViewerEnabled ? undefined : (isMultiViewer ? multiPreparation.mindBuffer : null)}
                 modelUrl={modelUrl}
                 imageUrl={imageUrl}
                 textureUrl={textureUrl}
