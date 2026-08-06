@@ -7,6 +7,11 @@ const viewerHtml = fs.readFileSync(
   'utf8',
 );
 
+const viewerJs = fs.readFileSync(
+  path.resolve(process.cwd(), 'public/static/ar-assets/js/ar-viewer.js'),
+  'utf8',
+);
+
 describe('AR viewer bootstrap fail-fast contract', () => {
   it('bounds the CDN bootstrap and reports its script stages', () => {
     expect(viewerHtml).toContain('BOOTSTRAP_DEADLINE_MS = 8000');
@@ -20,5 +25,43 @@ describe('AR viewer bootstrap fail-fast contract', () => {
     // CDN URLs must not be present in the vendor-first bootstrap
     expect(viewerHtml).not.toContain('aframe.io/releases');
     expect(viewerHtml).not.toContain('cdn.jsdelivr.net/npm/mind-ar');
+  });
+
+  // ── Task 7: SET_ACTIVE_TARGETS + BEGIN_ADD_CARD_SCAN contract ────────────────
+  it('handles SET_ACTIVE_TARGETS message', () => {
+    expect(viewerJs).toContain("case 'SET_ACTIVE_TARGETS'");
+  });
+
+  it('handles BEGIN_ADD_CARD_SCAN message', () => {
+    expect(viewerJs).toContain("case 'BEGIN_ADD_CARD_SCAN'");
+  });
+
+  it('applyActiveTargets does not call showImageFallbackForTarget on model error', () => {
+    // The new applyActiveTargets() must reject via ACTIVE_TARGETS_REJECTED
+    // and must NOT fall back to the legacy showImageFallbackForTarget path.
+    // Extract only the applyActiveTargets function body.
+    const fnStart = viewerJs.indexOf('function applyActiveTargets');
+    expect(fnStart).toBeGreaterThan(-1);
+    const afterFn = viewerJs.substring(fnStart);
+    // The function ends at the next sibling "    function " (4 spaces = module-level IIFE indent).
+    const nextSiblingFn = afterFn.indexOf('\n    function ', 1);
+    const fnBody = nextSiblingFn > 0 ? afterFn.substring(0, nextSiblingFn) : afterFn;
+    // The brief forbids the actual call, not mentions in comments.
+    // Check for the full call pattern so the comment "do NOT call …" is excluded.
+    expect(fnBody).not.toContain("showImageFallbackForTarget(0, 'model-0-asset-error')");
+    expect(fnBody).not.toContain('showImageFallbackForTarget(0, "model-0-asset-error")');
+    expect(fnBody).not.toContain('showImageFallbackForTarget(1,');
+  });
+
+  it('does not call showImageFallbackForTarget for slot 0 model error', () => {
+    // This assertion covers the new applyActiveTargets code path only.
+    // The brief requires that model errors in the revisioned slot protocol
+    // are reported via ACTIVE_TARGETS_REJECTED rather than image fallbacks.
+    const fnStart = viewerJs.indexOf('function applyActiveTargets');
+    const afterFn = viewerJs.substring(fnStart);
+    const nextFn = afterFn.indexOf('\n    function ', 1);
+    const fnBody = nextFn > 0 ? afterFn.substring(0, nextFn) : afterFn;
+    expect(fnBody).not.toContain("showImageFallbackForTarget(0, 'model-0-asset-error')");
+    expect(fnBody).not.toContain("showImageFallbackForTarget(1, 'model-1-asset-error')");
   });
 });
