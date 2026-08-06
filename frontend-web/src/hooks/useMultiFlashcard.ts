@@ -9,7 +9,7 @@
  * 5. Trigger combo effects when cards are close together
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { getApiBase, getSupabaseStorageBase } from '../config';
+import { getApiBase, getSupabaseStorageBase, isPersistentMindViewerEnabled } from '../config';
 import { HapticService } from '../services/HapticService';
 import { SoundEffectService } from '../services/SoundEffectService';
 
@@ -83,7 +83,8 @@ interface ComboData {
     comboId: string;
     description: string;
     requiredTags: string[];
-    targetOrder: string[];
+    // Task 10: targetOrder is optional - null in persistent mode (uses tag-based resolution)
+    targetOrder?: string[] | null;
     model3dUrl: string;
     image2dUrl: string;
     textureUrl?: string;
@@ -197,11 +198,29 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
         const flashcard = data.flashcard;
         const arObject = data.target || data.ar_objects?.[0];
 
-        const mindCatalogId = data.mindCatalogId;
-        const mindTargetIndex = data.mindTargetIndex;
+        // Task 9: Read catalog identity from arObject (snake_case from backend)
+        // Backend returns catalog fields inside target object, not at top level
+        const mindCatalogId = arObject?.mind_catalog_id;
+        const mindTargetIndex = arObject?.mind_target_index;
         const mindUrl = arObject?.nft_base_url || '';
 
-        // Task 9: Validate catalog fields if present
+        // Task 9: Validate catalog fields - fail fast in persistent mode if missing
+        const isPersistent = isPersistentMindViewerEnabled();
+
+        if (isPersistent) {
+            // Persistent mode requires catalog identity for all cards
+            if (!mindCatalogId || mindTargetIndex === undefined) {
+                emitArDebug('FLASHCARD_CATALOG_IDENTITY_MISSING', {
+                    qrId,
+                    hasMindCatalogId: !!mindCatalogId,
+                    hasMindTargetIndex: mindTargetIndex !== undefined,
+                    arTag: arObject?.ar_tag || flashcard.ar_tag
+                });
+                // Fail fast - persistent mode cannot work without catalog identity
+                return null;
+            }
+        }
+
         if (mindCatalogId && mindTargetIndex !== undefined) {
             try {
                 // Import catalog validation functions
@@ -360,31 +379,10 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
         const arTags = flashcards.map(card => card.arTag);
         const comboKey = [...arTags].sort().join('|');
 
-        // NEW: Check 1 - Validate categories match before checking combo
-        const [card1, card2] = flashcards;
-        if (card1.category !== card2.category) {
-            console.log('[MultiFlashcard] 🔍 Different categories, skipping combo check:',
-                card1.category, 'vs', card2.category);
-            emitArDebug('COMBO_CATEGORY_MISMATCH', {
-                arTags,
-                category1: card1.category,
-                category2: card2.category
-            });
-            setState(prev => prev.comboResolution.key !== comboKey ? prev : ({
-                ...prev,
-                isCheckingCombo: false,
-                comboResolution: {
-                    key: comboKey,
-                    status: 'not_found',
-                    reason: 'different_categories'
-                }
-            }));
-            return null;
-        }
-
         // NOTE: Category validation is handled by backend in check_combo().
         // If categories differ and cross_category_allowed=False, backend returns null.
         // So we proceed to combo check and let backend reject if needed.
+        // Task 10: In persistent mode, category check is deferred to backend - we proceed to tag-based resolution.
         
         if (snapshot.comboResolution.key === comboKey && snapshot.comboResolution.status !== 'idle') return null;
 
@@ -422,13 +420,105 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
                 return null;
             }
 
+            // Task 10: Parse combo data from backend response
+            const requiredTags: string[] = Array.isArray(data.combo.required_tags)
+                ? data.combo.required_tags
+                : [];
+
+            // Task 10: Use tag-based resolution when persistent viewer is enabled
+            const isPersistent = isPersistentMindViewerEnabled();
+
+            if (isPersistent) {
+                // Task 10: Use resolveComboByTags for order-independent combo activation
+                const comboResult = resolveComboByTags(flashcards, {
+                    comboId: data.combo.combo_id,
+                    requiredTags
+                });
+
+                if (!comboResult) {
+                    emitArDebug('COMBO_REJECTED_TAG_MISMATCH', {
+                        comboId: data.combo.combo_id,
+                        scannedTags: arTags,
+                        requiredTags
+                    });
+                    setState(prev => ({
+                        ...prev,
+                        activeCombo: null,
+                        comboMindUrl: null,
+                        mode: prev.detectedFlashcards.size >= 2 ? 'MULTI' : 'SINGLE',
+                        isCheckingCombo: false,
+                        comboResolution: {
+                            key: comboKey,
+                            status: 'rejected',
+                            reason: 'tag_mismatch'
+                        }
+                    }));
+                    emitArDebug('COMBO_RESOLUTION_CHANGED', {
+                        comboKey,
+                        status: 'rejected',
+                        reason: 'tag_mismatch'
+                    });
+                    return null;
+                }
+
+                // Task 10: Persistent mode - combo found via tags, no combo_mind_url needed
+                // Only preflight model/image (not mind file)
+                const model3dUrl = buildUrl(data.combo.model_3d_url) || '';
+                const image2dUrl = buildUrl(data.combo.image_2d_url) || '';
+                const textureUrl = buildUrl(data.combo.texture_url);
+
+                const assetProbes = await Promise.all([
+                    probeArAsset('model3d', model3dUrl),
+                    probeArAsset('image2d', image2dUrl),
+                    textureUrl ? probeArAsset('texture', textureUrl) : Promise.resolve(true)
+                ]);
+
+                if (assetProbes.some(ok => !ok)) {
+                    emitArDebug('COMBO_REJECTED_ASSET_PREFLIGHT', {
+                        comboId: data.combo.combo_id, arTags
+                    });
+                    setState(prev => ({
+                        ...prev,
+                        activeCombo: null,
+                        comboMindUrl: null,
+                        mode: prev.detectedFlashcards.size >= 2 ? 'MULTI' : 'SINGLE',
+                        isCheckingCombo: false,
+                        comboResolution: { key: comboKey, status: 'rejected', reason: 'asset_preflight' }
+                    }));
+                    return null;
+                }
+
+                emitArDebug('COMBO_RESOLVED_BY_TAGS', {
+                    comboId: data.combo.combo_id,
+                    requiredTags
+                });
+                setState(prev => ({
+                    ...prev,
+                    activeCombo: {
+                        comboId: data.combo.combo_id,
+                        description: data.combo.description,
+                        requiredTags,
+                        targetOrder: null, // Task 10: Not used in persistent mode
+                        model3dUrl,
+                        image2dUrl,
+                        textureUrl,
+                        comboMindUrl: null, // Task 10: Not used for tracking
+                        bonusXp: data.combo.bonus_xp || 100
+                    },
+                    comboMindUrl: null, // Task 10: Not used for tracking
+                    mode: 'COMBO',
+                    isCheckingCombo: false,
+                    comboResolution: { key: comboKey, status: 'found' }
+                }));
+                emitArDebug('COMBO_RESOLUTION_CHANGED', { comboKey, status: 'found' });
+                return data.combo;
+            }
+
+            // Legacy mode: use combo_mind_url and target_order
             const comboMindUrl = buildUrl(data.combo.combo_mind_url) || null;
             const model3dUrl = buildUrl(data.combo.model_3d_url) || '';
             const image2dUrl = buildUrl(data.combo.image_2d_url) || '';
             const textureUrl = buildUrl(data.combo.texture_url);
-            const requiredTags: string[] = Array.isArray(data.combo.required_tags)
-                ? data.combo.required_tags
-                : [];
             const targetOrder: string[] | null = Array.isArray(data.combo.target_order)
                 ? data.combo.target_order
                 : null;
