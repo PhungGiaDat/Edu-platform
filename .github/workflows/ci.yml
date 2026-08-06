@@ -5,13 +5,14 @@ on:
     branches:
       - main
       - develop
+      - MindAR-Update
   pull_request:
     branches:
       - main
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '24'
   PYTHON_VERSION: '3.10'
 
 # Vercel's Git integration is the sole production deployment owner. Actions
@@ -48,6 +49,12 @@ jobs:
 
       - name: Run tests
         run: npm run test
+
+      - name: Verify catalog metadata
+        run: npm run ar:catalog:verify
+
+      - name: Verify Supabase MindAR artifact
+        run: npm run ar:catalog:verify-remote
 
       - name: Build frontend
         run: npm run build
