@@ -15,6 +15,7 @@
     "test:e2e:ui": "playwright test --ui",
     "preview": "vite preview",
     "ar:catalog:verify": "vitest run src/__tests__/mindCatalogContract.test.ts",
+    "ar:catalog:verify-remote": "node scripts/verifyRemoteMindCatalog.mjs",
     "vendor:jsqr": "node scripts/vendor-jsqr.cjs",
     "postinstall": "node scripts/vendor-jsqr.cjs"
   },
