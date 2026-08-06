@@ -64,4 +64,13 @@ describe('AR viewer bootstrap fail-fast contract', () => {
     expect(fnBody).not.toContain("showImageFallbackForTarget(0, 'model-0-asset-error')");
     expect(fnBody).not.toContain("showImageFallbackForTarget(1, 'model-1-asset-error')");
   });
+
+  // ── Task 11: Persistent path must not invoke multi-mind lifecycle ─────────────
+  it('does not call MULTI_MIND_PREPARE_STARTED or MULTI_MIND_MERGED in persistent path', () => {
+    // The persistent viewer uses SET_ACTIVE_TARGETS / ACTIVE_TARGETS_APPLIED.
+    // It must NOT invoke the old multi-mind merge flow at all.
+    expect(viewerJs).not.toContain('MULTI_MIND_PREPARE_STARTED');
+    expect(viewerJs).not.toContain('MULTI_MIND_MERGED');
+    expect(viewerJs).not.toContain('MIND_BUFFER');
+  });
 });
