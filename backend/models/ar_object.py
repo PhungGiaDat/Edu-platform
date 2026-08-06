@@ -7,8 +7,8 @@ Architecture: Hybrid Database (Beanie for MongoDB)
 - Pydantic schemas for API request/response
 """
 from beanie import Document, Indexed
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, model_validator
+from typing import Optional, Any
 from datetime import datetime
 
 
@@ -16,38 +16,52 @@ from datetime import datetime
 class ARObject(Document):
     """
     AR Object Document - stored in MongoDB
-    
+
     Collection: ar_objects
     Contains NFT marker data and 3D model references
+
+    Catalog identity fields
+    -----------------------
+    ``mind_catalog_id`` and ``mind_target_index`` together identify the slot
+    inside a versioned MindAR catalog (``.mind`` + ``.manifest.json`` pair).
+    The pair is mandatory on every document because the runtime renders AR
+    scenes by catalog slot, not by raw URL.  See Task 2 of the
+    Shared-Mind Persistent Viewer plan.
     """
+
     ar_tag: Indexed(str, unique=True)  # Unique AR marker/target identifier
     description: str
     animation_type: str = Field(default="none")  # none, rotate, bounce, etc.
     glb_size: float = Field(default=1.0)
-    
+
     # NFT marker URLs (for AR.js NFT tracking)
     nft_base_url: str  # Base URL for .fset, .fset3, .iset files
-    
+
     # Model URLs
     model_3d_url: str  # URL to .glb/.gltf 3D model
     texture_url: Optional[str] = None  # URL to separate texture (optional)
     image_2d_url: str  # URL to 2D fallback image
-    
+
     # Transform properties
     position: str = Field(default="0 0 0")  # x y z
     rotation: str = Field(default="0 0 0")  # x y z (degrees)
     scale: str = Field(default="1 1 1")  # x y z
-    
+
+    # Catalog identity (versioned MindAR catalog slot)
+    mind_catalog_id: str  # Identifier of the compiled .mind catalog, e.g. "animals-v2"
+    mind_target_index: int  # Zero-based index of the slot inside that catalog
+
     # Metadata
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
-    
+
     class Settings:
         name = "ar_objects"  # MongoDB collection name
         indexes = [
-            "animation_type"
+            "animation_type",
+            "mind_catalog_id",
         ]
-    
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -61,14 +75,46 @@ class ARObject(Document):
                 "image_2d_url": "/static/images/apple.png",
                 "position": "0 0.5 0",
                 "rotation": "0 0 0",
-                "scale": "0.5 0.5 0.5"
+                "scale": "0.5 0.5 0.5",
+                "mind_catalog_id": "animals-v2",
+                "mind_target_index": 0,
             }
         }
 
 
 # ========== Pydantic Schemas (API) ==========
-class ARObjectCreate(BaseModel):
-    """Schema for creating a new AR object"""
+class _CatalogIdentityMixin(BaseModel):
+    """Shared validator enforcing that catalog identity fields move together.
+
+    Both ``ARObjectCreate`` (required) and ``ARObjectUpdate`` (optional)
+    inherit this so that the runtime can always read a complete catalog
+    triple from a persisted document.
+    """
+
+    mind_catalog_id: Optional[str] = None
+    mind_target_index: Optional[int] = None
+
+    @model_validator(mode="after")
+    def _validate_catalog_identity(self) -> "_CatalogIdentityMixin":
+        catalog = self.mind_catalog_id
+        index = self.mind_target_index
+        present = [v is not None for v in (catalog, index)]
+        if any(present) and not all(present):
+            raise ValueError(
+                "mind_catalog_id and mind_target_index must be provided together"
+            )
+        if index is not None and index < 0:
+            raise ValueError("mind_target_index must be a non-negative integer")
+        return self
+
+
+class ARObjectCreate(_CatalogIdentityMixin):
+    """Schema for creating a new AR object.
+
+    Catalog identity is mandatory on create — the runtime cannot resolve
+    a MindAR anchor without the complete (catalog, index) pair.
+    """
+
     ar_tag: str
     description: str
     animation_type: str = "none"
@@ -80,10 +126,27 @@ class ARObjectCreate(BaseModel):
     position: str = "0 0 0"
     rotation: str = "0 0 0"
     scale: str = "1 1 1"
+    mind_catalog_id: str
+    mind_target_index: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _require_catalog_identity(self) -> "ARObjectCreate":
+        if self.mind_catalog_id is None or self.mind_target_index is None:
+            raise ValueError(
+                "mind_catalog_id and mind_target_index are required on create"
+            )
+        return self
 
 
-class ARObjectUpdate(BaseModel):
-    """Schema for updating AR object - all fields optional"""
+class ARObjectUpdate(_CatalogIdentityMixin):
+    """Schema for updating AR object - all fields optional.
+
+    Catalog identity is optional here.  When the caller opts into a
+    catalog migration they must pass both fields together (enforced by
+    ``_CatalogIdentityMixin``).  Clearing both to ``None`` is rejected
+    because persisted documents must always resolve a catalog slot.
+    """
+
     description: Optional[str] = None
     animation_type: Optional[str] = None
     glb_size: Optional[float] = None
@@ -95,9 +158,24 @@ class ARObjectUpdate(BaseModel):
     rotation: Optional[str] = None
     scale: Optional[str] = None
 
+    @model_validator(mode="after")
+    def _reject_clearing_catalog(self) -> "ARObjectUpdate":
+        if (
+            self.mind_catalog_id is None
+            and self.mind_target_index is None
+            and "mind_catalog_id" in self.model_fields_set
+            and "mind_target_index" in self.model_fields_set
+        ):
+            raise ValueError(
+                "Cannot clear mind_catalog_id and mind_target_index; "
+                "AR objects must always resolve a catalog slot"
+            )
+        return self
+
 
 class ARObjectResponse(BaseModel):
     """Schema for API responses"""
+
     id: Optional[str] = Field(None, alias="_id")
     ar_tag: str
     description: str
@@ -110,8 +188,10 @@ class ARObjectResponse(BaseModel):
     position: str
     rotation: str
     scale: str
+    mind_catalog_id: str
+    mind_target_index: int
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
         populate_by_name = True
@@ -123,6 +203,7 @@ class ArObjectSchema(BaseModel):
     Legacy AR Object schema - kept for backward compatibility
     Use ARObjectResponse for new code
     """
+
     id: Optional[str] = Field(default=None, alias="_id")
     ar_tag: str
     description: str
@@ -135,7 +216,9 @@ class ArObjectSchema(BaseModel):
     position: str
     rotation: str
     scale: str
+    mind_catalog_id: str
+    mind_target_index: int
     created_at: datetime
-    
+
     class Config:
         populate_by_name = True

@@ -352,6 +352,8 @@ class AdminRepository:
             "position": '{"x": 0, "y": 0, "z": 0}',
             "rotation": '{"x": 0, "y": 0, "z": 0}',
             "scale": '{"x": 1, "y": 1, "z": 1}',
+            "mind_catalog_id": "legacy-singletons",
+            "mind_target_index": 0,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
         }

@@ -39,6 +39,8 @@ def _elephant_ar_object() -> dict:
         "position": "0 0 0",
         "rotation": "0 0 0",
         "scale": "1 1 1",
+        "mind_catalog_id": "animals-v2",
+        "mind_target_index": 0,
         "created_at": datetime(2026, 1, 1, tzinfo=timezone.utc),
     }
 
@@ -90,6 +92,10 @@ def test_flashcard_with_related_combo_returns_public_combo_contract():
     response = client.get("/api/v1/flashcard/ele123")
 
     assert response.status_code == 200
+    target = response.json()["target"]
+    assert target["mind_catalog_id"] == "animals-v2"
+    assert target["mind_target_index"] == 0
+    assert target["nft_base_url"] == "https://assets.example.com/elephant.mind"
     combo = response.json()["related_combos"][0]
     assert combo["center_transform"]["scale"] == "0.65 0.65 0.65"
     assert combo["cross_category_allowed"] is True
