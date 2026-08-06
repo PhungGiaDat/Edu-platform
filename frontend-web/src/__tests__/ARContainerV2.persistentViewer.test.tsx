@@ -15,7 +15,7 @@
  */
 
 import React from 'react';
-import { render, act, screen } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ActiveViewerTarget } from '@/core/types/ARMessages';
 

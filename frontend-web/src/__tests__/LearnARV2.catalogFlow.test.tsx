@@ -33,16 +33,14 @@ interface CapturedARContainerProps {
 }
 
 let capturedProps: CapturedARContainerProps | null = null;
-let rejectionCallback: CapturedARContainerProps['onActiveTargetsRejected'] = null;
-let appliedCallback: CapturedARContainerProps['onActiveTargetsApplied'] = null;
+let rejectionCallback: CapturedARContainerProps['onActiveTargetsRejected'] = undefined;
 const iframeSrcHistory: string[] = [];
 let iframeMountCount = 0;
 
 // Create mock ARContainerV2 that captures props
-const mockARContainerV2 = vi.fn(({ catalogId, mindUrl, catalogTargetCount, activeTargets, onActiveTargetsApplied, onActiveTargetsRejected, children }: any) => {
+const mockARContainerV2 = vi.fn(({ catalogId, mindUrl, catalogTargetCount, activeTargets, onActiveTargetsApplied, onActiveTargetsRejected, children: _children }: any) => {
   capturedProps = { catalogId, mindUrl, catalogTargetCount, activeTargets, onActiveTargetsApplied, onActiveTargetsRejected };
-  rejectionCallback = onActiveTargetsRejected ?? null;
-  appliedCallback = onActiveTargetsApplied ?? null;
+  rejectionCallback = onActiveTargetsRejected ?? undefined;
 
   const src = catalogId && mindUrl
     ? `/ar-viewer.html?mind=${mindUrl}&catalogId=${catalogId}&targetCount=${catalogTargetCount ?? 2}`
@@ -84,18 +82,6 @@ vi.mock('@/config', () => ({
 
 // ---- Test data fixtures ----
 
-const MANIFEST_FIXTURE = {
-  schemaVersion: 1,
-  catalogId: 'animals-v2',
-  mindUrl: '/assets/target/catalogs/animals-v2.mind',
-  targetCount: 2,
-  sha256: 'a'.repeat(64),
-  targets: [
-    { arTag: 'elephant_marker_01', mindTargetIndex: 0 },
-    { arTag: 'shiba_marker_01', mindTargetIndex: 1 },
-  ],
-};
-
 // ---- Test helpers ----
 
 function makeActiveTarget(overrides: Partial<ActiveViewerTarget> = {}): ActiveViewerTarget {
@@ -111,8 +97,7 @@ function makeActiveTarget(overrides: Partial<ActiveViewerTarget> = {}): ActiveVi
 
 function resetCapturedState() {
   capturedProps = null;
-  rejectionCallback = null;
-  appliedCallback = null;
+  rejectionCallback = undefined;
   iframeSrcHistory.length = 0;
   iframeMountCount = 0;
 }

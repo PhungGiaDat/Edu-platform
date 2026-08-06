@@ -1139,7 +1139,7 @@ export default function LearnARV2() {
     const addCardScanSessionRef = useRef<string | null>(null);
 
     // Task 9: Add card status for new flow
-    const [addCardStatus, setAddCardStatus] = useState<'idle' | 'scanning' | 'success' | 'error' | 'timeout' | 'cancelled'>('idle');
+    const [_addCardStatus, setAddCardStatus] = useState<'idle' | 'scanning' | 'success' | 'error' | 'timeout' | 'cancelled'>('idle');
 
     const handleAddCardScan = useCallback(() => {
         // Task 9: Fail closed if persistent viewer not enabled

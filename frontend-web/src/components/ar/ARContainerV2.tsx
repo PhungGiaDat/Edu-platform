@@ -379,7 +379,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
      * Arm (or re-arm) the 7-second ACK timeout for the current desired revision.
      * Clears any previously armed timeout to handle revision churn correctly.
      */
-    const armAckTimeout = useCallback((revision: number) => {
+    const armAckTimeout = useCallback((_revision: number) => {
         if (ackTimeoutRef.current) clearTimeout(ackTimeoutRef.current);
         ackTimeoutRef.current = setTimeout(() => {
             const state = revisionStateRef.current;

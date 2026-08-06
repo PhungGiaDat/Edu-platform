@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 // Test harness — loads the real module from disk when available so the suite
 // validates the actual JS module, not just the inline stub.
 // ---------------------------------------------------------------------------
-let _realCreate: typeof create | null = null;
+type CreateFn = (opts: { catalogId: string; targetCount: number }) => Registry;
+let _realCreate: CreateFn | null = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const fs = require('node:fs') as typeof import('node:fs');
@@ -17,8 +18,7 @@ try {
   // on the test's globalThis rather than Node's real global object.
   const sandbox = { globalThis: global, window: global, self: global };
   (new Function('root', src))(sandbox);
-  _realCreate = (sandbox as unknown as Record<string, unknown>).ARTargetRegistry
-    ?.create as typeof create;
+  _realCreate = ((sandbox as unknown as Record<string, unknown>).ARTargetRegistry as unknown as { create: CreateFn } | null | undefined)?.create ?? null;
 } catch {
   // Module file not found yet — test will use the inline stub below.
 }
