@@ -27,3 +27,14 @@ dist-ssr
 
 .env
 
+# MindAR compiled catalogs (large binaries — served via Supabase Storage CDN,
+# not bundled with the frontend deployment).  The matching ``.manifest.json``
+# and ``.sources.json`` files ARE tracked because they document the catalog
+# contract (catalogId, sha256, target list).  Re-compile with
+# ``node frontend-web/scripts/buildMindCatalog.mjs`` and upload the ``.mind``
+# binary to ``AR_models/mind-catalogs/<catalog-id>/<sha256>.mind`` on
+# Supabase Storage.  See docs/plan/20260802_hardcoded_values_refactor.md for
+# the rationale.
+*.mind
+public/assets/target/catalogs/*.mind
+
