@@ -17,9 +17,9 @@ Tasks 1–6 + 13: COMPLETE (verified from branch commits + test runs)
 
 Task 7: COMPLETE (commit 78ede41, 20+5 tests, all pass)
 Task 8: COMPLETE (commit 016f62a, 8 tests, all pass)
-Task 9: IN PROGRESS (3 test files, 34 tests, all pass)
-Task 10: PENDING
-Task 11: PENDING
+Task 9: COMPLETE (commit 73d0cf0, 34 tests, all pass)
+Task 10: COMPLETE (commit d031fed, 19 tests, all pass)
+Task 11: RUNNING (parallel)
 Task 12: PENDING
 
 ## Commit Reference (base for diffs)
