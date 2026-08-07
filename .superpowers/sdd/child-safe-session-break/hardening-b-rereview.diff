@@ -1,0 +1,191 @@
+diff --git a/frontend-web/src/__tests__/GlobalSessionWatcher.test.tsx b/frontend-web/src/__tests__/GlobalSessionWatcher.test.tsx
+index 49aa732..6246fa6 100644
+--- a/frontend-web/src/__tests__/GlobalSessionWatcher.test.tsx
++++ b/frontend-web/src/__tests__/GlobalSessionWatcher.test.tsx
+@@ -6,6 +6,7 @@ import userEvent from '@testing-library/user-event';
+ import { MemoryRouter, Route, Routes } from 'react-router-dom';
+ import { beforeEach, describe, expect, it, vi } from 'vitest';
+ import { GlobalSessionWatcher } from '../components/GlobalSessionWatcher';
++import { BreakReminder } from '../components/BreakReminder';
+ import { SessionProvider } from '../context/SessionContext';
+ 
+ vi.mock('../contexts/AuthContext', () => ({
+@@ -17,7 +18,15 @@ function renderWatcher(initialPath: string) {
+     <MemoryRouter initialEntries={[initialPath]}>
+       <SessionProvider>
+         <Routes>
+-          <Route path="/courses/animals" element={<div data-testid="course-route" />} />
++          <Route
++            path="/courses/animals"
++            element={(
++              <>
++                <button type="button">Obscured course control</button>
++                <div data-testid="course-route" />
++              </>
++            )}
++          />
+           <Route path="/learn-ar" element={<div data-testid="learn-ar-route" />} />
+           <Route path="/profile" element={<div data-testid="profile-route" />} />
+         </Routes>
+@@ -65,6 +74,76 @@ describe('GlobalSessionWatcher', () => {
+     expect(screen.getByTestId('profile-route')).toBeInTheDocument();
+   });
+ 
++  it('contains focus in the hard-limit reminder and restores it after navigation', async () => {
++    const user = userEvent.setup();
++    const trigger = document.createElement('button');
++    trigger.textContent = 'Open course';
++    document.body.appendChild(trigger);
++    trigger.focus();
++    localStorage.setItem('edu_session_state_v1', JSON.stringify({
++      version: 1,
++      phase: 'limit_reached',
++    }));
++
++    try {
++      renderWatcher('/courses/animals');
++      const takeBreak = screen.getByRole('button', { name: /take a break/i });
++
++      expect(takeBreak).toHaveFocus();
++      await user.tab();
++      expect(takeBreak).toHaveFocus();
++      await user.tab({ shift: true });
++      expect(takeBreak).toHaveFocus();
++      expect(screen.getByRole('button', { name: /obscured course control/i })).not.toHaveFocus();
++
++      await user.click(takeBreak);
++      expect(screen.getByTestId('profile-route')).toBeInTheDocument();
++      expect(trigger).toHaveFocus();
++    } finally {
++      trigger.remove();
++    }
++  });
++
++  it('refocuses the hard-limit action when a warning becomes a limit', async () => {
++    const user = userEvent.setup();
++    const trigger = document.createElement('button');
++    trigger.textContent = 'Open course';
++    document.body.appendChild(trigger);
++    trigger.focus();
++
++    try {
++      const { rerender } = render(
++        <BreakReminder
++          isWarning
++          isLimitReached={false}
++          remainingSeconds={60}
++          onContinue={vi.fn()}
++          onExit={vi.fn()}
++        />,
++      );
++
++      expect(screen.getByRole('button', { name: /keep going/i })).toHaveFocus();
++
++      rerender(
++        <BreakReminder
++          isWarning={false}
++          isLimitReached
++          remainingSeconds={0}
++          onExit={vi.fn()}
++        />,
++      );
++
++      const takeBreak = screen.getByRole('button', { name: /take a break/i });
++      expect(takeBreak).toHaveFocus();
++      await user.tab();
++      expect(takeBreak).toHaveFocus();
++      await user.tab({ shift: true });
++      expect(takeBreak).toHaveFocus();
++    } finally {
++      trigger.remove();
++    }
++  });
++
+   it.each(['/COURSES/animals/', '/LEARN-AR/'])('shows cooldown on a React Router learning-path variant: %s', initialPath => {
+     localStorage.setItem('edu_session_state_v1', JSON.stringify({
+       version: 1,
+diff --git a/frontend-web/src/components/BreakReminder.tsx b/frontend-web/src/components/BreakReminder.tsx
+index f96da43..20b1f1f 100644
+--- a/frontend-web/src/components/BreakReminder.tsx
++++ b/frontend-web/src/components/BreakReminder.tsx
+@@ -11,6 +11,10 @@
+ 
+ import React, { useEffect, useRef } from 'react';
+ 
++const getFocusableElements = (dialog: HTMLElement) => Array.from(dialog.querySelectorAll<HTMLElement>(
++  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
++));
++
+ // Format remaining seconds as "Xm Ys" or "X min"
+ function formatTime(secs: number): string {
+   const m = Math.floor(secs / 60);
+@@ -147,18 +151,63 @@ export const BreakReminder: React.FC<BreakReminderProps> = ({
+   onExit,
+ }) => {
+   const dialogRef = useRef<HTMLDivElement>(null);
++  const previousFocusRef = useRef<HTMLElement | null>(null);
+   const prefersReducedMotion =
+     typeof window !== 'undefined' &&
+     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ 
+-  // Focus the dialog when it mounts
++  const isOpen = isWarning || isLimitReached;
++
++  useEffect(() => {
++    const dialog = dialogRef.current;
++    if (!isOpen || !dialog) return;
++
++    previousFocusRef.current = document.activeElement instanceof HTMLElement
++      ? document.activeElement
++      : null;
++
++    const trapFocus = (event: KeyboardEvent) => {
++      if (event.key !== 'Tab') return;
++
++      const focusable = getFocusableElements(dialog);
++      if (focusable.length === 0) {
++        event.preventDefault();
++        dialog.focus();
++        return;
++      }
++
++      const first = focusable[0];
++      const last = focusable[focusable.length - 1];
++      const activeElement = document.activeElement;
++
++      if (event.shiftKey && (activeElement === first || !dialog.contains(activeElement))) {
++        event.preventDefault();
++        last.focus();
++      } else if (!event.shiftKey && (activeElement === last || !dialog.contains(activeElement))) {
++        event.preventDefault();
++        first.focus();
++      }
++    };
++
++    document.addEventListener('keydown', trapFocus);
++
++    return () => {
++      document.removeEventListener('keydown', trapFocus);
++      if (previousFocusRef.current?.isConnected) {
++        previousFocusRef.current.focus();
++      }
++    };
++  }, [isOpen]);
++
+   useEffect(() => {
+-    if ((isWarning || isLimitReached) && dialogRef.current) {
+-      dialogRef.current.focus();
+-    }
+-  }, [isWarning, isLimitReached]);
++    const dialog = dialogRef.current;
++    if (!isOpen || !dialog) return;
++
++    const [first] = getFocusableElements(dialog);
++    (first ?? dialog).focus();
++  }, [isOpen, isLimitReached]);
+ 
+-  if (!isWarning && !isLimitReached) return null;
++  if (!isOpen) return null;
+ 
+   const isFullScreen = isLimitReached;
+   const accentColor = isLimitReached ? 'pink' : 'yellow';

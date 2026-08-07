@@ -1,0 +1,332 @@
+diff --git a/frontend-web/src/__tests__/GlobalSessionWatcher.test.tsx b/frontend-web/src/__tests__/GlobalSessionWatcher.test.tsx
+index d7b1fe8..49aa732 100644
+--- a/frontend-web/src/__tests__/GlobalSessionWatcher.test.tsx
++++ b/frontend-web/src/__tests__/GlobalSessionWatcher.test.tsx
+@@ -18,6 +18,7 @@ function renderWatcher(initialPath: string) {
+       <SessionProvider>
+         <Routes>
+           <Route path="/courses/animals" element={<div data-testid="course-route" />} />
++          <Route path="/learn-ar" element={<div data-testid="learn-ar-route" />} />
+           <Route path="/profile" element={<div data-testid="profile-route" />} />
+         </Routes>
+         <GlobalSessionWatcher />
+@@ -64,6 +65,38 @@ describe('GlobalSessionWatcher', () => {
+     expect(screen.getByTestId('profile-route')).toBeInTheDocument();
+   });
+ 
++  it.each(['/COURSES/animals/', '/LEARN-AR/'])('shows cooldown on a React Router learning-path variant: %s', initialPath => {
++    localStorage.setItem('edu_session_state_v1', JSON.stringify({
++      version: 1,
++      phase: 'on_break',
++      breakUntil: Date.now() + 5 * 60_000,
++    }));
++
++    renderWatcher(initialPath);
++
++    expect(screen.getByRole('dialog', { name: /break time in progress/i })).toBeInTheDocument();
++  });
++
++  it('returns to profile after take-break storage writes fail', async () => {
++    const user = userEvent.setup();
++    localStorage.setItem('edu_session_state_v1', JSON.stringify({
++      version: 1,
++      phase: 'limit_reached',
++    }));
++    const storageFailure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
++      throw new DOMException('full', 'QuotaExceededError');
++    });
++
++    try {
++      renderWatcher('/courses/animals');
++
++      await user.click(screen.getByRole('button', { name: /take a break/i }));
++      expect(screen.getByTestId('profile-route')).toBeInTheDocument();
++    } finally {
++      storageFailure.mockRestore();
++    }
++  });
++
+   it('traps focus in the cooldown dialog and restores the prior focus on unmount', async () => {
+     const user = userEvent.setup();
+     const trigger = document.createElement('button');
+diff --git a/frontend-web/src/__tests__/SessionContext.test.tsx b/frontend-web/src/__tests__/SessionContext.test.tsx
+index 0310c4e..f845981 100644
+--- a/frontend-web/src/__tests__/SessionContext.test.tsx
++++ b/frontend-web/src/__tests__/SessionContext.test.tsx
+@@ -75,6 +75,30 @@ describe('SessionContext', () => {
+     });
+   });
+ 
++  it('keeps the in-memory break state when browser storage rejects writes', () => {
++    localStorage.setItem('edu_session_state_v1', JSON.stringify({
++      version: 1,
++      phase: 'limit_reached',
++    }));
++    const storageFailure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
++      throw new DOMException('full', 'QuotaExceededError');
++    });
++
++    try {
++      const { result } = renderHook(() => useSession(), {
++        wrapper: ({ children }) => (
++          <RouterSessionProvider initialPath="/courses/animals">{children}</RouterSessionProvider>
++        ),
++      });
++
++      act(() => result.current.takeBreak());
++
++      expect(result.current.isOnBreak).toBe(true);
++    } finally {
++      storageFailure.mockRestore();
++    }
++  });
++
+   it('does not start a session on /profile', () => {
+     const { result } = renderHook(() => useSession(), {
+       wrapper: ({ children }) => (
+diff --git a/frontend-web/src/__tests__/sessionBreakState.test.ts b/frontend-web/src/__tests__/sessionBreakState.test.ts
+index 49a293d..da0e74a 100644
+--- a/frontend-web/src/__tests__/sessionBreakState.test.ts
++++ b/frontend-web/src/__tests__/sessionBreakState.test.ts
+@@ -1,4 +1,5 @@
+ import { describe, expect, it } from 'vitest';
++import { SESSION_LIMIT_SECS, SESSION_WARNING_SECS } from '../config';
+ import {
+   beginLearningSession,
+   getSessionSnapshot,
+@@ -13,6 +14,16 @@ import {
+ describe('sessionBreakState', () => {
+   const now = 1_800_000_000_000;
+ 
++  const throwingStorage = (methods: Partial<Storage>): Storage => ({
++    getItem: () => null,
++    setItem: () => undefined,
++    removeItem: () => undefined,
++    clear: () => undefined,
++    key: () => null,
++    length: 0,
++    ...methods,
++  }) as Storage;
++
+   it('starts a fresh active session only on a learning route', () => {
+     expect(beginLearningSession(null, now)).toEqual({
+       version: 1,
+@@ -25,12 +36,64 @@ describe('sessionBreakState', () => {
+     expect(isLearningPath('/profile')).toBe(false);
+   });
+ 
++  it.each([
++    '/LEARN-AR',
++    '/learn-ar/',
++    '/FlashCards/deck-1/',
++    '/COURSES/animals/lessons/1/',
++    '/F/scan-123/',
++  ])('recognizes React Router learning-path variants: %s', pathname => {
++    expect(isLearningPath(pathname)).toBe(true);
++  });
++
++  it.each([
++    '/learn-ar-archive',
++    '/flashcards-admin',
++    '/courses-old/animals',
++    '/f/',
++    '/f/scan-123/extra',
++  ])('rejects non-learning lookalikes: %s', pathname => {
++    expect(isLearningPath(pathname)).toBe(false);
++  });
++
+   it('pauses elapsed time outside learning routes', () => {
+     const active = beginLearningSession(null, now)!;
+     const paused = setSessionRunning(active, now + 60_000, false);
+     expect(getSessionSnapshot(paused, now + 10 * 60_000).elapsedSeconds).toBe(60);
+   });
+ 
++  it('accumulates sub-second running segments at the exact warning and limit thresholds', () => {
++    let state = beginLearningSession(null, now)!;
++    const segmentDurationMs = 250;
++    const segmentsToWarning = SESSION_WARNING_SECS * 4;
++
++    for (let index = 0; index < segmentsToWarning; index += 1) {
++      const startedAt = now + index * segmentDurationMs * 2;
++      state = setSessionRunning(state, startedAt + segmentDurationMs, false)!;
++      state = setSessionRunning(state, startedAt + segmentDurationMs * 2, true)!;
++    }
++
++    expect(state).toMatchObject({
++      phase: 'active',
++      elapsedSeconds: SESSION_WARNING_SECS,
++    });
++    expect(getSessionSnapshot(state, now + segmentsToWarning * segmentDurationMs * 2)).toMatchObject({
++      elapsedSeconds: SESSION_WARNING_SECS,
++      remainingSeconds: SESSION_LIMIT_SECS - SESSION_WARNING_SECS,
++      isWarning: true,
++      isLimitReached: false,
++    });
++
++    const limitAt = now + segmentsToWarning * segmentDurationMs * 2;
++    state = setSessionRunning(state, limitAt + 1, true)!;
++    state = setSessionRunning(state, limitAt + (SESSION_LIMIT_SECS - SESSION_WARNING_SECS) * 1000, false)!;
++
++    expect(settleSessionState(state, limitAt + (SESSION_LIMIT_SECS - SESSION_WARNING_SECS) * 1000)).toEqual({
++      version: 1,
++      phase: 'limit_reached',
++    });
++  });
++
+   it('settles an expired learning window to limit_reached', () => {
+     const active = beginLearningSession(null, now)!;
+     expect(settleSessionState(active, now + 30 * 60_000)?.phase).toBe('limit_reached');
+@@ -59,4 +122,40 @@ describe('sessionBreakState', () => {
+     }));
+     expect(readSessionState(storage, now)).toBeNull();
+   });
++
++  it('treats unavailable storage and failed invalid-state cleanup as an empty session', () => {
++    const securityError = new DOMException('blocked', 'SecurityError');
++    const unavailableStorage = throwingStorage({
++      getItem: () => {
++        throw securityError;
++      },
++      removeItem: () => {
++        throw securityError;
++      },
++    });
++    const corruptStorage = throwingStorage({
++      getItem: () => '{invalid json',
++      removeItem: () => {
++        throw new DOMException('full', 'QuotaExceededError');
++      },
++    });
++
++    expect(readSessionState(unavailableStorage, now)).toBeNull();
++    expect(readSessionState(corruptStorage, now)).toBeNull();
++  });
++
++  it('does not throw when session-state writes are blocked', () => {
++    const quotaExceeded = new DOMException('full', 'QuotaExceededError');
++    const storage = throwingStorage({
++      setItem: () => {
++        throw quotaExceeded;
++      },
++      removeItem: () => {
++        throw quotaExceeded;
++      },
++    });
++
++    expect(() => writeSessionState(storage, takeSessionBreak(now))).not.toThrow();
++    expect(() => writeSessionState(storage, null)).not.toThrow();
++  });
+ });
+diff --git a/frontend-web/src/session/sessionBreakState.ts b/frontend-web/src/session/sessionBreakState.ts
+index b70edbe..0994625 100644
+--- a/frontend-web/src/session/sessionBreakState.ts
++++ b/frontend-web/src/session/sessionBreakState.ts
+@@ -3,6 +3,7 @@ import {
+   SESSION_LIMIT_SECS,
+   SESSION_WARNING_SECS,
+ } from '../config';
++import { matchPath } from 'react-router-dom';
+ 
+ export const SESSION_STATE_STORAGE_KEY = 'edu_session_state_v1';
+ export const LEGACY_SESSION_KEYS = [
+@@ -28,7 +29,7 @@ export interface SessionSnapshot {
+ 
+ const elapsedAt = (state: Extract<SessionState, { phase: 'active' }>, now: number) =>
+   state.elapsedSeconds +
+-  (state.runningSince === null ? 0 : Math.max(0, Math.floor((now - state.runningSince) / 1000)));
++  (state.runningSince === null ? 0 : Math.max(0, (now - state.runningSince) / 1000));
+ 
+ const emptySnapshot = (): SessionSnapshot => ({
+   phase: null,
+@@ -102,8 +103,8 @@ export function getSessionSnapshot(state: SessionState | null, now: number): Ses
+ 
+     return {
+       phase: isLimitReached ? 'limit_reached' : 'active',
+-      elapsedSeconds,
+-      remainingSeconds: Math.max(0, SESSION_LIMIT_SECS - elapsedSeconds),
++      elapsedSeconds: Math.floor(elapsedSeconds),
++      remainingSeconds: Math.max(0, Math.ceil(SESSION_LIMIT_SECS - elapsedSeconds)),
+       breakRemainingSeconds: 0,
+       isWarning: elapsedSeconds >= SESSION_WARNING_SECS && !isLimitReached,
+       isLimitReached,
+@@ -143,9 +144,23 @@ export function getSessionSnapshot(state: SessionState | null, now: number): Ses
+ }
+ 
+ export function readSessionState(storage: Storage, now: number): SessionState | null {
+-  LEGACY_SESSION_KEYS.forEach((key) => storage.removeItem(key));
++  const remove = (key: string) => {
++    try {
++      storage.removeItem(key);
++    } catch {
++      // Browser storage can be unavailable in privacy-restricted contexts.
++    }
++  };
++
++  LEGACY_SESSION_KEYS.forEach(remove);
++
++  let raw: string | null;
++  try {
++    raw = storage.getItem(SESSION_STATE_STORAGE_KEY);
++  } catch {
++    return null;
++  }
+ 
+-  const raw = storage.getItem(SESSION_STATE_STORAGE_KEY);
+   if (raw === null) {
+     return null;
+   }
+@@ -154,12 +169,12 @@ export function readSessionState(storage: Storage, now: number): SessionState |
+   try {
+     parsed = JSON.parse(raw);
+   } catch {
+-    storage.removeItem(SESSION_STATE_STORAGE_KEY);
++    remove(SESSION_STATE_STORAGE_KEY);
+     return null;
+   }
+ 
+   const invalid = () => {
+-    storage.removeItem(SESSION_STATE_STORAGE_KEY);
++    remove(SESSION_STATE_STORAGE_KEY);
+     return null;
+   };
+ 
+@@ -210,21 +225,28 @@ export function readSessionState(storage: Storage, now: number): SessionState |
+ }
+ 
+ export function writeSessionState(storage: Storage, state: SessionState | null): void {
+-  if (state === null) {
+-    storage.removeItem(SESSION_STATE_STORAGE_KEY);
+-    return;
+-  }
++  try {
++    if (state === null) {
++      storage.removeItem(SESSION_STATE_STORAGE_KEY);
++      return;
++    }
+ 
+-  storage.setItem(SESSION_STATE_STORAGE_KEY, JSON.stringify(state));
++    storage.setItem(SESSION_STATE_STORAGE_KEY, JSON.stringify(state));
++  } catch {
++    // Keep the in-memory state authoritative when browser storage is blocked.
++  }
+ }
+ 
+ export function isLearningPath(pathname: string): boolean {
++  const matches = (path: string) =>
++    matchPath({ path, end: true, caseSensitive: false }, pathname) !== null;
++
+   return (
+-    pathname === '/learn-ar' ||
+-    pathname === '/flashcards' ||
+-    pathname.startsWith('/flashcards/') ||
+-    pathname === '/courses' ||
+-    pathname.startsWith('/courses/') ||
+-    /^\/f\/[^/]+$/.test(pathname)
++    matches('/learn-ar') ||
++    matches('/flashcards') ||
++    matches('/flashcards/*') ||
++    matches('/courses') ||
++    matches('/courses/*') ||
++    matches('/f/:id')
+   );
+ }
