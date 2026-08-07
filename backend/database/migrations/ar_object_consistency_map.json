@@ -1,0 +1,30 @@
+{
+  "catalog": {
+    "elephant_marker_01": { "mind_catalog_id": "animals-v2", "mind_target_index": 0 },
+    "shiba_marker_01": { "mind_catalog_id": "animals-v2", "mind_target_index": 1 }
+  },
+  "legacy": [
+    "apple_marker_01",
+    "banana_marker_01",
+    "cake_marker_01",
+    "birthday_marker_01",
+    "flower_marker_01",
+    "mushroom_marker_01",
+    "palm_marker_01",
+    "tree_marker_01",
+    "cactus_marker_01",
+    "car_marker_01",
+    "suv_marker_01",
+    "truck_marker_01",
+    "jungle_marker_01",
+    "combo_ele_jungle_marker",
+    "cat_marker_01",
+    "hama_marker_01",
+    "coconut_marker_01",
+    "giraffe_marker_01",
+    "hippo_marker_01",
+    "britishshorthair_marker_01",
+    "catcow_marker_01",
+    "fredcat_marker_01"
+  ]
+}
