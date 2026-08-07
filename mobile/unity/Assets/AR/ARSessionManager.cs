@@ -34,7 +34,7 @@ public class ARSessionManager : MonoBehaviour
         if (_imageManager == null) {
             _imageManager = gameObject.AddComponent<ARTrackedImageManager>();
         }
-        _trackablesChangedHandler = HandleTrackedImagesChanged;
+        _trackablesChangedHandler = HandleTrackedImagesChangedInternal;
     }
 
     private void OnEnable()
@@ -75,7 +75,7 @@ public class ARSessionManager : MonoBehaviour
         }
     }
 
-    private void HandleTrackedImagesChanged(ARTrackablesChangedEventArgs<ARTrackedImage> args)
+    private void HandleTrackedImagesChangedInternal(ARTrackablesChangedEventArgs<ARTrackedImage> args)
     {
         // Image added
         foreach (var image in args.added) {
@@ -203,6 +203,15 @@ public class ARSessionManager : MonoBehaviour
     {
         UnityEngine.Debug.Log("[ARSessionManager] ResumeSession called");
         if (_session != null) _session.enabled = true;
+    }
+
+    /// <summary>
+    /// Test seam: fires the tracked-images changed handler with custom args.
+    /// Used by EditorMockImageDetector and PlayMode tests to inject mock ARTrackedImages.
+    /// </summary>
+    public void HandleTrackedImagesChanged(ARTrackablesChangedEventArgs<ARTrackedImage> args)
+    {
+        HandleTrackedImagesChangedInternal(args);
     }
 
     /// <summary>
