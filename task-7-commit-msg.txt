@@ -1,0 +1,19 @@
+fix(admin): prevent inconsistent AR object writes
+
+Task 6: exact idempotent repair replaces inferred migration logic.
+Task 7: admin must validate AR object before inserting flashcard.
+
+- Add ARObjectConfigurationError (ValueError) to ar_object_contract.
+- Replace _ensure_ar_object in admin_repository with _require_valid_ar_object
+  pre-insert validation that raises ARObjectConfigurationError on missing or
+  invalid AR object; never writes to ar_objects_collection.
+- Map ARObjectConfigurationError to HTTP 422 in api/admin.py so the admin UI
+  surfaces precise remediation hints.
+- Add ARObjectRepository.create_validated / update_validated that route all
+  writes through the shared ARObjectContract.
+- 15/15 Phase B + admin pytest cases pass:
+  tests/test_admin_ar_object_consistency.py (6)
+  tests/test_ar_object_consistency.py (3)
+  tests/test_audit_ar_objects_consistency.py (2)
+  tests/test_repair_ar_objects_consistency.py (3)
+  tests/test_flashcard_ar_response.py (1)
