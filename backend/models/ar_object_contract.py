@@ -22,6 +22,16 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
+class ARObjectConfigurationError(ValueError):
+    """Raised when an AR-object write would produce a document that fails the
+    discriminator contract (``ARObjectContract``).
+
+    Distinct from ``ValidationError`` so admin endpoints can map it to
+    HTTP 422 instead of HTTP 500, and so callers can distinguish "AR
+    configuration required" from generic schema failures.
+    """
+
+
 class TrackingMode(str, Enum):
     CATALOG = "catalog"
     LEGACY = "legacy"
@@ -90,6 +100,7 @@ def serialize_ar_object(document: Any) -> dict:
 
 
 __all__ = [
+    "ARObjectConfigurationError",
     "ARObjectContract",
     "TrackingMode",
     "normalize_vec3",

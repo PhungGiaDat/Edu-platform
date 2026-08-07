@@ -7,13 +7,32 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from database.base_repo import BaseRepository
 from database.db import mongo_connector
-from core.url_builders import mind_file_url
+from models.ar_object_contract import ARObjectConfigurationError, serialize_ar_object
 import logging
 import asyncio
 import re
 import uuid
 
 logger = logging.getLogger(__name__)
+
+
+async def _require_valid_ar_object(collection, ar_tag: str) -> dict:
+    """Pre-insert check that an ``ar_tag`` already corresponds to a valid
+    AR object document. Returns the serialized document on success.
+
+    Raises:
+        ARObjectConfigurationError: with code ``AR_OBJECT_NOT_CONFIGURED``
+            when no document exists for ``ar_tag`` or with code
+            ``AR_OBJECT_SCHEMA_INVALID`` when the existing document does not
+            satisfy :class:`models.ar_object_contract.ARObjectContract`.
+    """
+    raw = await collection.find_one({"ar_tag": ar_tag})
+    if raw is None:
+        raise ARObjectConfigurationError("AR_OBJECT_NOT_CONFIGURED")
+    try:
+        return serialize_ar_object(raw)
+    except Exception as exc:  # pragma: no cover - serializer only raises ValidationError
+        raise ARObjectConfigurationError("AR_OBJECT_SCHEMA_INVALID") from exc
 
 
 class AdminRepository:
@@ -301,15 +320,23 @@ class AdminRepository:
         return card
     
     async def create_flashcard(self, card_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create a new flashcard and auto-create ar_object if ar_tag provided"""
+        """Create a flashcard. When ``ar_tag`` is supplied, the AR object must
+        already exist and validate; no AR object is created or modified here.
+        """
         card_data["teacher_id"] = self.teacher_id
         card_data["created_at"] = datetime.utcnow()
         card_data["updated_at"] = datetime.utcnow()
         card_data["is_active"] = True
 
-        # Auto-generate ar_tag from qr_id if not provided
+        # Auto-generate ar_tag from qr_id if not provided. The synthetic tag
+        # is still validated against the catalog/legacy registry before
+        # insert.
         if not card_data.get("ar_tag") and card_data.get("qr_id"):
             card_data["ar_tag"] = card_data["qr_id"].lower().replace("-", "_") + "_marker"
+
+        ar_tag = card_data.get("ar_tag")
+        if ar_tag:
+            await _require_valid_ar_object(self.ar_objects_collection, ar_tag)
 
         await self.flashcards_collection.insert_one(card_data)
 
@@ -317,54 +344,24 @@ class AdminRepository:
         if card_data.get("deck_id"):
             await self._update_deck_card_count(card_data["deck_id"])
 
-        # Auto-create ar_object if ar_tag is provided
-        ar_tag = card_data.get("ar_tag")
-        if ar_tag:
-            await self._ensure_ar_object(ar_tag, card_data.get("image_url"))
-
         card_data["_id"] = str(card_data.get("_id", ""))
 
         return card_data
 
+    # Legacy private helper retained as a no-op so older callers/tests that
+    # imported ``_ensure_ar_object`` continue to receive an attribute. New
+    # code must use :func:`_require_valid_ar_object` instead.
     async def _ensure_ar_object(self, ar_tag: str, image_url: Optional[str] = None) -> None:
+        """Deprecated. AR objects are now configured explicitly via
+        ``ARObjectRepository.create_validated``. This method is kept as a
+        no-op to preserve the import surface for older tests; it never
+        writes to ``ar_objects_collection``.
         """
-        Create ar_object if it doesn't exist.
-        This enables AR tracking for flashcards with ar_tag.
-        """
-        existing = await self.ar_objects_collection.find_one({"ar_tag": ar_tag})
-        if existing:
-            logger.debug(f"[AdminRepo] AR object already exists for tag: {ar_tag}")
-            return
-
-        # ``nft_base_url`` is deprecated.  Keep the legacy placeholder so
-        # the document still validates, but the runtime must resolve the
-        # real ``.mind`` URL through the catalog manifest referenced by
-        # ``mind_catalog_id`` below.
-        nft_base_url = mind_file_url(f"assets/mind-files/{ar_tag}.mind")
-
-        ar_object = {
-            "ar_tag": ar_tag,
-            "description": f"AR object for {ar_tag}",
-            "animation_type": "idle",
-            "glb_size": 0,
-            "nft_base_url": nft_base_url,
-            "model_3d_url": "",
-            "texture_url": None,
-            "image_2d_url": image_url or "",
-            "position": '{"x": 0, "y": 0, "z": 0}',
-            "rotation": '{"x": 0, "y": 0, "z": 0}',
-            "scale": '{"x": 1, "y": 1, "z": 1}',
-            "mind_catalog_id": "legacy-singletons",
-            "mind_target_index": 0,
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow(),
-        }
-
-        try:
-            await self.ar_objects_collection.insert_one(ar_object)
-            logger.info(f"[AdminRepo] Created ar_object for tag: {ar_tag}")
-        except Exception as e:
-            logger.error(f"[AdminRepo] Failed to create ar_object for {ar_tag}: {e}")
+        logger.warning(
+            "[AdminRepo] _ensure_ar_object is deprecated and does nothing; "
+            "configure AR objects via ARObjectRepository.create_validated()."
+        )
+        return None
     
     async def update_flashcard(self, qr_id: str, update_data: Dict[str, Any]) -> bool:
         """Update a flashcard"""

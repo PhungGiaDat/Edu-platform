@@ -1,10 +1,20 @@
 # backend/database/repositories/ar_object_repository.py
 """
 AR Object Repository - Data Access Layer for AR targets/markers
+
+All writes must flow through :meth:`create_validated` /
+:meth:`update_validated`, which accept an :class:`ARObjectContract` and
+serialise through the shared contract. Generic BaseRepository writes that
+accept arbitrary dicts are intentionally not exposed for this collection,
+because every AR object must satisfy the catalog-or-legacy discriminator
+defined in :mod:`models.ar_object_contract`.
 """
 from typing import Optional, List, Dict, Any
 from core.base_repository import BaseRepository
-from models.ar_object_contract import serialize_ar_object
+from models.ar_object_contract import (
+    ARObjectContract,
+    serialize_ar_object,
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -60,6 +70,28 @@ class ARObjectRepository(BaseRepository):
             List of AR tag names
         """
         return await self.collection.distinct("ar_tag")
+
+    async def create_validated(self, payload: ARObjectContract) -> dict:
+        """Insert a new AR object after validating through the shared contract.
+
+        Raises :class:`pydantic.ValidationError` if ``payload`` is invalid.
+        Returns the serialised document (without Mongo ``_id``) so callers
+        never need to re-validate the round-tripped shape.
+        """
+        raw = payload.model_dump(mode="python")
+        result = await self.collection.insert_one(raw)
+        raw["_id"] = result.inserted_id
+        return serialize_ar_object(raw)
+
+    async def update_validated(self, ar_tag: str, payload: ARObjectContract) -> bool:
+        """Replace the persisted fields of an AR object with a validated
+        payload. Returns ``True`` when exactly one document was matched.
+        """
+        result = await self.collection.update_one(
+            {"ar_tag": ar_tag},
+            {"$set": payload.model_dump(mode="python")},
+        )
+        return result.matched_count == 1
 
 
 def get_ar_object_repository() -> ARObjectRepository:
