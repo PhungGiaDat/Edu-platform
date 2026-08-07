@@ -94,10 +94,12 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-asyncio pytest-cov httpx
 
+      - name: Print staged ar_objects validator plan
+        run: python -m database.migrations.apply_ar_objects_validator --action warn
+
       - name: Run tests
         run: |
           pytest tests/ -v --cov=. --cov-report=xml --cov-report=html
-        continue-on-error: true
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
