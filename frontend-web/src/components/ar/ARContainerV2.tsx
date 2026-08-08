@@ -36,7 +36,6 @@ import {
     initialRevisionState,
     ActiveTargetRevisionState,
 } from './activeTargetRevision';
-import { getSupabaseStorageBase } from '@/config';
 
 // ========== TYPES ==========
 export type ARPhase = 'IDLE' | 'SCANNING' | 'LOADING' | 'VIEWING' | 'ERROR'
@@ -97,20 +96,6 @@ interface ARViewerTarget {
 const VIEWER_BOOTSTRAP_TIMEOUT_MS = 15_000;
 // 7-second ACK timeout for SET_ACTIVE_TARGETS revisions (Task 8)
 const ACTIVE_TARGETS_ACK_TIMEOUT_MS = 7_000;
-
-function normalizeViewerAssetUrl(url?: string): string | undefined {
-    if (!url) return undefined;
-    const SUPABASE_BASE = getSupabaseStorageBase();
-    const lower = url.toLowerCase();
-    if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return `${SUPABASE_BASE}/assets/models3d/palm_tree.glb`;
-    if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return `${SUPABASE_BASE}/assets/model2d/Palm.jpg`;
-    if (lower.includes('/frontend/model2d/elephant.jpg') || lower.endsWith('/elephant.jpg')) return `${SUPABASE_BASE}/assets/model2d/Elephant.jpg`;
-    if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
-    if (lower.endsWith('/cute_elephant_jungle.glb')) return `${SUPABASE_BASE}/assets/models/combos/cute_elephant_jungle.glb`;
-    if (lower.endsWith('/elephant_tree_combo_layered.png')) return `${SUPABASE_BASE}/assets/model2d/elephant_tree_combo_layered.png`;
-    return url;
-}
-
 export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     initialPhase = 'SCANNING',
     catalogId,
@@ -280,12 +265,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
         viewerTargets.slice(0, targetCount).forEach((target, index) => {
             const suffix = index === 0 ? '' : String(index + 1);
-            const normalizedModelUrl = normalizeViewerAssetUrl(target.modelUrl);
-            const normalizedImageUrl = normalizeViewerAssetUrl(target.imageUrl);
-            const normalizedTextureUrl = normalizeViewerAssetUrl(target.textureUrl);
-            if (normalizedModelUrl) params.set(`model${suffix}`, normalizedModelUrl);
-            if (normalizedImageUrl) params.set(`image${suffix}`, normalizedImageUrl);
-            if (normalizedTextureUrl) params.set(`textureUrl${suffix}`, normalizedTextureUrl);
+            if (target.modelUrl) params.set(`model${suffix}`, target.modelUrl);
+            if (target.imageUrl) params.set(`image${suffix}`, target.imageUrl);
+            if (target.textureUrl) params.set(`textureUrl${suffix}`, target.textureUrl);
             if (target.word) params.set(`word${suffix}`, target.word);
         });
 
@@ -293,12 +275,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         params.set('targetCount', String(targetCount));
         params.set('maxTrack', String(Math.max(1, Math.min(targetCount, 5))));
 
-        const normalizedComboModelUrl = normalizeViewerAssetUrl(comboModelUrl);
-        const normalizedComboImageUrl = normalizeViewerAssetUrl(comboImageUrl);
-        const normalizedComboTextureUrl = normalizeViewerAssetUrl(comboTextureUrl);
-        if (normalizedComboModelUrl) params.set('comboModel', normalizedComboModelUrl);
-        if (normalizedComboImageUrl) params.set('comboImage', normalizedComboImageUrl);
-        if (normalizedComboTextureUrl) params.set('comboTextureUrl', normalizedComboTextureUrl);
+        if (comboModelUrl) params.set('comboModel', comboModelUrl);
+        if (comboImageUrl) params.set('comboImage', comboImageUrl);
+        if (comboTextureUrl) params.set('comboTextureUrl', comboTextureUrl);
         if (comboPhrase) params.set('comboPhrase', comboPhrase);
         return `/ar-viewer.html?${params.toString()}`;
     }, [mindUrl, catalogId, catalogTargetCount, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);

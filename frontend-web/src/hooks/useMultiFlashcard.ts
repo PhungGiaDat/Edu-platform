@@ -9,25 +9,11 @@
  * 5. Trigger combo effects when cards are close together
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { getApiBase, getSupabaseStorageBase, isPersistentMindViewerEnabled } from '../config';
+import { getApiBase, isPersistentMindViewerEnabled } from '../config';
 import { HapticService } from '../services/HapticService';
 import { SoundEffectService } from '../services/SoundEffectService';
 
 const API_BASE = getApiBase();
-const SUPABASE_BASE = getSupabaseStorageBase();
-
-function normalizeArAssetUrl(url?: string): string | undefined {
-    if (!url) return undefined;
-    const lower = url.toLowerCase();
-    if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return `${SUPABASE_BASE}/assets/models3d/palm_tree.glb`;
-    if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return `${SUPABASE_BASE}/assets/model2d/Palm.jpg`;
-    if (lower.includes('/frontend/model2d/elephant.jpg') || lower.endsWith('/elephant.jpg')) return `${SUPABASE_BASE}/assets/model2d/Elephant.jpg`;
-    if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
-    if (lower.endsWith('/cute_elephant_jungle.glb')) return `${SUPABASE_BASE}/assets/models/combos/cute_elephant_jungle.glb`;
-    if (lower.endsWith('/elephant_tree_combo_layered.png')) return `${SUPABASE_BASE}/assets/model2d/elephant_tree_combo_layered.png`;
-    if (lower.endsWith('/combo_targets.mind')) return `${SUPABASE_BASE}/assets/mind-files/combo_targets.mind`;
-    return url;
-}
 
 function emitArDebug(label: string, details: Record<string, unknown>) {
     window.postMessage({
@@ -146,12 +132,12 @@ export function useMultiFlashcard() {
 
     const buildUrl = useCallback((path?: string): string | undefined => {
         if (!path) return undefined;
-        const normalized = normalizeArAssetUrl(path);
-        if (!normalized) return undefined;
-        if (normalized.startsWith('http://') || normalized.startsWith('https://') || normalized.startsWith('/assets/')) {
-            return normalized;
+        // Full URLs returned by the backend are authoritative — the API
+        // response already contains the resolved Supabase URLs.
+        if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/assets/')) {
+            return path;
         }
-        const cleanPath = normalized.startsWith('/') ? normalized : `/${normalized}`;
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
         return `${API_BASE}${cleanPath}`;
     }, []);
 

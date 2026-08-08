@@ -2,21 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import type { ARTarget, ARCombo } from '../types';
-import { getApiBase, getSupabaseStorageBase } from '../config';
+import { getApiBase } from '../config';
 import { eventBus } from '@/runtime/EventBus';
 
 const API_BASE = getApiBase();
-const SUPABASE_BASE = getSupabaseStorageBase();
 
-function normalizeArAssetUrl(url?: string): string | undefined {
-  if (!url) return undefined;
-  const lower = url.toLowerCase();
-  if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return `${SUPABASE_BASE}/assets/models3d/palm_tree.glb`;
-  if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return `${SUPABASE_BASE}/assets/model2d/Palm.jpg`;
-  if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
-  if (lower.endsWith('/cute_elephant_jungle.glb')) return '/assets/models/combos/cute_elephant_jungle.glb';
-  if (lower.endsWith('/elephant_tree_combo_layered.png')) return '/assets/model2D/elephant_tree_combo_layered.png';
-  return url;
+function buildUrl(path: string | undefined): string | undefined {
+  if (!path) return undefined;
+  // Full URLs (http/https) returned by the backend are authoritative —
+  // the API response already contains the resolved Supabase URLs.
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  // Frontend static assets served by the same Vite origin.
+  if (path.startsWith('/assets/')) return path;
+  // Legacy relative paths — prepend API_BASE.
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE}${cleanPath}`;
 }
 
 // ── localStorage cache helpers ──────────────────────────────────────────────
@@ -76,13 +76,9 @@ export const useArData = (qrId: string | null) => {
     // Otherwise fall back to API_BASE for legacy relative paths
     const buildUrl = (path: string | undefined): string | undefined => {
       if (!path) return undefined;
-      const normalized = normalizeArAssetUrl(path);
-      if (!normalized) return undefined;
-      if (normalized.startsWith('/assets/')) return normalized;
-      // Use full URLs directly (Supabase storage URLs from backend)
-      if (normalized.startsWith('http://') || normalized.startsWith('https://')) return normalized;
-      // Fallback: prepend API_BASE for relative paths (legacy support)
-      const cleanPath = normalized.startsWith('/') ? normalized : `/${normalized}`;
+      if (path.startsWith('http://') || path.startsWith('https://')) return path;
+      if (path.startsWith('/assets/')) return path;
+      const cleanPath = path.startsWith('/') ? path : `/${path}`;
       return `${API_BASE}${cleanPath}`;
     };
 
