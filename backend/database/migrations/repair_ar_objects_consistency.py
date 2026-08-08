@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -24,6 +25,25 @@ from typing import Any, Iterable, Mapping
 
 # Sentinel that distinguishes "field absent" from "field set to None".
 MISSING: object = object()
+
+
+def _redact_mongo_url(url: str | None) -> str:
+    """Return ``url`` with any embedded credentials stripped.
+
+    Mirrors the helper in ``apply_ar_objects_validator`` — duplicated here
+    so this migration can be invoked in isolation without importing the
+    validator module (which has heavy Motor dependencies).
+    """
+    if not url:
+        return "<unset>"
+    match = re.match(r"^(?P<scheme>[a-zA-Z][a-zA-Z0-9+.\-]*)://(?P<rest>.*)$", url)
+    if not match:
+        return url
+    rest = match.group("rest")
+    credentials_end = rest.find("@")
+    if credentials_end == -1:
+        return url
+    return f"{match.group('scheme')}://***@{rest[credentials_end + 1:]}"
 
 
 @dataclass(frozen=True)
@@ -81,8 +101,14 @@ def build_repairs(
             if row.get("mind_target_index") != spec["mind_target_index"]:
                 old_values["mind_target_index"] = row.get("mind_target_index", MISSING)
                 set_values["mind_target_index"] = spec["mind_target_index"]
-            if "nft_base_url" in row and row.get("nft_base_url") not in (None, ""):
-                old_values["nft_base_url"] = row.get("nft_base_url")
+            # Only schedule an unset for nft_base_url when the field is
+            # actually present AND holds a meaningful value. Forcing an
+            # unset against a None/empty/absent value produces a filter
+            # clause that no document can satisfy, silently dropping the
+            # repair.
+            nft_url = row.get("nft_base_url", MISSING)
+            if nft_url is not MISSING and nft_url not in (None, ""):
+                old_values["nft_base_url"] = nft_url
                 unset.append("nft_base_url")
         elif ar_tag in legacy_set:
             # Legacy row: ensure tracking_mode + kept nft_base_url, drop catalog pair.
@@ -90,11 +116,16 @@ def build_repairs(
             if current_mode != "legacy":
                 old_values["tracking_mode"] = current_mode
                 set_values["tracking_mode"] = "legacy"
-            if "mind_catalog_id" in row and row.get("mind_catalog_id") is not None:
-                old_values["mind_catalog_id"] = row.get("mind_catalog_id")
+            # Same rule for catalog-pair fields on legacy rows: only unset
+            # when the source value is actually present and meaningful. A
+            # null/absent value produces a clause that cannot match.
+            catalog_id = row.get("mind_catalog_id", MISSING)
+            if catalog_id is not MISSING and catalog_id not in (None, ""):
+                old_values["mind_catalog_id"] = catalog_id
                 unset.append("mind_catalog_id")
-            if row.get("mind_target_index") is not None:
-                old_values["mind_target_index"] = row.get("mind_target_index")
+            catalog_index = row.get("mind_target_index", MISSING)
+            if catalog_index is not MISSING and catalog_index is not None:
+                old_values["mind_target_index"] = catalog_index
                 unset.append("mind_target_index")
         else:
             # Unknown ar_tag in any state: no repair planned.
@@ -118,31 +149,36 @@ def build_repairs(
 
 def _old_value_clause(field_name: str, old_value: Any) -> dict[str, Any]:
     if old_value is MISSING:
-        return {"$or": [{field_name: {"$exists": False}}, {field_name: None}]}
+        # Match "field absent" OR "field explicitly null". Without both, an
+        # operator overwriting a missing field with null would never see
+        # their document matched (conflated with bare absence). This clause
+        # is intentionally permissive: it is combined with other clauses in
+        # ``build_filter`` so it cannot over-match.
+        return {
+            "$or": [
+                {field_name: {"$exists": False}},
+                {field_name: {"$eq": None}},
+            ]
+        }
     return {"$or": [{field_name: old_value}, {field_name: {"$eq": old_value}}]}
 
 
 def build_filter(repair: Repair) -> dict[str, Any]:
-    clauses = [
+    """Build a CAS filter that only constrains fields the repair touches.
+
+    The original implementation always emitted clauses for tracking_mode,
+    mind_catalog_id, and mind_target_index, plus nft_base_url if present.
+    That over-constrained the filter and silently dropped repairs where any
+    of those fields was already absent on the document. The fix is to
+    only emit a clause for each field that is in ``old_values`` — i.e.
+    the fields the repair actually depends on.
+    """
+    clauses: list[dict[str, Any]] = [
         {"_id": repair.object_id},
         {"ar_tag": repair.ar_tag},
-        _old_value_clause(
-            "tracking_mode",
-            repair.old_values.get("tracking_mode", MISSING),
-        ),
-        _old_value_clause(
-            "mind_catalog_id",
-            repair.old_values.get("mind_catalog_id", MISSING),
-        ),
-        _old_value_clause(
-            "mind_target_index",
-            repair.old_values.get("mind_target_index", MISSING),
-        ),
     ]
-    if "nft_base_url" in repair.old_values:
-        clauses.append(
-            _old_value_clause("nft_base_url", repair.old_values["nft_base_url"])
-        )
+    for field_name, old_value in repair.old_values.items():
+        clauses.append(_old_value_clause(field_name, old_value))
     return {"$and": clauses}
 
 
@@ -255,7 +291,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     sys.stderr.write(
-        f"[repair] connecting to {mongo_url} / {args.expected_db}\n"
+        f"[repair] connecting to {_redact_mongo_url(mongo_url)} / {args.expected_db}\n"
     )
     client = motor.motor_asyncio.AsyncIOMotorClient(
         mongo_url,

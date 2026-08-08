@@ -185,40 +185,6 @@
                 return await import(src);
             }
 
-            function receiveMindBuffer() {
-                return new Promise(function (resolve, reject) {
-                    var requestIntervalId;
-                    var timeoutId = window.setTimeout(function () {
-                        window.clearInterval(requestIntervalId);
-                        window.removeEventListener('message', onMessage);
-                        reject(new Error('Timed out waiting for merged Mind buffer'));
-                    }, 15000);
-
-                    function onMessage(event) {
-                        if (event.source !== window.parent || !event.data || event.data.type !== 'MIND_BUFFER') return;
-                        var payload = event.data.payload || event.data;
-                        if (!payload.buffer) return;
-                        window.clearTimeout(timeoutId);
-                        window.clearInterval(requestIntervalId);
-                        window.removeEventListener('message', onMessage);
-                        runtimeMindUrl = URL.createObjectURL(new Blob([payload.buffer], {
-                            type: 'application/octet-stream'
-                        }));
-                        postToParent('AR_DEBUG', {
-                            label: 'MULTI_MIND_BLOB_CREATED',
-                            details: { bytes: payload.buffer.byteLength },
-                            source: 'ar-viewer-bootstrap'
-                        });
-                        resolve(runtimeMindUrl);
-                    }
-
-                    window.addEventListener('message', onMessage);
-                    var requestBuffer = function () { postToParent('MIND_BUFFER_REQUEST', {}); };
-                    requestIntervalId = window.setInterval(requestBuffer, 300);
-                    requestBuffer();
-                });
-            }
-
             // Load combo model with animation
             function loadComboModel(url, animationClip) {
                 var scene = document.querySelector('a-scene');
@@ -279,9 +245,7 @@
                     details: { requestedMind: requestedMind, deadlineMs: BOOTSTRAP_DEADLINE_MS },
                     source: 'ar-viewer-bootstrap'
                 });
-                var mindUrl = requestedMind === 'runtime-buffer'
-                    ? await receiveMindBuffer()
-                    : requestedMind;
+                var mindUrl = requestedMind;
                 if (!mindUrl) throw new Error('No Mind target source was provided');
 
                 await loadScript('/static/vendor/aframe-1.4.2.min.js', 'aframe', deadlineAt);

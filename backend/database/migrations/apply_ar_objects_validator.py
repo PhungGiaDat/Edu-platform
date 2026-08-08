@@ -13,9 +13,19 @@ required before any real ``db.command`` or ``create_index`` call is made.
 from __future__ import annotations
 
 import argparse
+import json
 import os
+import re
 import sys
 from typing import Any, Mapping
+
+import motor.motor_asyncio
+import certifi  # noqa: F401  (re-exported for tests that patch ``certifi.where``)
+
+# Module-level aliases so tests can monkeypatch the constructor used by
+# ``_run_apply``. Aliasing here (rather than inside ``main``) keeps the
+# dependency-injection seam stable across refactors.
+AsyncIOMotorClient = motor.motor_asyncio.AsyncIOMotorClient
 
 
 VALID_ACTIONS = ("warn", "error")
@@ -111,17 +121,206 @@ def build_index() -> tuple[list[tuple[str, int]], dict[str, Any]]:
     return keys, options
 
 
+def _redact_mongo_url(url: str | None) -> str:
+    """Return ``url`` with any embedded credentials stripped.
+
+    MongoDB connection strings embed the username and password directly
+    after ``://`` (``mongodb://user:pass@host`` or
+    ``mongodb+srv://user:pass@host``). Logging the URL verbatim leaks
+    secrets into CI/Render logs; this helper keeps the scheme and host so
+    operators can still see which cluster was targeted.
+    """
+    if not url:
+        return "<unset>"
+    match = re.match(r"^(?P<scheme>[a-zA-Z][a-zA-Z0-9+.\-]*)://(?P<rest>.*)$", url)
+    if not match:
+        return url
+    rest = match.group("rest")
+    # Strip user:password@ prefix if present, keep host/db/query.
+    credentials_end = rest.find("@")
+    if credentials_end == -1:
+        return url
+    return f"{match.group('scheme')}://***@{rest[credentials_end + 1:]}"
+
+
 def _print_plan(command: Mapping[str, Any], index_keys, index_options) -> None:
     plan = {
         "validator": command,
         "index": {"keys": index_keys, "options": index_options},
     }
-    sys.stdout.write(__import__("json").dumps(plan, indent=2, sort_keys=True))
+    sys.stdout.write(json.dumps(plan, indent=2, sort_keys=True))
     sys.stdout.write("\n")
 
 
+async def _fetch_validator_metadata(db) -> tuple[dict | None, str | None]:
+    """Read the live validator/validationAction without mutating anything.
+
+    The original "readback" called ``db.command({"collMod": ..., "validator": {}})``
+    which actually clears the rule we just installed. The safe equivalent is
+    a ``listCollections`` projection that returns the collection options
+    (validator, validationLevel, validationAction) without writing.
+    """
+    cursor = await db.command(
+        {
+            "listCollections": 1,
+            "filter": {"name": "ar_objects"},
+        }
+    )
+    rows = []
+    if hasattr(cursor, "to_list"):
+        rows = await cursor.to_list(length=1)
+    elif hasattr(cursor, "__aiter__"):
+        async for row in cursor:
+            rows.append(row)
+            if len(rows) >= 1:
+                break
+    else:
+        # Sync-style cursor (defensive — motor usually returns async).
+        for row in cursor:
+            rows.append(row)
+            if len(rows) >= 1:
+                break
+    if not rows:
+        return None, "collection ar_objects not found"
+    options = rows[0].get("options") or {}
+    validator = options.get("validator")
+    action = options.get("validationAction")
+    return validator, action
+
+
+async def _run_apply(
+    *,
+    mongo_url: str,
+    expected_db: str,
+    command: Mapping[str, Any],
+    index_keys: list[tuple[str, int]],
+    index_options: dict[str, Any],
+) -> int:
+    client = AsyncIOMotorClient(
+        mongo_url,
+        tls=True,
+        tlsCAFile=certifi.where(),
+        serverSelectionTimeoutMS=5000,
+    )
+    try:
+        try:
+            await client.admin.command("ping")
+        except Exception as exc:
+            sys.stderr.write(f"[validator] connection failed: {exc}\n")
+            return 1
+
+        db = client[expected_db]
+        coll = db["ar_objects"]
+        action = command.get("validationAction", "warn")
+        sys.stderr.write(
+            f"[validator] connecting to {_redact_mongo_url(mongo_url)} / {expected_db} "
+            f"(action={action})\n"
+        )
+
+        # 1. Install the validator exactly once. NEVER collMod with an empty
+        # validator — that wipes the rule we just installed.
+        sys.stderr.write(f"[validator] applying collMod action={action}\n")
+        try:
+            await db.command(command)
+        except Exception as exc:
+            sys.stderr.write(f"[validator] collMod FAILED: {exc}\n")
+            return 1
+        sys.stderr.write("[validator] collMod applied successfully\n")
+
+        # 2. Guard against duplicates that would block the partial unique index.
+        if index_options.get("unique"):
+            dup_pipeline = [
+                {
+                    "$match": {
+                        "mind_catalog_id": {"$type": "string"},
+                        "mind_target_index": {"$type": "int"},
+                        "tracking_mode": "catalog",
+                    }
+                },
+                {
+                    "$group": {
+                        "_id": {
+                            "mind_catalog_id": "$mind_catalog_id",
+                            "mind_target_index": "$mind_target_index",
+                        },
+                        "count": {"$sum": 1},
+                    }
+                },
+                {"$match": {"count": {"$gt": 1}}},
+            ]
+            cursor = coll.aggregate(dup_pipeline)
+            duplicates = await cursor.to_list(length=None)
+            if duplicates:
+                dup_str = ", ".join(
+                    f"({d['_id']['mind_catalog_id']}, {d['_id']['mind_target_index']})"
+                    for d in duplicates
+                )
+                sys.stderr.write(
+                    f"[validator] ERROR: {len(duplicates)} duplicate catalog pair(s) found: {dup_str}\n"
+                    "[validator] ERROR: resolve duplicates before creating unique index\n"
+                )
+                return 1
+            sys.stderr.write("[validator] duplicate check: no duplicates found\n")
+
+        # 3. Install the partial unique index. Errors propagate (no swallow).
+        idx_name = index_options.get("name", "unknown")
+        try:
+            await coll.create_index(index_keys, **index_options)
+        except Exception as exc:
+            sys.stderr.write(f"[validator] create_index FAILED: {exc}\n")
+            return 1
+        sys.stderr.write(
+            f"[validator] index {idx_name!r} created or already exists\n"
+        )
+
+        # 4. Verify state by reading collection options. NO collMod with empty
+        # validator — that destroys what we just installed.
+        try:
+            installed_validator, installed_action = await _fetch_validator_metadata(db)
+        except Exception as exc:
+            sys.stderr.write(f"[validator] WARNING: could not read validator: {exc}\n")
+            installed_validator = None
+            installed_action = None
+
+        if installed_validator is None:
+            sys.stderr.write(
+                f"[validator] ERROR: post-apply validator metadata missing — "
+                f"the rule may not have been installed. Aborting.\n"
+            )
+            return 1
+        sys.stderr.write(
+            f"[validator] verified: validationAction={installed_action!r} "
+            f"schemaKeys={sorted((installed_validator.get('$jsonSchema') or {}).keys())}\n"
+        )
+
+        try:
+            indexes = await coll.index_information()
+            idx_names = [v["name"] for v in indexes.values()]
+            if idx_name in idx_names:
+                sys.stderr.write(
+                    f"[validator] verified: index {idx_name!r} exists in {idx_names}\n"
+                )
+            else:
+                sys.stderr.write(
+                    f"[validator] ERROR: index {idx_name!r} not found in {idx_names}\n"
+                )
+                return 1
+        except Exception as exc:
+            sys.stderr.write(
+                f"[validator] WARNING: could not list indexes: {exc}\n"
+            )
+
+        sys.stderr.write(
+            f"[validator] SUCCESS: validator={installed_action} "
+            f"index={idx_name!r} active on {expected_db}\n"
+        )
+        return 0
+    finally:
+        client.close()
+
+
 def main(argv: list[str] | None = None) -> int:
-    import asyncio
+    import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -149,7 +348,7 @@ def main(argv: list[str] | None = None) -> int:
             "Set to 0 to confirm the audit passed before promoting to error mode."
         ),
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     command = build_validator(args.action)
     index_keys, index_options = build_index()
@@ -192,127 +391,25 @@ def main(argv: list[str] | None = None) -> int:
         sys.stderr.write("error: MONGO_URL environment variable is not set\n")
         return 2
 
+    import asyncio
+
     try:
-        import motor.motor_asyncio
-        import certifi
-    except ImportError as exc:
-        sys.stderr.write(f"error: pymongo/motor is not installed: {exc}\n")
-        return 1
-
-    async def _run():
-        client = motor.motor_asyncio.AsyncIOMotorClient(
-            mongo_url,
-            tls=True,
-            tlsCAFile=certifi.where(),
-            serverSelectionTimeoutMS=5000,
-        )
-        db = client[args.expected_db]
-        coll = db["ar_objects"]
-
-        sys.stderr.write(
-            f"[validator] connecting to {mongo_url} / {args.expected_db}\n"
-        )
-        try:
-            await client.admin.command("ping")
-        except Exception as exc:
-            sys.stderr.write(f"[validator] connection failed: {exc}\n")
-            return 1
-
-        # 1. Apply the collMod validator.
-        sys.stderr.write(
-            f"[validator] applying collMod action={args.action}\n"
-        )
-        try:
-            await db.command(command)
-        except Exception as exc:
-            sys.stderr.write(f"[validator] collMod FAILED: {exc}\n")
-            return 1
-        sys.stderr.write("[validator] collMod applied successfully\n")
-
-        # 2. Check for existing duplicates before creating unique index.
-        if index_options.get("unique"):
-            dup_pipeline = [
-                {
-                    "$match": {
-                        "mind_catalog_id": {"$type": "string"},
-                        "mind_target_index": {"$type": "int"},
-                        "tracking_mode": "catalog",
-                    }
-                },
-                {
-                    "$group": {
-                        "_id": {
-                            "mind_catalog_id": "$mind_catalog_id",
-                            "mind_target_index": "$mind_target_index",
-                        },
-                        "count": {"$sum": 1},
-                    }
-                },
-                {"$match": {"count": {"$gt": 1}}},
-            ]
-            duplicates = await coll.aggregate(dup_pipeline).to_list(length=None)
-            if duplicates:
-                dup_str = ", ".join(
-                    f"({d['_id']['mind_catalog_id']}, {d['_id']['mind_target_index']})"
-                    for d in duplicates
-                )
-                sys.stderr.write(
-                    f"[validator] ERROR: {len(duplicates)} duplicate catalog pair(s) found: {dup_str}\n"
-                    "[validator] ERROR: resolve duplicates before creating unique index\n"
-                )
-                return 1
-            sys.stderr.write("[validator] duplicate check: no duplicates found\n")
-
-        # 3. Create the partial unique index.
-        idx_name = index_options.get("name", "unknown")
-        try:
-            await coll.create_index(index_keys, **index_options)
-            sys.stderr.write(f"[validator] index {idx_name!r} created or already exists\n")
-        except Exception as exc:
-            # Index might already exist with different options.
-            sys.stderr.write(f"[validator] create_index note: {exc}\n")
-
-        # 4. Verify: read back validator metadata.
-        try:
-            result = await db.command({"collMod": "ar_objects", "validator": {}})
-            validator_info = result.get("validator", {})
-            sys.stderr.write(
-                f"[validator] verified: validationLevel={validator_info.get('validationLevel')!r} "
-                f"validationAction={validator_info.get('validationAction')!r}\n"
+        return asyncio.run(
+            _run_apply(
+                mongo_url=mongo_url,
+                expected_db=args.expected_db,
+                command=command,
+                index_keys=index_keys,
+                index_options=index_options,
             )
-        except Exception as exc:
-            sys.stderr.write(f"[validator] WARNING: could not read back validator: {exc}\n")
-
-        # 5. Verify: list indexes.
-        try:
-            indexes = await coll.index_information()
-            idx_names = [v["name"] for v in indexes.values()]
-            if idx_name in idx_names:
-                sys.stderr.write(f"[validator] verified: index {idx_name!r} exists in {idx_names}\n")
-            else:
-                sys.stderr.write(
-                    f"[validator] WARNING: index {idx_name!r} not found in {idx_names}\n"
-                )
-        except Exception as exc:
-            sys.stderr.write(f"[validator] WARNING: could not list indexes: {exc}\n")
-
-        sys.stderr.write(
-            f"[validator] SUCCESS: validator={args.action} "
-            f"index={idx_name!r} active on {args.expected_db}\n"
         )
-        client.close()
-        return 0
-
-    try:
-        exit_code = asyncio.run(_run())
     except Exception as exc:
         sys.stderr.write(f"[validator] FATAL: {exc}\n")
-        exit_code = 1
-    return exit_code
+        return 1
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
 
 
-__all__ = ["build_index", "build_validator", "main"]
+__all__ = ["build_index", "build_validator", "main", "_redact_mongo_url"]
