@@ -15,23 +15,17 @@ import { SoundEffectService } from '../services/SoundEffectService';
 
 const API_BASE = getApiBase();
 const SUPABASE_BASE = getSupabaseStorageBase();
-const PALM_TREE_MODEL_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb`;
-const PALM_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg`;
-const ELEPHANT_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg`;
-const COMBO_MODEL_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb`;
-const COMBO_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png`;
-const COMBO_MIND_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/mind-files/combo_targets.mind`;
 
 function normalizeArAssetUrl(url?: string): string | undefined {
     if (!url) return undefined;
     const lower = url.toLowerCase();
-    if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return PALM_TREE_MODEL_URL;
-    if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return PALM_IMAGE_URL;
-    if (lower.includes('/frontend/model2d/elephant.jpg') || lower.endsWith('/elephant.jpg')) return ELEPHANT_IMAGE_URL;
+    if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return `${SUPABASE_BASE}/assets/models3d/palm_tree.glb`;
+    if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return `${SUPABASE_BASE}/assets/model2d/Palm.jpg`;
+    if (lower.includes('/frontend/model2d/elephant.jpg') || lower.endsWith('/elephant.jpg')) return `${SUPABASE_BASE}/assets/model2d/Elephant.jpg`;
     if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
-    if (lower.endsWith('/cute_elephant_jungle.glb')) return COMBO_MODEL_URL;
-    if (lower.endsWith('/elephant_tree_combo_layered.png')) return COMBO_IMAGE_URL;
-    if (lower.endsWith('/combo_targets.mind')) return COMBO_MIND_URL;
+    if (lower.endsWith('/cute_elephant_jungle.glb')) return `${SUPABASE_BASE}/assets/models/combos/cute_elephant_jungle.glb`;
+    if (lower.endsWith('/elephant_tree_combo_layered.png')) return `${SUPABASE_BASE}/assets/model2d/elephant_tree_combo_layered.png`;
+    if (lower.endsWith('/combo_targets.mind')) return `${SUPABASE_BASE}/assets/mind-files/combo_targets.mind`;
     return url;
 }
 

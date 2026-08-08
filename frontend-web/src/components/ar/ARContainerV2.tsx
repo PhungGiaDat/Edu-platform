@@ -36,6 +36,7 @@ import {
     initialRevisionState,
     ActiveTargetRevisionState,
 } from './activeTargetRevision';
+import { getSupabaseStorageBase } from '@/config';
 
 // ========== TYPES ==========
 export type ARPhase = 'IDLE' | 'SCANNING' | 'LOADING' | 'VIEWING' | 'ERROR'
@@ -97,22 +98,16 @@ const VIEWER_BOOTSTRAP_TIMEOUT_MS = 15_000;
 // 7-second ACK timeout for SET_ACTIVE_TARGETS revisions (Task 8)
 const ACTIVE_TARGETS_ACK_TIMEOUT_MS = 7_000;
 
-const SUPABASE_BASE = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models';
-const PALM_TREE_MODEL_URL = `${SUPABASE_BASE}/assets/models3d/palm_tree.glb`;
-const PALM_IMAGE_URL = `${SUPABASE_BASE}/assets/model2d/Palm.jpg`;
-const ELEPHANT_IMAGE_URL = `${SUPABASE_BASE}/assets/model2d/Elephant.jpg`;
-const COMBO_MODEL_URL = `${SUPABASE_BASE}/assets/models/combos/cute_elephant_jungle.glb`;
-const COMBO_IMAGE_URL = `${SUPABASE_BASE}/assets/model2d/elephant_tree_combo_layered.png`;
-
 function normalizeViewerAssetUrl(url?: string): string | undefined {
     if (!url) return undefined;
+    const SUPABASE_BASE = getSupabaseStorageBase();
     const lower = url.toLowerCase();
-    if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return PALM_TREE_MODEL_URL;
-    if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return PALM_IMAGE_URL;
-    if (lower.includes('/frontend/model2d/elephant.jpg') || lower.endsWith('/elephant.jpg')) return ELEPHANT_IMAGE_URL;
+    if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return `${SUPABASE_BASE}/assets/models3d/palm_tree.glb`;
+    if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return `${SUPABASE_BASE}/assets/model2d/Palm.jpg`;
+    if (lower.includes('/frontend/model2d/elephant.jpg') || lower.endsWith('/elephant.jpg')) return `${SUPABASE_BASE}/assets/model2d/Elephant.jpg`;
     if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
-    if (lower.endsWith('/cute_elephant_jungle.glb')) return COMBO_MODEL_URL;
-    if (lower.endsWith('/elephant_tree_combo_layered.png')) return COMBO_IMAGE_URL;
+    if (lower.endsWith('/cute_elephant_jungle.glb')) return `${SUPABASE_BASE}/assets/models/combos/cute_elephant_jungle.glb`;
+    if (lower.endsWith('/elephant_tree_combo_layered.png')) return `${SUPABASE_BASE}/assets/model2d/elephant_tree_combo_layered.png`;
     return url;
 }
 
