@@ -1,0 +1,68 @@
+---
+description: Mobile stack context — loads when touching mobile/rn/, mobile/unity/, or any file under mobile/. Delegates the canonical content to skill `mobile-context` (`.cursor/skills/mobile-context/SKILL.md`). Same purpose as `unity-ar-evidence` and `unity-tool-routing` but covers the whole mobile layer including RN and the RN↔Unity bridge.
+globs:
+  - mobile/**/*.ts
+  - mobile/**/*.tsx
+  - mobile/**/*.js
+  - mobile/**/*.jsx
+  - mobile/**/*.cs
+  - mobile/**/*.unity
+  - mobile/**/*.prefab
+  - mobile/**/*.asset
+  - mobile/**/*.json
+  - mobile/**/*.md
+alwaysApply: false
+---
+    10|# Mobile Context (Cursor-side mirror)
+
+This is the Cursor counterpart of the `## Project Context` mobile section in `CLAUDE.md` plus the deeper architecture detail in `mobile/README.md`, `mobile/rn/README.md`, and `mobile/unity/README.md`. The canonical project-specific content lives in the skill `mobile-context` (`.cursor/skills/mobile-context/SKILL.md`).
+
+## Why this rule exists
+
+The mobile layer is a React Native (Expo) shell over a Unity ARFoundation runtime connected by a Phase-1 placeholder bridge. That architecture has constraints that are easy to forget:
+
+- The bridge contract is **frozen**: message format `"eventName|{json}"`, event names `onArReady / onPlaneDetected / onObjectPlaced / onAudioComplete / onInteraction / onError`. Breaking it breaks Unity.
+- **No real Swift bridge exists** yet — `UnityBridgeModule.ts` is a Phase 1 simulator. If a task requires real RN↔Unity traffic, the answer is "Phase 2, needs Swift native module".
+- **MVP is iOS-only**, ARFoundation 6 APIs only (`FindFirstObjectByType`, `ARSession.stateChanged`).
+- JWT lives in `expo-secure-store` only, key `'jwt_token'`. Never `AsyncStorage`.
+
+Loading the full `mobile/README.md` + `mobile/rn/README.md` + `mobile/unity/README.md` on every mobile file open wastes context. The skill `mobile-context` is the compact pointer — load it on first mobile mention, follow its links only when deeper detail is required.
+
+## When to load the skill
+
+Load `.cursor/skills/mobile-context/SKILL.md` when:
+
+1. User mentions `@mobile`, `@mobile-context`, or any mobile component by name.
+2. User opens / edits any file under `mobile/rn/` or `mobile/unity/`.
+3. User asks about the AR education app's client architecture, the RN↔Unity bridge, ARFoundation, GLB loading, or any message type / event name from the bridge contract.
+4. User proposes changes that cross the RN/Unity boundary (e.g. "rename `onObjectPlaced`", "store JWT in AsyncStorage", "add Android target").
+
+## When NOT to load
+
+- Pure Unity tool routing (REST / MCP / CLI selection) → `.cursor/rules/unity-tool-routing.mdc` wins.
+- Unity cold-start / progress / write-evidence protocol → `.cursor/rules/unity-ar-evidence.mdc` wins.
+- Generic RN patterns not specific to this project → `.cursor/skills/react-native-patterns/SKILL.md`.
+- File outside `mobile/` and not related to mobile (e.g. `frontend-web/`, `backend/`) — do not load this.
+
+## Interaction with other rules
+
+- `unity-tool-routing.mdc` and `unity-ar-evidence.mdc` already cover `mobile/unity/**` specifically. This rule is the **superset** for the whole `mobile/` tree. When those two fire, the union of their instructions plus this rule applies.
+- The skill `mobile-context` is project-specific. The generic skill `react-native-patterns` is project-agnostic. Both are valid; load `mobile-context` first when the question is about *this project's* mobile layer.
+
+## Anti-patterns
+
+- Loading all of `mobile/README.md` + `mobile/rn/README.md` + `mobile/unity/README.md` on every mobile file open. Read the skill first; follow its links only if needed.
+- Pretending the Swift bridge exists. It does not. Phase 1 placeholder only.
+- Suggesting Android paths. MVP is iOS-only.
+- Rewriting the bridge message format or event names without flagging it as a breaking change for Unity C#.
+- Storing the JWT anywhere other than `expo-secure-store`.
+
+## See also
+
+- `.cursor/skills/mobile-context/SKILL.md` — canonical project-specific content
+- `CLAUDE.md` — `## Project Context` and `## 5. Unity Tool Routing` (workspace-level)
+- `.cursor/rules/unity-tool-routing.mdc` — Unity tool selection (subset)
+- `.cursor/rules/unity-ar-evidence.mdc` — Unity cold-start + progress protocol (subset)
+- `.cursor/skills/react-native-patterns/SKILL.md` — generic RN patterns
+- `.cursor/skills/unity-arfoundation-image-tracking/SKILL.md` — AR Foundation deep-dive
+- `.cursor/skills/unity-rn-bridge/SKILL.md` — RN↔Unity bridge specifics

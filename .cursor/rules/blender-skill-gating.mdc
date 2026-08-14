@@ -1,0 +1,61 @@
+---
+description: Gating rule for the cat-quadruped-rig skill. Load .cursor/skills/cat-quadruped-rig/SKILL.md ONLY when the user talks about a cat, pet, quadruped, or 3D model in Blender. Do not load it for unrelated tasks — its content is large and irrelevant to non-3D work.
+globs:
+  - cat-agent/**
+  - **/*.fbx
+  - **/*.glb
+  - **/*.gltf
+  - **/*.blend
+  - **/*.blend1
+alwaysApply: false
+---
+
+# Blender 3D Model — Skill Gating Rule
+
+This rule is the **gating boundary** for the `cat-quadruped-rig` skill. It prevents the skill from being loaded into context for unrelated tasks.
+
+## When to load `.cursor/skills/cat-quadruped-rig/SKILL.md`
+
+Load the skill when the user's request matches **any** of these:
+
+1. **Mentions an animal 3D model**: cat, dog, pet, quadruped, animal, ragdoll, kitten, puppy.
+2. **Mentions rigging**: "rig this", "add bones", "skeleton", "armature", "skin", "weight paint".
+3. **Mentions animation**: "animate eating", "make it walk", "add idle", "chew", "tail wag", "head bob".
+4. **Mentions Blender MCP**: `mcp__blender__*` tool call, "blender mcp", "import into Blender", "export glb".
+5. **Touches one of these file extensions**: `.fbx`, `.glb`, `.gltf`, `.blend`.
+6. **Works in `cat-agent/`** directory.
+
+## When NOT to load
+
+Do NOT load the skill — and ignore the skill's full content — when the user is:
+
+- Asking about a React/Next.js frontend feature
+- Talking about a FastAPI backend endpoint
+- Editing MongoDB models, Supabase storage, or auth flows
+- Working on Unity (`mobile/unity/`) — the `unity-tool-routing.mdc` rule covers that
+- Asking a general Blender question (e.g., "what is a bevel modifier?") with no model in scope
+- Working on Three.js / WebGL rendering (load `vercel-react-best-practices` instead)
+
+## Quick test
+
+If the user message contains **at least one** of these words, load the skill:
+
+```
+cat, dog, pet, quadruped, animal, rig, armature, bone, skin, weight,
+animate, keyframe, blender, mcp__blender__, fbx, glb, blend, cat-agent
+```
+
+Otherwise, do not load it. Loading costs ~6 KB of context for nothing.
+
+## Companion rules
+
+- `unity-tool-routing.mdc` — for Unity-side work (model import into Unity, AR pet, etc.). Load only when the user pivots to Unity.
+- `karpathy-guidelines.mdc` — over-arching behavior rules. Always active.
+
+## Conflict resolution
+
+If `cat-quadruped-rig` and `unity-tool-routing` both seem to apply (e.g., "import cat into Unity"), prefer:
+- `cat-quadruped-rig` for "model this / rig this / animate this"
+- `unity-tool-routing` for "import into Unity / play in AR / render on device"
+
+The decision boundary is "where does the work happen": Blender side → cat-quadruped-rig; Unity side → unity-tool-routing.
