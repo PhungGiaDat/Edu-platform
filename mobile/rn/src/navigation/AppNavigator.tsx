@@ -22,6 +22,12 @@ import { LessonPlayerScreen } from '../screens/LessonPlayerScreen';
 import { PetsScreen } from '../screens/PetsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ARScreen } from '../screens/ARScreen';
+import { LearningPathScreen } from '../screens/LearningPathScreen';
+import { GamesMenuScreen } from '../screens/games/GamesMenuScreen';
+import { DragMatchScreen } from '../screens/games/DragMatchScreen';
+import { MemoryPairsScreen } from '../screens/games/MemoryPairsScreen';
+import { ColorLearnScreen } from '../screens/games/ColorLearnScreen';
+import { BridgeDiagnosticScreen } from '../screens/BridgeDiagnosticScreen';
 import { BRAND, COLORS } from '../design/tokens';
 
 export type RootStackParamList = {
@@ -29,22 +35,30 @@ export type RootStackParamList = {
   Home: undefined;
   CourseList: undefined;
   CourseDetail: { courseId: string; courseTitle: string };
+  LearningPath: undefined;
   LessonPlayer: { lessonId: string; lessonTitle: string; qrCode?: string };
   Pets: undefined;
   Profile: undefined;
   AR: { lessonId: string; lessonTitle: string };
+  GamesMenu: undefined;
+  DragMatch: undefined;
+  MemoryPairs: undefined;
+  ColorLearn: undefined;
+  BridgeDiagnostic: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 interface AppNavigatorProps {
   isAuthenticated: boolean;
+  saveToken: (token: string) => Promise<void>;
   onLoginSuccess: () => void;
   onLogout: () => Promise<void>;
 }
 
 export const AppNavigator: React.FC<AppNavigatorProps> = ({
   isAuthenticated,
+  saveToken,
   onLoginSuccess,
   onLogout,
 }) => (
@@ -56,7 +70,12 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
     >
       {!isAuthenticated ? (
         <Stack.Screen name="Auth">
-          {() => <AuthScreen onLoginSuccess={onLoginSuccess} />}
+          {() => (
+            <AuthScreen
+              saveToken={saveToken}
+              onLoginSuccess={onLoginSuccess}
+            />
+          )}
         </Stack.Screen>
       ) : (
         <>
@@ -77,24 +96,27 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
           <Stack.Screen
             name="CourseDetail"
             component={CourseDetailScreen}
-            options={({ route }) => ({
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="LearningPath"
+            component={LearningPathScreen}
+            options={{
               headerShown: true,
-              headerTitle: route.params?.courseTitle ?? 'Course',
+              headerTitle: 'Learning Path',
               headerStyle: { backgroundColor: COLORS.backgroundBase },
               headerTintColor: COLORS.textPrimary,
               headerBackTitle: 'Back',
-            })}
+            }}
           />
           <Stack.Screen
             name="LessonPlayer"
             component={LessonPlayerScreen}
-            options={({ route }) => ({
-              headerShown: true,
-              headerTitle: route.params?.lessonTitle ?? 'Lesson',
-              headerStyle: { backgroundColor: COLORS.backgroundBase },
-              headerTintColor: COLORS.textPrimary,
-              headerBackTitle: 'Back',
-            })}
+            options={{
+              headerShown: false,
+            }}
           />
           <Stack.Screen
             name="Pets"
@@ -111,11 +133,7 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
             name="Profile"
             component={ProfileScreen}
             options={{
-              headerShown: true,
-              headerTitle: 'Profile',
-              headerStyle: { backgroundColor: COLORS.backgroundBase },
-              headerTintColor: COLORS.textPrimary,
-              headerBackTitle: 'Back',
+              headerShown: false,
             }}
           />
           <Stack.Screen
@@ -127,6 +145,39 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
               headerStyle: { backgroundColor: BRAND.darkBg },
               headerTintColor: COLORS.white,
               headerBackTitle: 'Back',
+            }}
+          />
+          <Stack.Screen
+            name="BridgeDiagnostic"
+            component={BridgeDiagnosticScreen}
+            options={{ headerShown: true, headerTitle: 'Unity Bridge Diagnostics' }}
+          />
+          <Stack.Screen
+            name="GamesMenu"
+            component={GamesMenuScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="DragMatch"
+            component={DragMatchScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="MemoryPairs"
+            component={MemoryPairsScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="ColorLearn"
+            component={ColorLearnScreen}
+            options={{
+              headerShown: false,
             }}
           />
         </>

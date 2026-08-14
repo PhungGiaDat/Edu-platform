@@ -13,6 +13,10 @@ export type {
   Course,
   CourseDetail,
   Lesson,
+  LessonActivity,
+  LessonActivityType,
+  LessonLearningBlocks,
+  CompletionMode,
   LessonVocabularyItem,
   LessonVideoLesson,
   LessonQuizQuestion,
@@ -73,6 +77,27 @@ export interface AuthResponse {
   token_type: string;
 }
 
+export interface RegisterRequest {
+  email: string;
+  username: string;
+  password: string;
+  full_name?: string;
+}
+
+export interface RegisterResponse {
+  id: string;
+  email: string;
+  username: string;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  is_active: boolean;
+  is_verified: boolean;
+  is_superuser: boolean;
+  role: string;
+  roles: string[];
+  created_at: string;
+}
+
 export interface UserMe {
   id: string;
   email?: string;
@@ -95,4 +120,20 @@ export interface ARExperienceResponse {
   position: string;
   rotation: string;
   scale: string;
+  /**
+   * Native AR additive fields — BACKEND-T001.
+   *
+   * Optional on the raw API DTO for legacy MindAR coexistence (per
+   * `backend-contract.md §Schema migration` and `2026-08-10-m1a-correction-final`
+   * progress entry). Legacy records (e.g. animals-v2) MUST remain parseable
+   * even when these fields are absent. The strict requiredness is enforced
+   * at the mapper boundary (NativeTrackingDto), not at the wire boundary.
+   *
+   * `reference_image_url` is the reference image for AR Foundation's
+   * `MutableRuntimeReferenceImageLibrary` — distinct from `model_url`
+   * (3D GLB asset). `physical_width_m` is the printed card width in
+   * meters — distinct from `glb_size` (3D model scaling).
+   */
+  reference_image_url?: string | null;
+  physical_width_m?: number | null;
 }

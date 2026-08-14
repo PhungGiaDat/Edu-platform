@@ -18,6 +18,70 @@ import type {
   CompleteLessonStats,
 } from './session';
 
+export type LessonActivityType =
+  | 'warm_up'
+  | 'learn_vocabulary'
+  | 'listen_choose'
+  | 'match'
+  | 'drag_drop'
+  | 'memory_match'
+  | 'coloring'
+  | 'mini_game'
+  | 'quiz'
+  | 'read_aloud'
+  | 'pronunciation';
+
+export type CompletionMode =
+  | 'viewed'
+  | 'all_items'
+  | 'interaction_complete'
+  | 'game_complete'
+  | 'quiz_complete';
+
+interface LessonActivityBase<T extends LessonActivityType, C, M extends CompletionMode> {
+  activity_id: string;
+  type: T;
+  order: number;
+  required: boolean;
+  completion_policy: { mode: M };
+  config: C;
+  title?: string | null;
+  instructions?: string | null;
+}
+
+type PracticeReferences = {
+  vocabulary_ids: string[];
+  mini_game_item_ids?: number[];
+} | {
+  vocabulary_ids?: string[];
+  mini_game_item_ids: number[];
+};
+
+export type LessonActivity =
+  | LessonActivityBase<'warm_up', { media_asset_ids: string[] }, 'viewed'>
+  | LessonActivityBase<'learn_vocabulary', { vocabulary_ids: string[] }, 'viewed' | 'all_items'>
+  | LessonActivityBase<'listen_choose', { vocabulary_ids: string[]; question_count?: number | null; order_policy: 'authored' | 'random' }, 'all_items' | 'interaction_complete'>
+  | LessonActivityBase<'match', PracticeReferences, 'all_items' | 'interaction_complete'>
+  | LessonActivityBase<'drag_drop', PracticeReferences, 'all_items' | 'interaction_complete'>
+  | LessonActivityBase<'memory_match', PracticeReferences, 'all_items' | 'interaction_complete'>
+  | LessonActivityBase<'coloring', { vocabulary_id: string; outline_asset_id: string }, 'interaction_complete'>
+  | LessonActivityBase<'mini_game', { game_type: 'catch_word' | 'drag_match' | 'memory_match' | 'word_scramble' | 'coloring'; mini_game_item_ids: number[] }, 'game_complete'>
+  | LessonActivityBase<'quiz', { question_ids: number[]; question_count?: number | null; order_policy: 'authored' | 'random'; passing_score?: number | null }, 'quiz_complete'>
+  | LessonActivityBase<'read_aloud', { story_id: string }, 'all_items'>
+  | LessonActivityBase<'pronunciation', { vocabulary_ids: string[] }, 'all_items' | 'interaction_complete'>;
+
+export interface LessonLearningBlocks {
+  schema_version: 1 | 2;
+  content_version: number;
+  vocabulary: Array<string | Record<string, unknown>>;
+  activities: LessonActivity[];
+  activity?: Record<string, unknown> | null;
+  game?: Record<string, unknown> | null;
+  pronunciation?: Record<string, unknown> | null;
+  quiz?: Array<Record<string, unknown>> | null;
+  readAloudStory?: Record<string, unknown> | null;
+}
+
 export type {
   LessonSession,
   LessonSessionStepState,
@@ -147,6 +211,7 @@ export interface Lesson {
   qr_code?: string;
   order?: number;
   duration_minutes?: number;
+  learning_blocks: LessonLearningBlocks;
   vocabulary: LessonVocabularyItem[];
   quiz: LessonQuizQuestion[];
   videoLesson?: LessonVideoLesson | null;

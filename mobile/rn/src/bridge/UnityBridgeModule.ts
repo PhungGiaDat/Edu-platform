@@ -1,6 +1,13 @@
 import { NativeModules, NativeEventEmitter, Platform } from 'react-native';
-import type { UnityARExperiencePayload } from '../types/ar';
-import { createARMessage, type ARMessage } from './arMessages';
+import type {
+  UnityARExperiencePayload,
+  CardDescriptorRN,
+} from '../types/ar';
+import {
+  createARMessage,
+  type ARMessage,
+  type StartImageTrackingMultiPayload,
+} from './arMessages';
 
 const { UnityBridge } = NativeModules;
 
@@ -24,6 +31,37 @@ class UnityBridgeModule {
   }
 
   /**
+   * Check if Unity player is running.
+   */
+  async isUnityRunning(): Promise<boolean> {
+    if (!this.isAvailable) return false;
+
+    try {
+      return await UnityBridge.isUnityRunning();
+    } catch (error) {
+      console.error('UnityBridge: isUnityRunning failed', error);
+      return false;
+    }
+  }
+
+  async launchUnity(): Promise<boolean> {
+    if (!this.isAvailable) return false;
+    return UnityBridge.launchUnity();
+  }
+
+  async closeUnity(): Promise<void> {
+    if (!this.isAvailable) return;
+    await UnityBridge.closeUnity();
+  }
+
+  async sendPing(requestId: string): Promise<void> {
+    if (!this.isAvailable) {
+      throw new Error('UnityBridge native module is unavailable');
+    }
+    await UnityBridge.sendToUnity('PING', JSON.stringify({ requestId }));
+  }
+
+  /**
    * Sends AR experience data to Unity for rendering.
    */
   async loadExperience(payload: UnityARExperiencePayload): Promise<ARMessage> {
@@ -33,8 +71,9 @@ class UnityBridgeModule {
     }
 
     try {
+      const json = JSON.stringify(payload);
+      await UnityBridge.sendToUnity('loadARExperience', json);
       const message = createARMessage('LOAD_EXPERIENCE', payload);
-      // Phase 2: Call native module
       return message;
     } catch (error) {
       return createARMessage('EXPERIENCE_ERROR', {
@@ -51,7 +90,7 @@ class UnityBridgeModule {
     if (!this.isAvailable) return;
 
     try {
-      // Call native method: UnityBridge.startARSession()
+      await UnityBridge.sendToUnity('initSession', '{}');
     } catch (error) {
       console.error('UnityBridge: startARSession failed', error);
     }
@@ -65,9 +104,33 @@ class UnityBridgeModule {
     if (!this.isAvailable) return;
 
     try {
-      // Call native method
+      await UnityBridge.sendToUnity('startImageTracking', '{}');
     } catch (error) {
       console.error('UnityBridge: startImageTracking failed', error);
+    }
+  }
+
+  /**
+   * Starts image tracking with a list of `CardDescriptorRN` (multi-card flow).
+   *
+   * Per bridge-contract.md §"Multi-Card Bridge Contract" — the Unity side
+   * deserializes `{ cards: CardDescriptor[] }` into `CardDescriptorList` and
+   * calls `CardImageLibraryBuilder.BuildLibrary(...)`. This stub records the
+   * payload but does not invoke the native module (Phase 2 native wiring).
+   *
+   * Until MQ-1 is resolved, the existing `startImageTracking` (single-card
+   * legacy path) is kept alongside this method — RN callers should prefer
+   * `startImageTrackingMulti` for new code paths.
+   */
+  async startImageTrackingMulti(payload: StartImageTrackingMultiPayload): Promise<void> {
+    console.log('UnityBridge: Starting multi-card image tracking', payload.cards.length);
+    if (!this.isAvailable) return;
+
+    try {
+      const json = JSON.stringify(payload);
+      await UnityBridge.sendToUnity('startImageTrackingMulti', json);
+    } catch (error) {
+      console.error('UnityBridge: startImageTrackingMulti failed', error);
     }
   }
 
@@ -79,7 +142,8 @@ class UnityBridgeModule {
     if (!this.isAvailable) return;
 
     try {
-      // Call native method: UnityBridge.triggerCombo({ cardA, cardB })
+      const json = JSON.stringify({ cardA, cardB });
+      await UnityBridge.sendToUnity('triggerCombo', json);
     } catch (error) {
       console.error('UnityBridge: triggerCombo failed', error);
     }
@@ -91,6 +155,12 @@ class UnityBridgeModule {
   async pauseSession(): Promise<void> {
     console.log('UnityBridge: Pausing session');
     if (!this.isAvailable) return;
+
+    try {
+      await UnityBridge.sendToUnity('pauseSession', '{}');
+    } catch (error) {
+      console.error('UnityBridge: pauseSession failed', error);
+    }
   }
 
   /**
@@ -99,6 +169,12 @@ class UnityBridgeModule {
   async resumeSession(): Promise<void> {
     console.log('UnityBridge: Resuming session');
     if (!this.isAvailable) return;
+
+    try {
+      await UnityBridge.sendToUnity('resumeSession', '{}');
+    } catch (error) {
+      console.error('UnityBridge: resumeSession failed', error);
+    }
   }
 
   /**
@@ -107,6 +183,12 @@ class UnityBridgeModule {
   async destroySession(): Promise<void> {
     console.log('UnityBridge: Destroying session');
     if (!this.isAvailable) return;
+
+    try {
+      await UnityBridge.sendToUnity('destroySession', '{}');
+    } catch (error) {
+      console.error('UnityBridge: destroySession failed', error);
+    }
   }
 
   /**
@@ -114,6 +196,14 @@ class UnityBridgeModule {
    */
   async playAudio(audioUrl: string): Promise<void> {
     console.log('UnityBridge: Playing audio:', audioUrl);
+    if (!this.isAvailable) return;
+
+    try {
+      const json = JSON.stringify({ audioUrl });
+      await UnityBridge.sendToUnity('playAudio', json);
+    } catch (error) {
+      console.error('UnityBridge: playAudio failed', error);
+    }
   }
 
   /**
@@ -121,6 +211,13 @@ class UnityBridgeModule {
    */
   async closeExperience(): Promise<void> {
     console.log('UnityBridge: Closing experience');
+    if (!this.isAvailable) return;
+
+    try {
+      await UnityBridge.sendToUnity('closeExperience', '{}');
+    } catch (error) {
+      console.error('UnityBridge: closeExperience failed', error);
+    }
   }
 
   /**
@@ -135,8 +232,18 @@ class UnityBridgeModule {
       return undefined;
     }
 
-    const subscription = this.eventEmitter.addListener(eventType, (payload: Record<string, unknown>) => {
-      // Parse the message format: "eventName|{jsonPayload}"
+    const subscription = this.eventEmitter.addListener(eventType, (nativePayload: unknown) => {
+      let payload: Record<string, unknown> = {};
+      if (typeof nativePayload === 'string') {
+        try {
+          payload = JSON.parse(nativePayload) as Record<string, unknown>;
+        } catch {
+          payload = { raw: nativePayload };
+        }
+      } else if (nativePayload && typeof nativePayload === 'object') {
+        payload = nativePayload as Record<string, unknown>;
+      }
+
       const message: ARMessage = {
         type: eventType as ARMessage['type'],
         payload,
@@ -150,3 +257,7 @@ class UnityBridgeModule {
 }
 
 export const unityBridge = new UnityBridgeModule();
+
+// Re-export `CardDescriptorRN` so consumers can import both the bridge and
+// the DTO from this module without a separate types import.
+export type { CardDescriptorRN };

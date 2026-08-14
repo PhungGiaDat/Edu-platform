@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Text, StyleSheet, ViewStyle, StyleProp, ActivityIndicator, View } from 'react-native';
+import { Text, StyleSheet, ViewStyle, StyleProp, ActivityIndicator, View, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
@@ -23,10 +23,7 @@ export interface ClayButtonProps {
 const HEIGHT_MAP = { sm: 44, md: 52, lg: 60 } as const;
 const SHADOW_KEY_MAP = { sm: 'claySm', md: 'clayMd', lg: 'clayLg' } as const;
 
-const AnimatedTouchable = Animated.createAnimatedComponent(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  require('react-native').TouchableOpacity as any
-);
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 /**
  * Claymorphic button with animated press/lift states via Reanimated withSpring.

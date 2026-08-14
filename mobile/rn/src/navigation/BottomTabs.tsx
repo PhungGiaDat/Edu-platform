@@ -1,18 +1,23 @@
 /**
- * BottomTabs — claymorphic bottom-tab navigation strip.
+ * BottomTabs — premium claymorphic bottom navigation bar.
  *
- * Avoids `@react-navigation/bottom-tabs` because the project doesn't have it
- * installed and the directive forbids running `npm install`. Renders a clay
- * strip with 4 entries (Home / Courses / Pets / Profile) using existing
- * ClayCard primitives + token colors. Active tab receives a colored clay shell
- * + bolder weight.
+ * 5 primary destinations: Home / Learn / Games / Pets / Profile.
+ * Lexi floats above the navigation as an assistant orb (see LexiOrb).
  *
- * Each entry surfaces an onSelect callback so the parent can wire it to
- * react-navigation's `navigation.navigate(...)`.
+ * Uses vector icons via ClayIcons — no random emoji icons.
+ * Active tab uses clay pill indicator with semantic color tone.
  */
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { COLORS, FONT, RADIUS, SHADOWS, SPACING } from '../design/tokens';export type BottomTabKey = 'Home' | 'Courses' | 'Pets' | 'Profile';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import { ClayIcon, type ClayIconName } from '../components/icons/ClayIcons';
+import { COLORS, FONT, RADIUS, SHADOWS, SPACING, BRAND } from '../design/tokens';
+
+export type BottomTabKey = 'Home' | 'Learning' | 'Games' | 'Pets' | 'Profile';
 
 export interface BottomTabsProps {
   active: BottomTabKey;
@@ -22,91 +27,168 @@ export interface BottomTabsProps {
 interface TabEntry {
   key: BottomTabKey;
   label: string;
-  icon: string;
+  icon: ClayIconName;
   color: string;
+  bgColor: string;
 }
 
 const TABS: TabEntry[] = [
-  { key: 'Home', label: 'Home', icon: '🏠', color: COLORS.primary },
-  { key: 'Courses', label: 'Courses', icon: '📚', color: COLORS.accent },
-  { key: 'Pets', label: 'Pets', icon: '🐾', color: COLORS.secondary },
-  { key: 'Profile', label: 'Profile', icon: '👤', color: COLORS.coral },
+  {
+    key: 'Home',
+    label: 'Trang chủ',
+    icon: 'home',
+    color: BRAND.sunshineYellowDark,
+    bgColor: 'rgba(255,217,61,0.18)',
+  },
+  {
+    key: 'Learning',
+    label: 'Học',
+    icon: 'compass',
+    color: BRAND.skyBlueDark,
+    bgColor: 'rgba(110,185,255,0.18)',
+  },
+  {
+    key: 'Games',
+    label: 'Trò chơi',
+    icon: 'games',
+    color: BRAND.coralPinkDark,
+    bgColor: 'rgba(255,159,159,0.18)',
+  },
+  {
+    key: 'Pets',
+    label: 'Thú cưng',
+    icon: 'paw',
+    color: BRAND.mintGreenDark,
+    bgColor: 'rgba(180,225,151,0.18)',
+  },
+  {
+    key: 'Profile',
+    label: 'Hồ sơ',
+    icon: 'profile',
+    color: BRAND.deepSlate,
+    bgColor: 'rgba(26,39,68,0.10)',
+  },
 ];
+
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
+const TabButton: React.FC<{
+  tab: TabEntry;
+  isActive: boolean;
+  onPress: (key: BottomTabKey) => void;
+}> = ({ tab, isActive, onPress }) => {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: withSpring(scale.value, { damping: 16, stiffness: 280 }) },
+    ],
+  }));
+
+  return (
+    <AnimatedTouchable
+      activeOpacity={0.7}
+      onPress={() => onPress(tab.key)}
+      onPressIn={() => { scale.value = 0.92; }}
+      onPressOut={() => { scale.value = 1; }}
+      style={[styles.tabButton, animatedStyle]}
+    >
+      <View
+        style={[
+          styles.iconWell,
+          isActive && {
+            backgroundColor: tab.bgColor,
+            borderColor: tab.color,
+          },
+        ]}
+      >
+        <ClayIcon
+          name={tab.icon}
+          size={22}
+          color={isActive ? tab.color : COLORS.textMuted}
+          strokeWidth={isActive ? 2.4 : 2}
+        />
+      </View>
+      <Text
+        style={[
+          styles.label,
+          isActive && {
+            color: tab.color,
+            fontWeight: '800',
+          },
+        ]}
+        numberOfLines={1}
+      >
+        {tab.label}
+      </Text>
+      {isActive && (
+        <View style={[styles.activeDot, { backgroundColor: tab.color }]} />
+      )}
+    </AnimatedTouchable>
+  );
+};
 
 export const BottomTabs: React.FC<BottomTabsProps> = ({ active, onChange }) => (
   <View style={styles.container}>
     <View style={[styles.bar, SHADOWS.clayMd]}>
-      {TABS.map((tab) => {
-        const isActive = tab.key === active;
-        return (
-          <TouchableOpacity
-            key={tab.key}
-            activeOpacity={0.7}
-            onPress={() => onChange(tab.key)}
-            style={styles.tabButton}
-          >
-            <View
-              style={[
-                styles.iconWell,
-                isActive && {
-                  backgroundColor: tab.color,
-                },
-              ]}
-            >
-              <Text style={styles.icon}>{tab.icon}</Text>
-            </View>
-            <Text
-              style={[
-                styles.label,
-                isActive && {
-                  color: tab.color,
-                  fontWeight: '800',
-                },
-              ]}
-            >
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+      {TABS.map((tab) => (
+        <TabButton
+          key={tab.key}
+          tab={tab}
+          isActive={active === tab.key}
+          onPress={onChange}
+        />
+      ))}
     </View>
   </View>
 );
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.xs,
-    paddingBottom: SPACING.sm,
+    paddingHorizontal: SPACING.base,
+    paddingTop: SPACING.sm,
+    paddingBottom: Platform.OS === 'ios' ? SPACING.lg : SPACING.md,
     backgroundColor: COLORS.backgroundBase,
   },
   bar: {
     flexDirection: 'row',
     backgroundColor: COLORS.white,
-    borderRadius: RADIUS.lg,
-    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.xl,
+    paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.xs,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: SPACING.xs,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    position: 'relative',
   },
   iconWell: {
-    width: 40,
-    height: 32,
+    width: 56,
+    height: 36,
     borderRadius: RADIUS.md,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 2,
-  },
-  icon: {
-    fontSize: 18,
+    marginBottom: 4,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
   },
   label: {
     fontSize: FONT.sizes.xs,
     color: COLORS.textMuted,
-    fontWeight: '600',
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  activeDot: {
+    position: 'absolute',
+    bottom: 0,
+    width: 20,
+    height: 3,
+    borderRadius: 2,
+    alignSelf: 'center',
   },
 });
 

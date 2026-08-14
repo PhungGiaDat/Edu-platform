@@ -16,7 +16,10 @@ export type ARState =
   | 'AR_ERROR';
 
 export interface TrackedImage {
+  /** AR Foundation runtime handle (informational — do not use as Map key). */
   imageId: string;
+  /** Business identity — primary Map key, per TRACK-REQ-004. */
+  qrId: string;
   imageName: string;
   modelId: string;
   transform: { x: number; y: number; z: number };
@@ -88,11 +91,14 @@ export const useARSession = (
       }
 
       case 'onImageDetected': {
-        const payload = message.payload as { imageId: string; imageName: string; transform: { x: number; y: number; z: number } };
+        // Per bridge-contract.md §K-2, qrId is the business card identity.
+        // imageId is the AR Foundation runtime handle (informational only).
+        const payload = message.payload as { imageId: string; qrId: string; imageName: string; transform: { x: number; y: number; z: number } };
         setTrackedImages(prev => {
           const next = new Map(prev);
-          next.set(payload.imageId, {
+          next.set(payload.qrId, {
             imageId: payload.imageId,
+            qrId: payload.qrId,
             imageName: payload.imageName,
             modelId: '',
             transform: payload.transform,
@@ -108,10 +114,12 @@ export const useARSession = (
       }
 
       case 'onImageTrackingLost': {
-        const payload = message.payload as { imageId: string };
+        // Per bridge-contract.md §K-2: payload carries qrId (business identity).
+        // NOT tracking-state degradation — that is a quality signal, not removal.
+        const payload = message.payload as { qrId: string };
         setTrackedImages(prev => {
           const next = new Map(prev);
-          next.delete(payload.imageId);
+          next.delete(payload.qrId);
           return next;
         });
         if (arState !== 'IDLE' && arState !== 'AR_INITIALIZING') {
@@ -149,15 +157,16 @@ export const useARSession = (
         setProgressMessage('Ready!');
         break;
 
-      case 'onModelLoaded':
+      case 'onModelLoaded': {
+        // qrId is present per spec §K-2 (for card lookup); handler only needs AR state.
         if (arState === 'MODEL_SPAWNING') {
           setArState('MODEL_LOADED');
-          // Check if we should go to AR_INTERACTING
           if (trackedImages.size >= 2) {
             setArState('AR_INTERACTING');
           }
         }
         break;
+      }
 
       case 'onProximityNear':
         // Show combo hint UI
@@ -252,10 +261,26 @@ export const useARSession = (
   }, [clearTrackingTimeout]);
 
   const triggerCombo = useCallback(async () => {
-    const images = Array.from(trackedImages.keys());
+    const images = Array.from(trackedImages.values());
     if (images.length < 2) return;
-
-    await unityBridge.triggerCombo?.(images[0], images[1]);
+    // ⚠️ DECISION_REQUIRED — combo semantic identity unresolved.
+    //
+    // Per `mobile-ar-product-spec.md §F-1`, combos are identified by `arTag`
+    // (semantic combo tag) — backend `related_combos` is keyed by ar_tag,
+    // NOT qr_id. Per `bridge-contract.md §"React Native → Unity Methods"`,
+    // `triggerCombo` payload is `{ cardA, cardB }` with no field-level
+    // semantic identity specified (ambiguous).
+    //
+    // Current implementation passes `qrId` because:
+    //   1. `TrackedImage` exposes `qrId` (REQUIRED per spec §K-2)
+    //   2. The bridge has no `arTag` field on `TrackedImage`
+    //
+    // This needs resolution before combo UX lands (M5). Until then:
+    //   - Unity side (`ComboManager`) is the source of truth for ar_tag mapping
+    //   - RN should NOT silently choose qrId over arTag
+    //
+    // Forwarded as DECISION_REQUIRED: see MQ-7 (added).
+    await unityBridge.triggerCombo?.(images[0].qrId, images[1].qrId);
   }, [trackedImages]);
 
   const feedPet = useCallback((foodModelId: string) => {

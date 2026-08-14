@@ -7,20 +7,32 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { courseService } from '../services/courseService';
-import type { CourseDetail, Lesson } from '../types/course';
+import { coursesApi } from '../services/api';
+import type { CourseDetail, Lesson, UserProgress } from '../types/course';
 
 export interface UseCourseDetailResult {
   course: CourseDetail | null;
   lessons: Lesson[];
+  progress: UserProgress | null;
+  progressLoading: boolean;
+  progressError: string | null;
   loading: boolean;
   refreshing: boolean;
   error: string | null;
   refresh: () => Promise<void>;
+  refreshProgress: () => Promise<void>;
+  setProgress: (progress: UserProgress | null) => void;
 }
 
-export const useCourseDetail = (courseId: string | null): UseCourseDetailResult => {
+export const useCourseDetail = (
+  courseId: string | null,
+  userId: string | null,
+): UseCourseDetailResult => {
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [progress, setProgress] = useState<UserProgress | null>(null);
+  const [progressLoading, setProgressLoading] = useState(false);
+  const [progressError, setProgressError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +69,28 @@ export const useCourseDetail = (courseId: string | null): UseCourseDetailResult 
     }
   }, [courseId, fetchAll]);
 
+  const refreshProgress = useCallback(async () => {
+    if (!courseId || !userId) {
+      setProgress(null);
+      setProgressError(null);
+      return;
+    }
+
+    setProgressLoading(true);
+    try {
+      const response = await coursesApi.getProgress(userId);
+      setProgress(
+        response.data.find((item) => item.course_id === courseId) ?? null,
+      );
+      setProgressError(null);
+    } catch (err) {
+      console.error('useCourseDetail: progress fetch failed', err);
+      setProgressError('Failed to load course progress');
+    } finally {
+      setProgressLoading(false);
+    }
+  }, [courseId, userId]);
+
   useEffect(() => {
     if (courseId) {
       fetchAll(courseId).catch(() => undefined);
@@ -66,7 +100,23 @@ export const useCourseDetail = (courseId: string | null): UseCourseDetailResult 
     setLessons([]);
   }, [courseId, fetchAll]);
 
-  return { course, lessons, loading, refreshing, error, refresh };
+  useEffect(() => {
+    refreshProgress().catch(() => undefined);
+  }, [refreshProgress]);
+
+  return {
+    course,
+    lessons,
+    progress,
+    progressLoading,
+    progressError,
+    loading,
+    refreshing,
+    error,
+    refresh,
+    refreshProgress,
+    setProgress,
+  };
 };
 
 export default useCourseDetail;

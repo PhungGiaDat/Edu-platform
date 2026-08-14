@@ -7,7 +7,7 @@
  * `summaryToPet` adapter is gone; we now consume the canonical pet list
  * returned by `petsApi.listPets()` directly.
  */
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -22,8 +22,13 @@ import { PetCareStats, type PetCareStat } from '../components/PetCareStats';
 import { PetGrid } from '../components/PetGrid';
 import { PetSelector } from '../components/PetSelector';
 import { PetUnlockModal } from '../components/PetUnlockModal';
+import { PetModelViewer } from '../components/pets/PetModelViewer';
+import { LexiFloatingButton } from '../components/LexiFloatingButton';
+import { LexiQuickActionSheet } from '../components/LexiQuickActionSheet';
 import { useLocale } from '../i18n/useLocale';
 import { usePets } from '../hooks/usePets';
+import { useUser } from '../hooks/useUser';
+import { petsApi } from '../services/api';
 import {
   COLORS,
   FONT,
@@ -31,25 +36,30 @@ import {
   SPACING,
 } from '../design/tokens';
 import type { Pet } from '../types/pet';
+import type { PetCareState } from '../types/petCare';
 
 function normalize(value: number): number {
   return Math.min(Math.max(value, 0), 1);
 }
 
-function buildStats(pet: Pet): PetCareStat[] {
+function buildStats(careState: PetCareState): PetCareStat[] {
   return [
-    { key: 'happiness', label: 'Happy', value: 1 },
-    { key: 'energy', label: 'Energy', value: 1 },
-    { key: 'hunger', label: 'Full', value: 1 },
-    { key: 'xp', label: 'XP', value: normalize((pet.rarity === 'common' ? 1 : pet.rarity === 'rare' ? 0.5 : pet.rarity === 'epic' ? 0.25 : 0.1)) },
+    { key: 'happiness', label: 'Happiness', value: normalize(careState.happiness / 100) },
+    { key: 'energy', label: 'Energy', value: normalize(careState.energy / 100) },
+    { key: 'hunger', label: 'Hunger', value: normalize(careState.hunger / 100) },
+    { key: 'xp', label: 'XP', value: normalize(careState.xpEarned / 100) },
   ];
 }
 
 export const PetsScreen: React.FC = () => {
-  const { pets, loading, refreshing, error, refresh, getPet } = usePets();
+  const { pets, loading, refreshing, error, refresh, getPet, setActivePet } = usePets();
+  const { userId, activePet: userActivePet } = useUser();
   const { t } = useLocale();
   const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+  const [careState, setCareState] = useState<PetCareState | null>(null);
+  const [careStateError, setCareStateError] = useState<string | null>(null);
+  const [isSelectingPet, setIsSelectingPet] = useState(false);
   const [unlockVisible, setUnlockVisible] = useState(false);
   const [unlockContext, setUnlockContext] = useState<{
     name: string;
@@ -57,24 +67,78 @@ export const PetsScreen: React.FC = () => {
     stage?: string;
     emoji?: string;
   } | null>(null);
+  const [lexiVisible, setLexiVisible] = useState(false);
+
+  useEffect(() => {
+    if (userActivePet) {
+      setSelectedPetId(userActivePet.pet_id);
+      setSelectedPet(userActivePet);
+    }
+  }, [userActivePet]);
+
+  useEffect(() => {
+    if (!userId) {
+      setCareState(null);
+      setCareStateError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setCareStateError(null);
+    void petsApi
+      .getPetCareState(userId)
+      .then((response) => {
+        if (!cancelled) {
+          setCareState(response.data);
+        }
+      })
+      .catch((careError) => {
+        if (!cancelled) {
+          console.error('PetsScreen: getPetCareState failed', careError);
+          setCareStateError(t('pets.careLoadFailed'));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [t, userId]);
 
   const activePet: Pet | null = useMemo(() => {
     if (selectedPet) return selectedPet;
     if (selectedPetId) {
-      return pets.find((p) => p.pet_id === selectedPetId) ?? null;
+      return pets.find((pet) => pet.pet_id === selectedPetId) ?? null;
+    }
+    if (userActivePet) {
+      return pets.find((pet) => pet.pet_id === userActivePet.pet_id) ?? userActivePet;
     }
     return pets[0] ?? null;
-  }, [selectedPet, selectedPetId, pets]);
+  }, [pets, selectedPet, selectedPetId, userActivePet]);
 
   const onSelectPet = useCallback(
     (pet: Pet) => {
+      setIsSelectingPet(true);
+      setCareStateError(null);
       setSelectedPetId(pet.pet_id);
       setSelectedPet(pet);
-      void getPet(pet.pet_id).then((full) => {
-        if (full) setSelectedPet(full);
-      });
+      void Promise.all([setActivePet(pet.pet_id), getPet(pet.pet_id)])
+        .then(([nextActivePet, fullPet]) => {
+          if (nextActivePet) {
+            setSelectedPet(nextActivePet);
+            return;
+          }
+
+          if (fullPet) {
+            setSelectedPet(fullPet);
+          }
+
+          setCareStateError(t('pets.activePetFailed'));
+        })
+        .finally(() => {
+          setIsSelectingPet(false);
+        });
     },
-    [getPet],
+    [getPet, setActivePet, t],
   );
 
   if (loading && pets.length === 0) {
@@ -85,7 +149,7 @@ export const PetsScreen: React.FC = () => {
     );
   }
 
-  const stats = activePet ? buildStats(activePet) : null;
+  const stats = careState ? buildStats(careState) : null;
 
   return (
     <View style={styles.container}>
@@ -100,7 +164,7 @@ export const PetsScreen: React.FC = () => {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>{t('pets.title')}</Text>
+          <Text style={styles.title}>Thú cưng của tôi</Text>
         </View>
 
         {error ? (
@@ -116,7 +180,13 @@ export const PetsScreen: React.FC = () => {
           </View>
         ) : null}
 
-        <Text style={styles.sectionLabel}>Your pets</Text>
+        {careStateError ? (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{careStateError}</Text>
+          </View>
+        ) : null}
+
+        <Text style={styles.sectionLabel}>{t('pets.yourPets')}</Text>
         <PetSelector
           pets={pets}
           selectedPetId={activePet?.pet_id ?? null}
@@ -125,21 +195,23 @@ export const PetsScreen: React.FC = () => {
 
         {activePet ? (
           <ClayCard variant="md" color="white" style={styles.detailCard}>
+            <PetModelViewer pet={activePet} />
             <View style={styles.detailHeader}>
               <Text style={styles.detailTitle}>{activePet.name}</Text>
               <ClayButton
                 color="yellow"
                 variant="sm"
+                disabled={isSelectingPet}
                 onPress={() => {
                   setUnlockContext({
                     name: activePet.name,
                     rarity: activePet.rarity,
-                    stage: 'baby',
+                    stage: careState?.stage ?? 'baby',
                   });
                   setUnlockVisible(true);
                 }}
               >
-                Show details
+                {isSelectingPet ? t('pets.updatingActivePet') : t('pets.activePetCta')}
               </ClayButton>
             </View>
             {stats ? <PetCareStats stats={stats} /> : null}
@@ -150,7 +222,7 @@ export const PetsScreen: React.FC = () => {
           </ClayCard>
         )}
 
-        <Text style={styles.sectionLabel}>All pets</Text>
+        <Text style={styles.sectionLabel}>{t('pets.allPets')}</Text>
         <PetGrid
           pets={pets}
           selectedPetId={activePet?.pet_id ?? null}
@@ -175,6 +247,12 @@ export const PetsScreen: React.FC = () => {
           setUnlockVisible(false);
           setUnlockContext(null);
         }}
+      />
+
+      <LexiFloatingButton onPress={() => setLexiVisible(true)} />
+      <LexiQuickActionSheet
+        visible={lexiVisible}
+        onDismiss={() => setLexiVisible(false)}
       />
     </View>
   );

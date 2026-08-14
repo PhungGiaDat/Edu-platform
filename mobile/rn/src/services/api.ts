@@ -1,9 +1,17 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import type { AuthResponse, ARExperienceResponse } from '../types/api';
+import type {
+  AuthResponse,
+  RegisterRequest,
+  RegisterResponse,
+  ARExperienceResponse,
+} from '../types/api';
 import type {
   AddXpRequest,
   AddXpResponse,
+  AddXpEventRequest,
+  AddXpEventResponse,
+  toAddXpEventWireRequest,
   StreakData,
   UserStats,
 } from '../types/gamification';
@@ -37,11 +45,21 @@ api.interceptors.request.use(
   async (config) => {
     try {
       const token = await SecureStore.getItemAsync(TOKEN_KEY);
+      // [DEBUG-AUTH] Temporarily log token presence to diagnose 401
+      console.log(
+        `[DEBUG-AUTH] ${config.method?.toUpperCase()} ${config.url} token=${
+          token ? `${token.slice(0, 20)}…(${token.length})` : 'NONE'
+        }`,
+      );
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+      } else {
+        // [DEBUG-AUTH] Surface the missing-token case so we can see it
+        console.warn(`[DEBUG-AUTH] no JWT for ${config.url}`);
       }
-    } catch {
-      // Silent fail — token retrieval is optional
+    } catch (e) {
+      // [DEBUG-AUTH] Surface SecureStore failures (they were previously silent)
+      console.warn(`[DEBUG-AUTH] SecureStore.getItemAsync threw`, e);
     }
     return config;
   },
@@ -52,16 +70,53 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // [DEBUG-AUTH] Log full 401 context: URL, status, and whether we deleted the token
     if (error.response?.status === 401) {
+      console.warn(
+        `[DEBUG-AUTH] 401 on ${error.config?.method?.toUpperCase()} ${
+          error.config?.url
+        } — deleting stored JWT`,
+        { responseData: error.response?.data },
+      );
       SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => {});
     }
     return Promise.reject(error);
   }
 );
 
-export const authApi = {
-  login: (email: string, password: string) =>
-    api.post<AuthResponse>('/auth/login', { email, password }),
+export interface AuthApi {
+  /**
+   * POST /auth/login — backend uses `OAuth2PasswordRequestForm`, which
+   * requires `application/x-www-form-urlencoded` with `username` + `password`
+   * fields. RN historically sent JSON; this client now mirrors the contract
+   * used by `frontend-web/src/contexts/AuthContext.tsx`.
+   */
+  login: (email: string, password: string) => Promise<AxiosResponse<AuthResponse>>;
+  /**
+   * POST /auth/register — backend accepts JSON `UserCreate` and returns
+   * `UserResponse` (no token). The screen posts register, then auto-logs in
+   * via `login()` to obtain a JWT.
+   */
+  register: (payload: RegisterRequest) => Promise<AxiosResponse<RegisterResponse>>;
+  me: () => Promise<AxiosResponse<import('../types/api').UserMe>>;
+}
+
+export const authApi: AuthApi = {
+  login: async (email: string, password: string) => {
+    // Backend expects OAuth2PasswordRequestForm (form-encoded, not JSON).
+    const formBody = new URLSearchParams();
+    formBody.append('username', email);
+    formBody.append('password', password);
+
+    return api.post<AuthResponse>('/auth/login', formBody.toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+  },
+  register: async (payload: RegisterRequest) => {
+    return api.post<RegisterResponse>('/auth/register', payload, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  },
   me: () => api.get<import('../types/api').UserMe>('/auth/me'),
 };
 
@@ -151,6 +206,18 @@ export const coursesApi = {
       action,
       metadata,
     } as AddXpRequest),
+
+  /**
+   * Idempotent XP event for C26 gamification.
+   * Uses POST /gamification/xp-event with stable eventId.
+   *
+   * eventId must be:
+   * - Stable: Generated ONCE at semantic event creation
+   * - Unique: Different occurrences = different eventIds
+   * - Reused: Same occurrence retries use SAME eventId
+   */
+  addXpEvent: (body: AddXpEventRequest) =>
+    api.post<AddXpEventResponse>('/gamification/xp-event', toAddXpEventWireRequest(body)),
 };
 
 /**
@@ -270,6 +337,8 @@ export const gamificationService = {
   listBadges: () => api.get<unknown[]>('/gamification/badges'),
   awardXp: (body: AddXpRequest) =>
     api.post<AddXpResponse>('/gamification/add-xp', body),
+  addXpEvent: (body: AddXpEventRequest) =>
+    api.post<AddXpEventResponse>('/gamification/xp-event', body),
 };
 
 export default api;
