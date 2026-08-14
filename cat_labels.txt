@@ -1,3 +1,0 @@
-backend/seeds/courses\momo_home_family.json: home_family | Gia đình | Home
-backend/seeds/courses\momo_nature.json: nature | Thiên nhiên | Nature
-backend/seeds/courses\momo_school_food.json: school_food | Trường học | School
