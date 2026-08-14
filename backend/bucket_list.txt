@@ -1,4 +1,0 @@
-﻿============================================================
-Listing AR_models bucket...
-============================================================
-ERROR 400: {"statusCode":"404","error":"Bucket not found","message":"Bucket not found","code":"NoSuchBucket"}
