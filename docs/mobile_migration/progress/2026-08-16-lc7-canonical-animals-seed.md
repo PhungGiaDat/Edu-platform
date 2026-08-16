@@ -3,8 +3,8 @@
 ## Status
 
 - Seed definition: **IMPLEMENTED / TESTED**
-- Production apply: **AUTHORIZED BY LC11-PROD-APPLY, SAFELY BLOCKED BEFORE WRITE**
-- Production content verified: **NO**
+- Production apply: **APPLIED + FRESH-SESSION READBACK VERIFIED**
+- Production content verified: **YES**
 - Assets generated/uploaded: **NO / NO**
 
 ## Canonical content
@@ -29,10 +29,12 @@ Requirements are content identity plus controlled LC5 role, with no filename inf
 
 `pytest tests/test_canonical_animals_seed.py` validates deterministic course/lesson/vocabulary identities, LC2 ordered schema-v2 activity validation, relational Quiz/Game references, LC4/LC5 Memory Match semantics, controlled asset roles, and repeatable dry-run summary. Its fake repository applies the seed twice and snapshots the same Course, five Lessons, 25 Quiz identities, and five Game identities with no duplicate rows. Production application is intentionally excluded by the canonical milestone plan.
 
-## LC11 production apply attempt
+## LC11 production apply
 
-The later LC11-PROD-APPLY task added a bounded SQLAlchemy reconciler at `backend/database/seed/apply_canonical_animals.py` and ran its typed validation plus real production dry-run. All five LC2 schema-v2 Lessons, 25 Questions, 50 Options, and five Memory Match payloads validated. The dry-run then stopped before mutation because the existing non-null `quiz_questions.flashcard_qr_id` foreign key requires real `flashcards` owners: only canonical word Cat resolves (`cat001`), while Dog, Bird, Fish, and Rabbit have no flashcard row. Creating those dependency rows was not authorized, and unrelated QR substitution would corrupt ownership. Production writes: **0**.
+LC11-FK-OWNER resolved the prerequisite with four minimum learner flashcard owners in one SQLAlchemy Core/AsyncSession transaction. Cat retains `cat001`; Dog, Bird, Fish, and Rabbit reuse their exact LC7 vocabulary IDs as deterministic `qr_id` values. Required `image_url` fields reference the existing LC10 learner illustrations, while no `ar_tracking_targets` row or AR metadata was created. Fresh readback verified 5/5 owners and 25/25 planned Quiz FK references; the second owner reconciliation was all `NO_CHANGE`.
+
+The existing bounded reconciler at `backend/database/seed/apply_canonical_animals.py` then committed the canonical Course publication, five schema-v2 Lessons, 25 Questions, 50 Options, and five Memory Match items. Fresh-session readback passed all counts and activity ordering. A final production dry-run reported 86 canonical records `NO_CHANGE`, zero creates/updates, zero conflicts, and zero destructive operations.
 
 ## Boundaries preserved
 
-No database schema or Alembic revision; no production data, user progress, lesson sessions/attempts, gamification, preferences, media rows, storage, Unity, or AR metadata changed.
+No database schema or Alembic revision; no user progress, lesson sessions/attempts, gamification, preferences, media rows, storage objects, Unity, or AR metadata changed.
