@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
 
 // ---------------------------------------------------------------------------
 // Test harness — loads the real module from disk when available so the suite
@@ -7,9 +9,6 @@ import { describe, expect, it } from 'vitest';
 type CreateFn = (opts: { catalogId: string; targetCount: number }) => Registry;
 let _realCreate: CreateFn | null = null;
 try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const fs = require('node:fs') as typeof import('node:fs');
-  const path = require('node:path') as typeof import('node:path');
   const src = fs.readFileSync(
     path.resolve(process.cwd(), 'public/static/ar-assets/js/ar-target-registry.js'),
     'utf8',

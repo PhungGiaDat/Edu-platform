@@ -18,10 +18,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { courseService } from '../services/CourseService';
 import type { Course, Lesson, UserProgress } from '../types/course';
 
-interface AnimalsCourseProps {
-  // Accept optional props for customization
-}
-
 const ANIMAL_MASCOTS = [
   { name: 'cat', emoji: '🐱', color: '#FF9847', label: 'Cat', word: 'Meo' },
   { name: 'dog', emoji: '🐶', color: '#78A8A8', label: 'Dog', word: 'Cho' },
@@ -32,7 +28,7 @@ const ANIMAL_MASCOTS = [
 
 const getLearnerId = (userId?: string | null) => userId || 'guest-learner';
 
-export const AnimalsCourse: React.FC<AnimalsCourseProps> = () => {
+export const AnimalsCourse: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   

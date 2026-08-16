@@ -7,18 +7,6 @@ import { eventBus } from '@/runtime/EventBus';
 
 const API_BASE = getApiBase();
 
-function buildUrl(path: string | undefined): string | undefined {
-  if (!path) return undefined;
-  // Full URLs (http/https) returned by the backend are authoritative —
-  // the API response already contains the resolved Supabase URLs.
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  // Frontend static assets served by the same Vite origin.
-  if (path.startsWith('/assets/')) return path;
-  // Legacy relative paths — prepend API_BASE.
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_BASE}${cleanPath}`;
-}
-
 // ── localStorage cache helpers ──────────────────────────────────────────────
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
