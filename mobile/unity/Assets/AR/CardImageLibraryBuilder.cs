@@ -22,9 +22,134 @@ public class CardImageLibraryBuilder : MonoBehaviour
 
     public event Action OnLibraryReady;
     public event Action<string> OnError;
+    public event Action<string, string, string> OnCardFailed;
 
+    private readonly Dictionary<string, string> _qrIdByReferenceName = new();
     private MutableRuntimeReferenceImageLibrary _mutableLibrary;
     private bool _isBuilding;
+
+    /// <summary>Number of reference images that completed validation successfully.</summary>
+    public int RegisteredImageCount => _qrIdByReferenceName.Count;
+
+    /// <summary>
+    /// Resolves the deterministic runtime reference-image name to business qrId.
+    /// The builder deliberately registers every runtime image with name = qrId.
+    /// </summary>
+    public bool TryResolveQrId(string referenceImageName, out string qrId)
+    {
+        return _qrIdByReferenceName.TryGetValue(referenceImageName, out qrId);
+    }
+
+    /// <summary>
+    /// Returns whether the mutable library has been created and is ready to accept
+    /// incremental card additions.
+    /// </summary>
+    public bool IsLibraryReady => _mutableLibrary != null && !_isBuilding;
+
+    /// <summary>
+    /// Adds a single card to an already-built mutable runtime library.
+    /// Used for the second-card and subsequent-card paths where ARScene is already active
+    /// and the library already contains registered reference images.
+    ///
+    /// Downloads the reference image, schedules the add-image job, and waits for
+    /// validation. On success, fires OnLibraryReady (so existing listeners know the
+    /// library has been extended) and registers the qrId name mapping.
+    ///
+    /// Does NOT enable/disable the imageManager — it is already enabled from the
+    /// initial BuildLibrary call.
+    ///
+    /// If the library is not yet ready, falls back to BuildLibrary (clears existing
+    /// registrations and re-registers all cards). Prefer calling BuildLibrary once
+    /// with all known cards where possible.
+    /// </summary>
+    /// <param name="card">Single card descriptor (qrId, imageUrl, physicalWidthMeters).</param>
+    public void AddCard(CardDescriptor card)
+    {
+        if (card == null || string.IsNullOrEmpty(card.qrId) || string.IsNullOrEmpty(card.imageUrl))
+        {
+            var qrId = card?.qrId ?? "<missing>";
+            var detail = "qrId and imageUrl are required; physicalWidthMeters is optional (0f = unknown size)";
+            UnityEngine.Debug.LogError($"[CardImageLibraryBuilder] AddCard rejected '{qrId}': {detail}");
+            OnCardFailed?.Invoke(qrId, "MISSING_REFERENCE_IMAGE_METADATA", detail);
+            return;
+        }
+
+        if (_mutableLibrary == null || _isBuilding)
+        {
+            // Library not ready yet — fall back to BuildLibrary with just this card.
+            // BuildLibrary will clear existing registrations, but this path should
+            // only be hit during the initial session startup race.
+            UnityEngine.Debug.LogWarning("[CardImageLibraryBuilder] Library not ready — falling back to BuildLibrary");
+            BuildLibrary(new List<CardDescriptor> { card });
+            return;
+        }
+
+        StartCoroutine(AddCardCoroutine(card));
+    }
+
+    private IEnumerator AddCardCoroutine(CardDescriptor card)
+    {
+        UnityEngine.Debug.Log($"[CardImageLibraryBuilder] AddCard: '{card.qrId}' — downloading reference image");
+        var pending = new List<(CardDescriptor, Texture2D, string)>();
+        var ct = new CancellationTokenSource();
+
+        StartCoroutine(DownloadOne(card, pending, ct.Token));
+        yield return new WaitUntil(() => pending.Count >= 1);
+
+        if (pending[0].Item2 == null)
+        {
+            var msg = $"AddCard '{card.qrId}' download failed: {pending[0].Item3}";
+            UnityEngine.Debug.LogWarning("[CardImageLibraryBuilder] " + msg);
+            OnCardFailed?.Invoke(card.qrId, "REFERENCE_IMAGE_DOWNLOAD_FAILED", pending[0].Item3);
+            yield break;
+        }
+
+        var handle = _mutableLibrary.ScheduleAddImageWithValidationJob(
+            pending[0].Item2,
+            card.qrId,
+            card.physicalWidthMeters);
+
+        // Wait for job completion (yield in try-finally, not try-catch, to avoid CS1626)
+        try
+        {
+            while (!handle.jobHandle.IsCompleted)
+            {
+                yield return null;
+            }
+            handle.jobHandle.Complete();
+        }
+        finally
+        {
+            // AddReferenceImageJobState is a value type — no unmanaged resources to dispose.
+            // jobHandle.Complete() has already been called above.
+        }
+
+        try
+        {
+            if (handle.status == AddReferenceImageJobStatus.Success)
+            {
+                _qrIdByReferenceName[card.qrId] = card.qrId;
+                UnityEngine.Debug.Log($"[CardImageLibraryBuilder] AddCard '{card.qrId}' registered successfully. Total: {_qrIdByReferenceName.Count}");
+                OnLibraryReady?.Invoke();
+            }
+            else if (handle.status == AddReferenceImageJobStatus.ErrorInvalidImage)
+            {
+                UnityEngine.Debug.LogWarning($"[CardImageLibraryBuilder] AddCard '{card.qrId}': ErrorInvalidImage");
+                OnCardFailed?.Invoke(card.qrId, "RUNTIME_LIBRARY_ADD_FAILED", "ErrorInvalidImage");
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning($"[CardImageLibraryBuilder] AddCard '{card.qrId}': ErrorUnknown");
+                OnCardFailed?.Invoke(card.qrId, "RUNTIME_LIBRARY_ADD_FAILED", "ErrorUnknown");
+            }
+        }
+        catch (Exception ex)
+        {
+            var msg = $"AddCard '{card.qrId}' add failed: {ex.Message}";
+            UnityEngine.Debug.LogError("[CardImageLibraryBuilder] " + msg);
+            OnCardFailed?.Invoke(card.qrId, "RUNTIME_LIBRARY_ADD_FAILED", ex.Message);
+        }
+    }
 
     private void Awake()
     {
@@ -47,10 +172,25 @@ public class CardImageLibraryBuilder : MonoBehaviour
         if (cards == null || cards.Count == 0)
         {
             UnityEngine.Debug.LogWarning("[CardImageLibraryBuilder] No cards provided.");
-            OnError?.Invoke("No cards provided");
+            OnError?.Invoke("MISSING_REFERENCE_IMAGE_METADATA: no cards provided");
             return;
         }
 
+        foreach (var card in cards)
+        {
+            if (card == null || string.IsNullOrEmpty(card.qrId) ||
+                string.IsNullOrEmpty(card.imageUrl))
+            {
+                var qrId = card?.qrId ?? "<missing>";
+                var detail = "qrId and imageUrl are required; physicalWidthMeters is optional (0f = unknown size)";
+                UnityEngine.Debug.LogError($"[CardImageLibraryBuilder] MISSING_REFERENCE_IMAGE_METADATA: '{qrId}': {detail}");
+                OnCardFailed?.Invoke(qrId, "MISSING_REFERENCE_IMAGE_METADATA", detail);
+                OnError?.Invoke($"MISSING_REFERENCE_IMAGE_METADATA: {qrId}");
+                return;
+            }
+        }
+
+        _qrIdByReferenceName.Clear();
         StartCoroutine(BuildLibraryCoroutine(cards));
     }
 
@@ -95,48 +235,28 @@ public class CardImageLibraryBuilder : MonoBehaviour
         imageManager.enabled = false;
         imageManager.referenceLibrary = _mutableLibrary;
 
-        // Download all textures in parallel using a simple worker list
+        // Download all textures in parallel using a simple worker list.
         var pending = new List<(CardDescriptor card, Texture2D texture, string error)>();
-        var downloadCoroutines = new List<Coroutine>();
-
         foreach (var card in cards)
         {
             var ct = new CancellationTokenSource();
-            downloadCoroutines.Add(StartCoroutine(
-                DownloadOne(card, pending, ct.Token)));
+            StartCoroutine(DownloadOne(card, pending, ct.Token));
         }
 
-        // Wait for all downloads to finish
-        yield return new WaitUntil(() => downloadCoroutines.Count == 0 ||
-            pending.Count + pending.Count >= cards.Count);
+        // Wait until every card has reported a result (success or failure).
+        yield return new WaitUntil(() => pending.Count >= cards.Count);
 
-        // Wait for all to complete
-        while (pending.Count < cards.Count)
-        {
-            bool allDone = true;
-            foreach (var c in downloadCoroutines)
-            {
-                if (c != null) { allDone = false; break; }
-            }
-            if (allDone) break;
-            yield return null;
-        }
-
-        foreach (var c in downloadCoroutines)
-        {
-            if (c != null) StopCoroutine(c);
-        }
-        downloadCoroutines.Clear();
-
-        // Add each successful texture to the library
-        int addedCount = 0;
-        var jobHandles = new List<AddReferenceImageJobState>();
+        // Schedule add-image jobs for every successful download.
+        int scheduledCount = 0;
+        var jobHandles = new List<(CardDescriptor card, AddReferenceImageJobState state)>();
 
         foreach (var (card, texture, error) in pending)
         {
             if (texture == null)
             {
-                UnityEngine.Debug.LogWarning($"[CardImageLibraryBuilder] Skipping '{card.qrId}': {error ?? "download returned null"}");
+                var msg = $"REFERENCE_IMAGE_DOWNLOAD_FAILED: '{card.qrId}': {error ?? "download returned null"}";
+                UnityEngine.Debug.LogWarning("[CardImageLibraryBuilder] " + msg);
+                OnCardFailed?.Invoke(card.qrId, "REFERENCE_IMAGE_DOWNLOAD_FAILED", error ?? "download returned null");
                 continue;
             }
 
@@ -146,61 +266,77 @@ public class CardImageLibraryBuilder : MonoBehaviour
                     texture,
                     card.qrId,
                     card.physicalWidthMeters);
-                jobHandles.Add(handle);
-                addedCount++;
+                jobHandles.Add((card, handle));
+                scheduledCount++;
             }
             catch (Exception ex)
             {
-                UnityEngine.Debug.LogError($"[CardImageLibraryBuilder] ScheduleAddImageWithValidationJob failed for '{card.qrId}': {ex.Message}");
+                var msg = $"RUNTIME_LIBRARY_ADD_FAILED: '{card.qrId}': {ex.Message}";
+                UnityEngine.Debug.LogError("[CardImageLibraryBuilder] " + msg);
+                OnCardFailed?.Invoke(card.qrId, "RUNTIME_LIBRARY_ADD_FAILED", ex.Message);
             }
         }
 
-        if (addedCount == 0)
+        if (scheduledCount == 0)
         {
-            var msg = "No images were successfully added to the library.";
+            var msg = "No images were successfully downloaded/decoded; nothing scheduled.";
             UnityEngine.Debug.LogError("[CardImageLibraryBuilder] " + msg);
             OnError?.Invoke(msg);
             _isBuilding = false;
             yield break;
         }
 
-        UnityEngine.Debug.Log($"[CardImageLibraryBuilder] {addedCount}/{cards.Count} images added, waiting for jobs...");
+        UnityEngine.Debug.Log($"[CardImageLibraryBuilder] {scheduledCount}/{cards.Count} images scheduled, waiting for validation jobs...");
 
-        // Wait for all jobs
+        // Wait for all jobs to complete.
         bool allJobsComplete = false;
         while (!allJobsComplete)
         {
             allJobsComplete = true;
-            foreach (var jh in jobHandles)
+            foreach (var (_, state) in jobHandles)
             {
-                if (!jh.jobHandle.IsCompleted)
-                {
-                    allJobsComplete = false;
-                    break;
-                }
-                jh.jobHandle.Complete();
+                if (!state.jobHandle.IsCompleted) { allJobsComplete = false; break; }
             }
             if (!allJobsComplete) yield return null;
         }
 
-        // Check job statuses
-        foreach (var jh in jobHandles)
+        // Check job statuses explicitly — a completed job is not necessarily a
+        // SUCCESSFUL job. Only images that actually validated count toward readiness.
+        int successCount = 0;
+        foreach (var (card, state) in jobHandles)
         {
-            if (jh.status == AddReferenceImageJobStatus.ErrorInvalidImage)
+            state.jobHandle.Complete();
+            if (state.status == AddReferenceImageJobStatus.Success)
             {
-                UnityEngine.Debug.LogWarning("[CardImageLibraryBuilder] Job: ErrorInvalidImage (image not suitable for tracking).");
+                successCount++;
+                _qrIdByReferenceName[card.qrId] = card.qrId; // identity mapping: reference name IS qrId
             }
-            else if (jh.status == AddReferenceImageJobStatus.ErrorUnknown)
+            else if (state.status == AddReferenceImageJobStatus.ErrorInvalidImage)
             {
-                UnityEngine.Debug.LogWarning("[CardImageLibraryBuilder] Job: ErrorUnknown.");
+                UnityEngine.Debug.LogWarning($"[CardImageLibraryBuilder] '{card.qrId}': ErrorInvalidImage (image not suitable for tracking).");
+                OnCardFailed?.Invoke(card.qrId, "RUNTIME_LIBRARY_ADD_FAILED", "ErrorInvalidImage");
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning($"[CardImageLibraryBuilder] '{card.qrId}': ErrorUnknown.");
+                OnCardFailed?.Invoke(card.qrId, "RUNTIME_LIBRARY_ADD_FAILED", "ErrorUnknown");
             }
         }
 
-        // Assign library and enable tracking
+        if (successCount == 0)
+        {
+            var msg = "All add-image validation jobs failed; no trackable reference images available.";
+            UnityEngine.Debug.LogError("[CardImageLibraryBuilder] " + msg);
+            OnError?.Invoke(msg);
+            _isBuilding = false;
+            yield break;
+        }
+
+        // Assign library and enable tracking only once at least one image validated.
         imageManager.enabled = true;
         _isBuilding = false;
 
-        UnityEngine.Debug.Log($"[CardImageLibraryBuilder] Library ready with {addedCount} images. Tracking enabled.");
+        UnityEngine.Debug.Log($"[CardImageLibraryBuilder] Library ready with {successCount}/{cards.Count} images validated. Tracking enabled.");
         OnLibraryReady?.Invoke();
     }
 
@@ -259,13 +395,16 @@ public class CardDescriptor
     /// <summary>URL of the reference image to track.</summary>
     public string imageUrl;
 
-    /// <summary>Physical width of the printed card, in metres.</summary>
-    [Tooltip("Physical width of the printed card, in metres (measure your printout).")]
-    public float physicalWidthMeters = 0.08f; // default: 8cm card
+    /// <summary>
+    /// Physical width of the printed card, in metres.
+    /// Convention: 0f means unknown size (AR Foundation uses unknown-size registration).
+    /// There is NO approved production default — 0f is the intentional dev-path value.
+    /// </summary>
+    public float physicalWidthMeters;
 
     public CardDescriptor() { }
 
-    public CardDescriptor(string qrId, string imageUrl, float physicalWidthMeters = 0.08f)
+    public CardDescriptor(string qrId, string imageUrl, float physicalWidthMeters)
     {
         this.qrId = qrId;
         this.imageUrl = imageUrl;

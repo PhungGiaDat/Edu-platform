@@ -1,11 +1,10 @@
 using System;
-using System.Text;
 using UnityEngine;
 
 /// <summary>
 /// Singleton that sends JSON events back to the React Native bridge.
 /// iOS: Uses UnitySendMessage to communicate via Swift native module.
-/// Android: Uses UnitySendMessage via JNI to UnityBridgeModule.
+/// Android: Calls the RN native module directly through JNI.
 /// </summary>
 public class RNEventEmitter : MonoBehaviour
 {
@@ -19,7 +18,9 @@ public class RNEventEmitter : MonoBehaviour
                     if (_instance == null) {
                         var go = new GameObject("RNEventEmitter");
                         _instance = go.AddComponent<RNEventEmitter>();
-                        DontDestroyOnLoad(go);
+                        if (Application.isPlaying) {
+                            DontDestroyOnLoad(go);
+                        }
                     }
                 }
             }
@@ -38,7 +39,6 @@ public class RNEventEmitter : MonoBehaviour
     {
         try {
             string json = JsonUtility.ToJson(payload);
-            string message = $"{eventName}|{json}";
             UnityEngine.Debug.Log($"[RNEventEmitter] Sending: {eventName}");
 
 #if UNITY_IOS
@@ -78,19 +78,11 @@ public class RNEventEmitter : MonoBehaviour
     private void SendMessageAndroid(string eventName, string jsonPayload)
     {
         try {
-            using var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-            using var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-            activity.Call("runOnUiThread", new AndroidJavaRunnable(() => {
-                try {
-                    UnityEngine.Debug.Log($"[RNEventEmitter] Android forwarding: {eventName}");
-                } catch (Exception ex) {
-                    UnityEngine.Debug.LogError($"[RNEventEmitter] Android send failed: {ex.Message}");
-                }
-            }));
+            using var bridge = new AndroidJavaClass("com.rn.UnityBridgeModule");
+            bridge.CallStatic("emitFromUnity", eventName, jsonPayload);
+            UnityEngine.Debug.Log($"[RNEventEmitter] Android forwarded: {eventName}");
         } catch (Exception ex) {
-            UnityEngine.Debug.LogError($"[RNEventEmitter] Android setup failed: {ex.Message}");
-            // Fallback: try direct SendMessage
-            UnitySendMessage(TARGET_OBJECT, METHOD_NAME, $"{eventName}|{jsonPayload}");
+            UnityEngine.Debug.LogError($"[RNEventEmitter] Android forwarding failed: {ex.Message}");
         }
     }
 #endif
@@ -102,6 +94,8 @@ public class RNEventEmitter : MonoBehaviour
             return;
         }
         _instance = this;
-        DontDestroyOnLoad(gameObject);
+        if (Application.isPlaying) {
+            DontDestroyOnLoad(gameObject);
+        }
     }
 }

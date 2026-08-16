@@ -23,7 +23,7 @@ public class ARImageTrackingTestBootstrap : MonoBehaviour
         "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/flashcards/elephant_card.png";
 
     [SerializeField] private string elephantGlbUrl =
-        "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/models/animal-elephant.glb";
+        "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/elephant.glb";
 
     [Header("Physical dimensions")]
     [SerializeField] private float physicalWidthMeters = 0.15f;
@@ -265,6 +265,34 @@ public class ARImageTrackingTestBootstrap : MonoBehaviour
             go.transform.localScale = modelScale;
             _elephantModel = go;
             Debug.Log("[Bootstrap] Elephant GLB ready: " + go.name);
+
+            // Discover and log animation clips from the loaded model
+            var clips = _glbLoader.GetAnimationClips();
+            Debug.Log($"[Bootstrap] GLBLoader found {clips?.Length ?? 0} animation clip(s):");
+            if (clips != null)
+            {
+                foreach (var clip in clips)
+                {
+                    Debug.Log($"[Bootstrap]   Clip: {clip.name}");
+                }
+            }
+
+            // Wire to RuntimeAnimatorController and enumerate
+            _glbLoader.WireAnimationsToAnimator(go);
+            var animator = go.GetComponent<Animator>();
+            if (animator != null && animator.runtimeAnimatorController != null)
+            {
+                var ac = animator.runtimeAnimatorController;
+                Debug.Log($"[Bootstrap] RuntimeAnimatorController '{ac.name}' has {ac.animationClips.Length} clip(s):");
+                foreach (var clip in ac.animationClips)
+                {
+                    Debug.Log($"[Bootstrap]   AC clip: {clip.name}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[Bootstrap] No RuntimeAnimatorController on elephant model.");
+            }
         }
     }
 
