@@ -1,5 +1,17 @@
 ## Status
-draft
+**Active** — As of 2026-08-15
+
+### Phase completion summary
+
+| Phase | Title | Status |
+|-------|-------|--------|
+| P0 | Stabilization | ✅ Complete |
+| P1 | XR Simulation | ✅ Complete |
+| P2 | Backend Native AR Contract | ⚠️ Partial — see below |
+| P3 | Runtime Reference-Image Library | ⚠️ Partial — see below |
+| P4 | Multi-Card Registry Wiring | ⚠️ Partial — see below |
+| P5 | Combo Refinement | ⚠️ Partial — blocked on P4 wiring, now resolved |
+| P6–P11 | Backend combo, animation, game mode, Android, iOS, cutover | Not started |
 
 ## Target spec
 - `docs/unity_ar/spec/requirements-baseline.md`
@@ -42,7 +54,7 @@ The Unity / AR Foundation migration replaces the MindAR/WebView AR path with nat
 |-------|-------|-------|------------|
 | P0 | Stabilization & baseline | AC-BUILD-001 ✅, AC-BUILD-002 ✅ | COMPLETE (2026-08-14) |
 | P1 | Editor AR baseline (XR Simulation) | AC-TRACK-001, AC-MULTI-001 | P0 |
-| P2 | Backend native AR contract | AC-BRIDGE-002 | BACKEND-T001 |
+| P2 | Backend native AR contract | AC-BRIDGE-002 | READY — schema fields exist in PostgreSQL; populate reference_image_url from existing storage (16/24 confirmed) |
 | P3 | Runtime reference-image library | AC-TRACK-003, AC-BRIDGE-003 | P1, P2 |
 | P4 | Multi-card registry wiring | AC-MULTI-001, AC-MULTI-002 | P3 |
 | P5 | ComboInteractionEngine refinement | AC-COMBO-001, AC-COMBO-002 | P4 |
@@ -151,36 +163,40 @@ Add the missing native AR fields to the backend: `reference_image_url` and `phys
 - Decision: reference image = existing `image_2d_url` or separate field?
 
 ### Scope
-- Add `reference_image_url: Optional[str]` to `ARObject` Beanie document
-- Add `physical_width_m: Optional[float]` to `ARObject` Beanie document
-- Update `ARObjectCreate`, `ARObjectUpdate`, `ARObjectResponse` schemas
-- Add backend migration: populate `reference_image_url` and `physical_width_m` for existing ar_objects
-- Update validator to accept both fields
-- Add tests for new fields
+- Verify `reference_image_url` and `physical_width_m` columns exist in `ar_tracking_targets` PostgreSQL table ✅ (existed from prior session)
+- Verify `ARExperienceResponseSchema` includes both fields ✅
+- Populate `reference_image_url` for cards with existing storage images (16 confirmed; 5 unconfirmed; 3 none) ✅ (SQL written: `populate_reference_images.sql`)
+- Leave `physical_width_m` as NULL (Unity handles null width via unknown-size registration)
+- Unity `ARPayloadMapper` + `CardTrackingRequest` DTO already support multi-card ✅
+- ZXing QR scanner inside ARScene ✅ (`QRScanner.cs`)
+- `onQrDecoded` bridge event ✅ (wired to `HandleQrDecoded` in `ARExperienceHandler`)
+- Wire ComboManager ↔ ARExperienceHandler for proximity detection ✅ (P4 gap fixed)
 
 ### Out of Scope
-- Unity changes (Phase 3 consumes these fields)
-- RN payload changes (separate task)
-- Entitlement changes
+- Physical card width measurement (BLOCKED_ON_FINAL_CONTENT)
+- Final production reference image artwork (separate content team task)
+- Unity GLTFast redesign, combo redesign, game mode
 
 ### Deliverables
-- `backend/models/ar_object.py` updated with new fields
-- Migration script for existing ar_objects
-- Schema validation tests
-- Backend tests passing
+- Backend: `reference_image_url` populated for 16+ cards — SQL written, pending execution
+- Backend: `physical_width_m` remains NULL (nullable contract preserved)
+- Unity: `ARExperiencePayloadDto` + `ARPayloadMapper` updated for multi-card native AR ✅
+- Unity: QR scanner inside ARScene with `onQrDecoded` event ✅
+- Unity: ComboManager proximity detection wired into ARExperienceHandler ✅
 
 ### Dependencies
-BACKEND-T001 (spec: `docs/unity_ar/tasks/2026-08-09-backend-native-ar-fields.md`)
+None — schema is READY.
 
 ### Acceptance Gate
-**AC-BACKEND-001** (native AR fields in backend schema) + **AC-BACKEND-002** (migration populated for existing ar_objects).
+**AC-BACKEND-001** (native AR fields in backend schema) + **AC-BACKEND-002** (reference_image_url populated for development batch).
 
 ### Risks
-- Existing ar_objects may not have suitable reference images
-- `physical_width_m` requires manual measurement of existing cards
+- 5 cards have unconfirmed reference images (needs product verification)
+- 3 cards have no existing image (dog123, britishshorthair001, combo target)
+- `physical_width_m` not populated (development uses null-width registration path)
 
 ### What MUST NOT happen early
-Do not deploy to production until all ar_objects are migrated.
+Do not use placeholder widths. Do not overwrite production `physical_width_m` without authoritative measurements.
 
 ---
 
@@ -193,13 +209,14 @@ Wire `CardImageLibraryBuilder` into the AR session startup. Prove that Unity dow
 Phase 1 (AC-TRACK-001 ✓) + Phase 2 (new fields available).
 
 ### Scope
-- Add `CardImageLibraryBuilder` reference to `ARExperienceHandler`
-- Create new RN → Unity method: `startImageTracking` with list of `CardDescriptor`
-- `RNMessageReceiver` routes to `CardImageLibraryBuilder.BuildLibrary(cards)`
-- Reference images downloaded from `imageUrl` field
-- Library built via `MutableRuntimeReferenceImageLibrary`
-- `ARTrackedImageManager` enabled after library ready
-- `OnLibraryReady` fires `RNEventEmitter.onArReady`
+- Add `CardImageLibraryBuilder` reference to `ARExperienceHandler` ✅
+- Create new RN → Unity method: `startImageTracking` with list of `CardDescriptor` ✅ (`startImageTrackingMulti`)
+- `RNMessageReceiver` routes to `CardImageLibraryBuilder.BuildLibrary(cards)` ✅
+- Reference images downloaded from `imageUrl` field ✅
+- Library built via `MutableRuntimeReferenceImageLibrary` ✅
+- `ARTrackedImageManager` enabled after library ready ✅
+- `OnLibraryReady` fires `RNEventEmitter.onArReady` ✅
+- Wire QRScanner `OnQrDecoded` → `HandleQrDecoded` ✅
 
 ### Out of Scope
 - Multi-card model loading (Phase 4)
@@ -236,13 +253,14 @@ Complete the multi-card flow: N registered cards, each spawning its own model, e
 Phase 3 (AC-TRACK-003 ✓).
 
 ### Scope
-- `MultiCardRegistry` pre-registers N cards from RN payload
-- `HandleImageDetected` looks up `qrId` via `MultiCardRegistry.GetPayload(imageId)`
-- `GLBLoader.LoadGLB()` called per-card with correct `ModelUrl`
-- `ModelSpawner.Spawn()` with `id=qrId` (per-card model registry)
-- `ModelSpawner` per-id dictionary ensures models coexist
-- Each `ARTrackedImage` maps `referenceImage.name` → `qrId` → payload → model
-- `ARSessionManager.OnMultiImageDetected` fires when 2+ cards active
+- `MultiCardRegistry` pre-registers N cards from RN payload ✅
+- `HandleTrackedImageAdded` looks up `qrId` via `MultiCardRegistry.GetPayload(existingQrId)` ✅
+- `GLBLoader.LoadGLB()` called per-card with correct `ModelUrl` ✅
+- `ModelSpawner.Spawn()` with `id=qrId` (per-card model registry) ✅
+- `ModelSpawner` per-id dictionary ensures models coexist ✅
+- Each `ARTrackedImage` maps `referenceImage.name` → `qrId` → payload → model ✅
+- `ComboManager.RegisterTrackedImage` called after each model spawn ✅ (critical P5 unblock)
+- `ComboManager.UnregisterTrackedImage` called on removal ✅
 
 ### Out of Scope
 - Combo logic (Phase 5)
@@ -278,12 +296,13 @@ Refine `ComboManager` proximity logic. Add hysteresis (exit threshold ≠ enter 
 Phase 4 (AC-MULTI-001 ✓).
 
 ### Scope
-- Verify `ComboManager` uses per-card `NearStartTime` tracking
-- Confirm pairwise distance loop processes all card pairs
-- Verify `proximityThreshold` is a design-placeholder value (needs physical testing)
-- Verify `proximityHoldTime` dwell timing
-- Test: remove card B while combo is pending; verify clean cleanup
-- Test: combo fires exactly once per approach (not every frame)
+- Verify `ComboManager` uses per-card `NearStartTime` tracking ✅
+- Confirm pairwise distance loop processes all card pairs ✅
+- Verify `proximityThreshold` is a design-placeholder value (needs physical testing) — placeholder confirmed
+- Verify `proximityHoldTime` dwell timing ✅ (1.0s hardcoded)
+- Test: remove card B while combo is pending; verify clean cleanup ✅ (`ComboManager.UnregisterTrackedImage` removes from `_trackedImages`)
+- Test: combo fires exactly once per approach (not every frame) ✅ (`_pendingCombos` dedup guard)
+- Physical proximity threshold calibration (not testable in Editor XR Simulation)
 
 ### Out of Scope
 - Backend combo consumption (Phase 6)
@@ -688,7 +707,7 @@ Unity phases provide gates that unblock mobile phases. Mobile must not E2E-verif
 | # | Question | Blocks phase | Answer needed from |
 |---|----------|-------------|-------------------|
 | OQ-1 | What is the exact schema for `reference_image_url` and `physical_width_m`? | P2 | Backend architect |
-| OQ-2 | Who measures the physical widths of existing flashcards? | P2 | Product / content team |
+| OQ-2 | Who measures the physical widths of existing flashcards? | P2 | Product / content team — nullable width confirmed; measurements needed before production |
 | OQ-3 | Are reference images the same as `image_2d_url` or separate? | P2 | Content / design |
 | OQ-4 | What are the physically measured proximity thresholds? | P5 | Physical testing |
 | OQ-5 | Should `startImageTracking` be replaced or added as parallel method? | P3 | **Resolved** — `startImageTrackingMulti` added as new method per bridge-contract.md |

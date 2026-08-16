@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { unityBridge } from '../bridge/UnityBridgeModule';
-import { mapToUnityPayload } from '../bridge/ARExperienceMapper';
+import { mapToUnityPayload, validateNativeTrackingMetadata, toCardDescriptorRN } from '../bridge/ARExperienceMapper';
 import { flashcardApi } from '../services/api';
 import type { UnityARExperiencePayload } from '../types/ar';
 import type { ARMessage } from '../bridge/arMessages';
@@ -75,12 +75,79 @@ export const useARSession = (
     }
   }, []);
 
+  /** Tracks qrIds already sent to the backend this session. Prevents duplicate API calls. */
+  const qrResolutionCache = useRef<Set<string>>(new Set());
+
+  /**
+   * Resolves a QR-decoded qrId via the backend API, then sends the CardDescriptorRN
+   * to Unity for runtime image registration.
+   *
+   * This is the QR-discovery → backend resolution step of the ele123 golden path:
+   *   QRScanner (Unity) → onQrDecoded → handleQrDecoded → flashcardApi → CardDescriptorRN
+   *   → startImageTrackingMulti → CardImageLibraryBuilder (Unity) → MutableRuntimeReferenceImageLibrary
+   */
+  const handleQrDecoded = useCallback(async (qrId: string) => {
+    if (qrResolutionCache.current.has(qrId)) {
+      // Already resolved this session — deduplicated.
+      console.log(`[useARSession] qrId '${qrId}' already resolved — ignoring duplicate QR event`);
+      return;
+    }
+    qrResolutionCache.current.add(qrId);
+
+    console.log(`[useARSession] Resolving qrId '${qrId}' via backend...`);
+    try {
+      const response = await flashcardApi.getFlashcard(qrId);
+      const availability = validateNativeTrackingMetadata(response.data);
+
+      if (availability.kind !== 'ready') {
+        console.error(`[useARSession] Backend metadata unavailable for '${qrId}': ${availability.reason}`);
+        // Signal Unity to unblock the qrId for retry (card was rejected).
+        unityBridge.sendToUnity?.('onCardResolved', JSON.stringify({ qrId, registered: false }));
+        return;
+      }
+
+      const descriptor = toCardDescriptorRN(availability.tracking);
+      console.log(`[useARSession] Backend resolved '${qrId}' — sending to Unity`);
+
+      // Signal Unity that this qrId is registered (unblocks QR deduplication).
+      unityBridge.sendToUnity?.('onCardResolved', JSON.stringify({ qrId, registered: true }));
+
+      // Send to Unity for runtime reference-image registration.
+      await unityBridge.startImageTrackingMulti({ cards: [descriptor] });
+      console.log(`[useARSession] startImageTrackingMulti dispatched for '${qrId}'`);
+    } catch (err) {
+      console.error(`[useARSession] Backend resolution failed for '${qrId}':`, err);
+      qrResolutionCache.current.delete(qrId); // Allow retry on error.
+      unityBridge.sendToUnity?.('onCardResolved', JSON.stringify({ qrId, registered: false }));
+    }
+  }, []);
+
   const handleUnityEvent = useCallback((message: ARMessage) => {
     switch (message.type) {
       case 'onArReady':
         setArState('IMAGE_TRACKING_READY');
         clearTrackingTimeout();
         break;
+
+      /**
+       * onQrDecoded — Unity QRScanner decoded a QR code.
+       *
+       * Runtime path: QR discovery → Unity → RN → backend API → CardDescriptorRN
+       * → startImageTrackingMulti → Unity builds runtime reference-image library.
+       *
+       * Once registered, the qrId is locked (QRScanner deduplication) until the
+       * session ends or the card is explicitly unregistered. Subsequent physical
+       * detections of the SAME card go through image tracking (onImageDetected),
+       * not QR.
+       *
+       * This event fires ONLY from the QRScanner discovery layer, not from image
+       * tracking itself.
+       */
+      case 'onQrDecoded': {
+        const payload = message.payload as { qrId: string };
+        handleQrDecoded(payload.qrId);
+        break;
+      }
 
       case 'onError': {
         const payload = message.payload as { code: string; message: string };
@@ -204,6 +271,7 @@ export const useARSession = (
     const unsubscribers = [
       unityBridge.subscribe('onArReady', handleUnityEvent),
       unityBridge.subscribe('onError', handleUnityEvent),
+      unityBridge.subscribe('onQrDecoded', handleUnityEvent),
       unityBridge.subscribe('onImageDetected', handleUnityEvent),
       unityBridge.subscribe('onImageTrackingLost', handleUnityEvent),
       unityBridge.subscribe('onMultiImageDetected', handleUnityEvent),

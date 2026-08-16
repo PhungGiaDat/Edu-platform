@@ -2,7 +2,7 @@
 
 ## Status
 
-in progress — LC2 implemented and tested; content/runtime tasks remain
+in progress — LC2 and LC3 implemented and tested; content/runtime tasks remain
 
 ## Parent and authority
 
@@ -88,9 +88,11 @@ Unity/native AR and Render deployment readiness remain parallel independent lane
 
 ### LC3 — Data-driven Quiz Activity contract
 
+- Status: **IMPLEMENTED / TESTED / SCHEMA VERIFIED** on 2026-08-15.
 - Scope: define activity pool selection/count/order/completion configuration over existing `quiz_questions` and `quiz_question_options`.
 - Acceptance: vocabulary-backed image/word/audio, identify, concept, and simple-sentence questions can be represented; no fixed global option count, pass threshold, or reward amount.
-- Verify: repository selection and DTO validation tests.
+- Delivered: database-first SQLAlchemy mappings, request-scoped quiz repository/service, authenticated activity hydration, backend-evaluated answer submission, and existing session/attempt runtime storage.
+- Verify: focused repository/service/contract tests and live Alembic comparison (`0` operations).
 - Stop: if a required question cannot be represented because `flashcard_qr_id` is mandatory, record the smallest additive column/nullability proposal; do not create a parallel quiz table.
 
 ### LC4 — Configured Course Game contract
@@ -102,6 +104,7 @@ Unity/native AR and Render deployment readiness remain parallel independent lane
 
 ### LC5 — Learner asset-role and manifest contract
 
+- Status: **IMPLEMENTED / TESTED** on 2026-08-15. Semantic learner roles are projected from existing course fields and `media_assets`; no asset table, storage mutation, or content seed was added.
 - Scope: define semantic roles and deterministic object-path rules using Course fields plus existing `media_assets.section_id`, `asset_key`, `metadata`, and `public_url`.
 - Acceptance: vocabulary illustration/audio/coloring outline are reusable across activities; Course assets cannot be promoted to AR tracking assets; no new asset table.
 - Verify: manifest schema examples and duplicate/reuse checks.
@@ -121,6 +124,7 @@ Unity/native AR and Render deployment readiness remain parallel independent lane
 - Acceptance: `AnimalsAdventure` remains canonical, `AnimalsCourse` remains legacy, and legacy identifiers/API behavior are preserved where practical.
 - Verify: isolated seed dry-run/fixture validation before any approved database write.
 - Stop: no production seed execution in the same slice.
+- Status: **IMPLEMENTED / TESTED (seed definition); PRODUCTION APPLY SAFELY BLOCKED** on 2026-08-16. The executable canonical definition is `backend/database/seed/canonical_animals.py`; it contains five deterministic lessons, schema-v2 activities, relational quiz/game placeholders resolved at controlled database materialisation, and semantic LC5 asset requirements only. LC11-PROD-APPLY added a bounded SQLAlchemy reconciler and ran typed validation plus a real production dry-run. The dry-run made zero writes because Dog, Bird, Fish, and Rabbit lack required `flashcards.qr_id` owners for the existing non-null Quiz FK; only Cat resolves to `cat001`. Creating flashcards was outside the authorized content-table set, and unrelated QR substitution was rejected.
 
 ### LC8 — Animals asset manifest
 
@@ -128,6 +132,7 @@ Unity/native AR and Render deployment readiness remain parallel independent lane
 - Acceptance: every manifest entry has owner, semantic role, deterministic path, source/generation status, and consumers; no AR tracking image/width inference.
 - Verify: manifest completeness and duplicate-content audit.
 - Stop: no generation or upload.
+- Status: **IMPLEMENTED / TESTED** on 2026-08-16. `backend/database/seed/learner_asset_manifest.py` derives a versioned deterministic manifest from LC7 requirements and LC5 roles; the committed Animals artifact contains exactly 11 learner entries (6 existing SVG sources, 5 audio generation requirements), with no AR fields. LC10-B reconciled its physical destination to the existing shared public `AR_models` bucket while preserving the learner-only `courses/` namespace.
 
 ### LC9 — Generate approved learner assets
 
@@ -135,9 +140,11 @@ Unity/native AR and Render deployment readiness remain parallel independent lane
 - Acceptance: output dimensions/formats/quality match manifest; source and generated artifacts remain traceable.
 - Verify: asset inventory plus visual/audio review appropriate to each asset.
 - Stop: no Supabase upload.
+- Status: **IMPLEMENTED / VALIDATED LOCALLY** on 2026-08-16. All 11 LC8 entries have deterministic upload-ready local artifacts and SHA-256 metadata: six reviewed SVG sources were rasterized to RN-compatible PNGs, and five canonical English words were synthesized to validated WAV files with the established `en-US` female/normal-rate policy. LC10-B changed only bucket metadata, reused every byte/checksum, and published them downstream; LC9 generation itself made no schema, RN, Unity, or AR change.
 
 ### LC10 — Supabase learner asset upload and record verification
 
+- Status: **VERIFIED** on 2026-08-16 after LC10-B corrected the target to the existing shared public `AR_models` bucket. All eleven exact learner objects were uploaded without overwrite, authenticated/public byte-readback verified, bound through one AsyncSession transaction (one Course cover plus ten `media_assets` rows), fresh-session resolved 11/11, and rerun at `0 upload / 11 skip / 0 conflict`. Schema, policies, user state, AR metadata, Unity, and RN remained unchanged; LC11 may proceed.
 - Scope: upload approved LC9 outputs to existing approved bucket conventions and create/update existing `media_assets` records through an approved workflow.
 - Acceptance: deterministic paths, successful readback, correct semantic roles, no duplicate per-activity vocabulary uploads, and no AR asset mutation.
 - Verify: storage readback plus API asset resolution.
@@ -145,6 +152,7 @@ Unity/native AR and Render deployment readiness remain parallel independent lane
 
 ### LC11 — RN activity-driven Learning Session integration
 
+- Status: **PARTIAL / FIXTURE-SAFE INTEGRATION CODE_VERIFIED; PRODUCTION APPLY SAFELY BLOCKED** on 2026-08-16. Course cover, semantic vocabulary illustration/audio hydration, existing `expo-av` pronunciation playback, backend-ordered `learn_vocabulary → mini_game → quiz` dispatch, Memory Match reuse, Quiz reuse, and focused regression coverage are implemented. The normal learner API returned HTTP 200 but did not expose `animals-adventure-en-5-7`; production remains at `0/5` reachable schema-v2 Lessons. A typed real-production dry-run subsequently made zero writes because four canonical vocabulary concepts lack the `flashcards.qr_id` owners required by the existing Quiz FK. LC11 made no production content, Storage, media-row, schema, AR, Unity, or DQ-10 mutation. Device runtime is not verified.
 - Scope: connect CourseDetail→LessonPlayer→LearningSession to the ordered activity contract and existing session APIs; adapt flashcard/game/quiz primitives into renderers.
 - Acceptance: one Animals lesson traverses authored order, resumes, submits attempts, completes once, and displays backend-authoritative rewards; existing enrollment remains intact.
 - Verify: typecheck/focused tests, runtime verification, then Android device verification for the non-AR lesson flow.

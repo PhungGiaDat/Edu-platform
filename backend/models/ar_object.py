@@ -201,8 +201,8 @@ class ARObjectResponse(BaseModel):
     position: str
     rotation: str
     scale: str
-    mind_catalog_id: str
-    mind_target_index: int
+    mind_catalog_id: Optional[str] = None
+    mind_target_index: Optional[int] = None
     created_at: datetime
 
     class Config:
@@ -232,8 +232,11 @@ class ArObjectSchema(BaseModel):
     position: str
     rotation: str
     scale: str
-    mind_catalog_id: str
-    mind_target_index: int
+    # Imported legacy AR objects may not have MindAR catalog provenance.  This
+    # response is also used by the native transition path, where absence must
+    # stay explicit rather than being invented from a model or image URL.
+    mind_catalog_id: Optional[str] = None
+    mind_target_index: Optional[int] = None
     created_at: datetime
 
     class Config:

@@ -15,6 +15,11 @@ pymongo>=4.10.0
 dnspython>=2.6.0
 beanie>=1.27.0,<2.0.0
 
+# === Database - PostgreSQL ORM / migrations ===
+asyncpg>=0.31.0
+SQLAlchemy>=2.0.44,<2.1.0
+alembic>=1.14.0,<2.0.0
+
 # === Redis (Caching, Sessions, Rate Limiting) ===
 redis>=5.0.0
 

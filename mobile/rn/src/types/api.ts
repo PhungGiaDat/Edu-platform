@@ -14,6 +14,11 @@ export type {
   CourseDetail,
   Lesson,
   LessonActivity,
+  QuizActivityOption,
+  QuizActivityQuestion,
+  QuizActivityHydration,
+  QuizActivityAnswerRequest,
+  QuizActivityAnswerResult,
   LessonActivityType,
   LessonLearningBlocks,
   CompletionMode,
@@ -109,6 +114,32 @@ export interface UserMe {
   active_pet?: string | null;
 }
 
+/** Multi-marker combo DTO — mirrors backend ArCombinationSchema. */
+export interface ArCombinationSchema {
+  combo_id: string;
+  description: string;
+  required_tags: string[];
+  target_order?: string[] | null;
+  model_3d_url: string;
+  texture_url?: string | null;
+  image_2d_url: string;
+  combo_mind_url?: string | null;
+  bonus_xp: number;
+  center_transform?: {
+    position?: string | null;
+    rotation?: string | null;
+    scale?: string | null;
+  } | null;
+  semantic_result?: string | null;
+  animation?: string | null;
+  sound?: string | null;
+  phrase?: string | null;
+  priority: number;
+  active: boolean;
+  flashcard_set?: string | null;
+  cross_category_allowed: boolean;
+}
+
 export interface ARExperienceResponse {
   qr_id: string;
   word: string;
@@ -136,4 +167,10 @@ export interface ARExperienceResponse {
    */
   reference_image_url?: string | null;
   physical_width_m?: number | null;
+  /**
+   * Multi-marker combos that include this card's ar_tag.
+   * Empty array when no combos exist for this tag.
+   * Used by Unity-side MultiCardRegistry for combo lookup.
+   */
+  related_combos: readonly ArCombinationSchema[];
 }

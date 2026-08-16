@@ -62,15 +62,12 @@ class UserService:
     
     def _to_profile_response(self, user: Dict[str, Any]) -> Dict[str, Any]:
         """Transform user document to safe profile response"""
+        value = user.__dict__ if hasattr(user, "__dict__") else user
         return {
-            "id": str(user.get("_id", "")),
-            "email": user.get("email", ""),
-            "username": user.get("username", ""),
-            "full_name": user.get("full_name", ""),
-            "avatar_url": user.get("avatar_url"),
-            "is_active": user.get("is_active", True),
-            "is_verified": user.get("is_verified", False),
-            "created_at": user.get("created_at")
+            "id": str(value.get("id", "")), "email": value.get("email", ""),
+            "username": value.get("username", ""), "full_name": value.get("full_name", ""),
+            "avatar_url": value.get("avatar_url"), "is_active": value.get("is_active", True),
+            "is_verified": value.get("is_verified", False), "created_at": value.get("created_at"),
         }
 
 

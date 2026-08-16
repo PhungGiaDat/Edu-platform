@@ -87,16 +87,17 @@ export const ARScreen: React.FC<ARScreenProps> = ({ navigation, route }) => {
 
       // M3A — explicit native tracking boundary.
       // Step 1: validate. Step 2: produce CardDescriptorRN from validated
-      // NativeTrackingDto. Both steps are exercised; the descriptor is
-      // stored for M3B, but M3A does NOT call Unity runtime.
+      // NativeTrackingDto. Step 3: call startImageTrackingMulti to build
+      // the mutable runtime reference-image library in Unity.
       const availability = validateNativeTrackingMetadata(response.data);
       if (availability.kind === 'ready') {
         const descriptor = toCardDescriptorRN(availability.tracking);
-        // M3A STOP — do not call startImageTrackingMulti / no native
-        // runtime yet. Descriptor is prepared for M3B (Unity P3 gate).
-        if (descriptor) {
-          setNativeTracking({ state: 'ready', qrId: descriptor.qrId });
-        }
+        setNativeTracking({ state: 'ready', qrId: descriptor.qrId });
+
+        // Ele123 golden path: send the validated descriptor to Unity.
+        // Unity loads ARScene additively, builds MutableRuntimeReferenceImageLibrary,
+        // then enables ARTrackedImageManager to detect the physical card.
+        await unityBridge.startImageTrackingMulti({ cards: [descriptor] });
       } else {
         setNativeTracking({
           state: 'unavailable',

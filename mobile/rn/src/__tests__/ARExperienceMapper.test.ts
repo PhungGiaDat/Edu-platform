@@ -59,6 +59,7 @@ const baseResponse: ARExperienceResponse = {
   position: '0 0 0',
   rotation: '0 0 0',
   scale: '1 1 1',
+  related_combos: [],
 };
 
 // ---------------------------------------------------------------------------
@@ -126,6 +127,8 @@ test('mapToCardDescriptor returns ok when both backend native fields are present
     qrId: 'cat-meow',
     imageUrl: 'https://cdn.example/refs/cat.jpg',
     physicalWidthMeters: 0.085,
+    modelUrl: 'https://cdn.example/models/cat.glb',
+    word: 'cat',
   });
 });
 

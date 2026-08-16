@@ -18,8 +18,8 @@ import type {
   AddXpResponse,
   AddXpEventRequest,
   AddXpEventResponse,
-  toAddXpEventWireRequest,
 } from '../types/gamification';
+import { toAddXpEventWireRequest } from '../types/gamification';
 
 export interface UseGamificationResult {
   profile: UserStats | null;

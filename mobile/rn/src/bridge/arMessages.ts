@@ -13,6 +13,7 @@ export type ARMessageType =
   // Core AR
   | 'onArReady'
   | 'onError'
+  | 'onQrDecoded'
   | 'onImageDetected'
   | 'onImageTrackingLost'
   | 'onMultiImageDetected'

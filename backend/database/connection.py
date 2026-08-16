@@ -10,6 +10,7 @@ from typing import Optional
 
 # Import Beanie initialization and Documents
 from database.mongodb import init_mongodb, close_mongodb, get_client, get_database as get_mongodb_database, test_connection
+from database.postgres_connection import connect_postgres, close_postgres, postgres_core_enabled
 from models.flashcard import Flashcard
 from models.user_mongo import UserDocument, LearningProgressDocument, QuizAttemptDocument
 from models.pet import PetDocument
@@ -24,6 +25,7 @@ from models.cache_session import RedisCache
 from models.profile import ProfileContentDocument
 from models.flashcard_editor import FlashcardEditor
 from models.ar_combination import ARCombination  # NEW: Beanie Document for ar_combinations
+from models.gamification_event import GamificationEventDocument
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +107,10 @@ def get_database() -> motor.motor_asyncio.AsyncIOMotorDatabase:
 # ========== Startup/Shutdown Events ==========
 async def connect_to_database():
     """Call this on FastAPI startup"""
+    await connect_postgres()
+    if postgres_core_enabled():
+        logger.info("PostgreSQL core cutover enabled; MongoDB is archive-only and is not initialized")
+        return
     logger.info("🚀 [MongoDB] Initializing Beanie ODM and connections...")
     
     # Define models to register with Beanie
@@ -127,6 +133,8 @@ async def connect_to_database():
         FlashcardEditor,
         # NEW: AR Combinations model
         ARCombination,
+        # NEW: Gamification Event for XP idempotency
+        GamificationEventDocument,
     ]
     
     try:
@@ -144,6 +152,9 @@ async def connect_to_database():
 
 async def close_database_connection():
     """Call this on FastAPI shutdown"""
+    await close_postgres()
+    if postgres_core_enabled():
+        return
     logger.info("🔄 [MongoDB] Closing database connection...")
     await db_manager.close()
 

@@ -21,6 +21,7 @@ Lock in the authoritative native AR architecture: system ownership, runtime sequ
 ### Unity owns
 - ARSession lifecycle and AR subsystem management
 - AR camera and AR Foundation management
+- **QR code discovery while ARScene is active** (AR Foundation camera + ZXing)
 - Tracked-image lifecycle and ARTrackedImageManager
 - Runtime card instance management
 - 3D rendering, lighting, camera
@@ -110,6 +111,40 @@ Backend
 ---
 
 ## Runtime Sequence (Native AR Session)
+
+### QR Discovery (Unity-owned, ARScene active)
+
+When ARScene is active, Unity owns QR code discovery:
+
+```
+AR Foundation camera (ARCameraManager)
+  → ARCameraManager.TryGetLatestImage() at throttled interval (e.g., every 0.5–1.0s)
+  → XRCpuImage → byte[] pixels
+  → ZXing QR decode → qrId string
+  → if qrId not in knownQrIds:
+      → emit onQrDecoded({qrId}) to RN
+      → RN calls GET /api/v1/flashcard/{qrId}
+      → RN sends tracking payload to Unity
+      → Unity downloads reference image
+      → Unity adds to MutableRuntimeReferenceImageLibrary
+      → AR Foundation detects printed card → ARTrackedImage fires
+```
+
+**QR vs AR tracking target — two distinct operations:**
+- QR decode: AR Foundation camera → ZXing → qrId string (Unity-owned)
+- AR tracking: MutableRuntimeReferenceImageLibrary → feature-match → ARTrackedImage
+
+**State machine (Unity-side):**
+```
+UNKNOWN → SCANNING → QR_DETECTED → RESOLVING → REGISTERING → TRACKING
+```
+
+- Throttle: conservative interval (0.5–1.0s) — not every frame
+- Dedup: `knownQrIds` set suppresses repeated backend requests for same qrId
+- XRCpuImage: released immediately after decode — no holding resources
+- New qrId during active session: fully supported (pending → resolve → register)
+
+**RN QR scanning (non-AR flows):** React Native may retain QR scanning for navigation to non-AR screens. During active ARScene, Unity owns the camera.
 
 ### Session startup
 1. RN: user opens AR lesson

@@ -148,18 +148,34 @@ def build_repairs(
 
 
 def _old_value_clause(field_name: str, old_value: Any) -> dict[str, Any]:
+    """Build a CAS filter clause for a single field's expected prior value.
+
+    The clause is intentionally narrow: it must match exactly the state
+    the source row was observed in. Widening the clause (for example to
+    "match missing OR explicit null") silently over-matches when the
+    clause is ever used outside ``build_filter``, and the original
+    widening was only safe because ``build_filter`` always narrows by
+    ``_id`` (exactly one document). We keep that contract: this clause
+    matches its own state; ``build_filter`` is responsible for combining
+    the clauses and pinning the document.
+
+    Implementation notes
+    --------------------
+    * MISSING  -> ``{field: {"$exists": False}}`` matches only the absent
+      state. ``{x: null}`` would also match missing under MongoDB, so we
+      pin the absent state explicitly.
+    * explicit null -> ``{field: {"$type": "null"}}`` matches only an
+      explicit null. ``{x: null}`` alone would also match a missing
+      field; ``$type: "null"`` is the documented way to require the
+      field is present and BSON-null. (The ``$type`` name comes from
+      the BSON type alias table — alias 10.)
+    * present scalar -> ``$or`` of equality forms. This matches the
+      pre-existing behaviour for non-null scalars.
+    """
     if old_value is MISSING:
-        # Match "field absent" OR "field explicitly null". Without both, an
-        # operator overwriting a missing field with null would never see
-        # their document matched (conflated with bare absence). This clause
-        # is intentionally permissive: it is combined with other clauses in
-        # ``build_filter`` so it cannot over-match.
-        return {
-            "$or": [
-                {field_name: {"$exists": False}},
-                {field_name: {"$eq": None}},
-            ]
-        }
+        return {field_name: {"$exists": False}}
+    if old_value is None:
+        return {field_name: {"$type": "null"}}
     return {"$or": [{field_name: old_value}, {field_name: {"$eq": old_value}}]}
 
 

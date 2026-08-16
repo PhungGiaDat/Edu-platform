@@ -61,6 +61,7 @@ Requirement status: `CURRENT` (existing), `TARGET` (migration goal), `FUTURE` (p
 **TRACK-REQ-009 [TARGET][SHOULD]** — Reference images SHOULD be downloaded at runtime from `reference_image_url` before adding to the mutable library.
 **TRACK-REQ-010 [TARGET][MUST]** — Image tracking lifecycle: `added` → `updated` → `removed` per `ARTrackedImage`.
 **TRACK-REQ-011 [TARGET][MUST]** — `onImageTrackingLost` fires ONLY from the `removed` path, NOT from the `updated` path (regression tested by `ARSessionManagerRegressionTests`).
+**TRACK-REQ-012 [TARGET][MUST]** — Unity ARScene MUST own QR code discovery via AR Foundation camera + ZXing while ARScene is active. React Native MAY retain QR scanning for non-AR flows (e.g., lesson-based entry without camera).
 
 ---
 

@@ -19,6 +19,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Pressable,
+  Image,
 } from 'react-native';
 import {
   useFocusEffect,
@@ -81,7 +82,7 @@ export const CourseDetailScreen: React.FC = () => {
   const nav = navigation as unknown as {
     navigate: (
       route: string,
-      params: { lessonId: string; lessonTitle: string; qrCode?: string },
+      params: { lessonId: string; lessonTitle: string; qrCode?: string; lesson?: Lesson },
     ) => void;
   };
 
@@ -122,6 +123,7 @@ export const CourseDetailScreen: React.FC = () => {
         lessonId: lesson.lesson_id,
         lessonTitle: lesson.title,
         qrCode: lesson.qr_code,
+        lesson,
       });
     },
     [nav],
@@ -185,6 +187,9 @@ export const CourseDetailScreen: React.FC = () => {
           <>
             {/* ─── Hero ─────────────────────────────────────────────── */}
             <View style={styles.hero}>
+              {course?.thumbnail_url ? (
+                <Image source={{ uri: course.thumbnail_url }} style={styles.heroCover} />
+              ) : null}
               <View style={styles.heroTop}>
                 <View style={styles.heroText}>
                   <Text style={styles.heroTitle} numberOfLines={2}>
@@ -510,6 +515,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.8)',
   },
+  heroCover: { width: '100%', height: 180, borderRadius: RADIUS.lg, marginBottom: SPACING.md, resizeMode: 'cover' },
   heroTop: {
     flexDirection: 'row',
     alignItems: 'flex-start',

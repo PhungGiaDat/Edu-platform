@@ -209,6 +209,7 @@ describe('Backend contract — ARExperienceResponse.audio_url', () => {
       position: '0 0 -1.5',
       rotation: '0 0 0',
       scale: '1 1 1',
+      related_combos: [],
     };
 
     assert.strictEqual(
@@ -231,6 +232,7 @@ describe('Backend contract — ARExperienceResponse.audio_url', () => {
       position: '0 0 -1',
       rotation: '0 0 0',
       scale: '1 1 1',
+      related_combos: [],
     };
 
     // audio_url → vocabulary pronunciation (RN plays this)

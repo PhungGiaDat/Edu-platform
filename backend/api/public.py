@@ -7,8 +7,8 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import logging
 
-from models.flashcard import Flashcard
-from services.flashcard_service import FlashcardService, get_flashcard_service
+from database.postgres_connection import postgres_core_enabled
+from repositories.flashcard_repository import get_flashcard_repository
 from models.flashcard_editor import FlashcardEditor
 
 logger = logging.getLogger(__name__)
@@ -48,8 +48,7 @@ async def get_flashcard_by_qr(
     logger.info(f"[Public] GET /f/{qr_id}")
 
     try:
-        # Get flashcard from database
-        flashcard = await Flashcard.find_one(Flashcard.qr_id == qr_id)
+        flashcard = await get_flashcard_repository().get_by_qr_id(qr_id)
         
         if not flashcard:
             raise HTTPException(
@@ -58,9 +57,11 @@ async def get_flashcard_by_qr(
             )
 
         # Try to get canvas editor state
-        editor_state = await FlashcardEditor.find_one(
-            FlashcardEditor.flashcard_id == qr_id
-        )
+        editor_state = None
+        if not postgres_core_enabled():
+            editor_state = await FlashcardEditor.find_one(
+                FlashcardEditor.flashcard_id == qr_id
+            )
 
         editor_elements = None
         canvas_width = None
@@ -72,14 +73,14 @@ async def get_flashcard_by_qr(
             canvas_height = editor_state.canvas_height
 
         return PublicFlashcardResponse(
-            qr_id=flashcard.qr_id,
-            word=flashcard.word,
-            translation=flashcard.translation,
-            image_url=flashcard.image_url,
-            audio_url=flashcard.audio_url,
-            category=flashcard.category,
-            ar_tag=flashcard.ar_tag,
-            image_animation_type=flashcard.image_animation_type,
+            qr_id=flashcard["qr_id"],
+            word=flashcard["word"],
+            translation=flashcard["translation"],
+            image_url=flashcard["image_url"],
+            audio_url=flashcard.get("audio_url"),
+            category=flashcard["category"],
+            ar_tag=flashcard.get("ar_tag"),
+            image_animation_type=flashcard.get("image_animation_type"),
             editor_elements=editor_elements,
             canvas_width=canvas_width,
             canvas_height=canvas_height
@@ -106,7 +107,7 @@ async def verify_qr_code(
     """
     logger.info(f"[Public] GET /verify_qr?qr_data={qr_data}")
 
-    flashcard = await Flashcard.find_one(Flashcard.qr_id == qr_data)
+    flashcard = await get_flashcard_repository().get_by_qr_id(qr_data)
     
     if not flashcard:
         return {
@@ -116,9 +117,9 @@ async def verify_qr_code(
     
     return {
         "valid": True,
-        "flashcard_id": flashcard.qr_id,
-        "word": flashcard.word,
-        "category": flashcard.category
+        "flashcard_id": flashcard["qr_id"],
+        "word": flashcard["word"],
+        "category": flashcard["category"]
     }
 
 
@@ -133,7 +134,7 @@ async def get_ar_data(
     """
     logger.info(f"[Public] GET /ar_data/{qr_id}")
 
-    flashcard = await Flashcard.find_one(Flashcard.qr_id == qr_id)
+    flashcard = await get_flashcard_repository().get_by_qr_id(qr_id)
     
     if not flashcard:
         raise HTTPException(
@@ -142,10 +143,10 @@ async def get_ar_data(
         )
     
     return {
-        "qr_id": flashcard.qr_id,
-        "ar_tag": flashcard.ar_tag,
-        "image_url": flashcard.image_url,
-        "has_ar": bool(flashcard.ar_tag),
-        "has_audio": bool(flashcard.audio_url),
-        "audio_url": flashcard.audio_url
+        "qr_id": flashcard["qr_id"],
+        "ar_tag": flashcard.get("ar_tag"),
+        "image_url": flashcard["image_url"],
+        "has_ar": bool(flashcard.get("ar_tag")),
+        "has_audio": bool(flashcard.get("audio_url")),
+        "audio_url": flashcard.get("audio_url")
     }

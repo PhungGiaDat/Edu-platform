@@ -29,6 +29,7 @@ import { MemoryPairsScreen } from '../screens/games/MemoryPairsScreen';
 import { ColorLearnScreen } from '../screens/games/ColorLearnScreen';
 import { BridgeDiagnosticScreen } from '../screens/BridgeDiagnosticScreen';
 import { BRAND, COLORS } from '../design/tokens';
+import type { Lesson } from '../types/course';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -36,7 +37,7 @@ export type RootStackParamList = {
   CourseList: undefined;
   CourseDetail: { courseId: string; courseTitle: string };
   LearningPath: undefined;
-  LessonPlayer: { lessonId: string; lessonTitle: string; qrCode?: string };
+  LessonPlayer: { lessonId: string; lessonTitle: string; qrCode?: string; lesson?: Lesson };
   Pets: undefined;
   Profile: undefined;
   AR: { lessonId: string; lessonTitle: string };

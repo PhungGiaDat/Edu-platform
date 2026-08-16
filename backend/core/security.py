@@ -12,7 +12,7 @@ from typing import Optional, Union, Any
 from datetime import datetime, timedelta
 import logging
 from settings import settings
-from models.user_mongo import UserDocument
+from repositories.postgres_user_repository import PostgresUser, PostgresUserRepository
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ def create_access_token(
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme)
-) -> UserDocument:
+) -> PostgresUser:
     """
     FastAPI dependency to get current authenticated user Document from MongoDB
     """
@@ -120,7 +120,7 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    user = await UserDocument.get(token_data.sub)
+    user = await PostgresUserRepository().get_by_id(token_data.sub)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -130,8 +130,8 @@ async def get_current_user(
     return user
 
 async def get_current_active_superuser(
-    current_user: UserDocument = Depends(get_current_user),
-) -> UserDocument:
+    current_user: PostgresUser = Depends(get_current_user),
+) -> PostgresUser:
     if not current_user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
@@ -143,8 +143,8 @@ async def get_current_active_superuser(
 # ========== Teacher Role Check ==========
 
 async def get_current_teacher(
-    current_user: UserDocument = Depends(get_current_user),
-) -> UserDocument:
+    current_user: PostgresUser = Depends(get_current_user),
+) -> PostgresUser:
     """
     FastAPI dependency to ensure the current user has teacher role
     

@@ -40,6 +40,7 @@ export const MOCK_AR_CARDS = [
     scale: '1 1 1',
     reference_image_url: SAMPLE_REF_IMAGES.cat,
     physical_width_m: 0.085,
+    related_combos: [],
   },
   {
     qr_id: 'flashcard_dog',
@@ -54,6 +55,7 @@ export const MOCK_AR_CARDS = [
     scale: '1 1 1',
     reference_image_url: SAMPLE_REF_IMAGES.dog,
     physical_width_m: 0.085,
+    related_combos: [],
   },
   {
     qr_id: 'flashcard_chicken',
@@ -68,6 +70,7 @@ export const MOCK_AR_CARDS = [
     scale: '1 1 1',
     reference_image_url: SAMPLE_REF_IMAGES.chicken,
     physical_width_m: 0.08,
+    related_combos: [],
   },
   {
     qr_id: 'flashcard_egg',
@@ -82,6 +85,7 @@ export const MOCK_AR_CARDS = [
     scale: '1 1 1',
     reference_image_url: SAMPLE_REF_IMAGES.egg,
     physical_width_m: 0.075,
+    related_combos: [],
   },
 ] as const;
 

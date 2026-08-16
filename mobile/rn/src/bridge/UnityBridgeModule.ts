@@ -135,6 +135,23 @@ class UnityBridgeModule {
   }
 
   /**
+   * Low-level bridge: sends an arbitrary method + JSON payload to Unity.
+   * Used for internal lifecycle messages (e.g. card resolution acknowledgement).
+   *
+   * Prefer typed wrappers (startImageTrackingMulti, triggerCombo, etc.) for
+   * named operations. This method bypasses type safety — callers must ensure
+   * the method name is understood by RNMessageReceiver.
+   */
+  async sendToUnity(method: string, jsonPayload: string): Promise<void> {
+    if (!this.isAvailable) return;
+    try {
+      await UnityBridge.sendToUnity(method, jsonPayload);
+    } catch (error) {
+      console.error(`UnityBridge: sendToUnity(${method}) failed`, error);
+    }
+  }
+
+  /**
    * Triggers a combo between two cards.
    */
   async triggerCombo(cardA: string, cardB: string): Promise<void> {

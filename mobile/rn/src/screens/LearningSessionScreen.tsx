@@ -30,13 +30,14 @@
  * - Session duration policy (DQ-10 config)
  * - AR tracking logic (Unity bridge owns it)
  */
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -52,8 +53,14 @@ import { SessionProgress } from '../components/SessionProgress';
 import { SessionTimeIndicator } from '../components/SessionTimeIndicator';
 import { SessionOverlayRoot } from '../components/SessionOverlayRoot';
 import { CompletionShell } from '../components/CompletionShell';
+import { QuizActivityRenderer } from '../components/QuizActivityRenderer';
+import { CourseGameActivityRenderer } from '../components/CourseGameActivityRenderer';
+import { LearnVocabularyActivityRenderer } from '../components/LearnVocabularyActivityRenderer';
+import { activityAtCompletedCount, orderLessonActivities } from '../components/lessonActivityRuntime';
 import { SessionProvider, useSession } from '../hooks/SessionContext';
+import { coursesApi } from '../services/api';
 import type { SessionConfig } from '../types/session-state';
+import type { LessonActivity } from '../types/course';
 import {
   BRAND,
   COLORS,
@@ -121,10 +128,23 @@ export interface LearningSessionScreenProps {
   onAROpen?: () => void;
 
   /**
+   * Optional schema-v2 activity rendered inside this existing session shell.
+   * Omit it to preserve the legacy compositional children slot.
+   */
+  activity?: LessonActivity;
+
+  /** Backend-authored schema-v2 sequence. Order is read from each activity. */
+  activities?: LessonActivity[];
+
+  /** Required only for an activity that makes a backend request. */
+  courseId?: string;
+  lessonId?: string;
+
+  /**
    * Content slot for the learning activity (vocabulary/flashcard/quiz).
    * Receives currentStepIndex for keyed rendering.
    */
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 // ---------------------------------------------------------------------------
@@ -139,6 +159,10 @@ const LearningSessionInner: React.FC<LearningSessionScreenProps> = ({
   xpReward,
   onSessionEnd,
   onAROpen,
+  activity,
+  activities,
+  courseId,
+  lessonId,
   children,
 }) => {
   const navigation = useNavigation();
@@ -151,6 +175,15 @@ const LearningSessionInner: React.FC<LearningSessionScreenProps> = ({
     startBreak,
     setStatus,
   } = useSession();
+  const [activityRuntimeState, setActivityRuntimeState] = useState<'idle' | 'loading' | 'ready' | 'error'>(
+    activities?.length || activity ? 'loading' : 'idle',
+  );
+
+  const orderedActivities = useMemo(
+    () => orderLessonActivities(activities ?? (activity ? [activity] : [])),
+    [activities, activity],
+  );
+  const currentActivity = activityAtCompletedCount(orderedActivities, sessionState.completedCount);
 
   // Press animation for the AR card
   const arCardScale = useSharedValue(1);
@@ -168,6 +201,16 @@ const LearningSessionInner: React.FC<LearningSessionScreenProps> = ({
     // startSession only depends on totalSteps, stable across re-renders
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!orderedActivities.length || !courseId || !lessonId) return;
+    let active = true;
+    setActivityRuntimeState('loading');
+    coursesApi.startLessonSession(courseId, lessonId)
+      .then(() => { if (active) setActivityRuntimeState('ready'); })
+      .catch(() => { if (active) setActivityRuntimeState('error'); });
+    return () => { active = false; };
+  }, [courseId, lessonId, orderedActivities.length]);
 
   // ── Notify parent when session ends ──────────────────────────────────────
   useEffect(() => {
@@ -197,6 +240,38 @@ const LearningSessionInner: React.FC<LearningSessionScreenProps> = ({
 
   // ── AR card visual config ───────────────────────────────────────────────
   const xpDisplay = xpReward ?? '+50 XP';
+
+  const activityContent =
+    currentActivity?.type === 'learn_vocabulary' && courseId && lessonId ? (
+      <LearnVocabularyActivityRenderer
+        activity={currentActivity}
+        courseId={courseId}
+        lessonId={lessonId}
+        onComplete={handleAdvance}
+      />
+    ) : currentActivity?.type === 'quiz' && courseId && lessonId ? (
+      <QuizActivityRenderer
+        activity={currentActivity}
+        courseId={courseId}
+        lessonId={lessonId}
+        onComplete={handleAdvance}
+      />
+    ) : currentActivity?.type === 'mini_game' && courseId && lessonId ? (
+      <CourseGameActivityRenderer activity={currentActivity} courseId={courseId} lessonId={lessonId} onComplete={handleAdvance} />
+    ) : (
+      children
+    );
+
+  const learningContent = activityRuntimeState === 'loading' ? (
+    <ClayCard variant="lg" style={styles.stateCard}>
+      <ActivityIndicator color={BRAND.skyBlue} />
+      <Text style={styles.stateText}>Đang chuẩn bị bài học…</Text>
+    </ClayCard>
+  ) : activityRuntimeState === 'error' ? (
+    <ClayCard variant="lg" style={styles.stateCard}>
+      <Text style={styles.stateText}>Không thể bắt đầu phiên học. Con thử mở lại bài nhé!</Text>
+    </ClayCard>
+  ) : activityContent;
 
   if (isCompleted) {
     return (
@@ -259,7 +334,7 @@ const LearningSessionInner: React.FC<LearningSessionScreenProps> = ({
 
         {/* ── Learning Content slot ─────────────────────────────────────── */}
         <View style={styles.section}>
-          {children}
+          {learningContent}
         </View>
 
         {/* ── Session Time Indicator ─────────────────────────────────────── */}
@@ -379,6 +454,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.base,
     paddingBottom: SPACING.xl,
   },
+  stateCard: { alignItems: 'center', gap: SPACING.md, paddingVertical: SPACING.xl },
+  stateText: { color: COLORS.textSecondary, fontSize: FONT.sizes.md, fontWeight: '600', textAlign: 'center' },
 
   // Hero
   hero: {

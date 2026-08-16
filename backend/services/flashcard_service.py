@@ -151,6 +151,10 @@ class FlashcardService:
 def get_flashcard_service() -> FlashcardService:
     """Factory function for dependency injection"""
     flashcard_repo = get_flashcard_repository()
-    ai_service = get_ai_service()
+    # Qdrant/AI is not required for ordinary PostgreSQL-backed card reads;
+    # constructing its legacy Mongo config repository would reintroduce a
+    # forbidden normal-path dependency.
+    from database.postgres_connection import postgres_core_enabled
+    ai_service = None if postgres_core_enabled() else get_ai_service()
     return FlashcardService(flashcard_repo, ai_service)
 

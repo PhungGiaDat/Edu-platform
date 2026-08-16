@@ -1,4 +1,6 @@
 # backend/services/redis_service.py
+from __future__ import annotations
+
 """
 Redis Service - Core Redis Client with Connection Pooling
 Provides unified interface for Redis operations with graceful degradation.
@@ -10,9 +12,17 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 from contextlib import asynccontextmanager
 
-import redis.asyncio as redis
-from redis.asyncio.connection import ConnectionPool
-from redis.exceptions import RedisError, ConnectionError as RedisConnectionError
+try:
+    import redis.asyncio as redis
+    from redis.asyncio.connection import ConnectionPool
+    from redis.exceptions import RedisError, ConnectionError as RedisConnectionError
+    REDIS_CLIENT_AVAILABLE = True
+except ModuleNotFoundError:  # Optional local/test dependency.
+    redis = None
+    ConnectionPool = Any
+    RedisError = Exception
+    RedisConnectionError = ConnectionError
+    REDIS_CLIENT_AVAILABLE = False
 
 from settings import settings
 
@@ -41,6 +51,9 @@ class RedisService:
         Initialize Redis connection pool.
         Returns True if successful, False if Redis is unavailable.
         """
+        if not REDIS_CLIENT_AVAILABLE:
+            logger.info("[Redis] Python client unavailable; using in-memory fallback")
+            return False
         async with self._lock:
             if self._client is not None and self._is_connected:
                 return True

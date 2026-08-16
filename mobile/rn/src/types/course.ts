@@ -66,9 +66,22 @@ export type LessonActivity =
   | LessonActivityBase<'memory_match', PracticeReferences, 'all_items' | 'interaction_complete'>
   | LessonActivityBase<'coloring', { vocabulary_id: string; outline_asset_id: string }, 'interaction_complete'>
   | LessonActivityBase<'mini_game', { game_type: 'catch_word' | 'drag_match' | 'memory_match' | 'word_scramble' | 'coloring'; mini_game_item_ids: number[] }, 'game_complete'>
-  | LessonActivityBase<'quiz', { question_ids: number[]; question_count?: number | null; order_policy: 'authored' | 'random'; passing_score?: number | null }, 'quiz_complete'>
+  | LessonActivityBase<'quiz', { question_ids: number[]; question_count?: number | null; order_policy: 'authored' | 'random' }, 'quiz_complete'>
   | LessonActivityBase<'read_aloud', { story_id: string }, 'all_items'>
   | LessonActivityBase<'pronunciation', { vocabulary_ids: string[] }, 'all_items' | 'interaction_complete'>;
+
+export interface QuizActivityOption { option_id: string; label: string; order: number; }
+export interface QuizActivityQuestion { question_id: number; question_type: 'multiple_choice' | 'true_false'; prompt: string; flashcard_qr_id: string; options: QuizActivityOption[]; }
+export interface QuizActivityHydration { activity_id: string; questions: QuizActivityQuestion[]; }
+export interface QuizActivityAnswerRequest { question_id: number; option_id: string; }
+export interface QuizActivityAnswerResult { question_id: number; correct: boolean; score: number; completed: boolean; session: LessonSession; }
+export type LearnerAssetRole = 'course_cover' | 'warm_up_visual' | 'vocabulary_illustration' | 'pronunciation_audio' | 'coloring_outline';
+export interface ResolvedLearnerAsset { role: LearnerAssetRole; url: string; media_type: 'video' | 'audio' | 'image' | 'sticker' | 'model' | 'texture' | 'mind'; metadata: Record<string, unknown>; }
+export interface MemoryMatchCard { card_id: string; pair_id: string; type: 'word' | 'image'; content?: string | null; asset?: ResolvedLearnerAsset | null; }
+export interface MiniGameActivityHydration { activity_id: string; game_type: 'memory_match'; cards: MemoryMatchCard[]; }
+export interface MiniGameCompleteResult { completed: boolean; session: LessonSession; }
+export interface VocabularyActivityItem { vocabulary_id: string; illustration: ResolvedLearnerAsset; pronunciation_audio: ResolvedLearnerAsset; }
+export interface VocabularyActivityHydration { activity_id: string; items: VocabularyActivityItem[]; }
 
 export interface LessonLearningBlocks {
   schema_version: 1 | 2;
@@ -99,6 +112,7 @@ export interface Course {
   course_id: string;
   title: string;
   description: string;
+  thumbnail_url?: string | null;
   category_key: string;
   image_url?: string;
   lesson_count: number;

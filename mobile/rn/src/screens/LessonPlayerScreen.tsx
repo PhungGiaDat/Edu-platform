@@ -33,6 +33,7 @@ import { LessonCategoryBadge } from '../components/LessonCategoryBadge';
 import { LexiOrb } from '../components/LexiOrb';
 import { LexiBottomSheet } from '../components/LexiBottomSheet';
 import { ClayIcon } from '../components/icons/ClayIcons';
+import { LearningSessionScreen } from './LearningSessionScreen';
 import {
   BRAND,
   COLORS,
@@ -49,7 +50,7 @@ export const LessonPlayerScreen: React.FC = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'LessonPlayer'>>();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { lessonTitle, qrCode } = route.params;
+  const { lessonTitle, qrCode, lesson } = route.params;
 
   const nav = navigation as unknown as {
     goBack: () => void;
@@ -72,6 +73,26 @@ export const LessonPlayerScreen: React.FC = () => {
       lessonTitle: route.params.lessonTitle,
     });
   };
+
+  // Schema-v2 lessons stay in the existing lesson route and consume the
+  // backend-authored activity sequence inside the canonical session shell.
+  // Other/legacy lesson shapes retain the existing player unchanged.
+  const activities = lesson?.learning_blocks.schema_version === 2
+    ? lesson.learning_blocks.activities
+    : [];
+  if (activities.length > 0 && lesson) {
+    return (
+      <LearningSessionScreen
+        lessonTitle={lessonTitle}
+        qrCode={qrCode}
+        totalSteps={activities.length}
+        activities={activities}
+        courseId={lesson.course_id}
+        lessonId={lesson.lesson_id}
+        onAROpen={handleAROpen}
+      />
+    );
+  }
 
   return (
     <View style={styles.container}>

@@ -541,6 +541,14 @@ interface UnityARExperiencePayload {
 
 **MOB-ERR-REQ-032 [TARGET][MUST]** — The bridge contract is image-tracking-centric. Plane-based placement is not part of the native AR target architecture.
 
+### B-3. QR Discovery Ownership
+
+**MOB-QR-REQ-015 [TARGET][MUST]** — While ARScene is active, Unity owns QR code discovery via AR Foundation camera + ZXing. Unity emits `onQrDecoded({qrId})` to React Native.
+
+**MOB-QR-REQ-016 [TARGET][MUST]** — React Native receives `onQrDecoded`, calls `GET /api/v1/flashcard/{qrId}`, then sends the tracking payload to Unity via the bridge.
+
+**MOB-QR-REQ-017 [TARGET][SHOULD]** — React Native QR scanning remains available for non-AR flows (e.g., navigation to lesson content without entering ARScene).
+
 ---
 
 ## L. ACCEPTANCE CRITERIA

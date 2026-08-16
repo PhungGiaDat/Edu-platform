@@ -156,33 +156,46 @@ async def _fetch_validator_metadata(db) -> tuple[dict | None, str | None]:
     """Read the live validator/validationAction without mutating anything.
 
     The original "readback" called ``db.command({"collMod": ..., "validator": {}})``
-    which actually clears the rule we just installed. The safe equivalent is
-    a ``listCollections`` projection that returns the collection options
-    (validator, validationLevel, validationAction) without writing.
+    which actually clears the rule we just installed. The safe equivalent
+    is to read the collection options via the official ``listCollections``
+    helper. We support two equivalent shapes so the function works against
+    any of:
+
+    * ``db.list_collections(filter={"name": "ar_objects"})`` — the
+      recommended Motor helper, which returns a CommandCursor. Only
+      ``to_list`` and ``__aiter__`` are needed; both are part of the
+      public cursor protocol.
+    * ``db.command({"listCollections": 1, "filter": ...})`` — the raw
+      command. PyMongo/Motor return a plain ``dict`` (the wire reply);
+      we unpack ``firstBatch`` directly. This branch is the production
+      truth and the previous ``hasattr`` ladder masked the
+      "listCollections wire reply is a dict" fact, which made the
+      helper crash on the very first production call.
+
+    Both paths feed the same ``rows`` list, which is then mapped to the
+    MongoDB wire shape ``{name, options: {validator, validationAction}}``.
     """
-    cursor = await db.command(
-        {
-            "listCollections": 1,
-            "filter": {"name": "ar_objects"},
-        }
-    )
-    rows = []
-    if hasattr(cursor, "to_list"):
-        rows = await cursor.to_list(length=1)
-    elif hasattr(cursor, "__aiter__"):
-        async for row in cursor:
-            rows.append(row)
-            if len(rows) >= 1:
-                break
-    else:
-        # Sync-style cursor (defensive — motor usually returns async).
-        for row in cursor:
-            rows.append(row)
-            if len(rows) >= 1:
-                break
+    rows: list[Mapping[str, Any]] = []
+    if hasattr(db, "list_collections"):
+        # Preferred Motor helper. ``list_collections`` is synchronous; it
+        # returns a cursor; only ``to_list`` awaits.
+        cursor = db.list_collections(filter={"name": "ar_objects"})
+        if hasattr(cursor, "to_list"):
+            rows = await cursor.to_list(length=1)
+        else:
+            async for row in cursor:  # pragma: no cover - defensive
+                rows.append(row)
+                if len(rows) >= 1:
+                    break
+    else:  # pragma: no cover - alternate path used by some fakes/tests
+        reply = await db.command({"listCollections": 1, "filter": {"name": "ar_objects"}})
+        if isinstance(reply, Mapping):
+            first_batch = reply.get("cursor", {}).get("firstBatch") if isinstance(reply.get("cursor"), Mapping) else None
+            if isinstance(first_batch, list):
+                rows = first_batch[:1]
     if not rows:
         return None, "collection ar_objects not found"
-    options = rows[0].get("options") or {}
+    options = (rows[0] or {}).get("options") or {}
     validator = options.get("validator")
     action = options.get("validationAction")
     return validator, action

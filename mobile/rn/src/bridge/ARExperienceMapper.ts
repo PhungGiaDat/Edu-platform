@@ -72,36 +72,43 @@ export const validateNativeTrackingMetadata = (
   const hasImage =
     typeof apiResponse.reference_image_url === 'string' &&
     apiResponse.reference_image_url.length > 0;
-  const hasWidth =
-    typeof apiResponse.physical_width_m === 'number' &&
-    Number.isFinite(apiResponse.physical_width_m) &&
-    apiResponse.physical_width_m > 0;
 
-  if (hasImage && hasWidth) {
+  // physical_width_m is optional in the dev path.
+  // null/undefined is acceptable (unknown-size registration, widthMeters=0).
+  // Explicitly invalid values (NaN, negative) still fail.
+  const widthValue = apiResponse.physical_width_m;
+  const hasValidWidth =
+    widthValue == null ||
+    (typeof widthValue === 'number' && Number.isFinite(widthValue) && widthValue > 0);
+
+  if (!hasValidWidth) {
     return {
-      kind: 'ready',
-      tracking: {
-        qrId: apiResponse.qr_id,
-        referenceImageUrl: apiResponse.reference_image_url as string,
-        physicalWidthMeters: apiResponse.physical_width_m as number,
-      },
+      kind: 'unavailable',
+      reason: 'invalid_physical_width',
+      qrId: apiResponse.qr_id,
     };
   }
 
-  // Discriminate reason for downstream error routing.
-  let reason: 'missing_reference_image' | 'missing_physical_width' | 'both';
-  if (!hasImage && !hasWidth) {
-    reason = 'both';
-  } else if (!hasImage) {
-    reason = 'missing_reference_image';
-  } else {
-    reason = 'missing_physical_width';
+  if (!hasImage) {
+    return {
+      kind: 'unavailable',
+      reason: 'missing_reference_image',
+      qrId: apiResponse.qr_id,
+    };
   }
 
+  // Image present; width is null (dev) or a valid positive number.
   return {
-    kind: 'unavailable',
-    reason,
-    qrId: apiResponse.qr_id,
+    kind: 'ready',
+    tracking: {
+      qrId: apiResponse.qr_id,
+      referenceImageUrl: apiResponse.reference_image_url as string,
+      // 0 means unknown size — AR Foundation uses the unknown-size registration path.
+      physicalWidthMeters: widthValue ?? 0,
+      // Model + word from the same backend response — used by Unity for GLTFast spawn.
+      modelUrl: apiResponse.model_url,
+      word: apiResponse.word,
+    },
   };
 };
 
@@ -131,6 +138,8 @@ export const toCardDescriptorRN = (
   qrId: tracking.qrId,
   imageUrl: tracking.referenceImageUrl,
   physicalWidthMeters: tracking.physicalWidthMeters,
+  modelUrl: tracking.modelUrl,
+  word: tracking.word,
 });
 
 // ---------------------------------------------------------------------------

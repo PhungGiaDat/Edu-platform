@@ -14,7 +14,7 @@
  * Created: C14 (tap-to-hear + visual feedback).
  */
 
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 
 // ---------------------------------------------------------------------------
@@ -78,6 +78,11 @@ export function useFlashcardAudio(): FlashcardAudioResult {
     forceUpdate((n) => n + 1);
   }, []);
 
+  const clearError = useCallback(() => {
+    lastErrorRef.current = null;
+    forceUpdate((n) => n + 1);
+  }, []);
+
   const playVocabulary = useCallback(
     async (audioUrl?: string | null): Promise<void> => {
       // ── Missing audio metadata — non-blocking no-op ──────────────────────
@@ -106,7 +111,7 @@ export function useFlashcardAudio(): FlashcardAudioResult {
         );
         soundRef.current = sound;
         setIsPlaying(true);
-        reportError({ kind: 'MISSING_AUDIO_METADATA' }); // clear any stale error
+        clearError();
       } catch (err) {
         reportError({
           kind: 'AUDIO_LOAD_OR_PLAYBACK_FAILED',
@@ -115,7 +120,7 @@ export function useFlashcardAudio(): FlashcardAudioResult {
         setIsPlaying(false);
       }
     }, // end playVocabulary
-  [reportError],
+  [clearError, reportError],
 );
 
   const stop = useCallback(async (): Promise<void> => {
@@ -138,6 +143,12 @@ export function useFlashcardAudio(): FlashcardAudioResult {
       return;
     }
     setIsPlaying(!status.didJustFinish && !status.isBuffering && status.isPlaying);
+  }, []);
+
+  useEffect(() => () => {
+    const sound = soundRef.current;
+    soundRef.current = null;
+    if (sound) void sound.unloadAsync().catch(() => {});
   }, []);
 
   return {

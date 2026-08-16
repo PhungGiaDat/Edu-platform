@@ -48,6 +48,10 @@ export interface CardDescriptorRN {
   qrId: string;
   imageUrl: string;
   physicalWidthMeters: number;
+  /** 3D model URL — sent alongside tracking data so Unity can spawn content on detection. */
+  modelUrl?: string;
+  /** Card word — sent alongside tracking data. */
+  word?: string;
 }
 
 /**
@@ -69,7 +73,7 @@ export interface CardDescriptorRN {
  */
 export type CardDescriptorSource =
   | { kind: 'ok'; descriptor: CardDescriptorRN }
-  | { kind: 'unavailable'; reason: 'missing_reference_image' | 'missing_physical_width' | 'both'; qrId: string };
+  | { kind: 'unavailable'; reason: 'missing_reference_image' | 'missing_physical_width' | 'both' | 'invalid_physical_width'; qrId: string };
 
 /**
  * RN-side error code emitted when backend response is missing native AR
@@ -124,6 +128,10 @@ export interface NativeTrackingDto {
   qrId: string;
   referenceImageUrl: string;
   physicalWidthMeters: number;
+  /** 3D model URL — used by Unity for GLTFast instantiation when card is tracked. */
+  modelUrl?: string;
+  /** Card word — sent to Unity alongside the model. */
+  word?: string;
 }
 
 /**
@@ -141,7 +149,7 @@ export interface NativeTrackingDto {
  */
 export type NativeTrackingAvailability =
   | { kind: 'ready'; tracking: NativeTrackingDto }
-  | { kind: 'unavailable'; reason: 'missing_reference_image' | 'missing_physical_width' | 'both'; qrId: string };
+  | { kind: 'unavailable'; reason: 'missing_reference_image' | 'missing_physical_width' | 'both' | 'invalid_physical_width'; qrId: string };
 
 export interface ARStabilityConfig {
   plane_detection: boolean;

@@ -42,10 +42,15 @@ objects away.
 ## Current boundary
 
 Mapped learner core: Course, Lesson, LessonSession, LessonSessionStep,
-LessonStepAttempt, UserCourseProgress, UserCourseLessonProgress, plus direct
-WordMastery and MediaAsset support. `learning_blocks` remains JSONB and
-Pydantic remains authoritative for LC2 activity validation.
+LessonStepAttempt, UserCourseProgress, UserCourseLessonProgress, QuizQuestion,
+and QuizQuestionOption, plus direct WordMastery and MediaAsset support.
+`learning_blocks` remains JSONB and Pydantic remains authoritative for typed
+activity validation. Quiz option identity stays database-first as
+`(question_id, option_order)`; learner DTOs derive a stable wire ID rather than
+adding an artificial option key.
 
-Legacy asyncpg repositories remain for unmigrated AR, auth/gamification, quiz,
-game, learning-path, and legacy lesson-media routes. They are not a template for
-new mapped-domain persistence work.
+Legacy asyncpg repositories remain for unmigrated AR, auth/gamification, game,
+learning-path, and legacy lesson-media routes. The legacy flashcard quiz route
+remains readable, but LC3 lesson-activity quiz selection uses the mapped
+request-scoped repository. These compatibility paths are not templates for new
+mapped-domain persistence work.

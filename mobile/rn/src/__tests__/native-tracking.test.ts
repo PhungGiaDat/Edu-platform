@@ -62,6 +62,7 @@ const legacyResponse: ARExperienceResponse = {
   position: '0 0 0',
   rotation: '0 0 0',
   scale: '1 1 1',
+  related_combos: [],
 };
 
 const baseResponse: ARExperienceResponse = {
@@ -99,6 +100,7 @@ test('M3A: raw API DTO accepts a legacy record with native fields missing', () =
     position: legacyResponse.position,
     rotation: legacyResponse.rotation,
     scale: legacyResponse.scale,
+    related_combos: [],
   };
   // Compile-time guard: the optional fields are absent, not coerced.
   assert.equal(parsed.reference_image_url, undefined);
@@ -135,7 +137,8 @@ test('M3A: ready tracking carries referenceImageUrl (NOT imageUrl) — NativeTra
   assert.equal(result.kind, 'ready');
   if (result.kind !== 'ready') return;
   const keys = Object.keys(result.tracking).sort();
-  assert.deepEqual(keys, ['physicalWidthMeters', 'qrId', 'referenceImageUrl']);
+  // NativeTrackingDto now carries modelUrl + word alongside the tracking fields.
+  assert.deepEqual(keys, ['modelUrl', 'physicalWidthMeters', 'qrId', 'referenceImageUrl', 'word']);
   assert.equal(
     (result.tracking as unknown as Record<string, unknown>).imageUrl,
     undefined,
@@ -193,14 +196,17 @@ test('M3A: missing physical_width_m → unavailable, reason=missing_physical_wid
   assert.equal(result.qrId, 'ele-cu');
 });
 
-test('M3A: physical_width_m = 0 → unavailable, reason=missing_physical_width', () => {
+test('M3A: physical_width_m = 0 → READY (unknown-size dev-path)', () => {
+  // Per P2 session: 0f is the intentional dev-path value for unknown physical size.
+  // The updated validator accepts null/undefined/positive; 0 flows through as valid.
   const result = validateNativeTrackingMetadata({
     ...baseResponse,
     physical_width_m: 0,
   });
-  assert.equal(result.kind, 'unavailable');
-  if (result.kind !== 'unavailable') return;
-  assert.equal(result.reason, 'missing_physical_width');
+  assert.equal(result.kind, 'ready');
+  if (result.kind !== 'ready') return;
+  assert.equal(result.tracking.physicalWidthMeters, 0,
+    'Unknown-size dev path should carry physicalWidthMeters=0');
 });
 
 test('M3A: physical_width_m < 0 → unavailable, reason=missing_physical_width', () => {
@@ -315,13 +321,17 @@ test('M3A: toCardDescriptorRN maps only approved bridge fields', () => {
     qrId: 'ele-cu',
     referenceImageUrl: 'https://cdn.example/refs/ele.png',
     physicalWidthMeters: 0.085,
+    modelUrl: 'https://cdn.example/models/elephant.glb',
+    word: 'elephant',
   };
   const descriptor = toCardDescriptorRN(tracking);
   const keys = Object.keys(descriptor).sort();
-  assert.deepEqual(keys, ['imageUrl', 'physicalWidthMeters', 'qrId']);
+  assert.deepEqual(keys, ['imageUrl', 'modelUrl', 'physicalWidthMeters', 'qrId', 'word']);
   assert.equal(descriptor.qrId, 'ele-cu');
   assert.equal(descriptor.imageUrl, 'https://cdn.example/refs/ele.png');
   assert.equal(descriptor.physicalWidthMeters, 0.085);
+  assert.equal(descriptor.modelUrl, 'https://cdn.example/models/elephant.glb');
+  assert.equal(descriptor.word, 'elephant');
 });
 
 test('M3A: toCardDescriptorRN does NOT leak referenceImageUrl onto the bridge', () => {
@@ -331,6 +341,8 @@ test('M3A: toCardDescriptorRN does NOT leak referenceImageUrl onto the bridge', 
     qrId: 'ele-cu',
     referenceImageUrl: 'https://cdn.example/refs/ele.png',
     physicalWidthMeters: 0.085,
+    modelUrl: 'https://cdn.example/models/elephant.glb',
+    word: 'elephant',
   };
   const descriptor = toCardDescriptorRN(tracking);
   assert.equal(
@@ -345,6 +357,8 @@ test('M3A: toCardDescriptorRN does NOT add arTag (RQ-3 CLOSED)', () => {
     qrId: 'ele-cu',
     referenceImageUrl: 'https://cdn.example/refs/ele.png',
     physicalWidthMeters: 0.085,
+    modelUrl: 'https://cdn.example/models/elephant.glb',
+    word: 'elephant',
   };
   const descriptor = toCardDescriptorRN(tracking);
   assert.equal(
@@ -354,18 +368,21 @@ test('M3A: toCardDescriptorRN does NOT add arTag (RQ-3 CLOSED)', () => {
   );
 });
 
-test('M3A: toCardDescriptorRN does NOT add modelUrl (tracking-only)', () => {
-  // The bridge DTO is tracking-only. Model content is a separate layer.
+test('M3A: toCardDescriptorRN includes modelUrl for dynamic tracking + model association', () => {
+  // The bridge DTO now carries modelUrl so Unity can spawn content when the card is detected.
+  // This enables the dynamic QR → backend → reference-image → model-3d association path.
   const tracking: NativeTrackingDto = {
     qrId: 'ele-cu',
     referenceImageUrl: 'https://cdn.example/refs/ele.png',
     physicalWidthMeters: 0.085,
+    modelUrl: 'https://cdn.example/models/elephant.glb',
+    word: 'elephant',
   };
   const descriptor = toCardDescriptorRN(tracking);
   assert.equal(
-    (descriptor as unknown as Record<string, unknown>).modelUrl,
-    undefined,
-    'CardDescriptorRN must not carry modelUrl — tracking-only bridge payload',
+    descriptor.modelUrl,
+    'https://cdn.example/models/elephant.glb',
+    'CardDescriptorRN must carry modelUrl for dynamic model association',
   );
 });
 
@@ -382,6 +399,8 @@ test('M3A: validate → toCardDescriptorRN is the explicit pipeline (full chain)
   assert.equal(descriptor.qrId, 'ele-cu');
   assert.equal(descriptor.imageUrl, 'https://cdn.example/refs/ele.png');
   assert.equal(descriptor.physicalWidthMeters, 0.085);
+  assert.equal(descriptor.modelUrl, 'https://cdn.example/models/elephant.glb');
+  assert.equal(descriptor.word, 'elephant');
 });
 
 test('M3A: mapToCardDescriptor (legacy thunk) returns ok when both fields are present', () => {
@@ -392,6 +411,8 @@ test('M3A: mapToCardDescriptor (legacy thunk) returns ok when both fields are pr
     qrId: 'ele-cu',
     imageUrl: 'https://cdn.example/refs/ele.png',
     physicalWidthMeters: 0.085,
+    modelUrl: 'https://cdn.example/models/elephant.glb',
+    word: 'elephant',
   });
 });
 

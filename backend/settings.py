@@ -35,6 +35,13 @@ class Settings(BaseSettings):
     MONGO_URL: str
     MONGO_DB: str = "eduplatform"
 
+    # PostgreSQL owns migrated mobile-core paths.  Optional only for isolated
+    # unit tests that construct Settings without a database URL.
+    DATABASE_URL: Optional[SecretStr] = None
+    # Explicit deployment gate: do not route legacy endpoints to the new store
+    # until their response contracts have passed the migration smoke suite.
+    POSTGRES_CORE_ENABLED: bool = True
+
     # ========== Security ==========
     # Required. No default. Validator rejects placeholders and short values.
     SECRET_KEY: SecretStr

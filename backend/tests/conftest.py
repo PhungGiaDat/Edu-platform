@@ -131,12 +131,40 @@ def mock_repository(mock_user_data):
 
 
 @pytest.fixture
-def gamification_service(mock_repository):
-    """Create a GamificationService with mocked repository."""
-    with patch('services.gamification_service.get_gamification_repository', return_value=mock_repository):
+def mock_event_repository():
+    """Create a mock gamification event repository for idempotency tests."""
+    event_repo = AsyncMock()
+    event_repo.find_by_user_event = AsyncMock(return_value=None)
+    event_repo.create_event = AsyncMock(return_value={
+        "user_id": "test_user_123",
+        "event_id": "event-123",
+        "action": "pronunciation_attempt",
+        "status": "processing",
+    })
+    event_repo.mark_applied = AsyncMock(return_value={
+        "user_id": "test_user_123",
+        "event_id": "event-123",
+        "action": "pronunciation_attempt",
+        "status": "applied",
+        "xp_awarded": 15,
+        "total_xp_after": 15,
+        "level_after": 1,
+        "xp_to_next_after": 100,
+    })
+    event_repo.mark_rejected = AsyncMock(return_value=None)
+    event_repo.reset_to_processing = AsyncMock(return_value=None)
+    return event_repo
+
+
+@pytest.fixture
+def gamification_service(mock_repository, mock_event_repository):
+    """Create a GamificationService with mocked repositories."""
+    with patch('services.gamification_service.get_gamification_repository', return_value=mock_repository), \
+         patch('services.gamification_service.get_gamification_event_repository', return_value=mock_event_repository):
         from services.gamification_service import GamificationService
         service = GamificationService()
         service.repo = mock_repository
+        service.event_repo = mock_event_repository
         return service
 
 

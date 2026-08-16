@@ -6,7 +6,7 @@
  * Used as the featured/hero card on HomeScreen and CourseListScreen.
  */
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
@@ -39,6 +39,7 @@ export interface CourseShowcaseCardProps {
   xpReward?: number;
   lessonCount?: number;
   completedCount?: number;
+  imageUrl?: string | null;
   // CTA
   ctaLabel?: string;
   onCtaPress?: () => void;
@@ -70,6 +71,7 @@ export const CourseShowcaseCard: React.FC<CourseShowcaseCardProps> = ({
   xpReward,
   lessonCount,
   completedCount = 0,
+  imageUrl,
   ctaLabel = 'Học ngay',
   onCtaPress,
   onPress,
@@ -109,6 +111,7 @@ export const CourseShowcaseCard: React.FC<CourseShowcaseCardProps> = ({
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
+              {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.coverImage} /> : null}
               <View style={styles.headerTop}>
                 {/* Category badge */}
                 {categoryLabel ? (
@@ -195,7 +198,9 @@ export const CourseShowcaseCard: React.FC<CourseShowcaseCardProps> = ({
 const styles = StyleSheet.create({
   header: {
     gap: SPACING.sm,
+    overflow: 'hidden',
   },
+  coverImage: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%', opacity: 0.22 },
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',

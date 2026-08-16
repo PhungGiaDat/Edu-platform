@@ -10,8 +10,8 @@ import type {
   GamificationProfile,
   AddXpEventRequest,
   AddXpEventResponse,
-  toAddXpEventWireRequest,
 } from '../types/gamification';
+import { toAddXpEventWireRequest } from '../types/gamification';
 
 export const gamificationService = {
   getProfile: () => api.get<GamificationProfile>('/gamification/me'),

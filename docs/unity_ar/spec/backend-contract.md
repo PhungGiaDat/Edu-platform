@@ -63,7 +63,7 @@ Response shape:
 
 ## Native AR Additive Requirements
 
-The following fields do NOT currently exist in `backend/models/ar_object.py`. They are REQUIRED for native AR image tracking.
+The following fields are REQUIRED for native AR image tracking. They exist in the `ar_tracking_targets` PostgreSQL table (added in prior session). Backend API schema (`ARExperienceResponseSchema`) already includes both fields.
 
 ### Required: `reference_image_url`
 - **Type:** `str`
@@ -81,36 +81,11 @@ The following fields do NOT currently exist in `backend/models/ar_object.py`. Th
 - **Typical values:** 0.05–0.20 meters depending on print size
 - **Default:** None — must be populated per ar_object
 
-### Schema migration
+### Schema status
 
-Add to `backend/models/ar_object.py`:
+The `reference_image_url` and `physical_width_m` columns already exist in the `ar_tracking_targets` PostgreSQL table. The `ARExperienceResponseSchema` already includes both fields. No schema migration is required.
 
-```python
-class ARObject(Document):
-    # ... existing fields ...
-
-    # Native AR tracking (additive, not replacing MindAR fields)
-    reference_image_url: Optional[str] = None  # URL to reference image for native AR
-    physical_width_m: Optional[float] = None   # Physical width in meters (not glb_size)
-```
-
-Add to `ARObjectCreate`:
-```python
-reference_image_url: Optional[str] = None
-physical_width_m: Optional[float] = None
-```
-
-Add to `ARObjectUpdate`:
-```python
-reference_image_url: Optional[str] = None
-physical_width_m: Optional[float] = None
-```
-
-Add to `ARObjectResponse`:
-```python
-reference_image_url: Optional[str] = None
-physical_width_m: Optional[float] = None
-```
+The remaining work is content population (see P2 fast-path plan).
 
 ---
 
@@ -161,4 +136,4 @@ Do NOT move gamification into Unity.
 |---|----------|-----------------|
 | BQ-1 | What is the exact migration path for existing ar_objects to populate `reference_image_url` and `physical_width_m`? | Yes |
 | BQ-2 | Who creates and hosts the reference images? Is it the same as `image_2d_url` or a separate higher-quality image? | Yes |
-| BQ-3 | What is the default `physical_width_m` for cards that don't have it set? | Yes |
+| BQ-3 | What is the default `physical_width_m` for cards that don't have it set? | Yes | **Resolved** — `physical_width_m = NULL` is acceptable. Unity handles null width via the unknown-size registration path (`widthMeters = 0f` for ARCore). No fallback constant is used. Production physical measurements are required before production deployment. |

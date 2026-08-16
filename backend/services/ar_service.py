@@ -54,11 +54,32 @@ class ARService:
             raw_combos = await self.ar_combination_repo.find_by_tag(ar_tag)
             related_combos = [serialize_ar_combination(combo) for combo in raw_combos]
         
-        # Build complete AR experience response (must match ARExperienceResponseSchema)
+        tracking_target = await self.ar_object_repo.get_tracking_target(qr_id)
+        # Legacy test doubles and older repository implementations may not
+        # expose a tracking-target lookup. Treat that as native-unavailable,
+        # never as an object from which metadata can be inferred.
+        if not isinstance(tracking_target, dict):
+            tracking_target = None
+        translation = flashcard.get("translation") or {}
+        # Flat fields serve current RN. Nested members preserve the legacy Web
+        # contract. Missing native fields stay NULL/unavailable by design.
         return {
+            "qr_id": qr_id,
+            "word": flashcard.get("word", ""),
+            "translation_vi": translation.get("vi", flashcard.get("word", "")) if isinstance(translation, dict) else str(translation),
+            "audio_url": flashcard.get("audio_url"),
+            "model_url": ar_object.get("model_3d_url") if ar_object else "",
+            "animation_type": ar_object.get("animation_type", "none") if ar_object else "none",
+            "glb_size": ar_object.get("glb_size", 1) if ar_object else 1,
+            "position": ar_object.get("position", "0 0 0") if ar_object else "0 0 0",
+            "rotation": ar_object.get("rotation", "0 0 0") if ar_object else "0 0 0",
+            "scale": ar_object.get("scale", "1 1 1") if ar_object else "1 1 1",
+            "reference_image_url": tracking_target.get("reference_image_url") if tracking_target else None,
+            "physical_width_m": float(tracking_target["physical_width_m"]) if tracking_target and tracking_target.get("physical_width_m") is not None else None,
             "flashcard": flashcard,
             "target": ar_object,
-            "related_combos": related_combos
+            "related_combos": related_combos,
+            "tracking_target": tracking_target,
         }
     
     async def check_combo(self, ar_tags: list[str]) -> Optional[Dict[str, Any]]:

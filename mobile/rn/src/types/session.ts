@@ -59,7 +59,7 @@ export interface LessonSession {
 }
 
 export interface LessonStepAttemptPayload {
-  user_id: string;
+  user_id?: string;
   step_id: string;
   attempt_type?: string;
   passed: boolean;

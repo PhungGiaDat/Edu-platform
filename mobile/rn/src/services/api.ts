@@ -11,10 +11,10 @@ import type {
   AddXpResponse,
   AddXpEventRequest,
   AddXpEventResponse,
-  toAddXpEventWireRequest,
   StreakData,
   UserStats,
 } from '../types/gamification';
+import { toAddXpEventWireRequest } from '../types/gamification';
 import type { ChangePetOutfitRequest, ChangePetOutfitResponse, ClearActivePetResponse, ListPetsParams, Pet, PetListResponse, SetActivePetRequest, UnlockPetResponse } from '../types/pet';
 import type { PetCareActionResult, PetCareState, PetXPResponse } from '../types/petCare';
 import type {
@@ -27,6 +27,12 @@ import type {
   LessonStepAttemptResponse,
   MediaAssetRecord,
   QuizSubmitResult,
+  QuizActivityHydration,
+  QuizActivityAnswerRequest,
+  QuizActivityAnswerResult,
+  MiniGameActivityHydration,
+  MiniGameCompleteResult,
+  VocabularyActivityHydration,
   UserProgress,
 } from '../types/course';
 import { mapPetCareState, mapPetResponse } from './mappers';
@@ -177,6 +183,18 @@ export const coursesApi = {
       `/courses/${courseId}/lessons/${lessonId}/steps/attempt`,
       payload,
     ),
+
+  getQuizActivity: (courseId: string, lessonId: string, activityId: string) =>
+    api.get<QuizActivityHydration>(`/courses/${courseId}/lessons/${lessonId}/activities/${activityId}/quiz`),
+
+  submitQuizActivityAnswer: (courseId: string, lessonId: string, activityId: string, payload: QuizActivityAnswerRequest) =>
+    api.post<QuizActivityAnswerResult>(`/courses/${courseId}/lessons/${lessonId}/activities/${activityId}/quiz/answers`, payload),
+  getVocabularyActivity: (courseId: string, lessonId: string, activityId: string) =>
+    api.get<VocabularyActivityHydration>(`/courses/${courseId}/lessons/${lessonId}/activities/${activityId}/vocabulary`),
+  getMiniGameActivity: (courseId: string, lessonId: string, activityId: string) =>
+    api.get<MiniGameActivityHydration>(`/courses/${courseId}/lessons/${lessonId}/activities/${activityId}/mini-game`),
+  completeMiniGameActivity: (courseId: string, lessonId: string, activityId: string, matched_pair_ids: string[]) =>
+    api.post<MiniGameCompleteResult>(`/courses/${courseId}/lessons/${lessonId}/activities/${activityId}/mini-game/complete`, { matched_pair_ids }),
 
   submitQuiz: (lessonId: string, answers: Record<string, string>) =>
     api.post<QuizSubmitResult>(`/quizzes/${lessonId}/submit`, {

@@ -1,7 +1,7 @@
 # React Native Learner Product Specification
 
 ## Status
-approved — LC2 typed Lesson Activity contract implemented 2026-08-14
+approved — LC3 data-driven Quiz Activity contract implemented 2026-08-15
 
 ## Goal
 Lock in the product behavior, ownership, backend dependency, and verification method for every learner-facing feature in the React Native app. Stable MOB-*-REQ IDs referenced by Cursor tasks and test files.
@@ -59,7 +59,14 @@ Canonical authored content uses:
 - Optional `title` and `instructions` are presentation text.
 - Activity objects and configs reject unknown fields. Runtime fields such as `status`, `current`, `completed`, timestamps, attempts, score, or selected answers are prohibited.
 
-`completion_policy.mode` is controlled: `viewed`, `all_items`, `interaction_complete`, `game_complete`, or `quiz_complete`. Allowed modes are constrained by activity type. Quiz scoring/pass policy belongs to Quiz config; XP does not.
+`completion_policy.mode` is controlled: `viewed`, `all_items`, `interaction_complete`, `game_complete`, or `quiz_complete`. Allowed modes are constrained by activity type. Quiz performance is evaluated from canonical question data; XP does not belong to Quiz config.
+
+### LC3 quiz contract
+
+- A `quiz` activity references stable `quiz_questions.id` values through `config.question_ids`; it may cap that pool with `question_count` and use `order_policy` (`authored` or `random`). Duplicate IDs and counts larger than the pool are invalid.
+- Options retain canonical `quiz_question_options.option_order`; learner wire identity is the stable derived `{question_id}:{option_order}`. Question and option identity are never array indexes.
+- Random selections are saved in existing lesson-session step response JSONB. Backend answer evaluation records runtime attempts in `lesson_step_attempts`; a quiz completes when all selected questions have been attempted, independently of performance score.
+- Existing tables cover LC3: **no SQL/Alembic migration is required**. LC3 does not seed or rewrite production Lessons.
 
 | Activity `type` | Required typed `config` |
 |---|---|
@@ -94,18 +101,23 @@ On content-version change, resume remaps saved runtime state by stable `activity
 
 ### Asset roles and reuse
 
-| Owner | Minimum roles and current representation |
-|---|---|
-| LearningTopic | icon/cover only when needed; MVP may use the controlled topic registry plus existing category metadata |
-| Course | cover/thumbnail through existing Course fields; banner/background only for a known screen |
-| Lesson | cover, scene/background, intro/warm-up visual through `media_assets` semantic `section_id`/`asset_key` records |
-| Vocabulary | illustration, pronunciation audio, coloring outline; optional cutout/sound only for a known activity |
-| Course Game / Quiz | prompt/scene media only when canonical vocabulary assets are insufficient |
-| Native AR | physical reference image, measured width, 3D model, and AR-specific interaction media under Unity/native AR authority |
+LC5's controlled learner role vocabulary is deliberately separate from physical storage and native-AR fields. A learner API exposes only `{role, url, media_type, metadata}` after backend resolution; it never exposes a bucket credential, storage implementation detail, `reference_image_url`, `model_3d_url`, or `physical_width_m`.
 
-Reuse one vocabulary illustration/audio/outline across flashcards, Listen & Choose, Memory Match, Drag & Drop, Quiz, and Coloring. A Course illustration is never an AR tracking reference image, and model data never supplies `reference_image_url` or `physical_width_m`.
+| Domain | Role | Media type | Canonical owner / representation | Known consumers |
+|---|---|---|---|---|
+| Course | `course_cover` | image | existing `courses.thumbnail_url` / `thumbnail` | Course card and Course detail |
+| Lesson | `warm_up_visual` | image | one ready `media_assets` row for the lesson | typed warm-up activity |
+| Vocabulary | `vocabulary_illustration` | image | ready `media_assets`: `section_id=vocabulary`, `asset_key=vocabulary:<id>:vocabulary_illustration` | flashcard, Listen & Choose, Memory Match, future Quiz image choice |
+| Vocabulary | `pronunciation_audio` | audio | ready `media_assets`: `section_id=vocabulary`, `asset_key=vocabulary:<id>:pronunciation_audio` | flashcard tap-to-hear, Listen activity, future Quiz audio |
+| Vocabulary | `coloring_outline` | image | ready `media_assets`: `section_id=vocabulary`, `asset_key=vocabulary:<id>:coloring_outline` | future Coloring renderer |
 
-Use existing Supabase Storage conventions: one/few buckets with deterministic object paths and `media_assets` records, not a bucket per entity. Future paths may group `topics/`, `courses/`, `lessons/`, `vocabulary/`, and `games/`; exact paths are owned by the implementation milestone. Do not introduce a parallel asset table for this milestone.
+`media_assets` remains the lesson-scoped persistence record (`course_id`, `lesson_id`, `section_id`, `asset_key`, `path`, `type`, `status`, `public_url`, `metadata`). It is not exposed as an ORM response. For the first manifest/seed, each content identity plus semantic role has one ready canonical record. The resolver rejects more than one ready match rather than choosing an arbitrary path; variants require a later explicit role/selection decision.
+
+One vocabulary illustration/audio/outline is reused across activities; an activity must not create a duplicate asset record merely to consume it. The Memory Match payload retains legacy raw image URLs, but new canonical image cards use `vocabulary_id + vocabulary_illustration`; the service resolves the learner-safe image projection. Quiz has no media behavior in LC3, but a future Quiz may reuse these vocabulary roles without a new Quiz-specific role.
+
+AR is a separate namespace and persistence lane: a learner illustration is never an AR tracking reference image; course-game media is never AR-game media; learner images never fall back to `reference_image_url` or `model_3d_url`; no learner role resolves physical tracking width. Existing native-AR fields remain authoritative and untouched.
+
+Future manifests identify assets by content identity plus semantic role, source artifact, media type, destination, and status, never by guessing filenames. Storage bucket/path remains independent of the role. Existing Supabase Storage conventions remain in place; LC5 creates no bucket, object, or media record.
 
 ### Parent preference and progress
 

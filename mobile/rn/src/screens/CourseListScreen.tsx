@@ -19,6 +19,7 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
+  Image,
   type ListRenderItem,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -238,6 +239,7 @@ export const CourseListScreen: React.FC = () => {
                 </View>
                 <CourseShowcaseCard
                   title={featuredCourse.title}
+                  imageUrl={featuredCourse.thumbnail_url}
                   subtitle={featuredCourse.subtitle_vi ?? featuredCourse.description}
                   categoryLabel={featuredCourse.category_label}
                   categoryColor={
@@ -339,6 +341,7 @@ const CourseRowCard: React.FC<{
     <ClayCard variant="md" color="white" padding={0} onPress={onPress} style={styles.rowCard}>
       <View style={[styles.rowCardInner, { backgroundColor: withOpacity(catColor, 0.08) }]}>
         <View style={styles.rowCardLeft}>
+          {course.thumbnail_url ? <Image source={{ uri: course.thumbnail_url }} style={styles.rowCardCover} /> : null}
           <View style={[styles.rowCardAccent, { backgroundColor: catColor }]} />
           <View style={styles.rowCardText}>
             <Text style={styles.rowCardTitle} numberOfLines={2}>{course.title}</Text>
@@ -485,6 +488,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     flexShrink: 0,
   },
+  rowCardCover: { width: 64, height: 64, borderRadius: RADIUS.md, resizeMode: 'cover', flexShrink: 0 },
   rowCardText: {
     flex: 1,
     gap: 2,
