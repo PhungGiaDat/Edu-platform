@@ -4,6 +4,7 @@ LEGACY WRAPPER - Redirects to unified database/connection.py
 Kept for backward compatibility with existing repositories.
 """
 from database.connection import db_manager, connect_to_database, close_database_connection
+from database.postgres_connection import postgres_pool
 from typing import Optional
 import logging
 
@@ -28,7 +29,7 @@ async def close_databases():
 
 # Placeholder for removed PostgreSQL dependency
 async def get_pg_session():
-    raise RuntimeError("PostgreSQL has been removed. Use MongoDB documents directly.")
+    return postgres_pool()
 
 __all__ = [
     "mongo_connector",

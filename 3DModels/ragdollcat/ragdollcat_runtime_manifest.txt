@@ -1,0 +1,123 @@
+RAGDOLL CAT RUNTIME EXPORT MANIFEST
+
+SOURCE_BLEND:
+E:\University\Graduted Project\Edu-platform\3DModels\ragdollcat\ragdollcat_RUNTIME_SET_REFINED_FINAL.blend
+
+SOURCE_PRESERVED:
+yes
+
+EXPORT_WORKING_BLEND:
+E:\University\Graduted Project\Edu-platform\3DModels\ragdollcat\ragdollcat_EXPORT_WORKING.blend
+
+MOBILE_WORKING_BLEND:
+E:\University\Graduted Project\Edu-platform\3DModels\ragdollcat\ragdollcat_EXPORT_MOBILE_WORKING.blend
+
+MASTER_GLB:
+E:\University\Graduted Project\Edu-platform\3DModels\ragdollcat\ragdollcat_runtime_master.glb
+
+MOBILE_GLB:
+E:\University\Graduted Project\Edu-platform\3DModels\ragdollcat\ragdollcat_runtime_mobile.glb
+
+MESH:
+CAT_GAME_MESH
+
+SOURCE_VERTICES:
+59968
+
+GLB_POSITION_ACCESSOR_VERTICES:
+96380
+
+VERTEX_COUNT_NOTE:
+glTF splits source vertices at attribute boundaries for normals, tangents, UVs, skinning, and morph data; topology remains 120000 triangles.
+
+TRIANGLES:
+120000
+
+REQUIRED_MOUTH_MESH:
+CAT_MOUTH_INTERIOR (320 triangles)
+
+RIG_OBJECT:
+CAT_RIG
+
+ARMATURE_DATA:
+CAT_ARMATURE
+
+EXPORTED_JOINT_COUNT:
+46
+
+SKIN_INFLUENCES:
+4 highest-weight influences per exported vertex, normalized by the Blender glTF exporter; source weights were not repainted.
+
+TEXTURES_MASTER:
+- Base Color: 4096 x 4096, sRGB
+- Normal: 4096 x 4096, Non-Color
+- Roughness: 4096 x 4096 source, packed into glTF metallic-roughness texture
+- Metallic: 4096 x 4096 source, packed into glTF metallic-roughness texture
+- Imported GLB metallic-roughness texture: 4096 x 4096, Non-Color
+
+TEXTURES_MOBILE:
+- Base Color: 2048 x 2048, sRGB
+- Normal: 2048 x 2048, Non-Color
+- Roughness: 2048 x 2048 source duplicate, packed into glTF metallic-roughness texture
+- Metallic: 2048 x 2048 source duplicate, packed into glTF metallic-roughness texture
+- Imported GLB metallic-roughness texture: 2048 x 2048, Non-Color
+
+ANIMATIONS:
+- name: CAT_IDLE
+  duration_seconds: 5.966667
+  source_frames: 1-180 at 30 FPS
+- name: CAT_EAT
+  duration_seconds: 4.966667
+  source_frames: 1-150 at 30 FPS
+- name: CAT_LOOK_UP
+  duration_seconds: 2.966667
+  source_frames: 1-90 at 30 FPS
+- name: CAT_MEOW
+  duration_seconds: 1.966667
+  source_frames: 1-60 at 30 FPS
+- name: CAT_PET_REACT
+  duration_seconds: 3.300000
+  source_frames: 1-100 at 30 FPS
+- name: CAT_SIT
+  duration_seconds: 3.966667
+  source_frames: 1-120 at 30 FPS
+- name: CAT_SPIN
+  duration_seconds: 3.966667
+  source_frames: 1-120 at 30 FPS
+
+MISSING_EXPECTED_CANDIDATES:
+- CAT_ROLL_OVER was not present in the validated source and was not fabricated or exported.
+
+CAT_MEOW_MOUTH_IMPLEMENTATION:
+combination: jaw_ctrl deform bone + CAT_MOUTH_OPEN driven shape key/morph target + CAT_MOUTH_INTERIOR separate runtime mesh
+
+CAT_MEOW_MASTER_REIMPORT:
+frame 1 morph 0.0; frame 30 morph 1.0; frame 45 morph 0.0; visible mouth opening confirmed.
+
+CAT_MEOW_MOBILE_REIMPORT:
+frame 1 morph 0.0; frame 30 morph 1.0; frame 45 morph 0.0; visible mouth opening confirmed.
+
+MASTER_GLB_SIZE_BYTES:
+41232708
+
+MOBILE_GLB_SIZE_BYTES:
+20047944
+
+MASTER_REIMPORT_QA_BLEND:
+E:\University\Graduted Project\Edu-platform\3DModels\ragdollcat\ragdollcat_MASTER_REIMPORT_QA.blend
+
+MOBILE_REIMPORT_QA_BLEND:
+E:\University\Graduted Project\Edu-platform\3DModels\ragdollcat\ragdollcat_MOBILE_REIMPORT_QA.blend
+
+EXCLUDED_FROM_GLB:
+- CAT_SOURCE_HIGH
+- CAT_RIG_MESH
+- Camera
+- Light
+- CAT_PET_TARGET
+- CAT_FEED_TARGET (not present)
+- backup/recovery Actions
+- QA/debug helpers
+
+COMPRESSION:
+not attempted; the production candidate uses standard uncompressed glTF 2.0 GLB for broad Unity glTFast compatibility.

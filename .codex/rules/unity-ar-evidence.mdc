@@ -1,0 +1,123 @@
+---
+description: Two-way Unity / AR memory protocol. (1) Cold-start: at the BEGINNING of any Unity session, read the newest `docs/unity_ar/progress/` file to inherit last session's context — goal, changes, verification, not-yet-verified, next steps. (2) Write-evidence: after completing any Unity task, append a new `progress/YYYY-MM-DD-<topic>.md` so the next session inherits your result. Apply whenever starting Unity work, or whenever touching `mobile/unity/` or any Unity task that changes spec, progress, plan, blocker, or task files.
+globs:
+  - mobile/unity/**/*.cs
+  - mobile/unity/**/*.unity
+  - mobile/unity/**/*.prefab
+  - docs/unity_ar/**
+alwaysApply: false
+---
+
+# Unity / AR Evidence + Cold-Start — Cursor mirror
+
+Cursor-side counterpart to `.claude/skills/unity-ar-evidence/SKILL.md`. Same protocol, two hosts. If they drift, the Claude skill wins.
+
+## Cold-Start Protocol (mandatory at session start)
+
+Before doing **any** Unity / AR work in a new session, run this in order:
+
+1. **List progress files** newest-first:
+   ```bash
+   Glob docs/unity_ar/progress/*.md — sort by filename (date prefix) descending
+   ```
+2. **Read the newest progress file** with `Read`. This is the warm context. It tells you:
+   - What the user asked last session
+   - What was changed and verified
+   - What was *not* verified (still pending on physical device)
+   - Which specs and blockers are active
+   - What the next session should pick up
+3. **If the user named a task** (e.g. "continue Cat+Meat combo"), follow the `## Next` link from the latest progress and the `## Specs touched` / `## Blockers raised` sections.
+4. **Only then start work.** Don't ask the user to re-explain what was done last session — the progress file is the canonical answer.
+
+If `docs/unity_ar/progress/` is empty (first ever session), skip this step and tell the user "no prior progress" before starting.
+
+### Write priority when cold-starting
+
+The newest progress file is sufficient context for most sessions. **Do not pre-load** spec/, plans/, blockers/, or tasks/ unless the latest progress file links to one and the current task touches it.
+
+### What "newest" means
+
+- Sort by **filename date** (`YYYY-MM-DD` prefix), not filesystem mtime — filenames are the canonical chronological order
+- If two files share the same date, the longer / more detailed body is the more recent
+- If a progress file references "see also `progress/older-file.md`", follow that link only if the current task overlaps
+
+## When this fires (for write-evidence)
+
+Any completion of a Unity / AR Foundation task in this workspace. Typical triggers:
+
+- "I just finished X" / "now it works" / "done with X"
+- A meaningful change to `mobile/unity/Assets/`
+- A new AR Foundation invariant discovered
+- A blocker uncovered
+- A spec / plan / task file created or modified
+
+## The 5 folders (location: `docs/unity_ar/`)
+
+| Folder | Write when |
+|--------|------------|
+| `spec/` | A topic spans >1 component or needs documented invariants |
+| `progress/` | **End of every Unity task**, mandatory |
+| `plans/` | An approved spec spans >1 session |
+| `blockers/` | Approved spec contradicts reality |
+| `tasks/` | A plan step needs explicit ownership |
+
+Each folder has a `README.md` with the full rules. Read it once before writing the first file of that type. Don't re-read every session.
+
+## Mandatory: progress file at end of every task
+
+```markdown
+# docs/unity_ar/progress/YYYY-MM-DD-<topic>.md
+
+## Session
+YYYY-MM-DD HH:MM, agent: cursor | claude-code, branch: <git branch>
+
+## Goal
+One sentence the user asked.
+
+## Changed
+- `path/to/file.cs:LINE` — what and why
+- `GameObject/Component` — what changed
+
+## Verified
+- compilation: pass | fail | not-run
+- console (Unity Console): clean | errors | warnings
+- tests: <name> → pass | fail
+- XR Simulation: <result> | not-run
+- physical device: <result> | not-run | n/a
+
+## Not Verified
+- (default: list anything mobile/physical)
+
+## Specs touched
+- `docs/unity_ar/spec/<file>.md` §<section>
+
+## Blockers raised
+- `docs/unity_ar/blockers/<file>.md` — <one-line>
+
+## Next
+- <one sentence — what should happen next, NOT what you'll do>
+```
+
+Keep it 50-150 lines. No full diffs.
+
+## Anti-patterns
+
+- Skipping `progress/` for "trivial" changes — there are no trivial changes in AR
+- "Should compile" / "probably works" — not verification
+- Pasting diffs into progress — reference commit hashes instead
+- Opening blockers for typos / normal bugs
+- Renaming existing progress files (their name is their identity)
+- Reading all 5 README.md files every session
+
+## Reading order for the next agent
+
+1. Newest `docs/unity_ar/progress/` first.
+2. Follow `Specs touched` / `Blockers raised` links.
+3. If picking up an open task, read its parent plan first.
+4. Then start work.
+
+## See also
+
+- `.claude/skills/unity-ar-evidence/SKILL.md` — canonical protocol (Claude host)
+- `.cursor/rules/unity-tool-routing.mdc` — which Unity tool to call (Besty REST / MCP / CLI)
+- `docs/unity_ar/README.md` — folder structure and TencentDB memory mapping

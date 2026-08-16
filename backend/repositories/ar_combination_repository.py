@@ -1,161 +1,69 @@
-# backend/repositories/ar_combination_repository.py
-"""
-AR Combination Repository - Data Access Layer for multi-marker combos
-
-All methods now use Beanie ODM queries against the ARCombination Document,
-replacing the raw Motor/BaseRepository approach. Method signatures are
-preserved — callers in ARService see no change.
-"""
+"""PostgreSQL repository for AR multi-card combinations."""
 from typing import Optional, List, Dict, Any
-from models.ar_combination import ARCombination
-import logging
+import json
 
-logger = logging.getLogger(__name__)
-
-
-def _beanie_to_dict(doc: Optional[ARCombination]) -> Optional[Dict[str, Any]]:
-    """
-    Convert a Beanie Document to a plain dict with string _id.
-    Preserves the dict shape that ARService and api/combos.py expect.
-    """
-    if doc is None:
-        return None
-    data = doc.model_dump()
-    # Beanie stores _id in the id field as PydanticObjectId — serialize it
-    if doc.id is not None:
-        data["_id"] = str(doc.id)
-    return data
+from database.postgres_connection import postgres_pool
 
 
-def _beanie_list_to_dict(
-    docs: List[ARCombination],
-) -> List[Dict[str, Any]]:
-    """Convert a list of Beanie Documents to plain dicts."""
-    result = []
-    for doc in docs:
-        data = doc.model_dump()
-        if doc.id is not None:
-            data["_id"] = str(doc.id)
-        result.append(data)
-    return result
+def _row(row) -> dict:
+    return dict(row)
 
 
 class ARCombinationRepository:
-    """
-    Repository for ar_combinations collection using Beanie ODM.
-
-    Handles multi-flashcard AR combos. All methods return plain dicts
-    to maintain compatibility with the existing ARService and API layer.
-    """
+    async def _hydrate(self, row) -> Optional[Dict[str, Any]]:
+        if row is None:
+            return None
+        value = _row(row)
+        for key in ("center_transform", "animation", "flashcard_set", "target_order"):
+            if isinstance(value.get(key), str):
+                value[key] = json.loads(value[key])
+        if not isinstance(value.get("flashcard_set"), str):
+            value["flashcard_set"] = None
+        tags = await postgres_pool().fetch(
+            "SELECT ar_tag FROM public.ar_combination_required_tags WHERE combo_id=$1 ORDER BY tag_order", value["combo_id"]
+        )
+        value["required_tags"] = [tag["ar_tag"] for tag in tags]
+        # The Mongo DTO exposes animation as a scalar but the migration keeps
+        # its variable payload. Preserve an explicit string when available.
+        if isinstance(value.get("animation"), dict):
+            value["animation"] = value["animation"].get("type")
+        return value
 
     async def get_by_combo_id(self, combo_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Find AR combo by combo_id.
-
-        Args:
-            combo_id: Combo identifier (e.g., 'elephant_lion_combo')
-
-        Returns:
-            AR combination dict or None
-        """
-        logger.debug(f"[SEARCH] AR Combo by combo_id: {combo_id}")
-        doc = await ARCombination.find(ARCombination.combo_id == combo_id).first_or_none()
-        return _beanie_to_dict(doc)
+        return await self._hydrate(await postgres_pool().fetchrow(
+            "SELECT * FROM public.ar_combinations WHERE combo_id=$1", combo_id
+        ))
 
     async def find_by_tag(self, ar_tag: str) -> List[Dict[str, Any]]:
-        """
-        Find all combos that include a specific AR tag.
-
-        Args:
-            ar_tag: AR tag to search for in required_tags
-
-        Returns:
-            List of AR combination dicts
-        """
-        logger.debug(f"[SEARCH] AR Combos containing tag: {ar_tag}")
-        docs = await ARCombination.find(
-            ARCombination.required_tags == ar_tag
-        ).to_list()
-        return _beanie_list_to_dict(docs)
+        rows = await postgres_pool().fetch(
+            """SELECT c.* FROM public.ar_combinations c JOIN public.ar_combination_required_tags t USING(combo_id)
+               WHERE t.ar_tag=$1 ORDER BY c.priority DESC,c.combo_id""", ar_tag
+        )
+        return [await self._hydrate(row) for row in rows]  # type: ignore[misc]
 
     async def find_by_tags(self, ar_tags: List[str]) -> List[Dict[str, Any]]:
-        """
-        Find combos that match ALL provided tags.
-
-        Args:
-            ar_tags: List of AR tags
-
-        Returns:
-            List of AR combination dicts
-        """
-        docs = await ARCombination.find(
-            ARCombination.required_tags.all(ar_tags)
-        ).to_list()
-        return _beanie_list_to_dict(docs)
+        if not ar_tags:
+            return []
+        rows = await postgres_pool().fetch(
+            """SELECT c.* FROM public.ar_combinations c JOIN public.ar_combination_required_tags t USING(combo_id)
+               WHERE t.ar_tag = ANY($1::text[]) GROUP BY c.combo_id
+               HAVING count(DISTINCT t.ar_tag) = cardinality($1::text[]) ORDER BY max(c.priority) DESC""", ar_tags
+        )
+        return [await self._hydrate(row) for row in rows]  # type: ignore[misc]
 
     async def find_by_any_tag(self, ar_tags: List[str]) -> List[Dict[str, Any]]:
-        """
-        Find combos that contain ANY of the provided tags.
+        rows = await postgres_pool().fetch(
+            """SELECT DISTINCT c.* FROM public.ar_combinations c JOIN public.ar_combination_required_tags t USING(combo_id)
+               WHERE t.ar_tag = ANY($1::text[]) ORDER BY c.priority DESC,c.combo_id""", ar_tags
+        )
+        return [await self._hydrate(row) for row in rows]  # type: ignore[misc]
 
-        Args:
-            ar_tags: List of AR tags
-
-        Returns:
-            List of AR combination dicts
-        """
-        docs = await ARCombination.find(
-            ARCombination.required_tags.in_(ar_tags)
-        ).to_list()
-        return _beanie_list_to_dict(docs)
-
-    async def find_many(
-        self,
-        filter: Optional[Dict[str, Any]] = None,
-        skip: int = 0,
-        limit: int = 100,
-    ) -> List[Dict[str, Any]]:
-        """
-        Find multiple combos with pagination.
-        Falls back to raw Beanie queries when filter is empty.
-
-        Args:
-            filter: MongoDB-style filter dict (only top-level equality supported)
-            skip: Number of documents to skip
-            limit: Maximum number to return
-
-        Returns:
-            List of AR combination dicts
-        """
-        if not filter:
-            docs = (
-                await ARCombination.find_all()
-                .skip(skip)
-                .limit(limit)
-                .to_list()
-            )
-        else:
-            # Build Beanie query from filter dict
-            # Supports: {"field": value} and {"field": {"$in": [...]}}
-            queries = []
-            for field, value in filter.items():
-                if isinstance(value, dict) and "$in" in value:
-                    queries.append(getattr(ARCombination, field).in_(value["$in"]))
-                elif isinstance(value, dict) and "$all" in value:
-                    queries.append(getattr(ARCombination, field).all(value["$all"]))
-                else:
-                    queries.append(getattr(ARCombination, field) == value)
-            if queries:
-                docs = (
-                    await ARCombination.find(*queries)
-                    .skip(skip)
-                    .limit(limit)
-                    .to_list()
-                )
-            else:
-                docs = []
-        return _beanie_list_to_dict(docs)
+    async def find_many(self, filter: Optional[Dict[str, Any]] = None, skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
+        rows = await postgres_pool().fetch(
+            "SELECT * FROM public.ar_combinations ORDER BY priority DESC,combo_id OFFSET $1 LIMIT $2", skip, limit
+        )
+        return [await self._hydrate(row) for row in rows]  # type: ignore[misc]
 
 
 def get_ar_combination_repository() -> ARCombinationRepository:
-    """Factory function for dependency injection"""
     return ARCombinationRepository()

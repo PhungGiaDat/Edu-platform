@@ -148,6 +148,58 @@ namespace EduPlatform.EditModeTests
         }
 
         [Test]
+        public void TwoTrackablesCoexist_AndRemovingADoesNotRemoveB()
+        {
+            _registry.RegisterFlashcard("card_a", new ARExperiencePayload { QrId = "card_a" });
+            _registry.RegisterFlashcard("card_b", new ARExperiencePayload { QrId = "card_b" });
+            var trackableA = new UnityEngine.XR.ARSubsystems.TrackableId(1, 10);
+            var trackableB = new UnityEngine.XR.ARSubsystems.TrackableId(2, 20);
+
+            _registry.BindTrackable(trackableA, null, "card_a");
+            _registry.BindTrackable(trackableB, null, "card_b");
+
+            Assert.AreEqual(2, _registry.ActiveTrackableCount);
+            Assert.IsTrue(_registry.TryGetTrackableQrId(trackableA, out var qrA));
+            Assert.AreEqual("card_a", qrA);
+            Assert.IsTrue(_registry.TryGetTrackableQrId(trackableB, out var qrB));
+            Assert.AreEqual("card_b", qrB);
+
+            Assert.IsTrue(_registry.TryUnbindTrackable(trackableA, out var removedQr));
+            Assert.AreEqual("card_a", removedQr);
+            Assert.AreEqual(1, _registry.ActiveTrackableCount);
+            Assert.IsFalse(_registry.TryGetTrackableQrId(trackableA, out _));
+            Assert.IsTrue(_registry.TryGetTrackableQrId(trackableB, out var remainingQr));
+            Assert.AreEqual("card_b", remainingQr,
+                "Removing trackable A must preserve trackable B and its business identity.");
+        }
+
+        [Test]
+        public void TrackableModelBinding_IsScopedToPhysicalTrackable()
+        {
+            _registry.RegisterFlashcard("card_a", new ARExperiencePayload { QrId = "card_a" });
+            _registry.RegisterFlashcard("card_b", new ARExperiencePayload { QrId = "card_b" });
+            var trackableA = new UnityEngine.XR.ARSubsystems.TrackableId(3, 30);
+            var trackableB = new UnityEngine.XR.ARSubsystems.TrackableId(4, 40);
+            var modelA = new GameObject("ModelA");
+            var modelB = new GameObject("ModelB");
+
+            _registry.BindTrackable(trackableA, null, "card_a");
+            _registry.BindTrackable(trackableB, null, "card_b");
+            _registry.SetTrackableModel(trackableA, modelA);
+            _registry.SetTrackableModel(trackableB, modelB);
+
+            Assert.AreSame(modelA, _registry.GetTrackableModel(trackableA));
+            Assert.AreSame(modelB, _registry.GetTrackableModel(trackableB));
+
+            _registry.TryUnbindTrackable(trackableA, out _);
+            Assert.IsNull(_registry.GetTrackableModel(trackableA));
+            Assert.AreSame(modelB, _registry.GetTrackableModel(trackableB));
+
+            Object.DestroyImmediate(modelA);
+            Object.DestroyImmediate(modelB);
+        }
+
+        [Test]
         public void ComboFlow_RegisterTwoCardsAndResolveEach()
         {
             var chicken = new ARExperiencePayload

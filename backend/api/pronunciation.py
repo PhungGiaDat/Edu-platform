@@ -131,7 +131,8 @@ async def log_pronunciation_attempt(
     Log a single pronunciation attempt and award XP.
 
     - Inserts a document into pronunciation_attempts.
-    - Awards XP via gamification_service (action: "pronunciation_attempt").
+    - Awards XP via gamification_service using idempotent add_xp_with_event_id.
+    - Uses attempt_id as event_id for exactly-once semantics.
     - Checks if the user has hit 5 total attempts → awards pronunciation_pro_5 badge.
     - Returns the saved attempt plus xp_awarded.
     """
@@ -140,17 +141,27 @@ async def log_pronunciation_attempt(
         f"word={payload.flashcard_qr_id} score={payload.score}"
     )
 
-    # Persist attempt
+    # Persist attempt FIRST (this generates the attempt_id)
     doc_data = payload.model_dump()
-    doc_id = await repo.create_attempt(doc_data)
+    attempt = await repo.create_attempt(doc_data)
+    attempt_id = attempt["attempt_id"]
 
-    # Award XP
-    xp_result = await gamification_service.add_xp(
+    # Award XP with idempotency using attempt_id as event_id
+    xp_result = await gamification_service.add_xp_with_event_id(
         user_id=payload.user_id,
+        event_id=attempt_id,  # Use attempt_id for idempotency
         action="pronunciation_attempt",
-        metadata={"flashcard_qr_id": payload.flashcard_qr_id, "score": payload.score},
+        source_type="pronunciation",
+        source_id=payload.flashcard_qr_id,
+        attempt_id=attempt_id,
+        session_id=payload.session_id,
+        metadata={"score": payload.score, "flashcard_qr_id": payload.flashcard_qr_id},
     )
-    xp_awarded = xp_result.get("xp_added", 0)
+
+    # Get XP awarded (handle both legacy and idempotent responses)
+    xp_awarded = xp_result.get("xp_awarded") or xp_result.get("xp_added", 0)
+    if xp_result.get("success"):
+        await repo.set_xp_awarded(attempt_id, int(xp_awarded))
 
     # Badge check: pronunciation_pro awarded exactly on the 5th attempt.
     # Using == 5 (not >= 5) so the badge call fires only once, not on every
@@ -161,7 +172,8 @@ async def log_pronunciation_attempt(
         logger.info(f"[Pronunciation] Badge '{BADGE_PRONUNCIATION_PRO}' awarded to {payload.user_id}")
 
     return PronunciationAttemptResponse(
-        _id=doc_id,
+        _id=attempt_id,
+        attempt_id=attempt_id,
         user_id=payload.user_id,
         flashcard_qr_id=payload.flashcard_qr_id,
         spoken_text=payload.spoken_text,
@@ -173,7 +185,8 @@ async def log_pronunciation_attempt(
         section_id=payload.section_id,
         session_id=payload.session_id,
         target_text=payload.target_text,
-        attempted_at=doc_data.get("attempted_at"),
+        status="completed" if xp_result.get("success") else "pending",
+        attempted_at=attempt["attempted_at"],
         xp_awarded=xp_awarded,
     )
 

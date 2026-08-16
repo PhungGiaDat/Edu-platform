@@ -533,7 +533,9 @@ export default function LearnARV2() {
         progress: number;
         error: string | null;
     }>({ key: null, status: 'idle', mindUrl: null, mindBuffer: null, progress: 0, error: null });
-    const [multiRetryToken, setMultiRetryToken] = useState(0);
+    // Persistent mode: combo resolution is driven by the backend. No runtime merge state needed.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_multiRetryToken, setMultiRetryToken] = useState(0);
     const [isAddingCard, setIsAddingCard] = useState(false);
     const [, setIsComboActive] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -550,18 +552,7 @@ export default function LearnARV2() {
     const isAddingCardRef = useRef(false);
     const qrGateRef = useRef<Map<string, number>>(new Map());
     const lastTargetEventRef = useRef(0);
-    const multiOperationIdRef = useRef(0);
-    const multiAbortRef = useRef<AbortController | null>(null);
     const multiPreparingKeyRef = useRef<string | null>(null);
-    const firstTarget1FoundKeyRef = useRef<string | null>(null);
-    // Mirror of multiPreparation.mindBuffer that ARContainerV2 can read via
-    // postMessage even mid-render. Solves Cause 2 of
-    // report/DEBUG_20260706_MULTI_FLASHCARD_LOADING.md: the iframe's
-    // bootstrap() starts its 300 ms MIND_BUFFER_REQUEST poll ~immediately
-    // after mount, before React effects have had a chance to run. If the
-    // parent only stores the buffer in React state, the first poll arrives
-    // before the subscription effect has copied it into a ref-based handler.
-    const mindBufferRef = useRef<{ buffer: Uint8Array | null }>({ buffer: null });
 
     // Session ID returned from backend when we POST /sessions/start
     const sessionIdRef = useRef<string | null>(null);
@@ -625,7 +616,6 @@ export default function LearnARV2() {
         comboKey,
         comboResolution,
         shouldUseComboMindUrl,
-        shouldPrepareIndependentMulti,
         proximity: _proximity, // eslint-disable-line @typescript-eslint/no-unused-vars
         handleProximityDetected,
         handleProximityEnded,
@@ -745,204 +735,17 @@ export default function LearnARV2() {
         });
     }, [shouldUseComboMindUrl, comboMindUrl, comboKey, isPersistentViewerEnabled, emitMobileDebug]);
 
-    useEffect(() => {
-        if (!shouldPrepareIndependentMulti || !comboKey || !scannedTarget0 || !scannedTarget1) return;
-        if (multiPreparingKeyRef.current === comboKey) return;
+    // Persistent mode: combos are resolved by the backend and sent via
+    // SET_ACTIVE_TARGETS. No runtime merge is needed.
 
-        const operationId = ++multiOperationIdRef.current;
-        const controller = new AbortController();
-        multiAbortRef.current?.abort();
-        multiAbortRef.current = controller;
-        multiPreparingKeyRef.current = comboKey;
-        setMultiPreparation({
-            key: comboKey,
-            status: 'preparing',
-            mindUrl: null,
-            mindBuffer: null,
-            progress: 10,
-            error: null
-        });
-        const startedAt = Date.now();
-        const details = {
-            comboKey,
-            operationId,
-            qrIds: [scannedTarget0.qrId, scannedTarget1.qrId],
-            arTags: [scannedTarget0.arTag, scannedTarget1.arTag]
-        };
-        emitMobileDebug('MULTI_MIND_PREPARE_STARTED', details);
-
-        const ensureCurrent = () => {
-            if (controller.signal.aborted || multiOperationIdRef.current !== operationId) {
-                throw new DOMException('Stale multi-card preparation', 'AbortError');
-            }
-        };
-        const fetchMind = async (url: string, index: number) => {
-            if (!url) throw new Error(`Card ${index + 1} has no Mind target file`);
-            const resolvedUrl = resolveMindUrl(url);
-            if (!resolvedUrl) throw new Error(`Card ${index + 1} Mind target URL is invalid`);
-            const response = await fetch(resolvedUrl, { signal: controller.signal, cache: 'no-store' });
-            if (!response.ok) throw new Error(`Card ${index + 1} Mind file returned HTTP ${response.status}`);
-            const buffer = await response.arrayBuffer();
-            emitMobileDebug('MULTI_MIND_SOURCE_LOADED', { ...details, index, bytes: buffer.byteLength, url });
-            setMultiPreparation(prev => prev.key === comboKey
-                ? { ...prev, progress: index === 0 ? 25 : 40 }
-                : prev);
-            return buffer;
-        };
-        const preflightCard = async (index: number, urls: string[]) => {
-            for (const url of urls.filter(Boolean)) {
-                try {
-                    const response = await fetch(url, { method: 'HEAD', signal: controller.signal, cache: 'no-store' });
-                    if (response.ok) return;
-                } catch (error) {
-                    if (controller.signal.aborted) throw error;
-                }
-            }
-            throw new Error(`Card ${index + 1} has no reachable model or fallback image`);
-        };
-
-        void (async () => {
-            // Task 9: Skip runtime merge when persistent viewer is enabled
-            // In persistent mode, catalog targets are sent via SET_ACTIVE_TARGETS instead
-            if (isPersistentViewerEnabled) {
-                emitMobileDebug('PERSISTENT_VIEWER_SKIP_MERGE', { comboKey });
-                return;
-            }
-
-            try {
-                const [first, second] = await Promise.all([
-                    fetchMind(scannedTarget0.mindUrl, 0),
-                    fetchMind(scannedTarget1.mindUrl, 1)
-                ]);
-                ensureCurrent();
-                const { mergeMindTargetBuffers } = await import('@/utils/mergeMindTargets');
-                const merged = mergeMindTargetBuffers(first, second);
-                ensureCurrent();
-                emitMobileDebug('MULTI_MIND_VALIDATED', { ...details, elapsedMs: Date.now() - startedAt });
-                setMultiPreparation(prev => prev.key === comboKey ? { ...prev, progress: 60 } : prev);
-                emitMobileDebug('MULTI_MIND_MERGED', { ...details, bytes: merged.byteLength, elapsedMs: Date.now() - startedAt });
-                setMultiPreparation(prev => prev.key === comboKey ? { ...prev, progress: 75 } : prev);
-                await Promise.all([
-                    preflightCard(0, [scannedTarget0.model3dUrl, scannedTarget0.image2dUrl]),
-                    preflightCard(1, [scannedTarget1.model3dUrl, scannedTarget1.image2dUrl])
-                ]);
-                ensureCurrent();
-                setMultiPreparation({
-                    key: comboKey,
-                    status: 'ready',
-                    mindUrl: 'runtime-buffer',
-                    mindBuffer: merged,
-                    progress: 90,
-                    error: null
-                });
-            } catch (error) {
-                if (error instanceof DOMException && error.name === 'AbortError') {
-                    emitMobileDebug('MULTI_MIND_OPERATION_STALE', { ...details, elapsedMs: Date.now() - startedAt });
-                    return;
-                }
-                const message = error instanceof Error ? error.message : String(error);
-                multiPreparingKeyRef.current = null;
-                emitMobileDebug('MULTI_MIND_PREPARE_FAILED', { ...details, error: message, elapsedMs: Date.now() - startedAt });
-                setMultiPreparation({
-                    key: comboKey,
-                    status: 'error',
-                    mindUrl: null,
-                    mindBuffer: null,
-                    progress: 0,
-                    error: message
-                });
-            }
-        })();
-
-        return () => controller.abort();
-    }, [
-        shouldPrepareIndependentMulti,
-        comboKey,
-        // Use the snapshot's version as the stable identity signal. The qrIds
-        // are also listed as a safety net for the rare case where the
-        // snapshot's equality check misses under React 18 strict-mode.
-        flashcardSnapshot.version,
-        scannedTarget0?.qrId,
-        scannedTarget1?.qrId,
-        multiRetryToken,
-        emitMobileDebug
-    ]);
-
-    // Mirror the merged mindBuffer into a ref so ARContainerV2 can read it via
-    // postMessage without re-rendering. This is the bridge for Edit I — when
-    // the iframe mounts and immediately polls MIND_BUFFER_REQUEST, the parent's
-    // stable handler (registered once in ARContainerV2) reads from this ref.
-    useEffect(() => {
-        mindBufferRef.current.buffer = multiPreparation.mindBuffer;
-    }, [multiPreparation.mindBuffer]);
-
-    useEffect(() => {
-        if (multiPreparation.status !== 'ready' || !multiPreparation.mindUrl || !comboKey || multiPreparation.key !== comboKey) return;
-        if (!shouldPrepareIndependentMulti || activeCombo) return;
-        let cancelled = false;
-        let timeoutId: number | undefined;
-        const commitWhenTrackingSettles = () => {
-            const msSinceTargetEvent = Date.now() - lastTargetEventRef.current;
-            if (msSinceTargetEvent < 900) {
-                timeoutId = window.setTimeout(commitWhenTrackingSettles, 900 - msSinceTargetEvent);
-                return;
-            }
-            if (!cancelled) {
-                setMultiPreparation(prev => prev.key === comboKey
-                    ? { ...prev, status: 'committed', progress: 100 }
-                    : prev);
-                emitMobileDebug('MULTI_VIEWER_COMMITTED', { comboKey });
-            }
-        };
-        timeoutId = window.setTimeout(commitWhenTrackingSettles, 700);
-        return () => {
-            cancelled = true;
-            if (timeoutId) window.clearTimeout(timeoutId);
-        };
-    }, [multiPreparation, comboKey, shouldPrepareIndependentMulti, activeCombo, emitMobileDebug]);
-
-    const isMultiViewer = Boolean(
-        multiPreparation.status === 'committed' &&
-        multiPreparation.mindBuffer &&
-        Boolean(multiPreparation.mindUrl) &&
-        flashcardCount === 2 &&
-        (comboKey === null || comboKey === multiPreparation.key) &&
-        !isComboViewer
-    );
-
-    // Reset multiPreparation when comboKey changes or card count drops below 2
-    // Keep multiPreparation alive when in combo mode (either viewer or merging)
-    useEffect(() => {
-        if (isComboViewer) return;
-        if (flashcardCount === 2 && comboKey === multiPreparation.key) return;
-        // Operation id is no longer incremented here — the prepare effect owns
-        // its own cancellation via `multiAbortRef`, and bumping it during the
-        // cleanup window would race with the prepare's catch handler (see
-        // Skeptic Objection #5 in the multi-agent design review).
-        multiAbortRef.current?.abort();
-        multiPreparingKeyRef.current = null;
-        setMultiPreparation(prev => prev.status === 'idle' && prev.key === null ? prev : ({
-            key: null,
-            status: 'idle',
-            mindUrl: null,
-            mindBuffer: null,
-            progress: 0,
-            error: null
-        }));
-    }, [isComboViewer, flashcardCount, comboKey, multiPreparation.key]);
-
-    useEffect(() => () => {
-        multiOperationIdRef.current += 1;
-        multiAbortRef.current?.abort();
-    }, []);
+    // In persistent mode, combos use the backend-provided mindUrl from the
+    // combo detection response. No runtime buffer merge is needed.
 
     // Determine which mind URL to use:
-    // 1. Combo mode (isComboViewer) → use combo_mind_url from backend
-    // 2. Multi mode (isMultiViewer) → use merged mind buffer
-    // 3. Single card → use first card's mindUrl
-    const useMultiMind = (isMultiViewer || isComboViewer) && multiPreparation.status === 'committed';
-    const mindUrl = useMultiMind
-        ? (multiPreparation.mindBuffer ? 'runtime-buffer' : multiPreparation.mindUrl)
+    // - Combo mode (isComboViewer) → use combo_mind_url from backend
+    // - Single card → use first card's mindUrl
+    const mindUrl = isComboViewer
+        ? multiPreparation.mindUrl
         : resolveMindUrl(scannedTarget0?.mindUrl || arData?.targets?.[0]?.nft_base_url);
 
     const comboTarget0 = scannedTarget0;
@@ -965,7 +768,7 @@ export default function LearnARV2() {
     const comboPhrase = isComboViewer && activeCombo?.description
         || [comboTarget0?.word || arData?.flashcard?.word, comboTarget1?.word || fallbackTarget1?.word].filter(Boolean).join(' in ');
     const orderedViewerTargets = scannedTargets;
-    const committedViewerTargetCount = isComboViewer || isMultiViewer ? 2 : 1;
+    const committedViewerTargetCount = isComboViewer ? 2 : 1;
     const viewerTargets = orderedViewerTargets.length
         ? orderedViewerTargets.map(target => ({
             modelUrl: target.model3dUrl,
@@ -985,7 +788,6 @@ export default function LearnARV2() {
             appState,
             isAddingCard,
             isComboViewer,
-            isMultiViewer,
             flashcardCount,
             comboKey,
             comboResolution,
@@ -1038,26 +840,9 @@ export default function LearnARV2() {
                 comboPhrase
             }
         });
-    }, [emitMobileDebug, appState, isAddingCard, isComboViewer, isMultiViewer, flashcardCount, comboKey, comboResolution, displayMode, detectedQrId, mindUrl, activeCombo, comboTarget0, comboTarget1, fallbackTarget1, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+    }, [emitMobileDebug, appState, isAddingCard, isComboViewer, flashcardCount, comboKey, comboResolution, displayMode, detectedQrId, mindUrl, activeCombo, comboTarget0, comboTarget1, fallbackTarget1, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
 
     const handleViewerAssetError = useCallback((data: { code?: string; error: string; url?: string }) => {
-        if (isMultiViewer) {
-            emitMobileDebug('MULTI_MIND_PREPARE_FAILED', {
-                ...data,
-                comboKey,
-                phase: 'viewer_initialization'
-            });
-            setMultiPreparation(prev => ({
-                ...prev,
-                key: null,
-                status: 'error',
-                mindUrl: null,
-                mindBuffer: null,
-                error: data.error,
-                progress: 0
-            }));
-            return;
-        }
         if (!isComboViewer) return;
         emitMobileDebug('COMBO_VIEWER_FAILED_RESTORING_ORIGINALS', {
             ...data,
@@ -1073,7 +858,7 @@ export default function LearnARV2() {
         setCommittedComboId(null);
         setIsComboActive(false);
         rejectCombo(data.code || data.error);
-    }, [isMultiViewer, isComboViewer, emitMobileDebug, comboKey, activeCombo, scannedTargets, rejectCombo]);
+    }, [isComboViewer, emitMobileDebug, comboKey, activeCombo, scannedTargets, rejectCombo]);
 
     // ========== HANDLERS ==========
     const handleQRDetected = useCallback((qrId: string) => {
@@ -1237,15 +1022,14 @@ export default function LearnARV2() {
         console.log('[LearnARV2] Target found:', idx);
         lastTargetEventRef.current = Date.now();
         if (idx === 0) setMarkerFound(true);
-        if (idx === 1 && isMultiViewer && comboKey && firstTarget1FoundKeyRef.current !== comboKey) {
-            firstTarget1FoundKeyRef.current = comboKey;
+        if (idx === 1 && isComboViewer && comboKey) {
             const secondCard = getFlashcardByIndex(1);
-            emitMobileDebug('MULTI_TARGET_1_FIRST_FOUND', {
+            emitMobileDebug('COMBO_TARGET_1_FOUND', {
                 comboKey,
                 elapsedMs: secondCard ? Date.now() - secondCard.detectedAt : undefined
             });
         }
-    }, [isMultiViewer, comboKey, getFlashcardByIndex, emitMobileDebug]);
+    }, [isComboViewer, comboKey, getFlashcardByIndex, emitMobileDebug]);
 
     const handleTargetLost = useCallback((idx: number) => {
         console.log('[LearnARV2] Target lost:', idx);
@@ -1470,8 +1254,7 @@ export default function LearnARV2() {
                 activeTargets={isPersistentViewerEnabled ? activeTargets : undefined}
                 onActiveTargetsApplied={isPersistentViewerEnabled ? handleActiveTargetsApplied : undefined}
                 onActiveTargetsRejected={isPersistentViewerEnabled ? handleActiveTargetsRejected : undefined}
-                // Legacy props: only used when persistent viewer is disabled
-                mindBuffer={isPersistentViewerEnabled ? undefined : (isMultiViewer ? multiPreparation.mindBuffer : null)}
+                // Legacy props: no longer used in persistent mode
                 modelUrl={modelUrl}
                 imageUrl={imageUrl}
                 textureUrl={textureUrl}

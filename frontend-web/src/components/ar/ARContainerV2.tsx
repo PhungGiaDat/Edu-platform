@@ -16,7 +16,6 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { eventBus } from '@/runtime/EventBus';
 import { AREvent } from '@/core/types/AREvents';
-import { getSupabaseStorageBase } from '../../config';
 import {
     ARMessage,
     ARMessageType,
@@ -56,8 +55,7 @@ interface ARContainerV2Props {
         stage: string;
         message: string;
     }) => void;
-    // --- Legacy props (retained for backward compatibility) ---
-    mindBuffer?: Uint8Array | null;
+    // --- Legacy props (used when catalogId is absent; mindBuffer unused — runtime merge removed) ---
     modelUrl?: string;
     imageUrl?: string;
     textureUrl?: string;
@@ -95,28 +93,9 @@ interface ARViewerTarget {
     word?: string;
 }
 
-const SUPABASE_BASE = getSupabaseStorageBase();
-const PALM_TREE_MODEL_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb`;
-const PALM_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg`;
-const ELEPHANT_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg`;
-const COMBO_MODEL_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb`;
-const COMBO_IMAGE_URL = `${SUPABASE_BASE}/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png`;
 const VIEWER_BOOTSTRAP_TIMEOUT_MS = 15_000;
 // 7-second ACK timeout for SET_ACTIVE_TARGETS revisions (Task 8)
 const ACTIVE_TARGETS_ACK_TIMEOUT_MS = 7_000;
-
-function normalizeViewerAssetUrl(url?: string): string | undefined {
-    if (!url) return undefined;
-    const lower = url.toLowerCase();
-    if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return PALM_TREE_MODEL_URL;
-    if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return PALM_IMAGE_URL;
-    if (lower.includes('/frontend/model2d/elephant.jpg') || lower.endsWith('/elephant.jpg')) return ELEPHANT_IMAGE_URL;
-    if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
-    if (lower.endsWith('/cute_elephant_jungle.glb')) return COMBO_MODEL_URL;
-    if (lower.endsWith('/elephant_tree_combo_layered.png')) return COMBO_IMAGE_URL;
-    return url;
-}
-
 export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     initialPhase = 'SCANNING',
     catalogId,
@@ -125,7 +104,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     activeTargets,
     onActiveTargetsApplied,
     onActiveTargetsRejected,
-    mindBuffer,
+    // --- Legacy props (used when catalogId is absent) ---
     modelUrl,
     imageUrl,
     textureUrl,
@@ -186,16 +165,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     const revisionStateRef = useRef<ActiveTargetRevisionState>(initialRevisionState);
     // Task 8: ACK timeout handle — cleared on each new revision
     const ackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    // Ref-held buffer so the long-lived MIND_BUFFER_REQUEST listener (see the
-    // stable handler below) can ship the latest merged buffer to the iframe
-    // regardless of prop churn. Solves Cause 2 of
-    // report/DEBUG_20260706_MULTI_FLASHCARD_LOADING.md.
-    const mindBufferDeliveryRef = useRef<Uint8Array | null>(null);
-
-    useEffect(() => {
-        mindBufferDeliveryRef.current = mindBuffer ?? null;
-    }, [mindBuffer]);
 
     const emitDebug = useCallback((label: string, details: Record<string, unknown> = {}) => {
         window.postMessage({
@@ -263,7 +232,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
      * in the URL and never change the iframe key.
      */
     const viewerSrc = useMemo(() => {
-        // Persistent viewer path: catalogId + mindUrl + catalogTargetCount
+        // Priority 1: Persistent viewer (catalogId + mindUrl)
+        // Model/word/combo assets sent via postMessage after AR_READY.
+        // This path requires SET_ACTIVE_TARGETS to activate targets.
         if (catalogId && mindUrl) {
             const params = new URLSearchParams();
             params.set('mind', mindUrl);
@@ -276,11 +247,11 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             return `/ar-viewer.html?${params.toString()}`;
         }
 
-        // Legacy path: fall back to runtime-buffer / per-target-param URL
-        if (!mindUrl && !mindBuffer) return null;
+        // Priority 2: Legacy path — single mindUrl, models/words via URL params.
+        // Falls back to scanner if no mindUrl at all.
+        if (!mindUrl) return null;
         const params = new URLSearchParams();
-        params.set('mind', mindBuffer ? 'runtime-buffer' : mindUrl!);
-        params.set('supabaseBase', SUPABASE_BASE);
+        params.set('mind', mindUrl);
 
         const viewerTargets = targets?.length
             ? targets.slice(0, 5)
@@ -294,29 +265,22 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
         viewerTargets.slice(0, targetCount).forEach((target, index) => {
             const suffix = index === 0 ? '' : String(index + 1);
-            const normalizedModelUrl = normalizeViewerAssetUrl(target.modelUrl);
-            const normalizedImageUrl = normalizeViewerAssetUrl(target.imageUrl);
-            const normalizedTextureUrl = normalizeViewerAssetUrl(target.textureUrl);
-            if (normalizedModelUrl) params.set(`model${suffix}`, normalizedModelUrl);
-            if (normalizedImageUrl) params.set(`image${suffix}`, normalizedImageUrl);
-            if (normalizedTextureUrl) params.set(`textureUrl${suffix}`, normalizedTextureUrl);
+            if (target.modelUrl) params.set(`model${suffix}`, target.modelUrl);
+            if (target.imageUrl) params.set(`image${suffix}`, target.imageUrl);
+            if (target.textureUrl) params.set(`textureUrl${suffix}`, target.textureUrl);
             if (target.word) params.set(`word${suffix}`, target.word);
         });
 
         params.set('cardCount', String(targetCount));
         params.set('targetCount', String(targetCount));
-        if (typeof cardCount === 'number' || viewerTargets.length) {
-            params.set('maxTrack', String(Math.max(1, Math.min(targetCount, 5))));
-        }
-        const normalizedComboModelUrl = normalizeViewerAssetUrl(comboModelUrl);
-        const normalizedComboImageUrl = normalizeViewerAssetUrl(comboImageUrl);
-        const normalizedComboTextureUrl = normalizeViewerAssetUrl(comboTextureUrl);
-        if (normalizedComboModelUrl) params.set('comboModel', normalizedComboModelUrl);
-        if (normalizedComboImageUrl) params.set('comboImage', normalizedComboImageUrl);
-        if (normalizedComboTextureUrl) params.set('comboTextureUrl', normalizedComboTextureUrl);
+        params.set('maxTrack', String(Math.max(1, Math.min(targetCount, 5))));
+
+        if (comboModelUrl) params.set('comboModel', comboModelUrl);
+        if (comboImageUrl) params.set('comboImage', comboImageUrl);
+        if (comboTextureUrl) params.set('comboTextureUrl', comboTextureUrl);
         if (comboPhrase) params.set('comboPhrase', comboPhrase);
         return `/ar-viewer.html?${params.toString()}`;
-    }, [mindUrl, mindBuffer, catalogId, catalogTargetCount, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+    }, [mindUrl, catalogId, catalogTargetCount, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
 
     useEffect(() => {
         emitDebug('PARENT_VIEWER_SRC_READY', {
@@ -324,23 +288,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             mindUrl,
             catalogId,
             catalogTargetCount,
-            hasMindBuffer: Boolean(mindBuffer?.byteLength),
-            modelUrl,
-            imageUrl,
-            textureUrl,
-            modelUrl2,
-            imageUrl2,
-            textureUrl2,
-            word,
-            word2,
-            targets,
-            cardCount,
-            comboModelUrl,
-            comboImageUrl,
-            comboTextureUrl,
-            comboPhrase
         });
-    }, [emitDebug, viewerSrc, mindUrl, mindBuffer, catalogId, catalogTargetCount, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+    }, [emitDebug, viewerSrc, mindUrl, catalogId, catalogTargetCount]);
 
     const mainSrc = useMemo(() => {
         switch (phase) {
@@ -356,22 +305,24 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
      * changes, otherwise React remounts the iframe and loses the MindAR session.
      *
      * Persistent viewer: key = catalogId|mindUrl (stable catalog identity)
-     * Legacy path: key includes mindUrl or runtime-buffer identity
+     * Legacy path: key derived from URL params (mindUrl + models)
      */
     const mindIdentityKey = useMemo(() => {
         if (!mainSrc) return 'none';
         if (catalogId && mindUrl) {
-            // Task 8: stable key from catalog identity only
             return `catalog=${catalogId}|mind=${mindUrl}`;
         }
-        // Legacy path
-        if (mindBuffer && mindBuffer.byteLength > 0) return `mind=runtime-buffer#${mindBuffer.byteLength}#${mainSrc}`;
+        // Legacy path: stable key from URL params (doesn't include activeTargets)
         if (mainSrc.startsWith('data:') || mainSrc.includes('mind=')) {
             const url = new URL(mainSrc, window.location.origin);
-            return `phase=${phase}|mind=${url.searchParams.get('mind') ?? 'none'}`;
+            const modelParams = ['model', 'model2', 'model3', 'model4', 'model5']
+                .map(p => `${p}=${url.searchParams.get(p) ?? ''}`)
+                .filter(p => !p.endsWith('='))
+                .join('|');
+            return `legacy|mind=${url.searchParams.get('mind') ?? 'none'}|${modelParams}`;
         }
         return `phase=${phase}|scanner`;
-    }, [phase, mainSrc, mindBuffer, catalogId, mindUrl]);
+    }, [phase, mainSrc, catalogId, mindUrl]);
 
     // ========== TASK 8: REVISION TRANSPORT ==========
 
@@ -543,18 +494,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 break;
             }
 
-            case 'MIND_BUFFER_REQUEST': {
-                const iframeWindow = iframeRef.current?.contentWindow;
-                if (!fromPiP && mindBuffer && iframeWindow && event.source === iframeWindow) {
-                    iframeWindow.postMessage(
-                        createMessage('MIND_BUFFER', { buffer: mindBuffer }),
-                        '*'
-                    );
-                    emitDebug('PARENT_MIND_BUFFER_SENT', { bytes: mindBuffer.byteLength });
-                }
-                break;
-            }
-
             // Task 8: handle SET_ACTIVE_TARGETS acknowledgement
             case 'ACTIVE_TARGETS_APPLIED': {
                 const data = payload as ARMessagePayloadMap['ACTIVE_TARGETS_APPLIED'];
@@ -702,49 +641,12 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 break;
             }
         }
-    }, [phase, transitionTo, deferQrTransition, emitDebug, viewerSrc, mindBuffer, activeTargets, requestActiveTargets]);
+    }, [phase, transitionTo, deferQrTransition, emitDebug, viewerSrc, activeTargets, requestActiveTargets]);
 
     useEffect(() => {
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
     }, [handleMessage]);
-
-    // ========== STABLE MIND BUFFER DELIVERY (Edit I) ==========
-    // Registered once on mount, never re-subscribes. Solves the iframe
-    // thrash where React re-renders between the iframe's MIND_BUFFER_REQUEST
-    // and the parent's reply — see
-    // report/DEBUG_20260706_MULTI_FLASHCARD_LOADING.md, Cause 2.
-    //
-    // Defensive buffer copy: iOS Safari can neuter ArrayBuffer views during
-    // structured-clone-like operations inside postMessage (Constraint
-    // Guardian #6). Copying into a fresh Uint8Array detaches from the
-    // neuter-prone buffer.
-    useEffect(() => {
-        const onMessage = (event: MessageEvent) => {
-            const data = event.data;
-            if (!data || data.type !== 'MIND_BUFFER_REQUEST') return;
-            const iframeWindow = iframeRef.current?.contentWindow;
-            if (event.source !== iframeWindow || !iframeWindow) return;
-            const buffer = mindBufferDeliveryRef.current;
-            if (!buffer || !buffer.byteLength) return;
-            const safeBuffer = new Uint8Array(buffer.byteLength);
-            safeBuffer.set(buffer);
-            try {
-                iframeWindow.postMessage(
-                    createMessage('MIND_BUFFER', { buffer: safeBuffer }),
-                    '*'
-                );
-                emitDebug('PARENT_MIND_BUFFER_SENT', { bytes: safeBuffer.byteLength });
-            } catch (error) {
-                emitDebug('PARENT_MIND_BUFFER_POST_FAILED', {
-                    error: error instanceof Error ? error.message : String(error)
-                });
-            }
-        };
-        window.addEventListener('message', onMessage);
-        return () => window.removeEventListener('message', onMessage);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     // ========== EXTERNAL CONTROLS ==========
     useEffect(() => {

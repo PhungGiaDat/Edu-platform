@@ -3,7 +3,9 @@
 Game Repository - Data Access Layer for mini games
 """
 from typing import Optional, List, Dict, Any
+import json
 from database.base_repo import BaseRepository
+from database.postgres_connection import postgres_core_enabled, postgres_pool
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,7 +18,10 @@ class GameRepository(BaseRepository):
     """
     
     def __init__(self):
-        super().__init__("mini_game_bank")
+        if postgres_core_enabled():
+            self.collection = None
+        else:
+            super().__init__("mini_game_bank")
     
     async def get_by_flashcard_qr_id(
         self,
@@ -35,6 +40,31 @@ class GameRepository(BaseRepository):
         """
         logger.debug(f"🔍 [SEARCH] Games for flashcard: {qr_id}, filters: {filters}")
         
+        if postgres_core_enabled():
+            clauses = ["flashcard_qr_id = $1"]
+            args: list[Any] = [qr_id]
+            if filters.get("game_type"):
+                clauses.append(f"game_type = ${len(args)+1}")
+                args.append(filters["game_type"])
+            if filters.get("difficulty"):
+                clauses.append(f"difficulty = ${len(args)+1}")
+                args.append(filters["difficulty"])
+            rows = await postgres_pool().fetch(
+                "SELECT game_type,flashcard_qr_id,difficulty,question,image_url,correct_answer,stars_reward,time_limit,payload FROM public.mini_game_items WHERE " + " AND ".join(clauses),
+                *args,
+            )
+            values = []
+            for row in rows:
+                value = dict(row)
+                payload = value.pop("payload", {}) or {}
+                if isinstance(payload, str):
+                    try:
+                        payload = json.loads(payload)
+                    except json.JSONDecodeError:
+                        payload = {}
+                value.update(payload)
+                values.append(value)
+            return values
         query = {"flashcard_qr_id": qr_id}
         query.update(filters)
         
@@ -64,6 +94,9 @@ class GameRepository(BaseRepository):
         Returns:
             List of game session documents
         """
+        if postgres_core_enabled():
+            rows = await postgres_pool().fetch("SELECT * FROM public.mini_game_items WHERE game_type=$1 OFFSET $2 LIMIT $3", game_type, skip, limit)
+            return [dict(row) for row in rows]
         return await self.find_many(
             filter={"game_type": game_type},
             skip=skip,
@@ -87,6 +120,9 @@ class GameRepository(BaseRepository):
         Returns:
             List of game session documents
         """
+        if postgres_core_enabled():
+            rows = await postgres_pool().fetch("SELECT * FROM public.mini_game_items WHERE difficulty=$1 OFFSET $2 LIMIT $3", difficulty, skip, limit)
+            return [dict(row) for row in rows]
         return await self.find_many(
             filter={"difficulty": difficulty},
             skip=skip,
@@ -100,6 +136,8 @@ class GameRepository(BaseRepository):
         Returns:
             List of game type identifiers
         """
+        if postgres_core_enabled():
+            return [row["game_type"] for row in await postgres_pool().fetch("SELECT DISTINCT game_type FROM public.mini_game_items ORDER BY game_type")]
         return await self.collection.distinct("game_type")
 
 

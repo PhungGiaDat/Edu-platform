@@ -1,9 +1,28 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle, StyleProp, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ViewStyle,
+  StyleProp,
+  TouchableOpacity,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, COLOR_MAP, SHADOWS, RADIUS, type ClayColor } from '../design/tokens';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import {
+  COLORS,
+  COLOR_MAP,
+  SHADOWS,
+  RADIUS,
+  ANIMATION,
+  type ClayColor,
+} from '../design/tokens';
 
-export type ClayVariant = 'sm' | 'md' | 'lg';
+export type ClayVariant = 'sm' | 'md' | 'lg' | 'xl';
 
 export interface ClayCardProps {
   variant?: ClayVariant;
@@ -12,12 +31,32 @@ export interface ClayCardProps {
   padding?: number;
   style?: StyleProp<ViewStyle>;
   onPress?: () => void;
+  // Inner-tinted background used for cream/yellow tone families
+  tone?: 'cool' | 'warm' | 'none';
   children: React.ReactNode;
 }
 
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
+const RADIUS_MAP = {
+  sm: RADIUS.sm,
+  md: RADIUS.md,
+  lg: RADIUS.lg,
+  xl: RADIUS.xl,
+};
+
+const SHADOW_MAP = {
+  sm: SHADOWS.claySm,
+  md: SHADOWS.clayMd,
+  lg: SHADOWS.clayLg,
+  xl: SHADOWS.clayLg,
+};
+
 /**
- * Claymorphic card using native boxShadow (RN 0.86+) + LinearGradient top-edge highlight.
- * Renders 3-layer claymorphic effect: drop shadow + ambient shadow + gradient highlight.
+ * ClayCard — premium claymorphic surface with multi-layer highlight + shadow.
+ * Used everywhere a child-friendly soft surface is needed.
+ *
+ * Tappable variant uses Reanimated spring for tactile press feedback.
  */
 export const ClayCard: React.FC<ClayCardProps> = ({
   variant = 'md',
@@ -28,43 +67,77 @@ export const ClayCard: React.FC<ClayCardProps> = ({
   onPress,
   children,
 }) => {
-  const radius = borderRadius ?? RADIUS[variant];
-  const shadowKey = `clay${variant.charAt(0).toUpperCase() + variant.slice(1)}` as keyof typeof SHADOWS;
-  const shadowStyle = SHADOWS[shadowKey];
-  const backgroundColor = COLOR_MAP[color];
+  const radius = borderRadius ?? RADIUS_MAP[variant];
+  const shadowStyle = SHADOW_MAP[variant];
+  const backgroundColor = COLOR_MAP[color] ?? COLORS.white;
+
+  const pressed = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const pressY = pressed.value ? 2 : 0;
+    const pressScale = pressed.value ? 0.985 : 1;
+    const shadowMul = pressed.value ? 0.6 : 1;
+    return {
+      transform: [
+        { translateY: withSpring(pressY, ANIMATION.press) },
+        { scale: withSpring(pressScale, ANIMATION.press) },
+      ],
+      shadowOffset: {
+        width: shadowStyle.shadowOffset.width,
+        height: shadowStyle.shadowOffset.height * shadowMul,
+      },
+    };
+  });
 
   const cardContent = (
-    <View
+    <Animated.View
       style={[
         styles.container,
         {
           borderRadius: radius,
           shadowColor: shadowStyle.shadowColor,
-          shadowOffset: shadowStyle.shadowOffset,
           shadowOpacity: shadowStyle.shadowOpacity,
           shadowRadius: shadowStyle.shadowRadius,
           elevation: shadowStyle.elevation,
         },
+        onPress && animatedStyle,
         style,
       ]}
     >
-      <View style={[styles.inner, { backgroundColor, borderRadius: radius }]}>
+      <View
+        style={[
+          styles.inner,
+          { backgroundColor, borderRadius: radius },
+        ]}
+      >
+        {/* Top edge highlight — soft white→transparent gradient */}
         <LinearGradient
-          colors={['rgba(255,255,255,0.5)', 'transparent']}
-          style={[styles.highlight, { borderTopLeftRadius: radius, borderTopRightRadius: radius }]}
+          colors={['rgba(255,255,255,0.55)', 'rgba(255,255,255,0)']}
+          style={[
+            styles.highlight,
+            {
+              borderTopLeftRadius: radius,
+              borderTopRightRadius: radius,
+            },
+          ]}
           start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 0.25 }}
+          end={{ x: 0.5, y: 0.35 }}
         />
         <View style={[styles.content, { padding }]}>{children}</View>
       </View>
-    </View>
+    </Animated.View>
   );
 
   if (onPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+      <AnimatedTouchable
+        onPress={onPress}
+        activeOpacity={1}
+        onPressIn={() => { pressed.value = 1; }}
+        onPressOut={() => { pressed.value = 0; }}
+      >
         {cardContent}
-      </TouchableOpacity>
+      </AnimatedTouchable>
     );
   }
 
@@ -77,15 +150,19 @@ const styles = StyleSheet.create({
   },
   inner: {
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
   },
   highlight: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: '25%',
+    height: '35%',
   },
   content: {
     zIndex: 1,
   },
 });
+
+export default ClayCard;

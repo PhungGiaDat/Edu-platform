@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { unityBridge } from '../bridge/UnityBridgeModule';
 import { COLORS } from '../design/tokens';
 import type { ARMessage } from '../bridge/arMessages';
 
@@ -20,7 +21,8 @@ export const UnityView: React.FC<UnityViewProps> = ({
   onError,
   style,
 }) => {
-  const isAvailable = false; // Phase 2: Check unityBridge.checkAvailability()
+  // Phase 2: Check actual native module availability
+  const isAvailable = unityBridge.checkAvailability();
 
   if (!isAvailable) {
     // Development fallback: placeholder with claymorphic styling

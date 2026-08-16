@@ -1,101 +1,26 @@
-# backend/database/repositories/ar_object_repository.py
-"""
-AR Object Repository - Data Access Layer for AR targets/markers
-
-All writes must flow through :meth:`create_validated` /
-:meth:`update_validated`, which accept an :class:`ARObjectContract` and
-serialise through the shared contract. Generic BaseRepository writes that
-accept arbitrary dicts are intentionally not exposed for this collection,
-because every AR object must satisfy the catalog-or-legacy discriminator
-defined in :mod:`models.ar_object_contract`.
-"""
+"""PostgreSQL repository for semantic AR objects and tracking targets."""
 from typing import Optional, List, Dict, Any
-from core.base_repository import BaseRepository
-from models.ar_object_contract import (
-    ARObjectContract,
-    serialize_ar_object,
-)
-import logging
+import json
 
-logger = logging.getLogger(__name__)
+from database.postgres_connection import postgres_pool
 
 
-class ARObjectRepository(BaseRepository):
-    """
-    Repository for ar_objects collection
-    Handles AR markers, targets, and 3D models data
-    """
-
-    def __init__(self):
-        super().__init__("ar_objects")
-
+class ARObjectRepository:
     async def get_by_tag(self, ar_tag: str) -> Optional[Dict[str, Any]]:
-        """
-        Find AR object by tag
+        row = await postgres_pool().fetchrow("SELECT * FROM public.ar_objects WHERE ar_tag=$1", ar_tag)
+        return dict(row) if row else None
 
-        Args:
-            ar_tag: AR tracking tag (e.g., 'elephant', 'dog')
+    async def get_tracking_target(self, qr_id: str) -> Optional[Dict[str, Any]]:
+        row = await postgres_pool().fetchrow("SELECT * FROM public.ar_tracking_targets WHERE qr_id=$1", qr_id)
+        return dict(row) if row else None
 
-        Returns:
-            AR object document or None
-        """
-        logger.debug(f"🔍 [SEARCH] AR Object by tag: {ar_tag}")
-        raw = await self.find_one({"ar_tag": ar_tag})
-        if raw is None:
-            return None
-        return serialize_ar_object(raw)
-    
-    async def get_by_marker_type(
-        self,
-        marker_type: str
-    ) -> List[Dict[str, Any]]:
-        """
-        Get AR objects by marker type (e.g., 'NFT', 'HIRO', 'KANJI')
-        
-        Args:
-            marker_type: Type of AR marker
-            
-        Returns:
-            List of AR object documents
-        """
-        return await self.find_many(
-            filter={"marker_type": marker_type}
-        )
+    async def get_by_marker_type(self, marker_type: str) -> List[Dict[str, Any]]:
+        # Marker type was a Mongo-only free field; no PostgreSQL fallback exists.
+        return []
 
     async def get_all_tags(self) -> List[str]:
-        """
-        Get list of all unique AR tags
-        
-        Returns:
-            List of AR tag names
-        """
-        return await self.collection.distinct("ar_tag")
-
-    async def create_validated(self, payload: ARObjectContract) -> dict:
-        """Insert a new AR object after validating through the shared contract.
-
-        Raises :class:`pydantic.ValidationError` if ``payload`` is invalid.
-        Returns the serialised document (without Mongo ``_id``) so callers
-        never need to re-validate the round-tripped shape.
-        """
-        raw = payload.model_dump(mode="python")
-        result = await self.collection.insert_one(raw)
-        raw["_id"] = result.inserted_id
-        return serialize_ar_object(raw)
-
-    async def update_validated(self, ar_tag: str, payload: ARObjectContract) -> bool:
-        """Replace the persisted fields of an AR object with a validated
-        payload. Returns ``True`` when exactly one document was matched.
-        """
-        result = await self.collection.update_one(
-            {"ar_tag": ar_tag},
-            {"$set": payload.model_dump(mode="python")},
-        )
-        return result.matched_count == 1
+        return [row["ar_tag"] for row in await postgres_pool().fetch("SELECT ar_tag FROM public.ar_objects ORDER BY ar_tag")]
 
 
 def get_ar_object_repository() -> ARObjectRepository:
-    """Factory function for dependency injection"""
     return ARObjectRepository()
-
-

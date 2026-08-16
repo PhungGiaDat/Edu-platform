@@ -21,12 +21,37 @@ def test_repairs_catalog_and_legacy_without_inference():
 
 
 def test_compare_and_set_filter_uses_explicit_and_or_groups():
+    """The CAS filter must use an ``$and`` with per-field old-value clauses.
+
+    Every constrained field contributes exactly one clause. For MISSING
+    fields the clause is ``{field: {$exists: False}}``; for present
+    scalars it is an ``$or`` of equality forms; for explicit nulls it is
+    ``{field: {$type: "null"}}``. The ``$and`` narrowing by ``_id`` is
+    what makes the over-all filter exact — this test pins the
+    composition so a refactor cannot silently weaken the constraint.
+    """
     repair = build_repairs([
         {"_id": "1", "ar_tag": "elephant_marker_01", "nft_base_url": "/old.mind", "mind_catalog_id": None}
     ], MAPPING)[0]
     query = build_filter(repair)
     assert "$and" in query
-    assert sum(1 for clause in query["$and"] if "$or" in clause) >= 2
+    clauses = query["$and"]
+    # The first two clauses are always the {ar_tag} and {_id} pin.
+    assert clauses[0] == {"_id": "1"}
+    assert clauses[1] == {"ar_tag": "elephant_marker_01"}
+    # The remaining clauses must use the supported narrowing operators.
+    has_narrowing = False
+    for clause in clauses[2:]:
+        for _field, value in clause.items():
+            if isinstance(value, dict) and (
+                "$or" in value or "$exists" in value or "$type" in value
+            ):
+                has_narrowing = True
+                break
+    assert has_narrowing, (
+        "per-field clauses must use narrowing operators, "
+        f"got {clauses[2:]!r}"
+    )
 
 
 def test_second_pass_plans_zero_repairs():

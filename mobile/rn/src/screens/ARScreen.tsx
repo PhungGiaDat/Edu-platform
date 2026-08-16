@@ -5,6 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  AppState,
+  type AppStateStatus,
 } from 'react-native';
 import { ClayCard } from '../components/ClayCard';
 import { ClayButton } from '../components/ClayButton';
@@ -14,8 +16,14 @@ import { ARLoadingOverlay } from '../components/ARLoadingOverlay';
 import { ComboOverlay } from '../components/ComboOverlay';
 import { PetStatusOverlay } from '../components/PetStatusOverlay';
 import { useARSession } from '../hooks/useARSession';
-import { mapToUnityPayload } from '../bridge/ARExperienceMapper';
+import { unityBridge } from '../bridge/UnityBridgeModule';
+import {
+  mapToUnityPayload,
+  validateNativeTrackingMetadata,
+  toCardDescriptorRN,
+} from '../bridge/ARExperienceMapper';
 import { flashcardApi } from '../services/api';
+import { BACKEND_METADATA_UNAVAILABLE } from '../types/ar';
 import { COLORS, SPACING } from '../design/tokens';
 
 type RootStackParamList = {
@@ -37,6 +45,23 @@ export const ARScreen: React.FC<ARScreenProps> = ({ navigation, route }) => {
   const { lessonId, lessonTitle } = route.params;
   const [isLoadingLesson, setIsLoadingLesson] = useState(false);
   const [lessonError, setLessonError] = useState<string | null>(null);
+  /**
+   * M3A — native tracking availability for this lesson.
+   *
+   * `null` until the backend response is processed.
+   * `ready` when native tracking metadata is complete (descriptor available).
+   * `unavailable` when backend is missing or has invalid native fields
+   * (BACKEND_METADATA_UNAVAILABLE family — distinct from
+   * REFERENCE_IMAGE_LOAD_FAILED).
+   *
+   * M3A does NOT call Unity runtime when the descriptor is unavailable.
+   * The descriptor is prepared for M3B consumption.
+   */
+  const [nativeTracking, setNativeTracking] = useState<
+    | { state: 'pending' }
+    | { state: 'ready'; qrId: string }
+    | { state: 'unavailable'; code: typeof BACKEND_METADATA_UNAVAILABLE; qrId: string }
+  >({ state: 'pending' });
 
   const {
     arState,
@@ -55,9 +80,32 @@ export const ARScreen: React.FC<ARScreenProps> = ({ navigation, route }) => {
   const loadLesson = useCallback(async () => {
     setIsLoadingLesson(true);
     setLessonError(null);
+    setNativeTracking({ state: 'pending' });
 
     try {
       const response = await flashcardApi.getFlashcard(lessonId);
+
+      // M3A — explicit native tracking boundary.
+      // Step 1: validate. Step 2: produce CardDescriptorRN from validated
+      // NativeTrackingDto. Step 3: call startImageTrackingMulti to build
+      // the mutable runtime reference-image library in Unity.
+      const availability = validateNativeTrackingMetadata(response.data);
+      if (availability.kind === 'ready') {
+        const descriptor = toCardDescriptorRN(availability.tracking);
+        setNativeTracking({ state: 'ready', qrId: descriptor.qrId });
+
+        // Ele123 golden path: send the validated descriptor to Unity.
+        // Unity loads ARScene additively, builds MutableRuntimeReferenceImageLibrary,
+        // then enables ARTrackedImageManager to detect the physical card.
+        await unityBridge.startImageTrackingMulti({ cards: [descriptor] });
+      } else {
+        setNativeTracking({
+          state: 'unavailable',
+          code: BACKEND_METADATA_UNAVAILABLE,
+          qrId: availability.qrId,
+        });
+      }
+
       const payload = mapToUnityPayload(response.data);
       startSession(lessonId, payload);
     } catch (err) {
@@ -74,6 +122,21 @@ export const ARScreen: React.FC<ARScreenProps> = ({ navigation, route }) => {
       stopSession();
     };
   }, [loadLesson, stopSession]);
+
+  // App lifecycle → pause/resume Unity AR session (M2 / M8)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        unityBridge.resumeSession?.();
+      } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+        unityBridge.pauseSession?.();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   const handleExit = useCallback(() => {
     stopSession();
@@ -94,11 +157,26 @@ export const ARScreen: React.FC<ARScreenProps> = ({ navigation, route }) => {
   const showComboOverlay = arState === 'AR_INTERACTING' && canCombo;
   const showPetOverlay = arState === 'AR_INTERACTING';
   const showTrackingHint = arState === 'IMAGE_TRACKING_READY';
+  // M3A — surface metadata-unavailable state. This is RN-only metadata
+  // and does NOT route to REFERENCE_IMAGE_LOAD_FAILED (Unity → RN).
+  const isMetadataUnavailable = nativeTracking.state === 'unavailable';
 
   return (
     <View style={styles.container}>
       {/* Unity camera view */}
       <UnityView style={styles.unityView} />
+
+      {/* M3A — RN metadata-unavailable banner (not REFERENCE_IMAGE_LOAD_FAILED) */}
+      {isMetadataUnavailable && (
+        <View style={styles.nativeTrackingBanner}>
+          <ClayCard variant="sm" color="yellow" padding={12}>
+            <Text style={styles.nativeTrackingBannerText}>
+              Native tracking metadata unavailable for this card.
+              Falling back to legacy AR.
+            </Text>
+          </ClayCard>
+        </View>
+      )}
 
       {/* Claymorphic loading overlay */}
       {showLoadingOverlay && (
@@ -221,5 +299,19 @@ const styles = StyleSheet.create({
   exitIcon: {
     fontSize: 18,
     color: COLORS.textPrimary,
+  },
+  nativeTrackingBanner: {
+    position: 'absolute',
+    top: 100,
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  nativeTrackingBannerText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
   },
 });

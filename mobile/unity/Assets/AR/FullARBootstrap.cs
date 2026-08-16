@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.XR.ARFoundation;
 
 // Editor-time test rigs disable the runtime bootstrap so the test scene's own
@@ -24,6 +25,10 @@ public static class FullARBootstrap
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Bootstrap()
     {
+        // Gate A is an embedded-runtime/bridge smoke test and must not create
+        // any AR Foundation subsystems on non-ARCore hardware.
+        if (SceneManager.GetActiveScene().name == "BridgeSmokeScene") return;
+
         // Skip if a session is already created (e.g., POCBootstrap ran first).
         if (Object.FindFirstObjectByType<ARSession>() != null) return;
 

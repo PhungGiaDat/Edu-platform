@@ -20,6 +20,8 @@ from models.pet import (
 from models.user_mongo import UserDocument
 from services.gamification_service import GamificationService, get_gamification_service
 from core.security import get_current_user
+from repositories.postgres_user_repository import PostgresUserRepository
+from repositories.postgres_pet_repository import PostgresPetRepository
 from utils.cache import pet_cache, user_stats_cache, CacheKeys, invalidate_pet_catalog
 
 logger = logging.getLogger(__name__)
@@ -28,41 +30,37 @@ router = APIRouter()
 
 
 def pet_to_response(
-    pet: PetDocument, 
+    pet,
     user_unlocked_pets: List[str], 
     user_active_pet: Optional[str],
     user_xp: int,
     user_streak: int
 ) -> PetResponse:
     """Convert PetDocument to PetResponse with user-specific fields"""
-    is_unlocked = pet.pet_id in user_unlocked_pets
-    is_active = pet.pet_id == user_active_pet
+    value = pet if isinstance(pet, dict) else pet.model_dump()
+    is_unlocked = value["pet_id"] in user_unlocked_pets
+    is_active = value["pet_id"] == user_active_pet
     
     # Check if user can unlock this pet
     can_unlock = False
     if not is_unlocked:
-        condition = pet.unlock_condition
-        if condition.type == "free":
+        condition = value.get("unlock_condition") or {"type": "free", "value": 0}
+        condition_type = condition.get("type") if isinstance(condition, dict) else condition.type
+        condition_value = condition.get("value", 0) if isinstance(condition, dict) else condition.value
+        if condition_type == "free":
             can_unlock = True
-        elif condition.type == "xp":
-            can_unlock = user_xp >= condition.value
-        elif condition.type == "streak":
-            can_unlock = user_streak >= condition.value
+        elif condition_type == "xp":
+            can_unlock = user_xp >= condition_value
+        elif condition_type == "streak":
+            can_unlock = user_streak >= condition_value
         # Achievement-based unlocks would need additional logic
     
     return PetResponse(
-        pet_id=pet.pet_id,
-        name=pet.name,
-        name_vi=pet.name_vi,
-        model_url=pet.model_url,
-        texture_url=pet.texture_url,
-        thumbnail_url=pet.thumbnail_url,
-        category=pet.category,
-        pack_source=pet.pack_source,
-        rarity=pet.rarity,
-        color=pet.color,
-        animations=pet.animations,
-        unlock_condition=pet.unlock_condition,
+        pet_id=value["pet_id"], name=value["name"], name_vi=value.get("name_vi") or "",
+        model_url=value.get("model_url") or "", texture_url=value.get("texture_url"), thumbnail_url=value.get("thumbnail_url"),
+        category=value.get("category") or "character", pack_source=value.get("pack_source") or "", rarity=value.get("rarity") or "common",
+        color=value.get("color") or "#FF6B6B", animations=value.get("animations") or ["idle"],
+        unlock_condition=value.get("unlock_condition") or {"type": "free", "value": 0},
         is_unlocked=is_unlocked,
         is_active=is_active,
         can_unlock=can_unlock,
@@ -101,25 +99,7 @@ async def list_pets(
     user_unlocked = user.unlocked_pets or []
     user_active = user.active_pet
     
-    # Build query
-    query = {"is_active": True}
-    if category:
-        query["category"] = category
-    if rarity:
-        query["rarity"] = rarity
-    
-    # Try to get pets from cache (only if no filters)
-    pets = None
-    if not category and not rarity:
-        pets = await pet_cache.get(CacheKeys.ALL_PETS)
-    
-    if pets is None:
-        # Fetch from database
-        pets = await PetDocument.find(query).to_list()
-        
-        # Cache if no filters (full catalog)
-        if not category and not rarity:
-            await pet_cache.set(CacheKeys.ALL_PETS, pets, ttl=600)  # 10 minutes
+    pets = await PostgresPetRepository().list_active(category, rarity)
     
     # Convert to response with user-specific data
     pet_responses = [
@@ -152,7 +132,7 @@ async def get_pet(
     Get a specific pet by ID with user's unlock status.
     """
     # Get pet
-    pet = await PetDocument.find_one(PetDocument.pet_id == pet_id, PetDocument.is_active == True)
+    pet = await PostgresPetRepository().get(pet_id)
     if not pet:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -187,7 +167,7 @@ async def unlock_pet(
     and adds the pet to their unlocked_pets list.
     """
     # Get pet
-    pet = await PetDocument.find_one(PetDocument.pet_id == pet_id, PetDocument.is_active == True)
+    pet = await PostgresPetRepository().get(pet_id)
     if not pet:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -212,26 +192,28 @@ async def unlock_pet(
         )
     
     # Check unlock conditions
-    condition = pet.unlock_condition
+    condition = pet.get("unlock_condition") or {"type": "free", "value": 0}
+    condition_type = condition.get("type") if isinstance(condition, dict) else condition.type
+    condition_value = condition.get("value", 0) if isinstance(condition, dict) else condition.value
     can_unlock = False
     reason = ""
     
-    if condition.type == "free":
+    if condition_type == "free":
         can_unlock = True
-    elif condition.type == "xp":
-        if user_xp >= condition.value:
+    elif condition_type == "xp":
+        if user_xp >= condition_value:
             can_unlock = True
         else:
-            reason = f"Need {condition.value} XP (you have {user_xp})"
-    elif condition.type == "streak":
-        if user_streak >= condition.value:
+            reason = f"Need {condition_value} XP (you have {user_xp})"
+    elif condition_type == "streak":
+        if user_streak >= condition_value:
             can_unlock = True
         else:
-            reason = f"Need {condition.value} day streak (you have {user_streak})"
-    elif condition.type == "achievement":
+            reason = f"Need {condition_value} day streak (you have {user_streak})"
+    elif condition_type == "achievement":
         # Check achievements/badges
         user_badges = user_stats.get("badges", [])
-        achievement_id = str(condition.value)  # Achievement ID stored as value
+        achievement_id = str(condition_value)
         if achievement_id in user_badges:
             can_unlock = True
         else:
@@ -244,15 +226,14 @@ async def unlock_pet(
         )
     
     # Unlock the pet
-    user_unlocked.append(pet_id)
-    user.unlocked_pets = user_unlocked
-    await user.save()
+    user = await PostgresUserRepository().unlock_pet(user_id, pet_id)
+    user_unlocked = user.unlocked_pets or []
     
     logger.info(f"User {user_id} unlocked pet {pet_id}")
     
     return UnlockPetResponse(
         success=True,
-        message=f"Successfully unlocked {pet.name}!",
+        message=f"Successfully unlocked {pet['name']}!",
         pet=pet_to_response(pet, user_unlocked, user.active_pet, user_xp, user_streak)
     )
 
@@ -281,7 +262,7 @@ async def set_active_pet(
     user_unlocked = user.unlocked_pets or []
 
     # Get pet
-    pet = await PetDocument.find_one(PetDocument.pet_id == pet_id, PetDocument.is_active == True)
+    pet = await PostgresPetRepository().get(pet_id)
     if not pet:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -296,8 +277,7 @@ async def set_active_pet(
         )
     
     # Set as active
-    user.active_pet = pet_id
-    await user.save()
+    await PostgresUserRepository().set_active_pet(user_id, pet_id)
     
     logger.info(f"User {user_id} set active pet to {pet_id}")
     
@@ -322,11 +302,10 @@ async def get_active_pet(
         return None
     
     # Get pet
-    pet = await PetDocument.find_one(PetDocument.pet_id == user.active_pet)
+    pet = await PostgresPetRepository().get(user.active_pet, active_only=False)
     if not pet:
         # Pet was deleted or invalid - clear active pet
-        user.active_pet = None
-        await user.save()
+        await PostgresUserRepository().set_active_pet(user_id, None)
         return None
     
     user_stats = await gamification_service.get_user_stats(user_id)
@@ -346,8 +325,7 @@ async def clear_active_pet(
     """
     user_id = str(current_user.id)
     user = current_user
-    user.active_pet = None
-    await user.save()
+    await PostgresUserRepository().set_active_pet(user_id, None)
     
     logger.info(f"User {user_id} cleared active pet")
     

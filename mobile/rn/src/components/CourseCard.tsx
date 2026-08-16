@@ -3,7 +3,7 @@
  * Reads CATEGORY_COLORS via LessonCategoryBadge. Composes ClayCard + ClayProgressBar.
  */
 import React from 'react';
-import { View, Text, StyleSheet, type ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, Image, type ViewStyle } from 'react-native';
 import { ClayCard } from './ClayCard';
 import { ClayProgressBar } from './ClayProgressBar';
 import { LessonCategoryBadge } from './LessonCategoryBadge';
@@ -42,6 +42,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({
       onPress={onPress}
       style={[styles.card, style]}
     >
+      {course.thumbnail_url ? (
+        <Image source={{ uri: course.thumbnail_url }} style={styles.coverImage} />
+      ) : null}
       <View style={styles.body}>
         <View style={styles.headerRow}>
           <LessonCategoryBadge category={course.category} />
@@ -97,6 +100,7 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
   },
+  coverImage: { width: '100%', height: 140, borderRadius: 16, marginBottom: SPACING.md, resizeMode: 'cover' },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

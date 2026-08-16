@@ -54,7 +54,6 @@ export type ARMessageType =
     | 'TARGET_LOST'
     | 'MULTI_TARGET_DETECTED'
     | 'COMBO_DETECTED'
-    | 'MIND_BUFFER_REQUEST'
 
     // Interaction (Child → Parent)
     | 'MODEL_CLICKED'
@@ -69,7 +68,6 @@ export type ARMessageType =
     | 'PAUSE_TRACKING'
     | 'RESUME_TRACKING'
     | 'LOAD_MODEL'
-    | 'MIND_BUFFER'
     | 'INITIAL_STATE'
 
     // Catalog activation (Parent → Child)
@@ -154,7 +152,6 @@ export interface ARMessagePayloadMap {
         targets: number[];
         comboId?: string;
     };
-    MIND_BUFFER_REQUEST: Record<string, never>;
 
     // Interaction
     MODEL_CLICKED: {
@@ -200,9 +197,6 @@ export interface ARMessagePayloadMap {
         position?: string;
         rotation?: string;
         scale?: string;
-    };
-    MIND_BUFFER: {
-        buffer: Uint8Array;
     };
     INITIAL_STATE: {
         config: Record<string, unknown>;

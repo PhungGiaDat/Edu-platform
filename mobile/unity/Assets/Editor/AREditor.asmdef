@@ -3,6 +3,8 @@
     "rootNamespace": "EduPlatform.AR.Editor",
     "references": [
         "ARRuntime",
+        "Unity.XR.Management",
+        "Unity.XR.Management.Editor",
         "GUID:a9420e37d7990b54abdef6688edbe313",
         "GUID:92703082f92b41ba80f0d6912de66115",
         "GUID:a42927d1d4a3b4cda9b076a7adecb9cc",

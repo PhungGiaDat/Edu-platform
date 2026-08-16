@@ -2,8 +2,22 @@ import React, { useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { AppNavigator } from './navigation/AppNavigator';
 import { useAuth } from './hooks/useAuth';
+import { BridgeDiagnosticScreen } from './screens/BridgeDiagnosticScreen';
 
 export default function App() {
+  if (__DEV__) {
+    return (
+      <>
+        <StatusBar style="dark" />
+        <BridgeDiagnosticScreen />
+      </>
+    );
+  }
+
+  return <LearnerApp />;
+}
+
+function LearnerApp() {
   const { isAuthenticated, loading, saveToken, clearToken } = useAuth();
 
   const handleLoginSuccess = useCallback(() => {
@@ -25,6 +39,7 @@ export default function App() {
       <StatusBar style="dark" />
       <AppNavigator
         isAuthenticated={isAuthenticated}
+        saveToken={saveToken}
         onLoginSuccess={handleLoginSuccess}
         onLogout={handleLogout}
       />

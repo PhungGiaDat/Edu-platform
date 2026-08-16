@@ -1,0 +1,579 @@
+{
+  "file": "E:\\University\\Graduted Project\\Edu-platform\\3DModels\\ragdollcat\\ragdollcat_EXPORT_WORKING.blend",
+  "fps": 30,
+  "objects": [
+    {
+      "name": "Camera",
+      "type": "CAMERA",
+      "hide_viewport": false,
+      "hide_render": false,
+      "parent": null
+    },
+    {
+      "name": "CAT_GAME_MESH",
+      "type": "MESH",
+      "hide_viewport": false,
+      "hide_render": false,
+      "parent": "CAT_RIG"
+    },
+    {
+      "name": "CAT_MOUTH_INTERIOR",
+      "type": "MESH",
+      "hide_viewport": false,
+      "hide_render": false,
+      "parent": "CAT_RIG"
+    },
+    {
+      "name": "CAT_PET_TARGET",
+      "type": "EMPTY",
+      "hide_viewport": false,
+      "hide_render": true,
+      "parent": null
+    },
+    {
+      "name": "CAT_RIG",
+      "type": "ARMATURE",
+      "hide_viewport": false,
+      "hide_render": false,
+      "parent": null
+    },
+    {
+      "name": "CAT_RIG_MESH",
+      "type": "MESH",
+      "hide_viewport": true,
+      "hide_render": true,
+      "parent": "CAT_RIG"
+    },
+    {
+      "name": "CAT_SOURCE_HIGH",
+      "type": "MESH",
+      "hide_viewport": true,
+      "hide_render": true,
+      "parent": null
+    },
+    {
+      "name": "Light",
+      "type": "LIGHT",
+      "hide_viewport": false,
+      "hide_render": false,
+      "parent": null
+    }
+  ],
+  "meshes": [
+    {
+      "object": "CAT_GAME_MESH",
+      "mesh_data": "CAT_GAME_MESH_DATA",
+      "vertices": 59968,
+      "triangles": 120000,
+      "polygons": 120000,
+      "uv_maps": [
+        "UVMap"
+      ],
+      "material_slots": [
+        "Material"
+      ],
+      "modifiers": [
+        {
+          "name": "CAT_ARMATURE_DEFORM",
+          "type": "ARMATURE",
+          "object": "CAT_RIG"
+        }
+      ],
+      "vertex_groups": 35,
+      "weighted_vertices": 59968,
+      "max_influences": 6,
+      "vertices_over_4_influences": 4742,
+      "shape_keys": [
+        "Basis",
+        "CAT_MOUTH_OPEN"
+      ]
+    },
+    {
+      "object": "CAT_MOUTH_INTERIOR",
+      "mesh_data": "CAT_MOUTH_INTERIOR_MESH_VOLUME",
+      "vertices": 162,
+      "triangles": 320,
+      "polygons": 320,
+      "uv_maps": [],
+      "material_slots": [
+        "CAT_MOUTH_DARK"
+      ],
+      "modifiers": [],
+      "vertex_groups": 0,
+      "weighted_vertices": 0,
+      "max_influences": 0,
+      "vertices_over_4_influences": 0,
+      "shape_keys": []
+    },
+    {
+      "object": "CAT_RIG_MESH",
+      "mesh_data": "CAT_RIG_MESH_DATA",
+      "vertices": 499932,
+      "triangles": 999928,
+      "polygons": 999928,
+      "uv_maps": [
+        "UVMap"
+      ],
+      "material_slots": [
+        "Material"
+      ],
+      "modifiers": [
+        {
+          "name": "CAT_ARMATURE_DEFORM",
+          "type": "ARMATURE",
+          "object": "CAT_RIG"
+        }
+      ],
+      "vertex_groups": 35,
+      "weighted_vertices": 499932,
+      "max_influences": 6,
+      "vertices_over_4_influences": 36100,
+      "shape_keys": []
+    },
+    {
+      "object": "CAT_SOURCE_HIGH",
+      "mesh_data": "CAT_SOURCE_HIGH_MESH",
+      "vertices": 499932,
+      "triangles": 999928,
+      "polygons": 999928,
+      "uv_maps": [
+        "UVMap"
+      ],
+      "material_slots": [
+        "Material.001"
+      ],
+      "modifiers": [],
+      "vertex_groups": 0,
+      "weighted_vertices": 0,
+      "max_influences": 0,
+      "vertices_over_4_influences": 0,
+      "shape_keys": []
+    }
+  ],
+  "armatures": [
+    {
+      "object": "CAT_RIG",
+      "data": "CAT_ARMATURE",
+      "bones": 46,
+      "deform_bones": 35,
+      "mouth_bones": [
+        "jaw_ctrl"
+      ],
+      "constraints": [
+        {
+          "bone": "lower_front.R",
+          "constraints": [
+            "IK"
+          ]
+        },
+        {
+          "bone": "paw_front.R",
+          "constraints": [
+            "COPY_ROTATION"
+          ]
+        },
+        {
+          "bone": "lower_front.L",
+          "constraints": [
+            "IK"
+          ]
+        },
+        {
+          "bone": "paw_front.L",
+          "constraints": [
+            "COPY_ROTATION"
+          ]
+        },
+        {
+          "bone": "lower_hind.R",
+          "constraints": [
+            "IK"
+          ]
+        },
+        {
+          "bone": "hock.R",
+          "constraints": [
+            "DAMPED_TRACK"
+          ]
+        },
+        {
+          "bone": "paw_hind.R",
+          "constraints": [
+            "COPY_ROTATION"
+          ]
+        },
+        {
+          "bone": "lower_hind.L",
+          "constraints": [
+            "IK"
+          ]
+        },
+        {
+          "bone": "hock.L",
+          "constraints": [
+            "DAMPED_TRACK"
+          ]
+        },
+        {
+          "bone": "paw_hind.L",
+          "constraints": [
+            "COPY_ROTATION"
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "CAT_EAT",
+      "frame_range": [
+        1.0,
+        150.0
+      ],
+      "fcurves": 152,
+      "mouth_paths": [],
+      "fake_user": true
+    },
+    {
+      "name": "CAT_EAT_ORIGINAL_BACKUP",
+      "frame_range": [
+        1.0,
+        150.0
+      ],
+      "fcurves": 133,
+      "mouth_paths": [],
+      "fake_user": true
+    },
+    {
+      "name": "CAT_EAT_PRE_RIG_RECAL_BACKUP",
+      "frame_range": [
+        1.0,
+        150.0
+      ],
+      "fcurves": 139,
+      "mouth_paths": [],
+      "fake_user": true
+    },
+    {
+      "name": "CAT_IDLE",
+      "frame_range": [
+        1.0,
+        180.0
+      ],
+      "fcurves": 458,
+      "mouth_paths": [
+        "pose.bones[\"jaw_ctrl\"].location",
+        "pose.bones[\"jaw_ctrl\"].rotation_euler",
+        "pose.bones[\"jaw_ctrl\"].scale"
+      ],
+      "fake_user": true
+    },
+    {
+      "name": "CAT_LOOK_UP",
+      "frame_range": [
+        1.0,
+        90.0
+      ],
+      "fcurves": 130,
+      "mouth_paths": [],
+      "fake_user": true
+    },
+    {
+      "name": "CAT_MEOW",
+      "frame_range": [
+        1.0,
+        60.0
+      ],
+      "fcurves": 131,
+      "mouth_paths": [
+        "pose.bones[\"jaw_ctrl\"].rotation_euler"
+      ],
+      "fake_user": true
+    },
+    {
+      "name": "CAT_MEOW_PRE_JAW_FIX_BACKUP",
+      "frame_range": [
+        1.0,
+        60.0
+      ],
+      "fcurves": 130,
+      "mouth_paths": [],
+      "fake_user": true
+    },
+    {
+      "name": "CAT_PET_REACT",
+      "frame_range": [
+        1.0,
+        100.0
+      ],
+      "fcurves": 174,
+      "mouth_paths": [],
+      "fake_user": true
+    },
+    {
+      "name": "CAT_PET_REACT_PRE_REFINE_BACKUP",
+      "frame_range": [
+        1.0,
+        120.0
+      ],
+      "fcurves": 450,
+      "mouth_paths": [],
+      "fake_user": true
+    },
+    {
+      "name": "CAT_SIT",
+      "frame_range": [
+        1.0,
+        120.0
+      ],
+      "fcurves": 180,
+      "mouth_paths": [
+        "pose.bones[\"jaw_ctrl\"].location",
+        "pose.bones[\"jaw_ctrl\"].rotation_euler"
+      ],
+      "fake_user": false
+    },
+    {
+      "name": "CAT_SIT_PRE_REFINE_BACKUP",
+      "frame_range": [
+        1.0,
+        120.0
+      ],
+      "fcurves": 458,
+      "mouth_paths": [
+        "pose.bones[\"jaw_ctrl\"].location",
+        "pose.bones[\"jaw_ctrl\"].rotation_euler",
+        "pose.bones[\"jaw_ctrl\"].scale"
+      ],
+      "fake_user": true
+    },
+    {
+      "name": "CAT_SPIN",
+      "frame_range": [
+        1.0,
+        120.0
+      ],
+      "fcurves": 174,
+      "mouth_paths": [],
+      "fake_user": true
+    },
+    {
+      "name": "CAT_SPIN_PRE_REFINE_BACKUP",
+      "frame_range": [
+        1.0,
+        120.0
+      ],
+      "fcurves": 456,
+      "mouth_paths": [
+        "pose.bones[\"jaw_ctrl\"].location",
+        "pose.bones[\"jaw_ctrl\"].rotation_euler",
+        "pose.bones[\"jaw_ctrl\"].scale"
+      ],
+      "fake_user": true
+    }
+  ],
+  "materials": [
+    {
+      "name": "CAT_MOUTH_DARK",
+      "use_nodes": true,
+      "blend_method": "DITHERED",
+      "nodes": [
+        {
+          "name": "Principled BSDF",
+          "type": "BSDF_PRINCIPLED",
+          "image": null,
+          "image_colorspace": null
+        }
+      ]
+    },
+    {
+      "name": "Material",
+      "use_nodes": true,
+      "blend_method": "DITHERED",
+      "nodes": [
+        {
+          "name": "Principled BSDF",
+          "type": "BSDF_PRINCIPLED",
+          "image": null,
+          "image_colorspace": null
+        },
+        {
+          "name": "Image Texture",
+          "type": "TEX_IMAGE",
+          "image": "texture_pbr_20250901.png.001",
+          "image_colorspace": "sRGB"
+        },
+        {
+          "name": "Image Texture.001",
+          "type": "TEX_IMAGE",
+          "image": "texture_pbr_20250901_roughness.png.001",
+          "image_colorspace": "Non-Color"
+        },
+        {
+          "name": "Image Texture.002",
+          "type": "TEX_IMAGE",
+          "image": "texture_pbr_20250901_metallic.png.001",
+          "image_colorspace": "Non-Color"
+        },
+        {
+          "name": "Image Texture.003",
+          "type": "TEX_IMAGE",
+          "image": "texture_pbr_20250901_normal.png.001",
+          "image_colorspace": "Non-Color"
+        },
+        {
+          "name": "Normal Map",
+          "type": "NORMAL_MAP",
+          "image": null,
+          "image_colorspace": null
+        }
+      ]
+    },
+    {
+      "name": "Material.001",
+      "use_nodes": true,
+      "blend_method": "DITHERED",
+      "nodes": [
+        {
+          "name": "Principled BSDF",
+          "type": "BSDF_PRINCIPLED",
+          "image": null,
+          "image_colorspace": null
+        },
+        {
+          "name": "Image Texture",
+          "type": "TEX_IMAGE",
+          "image": "texture_pbr_20250901.png",
+          "image_colorspace": "sRGB"
+        },
+        {
+          "name": "Image Texture.001",
+          "type": "TEX_IMAGE",
+          "image": "texture_pbr_20250901_roughness.png",
+          "image_colorspace": "Non-Color"
+        },
+        {
+          "name": "Image Texture.002",
+          "type": "TEX_IMAGE",
+          "image": "texture_pbr_20250901_metallic.png",
+          "image_colorspace": "Non-Color"
+        },
+        {
+          "name": "Image Texture.003",
+          "type": "TEX_IMAGE",
+          "image": "texture_pbr_20250901_normal.png",
+          "image_colorspace": "Non-Color"
+        },
+        {
+          "name": "Normal Map",
+          "type": "NORMAL_MAP",
+          "image": null,
+          "image_colorspace": null
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "name": "Render Result",
+      "size": [
+        0,
+        0
+      ],
+      "filepath": "",
+      "packed": false,
+      "colorspace": ""
+    },
+    {
+      "name": "texture_pbr_20250901.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "filepath": "//..\\..\\..\\..\\..\\3D Model\\Ragdoll\\texture_pbr_20250901.png",
+      "packed": false,
+      "colorspace": "sRGB"
+    },
+    {
+      "name": "texture_pbr_20250901.png.001",
+      "size": [
+        4096,
+        4096
+      ],
+      "filepath": "E:\\University\\Graduted Project\\Edu-platform\\3DModels\\ragdollcat\\output.fbm\\texture_pbr_20250901.png",
+      "packed": true,
+      "colorspace": "sRGB"
+    },
+    {
+      "name": "texture_pbr_20250901_metallic.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "filepath": "//..\\..\\..\\..\\..\\3D Model\\Ragdoll\\output.fbm\\texture_pbr_20250901_metallic.png",
+      "packed": true,
+      "colorspace": "Non-Color"
+    },
+    {
+      "name": "texture_pbr_20250901_metallic.png.001",
+      "size": [
+        4096,
+        4096
+      ],
+      "filepath": "E:\\University\\Graduted Project\\Edu-platform\\3DModels\\ragdollcat\\output.fbm\\texture_pbr_20250901_metallic.png",
+      "packed": true,
+      "colorspace": "Non-Color"
+    },
+    {
+      "name": "texture_pbr_20250901_normal.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "filepath": "//..\\..\\..\\..\\..\\3D Model\\Ragdoll\\output.fbm\\texture_pbr_20250901_normal.png",
+      "packed": true,
+      "colorspace": "Non-Color"
+    },
+    {
+      "name": "texture_pbr_20250901_normal.png.001",
+      "size": [
+        4096,
+        4096
+      ],
+      "filepath": "E:\\University\\Graduted Project\\Edu-platform\\3DModels\\ragdollcat\\output.fbm\\texture_pbr_20250901_normal.png",
+      "packed": true,
+      "colorspace": "Non-Color"
+    },
+    {
+      "name": "texture_pbr_20250901_roughness.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "filepath": "//..\\..\\..\\..\\..\\3D Model\\Ragdoll\\output.fbm\\texture_pbr_20250901_roughness.png",
+      "packed": true,
+      "colorspace": "Non-Color"
+    },
+    {
+      "name": "texture_pbr_20250901_roughness.png.001",
+      "size": [
+        4096,
+        4096
+      ],
+      "filepath": "E:\\University\\Graduted Project\\Edu-platform\\3DModels\\ragdollcat\\output.fbm\\texture_pbr_20250901_roughness.png",
+      "packed": true,
+      "colorspace": "Non-Color"
+    },
+    {
+      "name": "Viewer Node",
+      "size": [
+        256,
+        256
+      ],
+      "filepath": "",
+      "packed": false,
+      "colorspace": ""
+    }
+  ],
+  "rig_nla": []
+}

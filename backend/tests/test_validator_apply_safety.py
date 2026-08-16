@@ -116,28 +116,46 @@ def test_apply_path_verifies_validator_was_not_removed_by_readback(monkeypatch):
         async def create_index(self, _keys, **_kwargs):
             return "ar_objects_catalog_pair_unique"
 
+    class _FakeListCollectionsCursor:
+        def __init__(self, rows):
+            self._rows = list(rows)
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            raise StopAsyncIteration
+
+        async def to_list(self, length=None):
+            if length is None:
+                return list(self._rows)
+            return list(self._rows[:length])
+
     class _FakeDatabase:
         def __init__(self):
             self.collection = _FakeCollection()
 
+        def list_collections(self, **_kwargs):
+            return _FakeListCollectionsCursor(
+                [
+                    {
+                        "name": "ar_objects",
+                        "options": {
+                            "validator": {
+                                "$jsonSchema": {
+                                    "required": ["tracking_mode"],
+                                    "oneOf": [],
+                                }
+                            },
+                            "validationLevel": "moderate",
+                            "validationAction": "warn",
+                        },
+                    }
+                ]
+            )
+
         async def command(self, command_doc):
             captured_collmod_calls.append(command_doc)
-            if "listCollections" in command_doc:
-                cursor = _FakeCommandCursor()
-                cursor.next = lambda: {
-                    "name": "ar_objects",
-                    "options": {
-                        "validator": {
-                            "$jsonSchema": {
-                                "required": ["tracking_mode"],
-                                "oneOf": [],
-                            }
-                        },
-                        "validationLevel": "moderate",
-                        "validationAction": "warn",
-                    },
-                }
-                return cursor
             return {}
 
         def __getitem__(self, name):
@@ -309,29 +327,11 @@ def test_apply_path_redacts_mongo_url_in_logs(monkeypatch, capsys):
         def __init__(self):
             self.collection = _FakeCollection()
 
-        async def command(self, command_doc):
-            if isinstance(command_doc, dict) and "listCollections" in command_doc:
-                class _Cursor:
-                    async def to_list(self, length=None):
-                        return [
-                            {
-                                "name": "ar_objects",
-                                "options": {
-                                    "validator": {"$jsonSchema": {"required": ["tracking_mode"]}},
-                                    "validationLevel": "moderate",
-                                    "validationAction": "warn",
-                                },
-                            }
-                        ]
-
-                    def __aiter__(self):
-                        return self
-
-                    async def __anext__(self):
-                        raise StopAsyncIteration
-
-                    def next(self):
-                        return {
+        def list_collections(self, **_kwargs):
+            class _Cursor:
+                async def to_list(self, length=None):
+                    return [
+                        {
                             "name": "ar_objects",
                             "options": {
                                 "validator": {"$jsonSchema": {"required": ["tracking_mode"]}},
@@ -339,8 +339,17 @@ def test_apply_path_redacts_mongo_url_in_logs(monkeypatch, capsys):
                                 "validationAction": "warn",
                             },
                         }
+                    ]
 
-                return _Cursor()
+                def __aiter__(self):
+                    return self
+
+                async def __anext__(self):
+                    raise StopAsyncIteration
+
+            return _Cursor()
+
+        async def command(self, command_doc):
             return {}
 
         def __getitem__(self, name):
@@ -468,9 +477,10 @@ def test_apply_path_detects_validator_wiped_after_collmod(monkeypatch, capsys):
         def __init__(self):
             self.collection = _FakeCollection()
 
+        def list_collections(self, **_kwargs):
+            return _WipedValidatorCursor()
+
         async def command(self, command_doc):
-            if isinstance(command_doc, dict) and "listCollections" in command_doc:
-                return _WipedValidatorCursor()
             return {}
 
         def __getitem__(self, name):

@@ -26,6 +26,7 @@ public static class ARPayloadMapper
     private static ARExperiencePayload MapToPayload(ARExperiencePayloadDto dto) {
         var payload = new ARExperiencePayload {
             QrId = dto.qrId,
+            ArTag = dto.arTag ?? dto.qrId,
             Word = dto.word,
             TranslationVi = dto.translationVi,
             AudioUrl = dto.audioUrl,
@@ -66,6 +67,7 @@ public static class ARPayloadMapper
     [Serializable]
     private class ARExperiencePayloadDto {
         public string qrId;
+        public string arTag;
         public string word;
         public string translationVi;
         public string audioUrl;
@@ -84,6 +86,8 @@ public static class ARPayloadMapper
 [Serializable]
 public struct ARExperiencePayload {
     public string QrId;
+    /// <summary>Semantic AR identity used for combo lookup via required_tags resolution.</summary>
+    public string ArTag;
     public string Word;
     public string TranslationVi;
     public string AudioUrl;

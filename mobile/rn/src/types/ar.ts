@@ -73,7 +73,7 @@ export interface CardDescriptorRN {
  */
 export type CardDescriptorSource =
   | { kind: 'ok'; descriptor: CardDescriptorRN }
-  | { kind: 'unavailable'; reason: 'missing_reference_image' | 'missing_physical_width' | 'both'; qrId: string };
+  | { kind: 'unavailable'; reason: 'missing_reference_image' | 'missing_physical_width' | 'both' | 'invalid_physical_width'; qrId: string };
 
 /**
  * RN-side error code emitted when backend response is missing native AR

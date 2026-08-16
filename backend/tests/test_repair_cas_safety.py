@@ -51,27 +51,60 @@ def test_old_value_clause_treats_missing_and_null_as_distinct():
     null_clause = _old_value_clause("tracking_mode", None)
     present_clause = _old_value_clause("tracking_mode", "legacy")
 
-    assert missing_clause == {
-        "$or": [
-            {"tracking_mode": {"$exists": False}},
-            {"tracking_mode": {"$eq": None}},
-        ]
-    }
+    # MISSING must match only the absent state — no $or widening. If a
+    # future refactor re-widens this clause to include explicit nulls,
+    # the production CAS path can over-match in any context where the
+    # clause is used without ``build_filter``'s $and(_id) narrowing.
+    assert missing_clause == {"tracking_mode": {"$exists": False}}, (
+        f"MISSING clause must be the narrow {{$exists: False}} form, got {missing_clause!r}"
+    )
+    # Explicit null must be matched via $type: "null" (BSON null), not
+    # via bare {x: null} which also matches missing.
+    assert null_clause == {"tracking_mode": {"$type": "null"}}, (
+        f"null clause must pin BSON null type, got {null_clause!r}"
+    )
     # null must not be combined with "$exists: false" — they are different
     # states and conflating them silently allows stale repairs.
     assert null_clause != missing_clause
-    assert null_clause == {
-        "$or": [
-            {"tracking_mode": None},
-            {"tracking_mode": {"$eq": None}},
-        ]
-    }
     assert present_clause == {
         "$or": [
             {"tracking_mode": "legacy"},
             {"tracking_mode": {"$eq": "legacy"}},
         ]
     }
+
+
+def _constrained_fields_from_filter(filter_doc):
+    """Return the set of field names whose value is constrained by a clause.
+
+    Reads the three supported clause shapes produced by
+    ``_old_value_clause``:
+
+    * ``{field: {"$or": [{field: v}, {field: {"$eq": v}}]}}`` — present scalar
+    * ``{field: {"$type": "null"}}`` — explicit null
+    * ``{field: {"$exists": False}}`` — MISSING
+    """
+    fields: set[str] = set()
+    for clause in filter_doc["$and"]:
+        if not isinstance(clause, dict):
+            continue
+        if "$or" in clause:
+            # Top-level $or form: the field name is buried inside each branch.
+            for branch in clause["$or"]:
+                if isinstance(branch, dict):
+                    fields.update(branch.keys())
+            continue
+        for field, value in clause.items():
+            if not isinstance(value, dict):
+                continue
+            if "$or" in value:
+                for branch in value["$or"]:
+                    if isinstance(branch, dict):
+                        for inner_field in branch:
+                            fields.add(inner_field)
+            elif "$type" in value or "$exists" in value:
+                fields.add(field)
+    return fields
 
 
 def test_build_filter_omits_clauses_for_unchanged_fields():
@@ -88,13 +121,11 @@ def test_build_filter_omits_clauses_for_unchanged_fields():
     )
     filter_doc = build_filter(repair)
 
-    # tracking_mode IS constrained — the repair sets it.
-    clauses = filter_doc["$and"]
-    constrained_fields = [
-        next(iter(clause["$or"][0].keys()))
-        for clause in clauses
-        if "$or" in clause
-    ]
+    # tracking_mode IS constrained — the repair sets it. The clause
+    # form depends on the value kind: explicit null -> $type, MISSING
+    # -> $exists, present scalar -> $or-of-equality whose outer key is
+    # the field name. Extract from any of those shapes.
+    constrained_fields = _constrained_fields_from_filter(filter_doc)
     assert "tracking_mode" in constrained_fields
 
     # mind_catalog_id is being unset — must NOT appear in the match clause,
@@ -117,11 +148,7 @@ def test_build_filter_keeps_clause_when_unset_field_has_old_value():
         },
     )
     filter_doc = build_filter(repair)
-    constrained_fields = [
-        next(iter(clause["$or"][0].keys()))
-        for clause in filter_doc["$and"]
-        if "$or" in clause
-    ]
+    constrained_fields = _constrained_fields_from_filter(filter_doc)
     assert "nft_base_url" in constrained_fields
 
 

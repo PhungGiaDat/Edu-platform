@@ -773,6 +773,43 @@ def get_index_definitions() -> List[IndexDefinition]:
         ),
     ])
 
+    # ------------------------------------------------------------------
+    # gamification_events
+    # ------------------------------------------------------------------
+    indexes.extend([
+        IndexDefinition(
+            name="user_event_unique",
+            collection="gamification_events",
+            fields=[("user_id", 1), ("event_id", 1)],
+            unique=True,
+            description="UNIQUE constraint for XP idempotency"
+        ),
+        IndexDefinition(
+            name="status_idx",
+            collection="gamification_events",
+            fields=[("status", 1)],
+            description="Status query for recovery/cleanup"
+        ),
+        IndexDefinition(
+            name="user_events_recent",
+            collection="gamification_events",
+            fields=[("user_id", 1), ("created_at", -1)],
+            description="User's recent events sorted by time"
+        ),
+        IndexDefinition(
+            name="action_idx",
+            collection="gamification_events",
+            fields=[("action", 1)],
+            description="Action analytics"
+        ),
+        IndexDefinition(
+            name="source_idx",
+            collection="gamification_events",
+            fields=[("source_type", 1), ("source_id", 1)],
+            description="Source tracking for reward eligibility"
+        ),
+    ])
+
     return indexes
 
 
