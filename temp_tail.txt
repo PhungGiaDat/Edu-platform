@@ -1,0 +1,2320 @@
+﻿              "type": "audio",
+              "status": "pending"
+            }
+          },
+          {
+            "page_id": "the-green-tree-read-2",
+            "order": 2,
+            "text_en": "Tree and Leaf are here.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
+            "highlighted_words": [
+              "Tree",
+              "Leaf"
+            ],
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-2.svg",
+              "type": "image",
+              "status": "pending"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-2.wav",
+              "type": "audio",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
+      },
+      "generatedMedia": [
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-1.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Cute classroom style scene for Tree."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-2.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Bright picture story for Leaf."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-3.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Happy reward scene with Green."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-1.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "I see a tree."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-1.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "I see a tree."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-2.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Tree and Leaf are here."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-2.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Tree and Leaf are here."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/video.mp4",
+            "type": "video",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "The Green Tree"
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/thumb.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "The Green Tree"
+        }
+      ]
+    },
+    {
+      "id": "splashing-river",
+      "lesson_id": "splashing-river",
+      "title": "Splashing River",
+      "description": "Nghe âm thanh nước và học từ mới.",
+      "video": {
+        "title": "Splashing River",
+        "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/splashing-river/video.mp4",
+        "duration_seconds": 90,
+        "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/splashing-river/thumb.png"
+      },
+      "content": null,
+      "title_vi": "Dòng sông vui",
+      "order": 3,
+      "is_completed": false,
+      "duration_minutes": 5,
+      "videoLesson": {
+        "title": "Splashing River",
+        "duration_seconds": 90,
+        "video": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/splashing-river/video.mp4",
+          "type": "video",
+          "status": "pending"
+        },
+        "thumbnail": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/splashing-river/thumb.svg",
+          "type": "image",
+          "status": "pending"
+        },
+        "scenes": [
+          {
+            "scene_id": "splashing-river-scene-1",
+            "order": 1,
+            "duration_seconds": 24,
+            "visual_prompt": "Cute classroom style scene for River.",
+            "narration_vi": "Momo nhìn thấy dòng sông.",
+            "audio_text_en": "Look! River!",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-1.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "scene_id": "splashing-river-scene-2",
+            "order": 2,
+            "duration_seconds": 24,
+            "visual_prompt": "Bright picture story for Water.",
+            "narration_vi": "Bé nghe và nói Water.",
+            "audio_text_en": "Say Water with Momo.",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-2.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "scene_id": "splashing-river-scene-3",
+            "order": 3,
+            "duration_seconds": 24,
+            "visual_prompt": "Happy reward scene with Blue.",
+            "narration_vi": "Momo vỗ tay khen bé.",
+            "audio_text_en": "Good job! Blue!",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-3.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ]
+      },
+      "vocabulary": [
+        {
+          "word_en": "River",
+          "word_vi": "dòng sông",
+          "emoji": "river",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/river.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/audio/river.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/stickers/river.svg",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "The river is blue."
+        },
+        {
+          "word_en": "Water",
+          "word_vi": "nước",
+          "emoji": "water",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/water.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/audio/water.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/stickers/water.svg",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "Water is cool."
+        },
+        {
+          "word_en": "Blue",
+          "word_vi": "màu xanh dương",
+          "emoji": "blue",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/blue.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/audio/blue.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/stickers/blue.svg",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "The water is blue."
+        }
+      ],
+      "game": {
+        "game_id": "splashing-river-quick-game",
+        "type": "listen_and_tap",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
+        "prompt_audio_text": "Tap river.",
+        "items": [
+          {
+            "id": "game-1",
+            "label": "River",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/games/river.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "game-2",
+            "label": "Water",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/games/water.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "game-3",
+            "label": "Blue",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/games/blue.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
+      },
+      "pronunciation": {
+        "task_id": "splashing-river-say",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
+        "prompt_audio_text": "River, Water, Blue",
+        "target_words": [
+          "River",
+          "Water",
+          "Blue"
+        ],
+        "audio": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/splashing-river/audio/pronunciation.wav",
+          "type": "audio",
+          "status": "pending"
+        },
+        "pass_score": 70,
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
+      },
+      "activity": {
+        "activity_id": "splashing-river-activity",
+        "type": "match_picture",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
+        "prompt_audio_text": "Find River and Water.",
+        "items": [
+          {
+            "id": "activity-1",
+            "label": "River",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/activities/river.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "activity-2",
+            "label": "Water",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/activities/water.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "activity-3",
+            "label": "Blue",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/activities/blue.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
+      },
+      "quiz": [
+        {
+          "question_id": "splashing-river-q1",
+          "type": "image_choice",
+          "prompt_vi": "Con thấy river ở đâu?",
+          "questionAudioText": "Tap river.",
+          "options": [
+            {
+              "option_id": "splashing-river-q1-1",
+              "label": "Tree",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q1-1.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "splashing-river-q1-2",
+              "label": "River",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q1-2.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "splashing-river-q1-3",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q1-3.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "splashing-river-q1-2",
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+        },
+        {
+          "question_id": "splashing-river-q2",
+          "type": "image_choice",
+          "prompt_vi": "Water nghĩa là gì?",
+          "questionAudioText": "Water.",
+          "options": [
+            {
+              "option_id": "splashing-river-q2-1",
+              "label": "nước",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-1.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "splashing-river-q2-2",
+              "label": "lá",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-2.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "splashing-river-q2-3",
+              "label": "mây",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-3.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "splashing-river-q2-1",
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+        },
+        {
+          "question_id": "splashing-river-q3",
+          "type": "image_choice",
+          "prompt_vi": "Blue là màu nào?",
+          "questionAudioText": "Blue.",
+          "options": [
+            {
+              "option_id": "splashing-river-q3-1",
+              "label": "xanh dương",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-1.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "splashing-river-q3-2",
+              "label": "xanh lá",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-2.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "splashing-river-q3-3",
+              "label": "hồng",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-3.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "splashing-river-q3-1",
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+        }
+      ],
+      "reward": {
+        "xp": 80,
+        "sticker": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/splashing-river/rewards/sticker.svg",
+          "type": "sticker",
+          "status": "pending"
+        },
+        "badgeTitle": "River Friend",
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
+      },
+      "arReference": null,
+      "readAloudStory": {
+        "story_id": "splashing-river-read-aloud",
+        "title": "Read with Momo: Splashing River",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
+        "pages": [
+          {
+            "page_id": "splashing-river-read-1",
+            "order": 1,
+            "text_en": "I see a river.",
+            "text_vi": "Momo nhìn thấy: River.",
+            "highlighted_words": [
+              "River"
+            ],
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-1.svg",
+              "type": "image",
+              "status": "pending"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-1.wav",
+              "type": "audio",
+              "status": "pending"
+            }
+          },
+          {
+            "page_id": "splashing-river-read-2",
+            "order": 2,
+            "text_en": "River and Water are here.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
+            "highlighted_words": [
+              "River",
+              "Water"
+            ],
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-2.svg",
+              "type": "image",
+              "status": "pending"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-2.wav",
+              "type": "audio",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
+      },
+      "generatedMedia": [
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-1.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Cute classroom style scene for River."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-2.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Bright picture story for Water."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-3.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Happy reward scene with Blue."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-1.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "I see a river."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-1.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "I see a river."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-2.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "River and Water are here."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-2.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "River and Water are here."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/video.mp4",
+            "type": "video",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Splashing River"
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/thumb.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Splashing River"
+        }
+      ]
+    },
+    {
+      "id": "little-bird",
+      "lesson_id": "little-bird",
+      "title": "Little Bird",
+      "description": "Bé nghe tiếng chim và nói từ bird.",
+      "video": {
+        "title": "Little Bird",
+        "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/little-bird/video.mp4",
+        "duration_seconds": 90,
+        "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/little-bird/thumb.png"
+      },
+      "content": null,
+      "title_vi": "Chim nhỏ",
+      "order": 4,
+      "is_completed": false,
+      "duration_minutes": 5,
+      "videoLesson": {
+        "title": "Little Bird",
+        "duration_seconds": 90,
+        "video": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/little-bird/video.mp4",
+          "type": "video",
+          "status": "pending"
+        },
+        "thumbnail": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/little-bird/thumb.svg",
+          "type": "image",
+          "status": "pending"
+        },
+        "scenes": [
+          {
+            "scene_id": "little-bird-scene-1",
+            "order": 1,
+            "duration_seconds": 24,
+            "visual_prompt": "Cute classroom style scene for Bird.",
+            "narration_vi": "Momo nhìn thấy con chim.",
+            "audio_text_en": "Look! Bird!",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-1.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "scene_id": "little-bird-scene-2",
+            "order": 2,
+            "duration_seconds": 24,
+            "visual_prompt": "Bright picture story for Fly.",
+            "narration_vi": "Bé nghe và nói Fly.",
+            "audio_text_en": "Say Fly with Momo.",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-2.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "scene_id": "little-bird-scene-3",
+            "order": 3,
+            "duration_seconds": 24,
+            "visual_prompt": "Happy reward scene with Small.",
+            "narration_vi": "Momo vỗ tay khen bé.",
+            "audio_text_en": "Good job! Small!",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-3.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ]
+      },
+      "vocabulary": [
+        {
+          "word_en": "Bird",
+          "word_vi": "con chim",
+          "emoji": "bird",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/bird.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/audio/bird.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/stickers/bird.svg",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "The bird can fly."
+        },
+        {
+          "word_en": "Fly",
+          "word_vi": "bay",
+          "emoji": "fly",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/fly.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/audio/fly.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/stickers/fly.svg",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "Birds fly."
+        },
+        {
+          "word_en": "Small",
+          "word_vi": "nhỏ",
+          "emoji": "small",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/small.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/audio/small.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/stickers/small.svg",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "The bird is small."
+        }
+      ],
+      "game": {
+        "game_id": "little-bird-quick-game",
+        "type": "listen_and_tap",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
+        "prompt_audio_text": "Tap bird.",
+        "items": [
+          {
+            "id": "game-1",
+            "label": "Bird",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/games/bird.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "game-2",
+            "label": "Fly",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/games/fly.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "game-3",
+            "label": "Small",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/games/small.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
+      },
+      "pronunciation": {
+        "task_id": "little-bird-say",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
+        "prompt_audio_text": "Bird, Fly, Small",
+        "target_words": [
+          "Bird",
+          "Fly",
+          "Small"
+        ],
+        "audio": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/little-bird/audio/pronunciation.wav",
+          "type": "audio",
+          "status": "pending"
+        },
+        "pass_score": 70,
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
+      },
+      "activity": {
+        "activity_id": "little-bird-activity",
+        "type": "match_picture",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
+        "prompt_audio_text": "Find Bird and Fly.",
+        "items": [
+          {
+            "id": "activity-1",
+            "label": "Bird",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/activities/bird.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "activity-2",
+            "label": "Fly",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/activities/fly.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "activity-3",
+            "label": "Small",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/activities/small.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
+      },
+      "quiz": [
+        {
+          "question_id": "little-bird-q1",
+          "type": "image_choice",
+          "prompt_vi": "Con chọn bird.",
+          "questionAudioText": "Tap bird.",
+          "options": [
+            {
+              "option_id": "little-bird-q1-1",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q1-1.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "little-bird-q1-2",
+              "label": "Tree",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q1-2.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "little-bird-q1-3",
+              "label": "Water",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q1-3.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "little-bird-q1-1",
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+        },
+        {
+          "question_id": "little-bird-q2",
+          "type": "image_choice",
+          "prompt_vi": "Fly nghĩa là gì?",
+          "questionAudioText": "Fly.",
+          "options": [
+            {
+              "option_id": "little-bird-q2-1",
+              "label": "ngủ",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-1.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "little-bird-q2-2",
+              "label": "bay",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-2.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "little-bird-q2-3",
+              "label": "ăn",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-3.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "little-bird-q2-2",
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+        },
+        {
+          "question_id": "little-bird-q3",
+          "type": "image_choice",
+          "prompt_vi": "Small là gì?",
+          "questionAudioText": "Small.",
+          "options": [
+            {
+              "option_id": "little-bird-q3-1",
+              "label": "nhỏ",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q3-1.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "little-bird-q3-2",
+              "label": "to",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q3-2.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "little-bird-q3-3",
+              "label": "cao",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q3-3.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "little-bird-q3-1",
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+        }
+      ],
+      "reward": {
+        "xp": 80,
+        "sticker": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/little-bird/rewards/sticker.svg",
+          "type": "sticker",
+          "status": "pending"
+        },
+        "badgeTitle": "Bird Singer",
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
+      },
+      "arReference": null,
+      "readAloudStory": {
+        "story_id": "little-bird-read-aloud",
+        "title": "Read with Momo: Little Bird",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
+        "pages": [
+          {
+            "page_id": "little-bird-read-1",
+            "order": 1,
+            "text_en": "I see a bird.",
+            "text_vi": "Momo nhìn thấy: Bird.",
+            "highlighted_words": [
+              "Bird"
+            ],
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-1.svg",
+              "type": "image",
+              "status": "pending"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-1.wav",
+              "type": "audio",
+              "status": "pending"
+            }
+          },
+          {
+            "page_id": "little-bird-read-2",
+            "order": 2,
+            "text_en": "Bird and Fly are here.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
+            "highlighted_words": [
+              "Bird",
+              "Fly"
+            ],
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-2.svg",
+              "type": "image",
+              "status": "pending"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-2.wav",
+              "type": "audio",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
+      },
+      "generatedMedia": [
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-1.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Cute classroom style scene for Bird."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-2.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Bright picture story for Fly."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-3.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Happy reward scene with Small."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-1.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "I see a bird."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-1.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "I see a bird."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-2.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Bird and Fly are here."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-2.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Bird and Fly are here."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/video.mp4",
+            "type": "video",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Little Bird"
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/thumb.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Little Bird"
+        }
+      ]
+    },
+    {
+      "id": "sunny-sky",
+      "lesson_id": "sunny-sky",
+      "title": "Sunny Sky",
+      "description": "Bé học sun, sky, yellow.",
+      "video": {
+        "title": "Sunny Sky",
+        "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/sunny-sky/video.mp4",
+        "duration_seconds": 90,
+        "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/sunny-sky/thumb.png"
+      },
+      "content": null,
+      "title_vi": "Bầu trời nắng",
+      "order": 5,
+      "is_completed": false,
+      "duration_minutes": 5,
+      "videoLesson": {
+        "title": "Sunny Sky",
+        "duration_seconds": 90,
+        "video": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/video.mp4",
+          "type": "video",
+          "status": "pending"
+        },
+        "thumbnail": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/thumb.svg",
+          "type": "image",
+          "status": "pending"
+        },
+        "scenes": [
+          {
+            "scene_id": "sunny-sky-scene-1",
+            "order": 1,
+            "duration_seconds": 24,
+            "visual_prompt": "Cute classroom style scene for Sun.",
+            "narration_vi": "Momo nhìn thấy mặt trời.",
+            "audio_text_en": "Look! Sun!",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-1.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "scene_id": "sunny-sky-scene-2",
+            "order": 2,
+            "duration_seconds": 24,
+            "visual_prompt": "Bright picture story for Sky.",
+            "narration_vi": "Bé nghe và nói Sky.",
+            "audio_text_en": "Say Sky with Momo.",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-2.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "scene_id": "sunny-sky-scene-3",
+            "order": 3,
+            "duration_seconds": 24,
+            "visual_prompt": "Happy reward scene with Yellow.",
+            "narration_vi": "Momo vỗ tay khen bé.",
+            "audio_text_en": "Good job! Yellow!",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-3.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ]
+      },
+      "vocabulary": [
+        {
+          "word_en": "Sun",
+          "word_vi": "mặt trời",
+          "emoji": "sun",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/sun.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/audio/sun.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/stickers/sun.svg",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "The sun is bright."
+        },
+        {
+          "word_en": "Sky",
+          "word_vi": "bầu trời",
+          "emoji": "sky",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/sky.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/audio/sky.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/stickers/sky.svg",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "The sky is blue."
+        },
+        {
+          "word_en": "Yellow",
+          "word_vi": "màu vàng",
+          "emoji": "yellow",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/yellow.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/audio/yellow.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/stickers/yellow.svg",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "The sun is yellow."
+        }
+      ],
+      "game": {
+        "game_id": "sunny-sky-quick-game",
+        "type": "listen_and_tap",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
+        "prompt_audio_text": "Tap sun.",
+        "items": [
+          {
+            "id": "game-1",
+            "label": "Sun",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/games/sun.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "game-2",
+            "label": "Sky",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/games/sky.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "game-3",
+            "label": "Yellow",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/games/yellow.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
+      },
+      "pronunciation": {
+        "task_id": "sunny-sky-say",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
+        "prompt_audio_text": "Sun, Sky, Yellow",
+        "target_words": [
+          "Sun",
+          "Sky",
+          "Yellow"
+        ],
+        "audio": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/audio/pronunciation.wav",
+          "type": "audio",
+          "status": "pending"
+        },
+        "pass_score": 70,
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
+      },
+      "activity": {
+        "activity_id": "sunny-sky-activity",
+        "type": "match_picture",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
+        "prompt_audio_text": "Find Sun and Sky.",
+        "items": [
+          {
+            "id": "activity-1",
+            "label": "Sun",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/activities/sun.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "activity-2",
+            "label": "Sky",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/activities/sky.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "activity-3",
+            "label": "Yellow",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/activities/yellow.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
+      },
+      "quiz": [
+        {
+          "question_id": "sunny-sky-q1",
+          "type": "image_choice",
+          "prompt_vi": "Con chọn sun.",
+          "questionAudioText": "Tap sun.",
+          "options": [
+            {
+              "option_id": "sunny-sky-q1-1",
+              "label": "Sun",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q1-1.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "sunny-sky-q1-2",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q1-2.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "sunny-sky-q1-3",
+              "label": "Leaf",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q1-3.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "sunny-sky-q1-1",
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+        },
+        {
+          "question_id": "sunny-sky-q2",
+          "type": "image_choice",
+          "prompt_vi": "Sky là gì?",
+          "questionAudioText": "Sky.",
+          "options": [
+            {
+              "option_id": "sunny-sky-q2-1",
+              "label": "bầu trời",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-1.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "sunny-sky-q2-2",
+              "label": "dòng sông",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-2.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "sunny-sky-q2-3",
+              "label": "cây",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-3.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "sunny-sky-q2-1",
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+        },
+        {
+          "question_id": "sunny-sky-q3",
+          "type": "image_choice",
+          "prompt_vi": "Yellow là màu nào?",
+          "questionAudioText": "Yellow.",
+          "options": [
+            {
+              "option_id": "sunny-sky-q3-1",
+              "label": "vàng",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-1.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "sunny-sky-q3-2",
+              "label": "xanh",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-2.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "sunny-sky-q3-3",
+              "label": "đen",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-3.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "sunny-sky-q3-1",
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+        }
+      ],
+      "reward": {
+        "xp": 80,
+        "sticker": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/rewards/sticker.svg",
+          "type": "sticker",
+          "status": "pending"
+        },
+        "badgeTitle": "Sunny Smile",
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
+      },
+      "arReference": null,
+      "readAloudStory": {
+        "story_id": "sunny-sky-read-aloud",
+        "title": "Read with Momo: Sunny Sky",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
+        "pages": [
+          {
+            "page_id": "sunny-sky-read-1",
+            "order": 1,
+            "text_en": "I see a sun.",
+            "text_vi": "Momo nhìn thấy: Sun.",
+            "highlighted_words": [
+              "Sun"
+            ],
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-1.svg",
+              "type": "image",
+              "status": "pending"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-1.wav",
+              "type": "audio",
+              "status": "pending"
+            }
+          },
+          {
+            "page_id": "sunny-sky-read-2",
+            "order": 2,
+            "text_en": "Sun and Sky are here.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
+            "highlighted_words": [
+              "Sun",
+              "Sky"
+            ],
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-2.svg",
+              "type": "image",
+              "status": "pending"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-2.wav",
+              "type": "audio",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
+      },
+      "generatedMedia": [
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-1.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Cute classroom style scene for Sun."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-2.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Bright picture story for Sky."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-3.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Happy reward scene with Yellow."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-1.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "I see a sun."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-1.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "I see a sun."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-2.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Sun and Sky are here."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-2.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Sun and Sky are here."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/video.mp4",
+            "type": "video",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Sunny Sky"
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/thumb.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Sunny Sky"
+        }
+      ]
+    },
+    {
+      "id": "nature-review",
+      "lesson_id": "nature-review",
+      "title": "Nature Review",
+      "description": "Bé ôn lại từ đã học.",
+      "video": {
+        "title": "Nature Review",
+        "url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/nature-review/video.mp4",
+        "duration_seconds": 90,
+        "thumbnail_url": "supabase://learnar-assets/courses/momo-nature-english-5-7/lessons/nature-review/thumb.png"
+      },
+      "content": null,
+      "title_vi": "Ôn thiên nhiên",
+      "order": 6,
+      "is_completed": false,
+      "duration_minutes": 5,
+      "videoLesson": {
+        "title": "Nature Review",
+        "duration_seconds": 90,
+        "video": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/nature-review/video.mp4",
+          "type": "video",
+          "status": "pending"
+        },
+        "thumbnail": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/nature-review/thumb.svg",
+          "type": "image",
+          "status": "pending"
+        },
+        "scenes": [
+          {
+            "scene_id": "nature-review-scene-1",
+            "order": 1,
+            "duration_seconds": 24,
+            "visual_prompt": "Cute classroom style scene for Elephant.",
+            "narration_vi": "Momo nhìn thấy con voi.",
+            "audio_text_en": "Look! Elephant!",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-1.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "scene_id": "nature-review-scene-2",
+            "order": 2,
+            "duration_seconds": 24,
+            "visual_prompt": "Bright picture story for Tree.",
+            "narration_vi": "Bé nghe và nói Tree.",
+            "audio_text_en": "Say Tree with Momo.",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-2.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "scene_id": "nature-review-scene-3",
+            "order": 3,
+            "duration_seconds": 24,
+            "visual_prompt": "Happy reward scene with Bird.",
+            "narration_vi": "Momo vỗ tay khen bé.",
+            "audio_text_en": "Good job! Bird!",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-3.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ]
+      },
+      "vocabulary": [
+        {
+          "word_en": "Elephant",
+          "word_vi": "con voi",
+          "emoji": "elephant",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/elephant.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/audio/elephant.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/elephant.svg",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "The elephant is big."
+        },
+        {
+          "word_en": "Tree",
+          "word_vi": "cây",
+          "emoji": "tree",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/tree.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/audio/tree.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/tree.svg",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "The tree is green."
+        },
+        {
+          "word_en": "Bird",
+          "word_vi": "con chim",
+          "emoji": "bird",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/bird.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/audio/bird.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/bird.svg",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "The bird can fly."
+        },
+        {
+          "word_en": "Sun",
+          "word_vi": "mặt trời",
+          "emoji": "sun",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/sun.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/audio/sun.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "sticker": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/sun.svg",
+            "type": "sticker",
+            "status": "pending"
+          },
+          "simple_sentence": "The sun is yellow."
+        }
+      ],
+      "game": {
+        "game_id": "nature-review-quick-game",
+        "type": "listen_and_tap",
+        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
+        "prompt_audio_text": "Tap tree.",
+        "items": [
+          {
+            "id": "game-1",
+            "label": "Elephant",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/elephant.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "game-2",
+            "label": "Tree",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/tree.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "game-3",
+            "label": "Bird",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/bird.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "game-4",
+            "label": "Sun",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/sun.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
+      },
+      "pronunciation": {
+        "task_id": "nature-review-say",
+        "instruction_vi": "Bấm nghe, sau đó nói lại thật to.",
+        "prompt_audio_text": "Elephant, Tree, Bird",
+        "target_words": [
+          "Elephant",
+          "Tree",
+          "Bird"
+        ],
+        "audio": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/nature-review/audio/pronunciation.wav",
+          "type": "audio",
+          "status": "pending"
+        },
+        "pass_score": 70,
+        "feedback_positive_vi": "Giọng của con rõ hơn rồi, giỏi lắm!"
+      },
+      "activity": {
+        "activity_id": "nature-review-activity",
+        "type": "match_picture",
+        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
+        "prompt_audio_text": "Find Elephant and Tree.",
+        "items": [
+          {
+            "id": "activity-1",
+            "label": "Elephant",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/elephant.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "activity-2",
+            "label": "Tree",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/tree.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "activity-3",
+            "label": "Bird",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/bird.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          },
+          {
+            "id": "activity-4",
+            "label": "Sun",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/sun.svg",
+              "type": "image",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Con ghép hình rất tốt!"
+      },
+      "quiz": [
+        {
+          "question_id": "nature-review-q1",
+          "type": "image_choice",
+          "prompt_vi": "Con chọn elephant.",
+          "questionAudioText": "Tap elephant.",
+          "options": [
+            {
+              "option_id": "nature-review-q1-1",
+              "label": "Elephant",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q1-1.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "nature-review-q1-2",
+              "label": "Sun",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q1-2.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "nature-review-q1-3",
+              "label": "Leaf",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q1-3.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "nature-review-q1-1",
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+        },
+        {
+          "question_id": "nature-review-q2",
+          "type": "image_choice",
+          "prompt_vi": "Con chọn tree.",
+          "questionAudioText": "Tap tree.",
+          "options": [
+            {
+              "option_id": "nature-review-q2-1",
+              "label": "Water",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q2-1.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "nature-review-q2-2",
+              "label": "Tree",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q2-2.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "nature-review-q2-3",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q2-3.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "nature-review-q2-2",
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+        },
+        {
+          "question_id": "nature-review-q3",
+          "type": "image_choice",
+          "prompt_vi": "Bird làm gì?",
+          "questionAudioText": "Birds fly.",
+          "options": [
+            {
+              "option_id": "nature-review-q3-1",
+              "label": "fly",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q3-1.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "nature-review-q3-2",
+              "label": "swim",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q3-2.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "nature-review-q3-3",
+              "label": "sleep",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q3-3.svg",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "nature-review-q3-1",
+          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
+          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+        }
+      ],
+      "reward": {
+        "xp": 80,
+        "sticker": {
+          "bucket": "learnar-assets",
+          "path": "courses/momo-nature-english-5-7/lessons/nature-review/rewards/sticker.svg",
+          "type": "sticker",
+          "status": "pending"
+        },
+        "badgeTitle": "Nature Champion",
+        "message_vi": "Con hoàn thành một phần học mới cùng Momo!"
+      },
+      "arReference": null,
+      "readAloudStory": {
+        "story_id": "nature-review-read-aloud",
+        "title": "Read with Momo: Nature Review",
+        "instruction_vi": "Nghe Momo đọc, nhìn hình, rồi đọc theo từng câu ngắn.",
+        "pages": [
+          {
+            "page_id": "nature-review-read-1",
+            "order": 1,
+            "text_en": "I see a elephant.",
+            "text_vi": "Momo nhìn thấy: Elephant.",
+            "highlighted_words": [
+              "Elephant"
+            ],
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-1.svg",
+              "type": "image",
+              "status": "pending"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-1.wav",
+              "type": "audio",
+              "status": "pending"
+            }
+          },
+          {
+            "page_id": "nature-review-read-2",
+            "order": 2,
+            "text_en": "Elephant and Tree are here.",
+            "text_vi": "Bé đọc cùng Momo bằng giọng thật rõ.",
+            "highlighted_words": [
+              "Elephant",
+              "Tree"
+            ],
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-2.svg",
+              "type": "image",
+              "status": "pending"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-2.wav",
+              "type": "audio",
+              "status": "pending"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Con đọc theo rất tốt. Momo nghe rõ rồi!"
+      },
+      "generatedMedia": [
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-1.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Cute classroom style scene for Elephant."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-2.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Bright picture story for Tree."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-3.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Happy reward scene with Bird."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-1.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "I see a elephant."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-1.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "I see a elephant."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-2.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Elephant and Tree are here."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-2.wav",
+            "type": "audio",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Elephant and Tree are here."
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/video.mp4",
+            "type": "video",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Nature Review"
+        },
+        {
+          "asset": {
+            "bucket": "learnar-assets",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/thumb.svg",
+            "type": "image",
+            "status": "pending"
+          },
+          "source": "placeholder",
+          "prompt": "Nature Review"
+        }
+      ]
+    }
+  ],
+  "catalogPreview": [
+    {
+      "label": "Sections",
+      "value": "6",
+      "color": "sky"
+    },
+    {
+      "label": "Mini games",
+      "value": "6",
+      "color": "amber"
+    },
+    {
+      "label": "Speaking tests",
+      "value": "6",
+      "color": "violet"
+    },
+    {
+      "label": "Reward XP",
+      "value": "480",
+      "color": "rose"
+    }
+  ],
+  "studentTestimonials": [
+    {
+      "name": "Minh, 6",
+      "role": "Young learner",
+      "quote": "Con thích chạm vào hình và nói elephant!",
+      "avatar": "M"
+    },
+    {
+      "name": "Mẹ của An",
+      "role": "Parent",
+      "quote": "Bài ngắn, nhiều hình, bé chịu học mỗi ngày.",
+      "avatar": "A"
+    }
+  ],
+  "enrollmentCta": {
+    "headline": "Cùng Momo khám phá thiên nhiên hôm nay",
+    "body": "Mỗi phần học chỉ vài phút: xem, chơi, nói, chọn đáp án và nhận sticker.",
+    "buttonLabel": "Bắt đầu với thiên nhiên"
+  },
+  "category_key": "nature",
+  "category_label": "Thiên nhiên",
+  "category_icon": "Nature"
+}
