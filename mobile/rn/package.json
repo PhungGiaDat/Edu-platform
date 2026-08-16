@@ -22,13 +22,17 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.10",
-    "typescript": "~5.9.2"
+    "@types/three": "^0.185.4",
+    "babel-preset-expo": "~54.0.10",
+    "typescript": "~5.9.2",
+    "@playwright/test": "^1.62.1"
   },
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test:e2e": "playwright test"
   },
   "private": true
 }
