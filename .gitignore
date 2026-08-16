@@ -510,3 +510,15 @@ mobile/.idea/
 
 # Unity NuGet cache
 mobile/unity/NuGet.config
+
+# Unity XR/AR settings (personal editor state, regenerated per machine)
+mobile/unity/Assets/XR/Loaders/
+mobile/unity/Assets/XR/Settings/
+mobile/unity/Assets/XR/Temp/
+mobile/unity/Assets/Temp/
+mobile/unity/UserSettings/AI.Animate/
+mobile/unity/UserSettings/AI.Generators/
+mobile/unity/UserSettings/AI.Image/
+mobile/unity/UserSettings/AI.Mesh/
+mobile/unity/UserSettings/AI.Pbr/
+mobile/unity/UserSettings/AI.Sound/
