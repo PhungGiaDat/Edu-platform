@@ -180,6 +180,10 @@ async def reconcile(session: AsyncSession, *, mutate: bool) -> ReconciliationRep
         "category_icon": COURSE.category_icon,
         "level": COURSE.level,
         "is_published": True,
+        # Legacy empty objects are invalid for these optional typed API fields.
+        # The canonical cover remains owned by thumbnail_url (LC10).
+        "thumbnail": None,
+        "enrollment_cta": None,
     }
     if course is None:
         report.course.records[COURSE_ID] = "CREATE"

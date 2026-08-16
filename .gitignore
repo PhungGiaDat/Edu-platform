@@ -457,6 +457,13 @@ mobile/unity/Assets/Models/**
 !mobile/unity/Assets/Models/**/*.meta
 **/public/models/
 
+# 3DModels/ — track final runtime GLBs, ignore Blender reference PNGs
+3DModels/
+!3DModels/
+3DModels/**/*.png
+3DModels/**/*.jpg
+!3DModels/**/*.glb
+
 # Isolated Codex feature worktrees
 .worktrees/
 
