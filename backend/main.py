@@ -45,6 +45,7 @@ from api import (
 )
 from api.pronunciation_enhanced import router as pronunciation_enhanced_router
 from api.lessons import router as lessons_router
+from api.course_lessons import router as course_lessons_router
 from api.session_tracking import router as session_tracking_router
 from api.session_lock import router as session_lock_router
 from api.websocket import router as websocket_router
@@ -258,6 +259,12 @@ app.include_router(
 )
 
 app.include_router(
+    course_lessons_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Course Lessons"]
+)
+
+app.include_router(
     lessons_router,
     prefix="/api",
     tags=["Lesson Media"]
@@ -333,6 +340,7 @@ async def detailed_health_check():
     Use this for comprehensive health monitoring.
     """
     from database.connection import db_manager
+    from database.postgres_connection import postgres_core_enabled, postgres_pool
     
     health_status = {
         "status": "ok",
@@ -343,10 +351,17 @@ async def detailed_health_check():
     
     # Check database connectivity
     try:
-        db_healthy = await db_manager.ping()
+        if postgres_core_enabled():
+            await postgres_pool().fetchval("SELECT 1")
+            db_healthy = True
+            database_engine = "postgresql"
+        else:
+            db_healthy = await db_manager.ping()
+            database_engine = "mongodb"
         health_status["database"] = {
             "status": "connected" if db_healthy else "disconnected",
-            "healthy": db_healthy
+            "healthy": db_healthy,
+            "engine": database_engine,
         }
     except Exception as e:
         health_status["database"] = {

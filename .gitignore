@@ -449,3 +449,23 @@ FodyWeavers.xsd
 **/models/3d/
 **/assets/models/
 **/public/models/
+
+# Isolated Codex feature worktrees
+.worktrees/
+
+# Codex cache
+.codex/npm-cache/
+.git-rewrite/
+
+# 3D Models (hosted on Supabase, URLs in MongoDB)
+3DModels/
+
+# IDE files
+mobile/.idea/
+
+# Unity per-machine/user settings
+mobile/unity/.claude/
+mobile/unity/.utmp/
+mobile/unity/Assets/_Recovery/
+mobile/unity/Builds/
+mobile/unity/UserSettings/

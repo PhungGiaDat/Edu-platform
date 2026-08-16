@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "unityMCP": {
+      "type": "stdio",
+      "command": "C:\\Users\\LENOVO\\.local\\bin\\uvx.exe",
+      "args": ["--from", "mcpforunityserver==10.1.2", "mcp-for-unity", "--transport", "stdio"]
+    },
+    "blender": {
+      "type": "stdio",
+      "command": "C:\\Users\\LENOVO\\.local\\bin\\uvx.exe",
+      "args": ["blender-mcp"],
+      "env": {
+        "BLENDER_HOST": "localhost",
+        "BLENDER_PORT": "9876",
+        "SystemRoot": "C:\\WINDOWS"
+      }
+    },
+    "mongodb": {
+      "command": "npx",
+      "args": ["-y", "mongodb-mcp-server@latest", "--readOnly"]
+    },
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase@latest"]
+    }
+  }
+}

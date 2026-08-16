@@ -1,11 +1,54 @@
 """
 Pytest configuration and fixtures for backend tests.
 """
+import os
+
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timedelta
 from typing import Dict, Any
+
+
+# Test-time defaults installed at conftest load time. This runs *before* pytest
+# collects test modules, so any top-level `import settings` / `from settings
+# import settings` inside a test file sees these env vars. The per-test
+# autouse monkeypatch below re-asserts the same values inside the test
+# scope (so they are cleaned up automatically by pytest).
+_TEST_ENV: Dict[str, str] = {
+    "MONGO_URL": "mongodb://localhost:27017",
+    "MONGO_DB": "test_eduplatform",
+    # 32+ char dummy secret (Settings.SECRET_KEY validator requires this)
+    "SECRET_KEY": "x" * 64,
+    "SUPABASE_PROJECT_URL": "https://test.supabase.co",
+    "SUPABASE_STORAGE_BUCKET": "AR_models",
+    "AVATAR_SERVICE_URL": "https://api.dicebear.com/7.x/avataaars/svg",
+    "DEFAULT_FRONTEND_ORIGIN": "http://localhost:5173",
+    "ALLOWED_ORIGINS": "*",
+    "DEV_ORIGINS": "http://localhost:3000,http://localhost:5173",
+}
+for _k, _v in _TEST_ENV.items():
+    os.environ.setdefault(_k, _v)
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Run once at pytest startup. Optional services disabled by default."""
+    for k in ("GOOGLE_API_KEY", "OPENAI_API_KEY",
+              "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"):
+        os.environ.pop(k, None)
+
+
+@pytest.fixture(autouse=True)
+def _dummy_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Re-assert the dummy env vars for every test.
+
+    The autouse `monkeypatch` is the user-approved fixture pattern: it
+    auto-applies to every test and auto-reverts on teardown, so tests that
+    need to override a value can do so with their own `monkeypatch.setenv`
+    (the inner scope wins) and leak nothing.
+    """
+    for k, v in _TEST_ENV.items():
+        monkeypatch.setenv(k, v)
 
 
 @pytest.fixture(scope="session")
@@ -88,12 +131,40 @@ def mock_repository(mock_user_data):
 
 
 @pytest.fixture
-def gamification_service(mock_repository):
-    """Create a GamificationService with mocked repository."""
-    with patch('services.gamification_service.get_gamification_repository', return_value=mock_repository):
+def mock_event_repository():
+    """Create a mock gamification event repository for idempotency tests."""
+    event_repo = AsyncMock()
+    event_repo.find_by_user_event = AsyncMock(return_value=None)
+    event_repo.create_event = AsyncMock(return_value={
+        "user_id": "test_user_123",
+        "event_id": "event-123",
+        "action": "pronunciation_attempt",
+        "status": "processing",
+    })
+    event_repo.mark_applied = AsyncMock(return_value={
+        "user_id": "test_user_123",
+        "event_id": "event-123",
+        "action": "pronunciation_attempt",
+        "status": "applied",
+        "xp_awarded": 15,
+        "total_xp_after": 15,
+        "level_after": 1,
+        "xp_to_next_after": 100,
+    })
+    event_repo.mark_rejected = AsyncMock(return_value=None)
+    event_repo.reset_to_processing = AsyncMock(return_value=None)
+    return event_repo
+
+
+@pytest.fixture
+def gamification_service(mock_repository, mock_event_repository):
+    """Create a GamificationService with mocked repositories."""
+    with patch('services.gamification_service.get_gamification_repository', return_value=mock_repository), \
+         patch('services.gamification_service.get_gamification_event_repository', return_value=mock_event_repository):
         from services.gamification_service import GamificationService
         service = GamificationService()
         service.repo = mock_repository
+        service.event_repo = mock_event_repository
         return service
 
 

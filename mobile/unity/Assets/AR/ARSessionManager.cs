@@ -16,6 +16,7 @@ public class ARSessionManager : MonoBehaviour
     private ARSessionState _state;
     private XRReferenceImageLibrary _referenceImageLibrary;
     private readonly List<ARTrackedImage> _activeImages = new();
+    private readonly Dictionary<string, ARTrackedImage> _trackedImageByName = new();
     private UnityAction<ARTrackablesChangedEventArgs<ARTrackedImage>> _trackablesChangedHandler;
 
     public event Action<string> OnArReady;
@@ -34,7 +35,7 @@ public class ARSessionManager : MonoBehaviour
         if (_imageManager == null) {
             _imageManager = gameObject.AddComponent<ARTrackedImageManager>();
         }
-        _trackablesChangedHandler = HandleTrackedImagesChanged;
+        _trackablesChangedHandler = HandleTrackedImagesChangedInternal;
     }
 
     private void OnEnable()
@@ -75,12 +76,13 @@ public class ARSessionManager : MonoBehaviour
         }
     }
 
-    private void HandleTrackedImagesChanged(ARTrackablesChangedEventArgs<ARTrackedImage> args)
+    private void HandleTrackedImagesChangedInternal(ARTrackablesChangedEventArgs<ARTrackedImage> args)
     {
         // Image added
         foreach (var image in args.added) {
             if (!_activeImages.Contains(image)) {
                 _activeImages.Add(image);
+                _trackedImageByName[image.referenceImage.name] = image;
                 var pos = image.transform.position;
                 UnityEngine.Debug.Log($"[ARSessionManager] Image detected: {image.referenceImage.name}");
                 OnImageDetected?.Invoke(image.referenceImage.name, pos);
@@ -92,12 +94,15 @@ public class ARSessionManager : MonoBehaviour
             }
         }
 
-        // Image updated (only emit tracking-lost on update if it was previously active)
+        // Image updated
         foreach (var image in args.updated) {
             if (_activeImages.Contains(image)) {
-                RNEventEmitter.Instance.SendEvent("onImageTrackingLost", new {
-                    imageId = image.referenceImage.name
-                });
+                // Only emit tracking-lost on tracking state change to limited/stopped
+                if (image.trackingState == ARTrackingState.Limited || image.trackingState == ARTrackingState.None) {
+                    RNEventEmitter.Instance.SendEvent("onImageTrackingLost", new {
+                        imageId = image.referenceImage.name
+                    });
+                }
             }
         }
 
@@ -106,6 +111,7 @@ public class ARSessionManager : MonoBehaviour
             var image = removed.Value;
             if (_activeImages.Contains(image)) {
                 _activeImages.Remove(image);
+                _trackedImageByName.Remove(image.referenceImage.name);
                 UnityEngine.Debug.Log($"[ARSessionManager] Image tracking lost: {image.referenceImage.name}");
                 OnImageTrackingLost?.Invoke(image.referenceImage.name);
                 RNEventEmitter.Instance.SendEvent("onImageTrackingLost", new {
@@ -126,6 +132,15 @@ public class ARSessionManager : MonoBehaviour
                 count = _activeImages.Count
             });
         }
+    }
+
+    /// <summary>
+    /// Gets the active ARTrackedImage by its reference image name.
+    /// Returns null if the image is not currently being tracked.
+    /// </summary>
+    public ARTrackedImage GetTrackedImage(string imageName)
+    {
+        return _trackedImageByName.TryGetValue(imageName, out var image) ? image : null;
     }
 
     /// <summary>
@@ -203,6 +218,15 @@ public class ARSessionManager : MonoBehaviour
     {
         UnityEngine.Debug.Log("[ARSessionManager] ResumeSession called");
         if (_session != null) _session.enabled = true;
+    }
+
+    /// <summary>
+    /// Test seam: fires the tracked-images changed handler with custom args.
+    /// Used by EditorMockImageDetector and PlayMode tests to inject mock ARTrackedImages.
+    /// </summary>
+    public void HandleTrackedImagesChanged(ARTrackablesChangedEventArgs<ARTrackedImage> args)
+    {
+        HandleTrackedImagesChangedInternal(args);
     }
 
     /// <summary>

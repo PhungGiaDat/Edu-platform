@@ -27,6 +27,7 @@ from models.admin_models import (
 )
 from repositories.admin_repository import AdminRepository, get_admin_repository
 from services.flashcard_upload_service import get_flashcard_upload_service
+from models.ar_object_contract import ARObjectConfigurationError
 import logging
 
 logger = logging.getLogger(__name__)
@@ -336,6 +337,17 @@ async def create_flashcard_in_deck(
     try:
         card = await repo.create_flashcard(card_dict)
         return AdminFlashcardResponse(**card)
+    except ARObjectConfigurationError as exc:
+        # AR configuration failures are operator mistakes (missing or invalid
+        # AR object), not server faults. Map to 422 so the admin UI can
+        # surface a precise remediation hint without leaking stack traces.
+        logger.info(f"[Admin] Flashcard rejected — {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"[Admin] Flashcard creation error: {e}")
         raise HTTPException(

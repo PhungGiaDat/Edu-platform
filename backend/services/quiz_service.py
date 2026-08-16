@@ -10,6 +10,7 @@ from repositories.flashcard_repository import FlashcardRepository, get_flashcard
 from services.ai_service import AIService, get_ai_service
 from models import QuizQuestion
 from settings import settings
+from database.postgres_connection import postgres_core_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -160,7 +161,7 @@ class QuizService:
 
         fixed_quiz = await self.quiz_repo.get_by_flashcard_qr_id(qr_id)
         if fixed_quiz:
-            logger.info("[Quiz] Using Mongo fallback for qr_id=%s", qr_id)
+            logger.info("[Quiz] Using PostgreSQL configured quiz for qr_id=%s", qr_id)
             return fixed_quiz
 
         logger.info("[Quiz] Using local fallback for qr_id=%s", qr_id)
@@ -171,5 +172,5 @@ def get_quiz_service() -> QuizService:
     """Factory function for dependency injection"""
     quiz_repo = get_quiz_repository()
     flashcard_repo = get_flashcard_repository()
-    ai_service = get_ai_service()
+    ai_service = None if postgres_core_enabled() else get_ai_service()
     return QuizService(quiz_repo, flashcard_repo, ai_service)

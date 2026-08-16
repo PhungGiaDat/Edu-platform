@@ -6,7 +6,6 @@ Handles registration and login using JWT and MongoDB
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
-from beanie import operators
 from settings import settings
 import logging
 
@@ -18,19 +17,16 @@ from core.security import (
     get_current_user,
     Token
 )
-from models.user_mongo import (
-    UserDocument, 
-    UserCreate, 
-    UserResponse
-)
+from models.user_mongo import UserCreate, UserResponse
+from repositories.postgres_user_repository import PostgresUser, PostgresUserRepository
 
 router = APIRouter()
 
 
-def to_user_response(user: UserDocument) -> UserResponse:
+def to_user_response(user: PostgresUser) -> UserResponse:
     """Map the persisted user to the authoritative public auth shape."""
     return UserResponse(
-        id=str(user.id),
+        id=user.id,
         email=user.email,
         username=user.username,
         full_name=user.full_name,
@@ -42,7 +38,7 @@ def to_user_response(user: UserDocument) -> UserResponse:
         roles=getattr(user, "roles", []) or [],
         created_at=user.created_at,
         active_pet=user.active_pet,
-        unlocked_pets=user.unlocked_pets,
+        unlocked_pets=user.unlocked_pets or [],
         pet_preferences=user.pet_preferences,
     )
 
@@ -52,18 +48,15 @@ async def register(user_in: UserCreate):
     Register a new user
     """
     # Check if user already exists
-    existing_user = await UserDocument.find_one(
-        UserDocument.email == user_in.email
-    )
+    repo = PostgresUserRepository()
+    existing_user = await repo.get_by_email(str(user_in.email))
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="A user with this email already exists"
         )
     
-    existing_username = await UserDocument.find_one(
-        UserDocument.username == user_in.username
-    )
+    existing_username = await repo.get_by_username(user_in.username)
     if existing_username:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -71,14 +64,10 @@ async def register(user_in: UserCreate):
         )
 
     # Create new user document
-    user = UserDocument(
-        email=user_in.email,
-        username=user_in.username,
-        full_name=user_in.full_name,
-        hashed_password=get_password_hash(user_in.password),
-        is_active=True
+    user = await repo.create(
+        email=str(user_in.email), username=user_in.username,
+        full_name=user_in.full_name, hashed_password=get_password_hash(user_in.password),
     )
-    await user.insert()
     
     return to_user_response(user)
 
@@ -90,12 +79,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     """
     try:
         # Find user by username or email
-        user = await UserDocument.find_one(
-            operators.Or(
-                UserDocument.username == form_data.username,
-                UserDocument.email == form_data.username
-            )
-        )
+        user = await PostgresUserRepository().get_by_login(form_data.username)
         
         if not user:
             logger.warning(f"Login attempt with non-existent user: {form_data.username}")
@@ -127,7 +111,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         # Create access token
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
-            subject=str(user.id), expires_delta=access_token_expires
+            subject=user.id, expires_delta=access_token_expires
         )
         
         logger.info(f"Successful login for user: {user.username}")
@@ -143,7 +127,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         )
 
 @router.get("/me", response_model=UserResponse)
-async def get_me(current_user: UserDocument = Depends(get_current_user)):
+async def get_me(current_user: PostgresUser = Depends(get_current_user)):
     """
     Get current logged in user details
     """

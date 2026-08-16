@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional
 from pydantic import BaseModel
 
-from models.ar_combination import ArCombinationSchema
+from models.ar_combination import ArCombinationSchema, serialize_ar_combination
 from services.ar_service import ARService, get_ar_service
 
 router = APIRouter(prefix="/combos", tags=["combos"])
@@ -40,25 +40,7 @@ def _to_combo_response(combo: dict) -> ArCombinationSchema:
     FastAPI's response_model=ArCombinationSchema calls this internally,
     but we call it explicitly for error clarity.
     """
-    return ArCombinationSchema(
-        combo_id=combo.get("combo_id", ""),
-        description=combo.get("description", ""),
-        required_tags=combo.get("required_tags", []),
-        target_order=combo.get("target_order"),
-        model_3d_url=combo.get("model_3d_url", ""),
-        texture_url=combo.get("texture_url"),
-        image_2d_url=combo.get("image_2d_url", ""),
-        combo_mind_url=combo.get("combo_mind_url"),
-        bonus_xp=combo.get("bonus_xp", combo.get("reward_xp", 100)),
-        # ---- Semantic fields ----
-        semantic_result=combo.get("semantic_result"),
-        animation=combo.get("animation"),
-        sound=combo.get("sound"),
-        phrase=combo.get("phrase"),
-        priority=combo.get("priority", 0),
-        active=combo.get("active", True),
-        flashcard_set=combo.get("flashcard_set"),
-    )
+    return serialize_ar_combination(combo)
 
 
 # ========== ENDPOINTS (Controller) ==========

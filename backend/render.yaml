@@ -42,6 +42,20 @@ services:
       
       - key: WORKERS
         value: 1  # Single worker for free tier (512MB RAM)
+
+      # Supabase + avatar + frontend origin — wired through env (sync:false
+      # because the values are deployment-specific).
+      - key: SUPABASE_PROJECT_URL
+        sync: false  # Set in Render dashboard (sensitive project URL)
+
+      - key: SUPABASE_STORAGE_BUCKET
+        value: AR_models
+
+      - key: AVATAR_SERVICE_URL
+        value: https://api.dicebear.com/7.x/avataaars/svg
+
+      - key: DEFAULT_FRONTEND_ORIGIN
+        sync: false  # Set to the deployed Vercel frontend origin
     
     # Health check
     healthCheckPath: /health

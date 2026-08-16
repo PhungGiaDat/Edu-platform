@@ -17,7 +17,6 @@ import logging
 
 from services.ai_service import AIService, get_ai_service
 from services.agentic_rag_service import AgenticRAGService, get_agentic_rag_service
-from repositories.flashcard_repository import FlashcardRepository, get_flashcard_repository
 from models.chat_log import ChatLog
 
 logger = logging.getLogger(__name__)
@@ -36,7 +35,7 @@ class RAGChatRequest(BaseModel):
 class RAGChatResponse(BaseModel):
     """Response schema for RAG chat"""
     response: str
-    sources: List[Dict[str, Any]]  # Retrieved flashcard words with scores
+    sources: List[Dict[str, Any]]  # Retrieved Qdrant animal-document sources with scores
     session_id: str
 
 
@@ -57,7 +56,6 @@ async def chat_message(
 async def rag_chat(
     request: RAGChatRequest,
     agentic_rag: AgenticRAGService = Depends(get_agentic_rag_service),
-    flashcard_repo: FlashcardRepository = Depends(get_flashcard_repository)
 ):
     """
     Agentic RAG chat — Planner → Generator → Validator pipeline.
@@ -65,7 +63,7 @@ async def rag_chat(
     Flow:
     1. Check MongoDB rag_cache (24h TTL) — return immediately if hit
     2. PLANNER: Query user learning progress → determine topic/keywords/difficulty
-    3. GENERATOR: Vector-search flashcards + LLM draft response
+    3. GENERATOR: Retrieve Qdrant animal documents + LLM draft response
     4. VALIDATOR: Quality check, age-appropriateness, dedup vs session history
     5. Cache result and log conversation
 
@@ -78,7 +76,6 @@ async def rag_chat(
         question=request.question,
         user_id=request.user_id,
         session_id=session_id,
-        flashcard_repo=flashcard_repo,
     )
 
     logger.info(

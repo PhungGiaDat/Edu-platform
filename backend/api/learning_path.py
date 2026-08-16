@@ -11,7 +11,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, date
 import logging
 
 from repositories.learning_path_repository import (
@@ -78,6 +78,19 @@ def _default_progress() -> dict:
     return {"time_spent_mins": 0, "words_learned": 0, "games_played": 0, "pronunciation_attempts": 0}
 
 
+async def _today_progress(user_id: str) -> dict:
+    """Return today's persisted PostgreSQL aggregate, or the stable zero shape."""
+    from database.postgres_connection import postgres_pool
+
+    row = await postgres_pool().fetchrow(
+        """SELECT time_spent_mins, words_learned, games_played, pronunciation_attempts
+           FROM public.daily_learning_progress
+           WHERE user_id=$1 AND progress_date=CURRENT_DATE""",
+        user_id,
+    )
+    return dict(row) if row else _default_progress()
+
+
 # ========== Endpoints ==========
 
 @router.get("/{user_id}")
@@ -101,7 +114,7 @@ async def get_learning_path(
     }
 
     # Daily progress is not tracked in this repo — return zeros so frontend renders
-    today_progress = _default_progress()
+    today_progress = await _today_progress(user_id)
 
     return JSONResponse({
         "preferences": prefs,
@@ -180,56 +193,26 @@ async def track_daily_progress(
     Track daily progress from session logs.
     Aggregates from SessionLogDocument instead of echoing client input (Q5: upsert-per-day).
     """
-    from repositories.gamification_repository import get_gamification_repository
-    from database.db import get_database
-    
     user_id = str(current_user.id)
-    target_date = progress.date
+    try:
+        target_date = date.fromisoformat(progress.date)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="date must use YYYY-MM-DD") from exc
     logger.info(f"[LearningPath] POST progress for user={user_id} date={target_date}")
     
-    repo = get_gamification_repository()
-    db = await get_database()
-    
-    # Get all sessions for the target date
-    start_of_day = datetime.strptime(target_date, "%Y-%m-%d")
-    end_of_day = start_of_day.replace(hour=23, minute=59, second=59)
-    
-    sessions = await db.session_logs.find({
-        "user_id": user_id,
-        "started_at": {"$gte": start_of_day, "$lte": end_of_day},
-        "ended_at": {"$ne": None}  # Only completed sessions
-    }).to_list(100)
-    
-    # Aggregate from session logs
-    total_time_seconds = 0
-    total_words = 0
-    total_games = 0
-    total_pronun = 0
-    topic_counts: dict = {}
-    
-    for session in sessions:
-        # Calculate duration from ended_at - started_at
-        if session.get("ended_at") and session.get("started_at"):
-            duration = (session["ended_at"] - session["started_at"]).total_seconds()
-            total_time_seconds += int(duration)
-        
-        # Aggregate learning metrics
-        total_words += session.get("words_learned", 0)
-        total_games += session.get("games_played", 0)
-        total_pronun += session.get("pronunciation_attempts", 0)
-        
-        # Track most studied topic
-        topic = session.get("active_topic")
-        if topic:
-            topic_counts[topic] = topic_counts.get(topic, 0) + 1
-    
-    total_time_mins = total_time_seconds // 60
-    most_studied_topic = max(topic_counts, key=topic_counts.get) if topic_counts else None
-    
-    # Get user goals for comparison
-    user_prefs = await repo.get_by_user_id(user_id) or {}
-    time_goal = 15  # default
-    words_goal = 5  # default
+    from database.postgres_connection import postgres_pool
+    row = await postgres_pool().fetchrow(
+        """INSERT INTO public.daily_learning_progress(user_id,progress_date,time_spent_mins,words_learned,games_played,pronunciation_attempts)
+           VALUES($1,$2::date,$3,$4,$5,$6) ON CONFLICT(user_id,progress_date) DO UPDATE SET
+           time_spent_mins=GREATEST(daily_learning_progress.time_spent_mins,EXCLUDED.time_spent_mins),
+           words_learned=GREATEST(daily_learning_progress.words_learned,EXCLUDED.words_learned),
+           games_played=GREATEST(daily_learning_progress.games_played,EXCLUDED.games_played),
+           pronunciation_attempts=GREATEST(daily_learning_progress.pronunciation_attempts,EXCLUDED.pronunciation_attempts),updated_at=now() RETURNING *""",
+        user_id, target_date, progress.time_spent_mins, progress.words_learned, progress.games_played, progress.pronunciation_attempts,
+    )
+    total_time_mins, total_words, total_games, total_pronun = row["time_spent_mins"], row["words_learned"], row["games_played"], row["pronunciation_attempts"]
+    prefs = await get_learning_path_repository().get_by_user(user_id) or {}
+    time_goal, words_goal = prefs.get("daily_time_goal_mins", 15), prefs.get("daily_words_goal", 5)
     
     # Determine goals met
     goals_met = {
@@ -247,9 +230,9 @@ async def track_daily_progress(
             "pronunciation_attempts": total_pronun,
         },
         "goals_met": goals_met,
-        "most_studied_topic": most_studied_topic,
-        "sessions_count": len(sessions),
-        "source": "session_logs"  # Indicates real aggregation vs mock
+        "most_studied_topic": None,
+        "sessions_count": 0,
+        "source": "daily_learning_progress"
     })
 
 
@@ -265,7 +248,7 @@ async def get_today_progress(
 
     today = datetime.now().strftime("%Y-%m-%d")
     doc = await repo.get_by_user(user_id) or {}
-    progress = _default_progress()
+    progress = await _today_progress(user_id)
     goals = _build_goals_block(doc, progress)
 
     return JSONResponse({

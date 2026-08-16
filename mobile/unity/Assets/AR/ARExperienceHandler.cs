@@ -22,6 +22,8 @@ public class ARExperienceHandler : MonoBehaviour
     [SerializeField] private ARAudioPlayer audioPlayer;
     [SerializeField] private ARGestureHandler gestureHandler;
     [SerializeField] private PlaneDetection planeDetection;
+    [SerializeField] private ComboManager comboManager;
+    [SerializeField] private PetController petController;
 
     private ARExperiencePayload? _currentPayload;
     private readonly Dictionary<string, ARTrackedImage> _trackedImages = new();
@@ -42,6 +44,8 @@ public class ARExperienceHandler : MonoBehaviour
         if (audioPlayer == null) audioPlayer = FindFirstObjectByType<ARAudioPlayer>();
         if (gestureHandler == null) gestureHandler = FindFirstObjectByType<ARGestureHandler>();
         if (planeDetection == null) planeDetection = FindFirstObjectByType<PlaneDetection>();
+        if (comboManager == null) comboManager = FindFirstObjectByType<ComboManager>();
+        if (petController == null) petController = FindFirstObjectByType<PetController>();
     }
 
     private void SubscribeEvents()
@@ -52,6 +56,9 @@ public class ARExperienceHandler : MonoBehaviour
             sessionManager.OnImageTrackingLost += HandleImageTrackingLost;
             sessionManager.OnMultiImageDetected += HandleMultiImageDetected;
             sessionManager.OnError += HandleError;
+        }
+        if (gestureHandler != null) {
+            gestureHandler.OnInteraction += HandleInteraction;
         }
     }
 
@@ -74,15 +81,23 @@ public class ARExperienceHandler : MonoBehaviour
         UnityEngine.Debug.Log($"[ARExperienceHandler] AR ready: {version}");
     }
 
-    private void HandleImageDetected(string imageId, Vector3 transform)
+    private void HandleImageDetected(string imageId, Vector3 position)
     {
         if (_currentPayload == null) return;
         if (_trackedImages.ContainsKey(imageId)) return;
 
-        UnityEngine.Debug.Log($"[ARExperienceHandler] Image detected: {imageId}");
+        // Get the ARTrackedImage reference for proper image-tracking placement
+        ARTrackedImage trackedImage = null;
+        if (sessionManager != null) {
+            trackedImage = sessionManager.GetTrackedImage(imageId);
+        }
 
-        // For MVP: trigger model load for the first detected image
-        SpawnModelAtImage(imageId, transform).ContinueWith(t => {
+        // Track the position
+        _trackedImages[imageId] = trackedImage;
+
+        UnityEngine.Debug.Log($"[ARExperienceHandler] Image detected: {imageId} at {position}");
+
+        SpawnModelAtImage(imageId, position, trackedImage).ContinueWith(t => {
             if (t.IsFaulted && t.Exception != null) {
                 var ex = t.Exception.InnerException ?? t.Exception;
                 RNEventEmitter.Instance.SendEvent("onError", new {
@@ -97,6 +112,12 @@ public class ARExperienceHandler : MonoBehaviour
     {
         UnityEngine.Debug.Log($"[ARExperienceHandler] Image tracking lost: {imageId}");
         _trackedImages.Remove(imageId);
+
+        if (_spawnedModels.TryGetValue(imageId, out var model)) {
+            _spawnedModels.Remove(imageId);
+        }
+
+        comboManager?.UnregisterTrackedImage(imageId);
     }
 
     private void HandleMultiImageDetected(string[] imageIds, int count)
@@ -118,6 +139,7 @@ public class ARExperienceHandler : MonoBehaviour
 
     /// <summary>
     /// Entry point: called by RNMessageReceiver when RN sends loadARExperience.
+    /// Parses payload and starts the AR session.
     /// </summary>
     public void LoadARExperience(string json)
     {
@@ -125,9 +147,8 @@ public class ARExperienceHandler : MonoBehaviour
         try {
             _currentPayload = ARPayloadMapper.Parse(json);
             var payload = _currentPayload.Value;
-            UnityEngine.Debug.Log($"[ARExperienceHandler] QrId={payload.QrId}, Word={payload.Word}");
+            UnityEngine.Debug.Log($"[ARExperienceHandler] QrId={payload.QrId}, Word={payload.Word}, ModelUrl={payload.ModelUrl}");
 
-            // Start AR session
             sessionManager?.InitSession();
         } catch (Exception ex) {
             UnityEngine.Debug.LogError($"[ARExperienceHandler] Load failed: {ex.Message}");
@@ -144,11 +165,10 @@ public class ARExperienceHandler : MonoBehaviour
     public void StartImageTracking()
     {
         UnityEngine.Debug.Log("[ARExperienceHandler] StartImageTracking called");
-        // For MVP: use basic session. Full image tracking requires ARReferenceImageLibrary.
         sessionManager?.InitSession();
     }
 
-    private async Task SpawnModelAtImage(string imageId, Vector3 position)
+    private async Task SpawnModelAtImage(string imageId, Vector3 position, ARTrackedImage trackedImage = null)
     {
         if (_currentPayload == null) return;
         var payload = _currentPayload.Value;
@@ -157,8 +177,19 @@ public class ARExperienceHandler : MonoBehaviour
             var modelPrefab = await glbLoader.LoadGLB(payload.ModelUrl);
             if (modelPrefab == null) return;
 
-            var spawned = modelSpawner.Spawn(modelPrefab, position, payload.Rotation, payload.Scale);
+            GameObject spawned;
+            if (trackedImage != null) {
+                // Image tracking: parent model to the tracked image so it follows the card
+                spawned = modelSpawner.SpawnOnTrackedImage(modelPrefab, trackedImage, payload.Rotation, payload.Scale);
+            } else {
+                // Fallback: world-space placement
+                spawned = modelSpawner.Spawn(modelPrefab, position, payload.Rotation, payload.Scale);
+            }
+
             _spawnedModels[imageId] = spawned;
+
+            // Register with combo manager if available
+            comboManager?.RegisterTrackedImage(trackedImage, spawned);
 
             RNEventEmitter.Instance.SendEvent("onObjectPlaced", new {
                 qrId = payload.QrId,

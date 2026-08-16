@@ -19,6 +19,7 @@ from .pronunciation_enhanced import router as pronunciation_enhanced_router
 from .sessions import router as sessions_router
 from .lessons import router as lessons_router
 from .session_tracking import router as session_tracking_router
+from .course_lessons import router as course_lessons_router
 from .admin import router as admin_router
 from .profile import router as profile_router
 
@@ -41,5 +42,6 @@ __all__ = [
     "session_tracking_router",
     "admin_router",
     "profile_router",
+    "course_lessons_router",
 ]
 

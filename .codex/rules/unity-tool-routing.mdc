@@ -1,0 +1,65 @@
+---
+description: Unity tool routing for this workspace — pick between Besty UnitySkills REST (776 skills), official Unity CLI (cold start / headless), and IvanMurzak Unity MCP (48 tools). Apply when touching any Unity asset, script, scene, GameObject, or MCP call. Load skills on demand; never pre-load the full Besty schema or all of unity-skills/references at once.
+globs:
+  - mobile/unity/**/*.cs
+  - mobile/unity/**/*.unity
+  - mobile/unity/**/*.prefab
+  - mobile/unity/**/*.asset
+alwaysApply: false
+---
+
+# Unity Tool Routing (Cursor-side mirror)
+
+This is the Cursor counterpart to the `## 5. Unity Tool Routing` section in `CLAUDE.md`. Same policy, two hosts. If they drift, `CLAUDE.md` wins (it is workspace-level).
+
+## Three paths — pick by task shape, not by reflex
+
+1. **Besty UnitySkills REST** (`.claude/skills/unity-skills/`, 776 skills, server on `localhost:8090–8100`)
+   - **Use for**: live Editor operations when Unity is open.
+   - **Boot**: `GET /health` first; branch on `currentMode` (`approval` / `auto` / `bypass`) before any write.
+   - **Schema discovery**: prefer `GET /skills/recommend?intent=<words>` (~2-5 KB) or `GET /skills?brief=1` (~19 KB). Only escalate to the full 618 KB schema when the cheaper layers left you unsure.
+   - **Dry-run gate**: `POST /skill/<name>?mode=dryRun` before the first execution of any skill whose parameters you don't already hold.
+
+2. **Official Unity CLI** (binding lives at `mobile/unity/Library/UnitySkills/cli_config.json`)
+   - **Use for**: cold-starting Unity when Editor is closed; headless tests; headless runs/builds when explicitly enabled.
+   - **Only if** that file exists with `enabled: true`. Otherwise ignore it completely and never suggest installing it.
+   - On-demand skill: `unity-skills/skills/unity-cli/SKILL.md` (already auto-discovered under `.claude/skills/unity-skills/skills/`).
+
+3. **IvanMurzak Unity MCP** (Cursor-side, `mcp__UnityMCP__*` namespace, 48 tools, registered at both `.cursor/mcp.json` and `C:\Users\LENOVO\.cursor\mcp.json`)
+   - **Use for**: when UnitySkills lacks the capability, when an existing workflow targets MCP, or when MCP is materially better (e.g. live Console via `read_console`, screenshots via `manage_camera screenshot`, PlayMode tests via `run_tests`).
+   - On-demand skill: `unity-mcp-usage` (Cursor mirrors it from `.claude/skills/unity-mcp-usage/SKILL.md`).
+
+## Anti-routing rules
+
+- **Never** perform the same mutation through both UnitySkills and Unity MCP.
+- **Never** read the full Besty schema (618 KB) when a smaller layer answers the question.
+- **Never** load all of `.claude/skills/unity-skills/references/` at once. Load the specific `skills/<module>/SKILL.md` only when the task touches that module.
+- **Never** call Unity CLI when the REST server is alive and the task is interactive editor work.
+- **Never** suggest installing Unity CLI from chat — it is opt-in via the in-Editor panel only.
+- **Never** call `execute_code` MCP tool to bypass the type system; the MCP tools are reflection-aware.
+
+## Skill loading cheat-sheet (progressive disclosure)
+
+| Trigger phrase or topic | Load by name (content loads on trigger) |
+|---|---|
+| AR Foundation, ARTrackedImageManager, runtime image library, image tracking, XR Simulation, ARKit/ARCore | `unity-arfoundation-image-tracking` |
+| React Native ↔ Unity bridge, RN↔Unity messaging, TurboModule surface for Unity | `unity-rn-bridge` |
+| `mcp__UnityMCP__*`, Editor screenshots, MCP-driven tests | `unity-mcp-usage` |
+| Vector math, pose, distance, quaternions, world/local transforms | `unity-3d-math` |
+| Besty REST, `localhost:8090`, `/health`, `/skills/recommend` | `unity-skills` |
+| Building or restructuring skills | `suggesting-skills` (in Cursor: `.cursor/skills/suggesting-skills/SKILL.md`) |
+| Anything else in Unity | Do not pre-load — start with `/health` and let the server's `/skills/recommend` pick the module |
+
+## Quick decision tree
+
+```
+Is Unity Editor running and reachable at localhost:8090–8100?
+├── yes  →  Use UnitySkills REST (default)
+│           ├── Is the capability missing or inferior in REST?
+│           │    └── yes → fall through to Unity MCP
+│           └── Done.
+└── no   →  Does mobile/unity/Library/UnitySkills/cli_config.json exist with enabled:true?
+            ├── yes  →  Use Unity CLI (cold start: `unity open <project> --args -unityskills-coldstart`)
+            └── no   →  Tell the user to bind CLI via Window > UnitySkills > Unity CLI Setup...
+                         (do not auto-suggest installing it unprompted)
+```

@@ -8,6 +8,12 @@
     },
     "render": {
       "enabled": true
+    },
+    "superpowers": {
+      "enabled": true
+    },
+    "react-doctor": {
+      "enabled": true
     }
   }
 }

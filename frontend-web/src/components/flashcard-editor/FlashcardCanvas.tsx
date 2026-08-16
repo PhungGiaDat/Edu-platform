@@ -16,6 +16,60 @@ interface FlashcardCanvasProps {
   onElementSelect?: (element: CanvasElement | null) => void;
 }
 
+interface ImageCanvasElementProps {
+  element: ImageElement;
+  onSelect: (id: string) => void;
+  onDragEnd: (element: ImageElement) => (event: KonvaEventObject<DragEvent>) => void;
+  onTransformEnd: (element: ImageElement) => void;
+}
+
+const ImageCanvasElement: React.FC<ImageCanvasElementProps> = ({ element, onSelect, onDragEnd, onTransformEnd }) => {
+  const [image, setImage] = useState<HTMLImageElement | null>(null);
+
+  useEffect(() => {
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.src = element.src;
+    img.onload = () => setImage(img);
+  }, [element.src]);
+
+  if (!image) {
+    return (
+      <Rect
+        id={element.id}
+        x={element.x}
+        y={element.y}
+        width={element.width}
+        height={element.height}
+        fill="#f3f4f6"
+        cornerRadius={element.borderRadius}
+      />
+    );
+  }
+
+  return (
+    <KonvaImage
+      id={element.id}
+      x={element.x}
+      y={element.y}
+      width={element.width}
+      height={element.height}
+      rotation={element.rotation}
+      opacity={element.opacity}
+      image={image}
+      cornerRadius={element.borderRadius}
+      draggable
+      onClick={(event) => {
+        event.cancelBubble = true;
+        onSelect(element.id);
+      }}
+      onTap={() => onSelect(element.id)}
+      onDragEnd={onDragEnd(element)}
+      onTransformEnd={() => onTransformEnd(element)}
+    />
+  );
+};
+
 const FlashcardCanvas: React.FC<FlashcardCanvasProps> = ({ stageRef: externalStageRef, onElementSelect }) => {
   const internalStageRef = useRef<Konva.Stage>(null);
   const stageRef = externalStageRef || internalStageRef;
@@ -167,56 +221,6 @@ const FlashcardCanvas: React.FC<FlashcardCanvasProps> = ({ stageRef: externalSta
     );
   };
 
-  // Render image element
-  const renderImageElement = (element: ImageElement) => {
-    const [image, setImage] = useState<HTMLImageElement | null>(null);
-
-    useEffect(() => {
-      const img = new window.Image();
-      img.crossOrigin = 'anonymous';
-      img.src = element.src;
-      img.onload = () => setImage(img);
-    }, [element.src]);
-
-    if (!image) {
-      return (
-        <Rect
-          key={element.id}
-          id={element.id}
-          x={element.x}
-          y={element.y}
-          width={element.width}
-          height={element.height}
-          fill="#f3f4f6"
-          cornerRadius={element.borderRadius}
-        />
-      );
-    }
-
-    return (
-      <KonvaImage
-        key={element.id}
-        id={element.id}
-        x={element.x}
-        y={element.y}
-        width={element.width}
-        height={element.height}
-        rotation={element.rotation}
-        opacity={element.opacity}
-        image={image}
-        cornerRadius={element.borderRadius}
-        draggable
-        onClick={(e) => {
-          e.cancelBubble = true;
-          selectElement(element.id);
-        }}
-        onTap={() => selectElement(element.id)}
-        onDragEnd={handleDragEnd(element)}
-        onTransformEnd={() => handleTransformEnd(element)}
-      />
-    );
-  };
-
   // Render QR element
   const renderQRElement = () => {
     // QR is rendered by QRLayer component, not in Konva
@@ -257,7 +261,15 @@ const FlashcardCanvas: React.FC<FlashcardCanvasProps> = ({ stageRef: externalSta
               case 'text':
                 return renderTextElement(element as TextElement);
               case 'image':
-                return renderImageElement(element as ImageElement);
+                return (
+                  <ImageCanvasElement
+                    key={element.id}
+                    element={element as ImageElement}
+                    onSelect={selectElement}
+                    onDragEnd={handleDragEnd}
+                    onTransformEnd={handleTransformEnd}
+                  />
+                );
               case 'qr':
                 return renderQRElement();
               default:

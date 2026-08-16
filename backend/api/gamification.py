@@ -4,7 +4,7 @@ Handles HTTP for XP, badges, pets, stickers, and progress reports.
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Any, Dict, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from services.gamification_service import GamificationService, get_gamification_service
 from models.gamification_model import UserPointsSchema
 from models.user_mongo import UserDocument
@@ -16,9 +16,41 @@ router = APIRouter()
 # ========== REQUEST/RESPONSE SCHEMAS ==========
 
 class AddXPRequest(BaseModel):
+    """Legacy request - no idempotency. Prefer AddXPEventRequest for new integrations."""
     user_id: str
     action: str
     metadata: Optional[Dict[str, Any]] = None
+
+
+class AddXPEventRequest(BaseModel):
+    """
+    Idempotent XP event request.
+
+    Use this for new integrations that need exactly-once XP semantics.
+    The event_id must be stable and unique per semantic occurrence.
+    """
+    action: str
+    event_id: str
+
+    # Optional semantic source
+    source_type: Optional[str] = None
+    source_id: Optional[str] = None
+
+    # Optional contextual IDs
+    attempt_id: Optional[str] = None
+    session_id: Optional[str] = None
+    learning_path_id: Optional[str] = None
+
+    # Legacy compatibility (forwarded but not authoritative)
+    metadata: Optional[Dict[str, Any]] = None
+
+    @field_validator("event_id")
+    @classmethod
+    def validate_event_id(cls, v: str) -> str:
+        """Reject None, empty, or whitespace-only event_id."""
+        if not v or not v.strip():
+            raise ValueError("event_id cannot be None, empty, or whitespace-only")
+        return v.strip()
 
 
 class ChoosePetRequest(BaseModel):
@@ -69,11 +101,56 @@ async def add_xp(
     current_user: UserDocument = Depends(get_current_user),
     service: GamificationService = Depends(get_gamification_service)
 ):
-    """Add XP for completing an action"""
+    """
+    Add XP for completing an action.
+
+    LEGACY ENDPOINT - no idempotency.
+    Prefer POST /gamification/xp-event for new integrations.
+    """
     user_id = str(current_user.id)
     result = await service.add_xp(user_id, request.action, request.metadata)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error", "Failed to add XP"))
+    return result
+
+
+@router.post("/gamification/xp-event")
+async def add_xp_event(
+    request: AddXPEventRequest,
+    current_user: UserDocument = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service)
+):
+    """
+    Idempotent XP event with UNIQUE(user_id, event_id).
+
+    Guarantees exactly-once XP semantics even with network retries.
+    event_id must be stable per semantic occurrence.
+
+    Returns cached result on replay (idempotent_replay: true).
+    """
+    user_id = str(current_user.id)
+
+    result = await service.add_xp_with_event_id(
+        user_id=user_id,
+        event_id=request.event_id,
+        action=request.action,
+        source_type=request.source_type,
+        source_id=request.source_id,
+        attempt_id=request.attempt_id,
+        session_id=request.session_id,
+        learning_path_id=request.learning_path_id,
+        metadata=request.metadata,
+    )
+
+    if not result.get("success"):
+        error = result.get("error", "Failed to process XP event")
+        if error in {"CONCURRENT_PROCESSING", "EVENT_SEMANTIC_CONFLICT"}:
+            raise HTTPException(
+                status_code=409,
+                detail="Event is being processed by another request"
+            )
+        raise HTTPException(status_code=400, detail=error)
+
     return result
 
 

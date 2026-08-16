@@ -1,11 +1,22 @@
 import json
 from datetime import datetime
 from pathlib import Path
+from collections.abc import AsyncIterator
 from typing import Any, Dict, List, Optional
 
 from models.course_integrity import normalize_course_payload
 from models.course_model import LessonSession, LessonSessionStepState
-from repositories.course_repository import get_course_repository
+from database.orm_session import session_factory
+from repositories.orm_course_repository import CourseRepository
+from repositories.orm_completion_reward_repository import CompletionRewardRepository
+from repositories.orm_quiz_repository import QuizRepository
+from repositories.orm_mini_game_repository import MiniGameRepository
+from repositories.orm_media_asset_repository import MediaAssetRepository
+from repositories.course_repository import get_course_repository as get_legacy_course_repository
+from services.quiz_activity_service import QuizActivityService
+from services.mini_game_activity_service import MiniGameActivityService
+from services.learner_asset_service import LearnerAssetService
+from services.vocabulary_activity_service import VocabularyActivityService
 from services.gamification_service import get_gamification_service
 from settings import settings
 
@@ -37,8 +48,24 @@ def load_all_course_seeds() -> List[Dict[str, Any]]:
     return [load_course_seed(path.name) for path in sorted(SEED_DIR.glob("*.json"))]
 
 
-def _lesson_step_blueprint(lesson: Dict[str, Any]) -> List[Dict[str, str]]:
-    steps: List[Dict[str, str]] = []
+def _lesson_step_blueprint(lesson: Dict[str, Any]) -> List[Dict[str, Any]]:
+    blocks = lesson.get("learning_blocks") or {}
+    if hasattr(blocks, "model_dump"):
+        blocks = blocks.model_dump(mode="json")
+    activities = blocks.get("activities", []) if isinstance(blocks, dict) else []
+    if activities:
+        return [
+            {
+                "step_id": activity["activity_id"],
+                "title": activity.get("title") or activity["type"].replace("_", " ").title(),
+                "activity_type": activity["type"],
+                "activity_order": activity["order"],
+                "required": activity["required"],
+            }
+            for activity in sorted(activities, key=lambda item: item["order"])
+        ]
+
+    steps: List[Dict[str, Any]] = []
     if lesson.get("videoLesson"):
         steps.append({"step_id": "watch", "title": "Watch"})
         if lesson["videoLesson"].get("scenes"):
@@ -55,6 +82,13 @@ def _lesson_step_blueprint(lesson: Dict[str, Any]) -> List[Dict[str, str]]:
         steps.append({"step_id": "quiz", "title": "Quiz"})
     steps.append({"step_id": "finish", "title": "Finish"})
     return steps
+
+
+def _lesson_content_version(lesson: Dict[str, Any]) -> int:
+    blocks = lesson.get("learning_blocks") or {}
+    if hasattr(blocks, "model_dump"):
+        blocks = blocks.model_dump(mode="json")
+    return int(blocks.get("content_version", 1)) if isinstance(blocks, dict) else 1
 
 
 def _public_asset_url(asset: Dict[str, Any]) -> str:
@@ -126,6 +160,9 @@ def _collect_lesson_media_assets(course_id: str, lesson: Dict[str, Any]) -> List
 def _normalize_existing_step(step: Dict[str, Any]) -> Dict[str, Any]:
     normalized = dict(step)
     normalized.setdefault("title", step.get("step_id", "").title())
+    normalized.setdefault("activity_type", None)
+    normalized.setdefault("activity_order", None)
+    normalized.setdefault("required", True)
     normalized.setdefault("status", "locked")
     normalized.setdefault("attempts", 0)
     normalized.setdefault("best_score", 0)
@@ -143,6 +180,9 @@ def _build_session(user_id: str, course_id: str, lesson: Dict[str, Any]) -> Dict
         step = LessonSessionStepState(
             step_id=item["step_id"],
             title=item["title"],
+            activity_type=item.get("activity_type"),
+            activity_order=item.get("activity_order"),
+            required=item.get("required", True),
             status="in_progress" if index == 0 else "locked",
         ).model_dump()
         steps.append(step)
@@ -151,6 +191,7 @@ def _build_session(user_id: str, course_id: str, lesson: Dict[str, Any]) -> Dict
         user_id=user_id,
         course_id=course_id,
         lesson_id=lesson["lesson_id"],
+        content_version=_lesson_content_version(lesson),
         current_step_id=steps[0]["step_id"],
         current_step_index=0,
         progress_percent=0,
@@ -167,6 +208,8 @@ def _progress_percent(steps: List[Dict[str, Any]]) -> int:
 
 
 def _normalize_session(session: Dict[str, Any], lesson: Dict[str, Any]) -> Dict[str, Any]:
+    target_content_version = _lesson_content_version(lesson)
+    content_changed = int(session.get("content_version", 1)) != target_content_version
     existing_steps = {
         step["step_id"]: _normalize_existing_step(step)
         for step in session.get("steps", [])
@@ -177,12 +220,18 @@ def _normalize_session(session: Dict[str, Any], lesson: Dict[str, Any]) -> Dict[
         current = existing_steps.get(item["step_id"])
         if current:
             current["title"] = item["title"]
+            current["activity_type"] = item.get("activity_type")
+            current["activity_order"] = item.get("activity_order")
+            current["required"] = item.get("required", True)
             normalized_steps.append(current)
         else:
             normalized_steps.append(
                 LessonSessionStepState(
                     step_id=item["step_id"],
                     title=item["title"],
+                    activity_type=item.get("activity_type"),
+                    activity_order=item.get("activity_order"),
+                    required=item.get("required", True),
                     status="locked" if index else "available",
                 ).model_dump()
             )
@@ -191,6 +240,12 @@ def _normalize_session(session: Dict[str, Any], lesson: Dict[str, Any]) -> Dict[
         normalized_steps[0]["status"] = "available"
 
     current_step_id = session.get("current_step_id")
+    if content_changed:
+        first_incomplete = next(
+            (step for step in normalized_steps if step["status"] != "completed"),
+            normalized_steps[-1],
+        )
+        current_step_id = first_incomplete["step_id"]
     if current_step_id not in {step["step_id"] for step in normalized_steps}:
         next_step = next((step for step in normalized_steps if step["status"] in {"available", "in_progress", "needs_retry"}), normalized_steps[0])
         current_step_id = next_step["step_id"]
@@ -201,6 +256,12 @@ def _normalize_session(session: Dict[str, Any], lesson: Dict[str, Any]) -> Dict[
     )
 
     session["steps"] = normalized_steps
+    required_steps = [step for step in normalized_steps if step.get("required", True)]
+    if required_steps and not all(step.get("status") == "completed" for step in required_steps):
+        session["status"] = "started"
+        session["completed_at"] = None
+
+    session["content_version"] = target_content_version
     session["current_step_id"] = current_step_id
     session["current_step_index"] = current_step_index
     session["progress_percent"] = _progress_percent(normalized_steps)
@@ -246,7 +307,8 @@ def _advance_session(session: Dict[str, Any], step_id: str, passed: bool, score:
         session["current_step_id"] = step["step_id"]
         session["current_step_index"] = step_index
 
-    if step_id == "finish" and passed:
+    required_steps = [item for item in steps if item.get("required", True)]
+    if required_steps and all(item.get("status") == "completed" for item in required_steps):
         session["status"] = "completed"
         session["completed_at"] = now
 
@@ -257,8 +319,13 @@ def _advance_session(session: Dict[str, Any], step_id: str, passed: bool, score:
 
 
 class CourseService:
-    def __init__(self):
-        self.repo = get_course_repository()
+    def __init__(self, repo: Optional[CourseRepository] = None, completion_rewards: Optional[CompletionRewardRepository] = None, quizzes: Optional[QuizRepository] = None, games: Optional[MiniGameRepository] = None, media: Optional[MediaAssetRepository] = None):
+        self.repo = repo if repo is not None else get_course_repository()
+        self.completion_rewards = completion_rewards
+        self.quiz_activities = QuizActivityService(self.repo, quizzes) if quizzes is not None else None
+        learner_assets = LearnerAssetService(media) if media is not None else None
+        self.mini_game_activities = MiniGameActivityService(self.repo, games, learner_assets) if games is not None else None
+        self.vocabulary_activities = VocabularyActivityService(self.repo, learner_assets) if learner_assets is not None else None
 
     async def _register_lesson_media(self, course_id: str, lesson: Dict[str, Any]) -> None:
         await self.repo.upsert_media_assets(_collect_lesson_media_assets(course_id, lesson))
@@ -280,6 +347,29 @@ class CourseService:
         if not lesson:
             raise ValueError("Lesson not found")
         return await self.repo.get_media_assets(course_id, lesson_id)
+
+    def _quiz_activity_service(self) -> QuizActivityService:
+        if self.quiz_activities is None:
+            raise RuntimeError("Quiz activity persistence requires the request-scoped ORM session")
+        return self.quiz_activities
+
+    async def get_quiz_activity(self, user_id: str, course_id: str, lesson_id: str, activity_id: str) -> Dict[str, Any]:
+        return await self._quiz_activity_service().hydrate(user_id, course_id, lesson_id, activity_id)
+
+    async def submit_quiz_activity_answer(self, user_id: str, course_id: str, lesson_id: str, activity_id: str, question_id: int, option_id: str) -> Dict[str, Any]:
+        return await self._quiz_activity_service().submit_answer(user_id, course_id, lesson_id, activity_id, question_id, option_id)
+
+    async def get_vocabulary_activity(self, user_id: str, course_id: str, lesson_id: str, activity_id: str) -> Dict[str, Any]:
+        if self.vocabulary_activities is None:
+            raise RuntimeError("Vocabulary activity persistence requires the request-scoped ORM session")
+        return await self.vocabulary_activities.hydrate(user_id, course_id, lesson_id, activity_id)
+
+    async def get_mini_game_activity(self, user_id: str, course_id: str, lesson_id: str, activity_id: str) -> Dict[str, Any]:
+        if self.mini_game_activities is None: raise RuntimeError('Mini-game activity persistence requires the request-scoped ORM session')
+        return await self.mini_game_activities.hydrate(user_id, course_id, lesson_id, activity_id)
+    async def complete_mini_game_activity(self, user_id: str, course_id: str, lesson_id: str, activity_id: str, matched_pair_ids: list[str]) -> Dict[str, Any]:
+        if self.mini_game_activities is None: raise RuntimeError('Mini-game activity persistence requires the request-scoped ORM session')
+        return await self.mini_game_activities.complete(user_id, course_id, lesson_id, activity_id, matched_pair_ids)
 
     async def generate_sample_course(
         self,
@@ -456,7 +546,12 @@ class CourseService:
         if not was_already_completed and reward:
             xp_earned = int(reward.get("xp", 0))
             if xp_earned > 0:
-                await gam_service.add_xp(user_id, "lesson_complete", {"course_id": course_id, "lesson_id": lesson_id})
+                if self.completion_rewards is not None:
+                    reward_result = await self.completion_rewards.award_lesson_completion(user_id, course_id, lesson_id)
+                    if not reward_result.get("success"):
+                        raise RuntimeError(f"Lesson completion reward failed: {reward_result.get('error', 'UNKNOWN')}")
+                else:
+                    await gam_service.add_xp(user_id, "lesson_completed", {"course_id": course_id, "lesson_id": lesson_id})
 
         await gam_service.track_learning(user_id, words_count, time_mins)
 
@@ -533,5 +628,13 @@ class CourseService:
         return await self.repo.get_progress(user_id)
 
 
-def get_course_service() -> CourseService:
-    return CourseService()
+async def get_course_service() -> AsyncIterator[CourseService]:
+    """Bind all learner repository calls in one request-scoped transaction."""
+    async with session_factory()() as session:
+        async with session.begin():
+            yield CourseService(CourseRepository(session), CompletionRewardRepository(session), QuizRepository(session), MiniGameRepository(session), MediaAssetRepository(session))
+
+
+def get_course_repository():
+    """Compatibility seam for unit tests; production uses injected ORM sessions."""
+    return get_legacy_course_repository()

@@ -270,5 +270,141 @@
     "image_animation_type": "bounce",
     "vector_embedding": null,
     "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "cat001",
+    "word": "cat",
+    "translation": {
+      "en": "cat",
+      "vi": "con mèo"
+    },
+    "definition": "Cat (con mèo): A small, furry domestic animal with sharp claws, whiskers, and a tail. Cats are known for being independent, curious, and playful. They make wonderful pets and love to purr. Chủ đề: animals. Cấp độ: easy. Trẻ em học từ vựng tiếng Anh về động vật.",
+    "category": "animals",
+    "image_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/images/flashcards/cats.jpg",
+    "audio_url": null,
+    "difficulty": "easy",
+    "ar_tag": "cat_marker_01",
+    "image_animation_type": "wiggle",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "hama001",
+    "word": "hamster",
+    "translation": {
+      "en": "hamster",
+      "vi": "chuột hamster"
+    },
+    "definition": "Hamster (chuột hamster): A small, round rodent with fluffy fur, tiny ears, and a short tail. Hamsters are popular pets known for storing food in their cheek pouches and running on wheels. Chủ đề: animals. Cấp độ: easy. Trẻ em học từ vựng tiếng Anh về động vật.",
+    "category": "animals",
+    "image_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/images/flashcards/hama.jpg",
+    "audio_url": null,
+    "difficulty": "easy",
+    "ar_tag": "hama_marker_01",
+    "image_animation_type": "bounce",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "huucaoco001",
+    "word": "coconut tree",
+    "translation": {
+      "en": "coconut tree",
+      "vi": "cây dừa"
+    },
+    "definition": "Coconut tree (cây dừa): A tall tropical palm tree that grows near beaches and produces coconuts. It has a long curved trunk, large green fronds, and round brown coconuts. Chủ đề: nature. Cấp độ: easy. Trẻ em học từ vựng tiếng Anh về thiên nhiên và cây cối.",
+    "category": "nature",
+    "image_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/images/flashcards/huucaoco.jpg",
+    "audio_url": null,
+    "difficulty": "easy",
+    "ar_tag": "coconut_marker_01",
+    "image_animation_type": "wiggle",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "giraffe001",
+    "word": "giraffe",
+    "translation": {
+      "en": "giraffe",
+      "vi": "con hươu cao cổ"
+    },
+    "definition": "Giraffe (con hươu cao cổ): The tallest living animal on Earth, with a very long neck, long legs, and a spotted coat. Giraffes use their long necks to reach leaves on tall trees. Chủ đề: animals. Cấp độ: medium. Trẻ em học từ vựng tiếng Anh về động vật.",
+    "category": "animals",
+    "image_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/images/flashcards/giraffe.jpg",
+    "audio_url": null,
+    "difficulty": "medium",
+    "ar_tag": "giraffe_marker_01",
+    "image_animation_type": "wiggle",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "hippo001",
+    "word": "hippopotamus",
+    "translation": {
+      "en": "hippopotamus",
+      "vi": "con hà mã"
+    },
+    "definition": "Hippopotamus (con hà mã): A large, round African animal with thick gray skin that lives in rivers and lakes. Despite being heavy, hippos can run fast and are excellent swimmers. Chủ đề: animals. Cấp độ: medium. Trẻ em học từ vựng tiếng Anh về động vật.",
+    "category": "animals",
+    "image_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/images/flashcards/hippo.jpg",
+    "audio_url": null,
+    "difficulty": "medium",
+    "ar_tag": "hippo_marker_01",
+    "image_animation_type": "bounce",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "britishshorthair001",
+    "word": "British Shorthair cat",
+    "translation": {
+      "en": "British Shorthair cat",
+      "vi": "mèo lông ngắn Anh"
+    },
+    "definition": "British Shorthair cat (mèo lông ngắn Anh): A round, fluffy cat breed with a thick blue-gray coat and copper eyes. They are calm, friendly, and make great family pets. Chủ đề: animals. Cấp độ: medium. Trẻ em học từ vựng tiếng Anh về giống mèo.",
+    "category": "animals",
+    "image_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/images/flashcards/britishshorthair.jpg",
+    "audio_url": null,
+    "difficulty": "medium",
+    "ar_tag": "britishshorthair_marker_01",
+    "image_animation_type": "wiggle",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "catcow001",
+    "word": "cat and cow",
+    "translation": {
+      "en": "cat and cow",
+      "vi": "mèo và bò"
+    },
+    "definition": "Cat and Cow (mèo và bò): A fun animal combo featuring a cat and a cow. Cats are small furry pets that purr, while cows are large farm animals that give milk. Chủ đề: animals. Cấp độ: easy. Trẻ em học từ vựng tiếng Anh về động vật.",
+    "category": "animals",
+    "image_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/images/flashcards/catcow.jpg",
+    "audio_url": null,
+    "difficulty": "easy",
+    "ar_tag": "catcow_marker_01",
+    "image_animation_type": "bounce",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
+  },
+  {
+    "qr_id": "fredcat001",
+    "word": "Fred the cat",
+    "translation": {
+      "en": "Fred the cat",
+      "vi": "Fred con mèo"
+    },
+    "definition": "Fred the cat (Fred con mèo): A cute cartoon cat character named Fred. This friendly feline has a playful personality and loves to explore and nap in sunny spots. Chủ đề: animals. Cấp độ: easy. Trẻ em học từ vựng tiếng Anh về động vật.",
+    "category": "animals",
+    "image_url": "__SUPABASE_BASE__/storage/v1/object/public/AR_models/images/flashcards/fredcat.jpg",
+    "audio_url": null,
+    "difficulty": "easy",
+    "ar_tag": "fredcat_marker_01",
+    "image_animation_type": "wiggle",
+    "vector_embedding": null,
+    "created_at": "2025-07-03T12:00:00Z"
   }
 ]

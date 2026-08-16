@@ -3,10 +3,19 @@
 Flashcard Repository - Data Access Layer
 """
 from typing import Optional, List, Dict, Any
+import json
 from database.base_repo import BaseRepository
+from database.postgres_connection import postgres_core_enabled, postgres_pool
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _row(row) -> Dict[str, Any]:
+    value = dict(row)
+    if isinstance(value.get("translation"), str):
+        value["translation"] = json.loads(value["translation"])
+    return value
 
 
 class FlashcardRepository(BaseRepository):
@@ -16,7 +25,13 @@ class FlashcardRepository(BaseRepository):
     """
     
     def __init__(self):
-        super().__init__("flashcards")
+        # The migrated read paths do not need a Mongo collection.  Avoid
+        # constructing one when the PostgreSQL runtime gate intentionally
+        # starts FastAPI without Beanie.
+        if postgres_core_enabled():
+            self.collection = None
+        else:
+            super().__init__("flashcards")
     
     async def get_by_qr_id(self, qr_id: str) -> Optional[Dict[str, Any]]:
         """
@@ -29,6 +44,11 @@ class FlashcardRepository(BaseRepository):
             Flashcard document or None
         """
         logger.debug(f"🔍 [SEARCH] Flashcard by qr_id: {qr_id}")
+        if postgres_core_enabled():
+            row = await postgres_pool().fetchrow(
+                "SELECT * FROM public.flashcards WHERE qr_id = $1", qr_id
+            )
+            return _row(row) if row else None
         result = await self.collection.find_one({"qr_id": qr_id})
         if result and "_id" in result:
             result["_id"] = str(result["_id"])
@@ -40,6 +60,13 @@ class FlashcardRepository(BaseRepository):
         limit: int = 100
     ) -> List[Dict[str, Any]]:
         """Return active flashcards for the learner flashcard gallery."""
+        if postgres_core_enabled():
+            rows = await postgres_pool().fetch(
+                """SELECT * FROM public.flashcards WHERE is_active = TRUE
+                   ORDER BY created_at DESC NULLS LAST, qr_id ASC OFFSET $1 LIMIT $2""",
+                skip, limit,
+            )
+            return [_row(row) for row in rows]
         cursor = (
             self.collection
             .find({"is_active": {"$ne": False}})
@@ -63,6 +90,11 @@ class FlashcardRepository(BaseRepository):
         Returns:
             Flashcard document or None
         """
+        if postgres_core_enabled():
+            row = await postgres_pool().fetchrow(
+                "SELECT * FROM public.flashcards WHERE ar_tag = $1 ORDER BY qr_id ASC LIMIT 1", ar_tag
+            )
+            return _row(row) if row else None
         return await self.find_one({"ar_tag": ar_tag})
     
     async def get_by_category(self, category: str) -> List[Dict[str, Any]]:
@@ -92,6 +124,12 @@ class FlashcardRepository(BaseRepository):
         Returns:
             List of flashcard documents
         """
+        if postgres_core_enabled():
+            rows = await postgres_pool().fetch(
+                "SELECT * FROM public.flashcards WHERE word ILIKE $1 ORDER BY word ASC, qr_id ASC LIMIT 100",
+                f"%{word}%",
+            )
+            return [_row(row) for row in rows]
         cursor = self.collection.find({"word": {"$regex": word, "$options": "i"}})
         results = await cursor.to_list(length=100)
         for result in results:
@@ -114,6 +152,11 @@ class FlashcardRepository(BaseRepository):
         Returns:
             Flashcard document or None
         """
+        if postgres_core_enabled():
+            row = await postgres_pool().fetchrow(
+                "SELECT * FROM public.flashcards WHERE qr_id = $1 AND ar_tag = $2", qr_id, ar_tag
+            )
+            return _row(row) if row else None
         return await self.find_one({"qr_id": qr_id, "ar_tag": ar_tag})
     
     async def get_by_category(
@@ -133,6 +176,13 @@ class FlashcardRepository(BaseRepository):
         Returns:
             List of flashcard documents
         """
+        if postgres_core_enabled():
+            rows = await postgres_pool().fetch(
+                """SELECT * FROM public.flashcards WHERE category = $1
+                   ORDER BY word ASC, qr_id ASC OFFSET $2 LIMIT $3""",
+                category, skip, limit,
+            )
+            return [_row(row) for row in rows]
         return await self.find_many(
             filter={"category": category},
             skip=skip,
@@ -157,6 +207,12 @@ class FlashcardRepository(BaseRepository):
         Returns:
             List of flashcard documents
         """
+        if postgres_core_enabled():
+            rows = await postgres_pool().fetch(
+                "SELECT * FROM public.flashcards WHERE difficulty=$1 ORDER BY qr_id OFFSET $2 LIMIT $3",
+                difficulty, skip, limit,
+            )
+            return [_row(row) for row in rows]
         return await self.find_many(
             filter={"difficulty": difficulty},
             skip=skip,
@@ -185,6 +241,9 @@ class FlashcardRepository(BaseRepository):
             The Gemini embedding model 'models/gemini-embedding-001' produces 3072-dimensional vectors.
             Ensure your MongoDB Atlas Vector Search index is configured with dimensions: 3072
         """
+        if postgres_core_enabled():
+            # Vector search remains a Qdrant responsibility after cutover.
+            return []
         if not query_vector:
             logger.warning("[VectorSearch] Empty query vector provided")
             return []

@@ -5,6 +5,9 @@ import LearnARV2 from "./pages/LearnARV2";
 import { CourseList } from "./pages/CourseList";
 import { CourseDetail } from "./pages/CourseDetail";
 import { LessonPlayer } from "./pages/LessonPlayer";
+import { AnimalsAdventure } from "./pages/AnimalsAdventure";
+import { AnimalsCourse } from "./pages/AnimalsCourse";
+import { AnimalsLessonPlayer } from "./pages/AnimalsLessonPlayer";
 import { Profile } from "./pages/Profile";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
@@ -23,6 +26,7 @@ import { useAuth } from "./contexts/AuthContext";
 import { getApiBase } from "./config";
 import { apiClient } from "./services/apiClient";
 import { SoundEffectService } from "./services/SoundEffectService";
+import { GlobalSessionWatcher } from "./components/GlobalSessionWatcher";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -262,7 +266,10 @@ const App = () => {
         <Route path="/flashcards" element={<RequireUserAuth><Layout><FlashcardPage /></Layout></RequireUserAuth>} />
         <Route path="/learn-ar" element={<RequireLearnerAccess><LearnARV2 /></RequireLearnerAccess>} />
         <Route path="/courses" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
-        <Route path="/courses/animals" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/animals" element={<RequireLearnerAccess><Layout><AnimalsCourse /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/animals-adventure" element={<RequireLearnerAccess><Layout><AnimalsAdventure /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/animals-adventure/lessons/:id" element={<RequireLearnerAccess><Layout><AnimalsLessonPlayer /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/animals/lessons/:lessonId" element={<RequireLearnerAccess><Layout><AnimalsLessonPlayer /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/path/:pathId" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/level/:level" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/category/:category" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
@@ -302,6 +309,9 @@ const App = () => {
 
       {/* Global Pet Unlock Celebration Modal */}
       <GlobalPetUnlockNotifier />
+
+      {/* Global Session Break Reminder */}
+      <GlobalSessionWatcher />
     </>
   );
 };

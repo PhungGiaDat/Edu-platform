@@ -3,6 +3,14 @@
  *
  * AR container with iframe swapping for MindAR + PiP multi-scanner.
  * Optimized for stability: iframe is not recreated on every property change.
+ *
+ * Persistent Viewer flow (Task 8):
+ * - viewer URL is built only from mind + catalogId + targetCount + maxTrack=2
+ * - mindIdentityKey = catalogId|mindUrl — stable across activeTargets changes
+ * - After AR_READY, sends SET_ACTIVE_TARGETS with revision 1
+ * - On activeTargets prop change, sends next SET_ACTIVE_TARGETS revision
+ * - 7-second ACK timeout triggers rejection with ACTIVE_TARGETS_TIMEOUT
+ * - No MIND_BUFFER props in the persistent viewer flow
  */
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
@@ -13,8 +21,21 @@ import {
     ARMessageType,
     ARMessagePayloadMap,
     createMessage,
-    normalizeMessage
+    normalizeMessage,
+    ActiveViewerTarget,
 } from '@/core/types/ARMessages';
+import { useDualDisplay } from '@/hooks/useDualDisplay';
+import { useComboDetection } from '@/hooks/useComboDetection';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
+import { dualDisplayManager } from '@/runtime/DualDisplayManager';
+import { ComboDefinition } from '@/lib/combo/types';
+import { armViewerBootstrapWatchdog } from './viewerBootstrapWatchdog';
+import {
+    requestRevision,
+    acknowledgeRevision,
+    initialRevisionState,
+    ActiveTargetRevisionState,
+} from './activeTargetRevision';
 
 // ========== TYPES ==========
 export type ARPhase = 'IDLE' | 'SCANNING' | 'LOADING' | 'VIEWING' | 'ERROR'
@@ -22,8 +43,19 @@ export type ARPhase = 'IDLE' | 'SCANNING' | 'LOADING' | 'VIEWING' | 'ERROR'
 
 interface ARContainerV2Props {
     initialPhase?: ARPhase;
+    // --- Persistent viewer props (Task 8) ---
+    catalogId?: string | null;
     mindUrl?: string | null;
-    mindBuffer?: Uint8Array | null;
+    catalogTargetCount?: number;
+    activeTargets?: ActiveViewerTarget[];
+    onActiveTargetsApplied?: (revision: number) => void;
+    onActiveTargetsRejected?: (error: {
+        revision: number;
+        code: string;
+        stage: string;
+        message: string;
+    }) => void;
+    // --- Legacy props (used when catalogId is absent; mindBuffer unused — runtime merge removed) ---
     modelUrl?: string;
     imageUrl?: string;
     textureUrl?: string;
@@ -47,6 +79,10 @@ interface ARContainerV2Props {
     onModelClick?: (modelId: string, targetIndex?: number) => void;
     onComboDetected?: (targets: number[]) => void;
     onViewerAssetError?: (data: { code?: string; error: string; url?: string }) => void;
+    // Dual display props
+    onComboActivated?: (combo: ComboDefinition) => void;
+    onComboDeactivated?: () => void;
+    onDualDisplayModeChange?: (mode: 'single' | 'dual' | 'combo') => void;
     children?: React.ReactNode;
 }
 
@@ -57,28 +93,18 @@ interface ARViewerTarget {
     word?: string;
 }
 
-const PALM_TREE_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb';
-const PALM_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg';
-const ELEPHANT_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg';
-const COMBO_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb';
-const COMBO_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png';
-
-function normalizeViewerAssetUrl(url?: string): string | undefined {
-    if (!url) return undefined;
-    const lower = url.toLowerCase();
-    if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return PALM_TREE_MODEL_URL;
-    if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return PALM_IMAGE_URL;
-    if (lower.includes('/frontend/model2d/elephant.jpg') || lower.endsWith('/elephant.jpg')) return ELEPHANT_IMAGE_URL;
-    if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
-    if (lower.endsWith('/cute_elephant_jungle.glb')) return COMBO_MODEL_URL;
-    if (lower.endsWith('/elephant_tree_combo_layered.png')) return COMBO_IMAGE_URL;
-    return url;
-}
-
+const VIEWER_BOOTSTRAP_TIMEOUT_MS = 15_000;
+// 7-second ACK timeout for SET_ACTIVE_TARGETS revisions (Task 8)
+const ACTIVE_TARGETS_ACK_TIMEOUT_MS = 7_000;
 export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     initialPhase = 'SCANNING',
+    catalogId,
     mindUrl,
-    mindBuffer,
+    catalogTargetCount,
+    activeTargets,
+    onActiveTargetsApplied,
+    onActiveTargetsRejected,
+    // --- Legacy props (used when catalogId is absent) ---
     modelUrl,
     imageUrl,
     textureUrl,
@@ -102,24 +128,43 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     onModelClick,
     onComboDetected,
     onViewerAssetError,
+    onComboActivated,
+    onComboDeactivated,
+    onDualDisplayModeChange,
     children
 }) => {
     const [phase, setPhase] = useState<ARPhase>(initialPhase);
     const [error, setError] = useState<string | null>(null);
     const [isReady, setIsReady] = useState(false);
 
+    // Dual display hooks
+    const {
+        displayMode,
+        isCombo,
+        getDisplayInfo,
+    } = useDualDisplay();
+
+    const {
+        hasActiveCombo,
+        activeCombo: combo,
+    } = useComboDetection();
+
+    const {
+        fps,
+        isHealthy,
+    } = usePerformanceMonitor();
+
+    // Get combo info from store
+    const comboData = getDisplayInfo();
+
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const pipRef = useRef<HTMLIFrameElement>(null);
-
-    // Ref-held buffer so the long-lived MIND_BUFFER_REQUEST listener (see the
-    // stable handler below) can ship the latest merged buffer to the iframe
-    // regardless of prop churn. Solves Cause 2 of
-    // report/DEBUG_20260706_MULTI_FLASHCARD_LOADING.md.
-    const mindBufferDeliveryRef = useRef<Uint8Array | null>(null);
-
-    useEffect(() => {
-        mindBufferDeliveryRef.current = mindBuffer ?? null;
-    }, [mindBuffer]);
+    const cancelViewerBootstrapWatchdogRef = useRef<(() => void) | null>(null);
+    // Task 8: revision state machine — kept in a ref so the ACK timeout
+    // and message handler can both mutate it without causing re-renders.
+    const revisionStateRef = useRef<ActiveTargetRevisionState>(initialRevisionState);
+    // Task 8: ACK timeout handle — cleared on each new revision
+    const ackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const emitDebug = useCallback((label: string, details: Record<string, unknown> = {}) => {
         window.postMessage({
@@ -143,7 +188,13 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         onModelClick,
         onComboDetected,
         onViewerAssetError,
-        onPhaseChange
+        onPhaseChange,
+        onComboActivated,
+        onComboDeactivated,
+        onDualDisplayModeChange,
+        // Task 8: revision lifecycle callbacks
+        onActiveTargetsApplied,
+        onActiveTargetsRejected,
     });
 
     useEffect(() => {
@@ -154,9 +205,14 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             onModelClick,
             onComboDetected,
             onViewerAssetError,
-            onPhaseChange
+            onPhaseChange,
+            onComboActivated,
+            onComboDeactivated,
+            onDualDisplayModeChange,
+            onActiveTargetsApplied,
+            onActiveTargetsRejected,
         };
-    }, [onQRDetected, onTargetFound, onTargetLost, onModelClick, onComboDetected, onViewerAssetError, onPhaseChange]);
+    }, [onQRDetected, onTargetFound, onTargetLost, onModelClick, onComboDetected, onViewerAssetError, onPhaseChange, onComboActivated, onComboDeactivated, onDualDisplayModeChange, onActiveTargetsApplied, onActiveTargetsRejected]);
 
     const transitionTo = useCallback((newPhase: ARPhase) => {
         if (newPhase === phase) return;
@@ -166,11 +222,36 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         eventBus.emit('AR_PHASE_CHANGED' as any, { phase: newPhase });
     }, [phase]);
 
-    // ========== VIEWER SRC ==========
+    // ========== TASK 8: VIEWER SRC (catalog-only, stable key) ==========
+    /**
+     * Build the persistent viewer URL.
+     *
+     * Contains ONLY: mind, catalogId, targetCount, maxTrack=2.
+     * Model URLs, words, combo assets, activeTargets, revision
+     * are sent via postMessage after AR_READY — they never appear
+     * in the URL and never change the iframe key.
+     */
     const viewerSrc = useMemo(() => {
-        if (!mindUrl && !mindBuffer) return null;
+        // Priority 1: Persistent viewer (catalogId + mindUrl)
+        // Model/word/combo assets sent via postMessage after AR_READY.
+        // This path requires SET_ACTIVE_TARGETS to activate targets.
+        if (catalogId && mindUrl) {
+            const params = new URLSearchParams();
+            params.set('mind', mindUrl);
+            params.set('catalogId', catalogId);
+            const targetCount = typeof catalogTargetCount === 'number'
+                ? catalogTargetCount
+                : 2;
+            params.set('targetCount', String(targetCount));
+            params.set('maxTrack', '2');
+            return `/ar-viewer.html?${params.toString()}`;
+        }
+
+        // Priority 2: Legacy path — single mindUrl, models/words via URL params.
+        // Falls back to scanner if no mindUrl at all.
+        if (!mindUrl) return null;
         const params = new URLSearchParams();
-        params.set('mind', mindBuffer ? 'runtime-buffer' : mindUrl!);
+        params.set('mind', mindUrl);
 
         const viewerTargets = targets?.length
             ? targets.slice(0, 5)
@@ -184,51 +265,31 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
         viewerTargets.slice(0, targetCount).forEach((target, index) => {
             const suffix = index === 0 ? '' : String(index + 1);
-            const normalizedModelUrl = normalizeViewerAssetUrl(target.modelUrl);
-            const normalizedImageUrl = normalizeViewerAssetUrl(target.imageUrl);
-            const normalizedTextureUrl = normalizeViewerAssetUrl(target.textureUrl);
-            if (normalizedModelUrl) params.set(`model${suffix}`, normalizedModelUrl);
-            if (normalizedImageUrl) params.set(`image${suffix}`, normalizedImageUrl);
-            if (normalizedTextureUrl) params.set(`textureUrl${suffix}`, normalizedTextureUrl);
+            if (target.modelUrl) params.set(`model${suffix}`, target.modelUrl);
+            if (target.imageUrl) params.set(`image${suffix}`, target.imageUrl);
+            if (target.textureUrl) params.set(`textureUrl${suffix}`, target.textureUrl);
             if (target.word) params.set(`word${suffix}`, target.word);
         });
 
         params.set('cardCount', String(targetCount));
         params.set('targetCount', String(targetCount));
-        if (typeof cardCount === 'number' || viewerTargets.length) {
-            params.set('maxTrack', String(Math.max(1, Math.min(targetCount, 5))));
-        }
-        const normalizedComboModelUrl = normalizeViewerAssetUrl(comboModelUrl);
-        const normalizedComboImageUrl = normalizeViewerAssetUrl(comboImageUrl);
-        const normalizedComboTextureUrl = normalizeViewerAssetUrl(comboTextureUrl);
-        if (normalizedComboModelUrl) params.set('comboModel', normalizedComboModelUrl);
-        if (normalizedComboImageUrl) params.set('comboImage', normalizedComboImageUrl);
-        if (normalizedComboTextureUrl) params.set('comboTextureUrl', normalizedComboTextureUrl);
+        params.set('maxTrack', String(Math.max(1, Math.min(targetCount, 5))));
+
+        if (comboModelUrl) params.set('comboModel', comboModelUrl);
+        if (comboImageUrl) params.set('comboImage', comboImageUrl);
+        if (comboTextureUrl) params.set('comboTextureUrl', comboTextureUrl);
         if (comboPhrase) params.set('comboPhrase', comboPhrase);
         return `/ar-viewer.html?${params.toString()}`;
-    }, [mindUrl, mindBuffer, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+    }, [mindUrl, catalogId, catalogTargetCount, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
 
     useEffect(() => {
         emitDebug('PARENT_VIEWER_SRC_READY', {
             hasViewerSrc: Boolean(viewerSrc),
             mindUrl,
-            hasMindBuffer: Boolean(mindBuffer?.byteLength),
-            modelUrl,
-            imageUrl,
-            textureUrl,
-            modelUrl2,
-            imageUrl2,
-            textureUrl2,
-            word,
-            word2,
-            targets,
-            cardCount,
-            comboModelUrl,
-            comboImageUrl,
-            comboTextureUrl,
-            comboPhrase
+            catalogId,
+            catalogTargetCount,
         });
-    }, [emitDebug, viewerSrc, mindUrl, mindBuffer, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+    }, [emitDebug, viewerSrc, mindUrl, catalogId, catalogTargetCount]);
 
     const mainSrc = useMemo(() => {
         switch (phase) {
@@ -238,23 +299,97 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         }
     }, [phase, viewerSrc]);
 
-    // Identity key for the viewer iframe that signals a meaningful change
-    // (phase flip, or runtime-buffer mode flip, OR the underlying buffer
-    // identity changed). Solves Cause 2 — the iframe no longer remounts on
-    // every viewerSrc string change, only when the actual source flips.
+    // ========== TASK 8: STABLE IDENTITY KEY ==========
+    /**
+     * Identity key for the viewer iframe — MUST NOT change when activeTargets
+     * changes, otherwise React remounts the iframe and loses the MindAR session.
+     *
+     * Persistent viewer: key = catalogId|mindUrl (stable catalog identity)
+     * Legacy path: key derived from URL params (mindUrl + models)
+     */
     const mindIdentityKey = useMemo(() => {
         if (!mainSrc) return 'none';
-        // For runtime-buffer mode, key by buffer reference identity so a
-        // successful merge re-mounts the iframe exactly once.
-        if (mindBuffer && mindBuffer.byteLength > 0) return `mind=runtime-buffer#${mindBuffer.byteLength}#${mainSrc}`;
+        if (catalogId && mindUrl) {
+            return `catalog=${catalogId}|mind=${mindUrl}`;
+        }
+        // Legacy path: stable key from URL params (doesn't include activeTargets)
         if (mainSrc.startsWith('data:') || mainSrc.includes('mind=')) {
-            // Use only the mind= param portion — the rest of the querystring
-            // (model, image, word params) does NOT require an iframe remount.
             const url = new URL(mainSrc, window.location.origin);
-            return `phase=${phase}|mind=${url.searchParams.get('mind') ?? 'none'}`;
+            const modelParams = ['model', 'model2', 'model3', 'model4', 'model5']
+                .map(p => `${p}=${url.searchParams.get(p) ?? ''}`)
+                .filter(p => !p.endsWith('='))
+                .join('|');
+            return `legacy|mind=${url.searchParams.get('mind') ?? 'none'}|${modelParams}`;
         }
         return `phase=${phase}|scanner`;
-    }, [phase, mainSrc, mindBuffer]);
+    }, [phase, mainSrc, catalogId, mindUrl]);
+
+    // ========== TASK 8: REVISION TRANSPORT ==========
+
+    /**
+     * Arm (or re-arm) the 7-second ACK timeout for the current desired revision.
+     * Clears any previously armed timeout to handle revision churn correctly.
+     */
+    const armAckTimeout = useCallback((_revision: number) => {
+        if (ackTimeoutRef.current) clearTimeout(ackTimeoutRef.current);
+        ackTimeoutRef.current = setTimeout(() => {
+            const state = revisionStateRef.current;
+            if (state.desiredRevision !== state.acknowledgedRevision) {
+                // Still waiting on this revision — time out and reject
+                callbacksRef.current.onActiveTargetsRejected?.({
+                    revision: state.desiredRevision,
+                    code: 'ACTIVE_TARGETS_TIMEOUT',
+                    stage: 'ACK_WAIT',
+                    message: `SET_ACTIVE_TARGETS revision ${state.desiredRevision} was not acknowledged within ${ACTIVE_TARGETS_ACK_TIMEOUT_MS}ms`,
+                });
+                emitDebug('PARENT_ACTIVE_TARGETS_TIMEOUT', {
+                    revision: state.desiredRevision,
+                });
+            }
+        }, ACTIVE_TARGETS_ACK_TIMEOUT_MS);
+    }, [emitDebug]);
+
+    /**
+     * Send SET_ACTIVE_TARGETS to the viewer iframe.
+     * Called after AR_READY and on every activeTargets prop change.
+     */
+    const sendActiveTargets = useCallback((revision: number, targets: ActiveViewerTarget[]) => {
+        if (!iframeRef.current?.contentWindow) return;
+        const iframeWindow = iframeRef.current.contentWindow;
+        iframeWindow.postMessage(
+            createMessage('SET_ACTIVE_TARGETS', {
+                catalogId: catalogId ?? '',
+                revision,
+                targets,
+            }),
+            '*'
+        );
+        emitDebug('PARENT_SET_ACTIVE_TARGETS_SENT', {
+            catalogId,
+            revision,
+            targetCount: targets.length,
+        });
+    }, [catalogId, emitDebug]);
+
+    /**
+     * Advance the revision state machine and send the new SET_ACTIVE_TARGETS.
+     * Arms the ACK timeout; on acknowledgeRevision the timeout is cleared.
+     */
+    const requestActiveTargets = useCallback((targets: ActiveViewerTarget[]) => {
+        const next = requestRevision(revisionStateRef.current, targets);
+        revisionStateRef.current = next;
+        sendActiveTargets(next.desiredRevision, targets);
+        armAckTimeout(next.desiredRevision);
+    }, [sendActiveTargets, armAckTimeout]);
+
+    // When activeTargets prop changes, send a new revision (only after AR_READY
+    // has been received so the iframe is ready to receive SET_ACTIVE_TARGETS).
+    const hasReceivedARReadyRef = useRef(false);
+    useEffect(() => {
+        if (!hasReceivedARReadyRef.current) return;
+        if (!activeTargets?.length) return;
+        requestActiveTargets(activeTargets);
+    }, [activeTargets, requestActiveTargets]);
 
     // ========== SEND TO IFRAME HELPERS ==========
     const sendToMain = useCallback((type: string, data: any = {}) => {
@@ -294,7 +429,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             onTargetFound: cbFound,
             onTargetLost: cbLost,
             onModelClick: cbClick,
-            onComboDetected: cbCombo
+            onComboDetected: cbCombo,
+            onComboActivated: cbComboActivated,
         } = callbacksRef.current;
 
         switch (type) {
@@ -316,6 +452,11 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 });
                 cbQR?.(data.qrId);
                 eventBus.emit(AREvent.MARKER_FOUND, { markerId: data.qrId, target: null } as any);
+                // Task 8: forward QR_DETECTED via eventBus for Add-card flow
+                eventBus.emit('AR_QR_DETECTED' as any, {
+                    sessionId: data.qrId,
+                    qrId: data.qrId,
+                });
                 if (!fromPiP && phase === 'SCANNING' && !deferQrTransition) {
                     transitionTo('LOADING');
                 }
@@ -331,7 +472,10 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 break;
             }
 
-            case 'AR_READY':
+            case 'AR_READY': {
+                if (fromPiP || phase !== 'VIEWING' || event.source !== iframeRef.current?.contentWindow) break;
+                cancelViewerBootstrapWatchdogRef.current?.();
+                cancelViewerBootstrapWatchdogRef.current = null;
                 emitDebug('PARENT_AR_READY', {
                     payload,
                     fromPiP,
@@ -341,17 +485,59 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 setIsReady(true);
                 transitionTo('VIEWING');
                 eventBus.emit(AREvent.SCENE_READY, { scene: 'viewer' } as any);
-                break;
 
-            case 'MIND_BUFFER_REQUEST': {
-                const iframeWindow = iframeRef.current?.contentWindow;
-                if (!fromPiP && mindBuffer && iframeWindow && event.source === iframeWindow) {
-                    iframeWindow.postMessage(
-                        createMessage('MIND_BUFFER', { buffer: mindBuffer }),
-                        '*'
-                    );
-                    emitDebug('PARENT_MIND_BUFFER_SENT', { bytes: mindBuffer.byteLength });
+                // Task 8: mark AR_READY received and send initial SET_ACTIVE_TARGETS
+                hasReceivedARReadyRef.current = true;
+                if (activeTargets?.length) {
+                    requestActiveTargets(activeTargets);
                 }
+                break;
+            }
+
+            // Task 8: handle SET_ACTIVE_TARGETS acknowledgement
+            case 'ACTIVE_TARGETS_APPLIED': {
+                const data = payload as ARMessagePayloadMap['ACTIVE_TARGETS_APPLIED'];
+                emitDebug('PARENT_ACTIVE_TARGETS_APPLIED', {
+                    catalogId: data.catalogId,
+                    revision: data.revision,
+                });
+
+                // Clear ACK timeout — revision was acknowledged in time
+                if (ackTimeoutRef.current) {
+                    clearTimeout(ackTimeoutRef.current);
+                    ackTimeoutRef.current = null;
+                }
+
+                const next = acknowledgeRevision(revisionStateRef.current, data.revision);
+                revisionStateRef.current = next;
+
+                callbacksRef.current.onActiveTargetsApplied?.(data.revision);
+                break;
+            }
+
+            // Task 8: handle SET_ACTIVE_TARGETS rejection
+            case 'ACTIVE_TARGETS_REJECTED': {
+                const data = payload as ARMessagePayloadMap['ACTIVE_TARGETS_REJECTED'];
+                emitDebug('PARENT_ACTIVE_TARGETS_REJECTED', {
+                    catalogId: data.catalogId,
+                    revision: data.revision,
+                    code: data.code,
+                    stage: data.stage,
+                    message: data.message,
+                });
+
+                // Clear ACK timeout
+                if (ackTimeoutRef.current) {
+                    clearTimeout(ackTimeoutRef.current);
+                    ackTimeoutRef.current = null;
+                }
+
+                callbacksRef.current.onActiveTargetsRejected?.({
+                    revision: data.revision,
+                    code: data.code,
+                    stage: data.stage,
+                    message: data.message,
+                });
                 break;
             }
 
@@ -364,6 +550,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 });
                 cbFound?.(data.targetIndex);
                 eventBus.emit(AREvent.MARKER_FOUND, { markerId: `target-${data.targetIndex}`, target: null } as any);
+
+                // Also notify dual display manager
+                dualDisplayManager.onMarkerFound(`target-${data.targetIndex}`);
                 break;
             }
 
@@ -376,6 +565,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 });
                 cbLost?.(data.targetIndex);
                 eventBus.emit(AREvent.MARKER_LOST, { markerId: `target-${data.targetIndex}` } as any);
+
+                // Also notify dual display manager
+                dualDisplayManager.onMarkerLost(`target-${data.targetIndex}`);
                 break;
             }
 
@@ -389,10 +581,20 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             case 'COMBO_DETECTED': {
                 const data = payload as ARMessagePayloadMap['COMBO_DETECTED'];
                 cbCombo?.(data.targets);
+
+                // Call dual display manager
+                dualDisplayManager.onMarkerFound(`target-${data.targets[0]}`);
+                dualDisplayManager.onMarkerFound(`target-${data.targets[1]}`);
+
                 eventBus.emit(AREvent.COMBO_ACTIVATED, {
                     tag1: `target-${data.targets[0]}`,
                     tag2: `target-${data.targets[1]}`
                 } as any);
+
+                // Call callback
+                if (hasActiveCombo && combo) {
+                    cbComboActivated?.(combo);
+                }
                 break;
             }
 
@@ -402,7 +604,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
             case 'SYSTEM_ERROR':
             case 'AR_ERROR' as any: {
-                const data = payload as { code?: string; error?: string; message?: string; url?: string };
+                const fromActiveViewer = event.source === iframeRef.current?.contentWindow;
+                if (!fromActiveViewer || fromPiP) break;
+                const data = payload as { code?: string; error?: string; message?: string; url?: string; stage?: string; elapsedMs?: number };
                 const errorMsg = data.error || data.message || 'Unknown error';
                 callbacksRef.current.onViewerAssetError?.({
                     code: data.code,
@@ -429,54 +633,20 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                     });
                     break;
                 }
+                cancelViewerBootstrapWatchdogRef.current?.();
+                cancelViewerBootstrapWatchdogRef.current = null;
                 setError(errorMsg);
+                transitionTo('ERROR');
                 eventBus.emit(AREvent.AR_ERROR, { error: new Error(errorMsg) } as any);
                 break;
             }
         }
-    }, [phase, transitionTo, deferQrTransition, emitDebug, viewerSrc, mindBuffer]);
+    }, [phase, transitionTo, deferQrTransition, emitDebug, viewerSrc, activeTargets, requestActiveTargets]);
 
     useEffect(() => {
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
     }, [handleMessage]);
-
-    // ========== STABLE MIND BUFFER DELIVERY (Edit I) ==========
-    // Registered once on mount, never re-subscribes. Solves the iframe
-    // thrash where React re-renders between the iframe's MIND_BUFFER_REQUEST
-    // and the parent's reply — see
-    // report/DEBUG_20260706_MULTI_FLASHCARD_LOADING.md, Cause 2.
-    //
-    // Defensive buffer copy: iOS Safari can neuter ArrayBuffer views during
-    // structured-clone-like operations inside postMessage (Constraint
-    // Guardian #6). Copying into a fresh Uint8Array detaches from the
-    // neuter-prone buffer.
-    useEffect(() => {
-        const onMessage = (event: MessageEvent) => {
-            const data = event.data;
-            if (!data || data.type !== 'MIND_BUFFER_REQUEST') return;
-            const iframeWindow = iframeRef.current?.contentWindow;
-            if (event.source !== iframeWindow || !iframeWindow) return;
-            const buffer = mindBufferDeliveryRef.current;
-            if (!buffer || !buffer.byteLength) return;
-            const safeBuffer = new Uint8Array(buffer.byteLength);
-            safeBuffer.set(buffer);
-            try {
-                iframeWindow.postMessage(
-                    createMessage('MIND_BUFFER', { buffer: safeBuffer }),
-                    '*'
-                );
-                emitDebug('PARENT_MIND_BUFFER_SENT', { bytes: safeBuffer.byteLength });
-            } catch (error) {
-                emitDebug('PARENT_MIND_BUFFER_POST_FAILED', {
-                    error: error instanceof Error ? error.message : String(error)
-                });
-            }
-        };
-        window.addEventListener('message', onMessage);
-        return () => window.removeEventListener('message', onMessage);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     // ========== EXTERNAL CONTROLS ==========
     useEffect(() => {
@@ -509,6 +679,58 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         }
     }, [phase, mindUrl, transitionTo]);
 
+    useEffect(() => {
+        cancelViewerBootstrapWatchdogRef.current?.();
+        cancelViewerBootstrapWatchdogRef.current = null;
+
+        if (phase !== 'VIEWING' || !viewerSrc) return;
+
+        cancelViewerBootstrapWatchdogRef.current = armViewerBootstrapWatchdog({
+            timeoutMs: VIEWER_BOOTSTRAP_TIMEOUT_MS,
+            onTimeout: () => {
+                emitDebug('PARENT_VIEWER_BOOTSTRAP_TIMEOUT', {
+                    timeoutMs: VIEWER_BOOTSTRAP_TIMEOUT_MS,
+                    viewerSrc
+                });
+                setError("AR couldn't start. Let's scan the card again.");
+                transitionTo('ERROR');
+            }
+        });
+
+        return () => {
+            cancelViewerBootstrapWatchdogRef.current?.();
+            cancelViewerBootstrapWatchdogRef.current = null;
+        };
+    }, [phase, viewerSrc, emitDebug, transitionTo]);
+
+    const handleScanAgain = useCallback(() => {
+        cancelViewerBootstrapWatchdogRef.current?.();
+        cancelViewerBootstrapWatchdogRef.current = null;
+        setError(null);
+        setIsReady(false);
+        transitionTo('SCANNING');
+    }, [transitionTo]);
+
+    // Debug overlay for development
+    const debugOverlay = process.env.NODE_ENV === 'development' ? (
+        <div style={{
+            position: 'absolute',
+            top: 10,
+            left: 10,
+            background: 'rgba(0,0,0,0.7)',
+            color: 'white',
+            padding: 8,
+            borderRadius: 8,
+            fontSize: 12,
+            zIndex: 1000,
+        }}>
+            <div>FPS: {fps} {isHealthy ? 'OK' : 'WARN'}</div>
+            <div>Mode: {displayMode}</div>
+            {isCombo && <div>Combo: {combo?.name}</div>}
+            <div>Markers: {comboData.markerCount}</div>
+        </div>
+    ) : null;
+
     return (
         <div
             className="ar-container-v2"
@@ -521,17 +743,21 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             {phase === 'ERROR' && (
                 <div style={{ position: 'absolute', inset: 0, background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100000, color: '#FF6B6B', flexDirection: 'column' }}>
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
-                    <p style={{ marginTop: 16 }}>{error || 'An error occurred'}</p>
-                    <button onClick={() => transitionTo('SCANNING')} style={{ marginTop: 24, padding: '12px 24px', background: '#4ECDC4', border: 'none', borderRadius: 20, color: '#fff', cursor: 'pointer', minHeight: 48, minWidth: 120 }}>Try Again</button>
+                    <p style={{ marginTop: 16 }}>{error || "AR couldn't start. Let's scan the card again."}</p>
+                    <button onClick={handleScanAgain} style={{ marginTop: 24, padding: '12px 24px', background: '#4ECDC4', border: 'none', borderRadius: 20, color: '#fff', cursor: 'pointer', minHeight: 48, minWidth: 120 }}>Scan Again</button>
                 </div>
             )}
 
-            {/* Main Iframe - Stabilized Key */}
+            {/* Main Iframe — key is mindIdentityKey (stable across activeTargets changes) */}
             {mainSrc && (
                 <iframe
                     ref={iframeRef}
                     key={`main-${mindIdentityKey}`}
                     src={mainSrc}
+                    onLoad={() => emitDebug('PARENT_VIEWER_IFRAME_LOADED', {
+                        phase,
+                        src: phase === 'VIEWING' ? 'viewer' : 'scanner'
+                    })}
                     allow="camera; microphone; autoplay; fullscreen"
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', zIndex: 1 }}
                 />
@@ -550,6 +776,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
             {/* Overlays */}
             <div style={{ position: 'relative', zIndex: 100 }}>{children}</div>
+
+            {/* Debug overlay */}
+            {debugOverlay}
         </div>
     );
 };

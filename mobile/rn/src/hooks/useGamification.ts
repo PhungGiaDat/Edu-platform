@@ -6,6 +6,8 @@
  * `/gamification/user/{user_id}`. The legacy per-action XP endpoints
  * (`/gamification/xp`) still work, but the consumer should call
  * `addXp({action, metadata})` against `coursesApi.addXp` instead.
+ *
+ * C26 UPDATE: Now supports idempotent XP via `addXpEvent`.
  */
 import { useCallback, useEffect, useState } from 'react';
 import api from '../services/api';
@@ -14,7 +16,10 @@ import type {
   UserStats,
   AddXpRequest,
   AddXpResponse,
+  AddXpEventRequest,
+  AddXpEventResponse,
 } from '../types/gamification';
+import { toAddXpEventWireRequest } from '../types/gamification';
 
 export interface UseGamificationResult {
   profile: UserStats | null;
@@ -23,6 +28,11 @@ export interface UseGamificationResult {
   error: string | null;
   refresh: () => Promise<void>;
   awardXp: (body: AddXpRequest) => Promise<AddXpResponse | null>;
+  /**
+   * Idempotent XP award for C26 gamification.
+   * eventId must be stable per semantic occurrence.
+   */
+  addXpEvent: (body: AddXpEventRequest) => Promise<AddXpEventResponse | null>;
 }
 
 export const useGamification = (userId?: string): UseGamificationResult => {
@@ -71,6 +81,35 @@ export const useGamification = (userId?: string): UseGamificationResult => {
     [fetchProfile]
   );
 
+  /**
+   * Idempotent XP award for C26 gamification.
+   * Uses POST /gamification/xp-event with stable eventId.
+   *
+   * IMPORTANT: eventId must be:
+   * - Generated ONCE at semantic event creation boundary
+   * - Reused across retries (same occurrence = same eventId)
+   * - Stable: Never regenerated for the same occurrence
+   */
+  const addXpEvent = useCallback(
+    async (body: AddXpEventRequest): Promise<AddXpEventResponse | null> => {
+      try {
+        const response = await api.post<AddXpEventResponse>(
+          '/gamification/xp-event',
+          toAddXpEventWireRequest(body)
+        );
+        // On successful response, refresh profile to sync progression
+        if (response.data.success && !response.data.idempotent_replay) {
+          await fetchProfile();
+        }
+        return response.data;
+      } catch (err) {
+        console.error('useGamification: addXpEvent failed', err);
+        return null;
+      }
+    },
+    [fetchProfile]
+  );
+
   return {
     profile,
     badges,
@@ -78,5 +117,6 @@ export const useGamification = (userId?: string): UseGamificationResult => {
     error,
     refresh,
     awardXp,
+    addXpEvent,
   };
 };

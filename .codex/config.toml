@@ -16,3 +16,28 @@ args = []
 [mcp_servers.qmd]
 command = "qmd"
 args = ["mcp"]
+
+[mcp_servers.blender]
+command = "C:\\Users\\LENOVO\\.local\\bin\\uvx.exe"
+args = ["blender-mcp"]
+startup_timeout_sec = 20
+tool_timeout_sec = 120
+default_tools_approval_mode = "writes"
+
+[mcp_servers.unityMCP]
+command = "C:\\Users\\LENOVO\\.local\\bin\\uvx.exe"
+args = ["--from", "mcpforunityserver==10.1.2", "mcp-for-unity", "--transport", "stdio"]
+startup_timeout_sec = 60
+env = { SystemRoot = "C:\\WINDOWS" }
+
+[mcp_servers.mongodb]
+command = "npx.cmd"
+args = ["--cache", "E:\\University\\Graduted Project\\Edu-platform\\.codex\\npm-cache", "-y", "mongodb-mcp-server@2.1.0", "--readOnly"]
+startup_timeout_sec = 120
+env = { MDB_MCP_CONNECTION_STRING = "${MONGODB_ATLAS_URI}" }
+
+[mcp_servers.supabase]
+command = "npx"
+args = ["-y", "@supabase/mcp-server-supabase@latest"]
+# Set SUPABASE_ACCESS_TOKEN in your shell environment or .env to enable Supabase MCP
+env = { SUPABASE_ACCESS_TOKEN = "${SUPABASE_ACCESS_TOKEN}" }

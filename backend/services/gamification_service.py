@@ -1,6 +1,8 @@
 from typing import List, Dict, Any, Optional
 from repositories.gamification_repository import get_gamification_repository
+from repositories.gamification_event_repository import get_gamification_event_repository
 from models.gamification_model import XP_REWARDS, BADGE_DEFINITIONS, calculate_next_level_xp
+from models.gamification_event import EventStatus
 from datetime import datetime
 import logging
 
@@ -12,6 +14,7 @@ class GamificationService:
     
     def __init__(self):
         self.repo = get_gamification_repository()
+        self.event_repo = get_gamification_event_repository()
 
     def _clamp(self, value: int, minimum: int = 0, maximum: int = 100) -> int:
         return max(minimum, min(maximum, int(value)))
@@ -102,40 +105,42 @@ class GamificationService:
         """
         Add XP for completing an action.
         Returns result with level_up info and badges earned.
+
+        NOTE: Legacy method - no idempotency. Use add_xp_with_event_id for new integrations.
         """
         if action not in XP_REWARDS:
             logger.warning(f"Unknown XP action: {action}")
             return {"success": False, "error": f"Unknown action: {action}"}
-        
+
         xp_amount = XP_REWARDS[action]
-        
+
         # Get current user data
         user_data = await self.repo.get_by_user_id(user_id) or {
             "total_points": 0, "level": 1, "xp_to_next_level": 100, "streak_days": 0
         }
-        
+
         current_xp = user_data.get("total_points", 0)
         current_level = user_data.get("level", 1)
         xp_to_next = user_data.get("xp_to_next_level", 100)
-        
+
         # Calculate new XP and level
         new_xp = current_xp + xp_amount
         new_level = current_level
         level_up = False
-        
+
         while new_xp >= xp_to_next:
             new_xp -= xp_to_next
             new_level += 1
             xp_to_next = calculate_next_level_xp(new_level)
             level_up = True
-        
+
         # Update database
         await self.repo.add_xp(user_id, xp_amount, new_level, xp_to_next)
-        
+
         # Update streak
         today = datetime.utcnow().strftime("%Y-%m-%d")
         streak_result = await self.update_streak(user_id, today)
-        
+
         # Check for badges
         badges_earned = []
         if level_up and new_level == 5:
@@ -147,12 +152,12 @@ class GamificationService:
         elif level_up and new_level == 20:
             await self.award_badge(user_id, "level_20")
             badges_earned.append("level_20")
-        
+
         # Auto-award stickers based on milestones
         sticker_earned = await self._check_sticker_rewards(user_id, action, new_level, metadata)
-        
+
         logger.info(f"Added {xp_amount} XP for {user_id} ({action})")
-        
+
         return {
             "success": True,
             "xp_added": xp_amount,
@@ -161,8 +166,253 @@ class GamificationService:
             "level_up": level_up,
             "streak": streak_result.get("current_streak", 0),
             "badges_earned": badges_earned,
-            "sticker_earned": sticker_earned
+            "sticker_earned": sticker_earned,
+            "_legacy": True,  # Mark as legacy for analytics
         }
+
+    async def add_xp_with_event_id(
+        self,
+        user_id: str,
+        event_id: str,
+        action: str,
+        source_type: Optional[str] = None,
+        source_id: Optional[str] = None,
+        attempt_id: Optional[str] = None,
+        session_id: Optional[str] = None,
+        learning_path_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Idempotent XP award via UNIQUE(user_id, event_id).
+
+        Algorithm:
+        1. Validate event_id is non-null, non-empty, non-whitespace.
+        2. Try to create event with PROCESSING status.
+        3. If duplicate, load existing event.
+           - If APPLIED: return cached result (idempotent replay).
+           - If PROCESSING: return error (concurrent processing).
+           - If REJECTED: allow retry with same event_id.
+        4. Calculate XP and progression.
+        5. Mark event as APPLIED atomically (conditional update).
+           - Only succeeds if status was PROCESSING.
+           - If failed, XP was NOT awarded (prevents duplicate XP).
+        6. Apply XP to user_points ONLY after successful mark_applied.
+
+        Returns:
+            {
+                "success": bool,
+                "event_id": str,
+                "action": str,
+                "xp_awarded": int,
+                "total_xp_after": int,
+                "level_after": int,
+                "xp_to_next_after": int,
+                "level_up": bool,
+                "idempotent_replay": bool,
+                "status": str,
+                "badges_earned": list,
+                "sticker_earned": dict,
+                "streak": int,
+            }
+        """
+        # Step 0: Validate event_id
+        if not event_id or not str(event_id).strip():
+            logger.warning(f"[add_xp_with_event_id] Invalid event_id: {event_id!r}")
+            return {
+                "success": False,
+                "event_id": str(event_id) if event_id is not None else "None",
+                "error": "Invalid event_id: cannot be None, empty, or whitespace-only",
+                "idempotent_replay": False,
+            }
+        event_id = str(event_id).strip()
+
+        # Validate action
+        if action not in XP_REWARDS:
+            logger.warning(f"[add_xp_with_event_id] Unknown action: {action}")
+            return {
+                "success": False,
+                "event_id": event_id,
+                "error": f"Unknown action: {action}",
+                "idempotent_replay": False,
+            }
+
+        xp_amount = XP_REWARDS[action]
+
+        # Step 1: Try to create event
+        created = await self.event_repo.create_event(
+            user_id=user_id,
+            event_id=event_id,
+            action=action,
+            source_type=source_type,
+            source_id=source_id,
+            attempt_id=attempt_id,
+            session_id=session_id,
+            learning_path_id=learning_path_id,
+            metadata=metadata,
+        )
+
+        if created is None:
+            # Duplicate event - check status for replay semantics
+            existing = await self.event_repo.find_by_user_event(user_id, event_id)
+            if existing and existing.get("status") == EventStatus.APPLIED.value:
+                # Valid replay - return cached result
+                logger.info(f"[add_xp_with_event_id] Replay for event {event_id}")
+                return {
+                    "success": True,
+                    "event_id": event_id,
+                    "action": existing.get("action"),
+                    "xp_awarded": existing.get("xp_awarded", 0),
+                    "total_xp_after": existing.get("total_xp_after", 0),
+                    "level_after": existing.get("level_after", 1),
+                    "xp_to_next_after": existing.get("xp_to_next_after", 100),
+                    "level_up": False,  # Already counted in snapshot
+                    "idempotent_replay": True,
+                    "status": existing.get("status"),
+                    "badges_earned": [],  # Not replayed
+                    "sticker_earned": None,  # Not replayed
+                    "streak": 0,  # Not recalculated
+                }
+            elif existing and existing.get("status") == EventStatus.PROCESSING.value:
+                # Concurrent processing - conflict
+                logger.warning(f"[add_xp_with_event_id] Concurrent processing for event {event_id}")
+                return {
+                    "success": False,
+                    "event_id": event_id,
+                    "error": "CONCURRENT_PROCESSING",
+                    "idempotent_replay": False,
+                }
+            else:
+                # REJECTED or unknown - allow retry by resetting to PROCESSING
+                reset_result = await self.event_repo.reset_to_processing(user_id, event_id)
+                if reset_result is None:
+                    # Race condition - another request changed the status
+                    existing = await self.event_repo.find_by_user_event(user_id, event_id)
+                    if existing and existing.get("status") == EventStatus.APPLIED.value:
+                        return {
+                            "success": True,
+                            "event_id": event_id,
+                            "action": existing.get("action"),
+                            "xp_awarded": existing.get("xp_awarded", 0),
+                            "total_xp_after": existing.get("total_xp_after", 0),
+                            "level_after": existing.get("level_after", 1),
+                            "xp_to_next_after": existing.get("xp_to_next_after", 100),
+                            "level_up": False,
+                            "idempotent_replay": True,
+                            "status": existing.get("status"),
+                            "badges_earned": [],
+                            "sticker_earned": None,
+                            "streak": 0,
+                        }
+                    return {
+                        "success": False,
+                        "event_id": event_id,
+                        "error": "RETRY_CONFLICT",
+                        "idempotent_replay": False,
+                    }
+                # Reset succeeded - continue with processing
+
+        # Step 2: Calculate XP and progression
+        user_data = await self.repo.get_by_user_id(user_id) or {
+            "total_points": 0, "level": 1, "xp_to_next_level": 100, "streak_days": 0
+        }
+
+        current_xp = user_data.get("total_points", 0)
+        current_level = user_data.get("level", 1)
+        xp_to_next = user_data.get("xp_to_next_level", 100)
+
+        # Calculate new XP and level
+        new_xp = current_xp + xp_amount
+        new_level = current_level
+        level_up = False
+
+        while new_xp >= xp_to_next:
+            new_xp -= xp_to_next
+            new_level += 1
+            xp_to_next = calculate_next_level_xp(new_level)
+            level_up = True
+
+        # Step 3: Mark event as APPLIED first (atomic conditional update)
+        # This MUST succeed before we apply XP to avoid duplicate awards
+        mark_result = await self.event_repo.mark_applied(
+            user_id=user_id,
+            event_id=event_id,
+            xp_awarded=xp_amount,
+            total_xp_after=current_xp + xp_amount,
+            level_after=new_level,
+            xp_to_next_after=xp_to_next,
+        )
+        
+        # ATOMICITY GUARANTEE: Only apply XP if mark_applied succeeded
+        # mark_applied uses conditional update - only succeeds if status was PROCESSING
+        # If None is returned, another request won the race (event already APPLIED)
+        if mark_result is None:
+            logger.warning(f"[add_xp_with_event_id] Race lost for event {event_id}, XP not applied")
+            # Return conflict - XP was not awarded
+            return {
+                "success": False,
+                "event_id": event_id,
+                "error": "CONCURRENT_PROCESSING",
+                "idempotent_replay": False,
+            }
+        
+        # Step 4: Apply XP to user_points ONLY after successful mark_applied
+        await self.repo.add_xp(user_id, xp_amount, new_level, xp_to_next)
+
+        # Step 5: Update streak
+        today = datetime.utcnow().strftime("%Y-%m-%d")
+        streak_result = await self.update_streak(user_id, today)
+
+        # Step 6: Check badges (only on level-up milestones)
+        badges_earned = []
+        if level_up and new_level == 5:
+            await self.award_badge(user_id, "level_5")
+            badges_earned.append("level_5")
+        elif level_up and new_level == 10:
+            await self.award_badge(user_id, "level_10")
+            badges_earned.append("level_10")
+        elif level_up and new_level == 20:
+            await self.award_badge(user_id, "level_20")
+            badges_earned.append("level_20")
+
+        # Step 7: Check sticker rewards
+        sticker_earned = await self._check_sticker_rewards(user_id, action, new_level, metadata)
+
+        logger.info(f"[add_xp_with_event_id] Applied {xp_amount} XP for {user_id} ({action}), event_id={event_id}")
+
+        return {
+            "success": True,
+            "event_id": event_id,
+            "action": action,
+            "xp_awarded": mark_result.get("xp_awarded", xp_amount),
+            "total_xp_after": mark_result.get("total_xp_after", current_xp + xp_amount),
+            "level_after": mark_result.get("level_after", new_level),
+            "xp_to_next_after": mark_result.get("xp_to_next_after", xp_to_next),
+            "level_up": level_up,
+            "idempotent_replay": False,
+            "status": EventStatus.APPLIED.value,
+            "badges_earned": badges_earned,
+            "sticker_earned": sticker_earned,
+            "streak": streak_result.get("current_streak", 0),
+        }
+
+    async def check_event_conflict(
+        self,
+        user_id: str,
+        event_id: str,
+        expected_action: str,
+    ) -> Dict[str, Any]:
+        """
+        Check if an event_id exists with different semantics (conflict detection).
+        Used for semantic validation before processing.
+        """
+        existing = await self.event_repo.find_by_user_event(user_id, event_id)
+        if existing and existing.get("action") != expected_action:
+            return {
+                "has_conflict": True,
+                "existing_event": existing,
+                "message": f"Event {event_id} was used for action '{existing.get('action')}', not '{expected_action}'",
+            }
+        return {"has_conflict": False, "existing_event": None, "message": None}
     
     async def award_badge(self, user_id: str, badge_id: str) -> Dict[str, Any]:
         """Award a badge to user"""
@@ -676,5 +926,9 @@ class GamificationService:
 
 
 def get_gamification_service() -> GamificationService:
+    from database.postgres_connection import postgres_core_enabled
+    if postgres_core_enabled():
+        from services.postgres_gamification_service import PostgresGamificationService
+        return PostgresGamificationService()
     return GamificationService()
 

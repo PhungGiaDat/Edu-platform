@@ -1,227 +1,132 @@
 // frontend-web/src/context/SessionContext.tsx
 /**
- * Session Context
- * Global session and app lock state management with Redis backend.
+ * Global session context for the child-safe learning window and break cooldown.
+ * Browser state is the UX source of truth; backend cleanup remains best-effort.
  */
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import sessionApi, { LockState, SessionData } from '../services/sessionApi';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useIdleDetector } from '../hooks/useIdleDetector';
+import {
+  beginLearningSession,
+  getBrowserSessionStorage,
+  getSessionSnapshot,
+  isLearningPath,
+  readSessionState,
+  setSessionRunning,
+  settleSessionState,
+  takeSessionBreak,
+  writeSessionState,
+} from '../session/sessionBreakState';
+import sessionApi from '../services/sessionApi';
 
 interface SessionContextValue {
-    // Lock state
-    lockState: LockState | null;
-    isLocked: boolean;
-    isWarning: boolean;
-    remainingSeconds: number;
-    
-    // Session state
-    session: SessionData | null;
-    isAuthenticated: boolean;
-    
-    // Actions
-    startSession: (ttlMinutes?: number) => Promise<void>;
-    endSession: () => Promise<void>;
-    pauseLock: () => Promise<void>;
-    resumeLock: () => Promise<void>;
-    extendLock: (minutes: number) => Promise<void>;
-    recordActivity: () => Promise<void>;
-    
-    // Loading states
-    isLoading: boolean;
-    error: string | null;
+  phase: 'active' | 'limit_reached' | 'on_break' | null;
+  elapsedSeconds: number;
+  remainingSeconds: number;
+  breakRemainingSeconds: number;
+  isWarning: boolean;
+  isLimitReached: boolean;
+  isOnBreak: boolean;
+  isPaused: boolean;
+  takeBreak: () => void;
+  isInitialized: boolean;
 }
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
 
 interface SessionProviderProps {
-    children: React.ReactNode;
-    autoStart?: boolean;
-    defaultTtlMinutes?: number;
-    syncIntervalMs?: number;
+  children: React.ReactNode;
 }
 
-export const SessionProvider: React.FC<SessionProviderProps> = ({
-    children,
-    autoStart = false,
-    defaultTtlMinutes = 30,
-    syncIntervalMs = 30000,
-}) => {
-    const [lockState, setLockState] = useState<LockState | null>(null);
-    const [session, setSession] = useState<SessionData | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    
-    const syncIntervalRef = useRef<number | null>(null);
+export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) => {
+  const location = useLocation();
+  const learningPath = isLearningPath(location.pathname);
+  const { isAuthenticated, isGuest } = useAuth();
+  const isAuthed = isAuthenticated && !isGuest;
+  const { isIdle } = useIdleDetector(5 * 60 * 1000);
+  const [isTabHidden, setIsTabHidden] = useState(() => document.hidden);
+  const [clockNow, setClockNow] = useState(() => Date.now());
+  const [sessionState, setSessionState] = useState(() => (
+    readSessionState(getBrowserSessionStorage(), Date.now())
+  ));
 
-    // Derived states
-    const isLocked = lockState?.state === 'locked' || lockState?.remaining_seconds === 0;
-    const isWarning = lockState?.state === 'warning' || 
-        (lockState?.remaining_seconds ?? Infinity) <= 5 * 60;
-    const remainingSeconds = lockState?.remaining_seconds ?? 0;
-    const isAuthenticated = !!session;
+  const shouldRun = learningPath && !isTabHidden && !isIdle;
+  const shouldTick =
+    (learningPath && shouldRun && sessionState?.phase === 'active') ||
+    sessionState?.phase === 'on_break';
 
-    // Sync lock state from backend
-    const syncLockState = useCallback(async () => {
-        try {
-            const state = await sessionApi.getLockState();
-            setLockState(state);
-            setError(null);
-        } catch (err) {
-            console.error('Failed to sync lock state:', err);
-            setError('Failed to sync session state');
-        }
-    }, []);
+  useEffect(() => {
+    const handleVisibilityChange = () => setIsTabHidden(document.hidden);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
-    // Start session/lock
-    const startSession = useCallback(async (ttlMinutes?: number) => {
-        setIsLoading(true);
-        setError(null);
-        
-        try {
-            const state = await sessionApi.startLock(ttlMinutes || defaultTtlMinutes);
-            setLockState(state);
-        } catch (err) {
-            console.error('Failed to start session:', err);
-            setError('Failed to start session');
-            throw err;
-        } finally {
-            setIsLoading(false);
-        }
-    }, [defaultTtlMinutes]);
+  useEffect(() => {
+    if (!learningPath) {
+      return;
+    }
 
-    // End session
-    const endSession = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-        
-        try {
-            await sessionApi.unlock();
-            setLockState(null);
-            setSession(null);
-        } catch (err) {
-            console.error('Failed to end session:', err);
-            setError('Failed to end session');
-            throw err;
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
+    const now = Date.now();
+    setClockNow(now);
+    setSessionState(previous => beginLearningSession(previous, now));
+  }, [learningPath]);
 
-    // Pause lock
-    const pauseLock = useCallback(async () => {
-        try {
-            await sessionApi.pauseLock();
-            await syncLockState();
-        } catch (err) {
-            console.error('Failed to pause lock:', err);
-            setError('Failed to pause session');
-        }
-    }, [syncLockState]);
+  useEffect(() => {
+    const now = Date.now();
+    setClockNow(now);
+    setSessionState(previous => setSessionRunning(previous, now, shouldRun));
+  }, [shouldRun]);
 
-    // Resume lock
-    const resumeLock = useCallback(async () => {
-        try {
-            await sessionApi.resumeLock();
-            await syncLockState();
-        } catch (err) {
-            console.error('Failed to resume lock:', err);
-            setError('Failed to resume session');
-        }
-    }, [syncLockState]);
+  useEffect(() => {
+    writeSessionState(getBrowserSessionStorage(), sessionState);
+  }, [sessionState]);
 
-    // Extend lock (parent override)
-    const extendLock = useCallback(async (minutes: number) => {
-        try {
-            const newState = await sessionApi.extendLock(minutes);
-            if (newState) {
-                setLockState(newState);
-            }
-        } catch (err) {
-            console.error('Failed to extend lock:', err);
-            setError('Failed to extend session time');
-        }
-    }, []);
+  useEffect(() => {
+    if (!shouldTick) {
+      return;
+    }
 
-    // Record activity
-    const recordActivity = useCallback(async () => {
-        try {
-            await sessionApi.recordActivity();
-        } catch (err) {
-            console.error('Failed to record activity:', err);
-        }
-    }, []);
-
-    // Initialize
-    useEffect(() => {
-        const init = async () => {
-            setIsLoading(true);
-            
-            try {
-                // Check for existing lock state
-                const existingState = await sessionApi.getLockState();
-                
-                if (existingState) {
-                    setLockState(existingState);
-                } else if (autoStart) {
-                    // Start new session if autoStart is enabled
-                    await startSession();
-                }
-            } catch (err) {
-                console.error('Failed to initialize session:', err);
-                setError('Failed to initialize session');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        init();
-    }, [autoStart, startSession]);
-
-    // Periodic sync
-    useEffect(() => {
-        if (syncIntervalMs > 0) {
-            syncIntervalRef.current = window.setInterval(syncLockState, syncIntervalMs);
-        }
-
-        return () => {
-            if (syncIntervalRef.current) {
-                clearInterval(syncIntervalRef.current);
-            }
-        };
-    }, [syncLockState, syncIntervalMs]);
-
-    const value: SessionContextValue = {
-        lockState,
-        isLocked,
-        isWarning,
-        remainingSeconds,
-        session,
-        isAuthenticated,
-        startSession,
-        endSession,
-        pauseLock,
-        resumeLock,
-        extendLock,
-        recordActivity,
-        isLoading,
-        error,
+    const tick = () => {
+      const now = Date.now();
+      setClockNow(now);
+      setSessionState(previous => settleSessionState(previous, now));
     };
 
-    return (
-        <SessionContext.Provider value={value}>
-            {children}
-        </SessionContext.Provider>
-    );
+    const interval = window.setInterval(tick, 1_000);
+    return () => window.clearInterval(interval);
+  }, [shouldTick]);
+
+  const takeBreak = useCallback(() => {
+    const now = Date.now();
+    const next = takeSessionBreak(now);
+    setClockNow(now);
+    setSessionState(next);
+    writeSessionState(getBrowserSessionStorage(), next);
+    if (isAuthed) {
+      void sessionApi.endSession().then(success => {
+        if (!success) console.warn('[SessionContext] backend cleanup failed');
+      });
+    }
+  }, [isAuthed]);
+
+  const snapshot = getSessionSnapshot(sessionState, clockNow);
+  const value: SessionContextValue = {
+    ...snapshot,
+    takeBreak,
+    isInitialized: true,
+  };
+
+  return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 };
 
-export const useSession = (): SessionContextValue => {
-    const context = useContext(SessionContext);
-    
-    if (context === undefined) {
-        throw new Error('useSession must be used within a SessionProvider');
-    }
-    
-    return context;
-};
+export function useSession(): SessionContextValue {
+  const context = useContext(SessionContext);
+  if (context === undefined) {
+    throw new Error('useSession must be used within a SessionProvider');
+  }
+  return context;
+}
 
 export default SessionContext;

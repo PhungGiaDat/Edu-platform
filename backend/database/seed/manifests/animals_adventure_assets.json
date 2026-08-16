@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "content_batch": "animals-adventure-en-5-7",
+  "content_version": 1,
+  "entries": [
+    {
+      "semantic_key": "course:animals-adventure-en-5-7:course_cover",
+      "owner_type": "course",
+      "content_identity": "animals-adventure-en-5-7",
+      "asset_role": "course_cover",
+      "media_type": "image",
+      "source_classification": "existing_file",
+      "source_path": "frontend-web/public/assets/animals/course-cover.svg",
+      "output_path": "backend/generated/learnar-assets/courses/animals-adventure-en-5-7/course/course-cover.png",
+      "bucket": "AR_models",
+      "object_path": "courses/animals-adventure-en-5-7/course/course-cover.png",
+      "consumers": [
+        "course_card",
+        "course_detail"
+      ]
+    },
+    {
+      "semantic_key": "vocabulary:animals-v1-bird:pronunciation_audio",
+      "owner_type": "vocabulary",
+      "content_identity": "animals-v1-bird",
+      "asset_role": "pronunciation_audio",
+      "media_type": "audio",
+      "source_classification": "generation_required",
+      "source_path": null,
+      "output_path": "backend/generated/learnar-assets/courses/animals-adventure-en-5-7/vocabulary/animals-v1-bird/pronunciation_audio.wav",
+      "bucket": "AR_models",
+      "object_path": "courses/animals-adventure-en-5-7/vocabulary/animals-v1-bird/pronunciation_audio.wav",
+      "consumers": [
+        "learn_vocabulary",
+        "pronunciation"
+      ]
+    },
+    {
+      "semantic_key": "vocabulary:animals-v1-bird:vocabulary_illustration",
+      "owner_type": "vocabulary",
+      "content_identity": "animals-v1-bird",
+      "asset_role": "vocabulary_illustration",
+      "media_type": "image",
+      "source_classification": "existing_file",
+      "source_path": "frontend-web/public/assets/animals/mascots/bird-vocab.svg",
+      "output_path": "backend/generated/learnar-assets/courses/animals-adventure-en-5-7/vocabulary/animals-v1-bird/vocabulary_illustration.png",
+      "bucket": "AR_models",
+      "object_path": "courses/animals-adventure-en-5-7/vocabulary/animals-v1-bird/vocabulary_illustration.png",
+      "consumers": [
+        "learn_vocabulary",
+        "memory_match"
+      ]
+    },
+    {
+      "semantic_key": "vocabulary:animals-v1-cat:pronunciation_audio",
+      "owner_type": "vocabulary",
+      "content_identity": "animals-v1-cat",
+      "asset_role": "pronunciation_audio",
+      "media_type": "audio",
+      "source_classification": "generation_required",
+      "source_path": null,
+      "output_path": "backend/generated/learnar-assets/courses/animals-adventure-en-5-7/vocabulary/animals-v1-cat/pronunciation_audio.wav",
+      "bucket": "AR_models",
+      "object_path": "courses/animals-adventure-en-5-7/vocabulary/animals-v1-cat/pronunciation_audio.wav",
+      "consumers": [
+        "learn_vocabulary",
+        "pronunciation"
+      ]
+    },
+    {
+      "semantic_key": "vocabulary:animals-v1-cat:vocabulary_illustration",
+      "owner_type": "vocabulary",
+      "content_identity": "animals-v1-cat",
+      "asset_role": "vocabulary_illustration",
+      "media_type": "image",
+      "source_classification": "existing_file",
+      "source_path": "frontend-web/public/assets/animals/mascots/cat-vocab.svg",
+      "output_path": "backend/generated/learnar-assets/courses/animals-adventure-en-5-7/vocabulary/animals-v1-cat/vocabulary_illustration.png",
+      "bucket": "AR_models",
+      "object_path": "courses/animals-adventure-en-5-7/vocabulary/animals-v1-cat/vocabulary_illustration.png",
+      "consumers": [
+        "learn_vocabulary",
+        "memory_match"
+      ]
+    },
+    {
+      "semantic_key": "vocabulary:animals-v1-dog:pronunciation_audio",
+      "owner_type": "vocabulary",
+      "content_identity": "animals-v1-dog",
+      "asset_role": "pronunciation_audio",
+      "media_type": "audio",
+      "source_classification": "generation_required",
+      "source_path": null,
+      "output_path": "backend/generated/learnar-assets/courses/animals-adventure-en-5-7/vocabulary/animals-v1-dog/pronunciation_audio.wav",
+      "bucket": "AR_models",
+      "object_path": "courses/animals-adventure-en-5-7/vocabulary/animals-v1-dog/pronunciation_audio.wav",
+      "consumers": [
+        "learn_vocabulary",
+        "pronunciation"
+      ]
+    },
+    {
+      "semantic_key": "vocabulary:animals-v1-dog:vocabulary_illustration",
+      "owner_type": "vocabulary",
+      "content_identity": "animals-v1-dog",
+      "asset_role": "vocabulary_illustration",
+      "media_type": "image",
+      "source_classification": "existing_file",
+      "source_path": "frontend-web/public/assets/animals/mascots/dog-vocab.svg",
+      "output_path": "backend/generated/learnar-assets/courses/animals-adventure-en-5-7/vocabulary/animals-v1-dog/vocabulary_illustration.png",
+      "bucket": "AR_models",
+      "object_path": "courses/animals-adventure-en-5-7/vocabulary/animals-v1-dog/vocabulary_illustration.png",
+      "consumers": [
+        "learn_vocabulary",
+        "memory_match"
+      ]
+    },
+    {
+      "semantic_key": "vocabulary:animals-v1-fish:pronunciation_audio",
+      "owner_type": "vocabulary",
+      "content_identity": "animals-v1-fish",
+      "asset_role": "pronunciation_audio",
+      "media_type": "audio",
+      "source_classification": "generation_required",
+      "source_path": null,
+      "output_path": "backend/generated/learnar-assets/courses/animals-adventure-en-5-7/vocabulary/animals-v1-fish/pronunciation_audio.wav",
+      "bucket": "AR_models",
+      "object_path": "courses/animals-adventure-en-5-7/vocabulary/animals-v1-fish/pronunciation_audio.wav",
+      "consumers": [
+        "learn_vocabulary",
+        "pronunciation"
+      ]
+    },
+    {
+      "semantic_key": "vocabulary:animals-v1-fish:vocabulary_illustration",
+      "owner_type": "vocabulary",
+      "content_identity": "animals-v1-fish",
+      "asset_role": "vocabulary_illustration",
+      "media_type": "image",
+      "source_classification": "existing_file",
+      "source_path": "frontend-web/public/assets/animals/mascots/fish-vocab.svg",
+      "output_path": "backend/generated/learnar-assets/courses/animals-adventure-en-5-7/vocabulary/animals-v1-fish/vocabulary_illustration.png",
+      "bucket": "AR_models",
+      "object_path": "courses/animals-adventure-en-5-7/vocabulary/animals-v1-fish/vocabulary_illustration.png",
+      "consumers": [
+        "learn_vocabulary",
+        "memory_match"
+      ]
+    },
+    {
+      "semantic_key": "vocabulary:animals-v1-rabbit:pronunciation_audio",
+      "owner_type": "vocabulary",
+      "content_identity": "animals-v1-rabbit",
+      "asset_role": "pronunciation_audio",
+      "media_type": "audio",
+      "source_classification": "generation_required",
+      "source_path": null,
+      "output_path": "backend/generated/learnar-assets/courses/animals-adventure-en-5-7/vocabulary/animals-v1-rabbit/pronunciation_audio.wav",
+      "bucket": "AR_models",
+      "object_path": "courses/animals-adventure-en-5-7/vocabulary/animals-v1-rabbit/pronunciation_audio.wav",
+      "consumers": [
+        "learn_vocabulary",
+        "pronunciation"
+      ]
+    },
+    {
+      "semantic_key": "vocabulary:animals-v1-rabbit:vocabulary_illustration",
+      "owner_type": "vocabulary",
+      "content_identity": "animals-v1-rabbit",
+      "asset_role": "vocabulary_illustration",
+      "media_type": "image",
+      "source_classification": "existing_file",
+      "source_path": "frontend-web/public/assets/animals/mascots/rabbit-vocab.svg",
+      "output_path": "backend/generated/learnar-assets/courses/animals-adventure-en-5-7/vocabulary/animals-v1-rabbit/vocabulary_illustration.png",
+      "bucket": "AR_models",
+      "object_path": "courses/animals-adventure-en-5-7/vocabulary/animals-v1-rabbit/vocabulary_illustration.png",
+      "consumers": [
+        "learn_vocabulary",
+        "memory_match"
+      ]
+    }
+  ]
+}

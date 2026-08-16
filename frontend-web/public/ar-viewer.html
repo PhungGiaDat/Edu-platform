@@ -36,26 +36,9 @@
 
             <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-            <a-entity id="target-0" mindar-image-target="targetIndex: 0" visible="true">
-                <a-image id="mode-2d-0" class="clickable" position="0 0 0" rotation="0 0 0"
-                    width="1" height="1" visible="false"></a-image>
-                <a-entity id="mode-3d-0" class="clickable" position="0 0.05 0" rotation="0 0 0"
-                    scale="0.25 0.25 0.25"
-                    animation__hover="property: scale; to: 0.28 0.28 0.28; dur: 200; startEvents: mouseenter"
-                    animation__leave="property: scale; to: 0.25 0.25 0.25; dur: 200; startEvents: mouseleave"
-                    animation__click="property: scale; from: 0.25 0.25 0.25; to: 0.3 0.3 0.3; dir: alternate; loop: 1; dur: 150; startEvents: click"
-                    visible="true"></a-entity>
-            </a-entity>
+            <!-- Anchors are created programmatically by ensureCatalogAnchors() before MindAR starts -->
+            <!-- See: /static/ar-assets/js/ar-target-registry.js → ensureCatalogAnchors() -->
 
-            <a-entity id="target-1" mindar-image-target="targetIndex: 1" visible="true">
-                <a-image id="mode-2d-1" class="clickable" position="0 0 0" rotation="0 0 0"
-                    width="1" height="1" visible="false"></a-image>
-                <a-entity id="mode-3d-1" class="clickable" position="0 0.1 0" scale="0.5 0.5 0.5"
-                    animation__hover="property: scale; to: 0.55 0.55 0.55; dur: 200; startEvents: mouseenter"
-                    animation__leave="property: scale; to: 0.5 0.5 0.5; dur: 200; startEvents: mouseleave"
-                    animation__click="property: scale; from: 0.5 0.5 0.5; to: 0.6 0.6 0.6; dir: alternate; loop: 1; dur: 150; startEvents: click"
-                    visible="true"></a-entity>
-            </a-entity>
         </a-scene>
     </template>
 
@@ -63,6 +46,14 @@
         (function () {
             var params = new URLSearchParams(window.location.search);
             var runtimeMindUrl = null;
+            var BOOTSTRAP_DEADLINE_MS = 8000;
+            var bootstrapStartedAt = Date.now();
+            var bootstrapFailureReported = false;
+
+            // Combo model parameters
+            var comboModelUrl = params.get('comboModel');
+            var comboAnimation = params.get('comboAnimation') || 'idle';
+            var comboImageUrl = params.get('comboImage');
 
             function postToParent(type, payload) {
                 window.parent.postMessage({
@@ -73,12 +64,119 @@
                 }, '*');
             }
 
-            function loadScript(src) {
+            function elapsedBootstrapMs() {
+                return Date.now() - bootstrapStartedAt;
+            }
+
+            function updateLoadingText(text) {
+                var loadText = document.getElementById('ar-load-text');
+                if (loadText) loadText.textContent = text;
+            }
+
+            function reportBootstrapFailure(error) {
+                if (bootstrapFailureReported) return;
+                bootstrapFailureReported = true;
+                updateLoadingText("AR couldn't start");
+                postToParent('AR_DEBUG', {
+                    label: 'VIEWER_BOOTSTRAP_FAILED',
+                    details: {
+                        code: error.code || 'AR_VIEWER_BOOTSTRAP_FAILED',
+                        stage: error.stage || 'bootstrap',
+                        url: error.url || null,
+                        elapsedMs: elapsedBootstrapMs(),
+                        message: error.message || String(error)
+                    },
+                    source: 'ar-viewer-bootstrap'
+                });
+                postToParent('SYSTEM_ERROR', {
+                    code: error.code || 'AR_VIEWER_BOOTSTRAP_FAILED',
+                    message: error.message || String(error),
+                    stage: error.stage || 'bootstrap',
+                    url: error.url || undefined,
+                    elapsedMs: elapsedBootstrapMs()
+                });
+            }
+
+            function createBootstrapError(code, message, stage, url) {
+                var error = new Error(message);
+                error.code = code;
+                error.stage = stage;
+                error.url = url;
+                return error;
+            }
+
+            function loadScript(src, stage, deadlineAt) {
                 return new Promise(function (resolve, reject) {
+                    var remainingMs = deadlineAt - Date.now();
+                    if (remainingMs <= 0) {
+                        reject(createBootstrapError(
+                            'AR_RUNTIME_SCRIPT_TIMEOUT',
+                            'AR runtime bootstrap timed out before ' + stage + ' could start',
+                            stage,
+                            src
+                        ));
+                        return;
+                    }
+
+                    postToParent('AR_DEBUG', {
+                        label: 'AR_RUNTIME_SCRIPT_START',
+                        details: { stage: stage, url: src, remainingMs: remainingMs },
+                        source: 'ar-viewer-bootstrap'
+                    });
+
                     var script = document.createElement('script');
+                    var settled = false;
+                    var timeoutId = window.setTimeout(function () {
+                        finish(createBootstrapError(
+                            'AR_RUNTIME_SCRIPT_TIMEOUT',
+                            'Timed out loading AR runtime script: ' + stage,
+                            stage,
+                            src
+                        ));
+                    }, remainingMs);
+
+                    function finish(error) {
+                        if (settled) return;
+                        settled = true;
+                        window.clearTimeout(timeoutId);
+                        script.onload = null;
+                        script.onerror = null;
+
+                        if (error) {
+                            if (script.parentNode) script.parentNode.removeChild(script);
+                            postToParent('AR_DEBUG', {
+                                label: 'AR_RUNTIME_SCRIPT_FAILED',
+                                details: {
+                                    stage: stage,
+                                    url: src,
+                                    code: error.code || 'AR_RUNTIME_SCRIPT_LOAD_FAILED',
+                                    elapsedMs: elapsedBootstrapMs(),
+                                    message: error.message
+                                },
+                                source: 'ar-viewer-bootstrap'
+                            });
+                            reject(error);
+                            return;
+                        }
+
+                        postToParent('AR_DEBUG', {
+                            label: 'AR_RUNTIME_SCRIPT_READY',
+                            details: { stage: stage, url: src, elapsedMs: elapsedBootstrapMs() },
+                            source: 'ar-viewer-bootstrap'
+                        });
+                        resolve();
+                    }
+
                     script.src = src;
-                    script.onload = resolve;
-                    script.onerror = function () { reject(new Error('Failed to load ' + src)); };
+                    script.onload = function () { finish(null); };
+                    script.onerror = function () {
+                        finish(createBootstrapError(
+                            'AR_RUNTIME_SCRIPT_LOAD_FAILED',
+                            'Failed to load AR runtime script: ' + stage,
+                            stage,
+                            src
+                        ));
+                    };
                     document.head.appendChild(script);
                 });
             }
@@ -87,49 +185,74 @@
                 return await import(src);
             }
 
-            function receiveMindBuffer() {
-                return new Promise(function (resolve, reject) {
-                    var requestIntervalId;
-                    var timeoutId = window.setTimeout(function () {
-                        window.clearInterval(requestIntervalId);
-                        window.removeEventListener('message', onMessage);
-                        reject(new Error('Timed out waiting for merged Mind buffer'));
-                    }, 15000);
+            // Load combo model with animation
+            function loadComboModel(url, animationClip) {
+                var scene = document.querySelector('a-scene');
+                if (!scene || !url) return;
 
-                    function onMessage(event) {
-                        if (event.source !== window.parent || !event.data || event.data.type !== 'MIND_BUFFER') return;
-                        var payload = event.data.payload || event.data;
-                        if (!payload.buffer) return;
-                        window.clearTimeout(timeoutId);
-                        window.clearInterval(requestIntervalId);
-                        window.removeEventListener('message', onMessage);
-                        runtimeMindUrl = URL.createObjectURL(new Blob([payload.buffer], {
-                            type: 'application/octet-stream'
-                        }));
-                        postToParent('AR_DEBUG', {
-                            label: 'MULTI_MIND_BLOB_CREATED',
-                            details: { bytes: payload.buffer.byteLength },
-                            source: 'ar-viewer-bootstrap'
-                        });
-                        resolve(runtimeMindUrl);
-                    }
+                // Create combo entity
+                var comboEntity = document.createElement('a-entity');
+                comboEntity.setAttribute('id', 'combo-model');
+                comboEntity.setAttribute('gltf-model', url);
+                comboEntity.setAttribute('position', '0 0.5 0');
+                comboEntity.setAttribute('scale', '0.3 0.3 0.3');
+                comboEntity.setAttribute('visible', 'false');
 
-                    window.addEventListener('message', onMessage);
-                    var requestBuffer = function () { postToParent('MIND_BUFFER_REQUEST', {}); };
-                    requestIntervalId = window.setInterval(requestBuffer, 300);
-                    requestBuffer();
+                // Add animation-mixer for GLTF animations
+                comboEntity.setAttribute('animation-mixer', 'clip: ' + animationClip + '; loop: repeat');
+
+                // Hide initially
+                scene.addEventListener('loaded', function() {
+                    comboEntity.setAttribute('visible', 'true');
+                });
+
+                // Add to scene
+                scene.appendChild(comboEntity);
+
+                console.log('✅ Combo model loaded with animation:', animationClip);
+                postToParent('AR_DEBUG', {
+                    label: 'COMBO_MODEL_LOADED',
+                    details: { url: url, animation: animationClip },
+                    source: 'ar-viewer'
+                });
+            }
+
+            // Update combo position based on marker positions
+            function updateComboPosition(marker1Pos, marker2Pos) {
+                var comboEntity = document.getElementById('combo-model');
+                if (!comboEntity) return;
+
+                // Calculate center
+                var centerX = (marker1Pos.x + marker2Pos.x) / 2;
+                var centerY = Math.max(marker1Pos.y, marker2Pos.y) + 0.3;
+                var centerZ = (marker1Pos.z + marker2Pos.z) / 2;
+
+                // Update position with animation
+                comboEntity.setAttribute('animation', {
+                    property: 'position',
+                    to: centerX + ' ' + centerY + ' ' + centerZ,
+                    dur: 300,
+                    easing: 'easeOutQuad'
                 });
             }
 
             async function bootstrap() {
+                bootstrapStartedAt = Date.now();
+                var deadlineAt = bootstrapStartedAt + BOOTSTRAP_DEADLINE_MS;
                 var requestedMind = params.get('mind') || '';
-                var mindUrl = requestedMind === 'runtime-buffer'
-                    ? await receiveMindBuffer()
-                    : requestedMind;
+                postToParent('AR_DEBUG', {
+                    label: 'VIEWER_BOOTSTRAP_START',
+                    details: { requestedMind: requestedMind, deadlineMs: BOOTSTRAP_DEADLINE_MS },
+                    source: 'ar-viewer-bootstrap'
+                });
+                var mindUrl = requestedMind;
                 if (!mindUrl) throw new Error('No Mind target source was provided');
 
-                await loadScript('https://aframe.io/releases/1.4.2/aframe.min.js');
-                await loadScript('https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js');
+                await loadScript('/static/vendor/aframe-1.4.2.min.js', 'aframe', deadlineAt);
+                await loadScript('/static/vendor/mindar-image-aframe-1.2.5.prod.js', 'mindar', deadlineAt);
+                await loadScript('/static/vendor/jsQR-1.4.0.min.js', 'jsqr', deadlineAt);
+                await loadScript('/static/ar-assets/js/ar-target-registry.js', 'target-registry', deadlineAt);
+                await loadScript('/static/ar-assets/js/ar-add-card-scanner.js', 'add-card-scanner', deadlineAt);
 
                 var maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));
                 var config = [
@@ -148,7 +271,41 @@
                 var scene = template.content.firstElementChild.cloneNode(true);
                 scene.setAttribute('mindar-image', config);
                 document.body.appendChild(scene);
-                await loadScript('/static/ar-assets/js/ar-viewer.js');
+                await loadScript('/static/ar-assets/js/ar-viewer.js', 'viewer', deadlineAt);
+
+                // Load combo model if URL params provided
+                if (comboModelUrl) {
+                    // Wait for scene to load before adding combo model
+                    scene.addEventListener('loaded', function() {
+                        loadComboModel(comboModelUrl, comboAnimation);
+                    });
+                }
+
+                // Listen for combo activation from parent
+                document.addEventListener('COMBO_ACTIVATED', function(e) {
+                    var comboEntity = document.getElementById('combo-model');
+                    if (comboEntity) {
+                        comboEntity.setAttribute('visible', 'true');
+                        postToParent('AR_DEBUG', {
+                            label: 'COMBO_ENTITY_SHOWN',
+                            details: e.detail || {},
+                            source: 'ar-viewer'
+                        });
+                    }
+                });
+
+                // Listen for combo deactivation
+                document.addEventListener('COMBO_DEACTIVATED', function(e) {
+                    var comboEntity = document.getElementById('combo-model');
+                    if (comboEntity) {
+                        comboEntity.setAttribute('visible', 'false');
+                        postToParent('AR_DEBUG', {
+                            label: 'COMBO_ENTITY_HIDDEN',
+                            details: e.detail || {},
+                            source: 'ar-viewer'
+                        });
+                    }
+                });
 
                 // ── Freeze Pose + Semantic Manager Integration ──────────────────────
                 var enableFreezePose = params.get('freezePose') === 'true';
@@ -196,10 +353,12 @@
             });
 
             bootstrap().catch(function (error) {
-                postToParent('SYSTEM_ERROR', {
-                    code: 'MIND_BUFFER_BOOTSTRAP_ERROR',
-                    message: error && error.message ? error.message : String(error)
-                });
+                reportBootstrapFailure(error || createBootstrapError(
+                    'AR_VIEWER_BOOTSTRAP_FAILED',
+                    'AR viewer bootstrap failed',
+                    'bootstrap',
+                    null
+                ));
             });
         })();
     </script>

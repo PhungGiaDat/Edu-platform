@@ -6,19 +6,6 @@ import { getApiBase } from '../config';
 import { eventBus } from '@/runtime/EventBus';
 
 const API_BASE = getApiBase();
-const PALM_TREE_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb';
-const PALM_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg';
-
-function normalizeArAssetUrl(url?: string): string | undefined {
-  if (!url) return undefined;
-  const lower = url.toLowerCase();
-  if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return PALM_TREE_MODEL_URL;
-  if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return PALM_IMAGE_URL;
-  if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
-  if (lower.endsWith('/cute_elephant_jungle.glb')) return '/assets/models/combos/cute_elephant_jungle.glb';
-  if (lower.endsWith('/elephant_tree_combo_layered.png')) return '/assets/model2D/elephant_tree_combo_layered.png';
-  return url;
-}
 
 // ── localStorage cache helpers ──────────────────────────────────────────────
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
@@ -77,13 +64,9 @@ export const useArData = (qrId: string | null) => {
     // Otherwise fall back to API_BASE for legacy relative paths
     const buildUrl = (path: string | undefined): string | undefined => {
       if (!path) return undefined;
-      const normalized = normalizeArAssetUrl(path);
-      if (!normalized) return undefined;
-      if (normalized.startsWith('/assets/')) return normalized;
-      // Use full URLs directly (Supabase storage URLs from backend)
-      if (normalized.startsWith('http://') || normalized.startsWith('https://')) return normalized;
-      // Fallback: prepend API_BASE for relative paths (legacy support)
-      const cleanPath = normalized.startsWith('/') ? normalized : `/${normalized}`;
+      if (path.startsWith('http://') || path.startsWith('https://')) return path;
+      if (path.startsWith('/assets/')) return path;
+      const cleanPath = path.startsWith('/') ? path : `/${path}`;
       return `${API_BASE}${cleanPath}`;
     };
 

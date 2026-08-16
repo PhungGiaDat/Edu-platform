@@ -9,30 +9,11 @@
  * 5. Trigger combo effects when cards are close together
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { getApiBase } from '../config';
+import { getApiBase, isPersistentMindViewerEnabled } from '../config';
 import { HapticService } from '../services/HapticService';
 import { SoundEffectService } from '../services/SoundEffectService';
 
 const API_BASE = getApiBase();
-const PALM_TREE_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models3d/palm_tree.glb';
-const PALM_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Palm.jpg';
-const ELEPHANT_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/Elephant.jpg';
-const COMBO_MODEL_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/models/combos/cute_elephant_jungle.glb';
-const COMBO_IMAGE_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/model2d/elephant_tree_combo_layered.png';
-const COMBO_MIND_URL = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/mind-files/combo_targets.mind';
-
-function normalizeArAssetUrl(url?: string): string | undefined {
-    if (!url) return undefined;
-    const lower = url.toLowerCase();
-    if (lower.includes('/ar_models/models/palm_tree.glb') || lower.includes('/assets/models/palm_tree.glb')) return PALM_TREE_MODEL_URL;
-    if (lower.includes('/assets/model2d/palm.jpg') || lower.endsWith('/palm.jpg')) return PALM_IMAGE_URL;
-    if (lower.includes('/frontend/model2d/elephant.jpg') || lower.endsWith('/elephant.jpg')) return ELEPHANT_IMAGE_URL;
-    if (lower.endsWith('/jungle_combo.jpg')) return '/assets/model2D/jungle_combo.jpg';
-    if (lower.endsWith('/cute_elephant_jungle.glb')) return COMBO_MODEL_URL;
-    if (lower.endsWith('/elephant_tree_combo_layered.png')) return COMBO_IMAGE_URL;
-    if (lower.endsWith('/combo_targets.mind')) return COMBO_MIND_URL;
-    return url;
-}
 
 function emitArDebug(label: string, details: Record<string, unknown>) {
     window.postMessage({
@@ -72,6 +53,9 @@ interface FlashcardData {
     image2dUrl: string;
     textureUrl?: string;
     mindUrl: string;
+    // Task 9: catalog activation fields
+    mindCatalogId?: string;
+    mindTargetIndex?: number;
     detectedAt: number;
 }
 
@@ -79,7 +63,8 @@ interface ComboData {
     comboId: string;
     description: string;
     requiredTags: string[];
-    targetOrder: string[];
+    // Task 10: targetOrder is optional - null in persistent mode (uses tag-based resolution)
+    targetOrder?: string[] | null;
     model3dUrl: string;
     image2dUrl: string;
     textureUrl?: string;
@@ -147,102 +132,188 @@ export function useMultiFlashcard() {
 
     const buildUrl = useCallback((path?: string): string | undefined => {
         if (!path) return undefined;
-        const normalized = normalizeArAssetUrl(path);
-        if (!normalized) return undefined;
-        if (normalized.startsWith('http://') || normalized.startsWith('https://') || normalized.startsWith('/assets/')) {
-            return normalized;
+        // Full URLs returned by the backend are authoritative — the API
+        // response already contains the resolved Supabase URLs.
+        if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/assets/')) {
+            return path;
         }
-        const cleanPath = normalized.startsWith('/') ? normalized : `/${normalized}`;
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
         return `${API_BASE}${cleanPath}`;
     }, []);
 
     /**
-     * Add a newly detected flashcard
-     */
-    const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): Promise<FlashcardData | null> => {
-        // Skip if already detected
-        const existing = stateRef.current.detectedFlashcards.get(qrId);
-        if (existing) {
-            console.log('[MultiFlashcard] QR already detected:', qrId);
-            return existing;
-        }
-        if (stateRef.current.detectedFlashcards.size >= 2) {
-            emitArDebug('FLASHCARD_LIMIT_REACHED', { qrId, limit: 2 });
+ * Add a newly detected flashcard
+ * 
+ * Task 9: Validates card against catalog manifest before adding.
+ * On failure, emits FLASHCARD_CATALOG_REJECTED with error code.
+ */
+const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): Promise<FlashcardData | null> => {
+    // Skip if already detected
+    const existing = stateRef.current.detectedFlashcards.get(qrId);
+    if (existing) {
+        console.log('[MultiFlashcard] QR already detected:', qrId);
+        return existing;
+    }
+    if (stateRef.current.detectedFlashcards.size >= 2) {
+        emitArDebug('FLASHCARD_LIMIT_REACHED', { qrId, limit: 2 });
+        return null;
+    }
+
+    console.log('[MultiFlashcard] 📱 New QR detected:', qrId);
+
+    // Fetch flashcard data
+    try {
+        const response = await fetch(`${API_BASE}/api/v1/flashcard/${qrId}`, { signal });
+        if (!response.ok) {
+            console.error('[MultiFlashcard] Failed to fetch flashcard:', qrId);
             return null;
         }
 
-        console.log('[MultiFlashcard] 📱 New QR detected:', qrId);
+        const data = await response.json();
+        if (!data || !data.flashcard) {
+            console.error('[MultiFlashcard] Flashcard data missing in response:', qrId);
+            return null;
+        }
 
-        // Fetch flashcard data
-        try {
-            const response = await fetch(`${API_BASE}/api/v1/flashcard/${qrId}`, { signal });
-            if (!response.ok) {
-                console.error('[MultiFlashcard] Failed to fetch flashcard:', qrId);
+        const flashcard = data.flashcard;
+        const arObject = data.target || data.ar_objects?.[0];
+
+        // Task 9: Read catalog identity from arObject (snake_case from backend)
+        // Backend returns catalog fields inside target object, not at top level
+        const mindCatalogId = arObject?.mind_catalog_id;
+        const mindTargetIndex = arObject?.mind_target_index;
+        // ``nft_base_url`` is deprecated.  The catalog manifest is the single
+        // source of truth for ``mindUrl``; ``nft_base_url`` from the backend
+        // is kept only as a last-resort fallback for legacy singletons that
+        // do not yet have a published manifest.
+        const legacyMindUrl = arObject?.nft_base_url || '';
+
+        // Task 9: Validate catalog fields - fail fast in persistent mode if missing
+        const isPersistent = isPersistentMindViewerEnabled();
+
+        if (isPersistent) {
+            // Persistent mode requires catalog identity for all cards
+            if (!mindCatalogId || mindTargetIndex === undefined) {
+                emitArDebug('FLASHCARD_CATALOG_IDENTITY_MISSING', {
+                    qrId,
+                    hasMindCatalogId: !!mindCatalogId,
+                    hasMindTargetIndex: mindTargetIndex !== undefined,
+                    arTag: arObject?.ar_tag || flashcard.ar_tag
+                });
+                // Fail fast - persistent mode cannot work without catalog identity
                 return null;
             }
+        }
 
-            const data = await response.json();
-            if (!data || !data.flashcard) {
-                console.error('[MultiFlashcard] Flashcard data missing in response:', qrId);
-                return null;
-            }
+        // Resolve mindUrl from the catalog manifest when possible.
+        // When a catalog is associated with the card, ``manifest.mindUrl``
+        // (typically a Supabase Storage URL) is authoritative.  When no
+        // catalog exists we fall back to ``nft_base_url`` for legacy cards.
+        let mindUrl = legacyMindUrl;
 
-            const flashcard = data.flashcard;
-            const arObject = data.target || data.ar_objects?.[0];
+        if (mindCatalogId && mindTargetIndex !== undefined) {
+            try {
+                // Import catalog validation functions
+                const { loadMindCatalog, validateCardForCatalog, preflightRequiredGlb } = await import('@/components/ar/arCatalogContract');
 
-            const flashcardData: FlashcardData = {
-                qrId,
-                arTag: arObject?.ar_tag || flashcard.ar_tag || `tag_${qrId}`,
-                word: flashcard.word || qrId,
-                category: flashcard.category || 'unknown', // NEW - store category
-                model3dUrl: buildUrl(arObject?.model_3d_url) || '',
-                image2dUrl: buildUrl(arObject?.image_2d_url) || '',
-                textureUrl: buildUrl(arObject?.texture_url),
-                mindUrl: arObject?.nft_base_url || '',
-                detectedAt: Date.now()
-            };
+                // Load and validate manifest
+                const manifest = await loadMindCatalog(mindCatalogId, signal);
 
-            emitArDebug('FLASHCARD_RESOLVED', {
-                qrId,
-                arTag: flashcardData.arTag,
-                mindUrl: flashcardData.mindUrl,
-                model3dUrl: flashcardData.model3dUrl,
-                image2dUrl: flashcardData.image2dUrl
-            });
-
-            setState(prev => {
-                if (prev.detectedFlashcards.has(qrId)) return prev;
-
-                const newMap = new Map(prev.detectedFlashcards);
-                newMap.set(qrId, flashcardData);
-
-                const newMode = newMap.size >= 2 ? 'MULTI' : 'SINGLE';
-                const newComboKey = newMap.size === 2
-                    ? Array.from(newMap.values()).map(card => card.arTag).sort().join('|')
-                    : null;
-                console.log('[MultiFlashcard] Mode:', newMode, 'Cards:', newMap.size);
-
-                return {
-                    ...prev,
-                    detectedFlashcards: newMap,
-                    mode: newMode,
-                    activeCombo: null,
-                    comboMindUrl: null,
-                    comboResolution: { key: newComboKey, status: 'idle' }
+                // Validate card against manifest
+                const cardIdentity = {
+                    arTag: arObject?.ar_tag || flashcard.ar_tag || `tag_${qrId}`,
+                    mindTargetIndex,
+                    mindCatalogId,
+                    mindUrl: manifest.mindUrl,
                 };
-            });
 
-            return flashcardData;
+                validateCardForCatalog(cardIdentity, manifest);
 
-        } catch (error) {
-            if (error instanceof DOMException && error.name === 'AbortError') {
-                emitArDebug('FLASHCARD_FETCH_ABORTED', { qrId });
+                // Preflight GLB
+                const model3dUrl = buildUrl(arObject?.model_3d_url) || '';
+                if (model3dUrl) {
+                    await preflightRequiredGlb(model3dUrl, signal);
+                }
+
+                // Manifest validated — adopt its ``mindUrl`` as the source of truth
+                mindUrl = manifest.mindUrl;
+
+                emitArDebug('FLASHCARD_CATALOG_VALIDATED', {
+                    qrId,
+                    mindCatalogId,
+                    mindTargetIndex,
+                    arTag: cardIdentity.arTag,
+                });
+            } catch (validationError) {
+                const errorCode = validationError instanceof Error ? validationError.message : 'FLASHCARD_CATALOG_REJECTED';
+                emitArDebug('FLASHCARD_CATALOG_REJECTED', {
+                    qrId,
+                    errorCode,
+                    mindCatalogId,
+                    mindTargetIndex,
+                });
+                // Return null — do NOT fallback to 2D
                 return null;
             }
-            console.error('[MultiFlashcard] Error fetching flashcard:', error);
+        }
+
+        const flashcardData: FlashcardData = {
+            qrId,
+            arTag: arObject?.ar_tag || flashcard.ar_tag || `tag_${qrId}`,
+            word: flashcard.word || qrId,
+            category: flashcard.category || 'unknown', // NEW - store category
+            model3dUrl: buildUrl(arObject?.model_3d_url) || '',
+            image2dUrl: buildUrl(arObject?.image_2d_url) || '',
+            textureUrl: buildUrl(arObject?.texture_url),
+            mindUrl: mindUrl,
+            mindCatalogId,
+            mindTargetIndex,
+            detectedAt: Date.now()
+        };
+
+        emitArDebug('FLASHCARD_RESOLVED', {
+            qrId,
+            arTag: flashcardData.arTag,
+            mindUrl: flashcardData.mindUrl,
+            mindCatalogId: flashcardData.mindCatalogId,
+            mindTargetIndex: flashcardData.mindTargetIndex,
+            model3dUrl: flashcardData.model3dUrl,
+            image2dUrl: flashcardData.image2dUrl
+        });
+
+        setState(prev => {
+            if (prev.detectedFlashcards.has(qrId)) return prev;
+
+            const newMap = new Map(prev.detectedFlashcards);
+            newMap.set(qrId, flashcardData);
+
+            const newMode = newMap.size >= 2 ? 'MULTI' : 'SINGLE';
+            const newComboKey = newMap.size === 2
+                ? Array.from(newMap.values()).map(card => card.arTag).sort().join('|')
+                : null;
+            console.log('[MultiFlashcard] Mode:', newMode, 'Cards:', newMap.size);
+
+            return {
+                ...prev,
+                detectedFlashcards: newMap,
+                mode: newMode,
+                activeCombo: null,
+                comboMindUrl: null,
+                comboResolution: { key: newComboKey, status: 'idle' }
+            };
+        });
+
+        return flashcardData;
+
+    } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            emitArDebug('FLASHCARD_FETCH_ABORTED', { qrId });
             return null;
         }
-    }, [buildUrl]);
+        console.error('[MultiFlashcard] Error fetching flashcard:', error);
+        return null;
+    }
+}, [buildUrl]);
 
     const addFlashcard = useCallback((qrId: string): Promise<FlashcardData | null> => {
         // 10s per-fetch safety timeout so a stuck request can't starve the
@@ -301,28 +372,11 @@ export function useMultiFlashcard() {
         const arTags = flashcards.map(card => card.arTag);
         const comboKey = [...arTags].sort().join('|');
 
-        // NEW: Check 1 - Validate categories match before checking combo
-        const [card1, card2] = flashcards;
-        if (card1.category !== card2.category) {
-            console.log('[MultiFlashcard] 🔍 Different categories, skipping combo check:',
-                card1.category, 'vs', card2.category);
-            emitArDebug('COMBO_CATEGORY_MISMATCH', {
-                arTags,
-                category1: card1.category,
-                category2: card2.category
-            });
-            setState(prev => prev.comboResolution.key !== comboKey ? prev : ({
-                ...prev,
-                isCheckingCombo: false,
-                comboResolution: {
-                    key: comboKey,
-                    status: 'not_found',
-                    reason: 'different_categories'
-                }
-            }));
-            return null;
-        }
-
+        // NOTE: Category validation is handled by backend in check_combo().
+        // If categories differ and cross_category_allowed=False, backend returns null.
+        // So we proceed to combo check and let backend reject if needed.
+        // Task 10: In persistent mode, category check is deferred to backend - we proceed to tag-based resolution.
+        
         if (snapshot.comboResolution.key === comboKey && snapshot.comboResolution.status !== 'idle') return null;
 
         emitArDebug('COMBO_LOOKUP_STARTED', { arTags, comboKey });
@@ -342,31 +396,122 @@ export function useMultiFlashcard() {
             }
 
             const data = await response.json();
+            
+            // FIX: Only set comboMindUrl when combo is FOUND
+            // Previously we set it even when not_found, causing shouldUseComboMindUrl 
+            // to trigger incorrectly (loading combo .mind while using individual minds)
             if (!data.found || !data.combo) {
-                // Always extract combo_mind_url from backend response — even when combo
-                // is not found locally, the backend may have pre-built combo mind files.
-                // We store it so LearnARV2 can decide to use it instead of merging.
-                const backendMindUrl = data.combo?.combo_mind_url
-                    ? buildUrl(data.combo.combo_mind_url) || null
-                    : null;
-                emitArDebug('COMBO_RESOLUTION_CHANGED', { comboKey, status: 'not_found', backendMindUrl });
+                emitArDebug('COMBO_RESOLUTION_CHANGED', { comboKey, status: 'not_found' });
                 setState(prev => prev.comboResolution.key !== comboKey ? prev : ({
                     ...prev,
                     isCheckingCombo: false,
-                    // Store backend combo_mind_url even if combo not found locally
-                    comboMindUrl: backendMindUrl ?? prev.comboMindUrl,
+                    // Do NOT set comboMindUrl here - keep it null
+                    // This ensures shouldUseComboMindUrl = false and shouldPrepareIndependentMulti = true
+                    comboMindUrl: null,
                     comboResolution: { key: comboKey, status: 'not_found' }
                 }));
                 return null;
             }
 
+            // Task 10: Parse combo data from backend response
+            const requiredTags: string[] = Array.isArray(data.combo.required_tags)
+                ? data.combo.required_tags
+                : [];
+
+            // Task 10: Use tag-based resolution when persistent viewer is enabled
+            const isPersistent = isPersistentMindViewerEnabled();
+
+            if (isPersistent) {
+                // Task 10: Use resolveComboByTags for order-independent combo activation
+                const comboResult = resolveComboByTags(flashcards, {
+                    comboId: data.combo.combo_id,
+                    requiredTags
+                });
+
+                if (!comboResult) {
+                    emitArDebug('COMBO_REJECTED_TAG_MISMATCH', {
+                        comboId: data.combo.combo_id,
+                        scannedTags: arTags,
+                        requiredTags
+                    });
+                    setState(prev => ({
+                        ...prev,
+                        activeCombo: null,
+                        comboMindUrl: null,
+                        mode: prev.detectedFlashcards.size >= 2 ? 'MULTI' : 'SINGLE',
+                        isCheckingCombo: false,
+                        comboResolution: {
+                            key: comboKey,
+                            status: 'rejected',
+                            reason: 'tag_mismatch'
+                        }
+                    }));
+                    emitArDebug('COMBO_RESOLUTION_CHANGED', {
+                        comboKey,
+                        status: 'rejected',
+                        reason: 'tag_mismatch'
+                    });
+                    return null;
+                }
+
+                // Task 10: Persistent mode - combo found via tags, no combo_mind_url needed
+                // Only preflight model/image (not mind file)
+                const model3dUrl = buildUrl(data.combo.model_3d_url) || '';
+                const image2dUrl = buildUrl(data.combo.image_2d_url) || '';
+                const textureUrl = buildUrl(data.combo.texture_url);
+
+                const assetProbes = await Promise.all([
+                    probeArAsset('model3d', model3dUrl),
+                    probeArAsset('image2d', image2dUrl),
+                    textureUrl ? probeArAsset('texture', textureUrl) : Promise.resolve(true)
+                ]);
+
+                if (assetProbes.some(ok => !ok)) {
+                    emitArDebug('COMBO_REJECTED_ASSET_PREFLIGHT', {
+                        comboId: data.combo.combo_id, arTags
+                    });
+                    setState(prev => ({
+                        ...prev,
+                        activeCombo: null,
+                        comboMindUrl: null,
+                        mode: prev.detectedFlashcards.size >= 2 ? 'MULTI' : 'SINGLE',
+                        isCheckingCombo: false,
+                        comboResolution: { key: comboKey, status: 'rejected', reason: 'asset_preflight' }
+                    }));
+                    return null;
+                }
+
+                emitArDebug('COMBO_RESOLVED_BY_TAGS', {
+                    comboId: data.combo.combo_id,
+                    requiredTags
+                });
+                setState(prev => ({
+                    ...prev,
+                    activeCombo: {
+                        comboId: data.combo.combo_id,
+                        description: data.combo.description,
+                        requiredTags,
+                        targetOrder: null, // Task 10: Not used in persistent mode
+                        model3dUrl,
+                        image2dUrl,
+                        textureUrl,
+                        comboMindUrl: null, // Task 10: Not used for tracking
+                        bonusXp: data.combo.bonus_xp || 100
+                    },
+                    comboMindUrl: null, // Task 10: Not used for tracking
+                    mode: 'COMBO',
+                    isCheckingCombo: false,
+                    comboResolution: { key: comboKey, status: 'found' }
+                }));
+                emitArDebug('COMBO_RESOLUTION_CHANGED', { comboKey, status: 'found' });
+                return data.combo;
+            }
+
+            // Legacy mode: use combo_mind_url and target_order
             const comboMindUrl = buildUrl(data.combo.combo_mind_url) || null;
             const model3dUrl = buildUrl(data.combo.model_3d_url) || '';
             const image2dUrl = buildUrl(data.combo.image_2d_url) || '';
             const textureUrl = buildUrl(data.combo.texture_url);
-            const requiredTags: string[] = Array.isArray(data.combo.required_tags)
-                ? data.combo.required_tags
-                : [];
             const targetOrder: string[] | null = Array.isArray(data.combo.target_order)
                 ? data.combo.target_order
                 : null;
@@ -721,10 +866,13 @@ export function useMultiFlashcard() {
         hasCombo: !!state.activeCombo,
         isMultiMode: state.mode === 'MULTI' || state.mode === 'COMBO' || state.mode === 'PROXIMITY_COMBO',
         isProximityCombo: state.mode === 'PROXIMITY_COMBO',
-        // Use backend combo_mind_url when available — no merge needed
+        // Use backend combo_mind_url ONLY when combo is actually found
+        // Safety check: require both comboMindUrl AND confirmed 'found' status
         shouldUseComboMindUrl: state.detectedFlashcards.size === 2 &&
-            state.comboMindUrl !== null,
+            state.comboMindUrl !== null &&
+            state.comboResolution.status === 'found',
         // Fallback: merge 2 separate .mind files only when no combo_mind_url from backend
+        // AND combo check returned not_found/rejected/error (meaning no valid combo exists)
         shouldPrepareIndependentMulti: state.detectedFlashcards.size === 2 &&
             state.comboResolution.key !== null &&
             state.comboMindUrl === null &&
@@ -733,3 +881,37 @@ export function useMultiFlashcard() {
 }
 
 export type { FlashcardData, ComboData, MultiFlashcardState, ProximityData, ComboResolution, ComboResolutionState };
+
+/**
+ * Task 10: Pure helpers for combo resolution by tag sets.
+ * Combo activation is based on tag sets, independent of scan order and MindAR indices.
+ * Never uses combo_mind_url or target_order for tracking.
+ */
+
+/**
+ * Checks if two unordered tag arrays contain the same elements.
+ * Order-independent comparison for combo tag matching.
+ */
+export function sameTagSet(left: string[], right: string[]): boolean {
+    return (
+        left.length === right.length &&
+        [...left].sort().every((tag, index) => tag === [...right].sort()[index])
+    );
+}
+
+/**
+ * Resolves whether the given combo should activate based on scanned targets.
+ * Returns the combo if the targets' arTags match the combo's requiredTags (order-independent),
+ * or null if no match.
+ *
+ * Does NOT use combo_mind_url, target_order, or any MindAR runtime fields.
+ */
+export function resolveComboByTags(
+    targets: { arTag: string }[],
+    combo: { comboId: string; requiredTags: string[] }
+): { comboId: string } | null {
+    const scannedTags = targets.map((t) => t.arTag);
+    return sameTagSet(scannedTags, combo.requiredTags)
+        ? { comboId: combo.comboId }
+        : null;
+}

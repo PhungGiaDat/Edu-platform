@@ -5,6 +5,10 @@ import path from 'path'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
+  // Vite proxy targets — overridable via VITE_PROXY_TARGET / VITE_PROXY_WS_TARGET.
+  // Defaults preserve the previous hardcoded behaviour (http://localhost:8000).
+  const proxyTarget = env.VITE_PROXY_TARGET || 'http://localhost:8000'
+  const proxyWsTarget = env.VITE_PROXY_WS_TARGET || 'ws://localhost:8000'
 
   return {
     plugins: [
@@ -75,25 +79,27 @@ export default defineConfig(({ mode }) => {
       ].filter(Boolean),
       
       // ✅ PROXY - Forward to backend
+      // Targets are env-driven (VITE_PROXY_TARGET / VITE_PROXY_WS_TARGET).
+      // Defaults preserve the previous hardcoded localhost behaviour.
       proxy: {
         '/api': {
-          target: 'http://localhost:8000',
+          target: proxyTarget,
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/api/, ''), // ✅ Remove /api prefix
         },
           '/assets/model2D': {  // ✅ Chỉ proxy model2D
-          target: 'http://localhost:8000',
+          target: proxyTarget,
           changeOrigin: true,
           secure: false,
         },
         // '/assets': {
-        //   target: 'http://localhost:8000',
+        //   target: proxyTarget,
         //   changeOrigin: true,
         //   secure: false,
         // },
         '/ws': {
-          target: 'ws://localhost:8000',
+          target: proxyWsTarget,
           changeOrigin: true,
           ws: true,
           secure: false,

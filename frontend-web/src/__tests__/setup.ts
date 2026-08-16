@@ -44,6 +44,20 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Mock iframe.contentWindow — jsdom returns null but the component checks
+// contentWindow before posting messages. We assign a fake postMessage so
+// sendActiveTargets and other iframe-send helpers can verify what they sent.
+Object.defineProperty(HTMLIFrameElement.prototype, 'contentWindow', {
+  get() {
+    return this._mockContentWindow ?? null;
+  },
+  set(val) {
+    this._mockContentWindow = val;
+  },
+  configurable: true,
+  enumerable: true,
+});
+
 // Suppress console.error in tests unless explicitly needed
 const originalError = console.error;
 beforeAll(() => {
