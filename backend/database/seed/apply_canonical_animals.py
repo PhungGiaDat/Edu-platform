@@ -255,7 +255,10 @@ async def reconcile(session: AsyncSession, *, mutate: bool) -> ReconciliationRep
                     _apply_values(row, values)
             report.quiz_questions.records[question.key] = state
 
-            existing_options = {item.option_order: item for item in row.options} if row is not None else {}
+            existing_options = (
+                {} if state == "CREATE"
+                else {item.option_order: item for item in row.options}
+            )
             if any(order not in (1, 2) for order in existing_options):
                 raise CanonicalContentConflict(f"Quiz {question.key} has non-canonical option identities")
             for option_order, option_value in enumerate(question.options, start=1):
