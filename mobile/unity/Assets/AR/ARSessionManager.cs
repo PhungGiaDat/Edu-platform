@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
@@ -10,31 +11,19 @@ using UnityEngine.XR.ARSubsystems;
 /// </summary>
 public class ARSessionManager : MonoBehaviour
 {
-    [SerializeField] private CardImageLibraryBuilder cardLibraryBuilder;
-
     private ARSession _session;
     private ARTrackedImageManager _imageManager;
     private ARSessionState _state;
     private XRReferenceImageLibrary _referenceImageLibrary;
     private readonly List<ARTrackedImage> _activeImages = new();
-    private UnityEngine.Events.UnityAction<ARTrackablesChangedEventArgs<ARTrackedImage>> _trackablesChangedHandler;
+    private readonly Dictionary<string, ARTrackedImage> _trackedImageByName = new();
+    private UnityAction<ARTrackablesChangedEventArgs<ARTrackedImage>> _trackablesChangedHandler;
 
     public event Action<string> OnArReady;
     public event Action<string, Vector3> OnImageDetected;
     public event Action<string> OnImageTrackingLost;
     public event Action<string[], int> OnMultiImageDetected;
     public event Action<string> OnError;
-
-    /// <summary>
-    /// Fired with the raw ARTrackedImage on first detection, in addition to
-    /// <see cref="OnImageDetected"/>. Lets subscribers (e.g. model spawning)
-    /// parent to the actual tracked transform instead of a one-shot position,
-    /// so the spawned model follows the card every frame.
-    /// </summary>
-    public event Action<ARTrackedImage> OnTrackedImageAdded;
-
-    /// <summary>Fired when a previously-active trackable is removed (per-instance cleanup key).</summary>
-    public event Action<TrackableId, string> OnTrackedImageRemoved;
 
     private void Awake()
     {
@@ -45,9 +34,6 @@ public class ARSessionManager : MonoBehaviour
         _imageManager = FindFirstObjectByType<ARTrackedImageManager>();
         if (_imageManager == null) {
             _imageManager = gameObject.AddComponent<ARTrackedImageManager>();
-        }
-        if (cardLibraryBuilder == null) {
-            cardLibraryBuilder = FindFirstObjectByType<CardImageLibraryBuilder>();
         }
         _trackablesChangedHandler = HandleTrackedImagesChangedInternal;
     }
@@ -96,62 +82,40 @@ public class ARSessionManager : MonoBehaviour
         foreach (var image in args.added) {
             if (!_activeImages.Contains(image)) {
                 _activeImages.Add(image);
+                _trackedImageByName[image.referenceImage.name] = image;
                 var pos = image.transform.position;
-                var refName = image.referenceImage.name;
-                UnityEngine.Debug.Log($"[ARSessionManager] Image detected: {refName}");
-
-                // Resolve qrId from CardImageLibraryBuilder's registry
-                var qrId = cardLibraryBuilder != null && cardLibraryBuilder.TryResolveQrId(refName, out var resolvedQrId)
-                    ? resolvedQrId
-                    : refName;
-
-                OnImageDetected?.Invoke(refName, pos);
-                OnTrackedImageAdded?.Invoke(image);
+                UnityEngine.Debug.Log($"[ARSessionManager] Image detected: {image.referenceImage.name}");
+                OnImageDetected?.Invoke(image.referenceImage.name, pos);
                 RNEventEmitter.Instance.SendEvent("onImageDetected", new {
-                    imageId = refName,
-                    imageName = refName,
-                    qrId = qrId,
-                    trackableId = image.trackableId.ToString(),
-                    trackingState = image.trackingState.ToString(),
+                    imageId = image.referenceImage.name,
+                    imageName = image.referenceImage.name,
                     transform = new { x = pos.x, y = pos.y, z = pos.z }
                 });
             }
         }
 
-        // Image updated: this is the normal per-frame pose / tracking-quality stream,
-        // NOT a loss. Emit a pose update; NEVER emit tracking-lost here — removal is the
-        // args.removed path only. TrackingState.None/Limited is a quality change, not
-        // trackable removal (bug #9 regression: the updated path used to spam tracking-lost).
+        // Image updated
         foreach (var image in args.updated) {
-            if (!_activeImages.Contains(image)) continue;
-            var pos = image.transform.position;
-            RNEventEmitter.Instance.SendEvent("onImagePoseUpdated", new {
-                imageId = image.referenceImage.name,
-                trackableId = image.trackableId.ToString(),
-                trackingState = image.trackingState.ToString(),
-                transform = new { x = pos.x, y = pos.y, z = pos.z }
-            });
+            if (_activeImages.Contains(image)) {
+                // Only emit tracking-lost on tracking state change to limited/stopped
+                if (image.trackingState == ARTrackingState.Limited || image.trackingState == ARTrackingState.None) {
+                    RNEventEmitter.Instance.SendEvent("onImageTrackingLost", new {
+                        imageId = image.referenceImage.name
+                    });
+                }
+            }
         }
 
-        // Image removed (now a KeyValuePair list in AR Foundation 6.0+).
-        // Removal targets exactly the trackable instance the provider dropped.
+        // Image removed (now a KeyValuePair list in AR Foundation 6.0+)
         foreach (var removed in args.removed) {
             var image = removed.Value;
             if (_activeImages.Contains(image)) {
                 _activeImages.Remove(image);
-                var refName = image.referenceImage.name;
-                UnityEngine.Debug.Log($"[ARSessionManager] Image tracking lost: {refName}");
-
-                // Resolve qrId for the event
-                var qrId = cardLibraryBuilder != null && cardLibraryBuilder.TryResolveQrId(refName, out var resolvedQrId)
-                    ? resolvedQrId
-                    : refName;
-
-                OnImageTrackingLost?.Invoke(refName);
-                OnTrackedImageRemoved?.Invoke(removed.Key, refName);
+                _trackedImageByName.Remove(image.referenceImage.name);
+                UnityEngine.Debug.Log($"[ARSessionManager] Image tracking lost: {image.referenceImage.name}");
+                OnImageTrackingLost?.Invoke(image.referenceImage.name);
                 RNEventEmitter.Instance.SendEvent("onImageTrackingLost", new {
-                    qrId = qrId,
-                    reason = "CARD_REMOVED"
+                    imageId = image.referenceImage.name
                 });
             }
         }
@@ -159,21 +123,24 @@ public class ARSessionManager : MonoBehaviour
         // Multi-image detection
         if (_activeImages.Count >= 2) {
             var imageNames = new string[_activeImages.Count];
-            var qrIds = new string[_activeImages.Count];
             for (int i = 0; i < _activeImages.Count; i++) {
-                var img = _activeImages[i];
-                imageNames[i] = img.referenceImage.name;
-                qrIds[i] = cardLibraryBuilder != null && cardLibraryBuilder.TryResolveQrId(img.referenceImage.name, out var resolved)
-                    ? resolved
-                    : img.referenceImage.name;
+                imageNames[i] = _activeImages[i].referenceImage.name;
             }
             OnMultiImageDetected?.Invoke(imageNames, _activeImages.Count);
             RNEventEmitter.Instance.SendEvent("onMultiImageDetected", new {
-                qrIds = qrIds,
                 imageIds = imageNames,
                 count = _activeImages.Count
             });
         }
+    }
+
+    /// <summary>
+    /// Gets the active ARTrackedImage by its reference image name.
+    /// Returns null if the image is not currently being tracked.
+    /// </summary>
+    public ARTrackedImage GetTrackedImage(string imageName)
+    {
+        return _trackedImageByName.TryGetValue(imageName, out var image) ? image : null;
     }
 
     /// <summary>
