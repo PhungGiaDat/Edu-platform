@@ -623,6 +623,7 @@ export default function LearnARV2() {
         rejectCombo,
         reset: resetMultiFlashcard,
         getFlashcardByIndex,
+        getFlashcardByTag,
     } = useMultiFlashcard();
 
     // ========== PERSISTENT VIEWER FLAG (must be before other refs/constants that use it) ==========
@@ -741,11 +742,14 @@ export default function LearnARV2() {
     // In persistent mode, combos use the backend-provided mindUrl from the
     // combo detection response. No runtime buffer merge is needed.
 
+    // Resolve combo mind URL from backend — single source for both legacy and persistent paths.
+    const resolvedComboMindUrl = comboMindUrl || activeCombo?.comboMindUrl || undefined;
+
     // Determine which mind URL to use:
-    // - Combo mode (isComboViewer) → use combo_mind_url from backend
+    // - Combo mode (isComboViewer) → use combo_mind_url from backend (resolvedComboMindUrl)
     // - Single card → use first card's mindUrl
     const mindUrl = isComboViewer
-        ? multiPreparation.mindUrl
+        ? resolveMindUrl(resolvedComboMindUrl)
         : resolveMindUrl(scannedTarget0?.mindUrl || arData?.targets?.[0]?.nft_base_url);
 
     const comboTarget0 = scannedTarget0;
@@ -767,7 +771,16 @@ export default function LearnARV2() {
     const comboTextureUrl = isComboViewer ? activeCombo?.textureUrl : undefined;
     const comboPhrase = isComboViewer && activeCombo?.description
         || [comboTarget0?.word || arData?.flashcard?.word, comboTarget1?.word || fallbackTarget1?.word].filter(Boolean).join(' in ');
-    const orderedViewerTargets = scannedTargets;
+
+    // Order targets by backend targetOrder so mindTargetIndex matches file positions.
+    // Fall back to scan order when no targetOrder is available.
+    const orderedComboTargets =
+        isComboViewer && activeCombo?.targetOrder?.length
+            ? activeCombo.targetOrder
+                .map(tag => getFlashcardByTag(tag))
+                .filter(Boolean) as import('@/hooks/useMultiFlashcard').FlashcardData[]
+            : scannedTargets;
+    const orderedViewerTargets = orderedComboTargets;
     const committedViewerTargetCount = isComboViewer ? 2 : 1;
     const viewerTargets = orderedViewerTargets.length
         ? orderedViewerTargets.map(target => ({
@@ -950,13 +963,16 @@ export default function LearnARV2() {
     // Task 9: Derive catalog props from the first card's flashcard data
     // The catalog is shared across all cards in a lesson, so we use the first card's catalog identity
     const catalogId = scannedTarget0?.mindCatalogId || null;
-    const catalogMindUrl = scannedTarget0?.mindUrl || null;
+    const catalogMindUrl = isComboViewer
+        ? (resolveMindUrl(resolvedComboMindUrl) || scannedTarget0?.mindUrl || null)
+        : (scannedTarget0?.mindUrl || null);
 
     // Task 9: Derive activeTargets from scanned flashcards
     // slotIndex follows scan order (0, 1), mindTargetIndex comes from flashcard data
+    // In combo mode, orderedComboTargets respects backend targetOrder so mindTargetIndex matches file positions
     const activeTargets: import('@/core/types/ARMessages').ActiveViewerTarget[] | undefined =
-        scannedTargets.length > 0 && catalogId && catalogMindUrl
-            ? scannedTargets.map((target, index) => ({
+        orderedComboTargets.length > 0 && catalogId && catalogMindUrl
+            ? orderedComboTargets.map((target, index) => ({
                 slotIndex: index as 0 | 1,
                 mindTargetIndex: target.mindTargetIndex ?? index,
                 arTag: target.arTag,
