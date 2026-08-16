@@ -482,3 +482,31 @@ htmlcov/
 # PowerShell misredirect artifacts (`> $null` parsed as a literal filename)
 /$null
 .codex/npm-cache/
+
+# ---------------------------------------------------------------------------
+# Unity-specific ignores (build artifacts, editor state, temp files)
+# ---------------------------------------------------------------------------
+
+# Unity build outputs (regenerated on each build)
+mobile/unity/Builds/
+
+# Unity editor user settings (personal workspace state)
+mobile/unity/UserSettings/Layouts/
+mobile/unity/UserSettings/EditorUserSettings.asset
+
+# Unity temp files and editor state
+mobile/unity/.utmp/
+mobile/unity/.claude/
+mobile/unity/AGENTS.md
+
+# Unity recovery files
+mobile/unity/Assets/_Recovery/
+
+# Unity logs
+mobile/unity/*.log
+
+# IDE settings specific to Unity project
+mobile/.idea/
+
+# Unity NuGet cache
+mobile/unity/NuGet.config
