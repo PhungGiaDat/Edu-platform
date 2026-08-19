@@ -99,7 +99,7 @@ services:
   # ========================================
   frontend:
     build:
-      context: ./frontend-web
+      context: ./frontend
       dockerfile: ../Dockerfile.frontend
     container_name: eduplatform-frontend
     restart: unless-stopped

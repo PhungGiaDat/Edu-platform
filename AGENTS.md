@@ -490,9 +490,9 @@ Primary implementation surfaces:
 - `mobile/unity/**`
 - `backend/**`
 
-`frontend-web/**` is now a **LEGACY / REFERENCE / FALLBACK** surface.
+`frontend/**` is now a **LEGACY / REFERENCE / FALLBACK** surface.
 
-**Do NOT** implement new learner-facing product features in `frontend-web/**` unless the user explicitly requests them.
+**Do NOT** implement new learner-facing product features in `frontend/**` unless the user explicitly requests them.
 
 **Do NOT** spend implementation time pursuing Web parity while mobile READY work remains.
 
@@ -669,7 +669,7 @@ Rules:
 
 ### FRONTEND-WEB POLICY
 
-Treat `frontend-web/**` as legacy unless explicitly assigned.
+Treat `frontend/**` as legacy unless explicitly assigned.
 
 Allowed work:
 - critical bug fixes

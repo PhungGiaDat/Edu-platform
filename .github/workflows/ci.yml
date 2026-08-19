@@ -28,7 +28,7 @@ jobs:
     
     defaults:
       run:
-        working-directory: frontend-web
+        working-directory: frontend
     
     steps:
       - name: Checkout code
@@ -39,7 +39,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: frontend-web/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -64,7 +64,7 @@ jobs:
         if: always()
         with:
           name: frontend-coverage
-          path: frontend-web/coverage/
+          path: frontend/coverage/
           retention-days: 7
 
   # ========================================
@@ -141,7 +141,7 @@ jobs:
       - name: Build Frontend Image
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend-web
+          context: ./frontend
           dockerfile: ../Dockerfile.frontend
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/eduplatform-frontend:${{ github.sha }}
@@ -171,11 +171,11 @@ jobs:
 
       - name: Pull Vercel Environment
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: frontend-web
+        working-directory: frontend
 
       - name: Build for Preview
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: frontend-web
+        working-directory: frontend
 
       - name: Deploy to Vercel Preview
         if: github.event_name == 'pull_request'
@@ -183,7 +183,7 @@ jobs:
         run: |
           url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
           echo "preview_url=$url" >> $GITHUB_OUTPUT
-        working-directory: frontend-web
+        working-directory: frontend
 
       - name: Comment PR with Preview URL
         if: github.event_name == 'pull_request'
