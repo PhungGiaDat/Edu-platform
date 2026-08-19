@@ -123,11 +123,11 @@ def collect_asset_requirements(
 def _legacy_candidate(content_identity: str, role: AssetRole) -> str | None:
     """Locate known legacy sources after semantics have already been resolved."""
     if role is AssetRole.COURSE_COVER:
-        return "frontend-web/public/assets/animals/course-cover.svg"
+        return "frontend/public/assets/animals/course-cover.svg"
     if role is AssetRole.VOCABULARY_ILLUSTRATION:
         word_by_id = {vocabulary_id: word.lower() for vocabulary_id, word, _ in VOCABULARY}
         word = word_by_id[content_identity]
-        return f"frontend-web/public/assets/animals/mascots/{word}-vocab.svg"
+        return f"frontend/public/assets/animals/mascots/{word}-vocab.svg"
     return None
 
 

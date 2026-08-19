@@ -17,7 +17,7 @@ from models.profile import (
     ProfileSummary,
     default_profile_content,
 )
-from models.user_mongo import UserDocument
+from repositories.postgres_user_repository import PostgresUser, PostgresUserRepository
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,6 @@ class ProfileService:
         self,
         gamification_service: Optional[Any] = None,
         course_repository: Optional[Any] = None,
-        database: Any = None,
     ):
         if gamification_service is None:
             from services.gamification_service import get_gamification_service
@@ -41,15 +40,7 @@ class ProfileService:
             course_repository = get_course_repository()
         self.gamification = gamification_service
         self.courses = course_repository
-        self._database = database
-
-    @property
-    def database(self):
-        if self._database is not None:
-            return self._database
-        from database.connection import db_manager
-
-        return db_manager.database
+        self._user_repo = PostgresUserRepository()
 
     @staticmethod
     def _avatar(username: str, avatar_url: Optional[str] = None) -> str:
@@ -91,43 +82,52 @@ class ProfileService:
         return len(completed), len(completed_today)
 
     async def _words_learned(self, user_id: str) -> int:
-        return await self.database["word_mastery"].count_documents(
-            {
-                "user_id": user_id,
-                "$or": [{"passes": {"$gt": 0}}, {"last_passed": True}],
-            }
+        from database.postgres_connection import postgres_pool
+
+        row = await postgres_pool().fetchval(
+            "SELECT count(*) FROM public.word_mastery WHERE user_id=$1 AND mastery_level>0",
+            user_id,
         )
+        return int(row) if row else 0
 
     async def _quizzes_passed(self, user_id: str) -> int:
-        return await self.database["quiz_attempts"].count_documents(
-            {"user_id": user_id, "score": {"$gte": 70}}
+        from database.postgres_connection import postgres_pool
+
+        row = await postgres_pool().fetchval(
+            "SELECT count(*) FROM public.quiz_attempts WHERE user_id=$1 AND score>=70",
+            user_id,
         )
+        return int(row) if row else 0
 
     async def _profile_content(self) -> Dict[str, Any]:
-        collection = self.database["profile_content"]
-        default = default_profile_content().model_dump(exclude={"id"})
-        await collection.update_one(
-            {"key": "default"},
-            {"$setOnInsert": default},
-            upsert=True,
+        from database.postgres_connection import postgres_pool
+
+        row = await postgres_pool().fetchrow(
+            "SELECT * FROM public.profile_content WHERE key='default'"
         )
-        stored = await collection.find_one({"key": "default"})
-        return stored or default
+        if row:
+            value = dict(row)
+            if "testimonials" in value and isinstance(value["testimonials"], str):
+                import json
+                value["testimonials"] = json.loads(value["testimonials"])
+            return value
+        return default_profile_content().model_dump(exclude={"id"})
 
     async def _leaderboard(self) -> List[ProfileLeaderboardEntry]:
         raw_entries = await self.gamification.get_leaderboard()
 
         async def enrich(entry: Dict[str, Any], index: int) -> ProfileLeaderboardEntry:
             user_id = str(entry.get("user_id", ""))
-            user = await UserDocument.get(user_id) if user_id else None
-            username = (
-                getattr(user, "username", None)
-                or entry.get("username")
-                or "Learner"
-            )
+            user: Optional[PostgresUser] = None
+            if user_id:
+                try:
+                    user = await self._user_repo.get_by_id(user_id)
+                except Exception:
+                    pass
+            username = (user.username if user else entry.get("username") or "Learner")
             avatar_url = self._avatar(
                 username,
-                getattr(user, "avatar_url", None) or entry.get("avatar_url"),
+                user.avatar_url if user else entry.get("avatar_url"),
             )
             return ProfileLeaderboardEntry(
                 user_id=user_id,
@@ -141,8 +141,8 @@ class ProfileService:
             *(enrich(entry, index) for index, entry in enumerate(raw_entries[:10]))
         ))
 
-    async def get_profile(self, user: UserDocument) -> ProfileResponse:
-        user_id = str(user.id)
+    async def get_profile(self, user: PostgresUser) -> ProfileResponse:
+        user_id = user.id
         partial: List[str] = []
 
         stats: Dict[str, Any] = {}
@@ -191,11 +191,11 @@ class ProfileService:
 
         identity = ProfileIdentity(
             id=user_id,
-            email=str(user.email),
+            email=user.email,
             username=user.username,
             full_name=user.full_name,
             avatar_url=self._avatar(user.username, user.avatar_url),
-            role=getattr(user, "role", "learner") or "learner",
+            role=user.role or "learner",
             is_superuser=user.is_superuser,
         )
         summary = ProfileSummary(

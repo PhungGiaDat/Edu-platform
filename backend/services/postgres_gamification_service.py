@@ -24,13 +24,13 @@ class PostgresGamificationService:
         }.items())
 
     @staticmethod
-    def _result(event, replay: bool) -> dict[str, Any]:
+    def _result(event, replay: bool, current_streak: int = 0) -> dict[str, Any]:
         return {
             "success": True, "event_id": event["event_id"], "action": event["action"],
             "xp_awarded": event["xp_awarded"], "total_xp_after": event["total_xp_after"],
             "level_after": event["level_after"], "xp_to_next_after": event["xp_to_next_after"],
             "level_up": False, "idempotent_replay": replay, "status": event["status"],
-            "badges_earned": [], "sticker_earned": None, "streak": 0,
+            "badges_earned": [], "sticker_earned": None, "streak": current_streak,
         }
 
     async def add_xp_with_event_id(self, user_id: str, event_id: str, action: str,
@@ -62,7 +62,10 @@ class PostgresGamificationService:
                                                 attempt_id=attempt_id, session_id=session_id, learning_path_id=learning_path_id):
                         return {"success": False, "error": "EVENT_SEMANTIC_CONFLICT"}
                     if existing["status"] == "applied":
-                        return self._result(existing, replay=True)
+                        streak_row = await connection.fetchrow(
+                            "SELECT streak_days FROM public.user_gamification WHERE user_id=$1", user_id
+                        )
+                        return self._result(existing, replay=True, current_streak=int(streak_row["streak_days"]) if streak_row else 0)
                     # A transaction never publishes a partially applied event.
                     return {"success": False, "error": "CONCURRENT_PROCESSING"}
 
@@ -95,7 +98,7 @@ class PostgresGamificationService:
                        level_after=$5,xp_to_next_after=$6,applied_at=$7 WHERE user_id=$1 AND event_id=$2 RETURNING *""",
                     user_id, event_id, xp, total_after, level, threshold, now,
                 )
-                result = self._result(event, replay=False)
+                result = self._result(event, replay=False, current_streak=int(aggregate["streak_days"]))
                 result["level_up"] = level_up
                 return result
 
@@ -105,10 +108,19 @@ class PostgresGamificationService:
     async def get_user_stats(self, user_id: str) -> dict[str, Any]:
         row = await postgres_pool().fetchrow("SELECT * FROM public.user_gamification WHERE user_id=$1", user_id)
         if not row:
-            return {"user_id": user_id, "total_points": 0, "level": 1, "xp_to_next_level": 100, "streak_days": 0, "badges": [], "stickers": []}
+            return {"user_id": user_id, "total_points": 0, "level": 1, "xp_to_next_level": 100,
+                    "streak_days": 0, "longest_streak": 0, "last_activity_date": None,
+                    "badges": [], "stickers": [], "stars": 0}
         value = dict(row)
         value["user_id"] = user_id
-        value["stickers"] = [dict(item) for item in await postgres_pool().fetch("SELECT sticker_id AS id,name,rarity,image_url,earned_at FROM public.user_gamification_stickers WHERE user_id=$1", user_id)]
+        # Ensure all UserPointsSchema fields are present
+        value.setdefault("stars", 0)
+        value.setdefault("longest_streak", 0)
+        value.setdefault("last_activity_date", None)
+        value.setdefault("daily_progress", [])
+        value["stickers"] = [dict(item) for item in await postgres_pool().fetch(
+            "SELECT sticker_id AS id,name,rarity,image_url,earned_at FROM public.user_gamification_stickers WHERE user_id=$1", user_id
+        )]
         return value
 
     async def get_leaderboard(self) -> list[dict[str, Any]]:

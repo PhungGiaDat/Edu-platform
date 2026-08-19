@@ -1,53 +1,50 @@
 """
 Gamification API Router - Controller Layer
-Handles HTTP for XP, badges, pets, stickers, and progress reports.
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import List, Any, Dict, Optional
+from fastapi import APIRouter, Depends, HTTPException
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, field_validator
+
 from services.gamification_service import GamificationService, get_gamification_service
 from models.gamification_model import UserPointsSchema
-from models.user_mongo import UserDocument
+from repositories.postgres_user_repository import PostgresUser
 from core.security import get_current_user
+
+
+# ========== Response Schemas ==========
+
+class LeaderboardEntry(BaseModel):
+    """Limited leaderboard entry — no internal columns exposed."""
+    user_id: str
+    points: int
+    level: int
+    streak_days: int
+    rank: int
 
 router = APIRouter()
 
 
-# ========== REQUEST/RESPONSE SCHEMAS ==========
+# ========== Request Schemas ==========
 
 class AddXPRequest(BaseModel):
-    """Legacy request - no idempotency. Prefer AddXPEventRequest for new integrations."""
     user_id: str
     action: str
     metadata: Optional[Dict[str, Any]] = None
 
 
 class AddXPEventRequest(BaseModel):
-    """
-    Idempotent XP event request.
-
-    Use this for new integrations that need exactly-once XP semantics.
-    The event_id must be stable and unique per semantic occurrence.
-    """
     action: str
     event_id: str
-
-    # Optional semantic source
     source_type: Optional[str] = None
     source_id: Optional[str] = None
-
-    # Optional contextual IDs
     attempt_id: Optional[str] = None
     session_id: Optional[str] = None
     learning_path_id: Optional[str] = None
-
-    # Legacy compatibility (forwarded but not authoritative)
     metadata: Optional[Dict[str, Any]] = None
 
     @field_validator("event_id")
     @classmethod
     def validate_event_id(cls, v: str) -> str:
-        """Reject None, empty, or whitespace-only event_id."""
         if not v or not v.strip():
             raise ValueError("event_id cannot be None, empty, or whitespace-only")
         return v.strip()
@@ -74,40 +71,45 @@ class TrackLearningRequest(BaseModel):
     time_mins: int
 
 
-# ========== EXISTING ENDPOINTS ==========
+# ========== XP & Stats ==========
 
-@router.get("/gamification/leaderboard", response_model=List[Dict[str, Any]])
+@router.get("/gamification/leaderboard", response_model=List[LeaderboardEntry])
 async def get_leaderboard(
-    service: GamificationService = Depends(get_gamification_service)
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Get top users leaderboard"""
-    return await service.get_leaderboard()
+    """Get top users leaderboard."""
+    raw = await service.get_leaderboard()
+    return [
+        LeaderboardEntry(
+            user_id=str(entry.get("user_id", "")),
+            points=int(entry.get("total_points", 0) or 0),
+            level=int(entry.get("level", 1) or 1),
+            streak_days=int(entry.get("streak_days", 0) or 0),
+            rank=idx + 1,
+        )
+        for idx, entry in enumerate(raw)
+    ]
 
 
 @router.get("/gamification/user/{user_id}", response_model=UserPointsSchema)
 async def get_user_stats(
     user_id: str,
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Get user gamification stats"""
-    user_id = str(current_user.id)
+    """Get user gamification stats."""
+    user_id = current_user.id
     return await service.get_user_stats(user_id)
 
 
 @router.post("/gamification/add-xp")
 async def add_xp(
     request: AddXPRequest,
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """
-    Add XP for completing an action.
-
-    LEGACY ENDPOINT - no idempotency.
-    Prefer POST /gamification/xp-event for new integrations.
-    """
-    user_id = str(current_user.id)
+    """Add XP for completing an action. Legacy — prefer POST /gamification/xp-event."""
+    user_id = current_user.id
     result = await service.add_xp(user_id, request.action, request.metadata)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error", "Failed to add XP"))
@@ -117,19 +119,11 @@ async def add_xp(
 @router.post("/gamification/xp-event")
 async def add_xp_event(
     request: AddXPEventRequest,
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """
-    Idempotent XP event with UNIQUE(user_id, event_id).
-
-    Guarantees exactly-once XP semantics even with network retries.
-    event_id must be stable per semantic occurrence.
-
-    Returns cached result on replay (idempotent_replay: true).
-    """
-    user_id = str(current_user.id)
-
+    """Idempotent XP event — guarantees exactly-once semantics."""
+    user_id = current_user.id
     result = await service.add_xp_with_event_id(
         user_id=user_id,
         event_id=request.event_id,
@@ -141,64 +135,56 @@ async def add_xp_event(
         learning_path_id=request.learning_path_id,
         metadata=request.metadata,
     )
-
     if not result.get("success"):
         error = result.get("error", "Failed to process XP event")
         if error in {"CONCURRENT_PROCESSING", "EVENT_SEMANTIC_CONFLICT"}:
-            raise HTTPException(
-                status_code=409,
-                detail="Event is being processed by another request"
-            )
+            raise HTTPException(status_code=409, detail="Event is being processed by another request")
         raise HTTPException(status_code=400, detail=error)
-
     return result
 
 
 @router.post("/gamification/award-badge")
 async def award_badge(
     badge_id: str,
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Award a badge to user"""
-    user_id = str(current_user.id)
+    """Award a badge to user."""
+    user_id = current_user.id
     result = await service.award_badge(user_id, badge_id)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error", "Failed to award badge"))
     return result
 
 
-# ========== PET ENDPOINTS ==========
+# ========== Pets ==========
 
 @router.get("/gamification/pet/{user_id}")
 async def get_pet(
     user_id: str,
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Get user's virtual pet"""
-    user_id = str(current_user.id)
+    user_id = current_user.id
     return await service.get_pet(user_id)
 
 
 @router.post("/gamification/pet/feed")
 async def feed_pet(
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Feed user's pet to increase happiness"""
-    user_id = str(current_user.id)
+    user_id = current_user.id
     return await service.feed_pet(user_id)
 
 
 @router.post("/gamification/pet/choose")
 async def choose_pet(
     request: ChoosePetRequest,
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Choose/change pet type"""
-    user_id = str(current_user.id)
+    user_id = current_user.id
     result = await service.choose_pet(user_id, request.pet_type)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error"))
@@ -207,22 +193,20 @@ async def choose_pet(
 
 @router.post("/gamification/pet/play")
 async def play_pet(
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Play with user's pet to increase happiness"""
-    user_id = str(current_user.id)
+    user_id = current_user.id
     return await service.play_with_pet(user_id)
 
 
 @router.post("/gamification/pet/outfit")
 async def change_pet_outfit(
     request: ChangePetOutfitRequest,
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Change pet's outfit/accessory"""
-    user_id = str(current_user.id)
+    user_id = current_user.id
     result = await service.change_pet_outfit(user_id, request.outfit)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error"))
@@ -232,90 +216,73 @@ async def change_pet_outfit(
 @router.get("/gamification/pet-xp/{user_id}")
 async def get_pet_xp(
     user_id: str,
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Get pet XP and evolution progress"""
-    user_id = str(current_user.id)
+    user_id = current_user.id
     return await service.get_pet_xp(user_id)
 
 
-# ========== STICKER ENDPOINTS ==========
+# ========== Stickers ==========
 
 @router.get("/gamification/stickers/catalog")
 async def get_sticker_catalog(
-    service: GamificationService = Depends(get_gamification_service)
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Get full sticker catalog with all available stickers"""
     return service.get_sticker_catalog()
 
 
 @router.get("/gamification/stickers/{user_id}")
 async def get_stickers(
     user_id: str,
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Get user's sticker collection"""
-    user_id = str(current_user.id)
+    user_id = current_user.id
     return await service.get_stickers(user_id)
 
 
 @router.post("/gamification/stickers/collect")
 async def collect_sticker(
     request: CollectStickerRequest,
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Collect a sticker for user"""
-    user_id = str(current_user.id)
+    user_id = current_user.id
     result = await service.collect_sticker(user_id, request.sticker_id)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error"))
     return result
 
 
-# ========== STREAK & DAILY GOAL ==========
+# ========== Streak & Daily Goal ==========
 
 @router.get("/gamification/streak/{user_id}")
 async def get_streak(
     user_id: str,
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Get streak data including daily goal progress for a user"""
-    user_id = str(current_user.id)
+    user_id = current_user.id
     return await service.get_streak(user_id)
 
-
-# ========== PROGRESS REPORT ENDPOINTS ==========
 
 @router.post("/gamification/track-learning")
 async def track_learning(
     request: TrackLearningRequest,
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """Track daily learning progress"""
-    user_id = str(current_user.id)
-    return await service.track_learning(
-        user_id, 
-        request.words_learned, 
-        request.time_mins
-    )
+    user_id = current_user.id
+    return await service.track_learning(user_id, request.words_learned, request.time_mins)
 
 
 @router.get("/reports/child/{user_id}/summary")
 async def get_progress_report(
     user_id: str,
-    days: int = Query(7, ge=1, le=30, description="Number of days to include"),
-    current_user: UserDocument = Depends(get_current_user),
-    service: GamificationService = Depends(get_gamification_service)
+    days: int = 7,
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
 ):
-    """
-    Get comprehensive progress report for parent dashboard.
-    Includes XP, level, streak, learning stats, pet status.
-    """
-    user_id = str(current_user.id)
+    user_id = current_user.id
     return await service.get_progress_report(user_id, days)
-

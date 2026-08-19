@@ -6,7 +6,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 from models.course_lesson import CourseLesson, LessonStatus, LessonType, MediaAsset, VocabularyItem
-from database.connection import db_manager
+from database.mongodb import get_collection
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ class CourseLessonRepository:
     
     @property
     def collection(self):
-        return db_manager.get_collection(self.collection_name)
+        return get_collection(self.collection_name)
     
     async def create_lesson(
         self,

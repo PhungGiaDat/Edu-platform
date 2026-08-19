@@ -43,7 +43,11 @@ httpx>=0.27.0
 # === AI - LangChain (Core only - no numpy conflict) ===
 langchain-core>=0.3.0
 langchain-google-genai>=2.0.0
+langchain-openai>=0.1.0
 google-generativeai>=0.8.0
+
+# === LLM Retry & Resilience ===
+tenacity>=8.2.0
 
 # === Vector Search - Qdrant Cloud Inference (no local embedding model) ===
 qdrant-client>=1.14.2,<2.0.0

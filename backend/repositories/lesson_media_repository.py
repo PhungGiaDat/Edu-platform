@@ -2,12 +2,33 @@
 """
 Lesson Media Repository - Data Access Layer for media_assets collection
 """
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
 from datetime import datetime
 from database.base_repo import BaseRepository
 import logging
 
+if TYPE_CHECKING:
+    from motor.motor_asyncio import AsyncIOMotorCollection
+
 logger = logging.getLogger(__name__)
+
+
+class _SafeCursor:
+    def sort(self, *args, **kwargs): return self
+    def skip(self, *args, **kwargs): return self
+    def limit(self, *args, **kwargs): return self
+    async def to_list(self, *args, **kwargs): return []
+
+
+class _SafeCollection:
+    async def find_one(self, *args, **kwargs): return None
+    async def find(self, *args, **kwargs): return _SafeCursor()
+    async def count_documents(self, *args, **kwargs): return 0
+    async def aggregate(self, *args, **kwargs): return _SafeCursor()
+    async def insert_one(self, *args, **kwargs):
+        raise RuntimeError("MongoDB unavailable: media_assets not migrated to PostgreSQL")
+    async def update_one(self, *args, **kwargs):
+        raise RuntimeError("MongoDB unavailable: media_assets not migrated to PostgreSQL")
 
 
 class LessonMediaRepository(BaseRepository):
@@ -17,7 +38,16 @@ class LessonMediaRepository(BaseRepository):
     """
 
     def __init__(self):
-        super().__init__("media_assets")
+        try:
+            super().__init__("media_assets")
+        except RuntimeError:
+            self._collection = None  # pragma: no cover — postgres_core_enabled=True
+
+    @property
+    def collection(self) -> "AsyncIOMotorCollection":
+        if self._collection is None:
+            return _SafeCollection()  # type: ignore[return-value]
+        return self._collection
 
     # ------------------------------------------------------------------
     # WRITE

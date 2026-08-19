@@ -23,8 +23,6 @@ class ARCombinationRepository:
             "SELECT ar_tag FROM public.ar_combination_required_tags WHERE combo_id=$1 ORDER BY tag_order", value["combo_id"]
         )
         value["required_tags"] = [tag["ar_tag"] for tag in tags]
-        # The Mongo DTO exposes animation as a scalar but the migration keeps
-        # its variable payload. Preserve an explicit string when available.
         if isinstance(value.get("animation"), dict):
             value["animation"] = value["animation"].get("type")
         return value
@@ -39,7 +37,7 @@ class ARCombinationRepository:
             """SELECT c.* FROM public.ar_combinations c JOIN public.ar_combination_required_tags t USING(combo_id)
                WHERE t.ar_tag=$1 ORDER BY c.priority DESC,c.combo_id""", ar_tag
         )
-        return [await self._hydrate(row) for row in rows]  # type: ignore[misc]
+        return [await self._hydrate(row) for row in rows]
 
     async def find_by_tags(self, ar_tags: List[str]) -> List[Dict[str, Any]]:
         if not ar_tags:
@@ -49,20 +47,20 @@ class ARCombinationRepository:
                WHERE t.ar_tag = ANY($1::text[]) GROUP BY c.combo_id
                HAVING count(DISTINCT t.ar_tag) = cardinality($1::text[]) ORDER BY max(c.priority) DESC""", ar_tags
         )
-        return [await self._hydrate(row) for row in rows]  # type: ignore[misc]
+        return [await self._hydrate(row) for row in rows]
 
     async def find_by_any_tag(self, ar_tags: List[str]) -> List[Dict[str, Any]]:
         rows = await postgres_pool().fetch(
             """SELECT DISTINCT c.* FROM public.ar_combinations c JOIN public.ar_combination_required_tags t USING(combo_id)
                WHERE t.ar_tag = ANY($1::text[]) ORDER BY c.priority DESC,c.combo_id""", ar_tags
         )
-        return [await self._hydrate(row) for row in rows]  # type: ignore[misc]
+        return [await self._hydrate(row) for row in rows]
 
     async def find_many(self, filter: Optional[Dict[str, Any]] = None, skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
         rows = await postgres_pool().fetch(
             "SELECT * FROM public.ar_combinations ORDER BY priority DESC,combo_id OFFSET $1 LIMIT $2", skip, limit
         )
-        return [await self._hydrate(row) for row in rows]  # type: ignore[misc]
+        return [await self._hydrate(row) for row in rows]
 
 
 def get_ar_combination_repository() -> ARCombinationRepository:

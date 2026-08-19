@@ -75,6 +75,11 @@ from .pronunciation import (
     PronunciationAttemptResponse,
     AttemptStatus,
 )
+from .user_schemas import (
+    UserCreate,
+    UserUpdate,
+    UserResponse,
+)
 
 __all__ = [
     # Flashcard
@@ -146,4 +151,8 @@ __all__ = [
     "PronunciationAttemptCreate",
     "PronunciationAttemptResponse",
     "AttemptStatus",
+    # User auth schemas
+    "UserCreate",
+    "UserUpdate",
+    "UserResponse",
 ]

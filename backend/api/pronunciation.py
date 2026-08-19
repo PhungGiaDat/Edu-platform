@@ -31,6 +31,7 @@ from repositories.pronunciation_repository import (
     PronunciationRepository,
     get_pronunciation_repository,
 )
+from repositories.postgres_user_repository import PostgresUser
 from services.gamification_service import GamificationService, get_gamification_service
 from services.ai_service import get_ai_service
 from services.feedback_service import FeedbackService, get_feedback_service
@@ -172,7 +173,7 @@ async def log_pronunciation_attempt(
         logger.info(f"[Pronunciation] Badge '{BADGE_PRONUNCIATION_PRO}' awarded to {payload.user_id}")
 
     return PronunciationAttemptResponse(
-        _id=attempt_id,
+        id=attempt_id,
         attempt_id=attempt_id,
         user_id=payload.user_id,
         flashcard_qr_id=payload.flashcard_qr_id,

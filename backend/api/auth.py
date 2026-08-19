@@ -17,7 +17,7 @@ from core.security import (
     get_current_user,
     Token
 )
-from models.user_mongo import UserCreate, UserResponse
+from models.user_schemas import UserCreate, UserResponse
 from repositories.postgres_user_repository import PostgresUser, PostgresUserRepository
 
 router = APIRouter()

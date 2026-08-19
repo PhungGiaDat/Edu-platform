@@ -8,7 +8,7 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
 
 from models.cache_session import RedisCache, CacheType
-from database.connection import db_manager
+from database.mongodb import get_collection
 import logging
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ class CacheRepository:
     
     @property
     def collection(self):
-        return db_manager.get_collection(self.collection_name)
+        return get_collection(self.collection_name)
     
     async def get(self, cache_key: str) -> Optional[Dict[str, Any]]:
         """Get a cached value by key."""

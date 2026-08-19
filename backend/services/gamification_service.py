@@ -896,14 +896,17 @@ class GamificationService:
         """
         # Get user stats
         stats = await self.repo.get_by_user_id(user_id) or {}
-        
-        # Get daily stats
+
+        # Get daily stats (warns, delegated to MongoDB)
         daily_stats = await self.repo.get_daily_stats(user_id, days)
-        
+
+        # Get stickers from separate table (PostgreSQL)
+        stickers = await self.repo.get_stickers(user_id)
+
         # Calculate totals (support both old 'words' and new 'words_learned' field names)
         total_words = sum(s.get("words_learned", s.get("words", 0)) for s in daily_stats)
         total_time = sum(s.get("time_mins", 0) for s in daily_stats)
-        
+
         return {
             "user_id": user_id,
             "period_days": days,
@@ -912,7 +915,7 @@ class GamificationService:
                 "level": stats.get("level", 1),
                 "streak_days": stats.get("streak_days", 0),
                 "badges_count": len(stats.get("badges", [])),
-                "stickers_count": len(stats.get("stickers", [])),
+                "stickers_count": len(stickers),
             },
             "learning": {
                 "total_words": total_words,
@@ -921,7 +924,7 @@ class GamificationService:
                 "avg_time_per_day": round(total_time / max(len(daily_stats), 1), 1),
             },
             "daily_breakdown": daily_stats,
-            "pet": stats.get("pet", {"type": "bunny", "happiness": 50}),
+            "pet": stats.get("pet") or {"type": "bunny", "happiness": 50},
         }
 
 

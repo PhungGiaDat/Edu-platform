@@ -7,6 +7,7 @@ from qdrant_client import QdrantClient, models
 
 from settings import settings
 from services.animal_rag_dataset import AnimalRAGDocument, build_qdrant_payload
+from services.llm_clients import CircuitBreaker, CircuitOpenError
 
 
 class QdrantRAGUnavailable(RuntimeError):
@@ -18,6 +19,11 @@ class QdrantRAGService:
 
     def __init__(self, client: Optional[QdrantClient] = None) -> None:
         self._client = client
+        self._breaker = CircuitBreaker(
+            name="qdrant.retrieve",
+            fail_max=5,
+            reset_timeout=30.0,
+        )
 
     def _get_client(self) -> QdrantClient:
         if self._client is not None:
@@ -36,6 +42,24 @@ class QdrantRAGService:
         )
         return self._client
 
+    def _call_qdrant(
+        self,
+        query: str,
+        query_filter: models.Filter,
+    ) -> Any:
+        """Synchronous Qdrant call — run inside asyncio.to_thread + breaker."""
+        return self._get_client().query_points(
+            collection_name=settings.QDRANT_COLLECTION,
+            query=models.Document(
+                text=query,
+                model=settings.QDRANT_EMBEDDING_MODEL,
+            ),
+            query_filter=query_filter,
+            with_payload=True,
+            limit=settings.QDRANT_RETRIEVAL_LIMIT,
+            score_threshold=settings.QDRANT_SCORE_THRESHOLD,
+        )
+
     async def retrieve(self, query: str) -> list[dict[str, Any]]:
         """Return a small, safety-filtered and diversified Qdrant context."""
         if not query.strip():
@@ -50,18 +74,14 @@ class QdrantRAGService:
             ]
         )
         try:
-            response = await asyncio.to_thread(
-                self._get_client().query_points,
-                collection_name=settings.QDRANT_COLLECTION,
-                query=models.Document(
-                    text=query,
-                    model=settings.QDRANT_EMBEDDING_MODEL,
-                ),
-                query_filter=query_filter,
-                with_payload=True,
-                limit=settings.QDRANT_RETRIEVAL_LIMIT,
-                score_threshold=settings.QDRANT_SCORE_THRESHOLD,
+            response = await self._breaker.acall(
+                asyncio.to_thread,
+                self._call_qdrant,
+                query,
+                query_filter,
             )
+        except CircuitOpenError:
+            raise QdrantRAGUnavailable("Qdrant circuit breaker is open — skipping retrieval")
         except QdrantRAGUnavailable:
             raise
         except Exception as exc:

@@ -3,10 +3,10 @@
 Database Module Exports
 """
 from .connection import (
-    db_manager,
     get_database,
     connect_to_database,
     close_database_connection,
+    db_manager,
 )
 
 # Import index management functions
@@ -25,8 +25,8 @@ from .indexes import (
 
 __all__ = [
     # MongoDB
-    "db_manager",
     "get_database",
+    "db_manager",
     # Lifecycle
     "connect_to_database",
     "close_database_connection",

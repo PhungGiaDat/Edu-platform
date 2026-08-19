@@ -1,11 +1,5 @@
-# backend/api/learning_path.py
 """
-Learning Path API - Controller layer
-GET  /learning-path/{user_id}          — get preferences + today's goal progress
-POST /learning-path/preferences        — upsert preferences (called by LearningPathSetup.tsx)
-POST /learning-path/goals              — partial update: time/words goals only
-POST /learning-path/progress           — accumulate daily progress
-GET  /learning-path/{user_id}/today   — today's progress vs goals
+Learning Path API
 """
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
@@ -16,9 +10,10 @@ import logging
 
 from repositories.learning_path_repository import (
     LearningPathRepository,
+    DailyProgressRepository,
     get_learning_path_repository,
 )
-from models.user_mongo import UserDocument
+from repositories.postgres_user_repository import PostgresUser
 from core.security import get_current_user
 
 router = APIRouter(prefix="/learning-path", tags=["Learning Path"])
@@ -33,7 +28,7 @@ class LearningPreferences(BaseModel):
     daily_time_goal_mins: Optional[int] = 15
     daily_words_goal: Optional[int] = 5
     notifications_enabled: Optional[bool] = True
-    reminder_time: Optional[str] = "18:00"  # informational — not persisted to DB
+    reminder_time: Optional[str] = "18:00"
 
 
 class DailyGoalProgress(BaseModel):
@@ -78,29 +73,25 @@ def _default_progress() -> dict:
     return {"time_spent_mins": 0, "words_learned": 0, "games_played": 0, "pronunciation_attempts": 0}
 
 
-async def _today_progress(user_id: str) -> dict:
-    """Return today's persisted PostgreSQL aggregate, or the stable zero shape."""
-    from database.postgres_connection import postgres_pool
-
-    row = await postgres_pool().fetchrow(
-        """SELECT time_spent_mins, words_learned, games_played, pronunciation_attempts
-           FROM public.daily_learning_progress
-           WHERE user_id=$1 AND progress_date=CURRENT_DATE""",
-        user_id,
-    )
-    return dict(row) if row else _default_progress()
+async def _today_progress(user_id: str, progress_repo: DailyProgressRepository) -> dict:
+    return await progress_repo.get_today(user_id)
 
 
 # ========== Endpoints ==========
 
+def get_daily_progress_repo() -> DailyProgressRepository:
+    return DailyProgressRepository()
+
+
 @router.get("/{user_id}")
 async def get_learning_path(
     user_id: str,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     repo: LearningPathRepository = Depends(get_learning_path_repository),
+    progress_repo: DailyProgressRepository = Depends(get_daily_progress_repo),
 ):
     """Get user's learning path preferences and current daily goals."""
-    user_id = str(current_user.id)
+    user_id = current_user.id
     logger.info(f"[LearningPath] GET preferences for user={user_id}")
 
     doc = await repo.get_by_user(user_id)
@@ -113,8 +104,7 @@ async def get_learning_path(
         "notifications_enabled": True,
     }
 
-    # Daily progress is not tracked in this repo — return zeros so frontend renders
-    today_progress = await _today_progress(user_id)
+    today_progress = await progress_repo.get_today(user_id)
 
     return JSONResponse({
         "preferences": prefs,
@@ -126,14 +116,11 @@ async def get_learning_path(
 @router.post("/preferences")
 async def save_learning_preferences(
     prefs: LearningPreferences,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     repo: LearningPathRepository = Depends(get_learning_path_repository),
 ):
-    """
-    Save (upsert) user's learning path preferences.
-    Called by LearningPathSetup.tsx on step 3 confirmation.
-    """
-    user_id = str(current_user.id)
+    """Save (upsert) user's learning path preferences."""
+    user_id = current_user.id
     logger.info(f"[LearningPath] POST preferences for user={user_id}")
 
     saved = await repo.upsert({
@@ -154,11 +141,11 @@ async def save_learning_preferences(
 @router.post("/goals")
 async def update_daily_goals(
     goal_update: GoalUpdate,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     repo: LearningPathRepository = Depends(get_learning_path_repository),
 ):
     """Partial update: only change time and/or words goals."""
-    user_id = str(current_user.id)
+    user_id = current_user.id
     logger.info(f"[LearningPath] POST goals for user={user_id}")
 
     doc = await repo.get_by_user(user_id) or {}
@@ -187,40 +174,37 @@ async def update_daily_goals(
 @router.post("/progress")
 async def track_daily_progress(
     progress: DailyGoalProgress,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
+    progress_repo: DailyProgressRepository = Depends(get_daily_progress_repo),
 ):
-    """
-    Track daily progress from session logs.
-    Aggregates from SessionLogDocument instead of echoing client input (Q5: upsert-per-day).
-    """
-    user_id = str(current_user.id)
+    """Track daily progress — aggregates from PostgreSQL daily_learning_progress."""
+    user_id = current_user.id
     try:
         target_date = date.fromisoformat(progress.date)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail="date must use YYYY-MM-DD") from exc
     logger.info(f"[LearningPath] POST progress for user={user_id} date={target_date}")
-    
-    from database.postgres_connection import postgres_pool
-    row = await postgres_pool().fetchrow(
-        """INSERT INTO public.daily_learning_progress(user_id,progress_date,time_spent_mins,words_learned,games_played,pronunciation_attempts)
-           VALUES($1,$2::date,$3,$4,$5,$6) ON CONFLICT(user_id,progress_date) DO UPDATE SET
-           time_spent_mins=GREATEST(daily_learning_progress.time_spent_mins,EXCLUDED.time_spent_mins),
-           words_learned=GREATEST(daily_learning_progress.words_learned,EXCLUDED.words_learned),
-           games_played=GREATEST(daily_learning_progress.games_played,EXCLUDED.games_played),
-           pronunciation_attempts=GREATEST(daily_learning_progress.pronunciation_attempts,EXCLUDED.pronunciation_attempts),updated_at=now() RETURNING *""",
-        user_id, target_date, progress.time_spent_mins, progress.words_learned, progress.games_played, progress.pronunciation_attempts,
+
+    row = await progress_repo.upsert(
+        user_id, target_date,
+        progress.time_spent_mins, progress.words_learned,
+        progress.games_played, progress.pronunciation_attempts,
     )
-    total_time_mins, total_words, total_games, total_pronun = row["time_spent_mins"], row["words_learned"], row["games_played"], row["pronunciation_attempts"]
+    total_time_mins = row["time_spent_mins"]
+    total_words = row["words_learned"]
+    total_games = row["games_played"]
+    total_pronun = row["pronunciation_attempts"]
+
     prefs = await get_learning_path_repository().get_by_user(user_id) or {}
-    time_goal, words_goal = prefs.get("daily_time_goal_mins", 15), prefs.get("daily_words_goal", 5)
-    
-    # Determine goals met
+    time_goal = prefs.get("daily_time_goal_mins", 15)
+    words_goal = prefs.get("daily_words_goal", 5)
+
     goals_met = {
         "time_goal_met": total_time_mins >= time_goal,
         "words_goal_met": total_words >= words_goal,
         "all_goals_met": total_time_mins >= time_goal and total_words >= words_goal,
     }
-    
+
     return JSONResponse({
         "status": "tracked",
         "progress": {
@@ -232,23 +216,24 @@ async def track_daily_progress(
         "goals_met": goals_met,
         "most_studied_topic": None,
         "sessions_count": 0,
-        "source": "daily_learning_progress"
+        "source": "daily_learning_progress",
     })
 
 
 @router.get("/{user_id}/today")
 async def get_today_progress(
     user_id: str,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     repo: LearningPathRepository = Depends(get_learning_path_repository),
+    progress_repo: DailyProgressRepository = Depends(get_daily_progress_repo),
 ):
     """Get today's learning progress vs. stored goal targets."""
-    user_id = str(current_user.id)
+    user_id = current_user.id
     logger.info(f"[LearningPath] GET today progress for user={user_id}")
 
     today = datetime.now().strftime("%Y-%m-%d")
     doc = await repo.get_by_user(user_id) or {}
-    progress = await _today_progress(user_id)
+    progress = await progress_repo.get_today(user_id)
     goals = _build_goals_block(doc, progress)
 
     return JSONResponse({

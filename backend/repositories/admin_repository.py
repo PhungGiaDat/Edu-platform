@@ -3,7 +3,7 @@
 Admin Repository - Database operations for Teacher Admin Dashboard
 Implements teacher-scoped data access patterns
 """
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, TYPE_CHECKING
 from datetime import datetime, timedelta
 from database.base_repo import BaseRepository
 from database.db import mongo_connector
@@ -13,7 +13,32 @@ import asyncio
 import re
 import uuid
 
+if TYPE_CHECKING:
+    from motor.motor_asyncio import AsyncIOMotorCollection, AsyncIOMotorCursor
+
 logger = logging.getLogger(__name__)
+
+
+class _SafeCursor:
+    def sort(self, *args, **kwargs): return self
+    def skip(self, *args, **kwargs): return self
+    def limit(self, *args, **kwargs): return self
+    async def to_list(self, *args, **kwargs): return []
+    async def count(self, *args, **kwargs): return 0
+
+
+class _SafeCollection:
+    """No-op collection returned when MongoDB is unavailable.
+    Read methods return safe empty defaults; write methods raise.
+    """
+    async def find_one(self, *args, **kwargs): return None
+    async def find(self, *args, **kwargs): return _SafeCursor()
+    async def count_documents(self, *args, **kwargs): return 0
+    async def aggregate(self, *args, **kwargs): return _SafeCursor()
+    async def insert_one(self, *args, **kwargs):
+        raise RuntimeError("MongoDB unavailable: admin collections not migrated to PostgreSQL")
+    async def update_one(self, *args, **kwargs):
+        raise RuntimeError("MongoDB unavailable: admin collections not migrated to PostgreSQL")
 
 
 async def _require_valid_ar_object(collection, ar_tag: str) -> dict:
@@ -44,20 +69,33 @@ class AdminRepository:
     def __init__(self, teacher_id: str):
         """
         Initialize repository with teacher_id for scoping
-        
+
         Args:
             teacher_id: The teacher's user ID for data scoping
         """
         self.teacher_id = teacher_id
-        self.courses_collection = mongo_connector.get_collection("courses")
-        self.flashcards_collection = mongo_connector.get_collection("flashcards")
-        self.flashcard_decks_collection = mongo_connector.get_collection("flashcard_decks")
-        self.student_progress_collection = mongo_connector.get_collection("student_progress")
-        self.usage_sessions_collection = mongo_connector.get_collection("usage_sessions")
-        self.learning_goals_collection = mongo_connector.get_collection("learning_goals")
-        self.users_collection = mongo_connector.get_collection("users")
-        self.ar_objects_collection = mongo_connector.get_collection("ar_objects")
-        
+        try:
+            self.courses_collection = mongo_connector.get_collection("courses")
+            self.flashcards_collection = mongo_connector.get_collection("flashcards")
+            self.flashcard_decks_collection = mongo_connector.get_collection("flashcard_decks")
+            self.student_progress_collection = mongo_connector.get_collection("student_progress")
+            self.usage_sessions_collection = mongo_connector.get_collection("usage_sessions")
+            self.learning_goals_collection = mongo_connector.get_collection("learning_goals")
+            self.users_collection = mongo_connector.get_collection("users")
+            self.ar_objects_collection = mongo_connector.get_collection("ar_objects")
+        except RuntimeError:
+            # postgres_core_enabled=True: all admin collections are unavailable
+            safe = _SafeCollection()
+            self.courses_collection = safe
+            self.flashcards_collection = safe
+            self.flashcard_decks_collection = safe
+            self.student_progress_collection = safe
+            self.usage_sessions_collection = safe
+            self.learning_goals_collection = safe
+            self.users_collection = safe
+            self.ar_objects_collection = safe
+            logger.warning("[AdminRepo] MongoDB unavailable — admin collections returning safe defaults")
+
         logger.debug(f"[AdminRepo] Initialized for teacher: {teacher_id}")
     
     # ========== Dashboard Stats ==========

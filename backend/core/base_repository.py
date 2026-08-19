@@ -7,7 +7,7 @@ from abc import ABC
 from typing import Any, Dict, List, Optional
 from motor.motor_asyncio import AsyncIOMotorCollection
 from bson import ObjectId
-from database.connection import db_manager
+from database.mongodb import get_collection
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,17 +18,30 @@ class BaseRepository(ABC):
     Generic Repository Pattern for MongoDB operations
     Provides common CRUD operations that all repositories can use
     """
-    
+
     def __init__(self, collection_name: str):
         """
         Initialize repository with collection name
-        
+
         Args:
             collection_name: MongoDB collection name
         """
         self.collection_name = collection_name
-        self.collection: AsyncIOMotorCollection = db_manager.get_collection(collection_name)
+        self._collection: AsyncIOMotorCollection = get_collection(collection_name)
         logger.debug(f"📦 [Repository] Initialized: {collection_name}")
+
+    @property
+    def collection(self) -> AsyncIOMotorCollection:
+        """
+        Guarded collection accessor.
+        Raises RuntimeError when postgres_core_enabled=True so child repos
+        that don't override this property always fail loudly.
+        """
+        if self._collection is None:
+            raise RuntimeError(
+                f"MongoDB unavailable: '{self.collection_name}' not migrated to PostgreSQL"
+            )
+        return self._collection
     
     # ========== CREATE ==========
     

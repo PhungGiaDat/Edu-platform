@@ -88,8 +88,22 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = None
     GOOGLE_API_KEY: Optional[str] = None
     AI_DYNAMIC_CONTENT_ENABLED: bool = True
-    AI_CONTENT_TIMEOUT_SECONDS: float = 8.0
-    AI_CONTENT_RETRIES: int = 2
+    AI_CONTENT_TIMEOUT_SECONDS: float = 30.0
+    AI_CONTENT_RETRIES: int = 3
+
+    # ========== TokenRouter Multi-Model LLM ==========
+    # OpenAI-compatible endpoint for Lexi Agentic RAG (Planner / Generator / Validator routing)
+    TOKENROUTER_API_KEY: Optional[SecretStr] = None
+    TOKENROUTER_BASE_URL: str = "https://api.tokenrouter.com/v1"
+    # Default models per pipeline stage (can override per-request)
+    MODEL_PLANNER: str = "qwen/qwen3.8-max-free"
+    MODEL_GENERATOR: str = "deepseek/deepseek-v4-pro-0813-free"
+    MODEL_VALIDATOR: str = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+    # Fallback cascade — comma-separated model list, tried in order on failure
+    MODEL_FALLBACKS: str = "qwen/qwen3.8-max-free,deepseek/deepseek-v4-pro-0813-free,nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+    # Circuit breaker: fail_max consecutive failures before skipping a model (60s reset)
+    LLM_CIRCUIT_BREAKER_FAIL_MAX: int = 5
+    LLM_CIRCUIT_BREAKER_RESET_SECONDS: int = 60
 
     # ========== Qdrant RAG (Optional) ==========
     QDRANT_URL: Optional[str] = None
@@ -244,3 +258,11 @@ if __name__ != "__main__":
     print(f"[CONFIG] Loaded settings: DB={settings.MONGO_DB}, Debug={settings.DEBUG}")
     print(f"[CONFIG] Redis configured: {settings.is_redis_configured}")
     print(f"[CONFIG] Static dir: {settings.STATIC_DIR}")
+
+    # Warn if TokenRouter API key is missing (chat endpoint will 503)
+    if not settings.TOKENROUTER_API_KEY:
+        import logging
+        logging.getLogger("settings").warning(
+            "[CONFIG] TOKENROUTER_API_KEY is not set — /api/v1/chat/rag will return 503. "
+            "Set TOKENROUTER_API_KEY in .env to enable Lexi Agentic RAG."
+        )

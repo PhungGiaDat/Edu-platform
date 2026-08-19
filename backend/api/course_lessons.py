@@ -15,7 +15,6 @@ Endpoints:
 from datetime import datetime
 from typing import List, Optional
 
-from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from models.course_lesson import (
@@ -27,7 +26,7 @@ from models.course_lesson import (
 )
 from repositories.course_lesson_repository import get_course_lesson_repository, CourseLessonRepository
 from core.security import get_current_user
-from models.user_mongo import UserDocument
+from repositories.postgres_user_repository import PostgresUser
 
 
 router = APIRouter(prefix="/course-lessons", tags=["Course Lessons"])
@@ -96,7 +95,7 @@ async def create_lesson(
     lesson_type: LessonType = LessonType.MIXED,
     duration_minutes: int = 5,
     xp_reward: int = 50,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     repo: CourseLessonRepository = Depends(get_course_lesson_repository),
 ):
     """
@@ -114,7 +113,7 @@ async def create_lesson(
         description=description,
         order=order,
         lesson_type=lesson_type,
-        created_by=str(current_user.id),
+        created_by=current_user.id,
         duration_minutes=duration_minutes,
         xp_reward=xp_reward,
         status=LessonStatus.DRAFT,
@@ -163,7 +162,7 @@ async def update_lesson(
     lesson_type: Optional[LessonType] = None,
     duration_minutes: Optional[int] = None,
     xp_reward: Optional[int] = None,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     repo: CourseLessonRepository = Depends(get_course_lesson_repository),
 ):
     """
@@ -184,7 +183,7 @@ async def update_lesson(
         }.items()
         if v is not None
     }
-    updates["updated_by"] = str(current_user.id)
+    updates["updated_by"] = current_user.id
 
     updated = await repo.update_lesson(lesson_id, **updates)
     return _require_lesson(updated, lesson_id)

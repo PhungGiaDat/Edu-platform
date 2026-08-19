@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
 import logging
 
-from models.user_mongo import UserDocument
+from repositories.postgres_user_repository import PostgresUser
 from core.security import get_current_user
 from utils.session_service import get_session_service, SessionService
 from services.lock_service import lock_service
@@ -73,14 +73,14 @@ class HeartbeatResponse(BaseModel):
 @router.post("/start", response_model=SessionStatusResponse)
 async def start_session_lock(
     payload: SessionStartRequest,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     session_service: SessionService = Depends(get_session_service),
 ):
     """
     Start or resume a tracked session.
     Called when the user opens the app or returns to it.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
     logger.info(f"[SessionLock] Starting session for user={user_id}")
 
     session_data = await session_service.start_session(
@@ -107,7 +107,7 @@ async def start_session_lock(
 @router.post("/heartbeat", response_model=HeartbeatResponse)
 async def heartbeat(
     payload: SessionHeartbeatRequest,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     session_service: SessionService = Depends(get_session_service),
 ):
     """
@@ -115,7 +115,7 @@ async def heartbeat(
     Called every 60 seconds by the frontend useSessionTimer hook.
     Updates the last_activity timestamp and checks for idle lock.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
 
     # Update activity with optional topic change
     result = await session_service.heartbeat(user_id)
@@ -135,14 +135,14 @@ async def heartbeat(
 @router.post("/lock")
 async def lock_app(
     payload: LockRequest,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     session_service: SessionService = Depends(get_session_service),
 ):
     """
     Manually lock the app.
     The user will need to unlock it to continue.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
     logger.info(f"[SessionLock] Manual lock requested for user={user_id}")
 
     success = await session_service.lock(user_id, reason=payload.reason or "manual")
@@ -158,14 +158,14 @@ async def lock_app(
 
 @router.post("/unlock")
 async def unlock_app(
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     session_service: SessionService = Depends(get_session_service),
 ):
     """
     Unlock the app.
     Resumes normal session tracking.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
     logger.info(f"[SessionLock] Unlock requested for user={user_id}")
 
     await session_service.unlock(user_id)
@@ -178,12 +178,12 @@ async def unlock_app(
 @router.post("/extend")
 async def extend_session_lock(
     payload: SessionExtendRequest,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
 ):
     """
     Extend the current session by extra_minutes (parent override).
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
     logger.info(f"[SessionLock] Extend requested by {payload.extended_by} for user={user_id}")
 
     result = lock_service.extend_lock(
@@ -210,12 +210,12 @@ async def extend_session_lock(
 
 @router.get("/usage/today")
 async def get_usage_today(
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
 ):
     """
     Get today's usage statistics for the current user.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
     usage = lock_service.get_usage_today(user_id)
 
     return {
@@ -227,12 +227,12 @@ async def get_usage_today(
 
 @router.post("/pause")
 async def pause_session_lock(
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
 ):
     """
     Pause the session timer.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
     success = lock_service.pause_lock(user_id)
 
     if not success:
@@ -243,12 +243,12 @@ async def pause_session_lock(
 
 @router.post("/resume")
 async def resume_session_lock(
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
 ):
     """
     Resume the session timer.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
     success = lock_service.resume_lock(user_id)
 
     if not success:
@@ -259,14 +259,14 @@ async def resume_session_lock(
 
 @router.get("/status", response_model=SessionStatusResponse)
 async def get_lock_status(
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     session_service: SessionService = Depends(get_session_service),
 ):
     """
     Get current session and lock status.
     Checks for idle lock and returns current state.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
 
     # Check if should be locked due to idle
     await session_service.check_idle_lock(user_id)
@@ -300,14 +300,14 @@ async def get_lock_status(
 
 @router.post("/end")
 async def end_session_lock(
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     session_service: SessionService = Depends(get_session_service),
 ):
     """
     End the tracked session.
     Called when the user logs out or closes the app completely.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
     logger.info(f"[SessionLock] Session end requested for user={user_id}")
 
     await session_service.end_session(user_id)

@@ -8,7 +8,7 @@ from typing import Optional, List, Any
 from datetime import datetime
 
 from core.security import get_current_user, get_current_active_superuser, get_current_teacher
-from models.user_mongo import UserDocument
+from repositories.postgres_user_repository import PostgresUser
 from models.admin_models import (
     DashboardStats,
     FlashcardDeckCreate,
@@ -36,10 +36,10 @@ router = APIRouter()
 
 
 def get_admin_repo(
-    current_user: UserDocument = Depends(get_current_teacher)
+    current_user: PostgresUser = Depends(get_current_teacher)
 ) -> AdminRepository:
     """Dependency to get admin repository scoped to current user"""
-    return AdminRepository(teacher_id=str(current_user.id))
+    return AdminRepository(teacher_id=current_user.id)
 
 
 # ========== Dashboard ==========
