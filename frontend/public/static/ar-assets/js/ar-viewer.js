@@ -639,6 +639,13 @@
             excludedQrIds: payload.excludedQrIds || [],
             timeoutMs: payload.timeoutMs || 15000,
         });
+        // Spec C: Show toast "Point camera at the next card"
+        var overlay = document.getElementById('ar-loading-overlay');
+        if (overlay) {
+            overlay.classList.add('video-ready');
+        }
+        // Toast is shown via parent HTML toast system
+        sendToParent('SHOW_TOAST', { text: 'Point camera at the next card', durationMs: 5000 });
     }
 
     /**
@@ -2522,6 +2529,8 @@
     /**
      * Aggressively remove any MindAR loading/scanning UI elements
      * MindAR creates these dynamically even with uiLoading: no
+     *
+     * Spec C: Enhanced — scans for first 5 seconds, then disconnects
      */
     function hideMindARUI() {
         // Remove by class patterns
@@ -2564,10 +2573,15 @@
     setTimeout(hideMindARUI, 500);
     setTimeout(hideMindARUI, 1000);
 
-    // Also run when AR is ready
-    scene.addEventListener('arReady', hideMindARUI);
+    // Spec C: Also run when AR is ready and hide overlay
+    scene.addEventListener('arReady', function onArReady() {
+        hideMindARUI();
+        // Signal to parent HTML to hide overlay
+        window.parent.postMessage({ type: 'AR_READY', payload: {} }, '*');
+        scene.removeEventListener('arReady', onArReady);
+    });
 
-    // Watch for dynamically added elements
+    // Spec C: Enhanced MutationObserver — watch for first 5 seconds, then disconnect
     const observer = new MutationObserver((mutations) => {
         let shouldHide = false;
         mutations.forEach(mutation => {
@@ -2593,6 +2607,17 @@
         childList: true,
         subtree: true
     });
+
+    // Spec C: Disconnect observer after 5 seconds to save CPU
+    let observerScans = 0;
+    const observerInterval = setInterval(function() {
+        hideMindARUI();
+        if (++observerScans >= 10) {
+            clearInterval(observerInterval);
+            observer.disconnect();
+            log('🧹', 'MindAR UI observer disconnected after 5s');
+        }
+    }, 500);
 
     // ============ START ============
     init();

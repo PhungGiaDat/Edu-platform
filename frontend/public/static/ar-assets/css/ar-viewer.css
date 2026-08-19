@@ -76,6 +76,133 @@ a-scene canvas {
     background: transparent !important;
 }
 
+/* ============ SPEC C: LOADING OVERLAY ============ */
+#ar-loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.4s ease, visibility 0.4s;
+}
+
+/* Spec C: When video/camera is ready, show camera feed mờ dần */
+#ar-loading-overlay.video-ready {
+    opacity: 0.4;
+}
+
+/* Spec C: Hide overlay completely when AR_READY */
+#ar-loading-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Spec C: Animated dots for loading text */
+#ar-load-text::after {
+    content: '';
+    animation: arDots 1.5s steps(4, end) infinite;
+}
+@keyframes arDots {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+    100% { content: ''; }
+}
+
+/* Spec C: Progress bar */
+#ar-progress-bar {
+    position: absolute;
+    bottom: 32%;
+    left: 20%;
+    right: 20%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 2px;
+    overflow: hidden;
+    display: none;
+}
+
+#ar-progress-bar.active {
+    display: block;
+}
+
+#ar-progress-bar span {
+    display: block;
+    height: 100%;
+    width: 30%;
+    background: #fff;
+    border-radius: 2px;
+    animation: arSweep 1.2s ease-in-out infinite;
+}
+
+@keyframes arSpin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes arSweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(400%); }
+}
+
+/* Spec C: Spinner element */
+.ar-spinner {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 6px solid rgba(255, 255, 255, 0.3);
+    border-top: 6px solid #fff;
+    animation: arSpin 0.8s linear infinite;
+}
+
+/* Spec C: Toast pill for add-card hints */
+.ar-toast-pill {
+    position: fixed;
+    bottom: 140px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.85);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Nunito', sans-serif;
+    animation: arToastIn 0.3s ease;
+    z-index: 500;
+    white-space: nowrap;
+}
+
+.ar-toast-pill.fade-out {
+    animation: arToastOut 0.4s ease forwards;
+}
+
+@keyframes arToastIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes arToastOut {
+    from {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+}
+
 /* Loading overlay removed - direct AR experience */
 
 /* ============ MODE INDICATOR (SIMPLE) ============ */

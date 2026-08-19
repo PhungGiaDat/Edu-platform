@@ -7,23 +7,17 @@
     <link rel="stylesheet" href="/static/ar-assets/css/ar-viewer.css">
 </head>
 <body>
-    <div id="ar-loading-overlay" style="
-        position:fixed;inset:0;
-        background:linear-gradient(135deg,#0ea5e9 0%,#0284c7 100%);
-        display:flex;flex-direction:column;align-items:center;justify-content:center;
-        z-index:9999;transition:opacity 0.4s ease;
-    ">
-        <div style="
-            width:64px;height:64px;border-radius:50%;
-            border:6px solid rgba(255,255,255,0.3);
-            border-top:6px solid #fff;
-            animation:arSpin 0.8s linear infinite;
-        "></div>
-        <p id="ar-load-text" style="color:#fff;font-size:16px;font-weight:700;margin-top:20px;font-family:sans-serif;">
-            Starting AR...
-        </p>
-        <style>@keyframes arSpin{to{transform:rotate(360deg)}}</style>
+    <!-- Spec C: Loading overlay - shows during MindAR warmup, fades when ready -->
+    <div id="ar-loading-overlay">
+        <div class="ar-spinner"></div>
+        <p id="ar-load-text">Loading AR</p>
+        <div id="ar-progress-bar">
+            <span></span>
+        </div>
     </div>
+
+    <!-- Spec C: Toast pill container for add-card hints -->
+    <div id="ar-toast-container"></div>
 
     <template id="ar-scene-template">
         <a-scene id="ar-scene"
@@ -49,6 +43,7 @@
             var BOOTSTRAP_DEADLINE_MS = 8000;
             var bootstrapStartedAt = Date.now();
             var bootstrapFailureReported = false;
+            var overlayHidden = false;
 
             // Combo model parameters
             var comboModelUrl = params.get('comboModel');
@@ -72,6 +67,103 @@
                 var loadText = document.getElementById('ar-load-text');
                 if (loadText) loadText.textContent = text;
             }
+
+            // Spec C: progress bar — show when bootstrap begins
+            function showProgressBar() {
+                var bar = document.getElementById('ar-progress-bar');
+                if (bar) bar.classList.add('active');
+            }
+
+            // Spec C: hide overlay on AR_READY (called from viewer + listen here)
+            function hideOverlay() {
+                if (overlayHidden) return;
+                overlayHidden = true;
+                var overlay = document.getElementById('ar-loading-overlay');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    setTimeout(function() {
+                        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                    }, 450);
+                }
+            }
+
+            // Listen for messages from the viewer script
+            window.addEventListener('message', function onViewerMessage(event) {
+                var msg = event.data;
+                if (!msg || !msg.type) return;
+
+                // Spec C: Hide overlay when AR is ready
+                if (msg.type === 'AR_READY') {
+                    hideOverlay();
+                    return;
+                }
+
+                // Spec C: Show toast when add-card scan starts
+                if (msg.type === 'SHOW_TOAST') {
+                    showToast(msg.payload && msg.payload.text ? msg.payload.text : 'Point camera at the next card',
+                              msg.payload && msg.payload.durationMs ? msg.payload.durationMs : 5000);
+                    return;
+                }
+            });
+            });
+
+            // Spec C: Toast pill system for add-card hints
+            var activeToast = null;
+            var toastTimeout = null;
+
+            function showToast(text, durationMs) {
+                durationMs = durationMs || 3000;
+                // Clear existing toast
+                if (toastTimeout) {
+                    clearTimeout(toastTimeout);
+                    toastTimeout = null;
+                }
+                if (activeToast) {
+                    activeToast.classList.add('fade-out');
+                    setTimeout(function() {
+                        if (activeToast && activeToast.parentNode) {
+                            activeToast.parentNode.removeChild(activeToast);
+                        }
+                        activeToast = null;
+                    }, 400);
+                }
+                // Create new toast
+                var container = document.getElementById('ar-toast-container');
+                if (!container) return;
+                var toast = document.createElement('div');
+                toast.className = 'ar-toast-pill';
+                toast.textContent = text;
+                container.appendChild(toast);
+                activeToast = toast;
+                // Auto-hide
+                toastTimeout = setTimeout(function() {
+                    toast.classList.add('fade-out');
+                    setTimeout(function() {
+                        if (toast.parentNode) toast.parentNode.removeChild(toast);
+                        if (activeToast === toast) activeToast = null;
+                    }, 400);
+                }, durationMs);
+            }
+
+            // Spec C: Camera ready detection — overlay mờ khi video xuất hiện
+            function detectCameraReady() {
+                var overlay = document.getElementById('ar-loading-overlay');
+                if (!overlay || overlayHidden) return;
+                // Check if video element exists and has content
+                var video = document.querySelector('video');
+                if (video && video.readyState >= 2) {
+                    overlay.classList.add('video-ready');
+                }
+            }
+
+            // Poll for camera ready for first 5 seconds
+            var cameraPollCount = 0;
+            var cameraPollInterval = setInterval(function() {
+                detectCameraReady();
+                if (++cameraPollCount > 20) { // ~5 seconds
+                    clearInterval(cameraPollInterval);
+                }
+            }, 250);
 
             function reportBootstrapFailure(error) {
                 if (bootstrapFailureReported) return;
@@ -239,6 +331,8 @@
             async function bootstrap() {
                 bootstrapStartedAt = Date.now();
                 var deadlineAt = bootstrapStartedAt + BOOTSTRAP_DEADLINE_MS;
+                // Spec C: show progress bar as soon as bootstrap begins
+                showProgressBar();
                 var requestedMind = params.get('mind') || '';
                 postToParent('AR_DEBUG', {
                     label: 'VIEWER_BOOTSTRAP_START',

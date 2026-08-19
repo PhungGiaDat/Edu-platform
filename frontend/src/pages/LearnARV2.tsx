@@ -25,6 +25,7 @@
 import { useEffect, useState, useCallback, useRef, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ARContainerV2, ARPhase } from '@/components/ar/ARContainerV2';
+import { applyInteractionFeedback } from '@/components/ar/modelInteractionPolicy';
 import ARControlPanel from '@/components/panel/ARControlPanel';
 import { ARGamificationPanel } from '@/components/Gamification/ARGamificationPanel';
 import { PetSelector } from '@/components/pets/PetSelector';
@@ -629,6 +630,12 @@ export default function LearnARV2() {
     // ========== PERSISTENT VIEWER FLAG (must be before other refs/constants that use it) ==========
     const isPersistentViewerEnabled = isPersistentMindViewerEnabled();
 
+    // Spec A: enable auto QR-in-scene when persistent viewer active, VIEWING phase, and fewer than 2 cards
+    const autoQrScanEnabled =
+        isPersistentViewerEnabled &&
+        appState === 'VIEWING' &&
+        flashcardCount < 2;
+
     // ========== DATA HOOKS ==========
     const { arData, error: arError } = useArData(detectedQrId);
     const { quizData } = useQuizData(detectedQrId, selectedDifficulty);
@@ -1103,35 +1110,41 @@ export default function LearnARV2() {
 
     const handleModelClick = useCallback((modelId: string, targetIndex?: number) => {
         console.log('[LearnARV2] Model clicked:', modelId, 'Index:', targetIndex);
-        let targetWord = "";
-        let audioUrl = "";
-        if (typeof targetIndex === 'number') {
-            const scannedCard = getFlashcardByIndex(targetIndex);
-            targetWord = scannedCard?.word || (targetIndex === 0 ? arData?.flashcard?.word || "" : "");
-            if (targetIndex === 0) audioUrl = arData?.flashcard?.audio_url || "";
-        } else {
-            targetWord = arData?.flashcard?.word || "";
-            audioUrl = arData?.flashcard?.audio_url || "";
-        }
-        console.log('[LearnARV2] Pronouncing:', targetWord);
-        if (audioUrl) {
-            const audio = new Audio(audioUrl);
-            audio.play().catch((err) => console.log('Audio play error:', err));
-        } else if (targetWord) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(targetWord);
-                utterance.lang = 'en-US';
-                utterance.rate = 0.9;
-                utterance.pitch = 1.1;
-                window.speechSynthesis.speak(utterance);
+
+        // Spec B: interaction feedback — animation + sound (fail-closed: no policy → pronunciation)
+        const tappedCard = typeof targetIndex === 'number'
+            ? getFlashcardByIndex(targetIndex)
+            : undefined;
+        const reacted = applyInteractionFeedback(eventBus, tappedCard, targetIndex ?? 0);
+
+        // Fall back to pronunciation only when no interaction policy exists
+        if (!reacted) {
+            let targetWord = "";
+            let audioUrl = "";
+            if (typeof targetIndex === 'number') {
+                const scannedCard = getFlashcardByIndex(targetIndex);
+                targetWord = scannedCard?.word || (targetIndex === 0 ? arData?.flashcard?.word || "" : "");
+                if (targetIndex === 0) audioUrl = arData?.flashcard?.audio_url || "";
+            } else {
+                targetWord = arData?.flashcard?.word || "";
+                audioUrl = arData?.flashcard?.audio_url || "";
+            }
+            console.log('[LearnARV2] Pronouncing:', targetWord);
+            if (audioUrl) {
+                const audio = new Audio(audioUrl);
+                audio.play().catch((err) => console.log('Audio play error:', err));
+            } else if (targetWord) {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(targetWord);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1.1;
+                    window.speechSynthesis.speak(utterance);
+                }
             }
         }
-        eventBus.emit('AR_COMMAND' as any, {
-            type: 'TRIGGER_ANIMATION',
-            payload: { clip: 'tap', loop: false, targetId: modelId }
-        });
-    }, [arData, getFlashcardByIndex]);
+    }, [arData, getFlashcardByIndex, eventBus]);
 
     // Mode toggles
     const handleDisplayModeChange = useCallback((mode: DisplayMode) => {
@@ -1263,6 +1276,8 @@ export default function LearnARV2() {
             {/* AR Container with iframe swapping */}
             <ARContainerV2
                 initialPhase={detectedQrId ? 'VIEWING' : 'SCANNING'}
+                // Spec A: auto QR-in-scene (single camera, no separate scanner phase)
+                autoQrScanEnabled={autoQrScanEnabled}
                 // Task 9: Pass catalog props when persistent viewer is enabled and we have catalog data
                 catalogId={isPersistentViewerEnabled ? catalogId : undefined}
                 mindUrl={isPersistentViewerEnabled ? catalogMindUrl : mindUrl}

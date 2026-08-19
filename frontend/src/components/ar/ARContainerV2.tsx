@@ -30,6 +30,7 @@ import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { dualDisplayManager } from '@/runtime/DualDisplayManager';
 import { ComboDefinition } from '@/lib/combo/types';
 import { armViewerBootstrapWatchdog } from './viewerBootstrapWatchdog';
+import { useAutoQrScan } from './useAutoQrScan';
 import {
     requestRevision,
     acknowledgeRevision,
@@ -43,6 +44,8 @@ export type ARPhase = 'IDLE' | 'SCANNING' | 'LOADING' | 'VIEWING' | 'ERROR'
 
 interface ARContainerV2Props {
     initialPhase?: ARPhase;
+    // --- Auto QR-in-scene (Spec A) ---
+    autoQrScanEnabled?: boolean;
     // --- Persistent viewer props (Task 8) ---
     catalogId?: string | null;
     mindUrl?: string | null;
@@ -98,6 +101,7 @@ const VIEWER_BOOTSTRAP_TIMEOUT_MS = 15_000;
 const ACTIVE_TARGETS_ACK_TIMEOUT_MS = 7_000;
 export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     initialPhase = 'SCANNING',
+    autoQrScanEnabled,
     catalogId,
     mindUrl,
     catalogTargetCount,
@@ -153,6 +157,12 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         fps,
         isHealthy,
     } = usePerformanceMonitor();
+
+    // Spec A: Auto QR-in-scene
+    const autoQr = useAutoQrScan({
+        enabled: autoQrScanEnabled === true,
+        maxCards: 2,
+    });
 
     // Get combo info from store
     const comboData = getDisplayInfo();
@@ -450,6 +460,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                     phase,
                     deferQrTransition
                 });
+                // Spec A: notify auto QR scanner
+                autoQr.markQr(data.qrId);
                 cbQR?.(data.qrId);
                 eventBus.emit(AREvent.MARKER_FOUND, { markerId: data.qrId, target: null } as any);
                 // Task 8: forward QR_DETECTED via eventBus for Add-card flow
@@ -488,6 +500,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
                 // Task 8: mark AR_READY received and send initial SET_ACTIVE_TARGETS
                 hasReceivedARReadyRef.current = true;
+                // Spec A: notify auto QR scanner that AR is ready
+                autoQr.markReady();
                 if (activeTargets?.length) {
                     requestActiveTargets(activeTargets);
                 }
@@ -601,6 +615,21 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             case 'ANIMATION_COMPLETE':
                 eventBus.emit('ANIMATION_COMPLETE' as any, payload);
                 break;
+
+            // Spec A: forward ADD_CARD_SCAN_TIMEOUT from viewer scanner to eventBus
+            // so useAutoQrScan can listen for scan timeouts
+            case 'ADD_CARD_SCAN_TIMEOUT': {
+                const data = payload as { sessionId?: string };
+                eventBus.emit('ADD_CARD_SCAN_TIMEOUT' as any, { sessionId: data.sessionId });
+                break;
+            }
+
+            case 'ADD_CARD_SCAN_STARTED': {
+                // Spec A: forward scan start confirmation (optional logging)
+                const data = payload as { sessionId?: string };
+                emitDebug('PARENT_ADD_CARD_SCAN_STARTED', { sessionId: data.sessionId });
+                break;
+            }
 
             case 'SYSTEM_ERROR':
             case 'AR_ERROR' as any: {
