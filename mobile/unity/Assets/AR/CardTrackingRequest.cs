@@ -84,6 +84,7 @@ public static class CardTrackingRequest
         var qrId = card?.qrId;
         if (string.IsNullOrEmpty(qrId))
         {
+            UnityEngine.Debug.LogWarning($"[CardTrackingRequest] Card rejected '{qrId ?? "<null>"}': qrId missing");
             result.Rejected.Add(new Rejection {
                 qrId = qrId, code = ErrMissingMetadata, detail = "qrId missing"
             });
@@ -91,6 +92,7 @@ public static class CardTrackingRequest
         }
         if (string.IsNullOrEmpty(card.imageUrl))
         {
+            UnityEngine.Debug.LogWarning($"[CardTrackingRequest] Card rejected '{qrId}': imageUrl missing");
             result.Rejected.Add(new Rejection {
                 qrId = qrId, code = ErrMissingMetadata, detail = "imageUrl missing"
             });
@@ -99,6 +101,7 @@ public static class CardTrackingRequest
         // modelUrl is a content asset; it must never stand in for the tracking image.
         if (!string.IsNullOrEmpty(card.modelUrl) && card.modelUrl == card.imageUrl)
         {
+            UnityEngine.Debug.LogWarning($"[CardTrackingRequest] Card rejected '{qrId}': imageUrl equals modelUrl");
             result.Rejected.Add(new Rejection {
                 qrId = qrId, code = ErrInvalidReferenceUrl,
                 detail = "imageUrl equals modelUrl; reference image must be distinct from the model asset"
@@ -184,5 +187,24 @@ public static class CardTrackingRequest
         // arrays reliably; List<T> deserialization in nested DTOs can silently produce
         // null if the JSON input is a single non-array element.
         public CardDto[] cards;
+        // P6: Backend combo definitions consumed by ComboManager.LoadSemanticCombos().
+        public string relatedCombos;
+    }
+
+    /// <summary>
+    /// Returns the raw relatedCombos JSON string from the payload, if present.
+    /// </summary>
+    public static string GetRelatedCombos(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return null;
+        try
+        {
+            var dto = JsonUtility.FromJson<PayloadDto>(json);
+            return dto?.relatedCombos;
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

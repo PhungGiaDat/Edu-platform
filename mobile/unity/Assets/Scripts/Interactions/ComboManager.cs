@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 
@@ -8,21 +7,23 @@ using UnityEngine.XR.ARFoundation;
 /// Tracks tracked images, detects proximity between card pairs, and orchestrates combo animations.
 /// Detects when 2+ flashcards are close together and triggers reward spawning.
 ///
-/// <para><b>Semantic combo path (P6):</b></para>
 /// Backend sends <c>related_combos</c> via <c>LoadSemanticCombos()</c>. Each combo
 /// carries a list of <c>requiredTags</c> (arTag values). Unity resolves arTag → qrId via
 /// <c>MultiCardRegistry</c> and matches against currently tracked cards. This path does NOT
 /// depend on qrId naming conventions.
 ///
-/// <para><b>Hardcoded fallback (P6A pending):</b></para>
-/// <c>InitComboTable()</c> provides legacy pairs as a fallback during the transition period.
-/// After P6A verification, the hardcoded table is removed entirely.
+/// Semantic combo resolution (P6+):
+///   proximity → ResolveSemanticCombo(qrIdA, qrIdB) → arTag→qrId→requiredTags match
+///   RN trigger → TriggerCombo(cardA, cardB) → qrId→arTag reverse lookup → same path
 /// </summary>
 public class ComboManager : MonoBehaviour
 {
     [SerializeField] private float proximityThreshold = 0.5f; // world units (~50cm)
     [SerializeField] private float proximityHoldTime = 1.0f; // seconds
     [SerializeField] private Transform[] rewardSpawnPoints;
+    // P7: Shared GLBLoader for loading combo reward models from backend model_3d_url.
+    // Set via Inspector or Awake auto-detection.
+    [SerializeField] private GLBLoader glbLoader;
 
     public event Action<string, string, float> OnProximityNear;
 #pragma warning disable CS0067 // Event is part of public API; subscribed externally.
@@ -31,18 +32,25 @@ public class ComboManager : MonoBehaviour
     public event Action<string, int> OnComboComplete;
 
     private readonly Dictionary<string, TrackedImageState> _trackedImages = new();
-    private readonly Dictionary<(string, string), ComboDefinition> _comboTable = new();
     // P6: Dynamic combo definitions from backend related_combos.
     // Key = comboId, Value = semantic combo definition.
     private readonly Dictionary<string, SemanticComboDefinition> _semanticCombos = new();
     // P6: In-memory registry for arTag → qrId resolution.
-    // Populated when ARExperienceHandler calls RegisterArTagForQrId().
+    // Populated when ARExperienceHandler calls RegisterArTag().
     private readonly Dictionary<string, string> _arTagToQrId = new();
+    // P6A: Reverse lookup qrId → arTag for TriggerCombo (RN passes qrIds, not arTags).
+    private readonly Dictionary<string, string> _qrIdToArTag = new();
     private readonly HashSet<string> _pendingCombos = new();
 
     private void Awake()
     {
-        InitComboTable();
+        // P7: Auto-wire GLBLoader if not set in Inspector.
+        if (glbLoader == null) {
+            glbLoader = GetComponent<GLBLoader>();
+        }
+        if (glbLoader == null) {
+            glbLoader = FindAnyObjectByType<GLBLoader>();
+        }
     }
 
     /// <summary>
@@ -69,6 +77,8 @@ public class ComboManager : MonoBehaviour
                 foreach (var combo in wrapper.combos)
                 {
                     if (string.IsNullOrEmpty(combo.comboId)) continue;
+                    // Only load active combos; inactive combos are filtered here.
+                    if (!combo.active) continue;
                     _semanticCombos[combo.comboId] = combo;
                 }
                 UnityEngine.Debug.Log($"[ComboManager] LoadSemanticCombos: loaded {_semanticCombos.Count} combo(s)");
@@ -84,11 +94,14 @@ public class ComboManager : MonoBehaviour
     /// Registers an arTag → qrId mapping for semantic combo resolution.
     /// Called by ARExperienceHandler when a card is registered with a payload that
     /// carries an arTag. Cards with no arTag are skipped.
+    /// Populates both _arTagToQrId (for ResolveSemanticCombo) and _qrIdToArTag
+    /// (for TriggerCombo RN path).
     /// </summary>
     public void RegisterArTag(string arTag, string qrId)
     {
         if (string.IsNullOrEmpty(arTag) || string.IsNullOrEmpty(qrId)) return;
         _arTagToQrId[arTag] = qrId;
+        _qrIdToArTag[qrId] = arTag;
         UnityEngine.Debug.Log($"[ComboManager] RegisterArTag: arTag='{arTag}' → qrId='{qrId}'");
     }
 
@@ -99,40 +112,7 @@ public class ComboManager : MonoBehaviour
     {
         _semanticCombos.Clear();
         _arTagToQrId.Clear();
-    }
-
-    private void InitComboTable()
-    {
-        // MVP: Hardcoded combo pairs (fallback during P6 → P6A transition).
-        // These use qrId names that match the current arTag conventions.
-        _comboTable[("flashcard_chicken", "flashcard_egg")] = new ComboDefinition {
-            ComboId = "chicken_egg_reward",
-            CardA = "flashcard_chicken",
-            CardB = "flashcard_egg",
-            ArTag = "",
-            RewardCardId = "reward_baby_chicken",
-            XpReward = 25
-        };
-        _comboTable[("flashcard_dog", "flashcard_bone")] = new ComboDefinition {
-            ComboId = "dog_bone_reward",
-            CardA = "flashcard_dog",
-            CardB = "flashcard_bone",
-            ArTag = "",
-            RewardCardId = "reward_happy_dog",
-            XpReward = 20
-        };
-        _comboTable[("flashcard_apple", "flashcard_worm")] = new ComboDefinition {
-            ComboId = "apple_worm_reward",
-            CardA = "flashcard_apple",
-            CardB = "flashcard_worm",
-            ArTag = "",
-            RewardCardId = "reward_apple_tree",
-            XpReward = 30
-        };
-        // Add reverse pairs
-        _comboTable[("flashcard_egg", "flashcard_chicken")] = _comboTable[("flashcard_chicken", "flashcard_egg")];
-        _comboTable[("flashcard_bone", "flashcard_dog")] = _comboTable[("flashcard_dog", "flashcard_bone")];
-        _comboTable[("flashcard_worm", "flashcard_apple")] = _comboTable[("flashcard_apple", "flashcard_worm")];
+        _qrIdToArTag.Clear();
     }
 
     private void Update()
@@ -160,7 +140,7 @@ public class ComboManager : MonoBehaviour
                             continue;
                         }
 
-                        // P6: Try semantic combo resolution first (from backend related_combos).
+                        // Try semantic combo resolution (from backend related_combos).
                         var semanticCombo = ResolveSemanticCombo(imgA.ImageId, imgB.ImageId);
                         if (semanticCombo != null) {
                             _pendingCombos.Add(pendingKey);
@@ -172,25 +152,8 @@ public class ComboManager : MonoBehaviour
                                 comboId = semanticCombo.comboId,
                                 distance = dist
                             });
-                            // Fire OnComboTriggered for semantic combo.
                             OnComboTriggered?.Invoke(imgA.ImageId, imgB.ImageId, semanticCombo.comboId);
                             TriggerSemanticCombo(semanticCombo, imgA.ImageId, imgB.ImageId);
-                            continue;
-                        }
-
-                        // Fallback: hardcoded table (P6A pending removal).
-                        var combo = _comboTable.TryGetValue(pairKey, out var c) ? c
-                            : _comboTable.TryGetValue(reverseKey, out var rc) ? rc
-                            : null;
-                        if (combo != null) {
-                            _pendingCombos.Add(pendingKey);
-                            OnProximityNear?.Invoke(imgA.ImageId, imgB.ImageId, dist);
-                            RNEventEmitter.Instance.SendEvent("onProximityNear", new {
-                                imageIdA = imgA.ImageId,
-                                imageIdB = imgB.ImageId,
-                                arTag = combo.ArTag ?? "",
-                                distance = dist
-                            });
                         }
                     }
                 } else {
@@ -210,8 +173,6 @@ public class ComboManager : MonoBehaviour
 
         foreach (var combo in _semanticCombos.Values)
         {
-            if (!combo.active) continue;
-
             // Build the set of qrIds required for this combo.
             var requiredQrIds = new HashSet<string>();
             foreach (var tag in combo.requiredTags)
@@ -282,37 +243,60 @@ public class ComboManager : MonoBehaviour
 
     /// <summary>
     /// Triggers a combo from RN (user taps COMBO button).
+    /// Uses semantic resolution: qrId → arTag → ResolveSemanticCombo.
+    /// Dedupes repeated triggers of the same pair so XP is awarded once.
     /// </summary>
     public void TriggerCombo(string cardA, string cardB)
     {
-        var key = (cardA, cardB);
-        var reverseKey = (cardB, cardA);
-        if (!_comboTable.TryGetValue(key, out var combo)
-            && !_comboTable.TryGetValue(reverseKey, out combo)) {
+        // Normalize pair key — order-independent to mirror proximity detector.
+        string pendingKey = string.CompareOrdinal(cardA, cardB) <= 0
+            ? $"{cardA}|{cardB}"
+            : $"{cardB}|{cardA}";
+
+        // Reverse lookup qrId → arTag
+        var arTagA = _qrIdToArTag.TryGetValue(cardA, out var a) ? a : null;
+        var arTagB = _qrIdToArTag.TryGetValue(cardB, out var b) ? b : null;
+
+        SemanticComboDefinition combo = null;
+        if (!string.IsNullOrEmpty(arTagA) && !string.IsNullOrEmpty(arTagB)) {
+            combo = ResolveSemanticCombo(cardA, cardB);
+        }
+
+        if (combo == null) {
             UnityEngine.Debug.LogWarning($"[ComboManager] No combo defined for: {cardA} + {cardB}");
             return;
         }
 
-        UnityEngine.Debug.Log($"[ComboManager] Triggering combo: {cardA} + {cardB}");
+        // Dedup: skip if this pair already pending (proximity or RN).
+        if (_pendingCombos.Contains(pendingKey)) {
+            UnityEngine.Debug.Log($"[ComboManager] Combo {combo.comboId} already pending — skipping duplicate trigger");
+            return;
+        }
+        _pendingCombos.Add(pendingKey);
+
+        UnityEngine.Debug.Log($"[ComboManager] Triggering combo: {cardA} + {cardB} (semantic)");
+        OnComboTriggered?.Invoke(cardA, cardB, combo.comboId);
         RNEventEmitter.Instance.SendEvent("onComboTriggered", new {
             cardIdA = cardA,
             cardIdB = cardB,
-            arTag = combo.ArTag,
-            comboId = combo.ComboId
+            arTag = combo.semanticResult,
+            comboId = combo.comboId
         });
+
+        // P8: Fire OnComboComplete immediately so XP is awarded even if
+        // PlayComboAnimation yields early (no AR-tracked models registered).
+        TriggerSemanticCombo(combo, cardA, cardB);
 
         PlayComboAnimation(cardA, cardB, combo);
     }
 
-    private void PlayComboAnimation(string cardA, string cardB, ComboDefinition combo)
+    private void PlayComboAnimation(string cardA, string cardB, SemanticComboDefinition combo)
     {
-        // Phase 2 MVP: Simplified animation
         StartCoroutine(ComboAnimationSequence(cardA, cardB, combo));
     }
 
-    private System.Collections.IEnumerator ComboAnimationSequence(string cardA, string cardB, ComboDefinition combo)
+    private System.Collections.IEnumerator ComboAnimationSequence(string cardA, string cardB, SemanticComboDefinition combo)
     {
-        // Get models
         var modelA = _trackedImages.TryGetValue(cardA, out var stateA) ? stateA.Model : null;
         var modelB = _trackedImages.TryGetValue(cardB, out var stateB) ? stateB.Model : null;
 
@@ -320,13 +304,13 @@ public class ComboManager : MonoBehaviour
             yield break;
         }
 
-        // Fly to midpoint
         Vector3 midpoint = (modelA.transform.position + modelB.transform.position) / 2f;
         float elapsed = 0f;
         float duration = 0.8f;
         var startPosA = modelA.transform.position;
         var startPosB = modelB.transform.position;
 
+        // Fly both models to midpoint
         while (elapsed < duration) {
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
@@ -336,16 +320,34 @@ public class ComboManager : MonoBehaviour
             yield return null;
         }
 
-        // Hide originals
         modelA.SetActive(false);
         modelB.SetActive(false);
 
-        // Spawn reward
-        var reward = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        reward.transform.position = midpoint;
-        reward.transform.localScale = Vector3.zero;
+        // P7: Load reward model from backend model_3d_url, or fall back to primitive sphere.
+        // In coroutines, yield-returning a Task waits for it to complete and returns the result.
+        GameObject reward = null;
+        bool modelLoaded = false;
 
-        // Scale up with bounce
+        if (glbLoader != null && !string.IsNullOrEmpty(combo.modelUrl)) {
+            var loadTask = glbLoader.LoadGLB(combo.modelUrl);
+            yield return loadTask;
+            var loaded = loadTask.Result;
+            if (loaded != null) {
+                reward = loaded;
+                reward.transform.position = midpoint;
+                reward.transform.localScale = Vector3.zero;
+                modelLoaded = true;
+            }
+        }
+
+        if (!modelLoaded) {
+            // Fallback: primitive sphere reward
+            reward = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            reward.transform.position = midpoint;
+            reward.transform.localScale = Vector3.zero;
+        }
+
+        // Scale up reward with bounce
         elapsed = 0f;
         duration = 0.4f;
         while (elapsed < duration) {
@@ -357,11 +359,23 @@ public class ComboManager : MonoBehaviour
         }
         reward.transform.localScale = Vector3.one;
 
-        // Emit combo complete
-        OnComboComplete?.Invoke(combo.RewardCardId, combo.XpReward);
+        // If a real model was loaded, wire its animations (P7).
+        if (modelLoaded) {
+            var animCtrl = reward.GetComponentInChildren<AnimationController>();
+            if (animCtrl != null) {
+                animCtrl.DiscoverClips();
+                if (!string.IsNullOrEmpty(combo.animation) && animCtrl.PlayClipByName(combo.animation)) {
+                    // Animation started — onAnimationComplete fires inside AnimationController.
+                } else {
+                    animCtrl.PlayAnimation(ARAnimationType.Idle);
+                }
+            }
+        }
+
+        OnComboComplete?.Invoke(combo.comboId, combo.bonusXp);
         RNEventEmitter.Instance.SendEvent("onComboComplete", new {
-            rewardCardId = combo.RewardCardId,
-            xpAwarded = combo.XpReward
+            rewardCardId = combo.comboId,
+            xpAwarded = combo.bonusXp
         });
     }
 
@@ -372,17 +386,6 @@ public class ComboManager : MonoBehaviour
         public GameObject Model;
         public float FirstDetectedTime;
         public float NearStartTime = -1;
-    }
-
-    private class ComboDefinition
-    {
-        public string ComboId;
-        public string CardA;
-        public string CardB;
-        public string ComboModelUrl;
-        public string ArTag;
-        public string RewardCardId;
-        public int XpReward;
     }
 
     /// <summary>
@@ -403,6 +406,11 @@ public class ComboManager : MonoBehaviour
         public string phrase = "";
         public bool active = true;
         public string centerTransform = "";
+        /// <summary>P7: Optional 3D model URL for the combo reward. If empty, falls back to primitive sphere.</summary>
+        public string modelUrl = "";
+
+        // P7: Expose modelUrl via a public property for testability.
+        public string ModelUrl => modelUrl;
     }
 
     /// <summary>

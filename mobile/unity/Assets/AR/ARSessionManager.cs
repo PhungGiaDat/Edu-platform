@@ -98,7 +98,7 @@ public class ARSessionManager : MonoBehaviour
         foreach (var image in args.updated) {
             if (_activeImages.Contains(image)) {
                 // Only emit tracking-lost on tracking state change to limited/stopped
-                if (image.trackingState == ARTrackingState.Limited || image.trackingState == ARTrackingState.None) {
+                if (image.trackingState == TrackingState.Limited || image.trackingState == TrackingState.None) {
                     RNEventEmitter.Instance.SendEvent("onImageTrackingLost", new {
                         imageId = image.referenceImage.name
                     });

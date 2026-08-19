@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR.ARFoundation;
 
 /// <summary>
 /// Spawns a loaded GLB model at a specified anchor with correct position,
@@ -69,6 +70,43 @@ public class ModelSpawner : MonoBehaviour
                 code = "MODEL_LOAD_FAILED",
                 message = $"Model spawn failed: {ex.Message}"
             });
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Spawns the model as a child of the given ARTrackedImage so it tracks
+    /// the physical card in world space. Returns the spawned model instance.
+    /// </summary>
+    public GameObject SpawnOnTrackedImage(GameObject modelPrefab, ARTrackedImage trackedImage,
+        Vector3 rotation, Vector3 scale) {
+        if (modelPrefab == null) {
+            UnityEngine.Debug.LogError("[ModelSpawner] Prefab is null");
+            return null;
+        }
+        if (trackedImage == null) {
+            UnityEngine.Debug.LogError("[ModelSpawner] TrackedImage is null");
+            return null;
+        }
+
+        try {
+            var id = trackedImage.referenceImage.name;
+            if (_spawnedModels.TryGetValue(id, out var existing) && existing != null) {
+                DestroyGo(existing);
+                _spawnedModels.Remove(id);
+            }
+
+            var spawned = Instantiate(modelPrefab, trackedImage.transform);
+            spawned.transform.localPosition = Vector3.zero;
+            spawned.transform.localRotation = Quaternion.Euler(rotation);
+            spawned.transform.localScale = scale;
+            spawned.SetActive(true);
+
+            _spawnedModels[id] = spawned;
+            UnityEngine.Debug.Log($"[ModelSpawner] SpawnOnTrackedImage (id={id}) at tracked image");
+            return spawned;
+        } catch (Exception ex) {
+            UnityEngine.Debug.LogError($"[ModelSpawner] SpawnOnTrackedImage failed: {ex.Message}");
             return null;
         }
     }

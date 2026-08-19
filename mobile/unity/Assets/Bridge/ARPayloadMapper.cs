@@ -1,12 +1,11 @@
 using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 /// <summary>
 /// Maps JSON payloads from React Native into strongly-typed Unity structs.
-/// Uses System.Text.Json for proper snake_case → camelCase conversion
-/// matching the ARExperienceResponseSchema API response shape.
+/// Uses JsonUtility with snake_case → camelCase pre-processing to match the
+/// ARExperienceResponseSchema API response shape.
 ///
 /// API response shape (ARExperienceResponseSchema):
 /// {
@@ -17,48 +16,71 @@ using UnityEngine;
 /// </summary>
 public static class ARPayloadMapper
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() {
-        PropertyNameCaseInsensitive = true,
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) }
-    };
+    private static readonly Regex SnakeCasePattern = new Regex(
+        @"""([a-z][a-z0-9]*)_([a-z])",
+        RegexOptions.Compiled);
+
+    /// <summary>
+    /// Pre-processes JSON: converts snake_case keys to camelCase so JsonUtility
+    /// can deserialize them into camelCase DTO fields.
+    /// </summary>
+    private static string PreprocessJson(string json)
+    {
+        return SnakeCasePattern.Replace(json, m =>
+            "\"" + m.Groups[1].Value + Char.ToUpper(m.Groups[2].Value[0]) + m.Groups[2].Value.Substring(1));
+    }
 
     /// <summary>
     /// Parses the raw JSON from React Native into an ARExperiencePayload struct.
     /// Handles ARExperienceResponseSchema (with flashcard/target wrapper) and
     /// legacy flat payload shapes.
     /// </summary>
-    public static ARExperiencePayload Parse(string json) {
-        if (string.IsNullOrEmpty(json)) {
+    public static ARExperiencePayload? Parse(string json)
+    {
+        if (string.IsNullOrEmpty(json))
+        {
             throw new ArgumentException("JSON payload is null or empty", nameof(json));
         }
 
-        try {
-            var wrapper = JsonSerializer.Deserialize<ARExperienceResponseWrapper>(json, JsonOptions);
-            if (wrapper != null) {
+        try
+        {
+            string processed = PreprocessJson(json);
+
+            // Try wrapper shape first (ARExperienceResponseSchema)
+            var wrapper = JsonUtility.FromJson<WrapperDto>(processed);
+            if (wrapper != null && (wrapper.Flashcard != null || wrapper.Target != null))
+            {
                 return MapFromWrapper(wrapper);
             }
 
             // Fallback: try flat legacy payload
-            var dto = JsonSerializer.Deserialize<ARExperiencePayloadDto>(json, JsonOptions);
-            return MapToPayload(dto);
-        } catch (Exception ex) {
+            var dto = JsonUtility.FromJson<FlatPayloadDto>(processed);
+            if (dto != null)
+            {
+                return MapFlat(dto);
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
             throw new FormatException($"Failed to parse AR payload: {ex.Message}", ex);
         }
     }
 
-    private static ARExperiencePayload MapFromWrapper(ARExperienceResponseWrapper wrapper) {
-        var flashcard = wrapper.Flashcard;
-        var target = wrapper.Target;
+    private static ARExperiencePayload MapFromWrapper(WrapperDto w)
+    {
+        var flashcard = w.Flashcard;
+        var target = w.Target;
 
         string translationVi = null;
-        if (flashcard?.Translation != null && flashcard.Translation.TryGetValue("vi", out var vi)) {
-            translationVi = vi;
-        } else if (flashcard?.TranslationVi != null) {
-            translationVi = flashcard.TranslationVi;
+        if (flashcard != null)
+        {
+            translationVi = GetTranslation(flashcard.TranslationVi, flashcard.Translation);
         }
 
-        return new ARExperiencePayload {
+        return new ARExperiencePayload
+        {
             QrId = flashcard?.QrId ?? flashcard?.ArTag ?? target?.ArTag ?? string.Empty,
             Word = flashcard?.Word ?? string.Empty,
             TranslationVi = translationVi ?? string.Empty,
@@ -72,17 +94,16 @@ public static class ARPayloadMapper
         };
     }
 
-    private static ARExperiencePayload MapToPayload(ARExperiencePayloadDto dto) {
-        if (dto == null) return default;
-
+    private static ARExperiencePayload MapFlat(FlatPayloadDto dto)
+    {
         string translationVi = dto.TranslationVi;
-        if (string.IsNullOrEmpty(translationVi) && dto.Translation != null) {
-            if (dto.Translation.TryGetValue("vi", out var vi)) {
-                translationVi = vi;
-            }
+        if (string.IsNullOrEmpty(translationVi) && dto.Translation != null)
+        {
+            translationVi = dto.Translation;
         }
 
-        return new ARExperiencePayload {
+        return new ARExperiencePayload
+        {
             QrId = dto.QrId ?? dto.ArTag ?? string.Empty,
             Word = dto.Word ?? string.Empty,
             TranslationVi = translationVi ?? string.Empty,
@@ -96,8 +117,22 @@ public static class ARPayloadMapper
         };
     }
 
-    private static ARAnimationType ParseAnimationType(string type) {
-        return type?.ToLowerInvariant() switch {
+    private static string GetTranslation(string directVi, string translationField)
+    {
+        if (!string.IsNullOrEmpty(directVi)) return directVi;
+        if (!string.IsNullOrEmpty(translationField))
+        {
+            // translation field is "{\"vi\":\"...\",\"en\":\"...\"}"
+            var trans = JsonUtility.FromJson<TranslationDto>(translationField);
+            return trans?.Vi;
+        }
+        return null;
+    }
+
+    private static ARAnimationType ParseAnimationType(string type)
+    {
+        return type?.ToLowerInvariant() switch
+        {
             "rotate" => ARAnimationType.Rotate,
             "bounce" => ARAnimationType.Bounce,
             "idle" => ARAnimationType.Idle,
@@ -105,84 +140,92 @@ public static class ARPayloadMapper
         };
     }
 
-    private static Vector3 ParseVector3(string vec) {
+    private static Vector3 ParseVector3(string vec)
+    {
         if (string.IsNullOrEmpty(vec)) return Vector3.zero;
         var parts = vec.Split(' ');
         if (parts.Length < 3) return Vector3.zero;
-        try {
+        try
+        {
             return new Vector3(
                 float.Parse(parts[0]),
                 float.Parse(parts[1]),
                 float.Parse(parts[2])
             );
-        } catch {
+        }
+        catch
+        {
             return Vector3.zero;
         }
     }
 
-    /// <summary>
-    /// Full ARExperienceResponseSchema wrapper (ARExperienceResponseSchema).
-    /// </summary>
-    private class ARExperienceResponseWrapper {
-        public FlashcardDto Flashcard { get; set; }
-        public TargetDto Target { get; set; }
-    }
+    #region DTOs
 
-    private class FlashcardDto {
-        public string QrId { get; set; }
-        public string ArTag { get; set; }
-        public string Word { get; set; }
-        public string AudioUrl { get; set; }
-        public Dictionary<string, string> Translation { get; set; }
-        public string TranslationVi { get; set; }
-    }
-
-    private class TargetDto {
-        public string ArTag { get; set; }
-        public string Model3dUrl { get; set; }
-        public string AnimationType { get; set; }
-        public float GlbSize { get; set; }
-        public string Position { get; set; }
-        public string Rotation { get; set; }
-        public string Scale { get; set; }
-    }
-
-    /// <summary>
-    /// Flat legacy payload DTO (for backward compatibility with older API shapes).
-    /// Supports both snake_case and camelCase field names via JsonPropertyName.
-    /// </summary>
     [Serializable]
-    private class ARExperiencePayloadDto {
-        [JsonPropertyName("qr_id")]
-        public string QrId { get; set; }
-        [JsonPropertyName("ar_tag")]
-        public string ArTag { get; set; }
-        public string Word { get; set; }
-        [JsonPropertyName("audio_url")]
-        public string AudioUrl { get; set; }
-        public Dictionary<string, string> Translation { get; set; }
-        [JsonPropertyName("translation_vi")]
-        public string TranslationVi { get; set; }
-        [JsonPropertyName("model_url")]
-        public string ModelUrl { get; set; }
-        [JsonPropertyName("model_3d_url")]
-        public string Model3dUrl { get; set; }
-        [JsonPropertyName("animation_type")]
-        public string AnimationType { get; set; }
-        [JsonPropertyName("glb_size")]
-        public float GlbSize { get; set; }
-        public string Position { get; set; }
-        public string Rotation { get; set; }
-        public string Scale { get; set; }
+    private class WrapperDto
+    {
+        public FlashcardDto Flashcard;
+        public TargetDto Target;
     }
+
+    [Serializable]
+    private class FlashcardDto
+    {
+        public string QrId;
+        public string ArTag;
+        public string Word;
+        public string AudioUrl;
+        public string TranslationVi; // snake_case converted to camelCase
+        public string Translation;    // raw JSON string, parsed separately
+    }
+
+    [Serializable]
+    private class TargetDto
+    {
+        public string ArTag;
+        public string Model3dUrl;
+        public string AnimationType;
+        public float GlbSize;
+        public string Position;
+        public string Rotation;
+        public string Scale;
+    }
+
+    [Serializable]
+    private class FlatPayloadDto
+    {
+        public string QrId;
+        public string ArTag;
+        public string Word;
+        public string AudioUrl;
+        public string TranslationVi;
+        public string Translation;    // raw JSON string
+        public string ModelUrl;
+        public string Model3dUrl;
+        public string AnimationType;
+        public float GlbSize;
+        public string Position;
+        public string Rotation;
+        public string Scale;
+    }
+
+    [Serializable]
+    private class TranslationDto
+    {
+        public string Vi;
+    }
+
+    #endregion
 }
 
 /// <summary>
 /// Strongly-typed AR experience payload used internally by Unity scripts.
 /// </summary>
 [Serializable]
-public struct ARExperiencePayload {
+public struct ARExperiencePayload
+{
     public string QrId;
+    public string ArTag;
     public string Word;
     public string TranslationVi;
     public string AudioUrl;
@@ -197,7 +240,8 @@ public struct ARExperiencePayload {
 /// <summary>
 /// Supported animation types for AR models.
 /// </summary>
-public enum ARAnimationType {
+public enum ARAnimationType
+{
     Idle,
     Rotate,
     Bounce
