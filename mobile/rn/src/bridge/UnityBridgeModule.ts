@@ -1,4 +1,6 @@
+import React from 'react';
 import { NativeModules, NativeEventEmitter, Platform } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import type {
   UnityARExperiencePayload,
   CardDescriptorRN,
@@ -278,3 +280,20 @@ export const unityBridge = new UnityBridgeModule();
 // Re-export `CardDescriptorRN` so consumers can import both the bridge and
 // the DTO from this module without a separate types import.
 export type { CardDescriptorRN };
+
+// ─── iOS: Native UnityView component ────────────────────────────────────────
+// Exported so ARScreen can use <NativeUnityView /> directly on iOS.
+// On Android the Unity player runs in a separate Activity; no native view needed.
+export const NativeUnityView: React.ComponentType<{
+  style?: ViewStyle;
+  onUnityReady?: () => void;
+  onUnityError?: (event: { nativeEvent: { message: string } }) => void;
+} | null> = (() => {
+  if (Platform.OS !== 'ios') return null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require('react-native').requireNativeComponent('UnityViewNative');
+  } catch {
+    return null;
+  }
+})();

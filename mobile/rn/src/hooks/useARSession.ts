@@ -4,6 +4,8 @@ import { mapToUnityPayload, validateNativeTrackingMetadata, toCardDescriptorRN }
 import { flashcardApi } from '../services/api';
 import type { UnityARExperiencePayload } from '../types/ar';
 import type { ARMessage } from '../bridge/arMessages';
+import type { AddXpEventRequest } from '../types/gamification';
+import { toAddXpEventWireRequest } from '../types/gamification';
 
 export type ARState =
   | 'IDLE'
@@ -37,6 +39,7 @@ export interface ARSessionState {
   progress: number;
   progressStage: 'download' | 'load' | 'instantiate' | null;
   progressMessage: string;
+  xpRewardPending: boolean;
 }
 
 export interface UseARSessionResult extends ARSessionState {
@@ -46,6 +49,8 @@ export interface UseARSessionResult extends ARSessionState {
   triggerCombo: () => Promise<void>;
   feedPet: (foodModelId: string) => void;
   retry: () => void;
+  /** Called whenever a combo completes with XP info. Parent (ARScreen) wires XP API. */
+  onComboComplete?: (xpAwarded: number, comboId: string, sessionId?: string) => void;
 }
 
 /**
@@ -53,7 +58,8 @@ export interface UseARSessionResult extends ARSessionState {
  */
 export const useARSession = (
   _lessonId?: string,
-  _initialPayload?: UnityARExperiencePayload
+  _initialPayload?: UnityARExperiencePayload,
+  options?: { onComboComplete?: (xpAwarded: number, comboId: string, sessionId?: string) => void }
 ): UseARSessionResult => {
   const [arState, setArState] = useState<ARState>('IDLE');
   const [trackedImages, setTrackedImages] = useState<Map<string, TrackedImage>>(new Map());
@@ -64,6 +70,7 @@ export const useARSession = (
   const [progress, setProgress] = useState(0);
   const [progressStage, setProgressStage] = useState<'download' | 'load' | 'instantiate' | null>(null);
   const [progressMessage, setProgressMessage] = useState('');
+  const [xpRewardPending, setXpRewardPending] = useState(false);
 
   const currentPayloadRef = useRef<UnityARExperiencePayload | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -77,6 +84,10 @@ export const useARSession = (
 
   /** Tracks qrIds already sent to the backend this session. Prevents duplicate API calls. */
   const qrResolutionCache = useRef<Set<string>>(new Set());
+
+  /** External callback for combo completion — set by parent via onComboComplete prop. */
+  const onComboCompleteRef = useRef<(xpAwarded: number, comboId: string, sessionId?: string) => void>(() => {});
+  onComboCompleteRef.current = options?.onComboComplete ?? (() => {});
 
   /**
    * Resolves a QR-decoded qrId via the backend API, then sends the CardDescriptorRN
@@ -244,8 +255,12 @@ export const useARSession = (
         break;
 
       case 'onComboComplete': {
-        const payload = message.payload as { rewardCardId: string; xpAwarded: number };
-        setCurrentStreak(prev => prev + payload.xpAwarded);
+        const payload = message.payload as { rewardCardId: string; xpAwarded: number; comboId?: string };
+        const xpAwarded = payload.xpAwarded;
+        const comboId = payload.comboId ?? `combo_${Date.now()}`;
+        setCurrentStreak(prev => prev + xpAwarded);
+        setXpRewardPending(true);
+        onComboCompleteRef.current(xpAwarded, comboId);
         break;
       }
 
@@ -373,11 +388,13 @@ export const useARSession = (
     progress,
     progressStage,
     progressMessage,
+    xpRewardPending,
     canCombo: trackedImages.size >= 2,
     startSession,
     stopSession,
     triggerCombo,
     feedPet,
     retry,
+    onComboComplete: onComboCompleteRef.current,
   };
 };

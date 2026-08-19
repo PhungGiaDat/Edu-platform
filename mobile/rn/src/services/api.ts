@@ -51,12 +51,7 @@ api.interceptors.request.use(
   async (config) => {
     try {
       const token = await SecureStore.getItemAsync(TOKEN_KEY);
-      // [DEBUG-AUTH] Temporarily log token presence to diagnose 401
-      console.log(
-        `[DEBUG-AUTH] ${config.method?.toUpperCase()} ${config.url} token=${
-          token ? `${token.slice(0, 20)}…(${token.length})` : 'NONE'
-        }`,
-      );
+      // Never write bearer-token material to browser or device logs.
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       } else {
