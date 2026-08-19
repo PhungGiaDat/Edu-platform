@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <!-- 
+    IMPORTANT: A-Frame/AR.js removed from parent app!
+    Using IFRAME ISOLATION pattern - AR runs inside ar-nft.html iframe only.
+    This prevents version conflicts and React lifecycle interference.
+    See: frontend-web/public/ar-nft.html for AR runtime.
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>English Platform</title>
+
+  <!-- Performance: preconnect to Google Fonts CDN before CSS @import fires -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Performance: early DNS resolution + TCP connection to Render API backend.
+       Reduces cold-connection latency on first API call (quiz, AR data, pets). -->
+  <link rel="preconnect" href="https://edu-platform-api-do20.onrender.com" />
+  <link rel="dns-prefetch" href="https://edu-platform-api-do20.onrender.com" />
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+  <!-- Mobile Debug - Enable with ?debug=true in URL -->
+  <script src="/static/ar-assets/js/mobile-debug.js"></script>
+</body>
+
+</html>

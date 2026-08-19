@@ -4,11 +4,13 @@ const email = process.env.LC11_WEB_EMAIL;
 const password = process.env.LC11_WEB_PASSWORD;
 
 type NetworkEvidence = { category: string; status: number; host: string; path: string };
+type RequestFailureEvidence = { host: string; path: string; error: string };
 
 function observeRuntime(page: Page) {
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
   const network: NetworkEvidence[] = [];
+  const requestFailures: RequestFailureEvidence[] = [];
 
   page.on('console', (message) => {
     if (message.type() === 'error') consoleErrors.push(message.text());
@@ -20,7 +22,8 @@ function observeRuntime(page: Page) {
     try { parsed = new URL(url); } catch { return; }
     const path = parsed.pathname.toLowerCase();
     let category: string | null = null;
-    if (path.includes('/api/v1/courses')) category = 'course-api';
+    if (path.includes('/api/v1/auth/')) category = 'auth-api';
+    else if (path.includes('/api/v1/courses')) category = 'course-api';
     else if (path.includes('/activities/') && path.includes('/vocabulary')) category = 'vocabulary-api';
     else if (path.includes('/activities/') && path.includes('/mini-game')) category = 'memory-match-api';
     else if (path.includes('/activities/') && path.includes('/quiz')) category = 'quiz-api';
@@ -29,7 +32,18 @@ function observeRuntime(page: Page) {
     if (category) network.push({ category, status: response.status(), host: parsed.host, path });
   });
 
-  return { consoleErrors, pageErrors, network };
+  page.on('requestfailed', (request) => {
+    try {
+      const parsed = new URL(request.url());
+      if (parsed.pathname.toLowerCase().includes('/api/v1/auth/')) {
+        requestFailures.push({ host: parsed.host, path: parsed.pathname, error: request.failure()?.errorText ?? 'unknown' });
+      }
+    } catch {
+      // Ignore non-URL browser-internal requests.
+    }
+  });
+
+  return { consoleErrors, pageErrors, network, requestFailures };
 }
 
 async function attachEvidence(testInfo: TestInfo, evidence: ReturnType<typeof observeRuntime>) {
@@ -39,11 +53,36 @@ async function attachEvidence(testInfo: TestInfo, evidence: ReturnType<typeof ob
   });
 }
 
-async function signIn(page: Page) {
+async function signIn(page: Page, evidence?: ReturnType<typeof observeRuntime>) {
   test.skip(!email || !password, 'Set LC11_WEB_EMAIL and LC11_WEB_PASSWORD to use the approved learner test account.');
-  await page.getByLabel('Email').fill(email!);
-  await page.getByLabel('Password').fill(password!);
-  await page.getByRole('button', { name: 'Sign In' }).click();
+  const emailInput = page.getByLabel('Email');
+  const passwordInput = page.getByLabel('Password');
+  const clearCredentialsFromForm = async () => {
+    if (await emailInput.isVisible().catch(() => false)) await emailInput.fill('');
+    if (await passwordInput.isVisible().catch(() => false)) await passwordInput.fill('');
+  };
+
+  await emailInput.fill(email!);
+  await passwordInput.fill(password!);
+  const loginResponse = page.waitForResponse((response) => {
+    const request = response.request();
+    return request.method() === 'POST' && new URL(response.url()).pathname.endsWith('/api/v1/auth/login');
+  }, { timeout: 20_000 });
+  // ClayButton is exposed as text (not a browser button) by Expo Web. The
+  // final exact text node is the primary CTA; the first is the mode switch.
+  await page.getByText('Sign In', { exact: true }).last().click();
+  let response;
+  try {
+    response = await loginResponse;
+  } catch {
+    await clearCredentialsFromForm();
+    const failures = evidence?.requestFailures ?? [];
+    throw new Error(`Normal AuthScreen login did not receive a backend response within 20 seconds. Auth request failures: ${JSON.stringify(failures)}`);
+  }
+  if (!response.ok()) {
+    await clearCredentialsFromForm();
+    throw new Error(`Normal AuthScreen login returned HTTP ${response.status()}.`);
+  }
   await expect(page.getByText(/Khóa học hôm nay|Các khóa học/)).toBeVisible({ timeout: 60_000 });
 }
 
@@ -73,10 +112,20 @@ test('Expo Web learner shell boots without native-only errors', async ({ page },
   await attachEvidence(testInfo, evidence);
 });
 
+test('LC11 normal AuthScreen reaches the learner application with the approved test account', async ({ page }, testInfo) => {
+  const evidence = observeRuntime(page);
+  try {
+    await page.goto('/');
+    await signIn(page, evidence);
+  } finally {
+    await attachEvidence(testInfo, evidence);
+  }
+});
+
 test('LC11 Cat production-backed vertical slice reaches CompletionShell', async ({ page }, testInfo) => {
   const evidence = observeRuntime(page);
   await page.goto('/');
-  await signIn(page);
+  await signIn(page, evidence);
 
   await expect(page.getByText('Animals Adventure', { exact: true })).toBeVisible();
   const courseCover = page.locator('img').first();
@@ -141,7 +190,7 @@ test('LC11 Cat production-backed vertical slice reaches CompletionShell', async 
 test('LC11 all-five first vocabulary activities render canonical assets', async ({ page }, testInfo) => {
   const evidence = observeRuntime(page);
   await page.goto('/');
-  await signIn(page);
+  await signIn(page, evidence);
   await page.getByText('Animals Adventure', { exact: true }).first().click();
   for (const lesson of ['Cat', 'Dog', 'Bird', 'Fish', 'Rabbit']) {
     await page.getByText(new RegExp(lesson, 'i')).last().click();

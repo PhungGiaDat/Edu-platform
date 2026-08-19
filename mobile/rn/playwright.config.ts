@@ -14,12 +14,14 @@ export default defineConfig({
     ...devices['iPhone 13'],
     baseURL,
     browserName: 'chromium',
-    trace: 'retain-on-failure',
+    // Authentication is performed with environment-only credentials; do not
+    // persist input actions in a Playwright trace when a test fails.
+    trace: 'off',
     screenshot: 'only-on-failure',
     video: 'off',
   },
   webServer: {
-    command: 'npx.cmd expo start --web --no-dev --minify --offline',
+    command: 'npx.cmd expo start --web --no-dev --minify --offline --clear',
     url: baseURL,
     reuseExistingServer: true,
     timeout: 120_000,

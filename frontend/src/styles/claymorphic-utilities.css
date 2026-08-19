@@ -1,0 +1,981 @@
+/**
+ * Claymorphic Utility Classes
+ * Apply these to any element for instant clay effects
+ * Based on the EduAR Landing Page design system
+ */
+
+/* ─── Cards ─────────────────────────────────────────────────── */
+.clay-card-sm {
+  border-radius: 24px;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+}
+
+.clay-card {
+  border-radius: 28px;
+  box-shadow: 0 8px 0 rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+}
+
+.clay-card-lg {
+  border-radius: 32px;
+  box-shadow: 0 14px 0 rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+}
+
+.clay-card:hover,
+.clay-card-sm:hover,
+.clay-card-lg:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 14px 0 rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+/* No hover effect variant */
+.clay-card-no-hover:hover {
+  transform: none;
+  box-shadow: 0 8px 0 rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+/* ─── Buttons ───────────────────────────────────────────────── */
+.clay-btn {
+  border-radius: 20px;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+  font-weight: 900;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.clay-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 9px 0 rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+/* Color Variants */
+.clay-btn-yellow {
+  background: #FFD93D;
+  box-shadow: 0 6px 0 #E5B800, inset 0 1px 0 rgba(255,255,255,0.4);
+  color: #1A2744;
+}
+
+.clay-btn-yellow:hover {
+  box-shadow: 0 9px 0 #E5B800, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-yellow:active {
+  box-shadow: 0 3px 0 #E5B800, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-blue {
+  background: #6EB9FF;
+  box-shadow: 0 6px 0 #3A8FD1, inset 0 1px 0 rgba(255,255,255,0.4);
+  color: #fff;
+}
+
+.clay-btn-blue:hover {
+  box-shadow: 0 9px 0 #3A8FD1, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-blue:active {
+  box-shadow: 0 3px 0 #3A8FD1, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-green {
+  background: #B4E197;
+  box-shadow: 0 6px 0 #7DC760, inset 0 1px 0 rgba(255,255,255,0.4);
+  color: #1A2744;
+}
+
+.clay-btn-green:hover {
+  box-shadow: 0 9px 0 #7DC760, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-green:active {
+  box-shadow: 0 3px 0 #7DC760, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-pink {
+  background: #FF9F9F;
+  box-shadow: 0 6px 0 #D97070, inset 0 1px 0 rgba(255,255,255,0.4);
+  color: #fff;
+}
+
+.clay-btn-pink:hover {
+  box-shadow: 0 9px 0 #D97070, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-pink:active {
+  box-shadow: 0 3px 0 #D97070, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-white {
+  background: #fff;
+  box-shadow: 0 6px 0 #E2E8F0, inset 0 1px 0 rgba(255,255,255,0.4);
+  color: #1A2744;
+}
+
+.clay-btn-white:hover {
+  box-shadow: 0 9px 0 #E2E8F0, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.clay-btn-white:active {
+  box-shadow: 0 3px 0 #E2E8F0, inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+/* Button Sizes */
+.clay-btn-sm {
+  padding: 10px 18px;
+  font-size: 15px;
+  min-height: 44px;
+}
+
+.clay-btn-md {
+  padding: 16px 32px;
+  font-size: 17px;
+  min-height: 56px;
+}
+
+.clay-btn-lg {
+  padding: 18px 36px;
+  font-size: 18px;
+  min-height: 60px;
+}
+
+/* ─── Animations ────────────────────────────────────────────── */
+.clay-float {
+  animation: clay-float 4s ease-in-out infinite;
+}
+
+.clay-float-delay {
+  animation: clay-float-delay 3.5s ease-in-out infinite 0.8s;
+}
+
+@keyframes clay-float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-14px) rotate(2deg); }
+}
+
+@keyframes clay-float-delay {
+  0%, 100% { transform: translateY(0) rotate(3deg); }
+  50% { transform: translateY(-10px) rotate(-1deg); }
+}
+
+/* XP Pulse Animation */
+.clay-xp-pulse {
+  animation: clay-xp-pulse 2s ease-in-out infinite;
+}
+
+@keyframes clay-xp-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+/* Shimmer Animation (for progress bars) */
+.clay-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.clay-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: clay-shimmer 2s infinite;
+}
+
+@keyframes clay-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* ─── Stagger Reveal ────────────────────────────────────────── */
+.clay-reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.34,1.2,0.64,1);
+}
+
+.clay-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Auto-stagger utility (use with JS to add transition-delay) */
+.clay-stagger-1 { transition-delay: 0.1s; }
+.clay-stagger-2 { transition-delay: 0.2s; }
+.clay-stagger-3 { transition-delay: 0.3s; }
+.clay-stagger-4 { transition-delay: 0.4s; }
+.clay-stagger-5 { transition-delay: 0.5s; }
+.clay-stagger-6 { transition-delay: 0.6s; }
+
+/* ─── Badges/Pills ──────────────────────────────────────────── */
+.clay-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 99px;
+  padding: 6px 16px;
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.15);
+}
+
+.clay-badge-yellow {
+  background: #FFD93D;
+  box-shadow: 0 3px 0 #E5B800;
+  color: #1A2744;
+}
+
+.clay-badge-pink {
+  background: #FF9F9F;
+  box-shadow: 0 3px 0 #D97070;
+  color: #1A2744;
+}
+
+.clay-badge-blue {
+  background: #6EB9FF;
+  box-shadow: 0 3px 0 #3A8FD1;
+  color: #fff;
+}
+
+.clay-badge-green {
+  background: #B4E197;
+  box-shadow: 0 3px 0 #7DC760;
+  color: #1A2744;
+}
+
+/* ─── Progress Bar with Shimmer ────────────────────────────── */
+.clay-progress-bar {
+  position: relative;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.2);
+}
+
+.clay-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.clay-progress-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: clay-shimmer 2s infinite;
+}
+
+/* ─── Accessibility ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .clay-card,
+  .clay-card-sm,
+  .clay-card-lg,
+  .clay-btn,
+  .clay-reveal,
+  .clay-float,
+  .clay-float-delay,
+  .clay-xp-pulse,
+  .clay-shimmer::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ─── Utility Classes ───────────────────────────────────────── */
+
+/* Spring physics transition */
+.clay-spring {
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* Cursor pointer for interactive elements */
+.clay-interactive {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Touch-friendly sizing */
+.clay-touch-target {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+/* ─── Playful Educational Platform Styles ───────────────────── */
+
+/* Vibrant gradient backgrounds */
+.clay-bg-playful {
+  background: linear-gradient(135deg, 
+    #FFF8E7 0%, 
+    #FFE8F0 25%, 
+    #E8F4FF 50%, 
+    #E8FFF0 75%, 
+    #FFF8E7 100%);
+  background-size: 400% 400%;
+  animation: clay-gradient-shift 15s ease infinite;
+}
+
+@keyframes clay-gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Hero Section Styles */
+.clay-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, 
+    #FFF5E0 0%,
+    #FFE4F3 40%,
+    #E4F4FF 70%,
+    #F0FFF4 100%);
+}
+
+.clay-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at center, rgba(255, 217, 61, 0.15) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, rgba(110, 185, 255, 0.15) 0%, transparent 50%),
+              radial-gradient(ellipse at 20% 80%, rgba(255, 159, 159, 0.15) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Claymorphic Card Variants */
+.clay-card-elevated {
+  background: #FFFFFF;
+  border-radius: 32px;
+  border: 4px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 
+    0 12px 0 rgba(0, 0, 0, 0.08),
+    0 20px 40px rgba(91, 141, 239, 0.12),
+    0 8px 16px rgba(0, 0, 0, 0.04),
+    inset 0 2px 0 rgba(255, 255, 255, 1);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.clay-card-elevated:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 20px 0 rgba(0, 0, 0, 0.08),
+    0 32px 60px rgba(91, 141, 239, 0.18),
+    0 12px 24px rgba(0, 0, 0, 0.06),
+    inset 0 2px 0 rgba(255, 255, 255, 1);
+}
+
+/* Colorful card variants */
+.clay-card-coral {
+  background: linear-gradient(145deg, #FFB4A2 0%, #FF9B85 100%);
+  border: 4px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 8px 0 #E88A78,
+    0 16px 32px rgba(255, 155, 133, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6);
+}
+
+.clay-card-mint {
+  background: linear-gradient(145deg, #A8E6CF 0%, #88D4AB 100%);
+  border: 4px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 8px 0 #6BC494,
+    0 16px 32px rgba(136, 212, 171, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6);
+}
+
+.clay-card-sky {
+  background: linear-gradient(145deg, #A8D8FF 0%, #88C4FF 100%);
+  border: 4px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 8px 0 #68A8E0,
+    0 16px 32px rgba(136, 196, 255, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6);
+}
+
+.clay-card-lavender {
+  background: linear-gradient(145deg, #D4A5FF 0%, #C48AFF 100%);
+  border: 4px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 8px 0 #A470D8,
+    0 16px 32px rgba(196, 138, 255, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6);
+}
+
+.clay-card-sunshine {
+  background: linear-gradient(145deg, #FFE066 0%, #FFD93D 100%);
+  border: 4px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 8px 0 #E5B800,
+    0 16px 32px rgba(255, 217, 61, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Section Title Style */
+.clay-section-title {
+  font-family: 'Baloo 2', 'Quicksand', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  color: #2D3A4A;
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.8);
+  position: relative;
+  display: inline-block;
+}
+
+.clay-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 60%;
+  height: 6px;
+  background: linear-gradient(90deg, #FFD93D, #FF9F9F);
+  border-radius: 99px;
+}
+
+/* Playful Stats Card */
+.clay-stat-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  padding: 24px;
+  text-align: center;
+  border: 3px solid rgba(91, 141, 239, 0.15);
+  box-shadow: 
+    0 6px 0 rgba(91, 141, 239, 0.12),
+    0 12px 24px rgba(91, 141, 239, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.clay-stat-card:hover {
+  transform: translateY(-4px) rotate(-1deg);
+}
+
+.clay-stat-number {
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #5B8DEF, #FF9F9F);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.clay-stat-label {
+  font-weight: 700;
+  color: #6B7A8D;
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+/* Testimonial Card */
+.clay-testimonial {
+  background: linear-gradient(145deg, #FFFFFF 0%, #F8FAFF 100%);
+  border-radius: 28px;
+  padding: 28px;
+  border: 3px solid rgba(255, 217, 61, 0.3);
+  box-shadow: 
+    0 8px 0 rgba(255, 217, 61, 0.15),
+    0 16px 32px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  position: relative;
+}
+
+.clay-testimonial::before {
+  content: '"';
+  position: absolute;
+  top: 16px;
+  left: 24px;
+  font-size: 4rem;
+  font-family: Georgia, serif;
+  color: rgba(255, 217, 61, 0.4);
+  line-height: 1;
+}
+
+/* Progress Ring */
+.clay-progress-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clay-progress-ring svg {
+  transform: rotate(-90deg);
+}
+
+.clay-progress-ring-track {
+  fill: none;
+  stroke: #E2E8F5;
+  stroke-width: 8;
+}
+
+.clay-progress-ring-fill {
+  fill: none;
+  stroke: url(#clay-gradient);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+/* Course Card */
+.clay-course-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 3px solid rgba(91, 141, 239, 0.12);
+  box-shadow: 
+    0 8px 0 rgba(0, 0, 0, 0.06),
+    0 16px 32px rgba(91, 141, 239, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+}
+
+.clay-course-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 16px 0 rgba(0, 0, 0, 0.06),
+    0 24px 48px rgba(91, 141, 239, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Course catalog — token-backed mobile composition used by CourseList. */
+.course-catalog {
+  color: var(--course-ink, #1A2744);
+  background-color: var(--course-page, #C5E4FF);
+}
+
+.course-list-card {
+  border: 4px solid rgba(255, 255, 255, 0.92);
+  border-radius: var(--course-card-radius, 32px) !important;
+  box-shadow: var(--course-card-shadow, 0 14px 0 rgba(0,0,0,0.12));
+  isolation: isolate;
+  transition: transform var(--course-motion, 250ms ease), box-shadow var(--course-motion, 250ms ease);
+}
+
+.course-list-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 0 rgba(110, 185, 255, 0.16), 0 24px 44px rgba(26, 39, 68, 0.14), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.course-list-card:focus-visible {
+  outline: 4px solid var(--course-ink, #1A2744);
+  outline-offset: 5px;
+}
+
+.course-list-card__xp-shell {
+  padding: 20px;
+  background: #FFECE8;
+}
+
+.course-list-card__xp-panel {
+  display: flex;
+  min-height: 140px;
+  align-items: center;
+  justify-content: center;
+  background: var(--course-yellow, #FFD93D);
+  box-shadow: 0 6px 0 var(--course-yellow-dark, #E5B800), inset 0 2px 0 rgba(255,255,255,0.28);
+}
+
+.course-list-card__bolt {
+  width: 5rem;
+  height: 5rem;
+  flex: 0 0 auto;
+  color: #F59E0B;
+  filter: drop-shadow(0 2px 0 rgba(255, 255, 255, 0.55));
+}
+
+.course-list-card__xp {
+  color: var(--course-ink, #1A2744);
+  font-size: clamp(3.4rem, 12vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.course-list-card__body {
+  padding: 24px;
+  background: #FFFFFF;
+}
+
+.course-list-card__cta {
+  border: 0;
+  border-radius: 28px;
+  color: var(--course-ink, #1A2744);
+  background: var(--course-coral, #FF9F9F);
+  box-shadow: var(--course-button-shadow, 0 6px 0 #D97070), inset 0 2px 0 rgba(255,255,255,0.38);
+  cursor: pointer;
+  transition: transform var(--course-motion, 250ms ease), box-shadow var(--course-motion, 250ms ease);
+}
+
+.course-list-card__cta:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 9px 0 var(--course-coral-dark, #D97070), inset 0 2px 0 rgba(255,255,255,0.38);
+}
+
+.course-list-card__cta:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 var(--course-coral-dark, #D97070), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+.course-list-card__cta:focus-visible {
+  outline: 4px solid var(--course-ink, #1A2744);
+  outline-offset: 4px;
+}
+
+@media (max-width: 639px) {
+  .course-list-grid {
+    gap: 28px;
+  }
+
+  .course-list-card {
+    width: 100%;
+    max-width: 430px;
+    margin-inline: auto;
+  }
+
+  .course-list-card__xp-shell {
+    padding: 16px;
+  }
+
+  .course-list-card__xp-panel {
+    min-height: 124px;
+  }
+
+  .course-list-card__bolt {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .course-list-card__xp {
+    font-size: clamp(3rem, 15vw, 4rem);
+  }
+
+  .course-list-card__body {
+    padding: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .course-list-card,
+  .course-list-card__cta {
+    transition: none;
+  }
+
+  .course-list-card:hover,
+  .course-list-card__cta:hover {
+    transform: none;
+  }
+}
+
+.clay-course-thumb {
+  height: 160px;
+  background: linear-gradient(135deg, #A8D8FF 0%, #FFE4F3 50%, #E8FFF0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+}
+
+/* CTA Button Styles */
+.clay-cta-primary {
+  background: linear-gradient(160deg, #FFE066 0%, #FFD93D 50%, #FFCA28 100%);
+  color: #1A2744;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  padding: 16px 40px;
+  border-radius: 99px;
+  border: 4px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    0 8px 0 #E5B800,
+    0 16px 32px rgba(255, 217, 61, 0.35),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.clay-cta-primary:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 
+    0 12px 0 #E5B800,
+    0 24px 48px rgba(255, 217, 61, 0.45),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6);
+}
+
+.clay-cta-primary:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 
+    0 4px 0 #E5B800,
+    0 8px 16px rgba(255, 217, 61, 0.25),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6);
+}
+
+.clay-cta-secondary {
+  background: linear-gradient(160deg, #FFFFFF 0%, #F8FAFF 100%);
+  color: #5B8DEF;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  padding: 16px 40px;
+  border-radius: 99px;
+  border: 4px solid rgba(91, 141, 239, 0.2);
+  box-shadow: 
+    0 8px 0 rgba(91, 141, 239, 0.15),
+    0 16px 32px rgba(91, 141, 239, 0.1),
+    inset 0 2px 0 rgba(255, 255, 255, 1);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.clay-cta-secondary:hover {
+  transform: translateY(-4px) scale(1.05);
+  border-color: rgba(91, 141, 239, 0.4);
+  box-shadow: 
+    0 12px 0 rgba(91, 141, 239, 0.15),
+    0 24px 48px rgba(91, 141, 239, 0.15),
+    inset 0 2px 0 rgba(255, 255, 255, 1);
+}
+
+/* Floating Elements Animation */
+.clay-float-element {
+  animation: clay-bob 6s ease-in-out infinite;
+}
+
+.clay-float-element:nth-child(2n) {
+  animation-delay: -2s;
+}
+
+.clay-float-element:nth-child(3n) {
+  animation-delay: -4s;
+}
+
+@keyframes clay-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-12px) rotate(2deg); }
+  50% { transform: translateY(-6px) rotate(-1deg); }
+  75% { transform: translateY(-18px) rotate(1deg); }
+}
+
+/* Icon Bubble */
+.clay-icon-bubble {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  border: 3px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    0 4px 0 rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.clay-icon-bubble-coral { background: linear-gradient(145deg, #FFB4A2, #FF9B85); }
+.clay-icon-bubble-mint { background: linear-gradient(145deg, #A8E6CF, #88D4AB); }
+.clay-icon-bubble-sky { background: linear-gradient(145deg, #A8D8FF, #88C4FF); }
+.clay-icon-bubble-lavender { background: linear-gradient(145deg, #D4A5FF, #C48AFF); }
+.clay-icon-bubble-sunshine { background: linear-gradient(145deg, #FFE066, #FFD93D); }
+
+/* Tab Styles */
+.clay-tab {
+  padding: 12px 24px;
+  border-radius: 99px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: #6B7A8D;
+}
+
+.clay-tab:hover {
+  color: #5B8DEF;
+  background: rgba(91, 141, 239, 0.08);
+}
+
+.clay-tab-active {
+  background: linear-gradient(145deg, #5B8DEF, #4A7CD8);
+  color: #FFFFFF;
+  box-shadow: 
+    0 4px 0 #3A6FD8,
+    0 8px 16px rgba(91, 141, 239, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Decorative Shapes */
+.clay-shape-circle {
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(255, 217, 61, 0.3), rgba(255, 159, 159, 0.3));
+  filter: blur(40px);
+  position: absolute;
+  pointer-events: none;
+}
+
+.clay-shape-blob {
+  border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  animation: clay-morph 8s ease-in-out infinite;
+}
+
+@keyframes clay-morph {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+}
+
+/* Pet Showcase Card */
+.clay-pet-showcase {
+  background: linear-gradient(180deg, 
+    rgba(168, 216, 255, 0.3) 0%, 
+    rgba(255, 228, 243, 0.3) 50%, 
+    rgba(168, 230, 207, 0.3) 100%);
+  border-radius: 32px;
+  padding: 24px;
+  border: 4px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 
+    0 12px 0 rgba(91, 141, 239, 0.08),
+    0 24px 48px rgba(0, 0, 0, 0.08),
+    inset 0 2px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Avatar Group */
+.clay-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid #FFFFFF;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+}
+
+.clay-avatar-group {
+  display: flex;
+}
+
+.clay-avatar-group .clay-avatar {
+  margin-left: -12px;
+}
+
+.clay-avatar-group .clay-avatar:first-child {
+  margin-left: 0;
+}
+
+/* Input Styles */
+.clay-input {
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 16px;
+  border: 3px solid #E2E8F5;
+  background: #FFFFFF;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2D3A4A;
+  transition: all 0.2s ease;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.04),
+    0 2px 0 rgba(255, 255, 255, 0.8);
+}
+
+.clay-input:focus {
+  outline: none;
+  border-color: #5B8DEF;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.04),
+    0 0 0 4px rgba(91, 141, 239, 0.15);
+}
+
+.clay-input::placeholder {
+  color: #A0AEC0;
+}
+
+@media (max-width: 640px) {
+  .clay-stat-card {
+    min-width: 0;
+    border-radius: 20px;
+    padding: 16px;
+  }
+
+  .clay-stat-number {
+    font-size: 2rem;
+    line-height: 1;
+    overflow-wrap: anywhere;
+  }
+
+  .clay-stat-label {
+    font-size: 0.78rem;
+    line-height: 1.2;
+  }
+
+  .clay-course-card {
+    min-width: 0;
+  }
+
+  .clay-course-thumb {
+    height: 128px;
+  }
+
+  .clay-tab {
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+
+  .clay-cta-primary,
+  .clay-cta-secondary {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+    padding: 14px 20px;
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  .clay-pet-showcase {
+    border-radius: 24px;
+    padding: 16px;
+  }
+}
+
+/* Ribbon/Banner */
+.clay-ribbon {
+  position: absolute;
+  top: 16px;
+  right: -8px;
+  background: linear-gradient(145deg, #FF9F9F, #FF7676);
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 6px 16px;
+  border-radius: 4px 0 0 4px;
+  box-shadow: 
+    0 4px 8px rgba(255, 118, 118, 0.3),
+    -2px 0 0 #E05050;
+}
+
+.clay-ribbon::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -8px;
+  border-width: 4px;
+  border-style: solid;
+  border-color: #C04040 #C04040 transparent transparent;
+}

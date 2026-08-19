@@ -1,4 +1,4 @@
-$bytes = [System.IO.File]::ReadAllBytes("E:\University\Graduted Project\Edu-platform\frontend-web\src\components\EnhancedVideoPlayer.tsx")
+$bytes = [System.IO.File]::ReadAllBytes("E:\University\Graduted Project\Edu-platform\frontend\src\components\EnhancedVideoPlayer.tsx")
 $line = 757
 $pos = 0
 $currentLine = 1

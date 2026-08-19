@@ -132,6 +132,59 @@ export interface ArCombinationSchema {
 }
 
 /**
+ * Lexi Agentic RAG — Chat Types
+ * Mirrors backend RAGChatRequest / RAGChatResponse and /chat/models
+ */
+
+// ── Model catalog ──────────────────────────────────────────────────────────────
+
+export interface ModelInfo {
+  id: string;
+  role: 'planner' | 'generator' | 'validator';
+  description: string;
+}
+
+export interface ChatModelsResponse {
+  models: ModelInfo[];
+  defaults: Record<string, string>;
+}
+
+// ── RAG Chat ───────────────────────────────────────────────────────────────────
+
+export interface RAGSource {
+  word: string;
+  score: number;
+}
+
+export interface RAGChatRequest {
+  question: string;
+  session_id?: string;
+  user_id?: string;
+  planner_model?: string;
+  generator_model?: string;
+  validator_model?: string;
+}
+
+export interface RAGChatResponse {
+  response: string;
+  sources: RAGSource[];
+  session_id: string;
+  agent_trace: string[];
+}
+
+// ── UI message shape ─────────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'ai';
+  content: string;
+  sources?: RAGSource[];
+  agentTrace?: string[];
+  timestamp: Date;
+}
+
+
+/**
  * Canonical flat learner/Unity DTO, with optional nested fields accepted for
  * the ARExperienceResponseSchema transport used by the newer AR endpoint.
  */
