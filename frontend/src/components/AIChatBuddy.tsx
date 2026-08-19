@@ -1,13 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CodexPetSprite } from '@/components/pets/CodexPetSprite';
 import { useAuth } from '../contexts/AuthContext';
-import { ChatService, type RAGChatResponse } from '../services/ChatService';
+import {
+    ChatService,
+    type RAGChatResponse,
+    type ModelInfo,
+    type ChatModelsResponse,
+} from '../services/ChatService';
 
 interface Message {
     id: string;
     role: 'user' | 'ai';
     content: string;
     sources?: { word: string; score: number }[];
+    agentTrace?: string[];
 }
 
 interface AIChatBuddyProps {
@@ -16,6 +22,111 @@ interface AIChatBuddyProps {
     show3DPet?: boolean;
 }
 
+// ─── Model picker dropdown ─────────────────────────────────────────────────────
+interface ModelPickerProps {
+    models: ModelInfo[];
+    defaults: Record<string, string>;
+    selected: { planner: string; generator: string; validator: string };
+    onChange: (sel: { planner: string; generator: string; validator: string }) => void;
+}
+
+function ModelPicker({ models, defaults, selected, onChange }: ModelPickerProps) {
+    const [open, setOpen] = useState(false);
+
+    const byRole = (role: string) => models.filter((m) => m.role === role);
+
+    const toggleRole = (role: string, modelId: string) => {
+        onChange({ ...selected, [role]: modelId });
+    };
+
+    const shortName = (id: string) => id.split('/').pop() ?? id;
+    const currentLabel = (role: string) => shortName(selected[role] || defaults[role] || 'default');
+
+    const ROLES = [
+        { key: 'planner', label: 'Planner', emoji: '🧠' },
+        { key: 'generator', label: 'Generator', emoji: '⚡' },
+        { key: 'validator', label: 'Validator', emoji: '✅' },
+    ] as const;
+
+    return (
+        <div className="relative">
+            <button
+                onClick={() => setOpen((o) => !o)}
+                className="flex min-h-[36px] items-center gap-1.5 rounded-full border-2 border-white/40 bg-white/20 px-3 py-1.5 text-xs font-black text-white transition-colors hover:bg-white/35"
+                title="Change AI models"
+            >
+                <span>⚙️</span>
+                <span className="hidden sm:inline">Models</span>
+            </button>
+
+            {open && (
+                <>
+                    <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+                    <div className="absolute right-0 top-full z-20 mt-2 w-64 rounded-2xl border-2 border-sky-100 bg-white p-3 shadow-xl">
+                        <p className="mb-2 text-xs font-black text-sky-500">AI Models</p>
+                        {ROLES.map(({ key, label, emoji }) => (
+                            <div key={key} className="mb-2 last:mb-0">
+                                <p className="mb-1 text-xs font-bold text-slate-500">
+                                    {emoji} {label}
+                                </p>
+                                <div className="flex flex-wrap gap-1">
+                                    {byRole(key).map((m) => {
+                                        const isActive = (selected[key] || defaults[key]) === m.id;
+                                        return (
+                                            <button
+                                                key={m.id}
+                                                onClick={() => toggleRole(key, m.id)}
+                                                className={`rounded-full px-2 py-0.5 text-xs font-bold transition-colors ${
+                                                    isActive
+                                                        ? 'bg-sky-100 text-sky-700 ring-1 ring-sky-400'
+                                                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                                }`}
+                                                title={m.description}
+                                            >
+                                                {shortName(m.id)}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
+                        <button
+                            onClick={() => setOpen(false)}
+                            className="mt-2 w-full rounded-xl bg-gradient-to-r from-yellow-300 to-orange-300 py-1.5 text-xs font-black text-slate-800 shadow-sm"
+                        >
+                            Done
+                        </button>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
+// ─── Agent trace debug ────────────────────────────────────────────────────────
+function AgentTrace({ trace }: { trace: string[] }) {
+    const [open, setOpen] = useState(false);
+    if (!trace.length) return null;
+    return (
+        <div className="mt-1">
+            <button
+                onClick={() => setOpen((o) => !o)}
+                className="text-xs text-slate-400 underline"
+            >
+                {open ? '▲' : '▼'} Debug
+            </button>
+            {open && (
+                <div className="mt-1 rounded-lg bg-slate-50 p-2 font-mono text-xs text-slate-400">
+                    {trace.map((s, i) => (
+                        <div key={i}>{s}</div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── Main component ────────────────────────────────────────────────────────────
 export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
     userId,
     initialOpen = false,
@@ -33,7 +144,29 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    // Model picker state
+    const [modelCatalog, setModelCatalog] = useState<ChatModelsResponse | null>(null);
+    const [selectedModels, setSelectedModels] = useState({
+        planner: '',
+        generator: '',
+        validator: '',
+    });
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Fetch model catalog on mount
+    useEffect(() => {
+        if (isOpen) {
+            ChatService.getModels()
+                .then((catalog) => {
+                    setModelCatalog(catalog);
+                    const d = catalog.defaults;
+                    setSelectedModels({ planner: d.planner, generator: d.generator, validator: d.validator });
+                })
+                .catch(() => {/* non-fatal */});
+        }
+    }, [isOpen]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -53,16 +186,24 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
         setIsLoading(true);
 
         try {
-            const response: RAGChatResponse = await ChatService.sendRAGMessage(input, effectiveUserId);
+            const response = await ChatService.sendRAGMessage(
+                input,
+                effectiveUserId,
+                {
+                    planner_model: selectedModels.planner || undefined,
+                    generator_model: selectedModels.generator || undefined,
+                    validator_model: selectedModels.validator || undefined,
+                },
+            );
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'ai',
                 content: response.response,
                 sources: response.sources,
+                agentTrace: response.agent_trace,
             };
             setMessages((prev) => [...prev, aiMsg]);
-        } catch (error) {
-            console.error('[AIChatBuddy] Chat error:', error);
+        } catch {
             setMessages((prev) => [
                 ...prev,
                 {
@@ -96,14 +237,14 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
 
     return (
         <>
+            {/* Floating pet button */}
             {!isOpen && show3DPet && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="group fixed bottom-[calc(env(safe-area-inset-bottom)+8rem)] right-2 flex h-16 w-16 cursor-pointer items-center justify-center p-0 transition-transform duration-300 motion-safe:hover:scale-105 sm:right-4 sm:h-[76px] sm:w-[76px] md:bottom-6 md:right-6 md:h-20 md:w-20 lg:h-[92px] lg:w-[92px]"
+                    className="fixed bottom-[calc(env(safe-area-inset-bottom)+8rem)] right-2 flex h-16 w-16 cursor-pointer items-center justify-center p-0 transition-transform duration-300 motion-safe:hover:scale-105 sm:right-4 sm:h-[76px] sm:w-[76px] md:bottom-6 md:right-6 md:h-20 md:w-20 lg:h-[92px] lg:w-[92px]"
                     style={{
                         zIndex: 'var(--z-chatbot)',
                         background: 'transparent',
-                        backgroundColor: 'transparent',
                         border: 0,
                         borderRadius: 0,
                         boxShadow: 'none',
@@ -121,16 +262,12 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                         <span className="absolute -right-2 top-8 h-4 w-4 rotate-45 border-r-2 border-t-2 border-sky-100 bg-white" />
                     </span>
                     <span className="block h-14 w-14 sm:h-[68px] sm:w-[68px] md:h-[72px] md:w-[72px] lg:h-[84px] lg:w-[84px]">
-                        <CodexPetSprite
-                            animationState="waiting"
-                            className="drop-shadow-2xl"
-                            label="Lexi"
-                            size="100%"
-                        />
+                        <CodexPetSprite animationState="waiting" className="drop-shadow-2xl" label="Lexi" size="100%" />
                     </span>
                 </button>
             )}
 
+            {/* Chat panel */}
             {isOpen && (
                 <div
                     className="fixed inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] flex h-[min(620px,calc(100dvh-env(safe-area-inset-bottom)-1rem))] max-h-[calc(100dvh-env(safe-area-inset-bottom)-1rem)] max-w-none animate-slideUp flex-col overflow-hidden rounded-[24px] border-4 border-white/80 shadow-[0_16px_0_rgba(91,141,239,0.10),0_26px_56px_rgba(45,60,90,0.18)] sm:inset-x-4 md:inset-x-auto md:bottom-6 md:right-6 md:h-[min(560px,calc(100dvh-3rem))] md:w-[410px] md:max-w-[410px] md:rounded-[28px]"
@@ -140,6 +277,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                         background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(239,249,255,0.98) 100%)',
                     }}
                 >
+                    {/* Header */}
                     <div className="relative overflow-hidden bg-gradient-to-r from-sky-400 via-cyan-400 to-emerald-300 p-3 sm:p-4">
                         <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/20" />
                         <div className="absolute bottom-0 left-12 h-14 w-14 rounded-full bg-yellow-200/25" />
@@ -156,6 +294,14 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
+                                {modelCatalog && (
+                                    <ModelPicker
+                                        models={modelCatalog.models}
+                                        defaults={modelCatalog.defaults}
+                                        selected={selectedModels}
+                                        onChange={setSelectedModels}
+                                    />
+                                )}
                                 <button
                                     onClick={handleNewChat}
                                     className="min-h-[44px] rounded-full border-2 border-white/30 bg-white/25 px-3 py-1.5 text-sm font-black text-white transition-colors hover:bg-white/35"
@@ -174,7 +320,11 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                         </div>
                     </div>
 
-                    <div className="flex-1 space-y-3 overflow-y-auto p-3 sm:p-4" style={{ background: 'linear-gradient(180deg, #F8FCFF 0%, #FFF8ED 100%)' }}>
+                    {/* Messages */}
+                    <div
+                        className="flex-1 space-y-3 overflow-y-auto p-3 sm:p-4"
+                        style={{ background: 'linear-gradient(180deg, #F8FCFF 0%, #FFF8ED 100%)' }}
+                    >
                         {messages.map((msg) => (
                             <div
                                 key={msg.id}
@@ -197,6 +347,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                                         {msg.content}
                                     </div>
 
+                                    {/* Source chips */}
                                     {msg.role === 'ai' && msg.sources && msg.sources.length > 0 && (
                                         <div className="mt-1 flex flex-wrap gap-1">
                                             {msg.sources.map((src, idx) => (
@@ -210,6 +361,9 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                                             ))}
                                         </div>
                                     )}
+
+                                    {/* Agent trace */}
+                                    {msg.agentTrace && <AgentTrace trace={msg.agentTrace} />}
                                 </div>
                             </div>
                         ))}
@@ -228,6 +382,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                         <div ref={messagesEndRef} />
                     </div>
 
+                    {/* Input */}
                     <div className="border-t-2 border-sky-100 bg-white p-3">
                         <div className="flex items-end gap-2">
                             <input

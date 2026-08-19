@@ -13,16 +13,37 @@ export interface RAGChatResponse {
     response: string;
     sources: { word: string; score: number }[];
     session_id: string;
+    agent_trace?: string[];
 }
 
 export interface PronunciationResult {
     feedback: string;
 }
 
-// ========== Session Management ==========
+// ── Model catalog ────────────────────────────────────────────────────────────────
+
+export interface ModelInfo {
+    id: string;
+    role: 'planner' | 'generator' | 'validator';
+    description: string;
+}
+
+export interface ChatModelsResponse {
+    models: ModelInfo[];
+    defaults: Record<string, string>;
+}
+
+// ── Session Management ────────────────────────────────────────────────────────
 let currentSessionId: string | null = null;
 
 export const ChatService = {
+    /**
+     * Get available TokenRouter models from backend.
+     */
+    async getModels(): Promise<ChatModelsResponse> {
+        return apiClient.get('/api/v1/chat/models');
+    },
+
     /**
      * Get or create session ID for conversation tracking
      */
@@ -41,18 +62,26 @@ export const ChatService = {
     },
 
     /**
-     * Send message using RAG-enabled endpoint (new)
-     * Uses vector search to find relevant flashcards for context
+     * Send message using RAG-enabled endpoint.
+     * Optional per-stage model overrides route each agent to a different model.
      */
-    async sendRAGMessage(question: string, userId?: string): Promise<RAGChatResponse> {
+    async sendRAGMessage(
+        question: string,
+        userId?: string,
+        modelOverrides?: {
+            planner_model?: string;
+            generator_model?: string;
+            validator_model?: string;
+        },
+    ): Promise<RAGChatResponse> {
         try {
-            const response = await apiClient.post('/api/v1/chat/rag', {
+            const response = await apiClient.post<RAGChatResponse>('/api/v1/chat/rag', {
                 question,
                 session_id: this.getSessionId(),
-                user_id: userId || null
+                user_id: userId || null,
+                ...modelOverrides,
             });
 
-            // Update session ID from response
             if (response.session_id) {
                 currentSessionId = response.session_id;
             }
@@ -60,11 +89,10 @@ export const ChatService = {
             return response;
         } catch (error) {
             console.error('[ChatService] RAG request failed:', error);
-            // Fallback response
             return {
                 response: "Sorry, I ran into an error. Please try again! 🙏",
                 sources: [],
-                session_id: this.getSessionId()
+                session_id: this.getSessionId(),
             };
         }
     },
@@ -75,7 +103,7 @@ export const ChatService = {
     async sendMessage(message: string, context: string = ""): Promise<string> {
         const response = await apiClient.post('/api/v1/chat/message', {
             message,
-            context
+            context,
         });
         return response.response;
     },
@@ -86,7 +114,7 @@ export const ChatService = {
     async analyzePronunciation(targetText: string, audioText: string): Promise<PronunciationResult> {
         const response = await apiClient.post('/api/v1/chat/pronunciation', {
             target_text: targetText,
-            audio_text: audioText
+            audio_text: audioText,
         });
         return response;
     },
@@ -95,10 +123,9 @@ export const ChatService = {
      * Test embedding generation (debug)
      */
     async testEmbedding(text: string): Promise<{ status: string; embedding_length: number }> {
-        const response = await apiClient.post('/api/v1/chat/test-embedding', {
-            text
-        });
+        const response = await apiClient.post('/api/v1/chat/test-embedding', { text });
         return response;
-    }
+    },
 };
+
 
