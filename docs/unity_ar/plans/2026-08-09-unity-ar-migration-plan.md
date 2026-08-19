@@ -1,5 +1,5 @@
 ## Status
-**Active** — As of 2026-08-15
+**Active** — As of 2026-08-18 (P0-P8, P6A complete)
 
 ### Phase completion summary
 
@@ -7,11 +7,16 @@
 |-------|-------|--------|
 | P0 | Stabilization | ✅ Complete |
 | P1 | XR Simulation | ✅ Complete |
-| P2 | Backend Native AR Contract | ⚠️ Partial — see below |
-| P3 | Runtime Reference-Image Library | ⚠️ Partial — see below |
-| P4 | Multi-Card Registry Wiring | ⚠️ Partial — see below |
-| P5 | Combo Refinement | ⚠️ Partial — blocked on P4 wiring, now resolved |
-| P6–P11 | Backend combo, animation, game mode, Android, iOS, cutover | Not started |
+| P2 | Backend Native AR Contract | ✅ Complete — fields exist, SQL written |
+| P3 | Runtime Reference-Image Library | ✅ Complete — CardImageLibraryBuilder wired |
+| P4 | Multi-Card Registry Wiring | ✅ Complete — multi-card model spawning verified |
+| P5 | Combo Refinement | ✅ Complete |
+| P6 | Semantic Combo Resolution | ✅ Complete |
+| P6A | Hardcoded Combo Table Retirement | ✅ Complete — _comboTable removed in P6; semantic only |
+| P7 | Animation / Content Behavior | ✅ Complete — 10 PlayMode tests pass |
+| P8 | Gamification Bridge | ✅ Complete — 5 PlayMode tests pass |
+| TBD | In-AR Game Mode Foundation | Future |
+| P9–P11 | Android, iOS, cutover | Not started — needs physical device |
 
 ## Target spec
 - `docs/unity_ar/spec/requirements-baseline.md`

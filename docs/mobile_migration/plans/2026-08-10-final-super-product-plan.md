@@ -24,7 +24,7 @@ MASTER PRODUCT ORCHESTRATION
 │   ├── R8: Gamification + Progress + Stickers
 │   ├── R9: Pets (collection, care, unlock)
 │   ├── R10: Session Management / Break Lifecycle
-│   ├── R11: AI Chat (DECISION_REQUIRED — DQ-7)
+│   ├── R11: AI Chat — Lexi Agentic RAG (TokenRouter multi-model + RN ChatScreen) · spec: `spec/lexi-agentic-rag-spec.md` · plan: `plans/2026-08-19-lexi-agentic-rag-plan.md`
 │   ├── R12: Native AR Product Integration
 │   ├── R13: Android E2E
 │   ├── R14: iOS E2E
@@ -110,7 +110,7 @@ High-level architecture change: `Parent preference → LearningTopic → Course 
 | R8 | PARTIAL | gamificationService exists; no UI wiring |
 | R9 | PARTIAL | PetsScreen with hardcoded stats |
 | R10 | NOT STARTED | Session timer, warning, break |
-| R11 | DECISION_REQUIRED | DQ-7 gates AI Chat |
+| R11 | IN PROGRESS | Lexi Agentic RAG — TokenRouter multi-model (Qwen planner / DeepSeek generator / Nemotron validator + fallback cascade + circuit breaker) + RN ChatScreen with model picker. Spec: `spec/lexi-agentic-rag-spec.md` · Plan: `plans/2026-08-19-lexi-agentic-rag-plan.md` |
 | R12 | NOT STARTED | AR entry, capability gating |
 | R13–R15 | NOT STARTED | Android/iOS E2E, cutover |
 

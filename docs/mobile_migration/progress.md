@@ -2,7 +2,14 @@
 # Format: Task N: status (description)
 
 ## Branch
-MindAR-Update (from main)
+10-days-quick-run (from main)
+
+## Cross-reference
+See `docs/unity_ar/progress/2026-08-18-migration-status-reconciliation.md` for full M0–M12 phase status vs. code evidence.
+
+## ⚠️ Unity AR phases (M2–M12) — see `docs/unity_ar/`
+This ledger covers **React Native UI/UX redesign** only.
+Unity AR phases M2–M12 are tracked in `docs/unity_ar/progress/2026-08-18-migration-status-reconciliation.md`.
 
 ## Overview
 

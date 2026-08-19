@@ -14,8 +14,8 @@
 - LearningSession activity dispatch: **PASS in focused tests**
 - Representative Cat Lesson: **PRODUCTION/API SLICE PASS**
 - Device runtime: **NOT VERIFIED**
-- Expo Web: **PREFLIGHT VERIFIED; LEARNER E2E PENDING AUTHENTICATED TEST SESSION**
-- Playwright: **SHELL PASS; CAT/ALL-FIVE FLOWS SKIPPED WITHOUT APPROVED TEST CREDENTIALS**
+- Expo Web: **LOCAL CORS + AUTH TRANSPORT VERIFIED; POST-LOGIN ACCEPTANCE IS NATIVE-ONLY**
+- Playwright: **WEB LIMITATION ACCEPTED; CAT/ALL-FIVE FLOWS REQUIRE RN/NATIVE VALIDATION**
 - Supabase Storage / `media_assets`: **UNCHANGED**
 - AR / Unity / DQ-10: **UNCHANGED**
 
@@ -55,12 +55,24 @@ RN contains no Supabase client, bucket/path construction, filename guessing, or 
 - Web test artifacts: `mobile/rn/playwright.config.ts` and `mobile/rn/e2e/lc11-web.spec.ts`; no learner production component or backend code was changed.
 - Physical Android: **NOT VERIFIED**; ADB remains at zero connected devices.
 
+## Expo Web CORS checkpoint — 2026-08-17
+
+- Normal Expo Web learner origin: `http://127.0.0.1:8081`.
+- FastAPI CORS is configured in `backend/main.py` from `Settings.cors_origins`.
+- Production origins come from `ALLOWED_ORIGINS` and `DEFAULT_FRONTEND_ORIGIN`; `DEV_ORIGINS` are included only when `DEBUG=true`.
+- Neither `http://localhost:8081` nor `http://127.0.0.1:8081` is present in the checked-in production or development origin defaults. They are distinct CORS origins and would require separate explicit entries.
+- Production CORS remains unchanged. For local E2E, the existing `DEBUG=true` backend configuration was given the single dev-only origin `http://127.0.0.1:8081` and Expo Web was run with a process-only `EXPO_PUBLIC_API_URL=http://127.0.0.1:8000` override.
+- Local `OPTIONS /api/v1/auth/login` returned HTTP 200 with `Access-Control-Allow-Origin: http://127.0.0.1:8081`.
+- The normal AuthScreen received a successful local backend login response. It then failed before navigation because `useAuth` calls `expo-secure-store` directly and Expo Web raised `setValueWithKeyAsync is not a function` while persisting the token.
+- No Auth/token semantic change was made. The project accepts Expo Web's native-only SecureStore limitation; learner role, post-login route, CourseList, Cat, and all-five acceptance continue through the supported RN/native path.
+- Course behavior, database schema, Storage, Unity, AR, and `frontend-web/**` were unchanged by this checkpoint.
+
 ## Safety
 
 Authorized production mutation was limited to four flashcard owners and the canonical LC7 Course/Lesson/Quiz/Game content. Storage, `media_assets`, production schema, Alembic, user progress, sessions, attempts, gamification, AR metadata, Unity, and DQ-10 were not mutated.
 
 ## Gate
 
-`LC11 PRODUCTION CONTENT BLOCKER CLOSED — LEARNER VERTICAL SLICE READY FOR DEVICE ACCEPTANCE`
+`LC11 DONE WITH ACCEPTED WEB E2E LIMITATION — RN/NATIVE ACCEPTANCE REMAINS PENDING`
 
 Device runtime remains **NOT VERIFIED**.

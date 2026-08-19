@@ -20,6 +20,7 @@
 | 3DINT | `interactive-3d-model-spec.md` | approved | Native 3D model touch interaction (touch → raycast → hotspot → animation → audio → event pipeline; Cat first fixture) |
 | PRON-SPEC | `pronunciation-ai-spec.md` | approved | Pronunciation AI product spec (recording UX, child-friendly scoring bands, audio categories, privacy boundary) |
 | PRON-ML | `pronunciation-ai-ml-plan.md` | approved | Pronunciation AI ML workstream (PRON-A0 through PRON-A9 + PRON-B0; dataset, fine-tuning, evaluation, calibration) |
+| LEXI-RAG | `lexi-agentic-rag-spec.md` | draft | Lexi Agentic RAG with TokenRouter multi-model routing (Qwen planner / DeepSeek generator / Nemotron validator + fallback cascade + circuit breaker) and the equivalent React Native chat screen with model picker |
 
 ## Requirement ID Conventions
 

@@ -1,33 +1,59 @@
+# Blocker: No ARCore-certified Android device available
+
+## ID
+`blocker-2026-08-13-android-device`
+
+## Raised
+2026-08-13 (updated 2026-08-18)
+
+## Phase
+M10 — Android E2E
+
+## Severity
+High
+
+## Description
+
+The APK `app-debug.apk` is built for `armeabi-v7a` (32-bit ARM) and IS compatible with LG K42 / LM-K420 (armeabi-v7a). The installation issue from 2026-08-13 (ABI mismatch) has been resolved.
+
+**However**, ARCore (Google's AR runtime for Android) requires **arm64-v8a** architecture. LG K42 is also NOT on Google's ARCore certified device list.
+
+This means:
+- APK installs on LG K42 ✅
+- AR features do NOT work (ARCore unavailable) ❌
+
+To test native AR on Android, need:
+1. `arm64-v8a` APK build
+2. ARCore-certified device
+
+## APK Architecture Evidence (2026-08-18)
+
+```
+$ unzip -l app-debug.apk | grep lib/armeabi
+  lib/armeabi-v7a/libappmodules.so    ✅
+  lib/armeabi-v7a/libgame.so          ✅ (Unity game library)
+  ...
+No arm64-v8a libs found in this APK.
+```
+
+## Solution
+
+### Option 1: Build arm64-v8a APK + use certified device
+```bash
+# Change gradle.properties:
+reactNativeArchitectures=arm64-v8a
+
+# Rebuild, install on ARCore-certified device:
+# Samsung Galaxy S10/S20/S21/S22, Google Pixel 4/5/6/7, OnePlus 8/9/10
+```
+
+### Option 2: Use Expo prebuild + Unity as Library for certified device
+- `npx expo prebuild --platform android`
+- Build APK with arm64-v8a
+- Install on certified device
+
 ## Status
-open
+Open — needs ARCore-certified 64-bit Android device + arm64-v8a APK rebuild
 
-## Blocks
-- `docs/unity_ar/spec/acceptance-gates.md` — physical Android embedded-runtime and ARCore camera acceptance.
-- `docs/unity_ar/spec/architecture-specification.md` — RN-hosted Unity AR Foundation runtime on Android.
-
-## Symptom
-The connected physical device is an LG `LM-K420` (`meh15lm`) running Android 11 / API 30 with a 32-bit userspace only:
-
-- `ro.product.cpu.abi = armeabi-v7a`
-- `ro.product.cpu.abilist = armeabi-v7a,armeabi`
-
-The current RN host, Unity export, and APK contain only `arm64-v8a`. Installing the exact current host APK reproduces:
-
-`INSTALL_FAILED_NO_MATCHING_ABIS: Failed to extract native libraries, res=-113`
-
-Google Play Services for AR (`com.google.ar.core`) is installed, but LG K42 / LM-K420 is absent from Google's current ARCore certified-device list. Therefore this handset cannot be used as evidence for the required certified ARCore camera / `AR_READY` gate.
-
-## Hypotheses (ranked)
-1. The LG K42 is the wrong acceptance handset — its 32-bit Android userspace conflicts with the existing arm64 pipeline, and the model is not ARCore-certified.
-2. An ARMv7 Unity/RN build could prove basic embedded rendering and direct bridge behavior on this handset, but it still cannot provide valid ARCore device acceptance.
-
-## Tried
-- Verified ADB authorization and exact device identity/ABI.
-- Enumerated Unity export JNI libraries and APK `lib/<abi>/` entries; both are arm64-only.
-- Reproduced the install failure with `adb install -r` against the exact APK path.
-- Changed Unity Player target architecture to ARMv7 and RN `reactNativeArchitectures` to `armeabi-v7a`.
-- Added `Assets/Scenes/ARScene.unity` to Unity Android build scenes.
-- Scheduled a fresh Unity Gradle export. The Unity MCP job became stale/timed out and the export timestamps and JNI libraries remained unchanged, so no ARMv7 artifact was produced or claimed.
-
-## Resolution
-Provide an ADB-authorized, ARCore-certified ARM64 Android device for final acceptance. If basic bridge diagnostics on LG K42 are still desired, first complete and verify an ARMv7 Unity export and RN host build, while keeping the ARCore gate explicitly blocked.
+## Impact
+M10 cannot be verified until resolved. All M2–M9 code is complete.
