@@ -26,6 +26,15 @@ _TEST_ENV: Dict[str, str] = {
     "DEFAULT_FRONTEND_ORIGIN": "http://localhost:5173",
     "ALLOWED_ORIGINS": "*",
     "DEV_ORIGINS": "http://localhost:3000,http://localhost:5173",
+    # TokenRouter / LLM (needed for settings initialization)
+    "TOKENROUTER_API_KEY": "test_tokenrouter_key",
+    "MODEL_PLANNER": "qwen/qwen3.8-max-free",
+    "MODEL_GENERATOR": "deepseek/deepseek-v4-pro-0813-free",
+    "MODEL_VALIDATOR": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    # Qdrant (needed for AgenticRAGService)
+    "QDRANT_URL": "http://localhost:6333",
+    "QDRANT_API_KEY": "test_qdrant_key",
+    "QDRANT_COLLECTION_NAME": "test_collection",
 }
 for _k, _v in _TEST_ENV.items():
     os.environ.setdefault(_k, _v)
