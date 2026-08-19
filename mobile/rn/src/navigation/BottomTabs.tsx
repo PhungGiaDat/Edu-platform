@@ -51,8 +51,8 @@ const TABS: TabEntry[] = [
     key: 'Chat',
     label: 'Lexi',
     icon: 'lexi',
-    color: BRAND.purple,
-    bgColor: 'rgba(168,85,247,0.15)',
+    color: BRAND.lavender,
+    bgColor: 'rgba(167,139,250,0.15)',
   },
   {
     key: 'Games',

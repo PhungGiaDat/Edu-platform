@@ -173,14 +173,14 @@ export interface RAGChatResponse {
 }
 
 // ── UI message shape ─────────────────────────────────────────────────────────
-
+// timestamp is number (Unix ms) for AsyncStorage JSON compatibility
 export interface ChatMessage {
   id: string;
   role: 'user' | 'ai';
   content: string;
   sources?: RAGSource[];
   agentTrace?: string[];
-  timestamp: Date;
+  timestamp: number;
 }
 
 
