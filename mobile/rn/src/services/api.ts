@@ -85,6 +85,20 @@ api.interceptors.response.use(
   }
 );
 
+// ── Chat / RAG ────────────────────────────────────────────────────────────────
+
+export interface ChatApi {
+  /** GET /chat/models — available TokenRouter models + defaults */
+  getModels: () => Promise<AxiosResponse<import('../types/api').ChatModelsResponse>>;
+  /** POST /chat/rag — Agentic RAG: Planner → Generator → Validator */
+  sendRAG: (payload: import('../types/api').RAGChatRequest) => Promise<AxiosResponse<import('../types/api').RAGChatResponse>>;
+}
+
+export const chatApi: ChatApi = {
+  getModels: () => api.get<import('../types/api').ChatModelsResponse>('/chat/models'),
+  sendRAG: (payload) => api.post<import('../types/api').RAGChatResponse>('/chat/rag', payload),
+};
+
 export interface AuthApi {
   /**
    * POST /auth/login — backend uses `OAuth2PasswordRequestForm`, which

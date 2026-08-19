@@ -28,6 +28,7 @@ import { DragMatchScreen } from '../screens/games/DragMatchScreen';
 import { MemoryPairsScreen } from '../screens/games/MemoryPairsScreen';
 import { ColorLearnScreen } from '../screens/games/ColorLearnScreen';
 import { BridgeDiagnosticScreen } from '../screens/BridgeDiagnosticScreen';
+import { ChatScreen } from '../screens/ChatScreen';
 import { BRAND, COLORS } from '../design/tokens';
 import type { Lesson } from '../types/course';
 
@@ -46,6 +47,7 @@ export type RootStackParamList = {
   MemoryPairs: undefined;
   ColorLearn: undefined;
   BridgeDiagnostic: undefined;
+  Chat: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -152,6 +154,13 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
             name="BridgeDiagnostic"
             component={BridgeDiagnosticScreen}
             options={{ headerShown: true, headerTitle: 'Unity Bridge Diagnostics' }}
+          />
+          <Stack.Screen
+            name="Chat"
+            component={ChatScreen}
+            options={{
+              headerShown: false,
+            }}
           />
           <Stack.Screen
             name="GamesMenu"

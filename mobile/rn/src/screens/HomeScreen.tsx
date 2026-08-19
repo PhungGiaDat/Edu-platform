@@ -132,6 +132,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = () => {
     (next: BottomTabKey) => {
       setActiveTab(next);
       if (next === 'Learning') nav.navigate('LearningPath');
+      else if (next === 'Chat') nav.navigate('Chat');
       else if (next === 'Games') nav.navigate('GamesMenu');
       else if (next === 'Pets') nav.navigate('Pets');
       else if (next === 'Profile') nav.navigate('Profile');

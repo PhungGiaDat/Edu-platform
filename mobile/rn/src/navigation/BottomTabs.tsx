@@ -17,7 +17,7 @@ import Animated, {
 import { ClayIcon, type ClayIconName } from '../components/icons/ClayIcons';
 import { COLORS, FONT, RADIUS, SHADOWS, SPACING, BRAND } from '../design/tokens';
 
-export type BottomTabKey = 'Home' | 'Learning' | 'Games' | 'Pets' | 'Profile';
+export type BottomTabKey = 'Home' | 'Learning' | 'Chat' | 'Games' | 'Pets' | 'Profile';
 
 export interface BottomTabsProps {
   active: BottomTabKey;
@@ -46,6 +46,13 @@ const TABS: TabEntry[] = [
     icon: 'compass',
     color: BRAND.skyBlueDark,
     bgColor: 'rgba(110,185,255,0.18)',
+  },
+  {
+    key: 'Chat',
+    label: 'Lexi',
+    icon: 'lexi',
+    color: BRAND.purple,
+    bgColor: 'rgba(168,85,247,0.15)',
   },
   {
     key: 'Games',
