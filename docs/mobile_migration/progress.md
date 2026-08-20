@@ -52,10 +52,10 @@ All 4 main screens redesigned, wired to real data via existing hooks.
 #### Frontend Tasks
 | # | Task | Platform | Status |
 |---|------|----------|--------|
-| 5 | NotebookScreen | Web + RN | ⏳ Pending |
-| 6 | DictionaryScreen | Web + RN | ⏳ Pending |
-| 7 | SwipeFlashcardsScreen | Web + RN | ⏳ Pending |
-| 8 | Push Notification System | Web + RN | ⏳ Pending |
+| 5 | NotebookScreen | Web | ✅ DONE |
+| 6 | DictionaryScreen | Web | ✅ DONE |
+| 7 | SwipeFlashcardsScreen | Web | ✅ DONE |
+| 8 | Push Notification System | Web | ⏳ Pending |
 
 #### PWA Setup (Add to Home Screen)
 | File | Description |
