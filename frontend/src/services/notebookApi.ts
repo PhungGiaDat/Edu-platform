@@ -2,7 +2,7 @@
  * Notebook API Client
  * Frontend service for Notebook (Sổ tay) endpoints
  */
-import { apiClient } from './apiClient';
+import { request } from './apiClient';
 import type { NotebookEntry, CreateEntryRequest, UpdateEntryRequest } from '../types/notebook';
 
 export interface NotebookListResponse {
@@ -46,57 +46,57 @@ export const notebookApi = {
     if (params?.per_page) searchParams.set('per_page', String(params.per_page));
 
     const query = searchParams.toString();
-    return apiClient.get<NotebookListResponse>(
-      `/api/v1/notebook${query ? `?${query}` : ''}`
-    );
+    return request(`/api/v1/notebook${query ? `?${query}` : ''}`, { method: 'GET' }) as Promise<NotebookListResponse>;
   },
 
   /**
    * Get cards due for review
    */
   async getDueCards(limit = 20): Promise<DueCardsResponse> {
-    return apiClient.get<DueCardsResponse>(
-      `/api/v1/notebook/due?limit=${limit}`
-    );
+    return request(`/api/v1/notebook/due?limit=${limit}`, { method: 'GET' }) as Promise<DueCardsResponse>;
   },
 
   /**
    * Get a single notebook entry
    */
   async get(id: string): Promise<NotebookEntry> {
-    return apiClient.get<NotebookEntry>(`/api/v1/notebook/${id}`);
+    return request(`/api/v1/notebook/${id}`, { method: 'GET' }) as Promise<NotebookEntry>;
   },
 
   /**
    * Create a new notebook entry
    */
   async create(data: CreateEntryRequest): Promise<NotebookEntry> {
-    return apiClient.post<NotebookEntry>('/api/v1/notebook', data);
+    return request('/api/v1/notebook', {
+      method: 'POST',
+      body: data,
+    }) as Promise<NotebookEntry>;
   },
 
   /**
    * Update a notebook entry
    */
   async update(id: string, data: UpdateEntryRequest): Promise<NotebookEntry> {
-    return apiClient.put<NotebookEntry>(`/api/v1/notebook/${id}`, data);
+    return request(`/api/v1/notebook/${id}`, {
+      method: 'PUT',
+      body: data,
+    }) as Promise<NotebookEntry>;
   },
 
   /**
    * Delete a notebook entry
    */
   async delete(id: string): Promise<void> {
-    return apiClient.delete(`/api/v1/notebook/${id}`);
+    return request(`/api/v1/notebook/${id}`, { method: 'DELETE' }) as Promise<void>;
   },
 
   /**
    * Submit a review result (SM-2 algorithm)
-   * @param id Entry ID
-   * @param quality Quality rating: 0-5
    */
   async submitReview(id: string, quality: number): Promise<ReviewResult> {
-    return apiClient.post<ReviewResult>('/api/v1/notebook/review', {
-      entry_id: id,
-      quality,
-    });
+    return request('/api/v1/notebook/review', {
+      method: 'POST',
+      body: { entry_id: id, quality },
+    }) as Promise<ReviewResult>;
   },
 };

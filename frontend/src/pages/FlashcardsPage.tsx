@@ -3,10 +3,10 @@
  * Swipe up to next, left = don't know, right = know
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSwipeable } from 'react-swipeable';
+import { useSwipeable, type SwipeCallback } from 'react-swipeable';
 import { notebookApi } from '../services/notebookApi';
 import type { NotebookEntry, VocabularyTopic } from '../types/notebook';
-import { ClayCard } from '../components/ClayCard';
+import { ClayCard } from '../components/clay/ClayCard';
 import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { Badge } from '../components/ui/Badge';

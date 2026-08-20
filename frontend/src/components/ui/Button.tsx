@@ -23,28 +23,34 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const variantStyles = {
-    primary: {
-      backgroundColor: colors.skyBlue,
-      color: 'white',
-      boxShadow: shadows.clayBlue,
-    },
-    secondary: {
-      backgroundColor: colors.warmWhite,
-      color: colors.deepSlate,
-      boxShadow: shadows.clay,
-    },
-    outline: {
-      backgroundColor: 'transparent',
-      color: colors.deepSlate,
-      border: `2px solid ${colors.lightGray}`,
-      boxShadow: 'none',
-    },
-    ghost: {
-      backgroundColor: 'transparent',
-      color: colors.mediumGray,
-      boxShadow: 'none',
-    },
+  const getStyles = () => {
+    const base = {
+      primary: {
+        backgroundColor: colors.skyBlue,
+        color: 'white',
+        boxShadow: shadows.clayBlue,
+        border: 'none' as const,
+      },
+      secondary: {
+        backgroundColor: colors.warmWhite,
+        color: colors.deepSlate,
+        boxShadow: shadows.clay,
+        border: 'none' as const,
+      },
+      outline: {
+        backgroundColor: 'transparent',
+        color: colors.deepSlate,
+        boxShadow: 'none',
+        border: `2px solid ${colors.lightGray}`,
+      },
+      ghost: {
+        backgroundColor: 'transparent',
+        color: colors.mediumGray,
+        boxShadow: 'none',
+        border: 'none' as const,
+      },
+    };
+    return base[variant];
   };
 
   const sizes = {
@@ -53,7 +59,7 @@ export function Button({
     lg: 'px-6 py-3 text-lg',
   };
 
-  const v = variantStyles[variant];
+  const style = getStyles();
 
   return (
     <button
@@ -68,13 +74,7 @@ export function Button({
         ${sizes[size]}
         ${className}
       `}
-      style={{
-        backgroundColor: v.backgroundColor,
-        color: v.color,
-        boxShadow: v.boxShadow,
-        border: v.border,
-        ...(variant === 'primary' && { border: 'none' }),
-      }}
+      style={style}
       {...props}
     >
       {loading ? (

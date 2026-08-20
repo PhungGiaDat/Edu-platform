@@ -2,7 +2,6 @@
  * Input - Text input component
  */
 import { colors } from '../../design-tokens/claymorphic';
-import { type } from 'os';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;

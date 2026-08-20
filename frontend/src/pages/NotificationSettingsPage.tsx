@@ -3,7 +3,7 @@
  * Configure spaced repetition push notification schedules
  */
 import { useState, useEffect } from 'react';
-import { ClayCard } from '../components/ClayCard';
+import { ClayCard } from '../components/clay/ClayCard';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Switch } from '../components/ui/Switch';
@@ -25,7 +25,7 @@ interface NotificationSettings {
 }
 
 export function NotificationSettingsPage() {
-  const { user } = useAuth();
+  const { user: _user } = useAuth(); // TODO: use for personalized settings
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<NotificationSettings>({

@@ -12,25 +12,33 @@ export const colors = {
   sunshineYellow: '#FFD93D',
   sunshineYellowDark: '#E5B800',
   sunshineYellowLight: '#FFF3A3',
-  
+
   skyBlue: '#6EB9FF',
   skyBlueDark: '#3A8FD1',
   skyBlueLight: '#C5E4FF',
-  
+
   mintGreen: '#B4E197',
   mintGreenDark: '#7DC760',
   mintGreenLight: '#DFFFD0',
-  
+
   coralPink: '#FF9F9F',
   coralPinkDark: '#D97070',
   coralPinkLight: '#FFD5D5',
-  
+
+  // Vibrant Palette
+  vibrantOrange: '#FF8C42',
+  electricPurple: '#A855F7',
+  neonTeal: '#14B8A6',
+  bubblePink: '#F472B6',
+  lavender: '#A78BFA',
+
   // Neutrals
   warmWhite: '#FFFBF0',
   deepSlate: '#1A2744',
   mediumGray: '#4A5568',
   lightGray: '#94A3B8',
   darkBg: '#111827',
+  backgroundBase: '#FFF8EE',
 } as const;
 
 // ─── Shadows ──────────────────────────────────────────────────
