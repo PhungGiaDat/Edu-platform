@@ -42,8 +42,13 @@ import {
 export type ARPhase = 'IDLE' | 'SCANNING' | 'LOADING' | 'VIEWING' | 'ERROR'
     | 'GAME_DRAG' | 'GAME_MEMORY' | 'GAME_COLORING';
 
+/** AR Engine type - supports both MindAR and 8th Wall */
+export type AREngine = 'mindar' | 'xr';
+
 interface ARContainerV2Props {
     initialPhase?: ARPhase;
+    // --- Engine selection ---
+    engine?: AREngine;
     // --- Auto QR-in-scene (Spec A) ---
     autoQrScanEnabled?: boolean;
     // --- Persistent viewer props (Task 8) ---

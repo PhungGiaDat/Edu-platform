@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>8th Wall AR</title>
+  <script src="https://8thwall.io/xr、防晒"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+    #container { width: 100%; height: 100%; position: relative; }
+    #overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.7); color: #fff; z-index: 100;
+      font-family: system-ui, sans-serif; text-align: center; padding: 20px;
+    }
+    #overlay.hidden { display: none; }
+    #loading-text { font-size: 18px; margin-bottom: 10px; }
+    #error-text { color: #FF6B6B; font-size: 16px; margin-top: 10px; }
+    canvas { display: block; width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="overlay">
+      <div>
+        <div id="loading-text">Loading 8th Wall AR...</div>
+        <div id="error-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== PARAMS FROM URL ==========
+    const params = new URLSearchParams(window.location.search);
+    const targetJsons = params.get('targets') || ''; // comma-separated JSON URLs
+    const modelUrl = params.get('model') || '';
+    const deckName = params.get('deck') || 'AR Experience';
+
+    // Parse target JSON URLs
+    const targetUrls = targetJsons ? targetJsons.split(',').filter(Boolean) : [];
+    const targetCount = targetUrls.length || 1;
+
+    // ========== POST MESSAGE BRIDGE ==========
+    function sendMessage(type, payload) {
+      window.parent.postMessage({ type, payload }, '*');
+    }
+
+    function showLoading(msg) {
+      document.getElementById('loading-text').textContent = msg;
+    }
+
+    function showError(msg) {
+      document.getElementById('error-text').textContent = msg;
+    }
+
+    function hideOverlay() {
+      document.getElementById('overlay').classList.add('hidden');
+    }
+
+    // ========== 8TH WALL XR ENGINE ==========
+    const xr = await window.XR8.Threejs.createRenderer({
+      canvas: document.createElement('canvas'),
+      options: {
+        debug: false,
+        antialias: true,
+      }
+    });
+
+    // Create scene
+    const scene = new THREE.Scene();
+    const camera = new THREE.Camera();
+    const renderer = xr.createRenderer();
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+    directionalLight.position.set(0, 5, 5);
+    scene.add(directionalLight);
+
+    // Model loader
+    let loadedModel = null;
+    const loader = new THREE.GLTFLoader();
+
+    function loadModel(url) {
+      if (!url) return Promise.resolve();
+      return new Promise((resolve, reject) => {
+        loader.load(url, (gltf) => {
+          loadedModel = gltf.scene;
+          // Apply claymorphic-like materials
+          loadedModel.traverse((child) => {
+            if (child.isMesh) {
+              child.material = new THREE.MeshStandardMaterial({
+                color: 0xf5f5f0,
+                roughness: 0.7,
+                metalness: 0.1,
+                flatShading: false,
+              });
+              child.castShadow = true;
+              child.receiveShadow = true;
+            }
+          });
+          // Start hidden
+          loadedModel.visible = false;
+          scene.add(loadedModel);
+          resolve();
+        }, undefined, reject);
+      });
+    }
+
+    // Load model if provided
+    if (modelUrl) {
+      loadModel(modelUrl).catch(e => console.error('Model load error:', e));
+    }
+
+    // ========== XR8 CAMERA CONTROLLER ==========
+    const camController = window.XR8.Threejs.xrCameraController();
+    const camSession = window.XR8.Threejs.xrCameraSession();
+
+    // ========== XR8 IMAGE TRACKING ==========
+    // 8th Wall uses imageTargetLocations for image tracking
+    const imageTargets = [];
+
+    // Create image target locations dynamically from URLs
+    async function createImageTargets() {
+      for (let i = 0; i < targetUrls.length; i++) {
+        const jsonUrl = targetUrls[i];
+        try {
+          const response = await fetch(jsonUrl);
+          const data = await response.json();
+          // 8th Wall expects a URL to the luminance image
+          const imageUrl = data.imagePath ?
+            jsonUrl.replace('.json', '_luminance.png') : '';
+
+          imageTargets.push({
+            name: `target_${i}`,
+            imageUrl: imageUrl,
+            physicalWidth: 0.08, // 8cm default
+          });
+        } catch (e) {
+          console.error('Failed to load target JSON:', jsonUrl, e);
+        }
+      }
+
+      // Create hit-test or image tracking controller
+      const imageControllerConfig = {
+        enabled: true,
+        imageTargets: imageTargets,
+      };
+
+      try {
+        window.XR8.ImageTrackingController.configure(imageControllerConfig);
+      } catch (e) {
+        console.error('ImageTrackingController not available:', e);
+        // Fallback: try face/object tracking
+      }
+    }
+
+    // ========== XR8 COORDINATE SYSTEM ==========
+    const tcController = window.XR8.XrController.of();
+
+    // ========== XR8 SESSION ==========
+    const onSubscribers = { targetFound: [], targetLost: [], comboDetected: [] };
+
+    function onTargetFound(index, name) {
+      const qrId = name || `target_${index}`;
+      sendMessage('TARGET_FOUND', { targetIndex: index, qrId });
+      onSubscribers.targetFound.forEach(cb => cb(qrId));
+
+      // Show model above the tracked image
+      if (loadedModel) {
+        loadedModel.position.set(0, 0.2, 0);
+        loadedModel.scale.set(0.5, 0.5, 0.5);
+        loadedModel.visible = true;
+      }
+    }
+
+    function onTargetLost(index) {
+      sendMessage('TARGET_LOST', { targetIndex: index });
+      onSubscribers.targetLost.forEach(cb => cb(index));
+
+      // Hide model
+      if (loadedModel) {
+        loadedModel.visible = false;
+      }
+    }
+
+    // ========== START XR ==========
+    try {
+      showLoading('Initializing 8th Wall...');
+
+      // Configure image targets if provided
+      if (targetUrls.length > 0) {
+        await createImageTargets();
+      }
+
+      // Start the XR session
+      await window.XR8.startSession({
+        canvas: renderer.domElement,
+        scene,
+        camera,
+        renderer,
+        controllers: [tcController, camController],
+        passCameraToXRController: false,
+      });
+
+      // Tell parent we're ready
+      hideOverlay();
+      sendMessage('AR_READY', { engine: 'xr', targetCount: imageTargets.length });
+      showLoading('Point camera at target...');
+
+    } catch (error) {
+      console.error('XR start failed:', error);
+      showError('Failed to start AR: ' + error.message);
+      sendMessage('SYSTEM_ERROR', { error: error.message, code: 'XR_INIT_FAILED' });
+    }
+
+    // ========== RENDER LOOP ==========
+    function animate() {
+      requestAnimationFrame(animate);
+      xr.render({ scene, camera, renderer });
+    }
+    animate();
+
+    // ========== EVENT LISTENERS ==========
+    window.addEventListener('resize', () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Listen for messages from parent
+    window.addEventListener('message', (event) => {
+      const { type, payload } = event.data || {};
+      switch (type) {
+        case 'SET_ACTIVE_TARGETS':
+          // Reload targets
+          break;
+        case 'RESUME_SCANNING':
+          showLoading('Point camera at target...');
+          break;
+        case 'SET_MODE':
+          // Handle mode change
+          break;
+      }
+    });
+
+    console.log('[ar-xr.html] 8th Wall AR initialized', {
+      targetCount: imageTargets.length,
+      modelUrl: modelUrl || 'none',
+      deckName: deckName,
+    });
+  </script>
+
+  <!-- Load Three.js and GLTFLoader before our script -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+</body>
+</html>

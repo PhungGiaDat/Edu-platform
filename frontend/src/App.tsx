@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import FlashcardPage from "./pages/FlashcardPage";
 import LearnARV2 from "./pages/LearnARV2";
+import LearnAR8thWall from "./pages/LearnAR8thWall";
 import { CourseList } from "./pages/CourseList";
 import { CourseDetail } from "./pages/CourseDetail";
 import { LessonPlayer } from "./pages/LessonPlayer";
