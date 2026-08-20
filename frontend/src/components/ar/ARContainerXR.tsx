@@ -26,6 +26,7 @@ import React, {
 import {
   XREngine,
   XRTargetData,
+  getXRTargetJSONs,
 } from '@/lib/xr-engine-adapter';
 import {
   ARMessage,

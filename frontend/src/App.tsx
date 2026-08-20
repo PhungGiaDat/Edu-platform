@@ -267,8 +267,7 @@ const App = () => {
         {/* Protected Routes (Wrapped in Layout) */}
         <Route path="/flashcards" element={<RequireUserAuth><Layout><FlashcardPage /></Layout></RequireUserAuth>} />
         <Route path="/learn-ar" element={<RequireLearnerAccess><LearnARV2 /></RequireLearnerAccess>} />
-        <Route path="/learn-ar-xr" element={<RequireLearnerAccess><LearnAR8thWall /></RequireLearnerAccess>} />
-        <Route path="/learn-ar-xr/:deckId" element={<RequireLearnerAccess><LearnAR8thWall /></RequireLearnerAccess>} />
+        {/* XR routes disabled - implementation in progress */}
         <Route path="/courses" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/animals" element={<RequireLearnerAccess><Layout><AnimalsCourse /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/animals-adventure" element={<RequireLearnerAccess><Layout><AnimalsAdventure /></Layout></RequireLearnerAccess>} />
