@@ -26,15 +26,10 @@ import React, {
 import {
   XREngine,
   XRTargetData,
-  getXRTargetJSONs,
-  getTargetUrlsForEngine,
 } from '@/lib/xr-engine-adapter';
 import {
   ARMessage,
-  ARMessageType,
-  createMessage,
   normalizeMessage,
-  ActiveViewerTarget,
 } from '@/core/types/ARMessages';
 
 // ========== TYPES ==========
@@ -232,8 +227,7 @@ export const ARContainerXR: React.FC<ARContainerXRProps> = ({
         break;
       }
 
-      case 'SYSTEM_ERROR':
-      case 'AR_ERROR': {
+      case 'SYSTEM_ERROR': {
         const data = payload as { error?: string; message?: string; code?: string };
         const errorMsg = data.error || data.message || 'Unknown error';
         console.error('[ARContainerXR] Error:', errorMsg, data.code);

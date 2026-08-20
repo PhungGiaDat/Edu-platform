@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import FlashcardPage from "./pages/FlashcardPage";
 import LearnARV2 from "./pages/LearnARV2";
-import LearnAR8thWall from "./pages/LearnAR8thWall";
+// LearnAR8thWall temporarily disabled - XR in progress - TODO: fix imports
+// TODO: Enable after XR implementation complete from "./pages/LearnAR8thWall";
 import { CourseList } from "./pages/CourseList";
 import { CourseDetail } from "./pages/CourseDetail";
 import { LessonPlayer } from "./pages/LessonPlayer";
@@ -266,6 +267,8 @@ const App = () => {
         {/* Protected Routes (Wrapped in Layout) */}
         <Route path="/flashcards" element={<RequireUserAuth><Layout><FlashcardPage /></Layout></RequireUserAuth>} />
         <Route path="/learn-ar" element={<RequireLearnerAccess><LearnARV2 /></RequireLearnerAccess>} />
+        <Route path="/learn-ar-xr" element={<RequireLearnerAccess><LearnAR8thWall /></RequireLearnerAccess>} />
+        <Route path="/learn-ar-xr/:deckId" element={<RequireLearnerAccess><LearnAR8thWall /></RequireLearnerAccess>} />
         <Route path="/courses" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/animals" element={<RequireLearnerAccess><Layout><AnimalsCourse /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/animals-adventure" element={<RequireLearnerAccess><Layout><AnimalsAdventure /></Layout></RequireLearnerAccess>} />
