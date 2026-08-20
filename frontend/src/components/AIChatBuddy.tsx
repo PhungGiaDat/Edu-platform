@@ -3,7 +3,6 @@ import { CodexPetSprite } from '@/components/pets/CodexPetSprite';
 import { useAuth } from '../contexts/AuthContext';
 import {
     ChatService,
-    type RAGChatResponse,
     type ModelInfo,
     type ChatModelsResponse,
 } from '../services/ChatService';
@@ -40,7 +39,6 @@ function ModelPicker({ models, defaults, selected, onChange }: ModelPickerProps)
     };
 
     const shortName = (id: string) => id.split('/').pop() ?? id;
-    const currentLabel = (role: string) => shortName(selected[role] || defaults[role] || 'default');
 
     const ROLES = [
         { key: 'planner', label: 'Planner', emoji: '🧠' },

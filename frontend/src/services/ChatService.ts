@@ -75,7 +75,7 @@ export const ChatService = {
         },
     ): Promise<RAGChatResponse> {
         try {
-            const response = await apiClient.post<RAGChatResponse>('/api/v1/chat/rag', {
+            const response = await apiClient.post('/api/v1/chat/rag', {
                 question,
                 session_id: this.getSessionId(),
                 user_id: userId || null,
@@ -86,7 +86,7 @@ export const ChatService = {
                 currentSessionId = response.session_id;
             }
 
-            return response;
+            return response as RAGChatResponse;
         } catch (error) {
             console.error('[ChatService] RAG request failed:', error);
             return {
