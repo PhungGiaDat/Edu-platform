@@ -349,15 +349,22 @@
                 await loadScript('/static/ar-assets/js/ar-add-card-scanner.js', 'add-card-scanner', deadlineAt);
 
                 var maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));
-                var config = [
+                // Fix D: read tuning params with same defaults as ar-viewer.js
+                var pFilterMinCF      = Math.max(0.001, Math.min(Number(params.get('filterMinCF')      || '0.1'),  1));
+                var pFilterBeta       = Math.max(0.001, Math.min(Number(params.get('filterBeta')       || '0.3'),  1));
+                var pWarmupTolerance  = Number(params.get('warmupTolerance') ?? -1);
+                var pLossTimeout      = Math.max(100, Math.min(Number(params.get('lossTimeout')         || '1200'), 10000));
+                var configParts = [
                     'imageTargetSrc: ' + mindUrl,
                     'maxTrack: ' + maxTrack,
                     'uiLoading: no',
                     'uiScanning: no',
                     'uiError: no',
-                    'filterMinCF: 0.001',
-                    'filterBeta: 0.001'
-                ].join('; ');
+                    'filterMinCF: ' + pFilterMinCF,
+                    'filterBeta: '  + pFilterBeta
+                ];
+                if (pWarmupTolerance >= 0) configParts.push('warmupTolerance: ' + pWarmupTolerance);
+                var config = configParts.join('; ');
                 window.__AR_VIEWER_INITIAL_MINDAR_CONFIG__ = config;
                 window.__AR_VIEWER_RESOLVED_MIND_URL__ = mindUrl;
 

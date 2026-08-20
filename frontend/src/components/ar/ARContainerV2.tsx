@@ -241,6 +241,14 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
      * are sent via postMessage after AR_READY — they never appear
      * in the URL and never change the iframe key.
      */
+    // Fix D: apply MindAR performance tuning to every viewerSrc
+    const applyTuningParams = (p: URLSearchParams) => {
+        p.set('filterMinCF',     '0.1');
+        p.set('filterBeta',      '0.3');
+        p.set('lossTimeout',     '1200');
+        p.set('warmupTolerance', '0');
+    };
+
     const viewerSrc = useMemo(() => {
         // Priority 1: Persistent viewer (catalogId + mindUrl)
         // Model/word/combo assets sent via postMessage after AR_READY.
@@ -254,6 +262,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 : 2;
             params.set('targetCount', String(targetCount));
             params.set('maxTrack', '2');
+            applyTuningParams(params);
             return `/ar-viewer.html?${params.toString()}`;
         }
 
@@ -289,6 +298,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         if (comboImageUrl) params.set('comboImage', comboImageUrl);
         if (comboTextureUrl) params.set('comboTextureUrl', comboTextureUrl);
         if (comboPhrase) params.set('comboPhrase', comboPhrase);
+        applyTuningParams(params);
         return `/ar-viewer.html?${params.toString()}`;
     }, [mindUrl, catalogId, catalogTargetCount, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
 

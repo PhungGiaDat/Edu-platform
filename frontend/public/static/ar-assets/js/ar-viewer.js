@@ -158,7 +158,18 @@
         window[`_arWord${target.index}`] = target.word;
     });
 
+    // ── Fix D: MindAR performance tuning params ────────────────────────────────
+    // All have safe defaults; iOS-friendly values are lower than the old 0.001/0.001
+    const pFilterMinCF = Math.max(0.001, Math.min(Number(params.get('filterMinCF') || 0.1), 1));
+    const pFilterBeta  = Math.max(0.001, Math.min(Number(params.get('filterBeta')  || 0.3), 1));
+    const pWarmupTolerance = Number(params.get('warmupTolerance') ?? -1); // -1 = let MindAR decide
+    const pLossTimeout     = Math.max(100, Math.min(Number(params.get('lossTimeout') || 1200), 10000));
+    const pRenderScale     = Math.max(0.1, Math.min(Number(params.get('renderScale') || 1), 2));
+    const pWatchdogDisabled = params.get('adaptiveWatchdogDisabled') === 'true';
+    // ───────────────────────────────────────────────────────────────────────────
+
     log('🔧', `Params: mind=${mindUrl}, model=${modelUrl}, texture=${textureUrl}, word=${window._arWord0}`);
+    log('⚙️', `FixD tuning: filterMinCF=${pFilterMinCF}, filterBeta=${pFilterBeta}, warmupTolerance=${pWarmupTolerance}, lossTimeout=${pLossTimeout}, renderScale=${pRenderScale}, watchdogDisabled=${pWatchdogDisabled}`);
 
     log('cards', `Viewer configured for ${cardCount} detected card(s)`);
 
@@ -716,8 +727,10 @@
                 });
             });
         
+        // Fix D: use URL-params-driven values; warmupTolerance only when explicitly set
         // filterMinCF: higher = faster response; filterBeta: lower = smoother tracking
-        const mindArConfig = `imageTargetSrc: ${mindUrl}; maxTrack: ${maxTrack}; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.001; filterBeta: 0.001`;
+        const warmupPart = pWarmupTolerance >= 0 ? `; warmupTolerance: ${pWarmupTolerance}` : '';
+        const mindArConfig = `imageTargetSrc: ${mindUrl}; maxTrack: ${maxTrack}; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: ${pFilterMinCF}; filterBeta: ${pFilterBeta}${warmupPart}`;
         log('⚙️', `MindAR config: ${mindArConfig}`);
         if (!scene.getAttribute('mindar-image')) {
             scene.setAttribute('mindar-image', mindArConfig);
@@ -747,6 +760,37 @@
                 word: target.word
             }))
         });
+
+        // ── Fix D (c): apply renderScale — reduces GPU fill-rate on low-power devices ──
+        if (pRenderScale < 1) {
+            const applyRenderScale = () => {
+                const aframeScene = AFRAME && AFRAME.scenes && AFRAME.scenes[0];
+                const canvas = aframeScene && (aframeScene.canvas || aframeScene.el && aframeScene.el.canvas);
+                if (!canvas) {
+                    log('⚠️', 'renderScale: canvas not found, retrying on next frame');
+                    return false;
+                }
+                const w = Math.round(window.innerWidth  * pRenderScale);
+                const h = Math.round(window.innerHeight * pRenderScale);
+                canvas.style.width  = w + 'px';
+                canvas.style.height = h + 'px';
+                canvas.width  = w;
+                canvas.height = h;
+                log('🎯', `renderScale applied: ${canvas.width}x${canvas.height} (was full-window)`);
+                return true;
+            };
+            // Wait for A-Frame scene to finish loading before scaling
+            if (AFRAME && AFRAME.scenes && AFRAME.scenes[0]) {
+                AFRAME.scenes[0].addEventListener('loaded', () => {
+                    if (!applyRenderScale()) {
+                        window.addEventListener('load', applyRenderScale);
+                    }
+                }, { once: true });
+            } else {
+                window.addEventListener('load', applyRenderScale);
+            }
+        }
+        // ──────────────────────────────────────────────────────────────────────────────────
 
         const assetsEl = document.querySelector('a-assets') || document.createElement('a-assets');
         if (!document.querySelector('a-assets')) {
@@ -1076,7 +1120,50 @@
             sendToParent('AR_READY', {
                 targetCount
             });
-        });
+
+            // ── Fix D (d): adaptive watchdog — warns host when FPS drops on mobile ─────
+            if (!pWatchdogDisabled) {
+                (function startAdaptiveWatchdog() {
+                    const WARNING_FPS   = 20;
+                    const CONSECUTIVE   = 5;
+                    const fpsHistory    = [];
+                    let   lastTime      = performance.now();
+                    let   frames        = 0;
+                    let   consecutiveLow = 0;
+                    let   warned         = false;
+
+                    function tick() {
+                        frames++;
+                        const now = performance.now();
+                        if (now - lastTime >= 1000) {
+                            const fps = Math.round(frames * 1000 / (now - lastTime));
+                            frames = 0;
+                            lastTime = now;
+                            fpsHistory.push(fps);
+                            log('📊', `FPS: ${fps} (low-run: ${consecutiveLow}/${CONSECUTIVE})`);
+
+                            if (fps < WARNING_FPS) {
+                                consecutiveLow++;
+                            } else {
+                                consecutiveLow = 0;
+                            }
+
+                            if (!warned && consecutiveLow >= CONSECUTIVE) {
+                                warned = true;
+                                const msg = `FPS ${fps} < ${WARNING_FPS} for ${CONSECUTIVE}s — suggest reload with renderScale=0.6&filterMinCF=0.2`;
+                                sendToParent('AR_PERF_WARNING', {
+                                    fps,
+                                    suggestion: 'reload with renderScale=0.6&filterMinCF=0.2'
+                                });
+                                sendDebug('ADAPTIVE_FPS_WARNING', { fps, consecutiveLow, suggestion: msg });
+                            }
+                        }
+                        requestAnimationFrame(tick);
+                    }
+                    requestAnimationFrame(tick);
+                })();
+            }
+            // ───────────────────────────────────────────────────────────────────────────
 
         scene.addEventListener('arError', (e) => {
             if (initializationFailureReported) return;
