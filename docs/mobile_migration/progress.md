@@ -27,6 +27,51 @@ All 4 main screens redesigned, wired to real data via existing hooks.
 
 ## Task Progress
 
+### LRN — Learn Vocabulary & Notebook (Web Enhanced) 📚
+
+**Date:** 2026-08-20
+**Branch:** 10-days-quick-run
+**Targets:** Web (`frontend/`) + React Native (`mobile/rn/`)
+
+#### Features
+| Feature | Mô tả | Status |
+|---------|--------|--------|
+| Sổ tay (Notebook) | Save words từ AI translation/flashcard swipe | 📋 SPEC DONE |
+| Tra từ (AI Dictionary) | AI contextual translation với Qdrant wiki | 📋 SPEC DONE |
+| TikTok Flashcards | Vertical swipe flashcard, topic/IELTS | 📋 SPEC DONE |
+| Thời điểm vàng | Spaced repetition push notifications | 📋 SPEC DONE |
+
+#### Backend Tasks
+| # | Task | Status |
+|---|------|--------|
+| 1 | Database Schema Migration | ✅ DONE |
+| 2 | Notebook CRUD API | ⏳ Pending |
+| 3 | Dictionary Translation API | ⏳ Pending |
+| 4 | Vocabulary Topics API | ⏳ Pending |
+
+#### Frontend Tasks
+| # | Task | Platform | Status |
+|---|------|----------|--------|
+| 5 | NotebookScreen | Web + RN | ⏳ Pending |
+| 6 | DictionaryScreen | Web + RN | ⏳ Pending |
+| 7 | SwipeFlashcardsScreen | Web + RN | ⏳ Pending |
+| 8 | Push Notification System | Web + RN | ⏳ Pending |
+
+#### PWA Setup (Add to Home Screen)
+| File | Description |
+|------|-------------|
+| `frontend/manifest.json` | PWA manifest với icons, shortcuts |
+| `frontend/src/hooks/usePWAInstall.ts` | Hook xử lý install prompt |
+| `frontend/src/components/PWAInstallButton.tsx` | UI button cho iOS/Android |
+| `frontend/public/static/js/sw-notifications.js` | Service Worker cho notifications |
+| `backend/database/postgres/migrations/20260820_01_notebook_tables.sql` | Schema với SM-2 algorithm |
+
+#### Spec & Plan
+- **Spec:** `docs/mobile_migration/spec/learn-vocab-notebook-spec.md`
+- **Plan:** `docs/mobile_migration/plans/2026-08-20-learn-vocab-notebook-plan.md`
+
+---
+
 ### Phase 1 — Design Tokens ✅
 - Task 18: COMPLETE
   - Added vibrant color palette to `design/tokens.ts`:
