@@ -18,6 +18,44 @@ class ARObjectRepository:
         )
         return dict(row) if row else None
 
+    async def get_tracking_targets_with_xr(
+        self, deck_id: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Get tracking targets with XR target URLs for 8th Wall engine."""
+        if deck_id:
+            query = """
+                SELECT tt.*, fd.name as deck_name, fd.category as deck_category
+                FROM public.ar_tracking_targets tt
+                JOIN public.flashcards f ON tt.qr_id = f.qr_id
+                JOIN public.flashcard_decks fd ON f.deck_id = fd.deck_id
+                WHERE f.deck_id = $1
+                ORDER BY f.qr_id
+            """
+            rows = await postgres_pool().fetch(query, deck_id)
+        else:
+            query = """
+                SELECT tt.*, fd.name as deck_name, fd.category as deck_category
+                FROM public.ar_tracking_targets tt
+                JOIN public.flashcards f ON tt.qr_id = f.qr_id
+                JOIN public.flashcard_decks fd ON f.deck_id = fd.deck_id
+                WHERE tt.xr_target_json_url IS NOT NULL
+                ORDER BY f.qr_id
+            """
+            rows = await postgres_pool().fetch(query)
+        return [dict(row) for row in rows]
+
+    async def get_xr_target_urls(self, qr_ids: List[str]) -> Dict[str, Dict[str, str]]:
+        """Get XR target URLs for multiple qr_ids. Returns dict mapping qr_id to urls."""
+        if not qr_ids:
+            return {}
+        query = """
+            SELECT qr_id, xr_target_json_url, xr_target_image_url, reference_image_url
+            FROM public.ar_tracking_targets
+            WHERE qr_id = ANY($1)
+        """
+        rows = await postgres_pool().fetch(query, qr_ids)
+        return {row["qr_id"]: dict(row) for row in rows}
+
     async def get_by_marker_type(self, marker_type: str) -> List[Dict[str, Any]]:
         return []
 

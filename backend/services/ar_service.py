@@ -2,7 +2,7 @@
 AR Service - Business logic for AR experience orchestration
 """
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from repositories.flashcard_repository import FlashcardRepository, get_flashcard_repository
 from repositories.ar_object_repository import ARObjectRepository, get_ar_object_repository
@@ -137,14 +137,44 @@ class ARService:
     async def get_combo_by_id(self, combo_id: str) -> Optional[Dict[str, Any]]:
         """
         Get a combo by its combo_id.
-        
+
         Args:
             combo_id: Combo identifier
-            
+
         Returns:
             Combo document if found, None otherwise
         """
         return await self.ar_combination_repo.get_by_combo_id(combo_id)
+
+    async def get_xr_targets_for_deck(self, deck_id: str) -> List[Dict[str, Any]]:
+        """
+        Get XR target data for 8th Wall engine from a specific deck.
+
+        Args:
+            deck_id: Flashcard deck identifier
+
+        Returns:
+            List of tracking target data with XR URLs
+        """
+        return await self.ar_object_repo.get_tracking_targets_with_xr(deck_id)
+
+    async def get_ar_experience_with_xr_urls(self, qr_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get AR experience data with explicit XR target URLs for 8th Wall engine.
+
+        Returns same data as get_ar_experience plus:
+            - xr_target_json_url: URL to XR target JSON (for 8th Wall)
+            - xr_target_image_url: URL to XR target luminance image
+        """
+        experience = await self.get_ar_experience(qr_id)
+        if not experience:
+            return None
+
+        tracking_target = experience.get("tracking_target") or {}
+        experience["xr_target_json_url"] = tracking_target.get("xr_target_json_url")
+        experience["xr_target_image_url"] = tracking_target.get("xr_target_image_url")
+
+        return experience
     
     async def list_combos(self, skip: int = 0, limit: int = 20) -> list[Dict[str, Any]]:
         """

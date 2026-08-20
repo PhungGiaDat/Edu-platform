@@ -106,6 +106,7 @@ const VIEWER_BOOTSTRAP_TIMEOUT_MS = 15_000;
 const ACTIVE_TARGETS_ACK_TIMEOUT_MS = 7_000;
 export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     initialPhase = 'SCANNING',
+    engine = 'mindar', // Default to MindAR for backward compatibility
     autoQrScanEnabled,
     catalogId,
     mindUrl,
@@ -257,6 +258,34 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     };
 
     const viewerSrc = useMemo(() => {
+        // === 8th Wall XR Engine ===
+        if (engine === 'xr') {
+            const params = new URLSearchParams();
+
+            // Add model URL for XR
+            if (modelUrl) params.set('model', modelUrl);
+
+            // For XR, we expect targets to be passed via activeTargets with xr_target_json_url
+            // or we can pass them directly via targets array
+            if (activeTargets?.length) {
+                const xrTargetUrls = activeTargets
+                    .filter((t: ActiveViewerTarget) => t.xr_target_json_url)
+                    .map((t: ActiveViewerTarget) => t.xr_target_json_url as string)
+                    .join(',');
+                if (xrTargetUrls) {
+                    params.set('targets', xrTargetUrls);
+                    params.set('targetCount', String(activeTargets.length));
+                }
+            }
+
+            // 8th Wall specific tuning
+            params.set('antialias', 'true');
+            params.set('shadowEnabled', 'true');
+
+            return `/ar-xr.html?${params.toString()}`;
+        }
+
+        // === MindAR Engine (default) ===
         // Priority 1: Persistent viewer (catalogId + mindUrl)
         // Model/word/combo assets sent via postMessage after AR_READY.
         // This path requires SET_ACTIVE_TARGETS to activate targets.
@@ -307,7 +336,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         if (comboPhrase) params.set('comboPhrase', comboPhrase);
         applyTuningParams(params);
         return `/ar-viewer.html?${params.toString()}`;
-    }, [mindUrl, catalogId, catalogTargetCount, modelUrl, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+    }, [engine, mindUrl, catalogId, catalogTargetCount, modelUrl, activeTargets, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
 
     useEffect(() => {
         emitDebug('PARENT_VIEWER_SRC_READY', {
@@ -319,12 +348,17 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     }, [emitDebug, viewerSrc, mindUrl, catalogId, catalogTargetCount]);
 
     const mainSrc = useMemo(() => {
+        // XR engine handles its own scanning phase internally
+        if (engine === 'xr') {
+            return phase === 'VIEWING' ? viewerSrc : null;
+        }
+        // MindAR engine
         switch (phase) {
             case 'SCANNING': return '/ar-scanner.html';
             case 'VIEWING': return viewerSrc;
             default: return null;
         }
-    }, [phase, viewerSrc]);
+    }, [phase, viewerSrc, engine]);
 
     // ========== TASK 8: STABLE IDENTITY KEY ==========
     /**

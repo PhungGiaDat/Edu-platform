@@ -156,19 +156,67 @@ async def search_flashcards(
 ):
     """
     Search flashcards by word (case-insensitive)
-    
+
     Args:
         query: Search term
     """
     logger.info(f"[API] GET /flashcard/search/{query}")
-    
+
     if len(query) < 2:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Search query must be at least 2 characters"
         )
-    
+
     results = await service.search(query)
-    
+
     return results
+
+
+@router.get("/xr-targets/deck/{deck_id}")
+async def get_xr_targets_by_deck(
+    deck_id: str,
+    ar_service: ARService = Depends(get_ar_service)
+):
+    """
+    Get XR target data for 8th Wall engine from a specific deck.
+
+    Returns XR target URLs (JSON + luminance image) for each flashcard in the deck.
+
+    Use this endpoint to load XR targets before starting AR experience with 8th Wall.
+    """
+    logger.info(f"[API] GET /flashcard/xr-targets/deck/{deck_id}")
+
+    targets = await ar_service.get_xr_targets_for_deck(deck_id)
+
+    return {
+        "deck_id": deck_id,
+        "target_count": len(targets),
+        "targets": targets
+    }
+
+
+@router.get("/{qr_id}/xr-urls")
+async def get_ar_experience_with_xr_urls(
+    qr_id: str,
+    ar_service: ARService = Depends(get_ar_service)
+):
+    """
+    Get AR experience data with explicit XR target URLs for 8th Wall engine.
+
+    Same as GET /flashcard/{qr_id} but includes:
+    - xr_target_json_url: URL to XR target JSON
+    - xr_target_image_url: URL to XR target luminance image
+    """
+    logger.info(f"[API] GET /flashcard/{qr_id}/xr-urls")
+
+    result = await ar_service.get_ar_experience_with_xr_urls(qr_id)
+
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"AR experience not found for QR ID: {qr_id}"
+        )
+
+    return result
 

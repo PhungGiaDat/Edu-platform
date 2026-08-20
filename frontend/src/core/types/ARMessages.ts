@@ -35,6 +35,10 @@ export interface ActiveViewerTarget {
   position?: string;
   rotation?: string;
   scale?: string;
+  /** XR Engine: URL to XR target JSON (8th Wall) */
+  xr_target_json_url?: string;
+  /** XR Engine: URL to XR target luminance image (8th Wall) */
+  xr_target_image_url?: string;
 }
 
 /**
