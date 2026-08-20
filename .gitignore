@@ -470,3 +470,31 @@ mobile/unity/.utmp/
 mobile/unity/Assets/_Recovery/
 mobile/unity/Builds/
 mobile/unity/UserSettings/
+
+# Temp extraction files
+temp_pptx_extract/
+temp_pptx.zip
+temp_*.zip
+temp_*.tmp
+
+# Mobile/RN prototypes
+mobile/rn/assets/prototypes/
+mobile/rn/test-artifacts/
+
+# Shiba (removed)
+shiba/
+
+# Test results
+frontend/test-results/
+
+# 3D Models cache (use Supabase instead)
+# 3DModels/cache/
+
+# Upload results
+docs/upload_xr_flashcards_results.json
+
+# Supabase local (if any)
+supabase/
+
+# Fix diffs
+fix-*.diff
