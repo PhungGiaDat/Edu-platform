@@ -55,7 +55,7 @@ All 4 main screens redesigned, wired to real data via existing hooks.
 | 5 | NotebookScreen | Web | ✅ DONE |
 | 6 | DictionaryScreen | Web | ✅ DONE |
 | 7 | SwipeFlashcardsScreen | Web | ✅ DONE |
-| 8 | Push Notification System | Web | ⏳ Pending |
+| 8 | Push Notification System | Web | ✅ DONE |
 
 #### PWA Setup (Add to Home Screen)
 | File | Description |
