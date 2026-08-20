@@ -231,7 +231,7 @@ async function handleResponse(response: Response): Promise<any> {
 /**
  * Generic fetch wrapper
  */
-async function request(
+export async function request(
   endpoint: string,
   options: ApiClientOptions = {}
 ): Promise<any> {

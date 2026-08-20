@@ -33,7 +33,6 @@ export interface ARSessionMetrics {
 
 const SESSION_KEY = 'ar_session_id';
 const DB_FLAG = '?db-metrics=on';
-const UI_FLAG = '?metrics=on';
 
 function getOrCreateSessionId(): string {
   try {

@@ -2,15 +2,15 @@
  * FlashcardsPage - TikTok-style Swipe Flashcards
  * Swipe up to next, left = don't know, right = know
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSwipeable, type SwipeCallback } from 'react-swipeable';
+import { useState, useEffect, useCallback } from 'react';
+import { useSwipeable } from 'react-swipeable';
 import { notebookApi } from '../services/notebookApi';
 import type { NotebookEntry, VocabularyTopic } from '../types/notebook';
 import { ClayCard } from '../components/clay/ClayCard';
 import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { Badge } from '../components/ui/Badge';
-import { colors, shadows, radius } from '../design-tokens/claymorphic';
+import { colors } from '../design-tokens/claymorphic';
 
 interface FlashcardsPageProps {
   onComplete?: () => void;
@@ -26,7 +26,6 @@ export function FlashcardsPage({ onComplete }: FlashcardsPageProps) {
   const [stats, setStats] = useState({ know: 0, dontKnow: 0 });
   const [showComplete, setShowComplete] = useState(false);
   const [translateX, setTranslateX] = useState(0);
-  const cardRef = useRef<HTMLDivElement>(null);
 
   // Fetch topics
   useEffect(() => {
@@ -72,7 +71,7 @@ export function FlashcardsPage({ onComplete }: FlashcardsPageProps) {
 
   // Submit review
   const submitReview = async (quality: number) => {
-    const currentCard = cards[currentIndex];
+    const currentCard = cards[currentIndex]; // used in JSX below
     if (!currentCard) return;
 
     try {
@@ -87,7 +86,7 @@ export function FlashcardsPage({ onComplete }: FlashcardsPageProps) {
     async (direction: 'left' | 'right' | 'up') => {
       if (currentIndex >= cards.length) return;
 
-      const currentCard = cards[currentIndex];
+      // currentCard used in submitReview via closure
 
       if (direction === 'left') {
         // Don't know - submit quality 1
@@ -118,16 +117,15 @@ export function FlashcardsPage({ onComplete }: FlashcardsPageProps) {
     onSwipedLeft: () => handleSwipe('left'),
     onSwipedRight: () => handleSwipe('right'),
     onSwipedUp: () => handleSwipe('up'),
-    onSwiping: (event) => {
+    onSwiping: (event: any) => {
       if (event.dir === 'Left' || event.dir === 'Right') {
         setTranslateX(event.delta.x);
       }
     },
-    onAnimationEnd: () => setTranslateX(0),
     trackMouse: true,
   });
 
-  const currentCard = cards[currentIndex];
+  const currentCard = cards[currentIndex]; // used in JSX below
 
   // Complete screen
   if (showComplete || cards.length === 0) {
@@ -244,7 +242,6 @@ export function FlashcardsPage({ onComplete }: FlashcardsPageProps) {
           <LoadingSpinner size="lg" />
         ) : (
           <div
-            ref={cardRef}
             {...handlers}
             className="w-full max-w-md cursor-grab active:cursor-grabbing select-none"
             style={{
