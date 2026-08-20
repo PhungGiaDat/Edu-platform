@@ -42,6 +42,9 @@ from api import (
     sessions_router,
     admin_router,
     profile_router,
+    notebook_router,
+    dictionary_router,
+    vocabulary_topics_router,
 )
 from api.pronunciation_enhanced import router as pronunciation_enhanced_router
 from api.lessons import router as lessons_router
@@ -314,6 +317,27 @@ app.include_router(
     semantic_rules_router,
     prefix=settings.API_V1_PREFIX,
     tags=["AR"]
+)
+
+# Notebook router (Sổ tay)
+app.include_router(
+    notebook_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Notebook"]
+)
+
+# Dictionary router (Tra từ)
+app.include_router(
+    dictionary_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Dictionary"]
+)
+
+# Vocabulary Topics router
+app.include_router(
+    vocabulary_topics_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Vocabulary Topics"]
 )
 
 logger.info("✅ All routers registered")

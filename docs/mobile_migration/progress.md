@@ -42,12 +42,12 @@ All 4 main screens redesigned, wired to real data via existing hooks.
 | Thời điểm vàng | Spaced repetition push notifications | 📋 SPEC DONE |
 
 #### Backend Tasks
-| # | Task | Status |
-|---|------|--------|
-| 1 | Database Schema Migration | ✅ DONE |
-| 2 | Notebook CRUD API | ⏳ Pending |
-| 3 | Dictionary Translation API | ⏳ Pending |
-| 4 | Vocabulary Topics API | ⏳ Pending |
+| # | Task | Status | Files |
+|---|------|--------|-------|
+| 1 | Database Schema Migration | ✅ DONE | `migrations/20260820_01_notebook_tables.sql` |
+| 2 | Notebook CRUD API | ✅ DONE | `models/notebook_entry.py`, `repositories/notebook_repository.py`, `services/notebook_service.py`, `api/notebook.py` |
+| 3 | Dictionary Translation API | ✅ DONE | `models/dictionary.py`, `services/dictionary_service.py`, `api/dictionary.py` |
+| 4 | Vocabulary Topics API | ✅ DONE | `models/vocabulary_topic.py`, `repositories/vocabulary_topic_repository.py`, `api/vocabulary_topics.py` |
 
 #### Frontend Tasks
 | # | Task | Platform | Status |

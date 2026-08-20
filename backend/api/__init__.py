@@ -22,6 +22,9 @@ from .session_tracking import router as session_tracking_router
 from .course_lessons import router as course_lessons_router
 from .admin import router as admin_router
 from .profile import router as profile_router
+from .notebook import router as notebook_router
+from .dictionary import router as dictionary_router
+from .vocabulary_topics import router as vocabulary_topics_router
 
 __all__ = [
     "flashcard_router",
@@ -43,5 +46,8 @@ __all__ = [
     "admin_router",
     "profile_router",
     "course_lessons_router",
+    "notebook_router",
+    "dictionary_router",
+    "vocabulary_topics_router",
 ]
 
