@@ -247,6 +247,8 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         p.set('filterBeta',      '0.3');
         p.set('lossTimeout',     '1200');
         p.set('warmupTolerance', '0');
+        p.set('renderScale',     '0.8');   // reduce GPU load on mobile
+        p.set('watchdogDisabled', 'false'); // keep adaptive watchdog active
     };
 
     const viewerSrc = useMemo(() => {

@@ -1164,6 +1164,7 @@
                 })();
             }
             // ───────────────────────────────────────────────────────────────────────────
+        });
 
         scene.addEventListener('arError', (e) => {
             if (initializationFailureReported) return;
