@@ -3,12 +3,12 @@
  * Web screen for AI-powered translation
  */
 import { useState, useCallback } from 'react';
-import { ClayCard } from '../components/ClayCard';
+import { ClayCard } from '../components/clay/ClayCard';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { Badge } from '../components/ui/Badge';
-import { colors, shadows, radius } from '../design-tokens/claymorphic';
+import { colors, shadows } from '../design-tokens/claymorphic';
 import { notebookApi } from '../services/notebookApi';
 import type { TranslateResponse, WordBreakdown, RelatedWord } from '../types/notebook';
 import { useAuth } from '../contexts/AuthContext';

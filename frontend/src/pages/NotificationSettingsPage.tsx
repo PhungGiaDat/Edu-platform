@@ -9,7 +9,7 @@ import { Input } from '../components/ui/Input';
 import { Switch } from '../components/ui/Switch';
 import { Badge } from '../components/ui/Badge';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { colors, shadows, radius } from '../design-tokens/claymorphic';
+import { colors, shadows } from '../design-tokens/claymorphic';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ScheduleWindow {
