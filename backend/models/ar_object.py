@@ -8,7 +8,7 @@ Architecture: Hybrid Database (Beanie for MongoDB)
 """
 from beanie import Document, Indexed
 from pydantic import BaseModel, Field, model_validator
-from typing import Optional, Any
+from typing import Optional, Any, List
 from datetime import datetime
 
 
