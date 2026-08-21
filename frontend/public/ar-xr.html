@@ -5,6 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>8th Wall AR - Claymorphic Flashcards</title>
 
+  <!-- Eruda Debug Console - Mobile Web Debugging -->
+  <script>
+    if (location.search.includes('debug') || location.hostname === 'localhost') {
+      (function() {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/eruda@3';
+        s.onload = function() { eruda.init({
+          defaults: { displaySize: 30, transparency: 0.8 },
+          useShadowDom: true
+        }); };
+        document.head.appendChild(s);
+      })();
+    }
+  </script>
+
   <!-- 8th Wall scripts - must be loaded first -->
   <script src="https://cdn.8thwall.com/xr8/three.module.min.js" type="module"></script>
   <script src="https://cdn.8thwall.com/xr8/webxr.min.js" defer></script>
@@ -97,8 +112,14 @@
     const debugPanel = document.getElementById('debug-panel');
 
     // Enable debug in development
-    if (window.location.hostname === 'localhost' || window.location.search.includes('debug')) {
+    const isDebug = window.location.hostname === 'localhost' || window.location.search.includes('debug');
+    if (isDebug) {
       debugPanel.style.display = 'block';
+
+      // Debug postMessage - log both directions
+      window.addEventListener('message', (e) => {
+        console.log('[←parent]', e.data);
+      });
     }
 
     // ========== POST MESSAGE BRIDGE ==========
@@ -412,14 +433,25 @@
     }
 
     // ========== COMBO RULES (from backend) ==========
-    // These would come from the backend in production
-    const comboRules = [
-      { tags: ['cat001', 'fish001'], name: 'Cat eats Fish' },
-      { tags: ['rabbit001', 'carrot001'], name: 'Rabbit eats Carrot' },
-      { tags: ['elephant001', 'grass001'], name: 'Elephant eats Grass' },
-      { tags: ['panda001', 'bamboo001'], name: 'Panda eats Bamboo' },
-      { tags: ['tiger001', 'meat001'], name: 'Tiger eats Meat' },
-    ];
+    let comboRules = []; // Loaded from backend
+
+    async function loadComboRules() {
+      const deck = params.get('deck') || '';
+      try {
+        // Fetch combo rules from backend
+        const url = `/api/v1/combinations/rules?flashcard_set=${encodeURIComponent(deck)}`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          comboRules = data.rules || [];
+          console.log('[ar-xr] Loaded combo rules:', comboRules.length);
+        } else {
+          console.warn('[ar-xr] Failed to load combo rules:', response.status);
+        }
+      } catch (e) {
+        console.error('[ar-xr] Error loading combo rules:', e);
+      }
+    }
 
     function checkSemanticCombo() {
       const foundTags = imageTargetData
@@ -498,6 +530,9 @@
 
       // Initialize Three.js scene
       initScene();
+
+      // Load combo rules from backend (non-blocking)
+      loadComboRules();
 
       // Load image targets
       await loadImageTargetData();

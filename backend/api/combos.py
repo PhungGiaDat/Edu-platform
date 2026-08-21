@@ -23,6 +23,18 @@ router = APIRouter(prefix="/combos", tags=["combos"])
 
 # ========== RESPONSE SCHEMAS ==========
 
+class ComboRule(BaseModel):
+    """Single combo rule for frontend"""
+    tags: List[str]
+    name: str
+    combo_id: str
+    animation_trigger: Optional[str] = None
+
+class ComboRulesResponse(BaseModel):
+    """Response for combo rules endpoint"""
+    rules: List[ComboRule]
+    total: int
+
 class ComboCheckResponse(BaseModel):
     """Response for combo check endpoint"""
     found: bool
@@ -111,7 +123,45 @@ async def get_combos_by_flashcard_set(
     return [_to_combo_response(c) for c in filtered]
 
 
-# Parameterized route MUST be last to avoid capturing /check and / paths
+@router.get("/rules", response_model=ComboRulesResponse)
+async def get_combo_rules(
+    flashcard_set: Optional[str] = Query(None, description="Flashcard set ID to filter rules"),
+    active_only: bool = Query(True, description="Only return active combos"),
+    ar_service: ARService = Depends(get_ar_service)
+):
+    """
+    Get combo rules for frontend AR engine.
+    Returns simplified rule format: { tags: [], name: string }
+    REPLACES: hardcoded comboRules in ar-xr.html
+
+    Example: /api/v1/combinations/rules?flashcardSet=claymorphic-animals-001
+    """
+    combos = await ar_service.list_combos(skip=0, limit=200)
+
+    # Filter by flashcard_set if provided
+    if flashcard_set:
+        combos = [c for c in combos if c.get("flashcard_set") == flashcard_set]
+
+    # Filter by active if specified
+    if active_only:
+        combos = [c for c in combos if c.get("active", True)]
+
+    # Convert to simple rules format
+    rules = [
+        {
+            "tags": c.get("required_tags", []),
+            "name": c.get("combo_name", c.get("name", "")),
+            "combo_id": c.get("combo_id", ""),
+            "animation_trigger": c.get("animation_trigger"),
+        }
+        for c in combos
+        if c.get("required_tags")
+    ]
+
+    return ComboRulesResponse(rules=rules, total=len(rules))
+
+
+# Parameterized route MUST be last to avoid capturing /check, /, and /rules paths
 @router.get("/{combo_id}", response_model=ArCombinationSchema)
 async def get_combo(
     combo_id: str,
