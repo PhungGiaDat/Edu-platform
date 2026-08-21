@@ -262,3 +262,150 @@ mobile/rn/android/app/build/outputs/apk/debug/app-debug.apk
 
 ### Docs
 See: `docs/unity_ar/progress/2026-08-13-unity-as-library-integration.md`
+
+---
+
+## R11 — 8th Wall XR Engine Integration (Claymorphic AR)
+
+**Date:** 2026-08-21
+**Branch:** 10-days-quick-run
+
+### Goal
+Add 8th Wall AR engine alongside MindAR for web-based AR experience.
+Support claymorphic-animals-001 deck with 10 targets and 5 combos.
+
+### Architecture
+```
+Frontend (React/Vite)
+├── LearnAR8thWall.tsx       # XR page (route: /learn-ar-xr)
+├── ARContainerV2.tsx        # Unified AR container (engine="xr")
+├── ar-xr.html              # 8th Wall runtime iframe
+└── xr-engine-adapter.ts    # Engine abstraction
+
+Backend (Python)
+├── ar_object_repository.py  # get_tracking_targets_with_xr()
+├── ar_service.py            # get_xr_targets_for_deck()
+└── api/flashcards.py        # GET /api/flashcard/xr-targets/deck/{deckId}
+
+Database (Supabase PostgreSQL)
+├── ar_tracking_targets       # XR target URLs (xr_target_json_url, xr_target_image_url)
+├── ar_objects               # Animations[], model_3d_url, transforms
+├── ar_combinations         # Combo rules (clay_cat_fish, etc.)
+└── flashcards              # Deck membership
+```
+
+### Data Flow
+```
+1. User navigates to /learn-ar-xr/:deckId
+2. Frontend calls GET /api/flashcard/xr-targets/deck/{deckId}
+3. Backend joins: ar_tracking_targets + ar_objects + flashcards
+4. Response includes:
+   - qr_id, word
+   - xr_target_json_url, xr_target_image_url (8th Wall targets)
+   - animations[], default_animation, combo_animation
+   - model_3d_url, texture_url, position, rotation, scale
+5. Frontend transforms to XRTargetData format
+6. ARContainerV2 renders ar-xr.html iframe with targets
+7. 8th Wall tracks image targets
+8. Combo detected → play combo_animation (e.g., CAT_EAT)
+```
+
+### Database Schema Changes
+
+#### ar_objects (animations)
+| Column | Type | Description |
+|--------|------|-------------|
+| `animations` | TEXT[] | Available animations: ['CAT_IDLE', 'CAT_EAT'] |
+| `default_animation` | TEXT | Default animation when target found |
+| `combo_animation` | TEXT | Animation for combo (animal eating) |
+
+#### ar_tracking_targets (XR URLs)
+| Column | Type | Description |
+|--------|------|-------------|
+| `xr_target_json_url` | TEXT | 8th Wall target JSON URL |
+| `xr_target_image_url` | TEXT | Luminance image URL |
+
+#### ar_combinations (claymorphic combos)
+| combo_id | tags | animation | phrase |
+|----------|------|-----------|--------|
+| clay_cat_fish | [cat001, fish001] | CAT_EAT | Meow! The cat eats fish! |
+| clay_rabbit_carrot | [rabbit001, carrot001] | RABBIT_EAT | Hop! The rabbit eats carrot! |
+| clay_elephant_grass | [elephant001, grass001] | ELEPHANT_EAT | The elephant eats grass! |
+| clay_panda_bamboo | [panda001, bamboo001] | PANDA_EAT | Yum! The panda eats bamboo! |
+| clay_tiger_meat | [tiger001, meat001] | TIGER_EAT | Roar! The tiger eats meat! |
+
+### Animation Sets (ragdollcat_mobile.glb)
+| Target | Catalog | Animations |
+|--------|---------|------------|
+| cat001 | animal-combo-v1 | CAT_IDLE, CAT_MEOW, CAT_EAT |
+| fish001 | animal-combo-v1 | FISH_IDLE, FISH_SWIM |
+| rabbit001 | animal-combo-v1 | RABBIT_IDLE, RABBIT_JUMP, RABBIT_EAT |
+| elephant001 | animal-combo-v1 | ELEPHANT_IDLE, ELEPHANT_SPRAY, ELEPHANT_EAT |
+| panda001 | animal-combo-v1 | PANDA_IDLE, PANDA_EAT |
+| tiger001 | animal-combo-v1 | TIGER_IDLE, TIGER_ROAR, TIGER_EAT |
+| carrot001 | animal-combo-v1 | CARROT_IDLE |
+| grass001 | animal-combo-v1 | GRASS_SWAY |
+| bamboo001 | animal-combo-v1 | BAMBOO_SWAY |
+| meat001 | animal-combo-v1 | MEAT_IDLE |
+
+### Files Created/Modified
+
+#### Backend (Python)
+| File | Action | Description |
+|------|--------|-------------|
+| `models/ar_object.py` | MODIFIED | Added _AnimationsMixin |
+| `repositories/ar_object_repository.py` | MODIFIED | get_tracking_targets_with_xr() with all fields |
+| `database/postgres/migrations/20260821_04_*.sql` | NEW | get_xr_targets_for_deck() function |
+
+#### Frontend (React)
+| File | Action | Description |
+|------|--------|-------------|
+| `pages/LearnAR8thWall.tsx` | NEW | XR page with parallel data fetch |
+| `components/ar/ARContainerV2.tsx` | MODIFIED | Added engine="xr" support |
+| `lib/xr-engine-adapter.ts` | MODIFIED | Added animations[], default_animation |
+| `core/types/ARMessages.ts` | MODIFIED | Added animation fields to ActiveViewerTarget |
+| `public/ar-xr.html` | NEW | 8th Wall runtime |
+
+#### Scripts
+| File | Description |
+|------|-------------|
+| `scripts/upload_ragdoll_3d.py` | Upload GLB files to Supabase |
+| `scripts/upload_tus_ragdoll.py` | TUS protocol for large files |
+| `scripts/compile_xr_targets.js` | Compile XR targets for 8th Wall |
+| `scripts/update_claymorphic_animations.py` | Update animations in database |
+
+### Supabase Storage URLs
+| Asset | URL |
+|-------|-----|
+| Master GLB | `3dmodel/ragdollcat_master.glb` (40MB) |
+| Mobile GLB | `3dmodel/ragdollcat_mobile.glb` (20MB) |
+| XR Targets | `images/xr-targets/{qr_id}.json` |
+| Luminance | `images/xr-targets/{qr_id}_luminance.png` |
+| Flashcards | `images/flashcard/{qr_id}.png` |
+
+### API Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/flashcard/xr-targets/deck/{deckId}` | Get XR targets for deck |
+| GET | `/api/flashcard/{qr_id}/xr-urls` | Get single target XR URLs |
+| GET | `/api/v1/combinations/rules?flashcard_set={deckId}` | Get combo rules |
+
+### Routes
+| Path | Engine | Description |
+|------|--------|-------------|
+| `/learn-ar` | MindAR | Original MindAR experience |
+| `/learn-ar-xr` | 8th Wall | 8th Wall (default deck) |
+| `/learn-ar-xr/:deckId` | 8th Wall | 8th Wall (specific deck) |
+
+### Best Practices Applied
+- **async-parallel**: Parallel fetch of targets + combo rules (Promise.all)
+- **No hardcoded data**: All animations from backend database
+- **Fallback handling**: Graceful degradation if endpoint unavailable
+- **Type safety**: TypeScript interfaces for API responses
+
+### Next Steps
+1. Deploy backend with new XR endpoints
+2. Test /learn-ar-xr route with claymorphic deck
+3. Verify combo detection and animation playback
+4. Add combo celebration UI
+5. Implement combo_animation in ar-xr.html runtime
