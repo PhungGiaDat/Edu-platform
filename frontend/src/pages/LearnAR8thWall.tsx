@@ -1,5 +1,5 @@
 // @ts-nocheck
-// XR implementation in progress - disabling type checking for now
+// XR implementation - using backend API for data
 
 /**
  * LearnAR8thWall.tsx
@@ -8,42 +8,55 @@
  * Uses ARContainerV2 with engine="xr" prop.
  *
  * Route: /learn-ar-xr
+ * Route: /learn-ar-xr/:deckId
  *
- * Features:
- * - Loads XR targets from backend API
- * - Uses ARContainerV2 with engine="xr"
- * - Supports deck selection
- * - Handles combo detection
+ * Data Flow (per vercel-react-best-practices):
+ * 1. Fetch deck targets from backend API (parallel with combo rules)
+ * 2. Transform data and initialize AR container
+ * 3. Handle combo detection from backend
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ARContainerV2, { AREngine, ARPhase } from '@/components/ar/ARContainerV2';
-import { XRTargetData, getXRTargetJSONs, buildMindARConfig } from '@/lib/xr-engine-adapter';
+import { XRTargetData } from '@/lib/xr-engine-adapter';
 import { useToast } from '@/hooks/useToast';
 import { ActiveViewerTarget } from '@/core/types/ARMessages';
 import './LearnAR8thWall.css';
 
-// API Base URL - use VITE_API_BASE (Vite convention)
-const API_BASE = import.meta.env.VITE_API_BASE || '';
+// API Base URL
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://edu-platform-api-do20.onrender.com';
+
+/** API Response types */
+interface BackendTargetsResponse {
+  deck_id: string;
+  target_count: number;
+  targets: TargetData[];
+}
+
+interface TargetData {
+  qr_id: string;
+  word?: string;
+  xr_target_json_url?: string;
+  xr_target_image_url?: string;
+  reference_image_url?: string;
+  mind_catalog_id?: string;
+  mind_target_index?: number;
+  description?: string;
+  animations?: string[];
+  default_animation?: string;
+  combo_animation?: string;
+  model_3d_url?: string;
+  texture_url?: string;
+  position?: string;
+  rotation?: string;
+  scale?: string;
+}
 
 interface DeckInfo {
   deck_id: string;
   name: string;
-  description?: string;
-  category?: string;
-  card_count?: number;
-}
-
-interface ARExperienceData {
-  qr_id: string;
-  word: string;
-  translation_vi: string;
-  model_url?: string;
-  animation_type?: string;
-  xr_target_json_url?: string;
-  xr_target_image_url?: string;
-  reference_image_url?: string;
+  card_count: number;
 }
 
 export const LearnAR8thWall: React.FC = () => {
@@ -56,182 +69,113 @@ export const LearnAR8thWall: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [deckInfo, setDeckInfo] = useState<DeckInfo | null>(null);
   const [targets, setTargets] = useState<XRTargetData[]>([]);
-  const [modelUrl, setModelUrl] = useState<string>('');
+  const [activeTargets, setActiveTargets] = useState<ActiveViewerTarget[]>([]);
+  const [comboRules, setComboRules] = useState<any[]>([]);
   const [foundCards, setFoundCards] = useState<Set<string>>(new Set());
   const [activeCombo, setActiveCombo] = useState<string | null>(null);
   const [phase, setPhase] = useState<ARPhase>('LOADING');
 
-  // ========== LOAD XR TARGETS ==========
-  const [activeTargets, setActiveTargets] = useState<ActiveViewerTarget[]>([]);
+  /** Default deck ID */
+  const targetDeckId = useMemo(() => deckId || 'claymorphic-animals-001', [deckId]);
 
-  const loadXRTargets = useCallback(async () => {
+  /**
+   * Fetch XR targets and combo rules in PARALLEL
+   * Per async-parallel rule: independent ops should run concurrently
+   */
+  const loadARData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Use deck ID from URL or default to claymorphic deck
-      const targetDeckId = deckId || 'claymorphic-animals-001';
+      // Parallel fetch: targets + combo rules (no dependencies)
+      const [targetsRes, combosRes] = await Promise.all([
+        fetch(`${API_BASE}/api/flashcard/xr-targets/deck/${targetDeckId}`, {
+          headers: { 'Content-Type': 'application/json' },
+        }),
+        fetch(`${API_BASE}/api/v1/combinations/rules?flashcard_set=${encodeURIComponent(targetDeckId)}`, {
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ]);
 
-      // Try backend first, fallback to Supabase REST API
-      let data: any = null;
-      try {
-        const response = await fetch(
-          `${API_BASE}/api/flashcard/xr-targets/deck/${targetDeckId}`,
-          {
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
-
-        if (response.ok) {
-          data = await response.json();
-        } else {
-          console.warn('[LearnAR8thWall] Backend endpoint not available, using Supabase fallback');
-          throw new Error('Backend endpoint not available');
-        }
-      } catch (backendErr) {
-        // Fallback: query Supabase REST API directly
-        console.log('[LearnAR8thWall] Loading from Supabase direct...');
-        data = await loadFromSupabase(targetDeckId);
+      // Check targets response
+      if (!targetsRes.ok) {
+        throw new Error(`Failed to load XR targets: ${targetsRes.status}`);
       }
 
-      // Extract deck info
-      if (data.targets?.length > 0) {
-        setDeckInfo({
-          deck_id: targetDeckId,
-          name: data.targets[0]?.deck_name || 'AR Deck',
-          card_count: data.target_count,
-        });
+      const targetsData: BackendTargetsResponse = await targetsRes.json();
 
-        // Transform to XRTargetData format
-        const xrTargets: XRTargetData[] = data.targets.map((t: any) => ({
-          qr_id: t.qr_id,
-          xr_target_json_url: t.xr_target_json_url,
-          xr_target_image_url: t.xr_target_image_url,
-          reference_image_url: t.reference_image_url,
-          mind_file_url: t.mind_file_url,
-          mind_catalog_id: t.mind_catalog_id,
-          model_3d_url: t.model_3d_url,
-          texture_url: t.texture_url,
-          animation_type: t.animation_type, // @deprecated
-          animations: t.animations || (t.animation_type ? [t.animation_type] : ['IDLE']),
-          default_animation: t.default_animation || t.animation_type || 'IDLE',
-          position: t.position,
-          rotation: t.rotation,
-          scale: t.scale,
-        }));
-
-        setTargets(xrTargets);
-
-        // Build ActiveViewerTarget for ARContainerV2 with XR URLs
-        const viewerTargets: ActiveViewerTarget[] = data.targets.map((t: any, index: number) => ({
-          slotIndex: index as ActiveViewerTarget['slotIndex'],
-          mindTargetIndex: t.mind_target_index ?? index,
-          arTag: t.qr_id,
-          modelUrl: t.model_3d_url || '',
-          textureUrl: t.texture_url,
-          word: t.word || t.qr_id,
-          position: t.position || '0 0 0',
-          rotation: t.rotation || '0 0 0',
-          scale: t.scale || '1 1 1',
-          xr_target_json_url: t.xr_target_json_url,
-          xr_target_image_url: t.xr_target_image_url,
-        }));
-
-        setActiveTargets(viewerTargets);
-
-        // Use first target's model URL as default
-        if (xrTargets[0]?.model_3d_url) {
-          setModelUrl(xrTargets[0].model_3d_url);
-        }
-      } else {
-        setError('No XR targets found for this deck');
+      // Parse combos (may fail if endpoint not available)
+      let combos: any[] = [];
+      if (combosRes.ok) {
+        const combosData = await combosRes.json();
+        combos = combosData.rules || combosData || [];
       }
+
+      // Process data
+      if (!targetsData.targets?.length) {
+        throw new Error('No XR targets found for this deck');
+      }
+
+      // Set deck info
+      setDeckInfo({
+        deck_id: targetDeckId,
+        name: targetsData.targets[0]?.deck_name || 'AR Deck',
+        card_count: targetsData.target_count,
+      });
+
+      // Transform targets to XRTargetData format
+      const xrTargets: XRTargetData[] = targetsData.targets.map((t) => ({
+        qr_id: t.qr_id,
+        xr_target_json_url: t.xr_target_json_url,
+        xr_target_image_url: t.xr_target_image_url,
+        reference_image_url: t.reference_image_url,
+        mind_catalog_id: t.mind_catalog_id,
+        mind_target_index: t.mind_target_index,
+        model_3d_url: t.model_3d_url,
+        texture_url: t.texture_url,
+        animations: t.animations,
+        default_animation: t.default_animation || 'IDLE',
+        combo_animation: t.combo_animation,
+        position: t.position || '0 0 0',
+        rotation: t.rotation || '0 0 0',
+        scale: t.scale || '1 1 1',
+      }));
+
+      setTargets(xrTargets);
+
+      // Build ActiveViewerTarget for ARContainerV2
+      const viewerTargets: ActiveViewerTarget[] = targetsData.targets.map((t, index) => ({
+        slotIndex: (index % 2) as ActiveViewerTarget['slotIndex'], // 0 or 1
+        mindTargetIndex: t.mind_target_index ?? index,
+        arTag: t.qr_id,
+        modelUrl: t.model_3d_url || '',
+        textureUrl: t.texture_url,
+        word: t.word || t.qr_id.replace('001', ''),
+        position: t.position || '0 0 0',
+        rotation: t.rotation || '0 0 0',
+        scale: t.scale || '1 1 1',
+        xr_target_json_url: t.xr_target_json_url,
+        xr_target_image_url: t.xr_target_image_url,
+        animations: t.animations,
+        default_animation: t.default_animation,
+        combo_animation: t.combo_animation,
+      }));
+
+      setActiveTargets(viewerTargets);
+      setComboRules(combos);
+
     } catch (err) {
       console.error('[LearnAR8thWall] Load error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load AR content');
     } finally {
       setIsLoading(false);
     }
-  }, [deckId]);
-
-  // ========== SUPABASE FALLBACK ==========
-  // Direct query to Supabase when backend endpoint not yet deployed
-  const loadFromSupabase = async (deckId: string) => {
-    const supabaseUrl = 'https://rofprrtoeyirssfndxag.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvZnBycnRvZXlpcnNzZm5keGFnIiwicm9sZSI6ImFub25fa2V5IiwiaWF0IjoxNzY1MDA0NjkwLCJleHAiOjIwODA1ODA2OTB9.placeholder';
-
-    // For claymorphic-animals-001, use known default targets with animations
-    if (deckId === 'claymorphic-animals-001') {
-      // Animations for ragdollcat model
-      const targetAnimations: Record<string, { animations: string[], default: string }> = {
-        'cat001':    { animations: ['CAT_IDLE', 'CAT_MEOW', 'CAT_EAT'], default: 'CAT_IDLE' },
-        'fish001':   { animations: ['FISH_IDLE', 'FISH_SWIM'], default: 'FISH_IDLE' },
-        'rabbit001': { animations: ['RABBIT_IDLE', 'RABBIT_JUMP', 'RABBIT_EAT'], default: 'RABBIT_IDLE' },
-        'carrot001': { animations: ['CARROT_IDLE'], default: 'CARROT_IDLE' },
-        'elephant001': { animations: ['ELEPHANT_IDLE', 'ELEPHANT_SPRAY', 'ELEPHANT_EAT'], default: 'ELEPHANT_IDLE' },
-        'grass001':  { animations: ['GRASS_SWAY'], default: 'GRASS_SWAY' },
-        'panda001':  { animations: ['PANDA_IDLE', 'PANDA_EAT'], default: 'PANDA_IDLE' },
-        'bamboo001': { animations: ['BAMBOO_SWAY'], default: 'BAMBOO_SWAY' },
-        'tiger001':  { animations: ['TIGER_IDLE', 'TIGER_ROAR', 'TIGER_EAT'], default: 'TIGER_IDLE' },
-        'meat001':   { animations: ['MEAT_IDLE'], default: 'MEAT_IDLE' },
-      };
-
-      const modelUrl = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/3dmodel/ragdollcat_mobile.glb';
-      const defaultTargets = Object.keys(targetAnimations);
-
-      return {
-        deck_id: deckId,
-        target_count: defaultTargets.length,
-        targets: defaultTargets.map((qr_id, index) => {
-          const anim = targetAnimations[qr_id];
-          return {
-            qr_id,
-            deck_name: 'Claymorphic Animals',
-            deck_id: deckId,
-            mind_catalog_id: 'animal-combo-v1',
-            mind_target_index: index,
-            word: qr_id.replace('001', ''),
-            model_3d_url: modelUrl,
-            animations: anim.animations,
-            default_animation: anim.default,
-            xr_target_json_url: `https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/xr-targets/${qr_id}.json`,
-            xr_target_image_url: `https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/xr-targets/${qr_id}_luminance.png`,
-            reference_image_url: `https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcard/${qr_id}.png`,
-            position: '0 0 0',
-            rotation: '0 0 0',
-            scale: '1 1 1',
-          };
-        }),
-      };
-    }
-
-    // Query Supabase REST API for other decks
-    const response = await fetch(
-      `${supabaseUrl}/rest/v1/ar_tracking_targets?deck_id=eq.${deckId}&select=qr_id,xr_target_json_url,xr_target_image_url,reference_image_url,model_3d_url,position,rotation,scale`,
-      {
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Supabase query failed: ${response.statusText}`);
-    }
-
-    const targets = await response.json();
-    return {
-      deck_id: deckId,
-      target_count: targets.length,
-      targets,
-    };
-  };
+  }, [targetDeckId]);
 
   // Load on mount
   useEffect(() => {
-    loadXRTargets();
-  }, [loadXRTargets]);
+    loadARData();
+  }, [loadARData]);
 
   // ========== AR EVENT HANDLERS ==========
   const handlePhaseChange = useCallback((newPhase: ARPhase) => {
@@ -240,15 +184,10 @@ export const LearnAR8thWall: React.FC = () => {
 
   const handleTargetFound = useCallback(
     (targetIndex: number) => {
-      // Find the target by index from activeTargets
       const target = activeTargets[targetIndex];
       const qrId = target?.arTag || `target_${targetIndex}`;
       console.log('[LearnAR8thWall] Target found:', targetIndex, qrId);
-      setFoundCards((prev) => {
-        const next = new Set(prev);
-        next.add(qrId);
-        return next;
-      });
+      setFoundCards((prev) => new Set([...prev, qrId]));
       showToast(`Found: ${qrId}`, 'success');
     },
     [activeTargets, showToast]
@@ -261,12 +200,27 @@ export const LearnAR8thWall: React.FC = () => {
   const handleComboDetected = useCallback(
     (targetIndices: number[]) => {
       console.log('[LearnAR8thWall] Combo detected:', targetIndices);
-      if (targetIndices.length >= 2) {
-        setActiveCombo('combo_activated');
+
+      // Check combo rules from backend
+      const foundTags = targetIndices
+        .map((i) => activeTargets[i]?.arTag)
+        .filter(Boolean);
+
+      const matchedCombo = comboRules.find((rule) =>
+        rule.required_tags?.every((tag: string) => foundTags.includes(tag)) ||
+        rule.tags?.every((tag: string) => foundTags.includes(tag))
+      );
+
+      if (matchedCombo) {
+        console.log('[LearnAR8thWall] Combo matched:', matchedCombo.combo_name);
+        setActiveCombo(matchedCombo.combo_id);
+        showToast(matchedCombo.phrase || 'Combo activated!', 'success');
+      } else if (targetIndices.length >= 2) {
+        setActiveCombo('generic_combo');
         showToast('Combo detected! Great job!', 'success');
       }
     },
-    [showToast]
+    [activeTargets, comboRules, showToast]
   );
 
   const handleError = useCallback(
@@ -307,14 +261,7 @@ export const LearnAR8thWall: React.FC = () => {
     return (
       <div className="ar-xr-error">
         <div className="error-icon">
-          <svg
-            width={64}
-            height={64}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#FF6B6B"
-            strokeWidth={2}
-          >
+          <svg width={64} height={64} viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth={2}>
             <circle cx={12} cy={12} r={10} />
             <line x1={15} y1={9} x2={9} y2={15} />
             <line x1={9} y1={9} x2={15} y2={15} />
@@ -323,12 +270,8 @@ export const LearnAR8thWall: React.FC = () => {
         <h2>Could not load AR</h2>
         <p>{error}</p>
         <div className="error-actions">
-          <button className="btn-primary" onClick={loadXRTargets}>
-            Try Again
-          </button>
-          <button className="btn-secondary" onClick={handleBack}>
-            Go Back
-          </button>
+          <button className="btn-primary" onClick={loadARData}>Try Again</button>
+          <button className="btn-secondary" onClick={handleBack}>Go Back</button>
         </div>
       </div>
     );
@@ -339,14 +282,7 @@ export const LearnAR8thWall: React.FC = () => {
       {/* Header */}
       <div className="ar-xr-header">
         <button className="back-btn" onClick={handleBack}>
-          <svg
-            width={24}
-            height={24}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
+          <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
@@ -361,17 +297,18 @@ export const LearnAR8thWall: React.FC = () => {
         </button>
       </div>
 
-      {/* AR Container - Use ARContainerV2 with engine="xr" */}
+      {/* AR Container */}
       <ARContainerV2
         engine="xr"
         initialPhase={phase}
-        modelUrl={modelUrl}
+        modelUrl={targets[0]?.model_3d_url}
         activeTargets={activeTargets}
         onPhaseChange={handlePhaseChange}
         onTargetFound={handleTargetFound}
         onTargetLost={handleTargetLost}
         onComboDetected={handleComboDetected}
         onViewerAssetError={(data) => handleError(data.error, data.code)}
+        onReady={handleReady}
       />
 
       {/* Found Cards Overlay */}
@@ -380,9 +317,7 @@ export const LearnAR8thWall: React.FC = () => {
           <div className="found-cards-title">Found Cards</div>
           <div className="found-cards-list">
             {Array.from(foundCards).map((card) => (
-              <div key={card} className="found-card-badge">
-                {card}
-              </div>
+              <div key={card} className="found-card-badge">{card}</div>
             ))}
           </div>
         </div>

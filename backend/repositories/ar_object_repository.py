@@ -21,23 +21,76 @@ class ARObjectRepository:
     async def get_tracking_targets_with_xr(
         self, deck_id: Optional[str] = None
     ) -> List[Dict[str, Any]]:
-        """Get tracking targets with XR target URLs for 8th Wall engine."""
+        """Get tracking targets with XR target URLs and ar_objects data for 8th Wall engine.
+
+        Joins ar_tracking_targets (XR URLs) with ar_objects (animations, model, transforms).
+        This allows the frontend to get all data without hardcoding animations.
+
+        Returns:
+            List of dicts with:
+            - qr_id, word (from flashcard)
+            - xr_target_json_url, xr_target_image_url (from ar_tracking_targets)
+            - animations[], default_animation, combo_animation (from ar_objects)
+            - model_3d_url, texture_url, position, rotation, scale (from ar_objects)
+        """
         if deck_id:
             query = """
-                SELECT tt.*, fd.name as deck_name, fd.category as deck_category
+                SELECT
+                    tt.qr_id,
+                    f.word,
+                    tt.xr_target_json_url,
+                    tt.xr_target_image_url,
+                    tt.reference_image_url,
+                    tt.animation_type,
+                    tt.mind_catalog_id,
+                    tt.mind_target_index,
+                    fd.name as deck_name,
+                    fd.category as deck_category,
+                    fd.deck_id,
+                    COALESCE(ao.description, tt.qr_id || ' AR object') as description,
+                    ao.animations,
+                    ao.default_animation,
+                    ao.combo_animation,
+                    COALESCE(ao.model_3d_url, 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/3dmodel/ragdollcat_mobile.glb') as model_3d_url,
+                    ao.texture_url,
+                    COALESCE(ao.position, '0 0 0') as position,
+                    COALESCE(ao.rotation, '0 0 0') as rotation,
+                    COALESCE(ao.scale, '1 1 1') as scale
                 FROM public.ar_tracking_targets tt
                 JOIN public.flashcards f ON tt.qr_id = f.qr_id
                 JOIN public.flashcard_decks fd ON f.deck_id = fd.deck_id
+                LEFT JOIN public.ar_objects ao ON ao.ar_tag = tt.qr_id
                 WHERE f.deck_id = $1
                 ORDER BY f.qr_id
             """
             rows = await postgres_pool().fetch(query, deck_id)
         else:
             query = """
-                SELECT tt.*, fd.name as deck_name, fd.category as deck_category
+                SELECT
+                    tt.qr_id,
+                    f.word,
+                    tt.xr_target_json_url,
+                    tt.xr_target_image_url,
+                    tt.reference_image_url,
+                    tt.animation_type,
+                    tt.mind_catalog_id,
+                    tt.mind_target_index,
+                    fd.name as deck_name,
+                    fd.category as deck_category,
+                    fd.deck_id,
+                    COALESCE(ao.description, tt.qr_id || ' AR object') as description,
+                    ao.animations,
+                    ao.default_animation,
+                    ao.combo_animation,
+                    COALESCE(ao.model_3d_url, 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/3dmodel/ragdollcat_mobile.glb') as model_3d_url,
+                    ao.texture_url,
+                    COALESCE(ao.position, '0 0 0') as position,
+                    COALESCE(ao.rotation, '0 0 0') as rotation,
+                    COALESCE(ao.scale, '1 1 1') as scale
                 FROM public.ar_tracking_targets tt
                 JOIN public.flashcards f ON tt.qr_id = f.qr_id
                 JOIN public.flashcard_decks fd ON f.deck_id = fd.deck_id
+                LEFT JOIN public.ar_objects ao ON ao.ar_tag = tt.qr_id
                 WHERE tt.xr_target_json_url IS NOT NULL
                 ORDER BY f.qr_id
             """

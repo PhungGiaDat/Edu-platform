@@ -39,6 +39,12 @@ export interface ActiveViewerTarget {
   xr_target_json_url?: string;
   /** XR Engine: URL to XR target luminance image (8th Wall) */
   xr_target_image_url?: string;
+  /** List of available animations in the 3D model */
+  animations?: string[];
+  /** Default animation to play when target is found */
+  default_animation?: string;
+  /** Animation to play during combo (animal eating) */
+  combo_animation?: string;
 }
 
 /**

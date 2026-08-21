@@ -86,6 +86,23 @@ class ARObject(Document):
         }
 
 
+# ========== Animations Mixin ==========
+class _AnimationsMixin(BaseModel):
+    """Mixin for AR objects that support multiple animations from a single 3D model."""
+    animations: Optional[List[str]] = Field(
+        default=None,
+        description="List of available animations in the 3D model, e.g. ['CAT_IDLE', 'CAT_EAT']"
+    )
+    default_animation: Optional[str] = Field(
+        default=None,
+        description="Default animation to play when target is found"
+    )
+    combo_animation: Optional[str] = Field(
+        default=None,
+        description="Animation to play during combo (e.g. animal eating animation)"
+    )
+
+
 # ========== Pydantic Schemas (API) ==========
 class _CatalogIdentityMixin(BaseModel):
     """Shared validator enforcing that catalog identity fields move together.
@@ -112,11 +129,13 @@ class _CatalogIdentityMixin(BaseModel):
         return self
 
 
-class ARObjectCreate(_CatalogIdentityMixin):
+class ARObjectCreate(_CatalogIdentityMixin, _AnimationsMixin):
     """Schema for creating a new AR object.
 
     Catalog identity is mandatory on create — the runtime cannot resolve
     a MindAR anchor without the complete (catalog, index) pair.
+
+    Supports multiple animations from a single 3D model (e.g. ragdollcat).
     """
 
     ar_tag: str
@@ -145,7 +164,7 @@ class ARObjectCreate(_CatalogIdentityMixin):
         return self
 
 
-class ARObjectUpdate(_CatalogIdentityMixin):
+class ARObjectUpdate(_CatalogIdentityMixin, _AnimationsMixin):
     """Schema for updating AR object - all fields optional.
 
     Catalog identity is optional here.  When the caller opts into a
@@ -187,6 +206,8 @@ class ARObjectResponse(BaseModel):
     catalog manifest resolved via ``mind_catalog_id`` + ``mind_target_index``
     on this document.  The field remains in the response payload as
     ``Optional[str]`` so legacy clients keep parsing without errors.
+
+    Includes animations[] for multi-animation models (e.g. ragdollcat).
     """
 
     id: Optional[str] = Field(None, alias="_id")
@@ -203,6 +224,9 @@ class ARObjectResponse(BaseModel):
     scale: str
     mind_catalog_id: Optional[str] = None
     mind_target_index: Optional[int] = None
+    animations: Optional[List[str]] = None
+    default_animation: Optional[str] = None
+    combo_animation: Optional[str] = None
     created_at: datetime
 
     class Config:
@@ -237,6 +261,9 @@ class ArObjectSchema(BaseModel):
     # stay explicit rather than being invented from a model or image URL.
     mind_catalog_id: Optional[str] = None
     mind_target_index: Optional[int] = None
+    animations: Optional[List[str]] = None
+    default_animation: Optional[str] = None
+    combo_animation: Optional[str] = None
     created_at: datetime
 
     class Config:
