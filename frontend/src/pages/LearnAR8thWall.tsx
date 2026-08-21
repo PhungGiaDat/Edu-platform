@@ -24,8 +24,8 @@ import { useToast } from '@/hooks/useToast';
 import { ActiveViewerTarget } from '@/core/types/ARMessages';
 import './LearnAR8thWall.css';
 
-// API Base URL - adjust for your environment
-const API_BASE = process.env.REACT_APP_API_URL || '';
+// API Base URL - use VITE_API_BASE (Vite convention)
+const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 interface DeckInfo {
   deck_id: string;
@@ -72,21 +72,27 @@ export const LearnAR8thWall: React.FC = () => {
       // Use deck ID from URL or default to claymorphic deck
       const targetDeckId = deckId || 'claymorphic-animals-001';
 
-      // Fetch XR targets from backend
-      const response = await fetch(
-        `${API_BASE}/api/flashcard/xr-targets/deck/${targetDeckId}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+      // Try backend first, fallback to Supabase REST API
+      let data: any = null;
+      try {
+        const response = await fetch(
+          `${API_BASE}/api/flashcard/xr-targets/deck/${targetDeckId}`,
+          {
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+
+        if (response.ok) {
+          data = await response.json();
+        } else {
+          console.warn('[LearnAR8thWall] Backend endpoint not available, using Supabase fallback');
+          throw new Error('Backend endpoint not available');
         }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to load XR targets: ${response.statusText}`);
+      } catch (backendErr) {
+        // Fallback: query Supabase REST API directly
+        console.log('[LearnAR8thWall] Loading from Supabase direct...');
+        data = await loadFromSupabase(targetDeckId);
       }
-
-      const data = await response.json();
 
       // Extract deck info
       if (data.targets?.length > 0) {
@@ -145,6 +151,65 @@ export const LearnAR8thWall: React.FC = () => {
       setIsLoading(false);
     }
   }, [deckId]);
+
+  // ========== SUPABASE FALLBACK ==========
+  // Direct query to Supabase when backend endpoint not yet deployed
+  const loadFromSupabase = async (deckId: string) => {
+    const supabaseUrl = 'https://rofprrtoeyirssfndxag.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvZnBycnRvZXlpcnNzZm5keGFnIiwicm9sZSI6ImFub25fa2V5IiwiaWF0IjoxNzY1MDA0NjkwLCJleHAiOjIwODA1ODA2OTB9.placeholder';
+
+    // For claymorphic-animals-001, use known default targets
+    if (deckId === 'claymorphic-animals-001') {
+      const defaultTargets = [
+        'cat001', 'fish001', 'rabbit001', 'carrot001',
+        'elephant001', 'grass001', 'panda001', 'bamboo001',
+        'tiger001', 'meat001'
+      ];
+
+      const modelUrl = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/3dmodel/ragdollcat_mobile.glb';
+
+      return {
+        deck_id: deckId,
+        target_count: defaultTargets.length,
+        targets: defaultTargets.map((qr_id, index) => ({
+          qr_id,
+          deck_name: 'Claymorphic Animals',
+          deck_id: deckId,
+          mind_target_index: index,
+          word: qr_id.replace('001', ''),
+          model_3d_url: modelUrl,
+          xr_target_json_url: `https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/xr-targets/${qr_id}.json`,
+          xr_target_image_url: `https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/xr-targets/${qr_id}_luminance.png`,
+          reference_image_url: `https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcard/${qr_id}.png`,
+          position: '0 0 0',
+          rotation: '0 0 0',
+          scale: '1 1 1',
+        })),
+      };
+    }
+
+    // Query Supabase REST API for other decks
+    const response = await fetch(
+      `${supabaseUrl}/rest/v1/ar_tracking_targets?deck_id=eq.${deckId}&select=qr_id,xr_target_json_url,xr_target_image_url,reference_image_url,model_3d_url,position,rotation,scale`,
+      {
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Supabase query failed: ${response.statusText}`);
+    }
+
+    const targets = await response.json();
+    return {
+      deck_id: deckId,
+      target_count: targets.length,
+      targets,
+    };
+  };
 
   // Load on mount
   useEffect(() => {
