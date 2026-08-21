@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>AR Viewer</title>
+    <!-- Eruda Debug Console - Mobile Web Debugging -->
+    <script>
+        if (location.search.includes('debug') || location.hostname === 'localhost') {
+            (function() {
+                var s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/eruda@3';
+                s.onload = function() { eruda.init({
+                    defaults: { displaySize: 30, transparency: 0.8 },
+                    useShadowDom: true
+                }); };
+                document.head.appendChild(s);
+            })();
+        }
+    </script>
     <link rel="stylesheet" href="/static/ar-assets/css/ar-viewer.css">
 </head>
 <body>
@@ -88,6 +102,16 @@
             }
 
             // Listen for messages from the viewer script
+            // Debug: log all incoming messages if ?debug
+            if (location.search.includes('debug') || location.hostname === 'localhost') {
+                (function() {
+                    var origHandler = null;
+                    window.addEventListener('message', function debugMessage(event) {
+                        console.log('[←parent]', event.data);
+                    });
+                })();
+            }
+
             window.addEventListener('message', function onViewerMessage(event) {
                 var msg = event.data;
                 if (!msg || !msg.type) return;
