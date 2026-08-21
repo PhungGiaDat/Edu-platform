@@ -112,7 +112,9 @@ export const LearnAR8thWall: React.FC = () => {
           mind_catalog_id: t.mind_catalog_id,
           model_3d_url: t.model_3d_url,
           texture_url: t.texture_url,
-          animation_type: t.animation_type,
+          animation_type: t.animation_type, // @deprecated
+          animations: t.animations || (t.animation_type ? [t.animation_type] : ['IDLE']),
+          default_animation: t.default_animation || t.animation_type || 'IDLE',
           position: t.position,
           rotation: t.rotation,
           scale: t.scale,
@@ -158,33 +160,48 @@ export const LearnAR8thWall: React.FC = () => {
     const supabaseUrl = 'https://rofprrtoeyirssfndxag.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvZnBycnRvZXlpcnNzZm5keGFnIiwicm9sZSI6ImFub25fa2V5IiwiaWF0IjoxNzY1MDA0NjkwLCJleHAiOjIwODA1ODA2OTB9.placeholder';
 
-    // For claymorphic-animals-001, use known default targets
+    // For claymorphic-animals-001, use known default targets with animations
     if (deckId === 'claymorphic-animals-001') {
-      const defaultTargets = [
-        'cat001', 'fish001', 'rabbit001', 'carrot001',
-        'elephant001', 'grass001', 'panda001', 'bamboo001',
-        'tiger001', 'meat001'
-      ];
+      // Animations for ragdollcat model
+      const targetAnimations: Record<string, { animations: string[], default: string }> = {
+        'cat001':    { animations: ['CAT_IDLE', 'CAT_MEOW', 'CAT_EAT'], default: 'CAT_IDLE' },
+        'fish001':   { animations: ['FISH_IDLE', 'FISH_SWIM'], default: 'FISH_IDLE' },
+        'rabbit001': { animations: ['RABBIT_IDLE', 'RABBIT_JUMP', 'RABBIT_EAT'], default: 'RABBIT_IDLE' },
+        'carrot001': { animations: ['CARROT_IDLE'], default: 'CARROT_IDLE' },
+        'elephant001': { animations: ['ELEPHANT_IDLE', 'ELEPHANT_SPRAY', 'ELEPHANT_EAT'], default: 'ELEPHANT_IDLE' },
+        'grass001':  { animations: ['GRASS_SWAY'], default: 'GRASS_SWAY' },
+        'panda001':  { animations: ['PANDA_IDLE', 'PANDA_EAT'], default: 'PANDA_IDLE' },
+        'bamboo001': { animations: ['BAMBOO_SWAY'], default: 'BAMBOO_SWAY' },
+        'tiger001':  { animations: ['TIGER_IDLE', 'TIGER_ROAR', 'TIGER_EAT'], default: 'TIGER_IDLE' },
+        'meat001':   { animations: ['MEAT_IDLE'], default: 'MEAT_IDLE' },
+      };
 
       const modelUrl = 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/3dmodel/ragdollcat_mobile.glb';
+      const defaultTargets = Object.keys(targetAnimations);
 
       return {
         deck_id: deckId,
         target_count: defaultTargets.length,
-        targets: defaultTargets.map((qr_id, index) => ({
-          qr_id,
-          deck_name: 'Claymorphic Animals',
-          deck_id: deckId,
-          mind_target_index: index,
-          word: qr_id.replace('001', ''),
-          model_3d_url: modelUrl,
-          xr_target_json_url: `https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/xr-targets/${qr_id}.json`,
-          xr_target_image_url: `https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/xr-targets/${qr_id}_luminance.png`,
-          reference_image_url: `https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcard/${qr_id}.png`,
-          position: '0 0 0',
-          rotation: '0 0 0',
-          scale: '1 1 1',
-        })),
+        targets: defaultTargets.map((qr_id, index) => {
+          const anim = targetAnimations[qr_id];
+          return {
+            qr_id,
+            deck_name: 'Claymorphic Animals',
+            deck_id: deckId,
+            mind_catalog_id: 'animal-combo-v1',
+            mind_target_index: index,
+            word: qr_id.replace('001', ''),
+            model_3d_url: modelUrl,
+            animations: anim.animations,
+            default_animation: anim.default,
+            xr_target_json_url: `https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/xr-targets/${qr_id}.json`,
+            xr_target_image_url: `https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/xr-targets/${qr_id}_luminance.png`,
+            reference_image_url: `https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/images/flashcard/${qr_id}.png`,
+            position: '0 0 0',
+            rotation: '0 0 0',
+            scale: '1 1 1',
+          };
+        }),
       };
     }
 

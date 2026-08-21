@@ -19,7 +19,12 @@ export interface XRTargetData {
   mind_target_index?: number;
   model_3d_url?: string;
   texture_url?: string;
+  /** @deprecated Use animations[] instead */
   animation_type?: string;
+  /** List of available animations in the 3D model */
+  animations?: string[];
+  /** Default animation to play when target is found */
+  default_animation?: string;
   position?: string;
   rotation?: string;
   scale?: string;
