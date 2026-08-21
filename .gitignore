@@ -3,8 +3,18 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-.opencode    
-/scripts/
+.opencode
+
+# Scripts (root level)
+!/scripts/
+scripts/*.py
+scripts/*.js
+scripts/*.sh
+scripts/*.md
+!scripts/compile_xr_targets.js
+!scripts/upload_ragdoll_3d.py
+!scripts/upload_tus_ragdoll.py
+!scripts/README_3D_UPLOAD.md
 !backend/scripts/
 backend/scripts/*
 !backend/scripts/create_admin.py
