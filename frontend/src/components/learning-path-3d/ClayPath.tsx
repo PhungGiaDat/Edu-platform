@@ -126,6 +126,11 @@ export const ClayPath: React.FC<ClayPathProps> = ({ nodes, currentProgress }) =>
         </React.Fragment>
       ))}
 
+      {/* Golden progress trail - shows completed portion of path */}
+      {currentProgress > 0 && (
+        <ProgressTrail nodes={nodes} progress={currentProgress} />
+      )}
+
       {/* Progress indicator - brighter accent color at current position */}
       {currentProgress > 0 && (
         <ProgressMarker
@@ -135,6 +140,52 @@ export const ClayPath: React.FC<ClayPathProps> = ({ nodes, currentProgress }) =>
         />
       )}
     </group>
+  );
+};
+
+// ========== Golden Progress Trail ==========
+
+interface ProgressTrailProps {
+  nodes: LessonNode[];
+  progress: number;
+}
+
+const ProgressTrail: React.FC<ProgressTrailProps> = ({ nodes, progress }) => {
+  const trailGeometry = useMemo(() => {
+    const fullSpline = createPathSpline(nodes);
+    const length = fullSpline.getLength();
+
+    // Create a spline from start to current progress
+    const points: THREE.Vector3[] = [];
+    const numPoints = Math.max(20, Math.floor(length * 10)); // At least 20 points
+
+    for (let i = 0; i <= numPoints; i++) {
+      const pointProgress = (i / numPoints) * progress;
+      const point = fullSpline.getPointAt(pointProgress);
+      points.push(point);
+    }
+
+    // Create spline from points
+    const trailSpline = new THREE.CatmullRomCurve3(points);
+    return new THREE.TubeGeometry(trailSpline, 100, 0.25, 8, false);
+  }, [nodes, progress]);
+
+  const trailMaterial = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#FFD700'),
+      emissive: new THREE.Color('#FFD700'),
+      emissiveIntensity: 0.3,
+      roughness: 0.4,
+      metalness: 0.2,
+      transparent: true,
+      opacity: 0.7,
+    });
+  }, []);
+
+  return (
+    <mesh geometry={trailGeometry}>
+      <primitive object={trailMaterial} />
+    </mesh>
   );
 };
 
