@@ -30,11 +30,13 @@ export interface PetGuideProps {
   progress: number;
   /** Lesson nodes for spline calculation */
   nodes: LessonNode[];
+  /** Trigger celebration animation when lesson is completed */
+  isCelebrating?: boolean;
 }
 
 // ========== Component ==========
 
-export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, nodes }) => {
+export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, nodes, isCelebrating = false }) => {
   const groupRef = useRef<THREE.Group>(null);
   const targetRotation = useRef(0);
   const lastProgress = useRef(progress);
@@ -60,7 +62,7 @@ export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, nodes }) => {
   }, [tangent]);
 
   // Track distance traveled for walking animation speed
-  useFrame((_, delta) => {
+  useFrame((state) => {
     if (!groupRef.current) return;
 
     // Update distance traveled based on progress change
@@ -72,26 +74,34 @@ export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, nodes }) => {
     targetRotation.current += (targetAngle - targetRotation.current) * ROTATION_SMOOTHING;
     groupRef.current.rotation.y = targetRotation.current;
 
-    // Bob animation based on movement (walking effect)
-    const isMoving = progressDelta > 0.001;
-    if (isMoving) {
-      const bobPhase = distanceTraveled.current * BOB_SPEED;
-      const bobY = Math.sin(bobPhase) * BOB_AMPLITUDE;
-      groupRef.current.position.y = position.y + bobY;
+    // Celebration animation
+    if (isCelebrating) {
+      const jumpHeight = Math.abs(Math.sin(state.clock.elapsedTime * 6)) * 0.4;
+      groupRef.current.position.y = position.y + jumpHeight;
+      // Wiggle rotation
+      groupRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 10) * 0.1;
     } else {
-      // Gentle idle float
-      const idleTime = Date.now() / 1000;
-      const idleBob = Math.sin(idleTime * 2) * 0.05;
-      groupRef.current.position.y = position.y + idleBob;
+      // Bob animation based on movement (walking effect)
+      const isMoving = progressDelta > 0.001;
+      if (isMoving) {
+        const bobPhase = distanceTraveled.current * BOB_SPEED;
+        const bobY = Math.sin(bobPhase) * BOB_AMPLITUDE;
+        groupRef.current.position.y = position.y + bobY;
+      } else {
+        // Gentle idle float
+        const idleTime = Date.now() / 1000;
+        const idleBob = Math.sin(idleTime * 2) * 0.05;
+        groupRef.current.position.y = position.y + idleBob;
+      }
     }
   });
 
   // Use model if available, otherwise fallback to clay blob
   if (pet.model_url) {
-    return <PetModel position={position} modelUrl={pet.model_url} groupRef={groupRef} />;
+    return <PetModel position={position} modelUrl={pet.model_url} groupRef={groupRef} isCelebrating={isCelebrating} />;
   }
 
-  return <PetFallback position={position} groupRef={groupRef} />;
+  return <PetFallback position={position} groupRef={groupRef} isCelebrating={isCelebrating} />;
 };
 
 // ========== Pet Model Component ==========
@@ -100,9 +110,10 @@ interface PetModelProps {
   position: THREE.Vector3;
   modelUrl: string;
   groupRef: React.RefObject<THREE.Group | null>;
+  isCelebrating?: boolean;
 }
 
-const PetModel: React.FC<PetModelProps> = ({ position, modelUrl, groupRef }) => {
+const PetModel: React.FC<PetModelProps> = ({ position, modelUrl, groupRef, isCelebrating }) => {
   const { scene } = useGLTF(modelUrl);
   const clonedScene = useMemo(() => scene.clone(), [scene]);
 
@@ -119,6 +130,8 @@ const PetModel: React.FC<PetModelProps> = ({ position, modelUrl, groupRef }) => 
   return (
     <group ref={groupRef} position={[position.x, position.y, position.z]}>
       <primitive object={clonedScene} />
+      {/* Celebration particles */}
+      {isCelebrating && <CelebrationParticles position={[0, 0, 0]} />}
     </group>
   );
 };
@@ -128,9 +141,10 @@ const PetModel: React.FC<PetModelProps> = ({ position, modelUrl, groupRef }) => 
 interface PetFallbackProps {
   position: THREE.Vector3;
   groupRef: React.RefObject<THREE.Group | null>;
+  isCelebrating?: boolean;
 }
 
-const PetFallback: React.FC<PetFallbackProps> = ({ position, groupRef }) => {
+const PetFallback: React.FC<PetFallbackProps> = ({ position, groupRef, isCelebrating }) => {
   return (
     <group ref={groupRef} position={[position.x, position.y, position.z]}>
       {/* Main body - clay blob */}
@@ -146,6 +160,9 @@ const PetFallback: React.FC<PetFallbackProps> = ({ position, groupRef }) => {
       <Float speed={2} rotationIntensity={0} floatIntensity={0.3}>
         <group />
       </Float>
+
+      {/* Celebration particles */}
+      {isCelebrating && <CelebrationParticles position={[0, 0, 0]} />}
     </group>
   );
 };
@@ -204,6 +221,35 @@ const EyeHighlight: React.FC<EyeHighlightProps> = ({ position }) => {
     <mesh position={position} material={highlightMaterial}>
       <sphereGeometry args={[0.025, 8, 8]} />
     </mesh>
+  );
+};
+
+// ========== Celebration Particles Component ==========
+
+interface CelebrationParticlesProps {
+  position: [number, number, number];
+}
+
+const CelebrationParticles: React.FC<CelebrationParticlesProps> = ({ position }) => {
+  // Generate static positions for particles around the pet
+  const particlePositions = useMemo(() => {
+    return Array.from({ length: 8 }, (_, i) => ({
+      x: Math.cos((i * Math.PI) / 4) * 0.5,
+      y: Math.random() * 0.5,
+      z: Math.sin((i * Math.PI) / 4) * 0.5,
+      color: i % 2 === 0 ? '#FFD700' : '#FF6B6B',
+    }));
+  }, []);
+
+  return (
+    <group position={position}>
+      {particlePositions.map((particle, i) => (
+        <mesh key={i} position={[particle.x, particle.y, particle.z]}>
+          <sphereGeometry args={[0.05, 8, 8]} />
+          <meshBasicMaterial color={particle.color} />
+        </mesh>
+      ))}
+    </group>
   );
 };
 
