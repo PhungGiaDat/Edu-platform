@@ -4,7 +4,7 @@ export interface LessonNode {
   status: 'completed' | 'available' | 'locked';
   type: 'flashcard' | 'quiz' | 'ar_session' | 'lesson';
   xp_reward: number;
-  icon: string; // emoji or icon key
+  icon: string;
   position: number; // 0-1 along path spline
   unlock_condition?: {
     type: 'xp' | 'streak' | 'lesson';
@@ -13,9 +13,8 @@ export interface LessonNode {
   };
 }
 
-export interface LearningPath {
-  path_id: string;
-  name: string;
-  nodes: LessonNode[];
-  total_xp: number;
+export interface Unit {
+  unit_id: string;
+  title: string;
+  lessons: LessonNode[];
 }
