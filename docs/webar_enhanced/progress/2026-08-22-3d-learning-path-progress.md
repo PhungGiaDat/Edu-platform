@@ -17,8 +17,8 @@
 | 9. Lesson Modal UI | ✅ Done | - | Committed: 1a97f19 |
 | 10. Main Page | ✅ Done | - | Committed: 1a97f19 |
 | 11. Progress Trail | ✅ Done | - | Committed: 3459ec2 |
-| 12. Celebration | ⬜ Pending | - | - |
-| 13. Real Data | ⬜ Pending | - | - |
+| 12. Celebration | ✅ Done | - | Committed: 7ebc5a0 |
+| 13. Real Data | ✅ Done | - | Committed: 3ad26f0 |
 | 14. Optimization | ✅ Done | - | Committed: bfbc9df |
 
 ---
@@ -135,6 +135,16 @@
 - Extends from path start (0) to current progress position
 - Committed: 3459ec2
 - TypeScript compilation verified
+
+**Task 13 - Real API Integration:** ✅ Completed
+- Added `apiClient` import from `@/services/apiClient`
+- Added `loading` state management with `useState`
+- Replaced demo data initialization with `useEffect` that calls `apiClient.get('/api/v1/learning-path/user')`
+- Added `transformLearningPathData()` function to map API response to `LessonNode[]`
+- Added loading UI with paw emoji animation and "Loading your path..." message
+- Falls back to `DEMO_NODES` on API failure
+- TypeScript compilation verified
+- Committed: 3ad26f0
 
 **Next Actions:**
 - Launch parallel subagents for Tasks 1-4 (independent components)
