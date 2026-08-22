@@ -174,17 +174,10 @@ const BackgroundHills: React.FC = () => {
 // ========== Trees ==========
 
 const Trees: React.FC = () => {
-  const trunkMaterial = useMemo(() => {
-    return new THREE.MeshToonMaterial({
-      color: new THREE.Color(COLORS.treeTrunk),
-    });
-  }, []);
-
-  const leavesMaterial = useMemo(() => {
-    return new THREE.MeshToonMaterial({
-      color: new THREE.Color(COLORS.treeLeaves),
-    });
-  }, []);
+  const trunkRef = useRef<THREE.InstancedMesh>(null);
+  const leaves1Ref = useRef<THREE.InstancedMesh>(null);
+  const leaves2Ref = useRef<THREE.InstancedMesh>(null);
+  const leaves3Ref = useRef<THREE.InstancedMesh>(null);
 
   // Position trees along the sides of the path area
   const treePositions: Array<[number, number, number]> = [
@@ -208,55 +201,119 @@ const Trees: React.FC = () => {
     [3, 0, 21],
   ];
 
+  // Generate random scales for each tree
+  const treeScales = useMemo(() => {
+    return treePositions.map(() => 0.8 + Math.random() * 0.4);
+  }, []);
+
+  // Materials for instanced meshes
+  const trunkMaterial = useMemo(() => {
+    return new THREE.MeshToonMaterial({
+      color: new THREE.Color(COLORS.treeTrunk),
+    });
+  }, []);
+
+  const leavesMaterial = useMemo(() => {
+    return new THREE.MeshToonMaterial({
+      color: new THREE.Color(COLORS.treeLeaves),
+    });
+  }, []);
+
+  // Update instance matrices when positions change
+  useMemo(() => {
+    const matrix = new THREE.Matrix4();
+    const position = new THREE.Vector3();
+    const quaternion = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+
+    treePositions.forEach((pos, i) => {
+      const s = treeScales[i];
+      const trunkHeight = 0.6 * s;
+      const trunkRadius = 0.12 * s;
+
+      // Trunk instance
+      position.set(pos[0], pos[1] + trunkHeight / 2, pos[2]);
+      scale.set(trunkRadius * 0.7, trunkHeight, trunkRadius * 0.7);
+      matrix.compose(position, quaternion, scale);
+      if (trunkRef.current) {
+        trunkRef.current.setMatrixAt(i, matrix);
+      }
+
+      // Leaves layer 1
+      const leavesRadius = 0.5 * s;
+      const leavesHeight = 0.8 * s;
+      position.set(pos[0], pos[1] + trunkHeight + leavesHeight * 0.3, pos[2]);
+      scale.set(leavesRadius, leavesHeight * 0.6, leavesRadius);
+      matrix.compose(position, quaternion, scale);
+      if (leaves1Ref.current) {
+        leaves1Ref.current.setMatrixAt(i, matrix);
+      }
+
+      // Leaves layer 2
+      position.set(pos[0], pos[1] + trunkHeight + leavesHeight * 0.6, pos[2]);
+      scale.set(leavesRadius * 0.7, leavesHeight * 0.5, leavesRadius * 0.7);
+      matrix.compose(position, quaternion, scale);
+      if (leaves2Ref.current) {
+        leaves2Ref.current.setMatrixAt(i, matrix);
+      }
+
+      // Leaves layer 3
+      position.set(pos[0], pos[1] + trunkHeight + leavesHeight * 0.85, pos[2]);
+      scale.set(leavesRadius * 0.4, leavesHeight * 0.35, leavesRadius * 0.4);
+      matrix.compose(position, quaternion, scale);
+      if (leaves3Ref.current) {
+        leaves3Ref.current.setMatrixAt(i, matrix);
+      }
+    });
+
+    // Mark all instanced meshes as needing update
+    if (trunkRef.current) trunkRef.current.instanceMatrix.needsUpdate = true;
+    if (leaves1Ref.current) leaves1Ref.current.instanceMatrix.needsUpdate = true;
+    if (leaves2Ref.current) leaves2Ref.current.instanceMatrix.needsUpdate = true;
+    if (leaves3Ref.current) leaves3Ref.current.instanceMatrix.needsUpdate = true;
+  }, [treePositions, treeScales]);
+
   return (
     <group>
-      {treePositions.map((pos, i) => (
-        <Tree
-          key={`tree-${i}`}
-          position={pos}
-          trunkMaterial={trunkMaterial}
-          leavesMaterial={leavesMaterial}
-          scale={0.8 + Math.random() * 0.4}
-        />
-      ))}
-    </group>
-  );
-};
+      {/* Trunk instanced mesh */}
+      <instancedMesh
+        ref={trunkRef}
+        args={[undefined, undefined, treePositions.length]}
+        castShadow
+      >
+        <cylinderGeometry args={[1, 1, 1, 8]} />
+        <primitive object={trunkMaterial} attach="material" />
+      </instancedMesh>
 
-interface TreeProps {
-  position: [number, number, number];
-  trunkMaterial: THREE.Material;
-  leavesMaterial: THREE.Material;
-  scale?: number;
-}
+      {/* Leaves layer 1 instanced mesh */}
+      <instancedMesh
+        ref={leaves1Ref}
+        args={[undefined, undefined, treePositions.length]}
+        castShadow
+      >
+        <coneGeometry args={[1, 1, 8]} />
+        <primitive object={leavesMaterial} attach="material" />
+      </instancedMesh>
 
-const Tree: React.FC<TreeProps> = ({ position, trunkMaterial, leavesMaterial, scale = 1 }) => {
-  const trunkHeight = 0.6 * scale;
-  const trunkRadius = 0.12 * scale;
-  const leavesRadius = 0.5 * scale;
-  const leavesHeight = 0.8 * scale;
+      {/* Leaves layer 2 instanced mesh */}
+      <instancedMesh
+        ref={leaves2Ref}
+        args={[undefined, undefined, treePositions.length]}
+        castShadow
+      >
+        <coneGeometry args={[1, 1, 8]} />
+        <primitive object={leavesMaterial} attach="material" />
+      </instancedMesh>
 
-  return (
-    <group position={position}>
-      {/* Trunk */}
-      <mesh position={[0, trunkHeight / 2, 0]} castShadow>
-        <cylinderGeometry args={[trunkRadius * 0.7, trunkRadius, trunkHeight, 8]} />
-        <primitive object={trunkMaterial} />
-      </mesh>
-
-      {/* Foliage - stacked cones for low-poly look */}
-      <mesh position={[0, trunkHeight + leavesHeight * 0.3, 0]} castShadow>
-        <coneGeometry args={[leavesRadius, leavesHeight * 0.6, 8]} />
-        <primitive object={leavesMaterial} />
-      </mesh>
-      <mesh position={[0, trunkHeight + leavesHeight * 0.6, 0]} castShadow>
-        <coneGeometry args={[leavesRadius * 0.7, leavesHeight * 0.5, 8]} />
-        <primitive object={leavesMaterial} />
-      </mesh>
-      <mesh position={[0, trunkHeight + leavesHeight * 0.85, 0]} castShadow>
-        <coneGeometry args={[leavesRadius * 0.4, leavesHeight * 0.35, 8]} />
-        <primitive object={leavesMaterial} />
-      </mesh>
+      {/* Leaves layer 3 instanced mesh */}
+      <instancedMesh
+        ref={leaves3Ref}
+        args={[undefined, undefined, treePositions.length]}
+        castShadow
+      >
+        <coneGeometry args={[1, 1, 8]} />
+        <primitive object={leavesMaterial} attach="material" />
+      </instancedMesh>
     </group>
   );
 };
@@ -328,7 +385,7 @@ const Cloud: React.FC<CloudProps> = ({ position, speed = 0.01 }) => {
     <group ref={groupRef} position={position}>
       {/* Center blob */}
       <mesh scale={[1.5, 0.6, 0.8]}>
-        <sphereGeometry args={[0.8, 12, 12]} />
+        <sphereGeometry args={[0.8, 6, 6]} />
         <primitive object={cloudMaterial} />
       </mesh>
 
@@ -339,7 +396,7 @@ const Cloud: React.FC<CloudProps> = ({ position, speed = 0.01 }) => {
           position={[offset.x, offset.y, offset.z]}
           scale={[offset.scale, offset.scale * 0.5, offset.scale]}
         >
-          <sphereGeometry args={[0.5, 10, 10]} />
+          <sphereGeometry args={[0.5, 6, 6]} />
           <primitive object={cloudMaterial} />
         </mesh>
       ))}

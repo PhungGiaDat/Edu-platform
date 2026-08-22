@@ -166,14 +166,16 @@ export const LessonNode: React.FC<LessonNodeProps> = ({ node, onClick, spline })
         castShadow
         receiveShadow
       >
-        <icosahedronGeometry args={[NODE_RADIUS, 1]} />
+        {/* LOD: Use lower detail geometry for distant nodes */}
+        <icosahedronGeometry args={position[2] < -15 ? [NODE_RADIUS, 1] : [NODE_RADIUS, 2]} />
         <primitive object={materials.main} attach="material" />
       </mesh>
 
       {/* Glow effect for available/completed nodes */}
       {node.status !== 'locked' && (
         <mesh scale={1.15}>
-          <icosahedronGeometry args={[NODE_RADIUS, 1]} />
+          {/* LOD: Use lower detail geometry for distant nodes */}
+          <icosahedronGeometry args={position[2] < -15 ? [NODE_RADIUS, 1] : [NODE_RADIUS, 2]} />
           <meshBasicMaterial
             color={stateColor}
             transparent
