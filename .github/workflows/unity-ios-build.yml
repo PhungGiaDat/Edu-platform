@@ -26,6 +26,7 @@ on:
 
 env:
   UNITY_VERSION: ${{ inputs.unity_version || '6000.3.20f1' }}
+  BUILD_TYPE: ${{ inputs.build_type || 'full' }}
 
 jobs:
   # ============================================================
@@ -36,7 +37,7 @@ jobs:
   unity-ios-build:
     name: Unity iOS Build
     runs-on: macos-14
-    if: inputs.build_type == 'full' || inputs.build_type == 'unity-only' || github.event.inputs.build_type == 'full' || github.event.inputs.build_type == 'unity-only'
+    if: github.event_name == 'push' || env.BUILD_TYPE == 'full' || env.BUILD_TYPE == 'unity-only'
     defaults:
       run:
         shell: bash
@@ -84,7 +85,7 @@ jobs:
     name: Expo iOS Build
     runs-on: macos-14
     needs: unity-ios-build
-    if: inputs.build_type == 'full' || inputs.build_type == 'expo-only' || github.event.inputs.build_type == 'full' || github.event.inputs.build_type == 'expo-only'
+    if: github.event_name == 'push' || env.BUILD_TYPE == 'full' || env.BUILD_TYPE == 'expo-only'
     defaults:
       run:
         shell: bash
@@ -112,14 +113,14 @@ jobs:
       # Merge Unity output into RN iOS
       # ----------------------------------------
       - name: Download Unity Artifact
-        if: inputs.build_type == 'full' || github.event.inputs.build_type == 'full'
+        if: github.event_name == 'push' || env.BUILD_TYPE == 'full'
         uses: actions/download-artifact@v4
         with:
           name: unity-ios-output
           path: ${{ github.workspace }}/unity-output/
 
       - name: Copy Unity Framework
-        if: inputs.build_type == 'full' || github.event.inputs.build_type == 'full'
+        if: github.event_name == 'push' || env.BUILD_TYPE == 'full'
         run: |
           UNITY_OUT="${{ github.workspace }}/unity-output"
           RN_IOS="${{ github.workspace }}/mobile/rn/ios"
@@ -222,7 +223,7 @@ jobs:
     name: Package for Device Deploy
     runs-on: macos-14
     needs: expo-ios-build
-    if: inputs.build_type == 'full' || github.event.inputs.build_type == 'full'
+    if: github.event_name == 'push' || env.BUILD_TYPE == 'full'
     defaults:
       run:
         shell: bash
