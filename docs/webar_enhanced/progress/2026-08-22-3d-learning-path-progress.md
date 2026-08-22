@@ -16,10 +16,10 @@
 | 8. Path Camera | ✅ Done | - | Committed: 7a3bb95 |
 | 9. Lesson Modal UI | ✅ Done | - | Committed: 1a97f19 |
 | 10. Main Page | ✅ Done | - | Committed: 1a97f19 |
-| 11. Progress Trail | ⬜ Pending | - | - |
+| 11. Progress Trail | ✅ Done | - | Committed: 3459ec2 |
 | 12. Celebration | ⬜ Pending | - | - |
 | 13. Real Data | ⬜ Pending | - | - |
-| 14. Optimization | ⬜ Pending | - | - |
+| 14. Optimization | ✅ Done | - | Committed: bfbc9df |
 
 ---
 
@@ -112,6 +112,28 @@
 - Header overlay with progress stats and XP display
 - Navigation based on lesson type (AR → /learn-ar, Flashcard → /flashcards, Quiz → /courses)
 - Added route `/learning-path-3d` in App.tsx
+- TypeScript compilation verified
+
+**Task 14 - Performance Optimization:** ✅ Completed
+- **Trees instancing (Landscape.tsx):** Replaced 16 individual Tree components with 4 InstancedMesh (trunk + 3 foliage layers)
+  - Each tree instance has its own position, scale, and rotation
+  - Reduced draw calls from ~64 (4 meshes × 16 trees) to 4
+  - Random scale variation (0.8-1.2) applied per instance
+- **LOD for nodes (LessonNode.tsx):** Added level-of-detail for distant nodes
+  - Nodes with position.z < -15 use lower subdivision: [NODE_RADIUS, 1]
+  - Closer nodes use [NODE_RADIUS, 2] for more detail
+- **Simplified clouds:** Reduced sphere segments from 10-12 to 6 for cloud blobs
+  - Center blob: 12→6 segments, surrounding blobs: 10→6 segments
+- TypeScript compilation verified
+- Committed: bfbc9df
+
+**Task 11 - Progress Trail:** ✅ Completed
+- Added golden trail effect to `ClayPath.tsx` showing completed path portion
+- Created `ProgressTrail` component with TubeGeometry (gold #FFD700 color)
+- Trail material: emissive glow (intensity 0.3), transparent opacity 0.7
+- Trail only renders when `currentProgress > 0`
+- Extends from path start (0) to current progress position
+- Committed: 3459ec2
 - TypeScript compilation verified
 
 **Next Actions:**
