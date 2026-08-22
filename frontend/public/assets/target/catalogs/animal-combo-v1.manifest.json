@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "animal-combo-v1",
+  "mindUrl": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/mind-catalogs/animal-combo-v1/400940f039a666785336fe284fc01f68455e44c59757cfa79ad56c5d82fc7b9e.mind",
+  "targetCount": 10,
+  "sha256": "400940f039a666785336fe284fc01f68455e44c59757cfa79ad56c5d82fc7b9e",
+  "targets": [
+    { "arTag": "cat001", "mindTargetIndex": 0 },
+    { "arTag": "rabbit001", "mindTargetIndex": 1 },
+    { "arTag": "elephant001", "mindTargetIndex": 2 },
+    { "arTag": "panda001", "mindTargetIndex": 3 },
+    { "arTag": "tiger001", "mindTargetIndex": 4 },
+    { "arTag": "fish001", "mindTargetIndex": 5 },
+    { "arTag": "carrot001", "mindTargetIndex": 6 },
+    { "arTag": "grass001", "mindTargetIndex": 7 },
+    { "arTag": "bamboo001", "mindTargetIndex": 8 },
+    { "arTag": "meat001", "mindTargetIndex": 9 }
+  ]
+}
