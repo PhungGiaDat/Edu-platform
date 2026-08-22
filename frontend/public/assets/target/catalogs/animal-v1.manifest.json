@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "animal-v1",
+  "mindUrl": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/mind-catalogs/animal-v1/78c46164ab15d032b94c07b026c0d970d6829efa59c7229e868c10225157b4a5.mind",
+  "targetCount": 5,
+  "sha256": "78c46164ab15d032b94c07b026c0d970d6829efa59c7229e868c10225157b4a5",
+  "targets": [
+    { "arTag": "cat001", "mindTargetIndex": 0 },
+    { "arTag": "rabbit001", "mindTargetIndex": 1 },
+    { "arTag": "elephant001", "mindTargetIndex": 2 },
+    { "arTag": "panda001", "mindTargetIndex": 3 },
+    { "arTag": "tiger001", "mindTargetIndex": 4 }
+  ]
+}
