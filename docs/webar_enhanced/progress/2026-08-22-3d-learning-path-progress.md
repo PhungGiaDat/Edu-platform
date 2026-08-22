@@ -15,7 +15,7 @@
 | 7. Landscape | ✅ Done | - | Committed: 922e0e3 |
 | 8. Path Camera | ✅ Done | - | Committed: 7a3bb95 |
 | 9. Lesson Modal UI | ✅ Done | - | Committed: 1a97f19 |
-| 10. Main Page | ✅ Done | - | Committed: <new> |
+| 10. Main Page | ✅ Done | - | Committed: 1a97f19 |
 | 11. Progress Trail | ⬜ Pending | - | - |
 | 12. Celebration | ⬜ Pending | - | - |
 | 13. Real Data | ⬜ Pending | - | - |
