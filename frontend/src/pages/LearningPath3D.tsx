@@ -5,13 +5,14 @@
  * Combines the 3D scene with modal UI and state management.
  */
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LearningPathScene } from '@/components/learning-path-3d/LearningPathScene';
 import { LessonModal } from '@/components/learning-path-3d/LessonModal';
 import { useLearningPath3DStore } from '@/hooks/useLearningPath3D';
 import { usePets } from '@/hooks/usePets';
 import { useAuth } from '@/contexts/AuthContext';
+import { apiClient } from '@/services/apiClient';
 import type { LessonNode } from '@/types/learning-path';
 
 // ========== Demo Data ==========
@@ -24,12 +25,44 @@ const DEMO_NODES: LessonNode[] = [
   { lesson_id: 'l5', title: 'Food', status: 'locked', type: 'flashcard', xp_reward: 50, icon: '🍎', position: 0.65 },
 ];
 
+// ========== Transform Functions ==========
+
+interface ApiLearningPathItem {
+  lesson_id: string;
+  title: string;
+  status?: 'completed' | 'available' | 'locked';
+  type?: 'flashcard' | 'quiz' | 'ar_session' | 'lesson';
+  xp_reward?: number;
+  xp?: number;
+  icon?: string;
+  emoji?: string;
+  position?: number;
+  order?: number;
+}
+
+function transformLearningPathData(data: ApiLearningPathItem[]): LessonNode[] {
+  if (!Array.isArray(data) || data.length === 0) {
+    return DEMO_NODES;
+  }
+
+  return data.map((item, index) => ({
+    lesson_id: item.lesson_id || `lesson-${index}`,
+    title: item.title || `Lesson ${index + 1}`,
+    status: item.status || (index < 2 ? 'completed' : index === 2 ? 'available' : 'locked'),
+    type: item.type || 'lesson',
+    xp_reward: item.xp_reward || item.xp || 50,
+    icon: item.icon || item.emoji || '📚',
+    position: item.position ?? item.order ?? ((index + 1) / (data.length + 1)),
+  }));
+}
+
 // ========== Component ==========
 
 export const LearningPath3D: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { activePet } = usePets(user?.id || null);
+  const [loading, setLoading] = useState(true);
 
   // Store state and actions
   const {
@@ -45,17 +78,41 @@ export const LearningPath3D: React.FC = () => {
     completeLesson,
   } = useLearningPath3DStore();
 
-  // Initialize with demo data on mount
+  // Fetch learning path data on mount
   useEffect(() => {
-    if (nodes.length === 0) {
-      setNodes(DEMO_NODES);
-      // Set initial progress to first available node
-      const firstAvailable = DEMO_NODES.find(n => n.status === 'available');
-      if (firstAvailable) {
-        setCurrentProgress(firstAvailable.position);
+    const fetchLearningPath = async () => {
+      setLoading(true);
+      try {
+        const data = await apiClient.get('/api/v1/learning-path/user');
+        const transformed = transformLearningPathData(data);
+        setNodes(transformed);
+
+        // Set progress to first available node
+        const firstAvailable = transformed.find(n => n.status === 'available');
+        if (firstAvailable) {
+          setCurrentProgress(firstAvailable.position);
+        } else {
+          // If all completed, show last completed
+          const lastCompleted = [...transformed].reverse().find(n => n.status === 'completed');
+          if (lastCompleted) {
+            setCurrentProgress(lastCompleted.position);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load learning path:', error);
+        // Fallback to demo data
+        setNodes(DEMO_NODES);
+        const firstAvailable = DEMO_NODES.find(n => n.status === 'available');
+        if (firstAvailable) {
+          setCurrentProgress(firstAvailable.position);
+        }
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [nodes.length, setNodes, setCurrentProgress]);
+    };
+
+    fetchLearningPath();
+  }, [setNodes, setCurrentProgress]);
 
   // Calculate progress stats
   const progressStats = useMemo(() => {
@@ -100,6 +157,18 @@ export const LearningPath3D: React.FC = () => {
   const handleCloseModal = () => {
     closeModal();
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
+        <div className="text-center">
+          <div className="text-6xl">🐾</div>
+          <p className="mt-4 font-bold text-slate-600">Loading your path...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
