@@ -1,6 +1,12 @@
 name: Unity iOS Build + Expo iOS
 
 on:
+  push:
+    branches:
+      - 10-days-quick-run
+    paths:
+      - 'mobile/unity/**'
+      - '.github/workflows/unity-ios-build.yml'
   workflow_dispatch:
     inputs:
       unity_version:
