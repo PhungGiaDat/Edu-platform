@@ -61,11 +61,8 @@ public static class iOSBuild
         else
         {
             Debug.LogError($"[iOSBuild] ❌ Build failed: {report.summary.result}");
-            foreach (var msg in report.messages)
-            {
-                if (msg.type == LogType.Error)
-                    Debug.LogError($"  {msg.content}");
-            }
+            Debug.LogError($"  Total errors: {report.summary.totalErrors}");
+            Debug.LogError($"  Total warnings: {report.summary.totalWarnings}");
         }
 
         EditorApplication.Exit(success ? 0 : 1);
