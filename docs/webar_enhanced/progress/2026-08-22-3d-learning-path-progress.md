@@ -14,8 +14,8 @@
 | 6. Pet Guide | ✅ Done | - | Committed: `37895bc` |
 | 7. Landscape | ✅ Done | - | Committed: 922e0e3 |
 | 8. Path Camera | ✅ Done | - | Committed: 7a3bb95 |
-| 9. Lesson Modal UI | ⬜ Blocked | framer-motion not installed | - |
-| 10. Main Page | ⬜ Pending | - | - |
+| 9. Lesson Modal UI | ✅ Done | - | Committed: 1a97f19 |
+| 10. Main Page | ✅ Done | - | Committed: <new> |
 | 11. Progress Trail | ⬜ Pending | - | - |
 | 12. Celebration | ⬜ Pending | - | - |
 | 13. Real Data | ⬜ Pending | - | - |
@@ -94,14 +94,25 @@
 - Committed: 7a3bb95
 - TypeScript compilation verified
 
-**Task 9 - Lesson Modal UI:** ⬜ BLOCKED
-- Requirement: framer-motion for animations
-- Blocker: framer-motion NOT installed in `frontend/package.json`
-- Project uses Tailwind CSS animations and inline styles instead
-- Alternative: Implement with CSS animations (like PetUnlockModal.tsx)
-- Option A: Install framer-motion via npm
-- Option B: Use CSS animations (matching PetUnlockModal pattern)
-- Decision needed from project owner
+**Task 9 - Lesson Modal UI:** ✅ Completed
+- Rewrote LessonModal with CSS animations (no framer-motion)
+- Added LESSON_TYPE_LABELS and LESSON_TYPE_ICONS mappings
+- Claymorphic modal: border-4 border-white, rounded-[32px]
+- Custom shadow: shadow-[0_12px_0_rgba(91,141,239,0.18),0_24px_48px_rgba(0,0,0,0.15)]
+- Bottom sheet position: inset-x-4 bottom-4
+- Modal-in animation: scale(0.9) + translateY(20px) → scale(1) + translateY(0)
+- Committed: 1a97f19
+- TypeScript compilation verified
+
+**Task 10 - Main Page:** ✅ Completed
+- Created `frontend/src/pages/LearningPath3D.tsx` main page component
+- Created `frontend/src/components/learning-path-3d/index.ts` barrel export
+- Updated `LearningPathScene` to wire up all 3D components (ClayPath, LessonNode3D, PetGuide, Landscape, PathCamera)
+- Demo data with 5 lessons (Hello, Colors, Numbers, Animals, Food)
+- Header overlay with progress stats and XP display
+- Navigation based on lesson type (AR → /learn-ar, Flashcard → /flashcards, Quiz → /courses)
+- Added route `/learning-path-3d` in App.tsx
+- TypeScript compilation verified
 
 **Next Actions:**
 - Launch parallel subagents for Tasks 1-4 (independent components)
@@ -114,7 +125,7 @@ _(Update here when blockers are encountered)_
 
 | Blocker | Task | Resolution | Status |
 |---------|------|------------|--------|
-| framer-motion not installed in frontend | 9. Lesson Modal UI | Install framer-motion or implement with CSS animations | Open |
+| framer-motion not installed in frontend | 9. Lesson Modal UI | Resolved - implemented with CSS animations instead | Closed |
 
 ---
 
@@ -122,4 +133,4 @@ _(Update here when blockers are encountered)_
 
 | Decision | Task | Rationale |
 |----------|------|-----------|
-| - | - | - |
+| Use CSS animations instead of framer-motion | 9. Lesson Modal UI | Project pattern uses Tailwind CSS animations and inline `<style>` tags; framer-motion not installed |
