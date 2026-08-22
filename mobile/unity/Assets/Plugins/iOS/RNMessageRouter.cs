@@ -15,8 +15,12 @@ using UnityEngine;
 /// </summary>
 public class RNMessageRouter : MonoBehaviour
 {
-    [SerializeField] private string targetObject = "RNMessageRouter";
-    [SerializeField] private string targetMethod = "OnMessageFromUnity";
+    [System.Serializable]
+    private class UnityEventWrapper
+    {
+        public string Event;
+        public string Payload;
+    }
 
     public static RNMessageRouter Instance { get; private set; }
 
@@ -45,26 +49,30 @@ public class RNMessageRouter : MonoBehaviour
     {
         if (string.IsNullOrEmpty(json)) return;
 
-        RNEventEmitter.Instance.SendJsonEvent(json);
+        try
+        {
+            var wrapper = JsonUtility.FromJson<UnityEventWrapper>(json);
+            if (wrapper != null && !string.IsNullOrEmpty(wrapper.Event))
+            {
+                RNEventEmitter.Instance.SendJsonEvent(wrapper.Event, wrapper.Payload ?? "{}");
+                Debug.Log($"[RNMessageRouter] Forwarded event: {wrapper.Event}");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[RNMessageRouter] Failed to parse event JSON: {ex.Message}");
+        }
     }
 
+    // RN → Unity: handled by Swift calling UnityFramework.SendMessage("RNMessageReceiver", ...).
+    // RNMessageRouter.SendToUnity is not used in the current architecture.
+    // Kept as a no-op stub to avoid unused-variable warnings.
+    public static void SendToUnity(string methodName, string jsonPayload)
+    {
 #if UNITY_IOS && !UNITY_EDITOR
-    /// <summary>
-    /// iOS-only: send a message back to Unity framework.
-    /// On iOS, the UnityFramework is compiled into the app; we call it directly.
-    /// </summary>
-    public static void SendToUnity(string methodName, string jsonPayload)
-    {
-        var message = $"{methodName}|{jsonPayload}";
-        // UnityFramework.iOS.SendMessage is invoked via plugin;
-        // here we relay through RNMessageReceiver which already handles the method dispatch
-        RNMessageReceiver.Instance?.ReceiveMessage(methodName, jsonPayload);
-    }
+        Debug.Log($"[RNMessageRouter] SendToUnity (unused path): {methodName}");
 #else
-    public static void SendToUnity(string methodName, string jsonPayload)
-    {
-        // Stub for non-iOS builds
         Debug.Log($"[RNMessageRouter] SendToUnity stub: {methodName}");
-    }
 #endif
+    }
 }

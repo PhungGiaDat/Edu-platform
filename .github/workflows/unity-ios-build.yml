@@ -1,0 +1,287 @@
+name: Unity iOS Build + Expo iOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      unity_version:
+        description: 'Unity Version (e.g. 6000.3.20f1)'
+        required: false
+        default: '6000.3.20f1'
+        type: string
+      build_type:
+        description: 'Build scope'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - unity-only
+          - expo-only
+
+env:
+  UNITY_VERSION: ${{ inputs.unity_version || '6000.3.20f1' }}
+
+jobs:
+  # ============================================================
+  # Unity iOS Build — macOS M1/M2
+  # game-ci handles Unity Personal license automatically
+  # Free tier: 5 builds/month (sufficient for testing)
+  # ============================================================
+  unity-ios-build:
+    name: Unity iOS Build
+    runs-on: macos-14
+    if: inputs.build_type == 'full' || inputs.build_type == 'unity-only' || github.event.inputs.build_type == 'full' || github.event.inputs.build_type == 'unity-only'
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 1
+
+      # ----------------------------------------
+      # game-ci Unity Builder
+      # Automatically handles Unity Personal license
+      # ----------------------------------------
+      - name: Build Unity iOS Player
+        id: unity_build
+        uses: game-ci/unity-actions/unity-builder@v4
+        with:
+          unityVersion: ${{ env.UNITY_VERSION }}
+          targetPlatform: ios
+          projectPath: mobile/unity
+          buildMethod: iOSBuild.Build
+          outputPath: build-output
+          # No license secrets needed — game-ci handles Personal license
+
+      - name: Show Unity Build Output
+        run: |
+          echo "=== Unity build output ==="
+          ls -la build-output/
+          find build-output -maxdepth 3 -type f | head -30
+
+      - name: Upload Unity Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-ios-output
+          path: build-output/
+          retention-days: 7
+          compression-level: 9
+
+  # ============================================================
+  # Expo iOS Build — macOS M1/M2
+  # ============================================================
+  expo-ios-build:
+    name: Expo iOS Build
+    runs-on: macos-14
+    needs: unity-ios-build
+    if: inputs.build_type == 'full' || inputs.build_type == 'expo-only' || github.event.inputs.build_type == 'full' || github.event.inputs.build_type == 'expo-only'
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: mobile/rn/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd mobile/rn
+          npm ci --prefer-offline
+
+      # ----------------------------------------
+      # Merge Unity output into RN iOS
+      # ----------------------------------------
+      - name: Download Unity Artifact
+        if: inputs.build_type == 'full' || github.event.inputs.build_type == 'full'
+        uses: actions/download-artifact@v4
+        with:
+          name: unity-ios-output
+          path: ${{ github.workspace }}/unity-output/
+
+      - name: Copy Unity Framework
+        if: inputs.build_type == 'full' || github.event.inputs.build_type == 'full'
+        run: |
+          UNITY_OUT="${{ github.workspace }}/unity-output"
+          RN_IOS="${{ github.workspace }}/mobile/rn/ios"
+          DEST="$RN_IOS/LocalPods/UnityBridge/UnityBuild"
+          mkdir -p "$DEST"
+
+          # Copy UnityFramework.framework
+          if [ -d "$UNITY_OUT/UnityFramework.framework" ]; then
+            cp -r "$UNITY_OUT/UnityFramework.framework" "$DEST/"
+            echo "✅ UnityFramework.framework copied"
+          fi
+
+          # Copy Data/
+          if [ -d "$UNITY_OUT/Data" ]; then
+            cp -r "$UNITY_OUT/Data" "$DEST/"
+            echo "✅ Data/ copied"
+          fi
+
+          # Copy Libraries/
+          if [ -d "$UNITY_OUT/Libraries" ]; then
+            cp -r "$UNITY_OUT/Libraries" "$DEST/"
+            echo "✅ Libraries/ copied"
+          fi
+
+          echo "--- UnityBuild contents ---"
+          ls -la "$DEST/"
+
+          # If not found, search deeper
+          if [ ! -d "$DEST/UnityFramework.framework" ]; then
+            echo "⚠️ Framework not at root, searching..."
+            find "$UNITY_OUT" -name "UnityFramework*" -type d 2>/dev/null
+          fi
+
+      # ----------------------------------------
+      # Expo Prebuild + Pod Install
+      # ----------------------------------------
+      - name: Expo Prebuild iOS
+        run: |
+          cd ${{ github.workspace }}/mobile/rn
+          npx expo prebuild --platform ios --clean 2>&1
+
+      - name: Pod Install
+        run: |
+          cd ${{ github.workspace }}/mobile/rn/ios
+          pod install --repo-update 2>&1 || pod install 2>&1
+
+      - name: Show Pods Status
+        run: |
+          echo "=== Pods ==="
+          ls ${{ github.workspace }}/mobile/rn/ios/Pods/ 2>/dev/null | head -10
+          echo "=== Podfile.lock ==="
+          head -20 ${{ github.workspace }}/mobile/rn/ios/Podfile.lock 2>/dev/null
+
+      # ----------------------------------------
+      # Xcode Build
+      # ----------------------------------------
+      - name: Xcode Build (Simulator)
+        id: xcode_build
+        run: |
+          cd ${{ github.workspace }}/mobile/rn/ios
+
+          WORKSPACE=$(find . -name "*.xcworkspace" -type d | head -1)
+          echo "Using workspace: $WORKSPACE"
+
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme app \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee ${{ github.workspace }}/xcode-build.log | tail -60
+
+      - name: Verify Xcode Build
+        run: |
+          LOG="${{ github.workspace }}/xcode-build.log"
+
+          if grep -q "BUILD SUCCEEDED" "$LOG"; then
+            echo "✅ Xcode build SUCCEEDED"
+          elif grep -q "BUILD FAILED" "$LOG"; then
+            echo "❌ Xcode build FAILED"
+            grep -B3 -A3 "error:" "$LOG" | tail -30
+            exit 1
+          fi
+
+          find ${{ github.workspace }}/mobile/rn/ios/build/Build/Products -name "*.app" -type d 2>/dev/null | head -5
+
+      - name: Upload Expo Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: expo-ios-output
+          path: ${{ github.workspace }}/mobile/rn/ios/
+          retention-days: 7
+          compression-level: 6
+
+  # ============================================================
+  # Package for Mac M4 Deploy
+  # ============================================================
+  package-for-device:
+    name: Package for Device Deploy
+    runs-on: macos-14
+    needs: expo-ios-build
+    if: inputs.build_type == 'full' || github.event.inputs.build_type == 'full'
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 1
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ github.workspace }}/artifacts/
+
+      - name: Create deploy package
+        run: |
+          PKG="${{ github.workspace }}/deploy-package"
+          mkdir -p "$PKG/UnityBuild" "$PKG/iOS"
+
+          # Unity build
+          cp -r ${{ github.workspace }}/artifacts/unity-ios-output/* "$PKG/UnityBuild/" 2>/dev/null || true
+
+          # Expo build
+          cp -r ${{ github.workspace }}/artifacts/expo-ios-output/ios/build/* "$PKG/iOS/" 2>/dev/null || true
+
+          # RN source
+          cp -r ${{ github.workspace }}/mobile/rn "$PKG/rn-source/"
+
+          # README
+          cat > "$PKG/README.md" << 'README_EOF'
+          # Deploy to iPhone 14 Pro (Mac M4)
+
+          ## Quick Start
+          1. Copy this folder to Mac M4
+          2. Connect iPhone 14 Pro via USB → Trust this computer
+          3. Open `rn-source/ios/*.xcworkspace` in Xcode
+          4. Select iPhone 14 Pro → ▶ Run
+
+          ## What's Inside
+          - `UnityBuild/` — Unity iOS player (UnityFramework.framework + Data/)
+          - `iOS/` — Built Expo app
+          - `rn-source/` — React Native source
+
+          ## Code Signing
+          1. In Xcode: project → Signing & Capabilities
+          2. Check "Automatically manage signing"
+          3. Select your Apple Developer team
+          4. Run on device
+
+          ## Troubleshooting
+          - "No devices": Enable Developer Mode on iPhone (Settings → Privacy → Developer)
+          - "Signing error": Add Apple ID in Xcode → Preferences → Accounts
+          - "Unity framework not found": Manually drag UnityBuild/UnityFramework.framework into Xcode project
+          README_EOF
+
+          echo "Package size:"
+          du -sh "$PKG"
+          echo "Contents:"
+          ls "$PKG/"
+
+      - name: Upload deploy package
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-package
+          path: ${{ github.workspace }}/deploy-package/
+          retention-days: 14
