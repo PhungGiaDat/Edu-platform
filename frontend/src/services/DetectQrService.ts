@@ -1,4 +1,5 @@
 import { BrowserQRCodeReader } from '@zxing/library';
+import { getApiBase } from '@/config';
 
 /**
  * Service for local QR code detection using @zxing/library
@@ -201,7 +202,7 @@ export async function decodeFromVideo(video: HTMLVideoElement): Promise<string |
 // NEW API: Verify QR code with backend
 // ============================================================================
 
-const BASE_URL = import.meta.env.VITE_BACKEND_API;
+const BASE_URL = getApiBase();
 
 /**
  * Verify QR code with backend

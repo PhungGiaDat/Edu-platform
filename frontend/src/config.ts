@@ -44,6 +44,10 @@ export const getSupabaseStorageBase = (): string => {
   return 'https://rofprrtoeyirssfndxag.supabase.co';
 };
 
+/** Timeout for MindAR to emit AR_READY before triggering fallback (ms). */
+export const AR_READY_TIMEOUT_MS = 10_000; // 10 seconds
+/** Minimum FPS before triggering performance-based fallback to XR. */
+export const MIN_PERFORMANCE_FPS = 15;
 /** Maximum AR session duration before the session is ended. */
 export const AR_SESSION_LIMIT_MINS = 30;
 /** Warning threshold displayed before the AR session limit. */

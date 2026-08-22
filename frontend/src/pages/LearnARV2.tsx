@@ -38,6 +38,7 @@ import { usePets } from '@/hooks/usePets';
 import { useGamification } from '@/hooks/useGamification';
 import { useMultiFlashcard } from '@/hooks/useMultiFlashcard';
 import { useFlashcardSnapshot } from '@/hooks/useFlashcardSnapshot';
+import { useARFallback, type AREngine } from '@/hooks/useARFallback';
 import { HapticService } from '@/services/HapticService';
 import { SoundEffectService } from '@/services/SoundEffectService';
 import { SpeechService } from '@/services/SpeechService';
@@ -520,6 +521,14 @@ export default function LearnARV2() {
     // Derive user ID from JWT; guest mode has no user id and must stay read-only
     const USER_ID = isGuest ? null : (user?.id ?? null);
 
+    // ── AR Engine Fallback: navigate to 8th Wall when MindAR fails ──────────────
+    useEffect(() => {
+        if (arEngine === 'xr' && fallbackTriggered) {
+            const deckId = scannedTarget0?.mindCatalogId || 'claymorphic-animals-001';
+            navigate(`/learn-ar-xr/${deckId}`, { replace: true });
+        }
+    }, [arEngine, fallbackTriggered, scannedTarget0, navigate]);
+
     // ========== STATE ==========
     const [appState, setAppState] = useState<AppState>('SCANNING');
     const [displayMode, setDisplayMode] = useState<DisplayMode>('3D');
@@ -647,6 +656,21 @@ export default function LearnARV2() {
 
     // Gamification
     const { progress, trackFlashcardView, trackComboDiscovered } = useGamification(USER_ID);
+
+    // AR Engine Fallback (MindAR → 8th Wall)
+    const {
+        engine: arEngine,
+        fallbackTriggered,
+        handlePerformanceMetrics,
+        handleSystemError,
+        triggerFallback,
+    } = useARFallback({
+        initialEngine: 'mindar',
+        onFallbackTriggered: (reason) => {
+            console.warn('[LearnARV2] AR fallback triggered:', reason);
+            emitMobileDebug('AR_FALLBACK_TRIGGERED', { reason });
+        },
+    });
 
     // Pets
     const { pets, unlockPet, setActivePet, recentlyUnlocked } = usePets(USER_ID);
@@ -965,7 +989,9 @@ export default function LearnARV2() {
 
     const handleActiveTargetsRejected = useCallback((error: { revision: number; code: string; stage: string; message: string }) => {
         emitMobileDebug('PERSISTENT_TARGETS_REJECTED', error);
-    }, [emitMobileDebug]);
+        // Trigger AR fallback on catalog rejection (catalog not found, mismatch, etc.)
+        handleSystemError(error.code);
+    }, [emitMobileDebug, handleSystemError]);
 
     // Task 9: Derive catalog props from the first card's flashcard data
     // The catalog is shared across all cards in a lesson, so we use the first card's catalog identity
@@ -1275,6 +1301,7 @@ export default function LearnARV2() {
         <div className="learn-ar-v2" style={{ position: 'fixed', inset: 0 }}>
             {/* AR Container with iframe swapping */}
             <ARContainerV2
+                engine={arEngine}
                 initialPhase={detectedQrId ? 'VIEWING' : 'SCANNING'}
                 // Spec A: auto QR-in-scene (single camera, no separate scanner phase)
                 autoQrScanEnabled={autoQrScanEnabled}

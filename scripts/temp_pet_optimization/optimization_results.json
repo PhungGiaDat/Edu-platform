@@ -1,0 +1,82 @@
+{
+  "downloaded": [],
+  "optimized": [],
+  "uploaded": [],
+  "failed": [
+    {
+      "pet_id": "blocky_beta",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_frank",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_indi",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_luna",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_nick",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_percy",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_quinn",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_rex",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_sam",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_tina",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_violet",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_winston",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_xander",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_yara",
+      "step": "download",
+      "error": "Download failed"
+    },
+    {
+      "pet_id": "blocky_zoe",
+      "step": "download",
+      "error": "Download failed"
+    }
+  ]
+}

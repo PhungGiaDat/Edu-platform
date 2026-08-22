@@ -475,18 +475,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                 )}
             </aside>
 
-            <nav aria-label="Primary navigation" className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-3 right-3 z-[var(--z-nav)] max-w-[calc(100vw-1.5rem)] md:hidden">
-                <div className="pointer-events-auto relative flex min-h-[76px] items-stretch justify-around gap-1 rounded-[30px] border-2 border-white bg-white/95 p-1.5 shadow-[0_8px_32px_rgba(91,141,239,0.18),0_4px_0_rgba(0,0,0,0.05)] backdrop-blur-md">
+            <nav aria-label="Primary navigation" className="pointer-events-none fixed bottom-0 left-0 right-0 z-[var(--z-nav)] md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+                <div className="pointer-events-auto mx-3 mb-3 flex min-h-[76px] items-stretch justify-around gap-1 rounded-[30px] border-4 border-white bg-[#5B8DEF] p-1.5 shadow-[0_8px_0_rgba(59,100,180,0.30),0_8px_32px_rgba(91,141,239,0.25)]">
                     {navItems.map((item) => {
                         const Icon = iconComponents[item.iconKey];
                         const active = isRouteActive(location.pathname, item.path);
                         return (
-                            <Link key={item.path} to={item.path} aria-current={active ? 'page' : undefined} className={`relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-[22px] px-1 transition-colors ${active ? 'bg-gradient-to-br from-[#6EB9FF] to-[#3A8FD1] text-white shadow-[0_4px_0_#3A8FD1]' : 'text-slate-500'}`}>
+                            <Link key={item.path} to={item.path} aria-current={active ? 'page' : undefined} className={`relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-[22px] px-1 transition-all ${active ? 'bg-white text-slate-800 shadow-[0_4px_0_rgba(0,0,0,0.15)]' : 'text-white/80 hover:text-white'}`}>
                                 <Icon className="h-6 w-6" /><span className="mt-1 max-w-full truncate text-[10px] font-extrabold leading-none">{item.shortLabel}</span>
                             </Link>
                         );
                     })}
-                    <button ref={moreButtonRef} type="button" onClick={() => setIsMobileMoreOpen(true)} aria-expanded={isMobileMoreOpen} aria-controls="mobile-more-sheet" className={`relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-[22px] px-1 ${isMobileMoreOpen ? 'bg-[#FFF0B8] text-slate-800' : 'text-slate-500'}`}>
+                    <button ref={moreButtonRef} type="button" onClick={() => setIsMobileMoreOpen(true)} aria-expanded={isMobileMoreOpen} aria-controls="mobile-more-sheet" className={`relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-[22px] px-1 ${isMobileMoreOpen ? 'bg-white text-slate-800 shadow-[0_4px_0_rgba(0,0,0,0.15)]' : 'text-white/80 hover:text-white'}`}>
                         <MoreIcon className="h-6 w-6" /><span className="mt-1 max-w-full truncate text-[10px] font-extrabold leading-none">More</span>
                     </button>
                 </div>

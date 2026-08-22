@@ -1,0 +1,12 @@
+{
+  "uploaded": [
+    {
+      "success": false,
+      "error": "Session creation failed: 400 Invalid upload-metadata\n"
+    },
+    {
+      "success": false,
+      "error": "Session creation failed: 400 Invalid upload-metadata\n"
+    }
+  ]
+}

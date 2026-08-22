@@ -251,9 +251,12 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
                     errorCode,
                     mindCatalogId,
                     mindTargetIndex,
+                    fallbackStrategy: 'legacy_mind_url',
                 });
-                // Return null — do NOT fallback to 2D
-                return null;
+                // Single card: graceful fallback to legacy mindUrl, not required to reject.
+                // Combo path (second card) still requires catalog correctness.
+                console.warn('[useMultiFlashcard] Catalog validation failed, falling back to legacy mindUrl:', errorCode);
+                mindUrl = legacyMindUrl;
             }
         }
 

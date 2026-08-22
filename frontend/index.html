@@ -28,6 +28,14 @@
   <script type="module" src="/src/main.tsx"></script>
   <!-- Mobile Debug - Enable with ?debug=true in URL -->
   <script src="/static/ar-assets/js/mobile-debug.js"></script>
+  <!-- Eruda mobile console - Enable with ?eruda=true in URL -->
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>
+    if (window.location.search.includes('eruda=true')) {
+      eruda.init();
+      console.log('[eruda] Mobile console enabled');
+    }
+  </script>
 </body>
 
 </html>

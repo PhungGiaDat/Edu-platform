@@ -1,0 +1,10 @@
+{
+  "name": "edu-platform-shiba-upload",
+  "version": "1.0.0",
+  "private": true,
+  "description": "One-off upload script for the shiba dog 3D model and MindAR .mind target to the Edu-platform Supabase storage bucket.",
+  "type": "module",
+  "scripts": {
+    "upload-shiba": "node upload_shiba.mjs"
+  }
+}

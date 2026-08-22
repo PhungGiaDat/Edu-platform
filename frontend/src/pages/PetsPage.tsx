@@ -458,7 +458,7 @@ export default function PetsPage() {
     const canRenderDisplayPet3D = isRenderableModelUrl(displayPet?.model_url);
 
     return (
-        <div className="min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden clay-bg-playful pb-[calc(env(safe-area-inset-bottom)+13rem)] transition-all duration-300 md:pb-8">
+        <div className="min-h-screen w-full max-w-[100vw] min-w-0 overflow-x-hidden clay-bg-playful pb-[calc(env(safe-area-inset-bottom)+8rem)] transition-all duration-300 md:pb-8">
             {/* Decorative Background Elements */}
             <div className="pointer-events-none fixed inset-0 hidden overflow-hidden sm:block">
                 <div className="clay-shape-circle w-96 h-96 -top-48 -left-48 opacity-40" />
@@ -495,7 +495,7 @@ export default function PetsPage() {
                             </h2>
 
                             {isLoading ? (
-                                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
+                                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                                     {[1, 2, 3, 4, 5, 6].map(i => (
                                         <div key={i} className="h-40 animate-pulse rounded-3xl bg-gray-100 sm:h-48" />
                                     ))}
@@ -507,7 +507,7 @@ export default function PetsPage() {
                                     <p className="text-gray-600">Complete lessons to unlock your first pet companion.</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
+                                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                                     {pets.map(pet => (
                                         <PetCollectionCard
                                             key={pet.pet_id}

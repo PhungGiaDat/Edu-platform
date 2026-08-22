@@ -195,13 +195,13 @@ export const LearningPathSetup: React.FC = () => {
           className="rounded-[36px] border-4 border-white px-5 py-6 shadow-[0_14px_0_rgba(91,141,239,0.12)] sm:px-7"
           style={{ background: '#F7FBFF' }}
         >
-          <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="max-w-3xl">
               <div className="inline-flex rounded-full border-4 border-white bg-white px-4 py-2 text-sm font-black text-sky-700 shadow-[0_6px_0_rgba(91,141,239,0.12)]">
                 {ui.kicker}
               </div>
               <h1
-                className="mt-4 text-4xl font-black leading-tight text-slate-800 sm:text-5xl"
+                className="mt-4 text-3xl font-black leading-tight text-slate-800 sm:text-4xl lg:text-5xl"
                 style={{ fontFamily: "'Baloo 2', system-ui, sans-serif" }}
               >
                 {ui.title}
@@ -240,7 +240,7 @@ export const LearningPathSetup: React.FC = () => {
             <section>
               <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-800">{ui.topicTitle}</h2>
+                  <h2 className="text-2xl font-black text-slate-800 sm:text-3xl">{ui.topicTitle}</h2>
                   <p className="mt-1 font-bold text-slate-600">{ui.topicBody}</p>
                 </div>
                 <div className="rounded-full border-4 border-white bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-[0_6px_0_rgba(26,39,68,0.08)]">
@@ -248,7 +248,7 @@ export const LearningPathSetup: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {learningTopics.map((topic, index) => {
                   const tone = palette[index % palette.length];
                   const isSelected = selectedTopics.includes(topic.id);
@@ -457,7 +457,7 @@ const GoalSelector: React.FC<{
     }}
   >
     <h3 className="text-2xl font-black text-slate-800">{title}</h3>
-    <div className="mt-4 grid grid-cols-2 gap-3">
+    <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3">
       {values.map((option) => {
         const isActive = option === value;
         return (

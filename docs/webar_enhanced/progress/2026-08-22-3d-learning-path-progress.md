@@ -14,7 +14,7 @@
 | 6. Pet Guide | ✅ Done | - | Committed: `37895bc` |
 | 7. Landscape | ✅ Done | - | Committed: 922e0e3 |
 | 8. Path Camera | ✅ Done | - | Committed: 7a3bb95 |
-| 9. Lesson Modal UI | ⬜ Pending | - | - |
+| 9. Lesson Modal UI | ⬜ Blocked | framer-motion not installed | - |
 | 10. Main Page | ⬜ Pending | - | - |
 | 11. Progress Trail | ⬜ Pending | - | - |
 | 12. Celebration | ⬜ Pending | - | - |
@@ -94,6 +94,15 @@
 - Committed: 7a3bb95
 - TypeScript compilation verified
 
+**Task 9 - Lesson Modal UI:** ⬜ BLOCKED
+- Requirement: framer-motion for animations
+- Blocker: framer-motion NOT installed in `frontend/package.json`
+- Project uses Tailwind CSS animations and inline styles instead
+- Alternative: Implement with CSS animations (like PetUnlockModal.tsx)
+- Option A: Install framer-motion via npm
+- Option B: Use CSS animations (matching PetUnlockModal pattern)
+- Decision needed from project owner
+
 **Next Actions:**
 - Launch parallel subagents for Tasks 1-4 (independent components)
 
@@ -105,7 +114,7 @@ _(Update here when blockers are encountered)_
 
 | Blocker | Task | Resolution | Status |
 |---------|------|------------|--------|
-| - | - | - | - |
+| framer-motion not installed in frontend | 9. Lesson Modal UI | Install framer-motion or implement with CSS animations | Open |
 
 ---
 

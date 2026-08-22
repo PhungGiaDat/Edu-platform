@@ -1187,7 +1187,7 @@ export const LessonPlayer: React.FC = () => {
   const currentStep = stepOrder[Math.min(activeStep, stepOrder.length - 1)];
 
   return (
-    <div className="flex min-h-[100dvh] w-full max-w-[100vw] min-w-0 flex-col overflow-hidden clay-bg-playful pb-[calc(env(safe-area-inset-bottom)+7rem)] md:pb-6">
+    <div className="flex min-h-[100dvh] w-full max-w-[100vw] min-w-0 flex-col overflow-hidden clay-bg-playful pb-[calc(env(safe-area-inset-bottom)+4rem)] md:pb-6">
       <div className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-1 flex-col px-3 py-4 sm:px-6 lg:px-8">
         <div className="mb-4 flex items-center justify-between gap-3">
           <button

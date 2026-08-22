@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import FlashcardPage from "./pages/FlashcardPage";
 import LearnARV2 from "./pages/LearnARV2";
-// LearnAR8thWall temporarily disabled - XR in progress - TODO: fix imports
-// TODO: Enable after XR implementation complete from "./pages/LearnAR8thWall";
+import LearnAR8thWall from "./pages/LearnAR8thWall";
 import { CourseList } from "./pages/CourseList";
 import { CourseDetail } from "./pages/CourseDetail";
 import { LessonPlayer } from "./pages/LessonPlayer";
@@ -16,6 +15,7 @@ import { Register } from "./pages/Register";
 import { LandingPage } from "./pages/LandingPage";
 import { ProgressDashboard } from "./pages/ProgressDashboard";
 import { LearningPathSetup } from "./pages/LearningPathSetup";
+import { LearningPath3D } from "./pages/LearningPath3D";
 import PetsPage from "./pages/PetsPage";
 import StickersPage from "./pages/StickersPage";
 import { Layout } from "./components/Layout";
@@ -267,6 +267,8 @@ const App = () => {
         {/* Protected Routes (Wrapped in Layout) */}
         <Route path="/flashcards" element={<RequireUserAuth><Layout><FlashcardPage /></Layout></RequireUserAuth>} />
         <Route path="/learn-ar" element={<RequireLearnerAccess><LearnARV2 /></RequireLearnerAccess>} />
+        <Route path="/learn-ar-xr" element={<RequireLearnerAccess><LearnAR8thWall /></RequireLearnerAccess>} />
+        <Route path="/learn-ar-xr/:deckId" element={<RequireLearnerAccess><LearnAR8thWall /></RequireLearnerAccess>} />
         {/* XR routes disabled - implementation in progress */}
         <Route path="/courses" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
         <Route path="/courses/animals" element={<RequireLearnerAccess><Layout><AnimalsCourse /></Layout></RequireLearnerAccess>} />
@@ -281,6 +283,7 @@ const App = () => {
         <Route path="/profile" element={<RequireUserAuth><Layout><Profile /></Layout></RequireUserAuth>} />
         <Route path="/progress" element={<RequireUserAuth><Layout><ProgressDashboard /></Layout></RequireUserAuth>} />
         <Route path="/learning-path" element={<RequireUserAuth><Layout><LearningPathSetup /></Layout></RequireUserAuth>} />
+        <Route path="/learning-path-3d" element={<RequireUserAuth><Layout><LearningPath3D /></Layout></RequireUserAuth>} />
 
         <Route path="/pets" element={<RequireUserAuth><Layout><PetsPage /></Layout></RequireUserAuth>} />
         <Route path="/stickers" element={<RequireUserAuth><Layout><StickersPage /></Layout></RequireUserAuth>} />

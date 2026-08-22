@@ -1,0 +1,112 @@
+{
+  "ar_objects_updated": [
+    {
+      "qr_id": "cat001",
+      "status": 400,
+      "animations": [
+        "CAT_IDLE",
+        "CAT_MEOW",
+        "CAT_EAT"
+      ]
+    },
+    {
+      "qr_id": "fish001",
+      "status": 400,
+      "animations": [
+        "FISH_IDLE",
+        "FISH_SWIM"
+      ]
+    },
+    {
+      "qr_id": "rabbit001",
+      "status": 400,
+      "animations": [
+        "RABBIT_IDLE",
+        "RABBIT_JUMP",
+        "RABBIT_EAT"
+      ]
+    },
+    {
+      "qr_id": "carrot001",
+      "status": 400,
+      "animations": [
+        "CARROT_IDLE"
+      ]
+    },
+    {
+      "qr_id": "elephant001",
+      "status": 400,
+      "animations": [
+        "ELEPHANT_IDLE",
+        "ELEPHANT_SPRAY",
+        "ELEPHANT_EAT"
+      ]
+    },
+    {
+      "qr_id": "grass001",
+      "status": 400,
+      "animations": [
+        "GRASS_SWAY"
+      ]
+    },
+    {
+      "qr_id": "panda001",
+      "status": 400,
+      "animations": [
+        "PANDA_IDLE",
+        "PANDA_EAT"
+      ]
+    },
+    {
+      "qr_id": "bamboo001",
+      "status": 400,
+      "animations": [
+        "BAMBOO_SWAY"
+      ]
+    },
+    {
+      "qr_id": "tiger001",
+      "status": 400,
+      "animations": [
+        "TIGER_IDLE",
+        "TIGER_ROAR",
+        "TIGER_EAT"
+      ]
+    },
+    {
+      "qr_id": "meat001",
+      "status": 400,
+      "animations": [
+        "MEAT_IDLE"
+      ]
+    }
+  ],
+  "combinations_updated": [
+    {
+      "combo_id": "clay_cat_fish",
+      "status": 204,
+      "animation": "CAT_EAT"
+    },
+    {
+      "combo_id": "clay_rabbit_carrot",
+      "status": 204,
+      "animation": "RABBIT_EAT"
+    },
+    {
+      "combo_id": "clay_elephant_grass",
+      "status": 204,
+      "animation": "ELEPHANT_EAT"
+    },
+    {
+      "combo_id": "clay_panda_bamboo",
+      "status": 204,
+      "animation": "PANDA_EAT"
+    },
+    {
+      "combo_id": "clay_tiger_meat",
+      "status": 204,
+      "animation": "TIGER_EAT"
+    }
+  ],
+  "catalog_renamed": "claymorphic-v1 -> animal-combo-v1"
+}

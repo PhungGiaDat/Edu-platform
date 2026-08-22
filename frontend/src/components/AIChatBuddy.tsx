@@ -239,7 +239,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
             {!isOpen && show3DPet && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-[calc(env(safe-area-inset-bottom)+8rem)] right-2 flex h-16 w-16 cursor-pointer items-center justify-center p-0 transition-transform duration-300 motion-safe:hover:scale-105 sm:right-4 sm:h-[76px] sm:w-[76px] md:bottom-6 md:right-6 md:h-20 md:w-20 lg:h-[92px] lg:w-[92px]"
+                    className="fixed bottom-[calc(env(safe-area-inset-bottom)+6rem)] right-2 flex h-14 w-14 cursor-pointer items-center justify-center p-0 transition-transform duration-300 motion-safe:hover:scale-105 sm:right-4 sm:bottom-6 sm:h-[68px] sm:w-[68px] md:bottom-6 md:right-6 md:h-20 md:w-20 lg:h-[92px] lg:w-[92px]"
                     style={{
                         zIndex: 'var(--z-chatbot)',
                         background: 'transparent',
@@ -254,7 +254,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                     title="Talk to Lexi"
                     aria-label="Talk to Lexi"
                 >
-                    <span className="absolute -left-28 top-2 hidden w-32 rounded-2xl border-2 border-sky-100 bg-white px-3 py-2 text-left text-xs font-black leading-tight text-slate-700 shadow-[0_10px_24px_rgba(91,141,239,0.18)] motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:-translate-y-1 sm:block">
+                    <span className="absolute -left-20 top-2 hidden w-28 rounded-2xl border-2 border-sky-100 bg-white px-3 py-2 text-left text-xs font-black leading-tight text-slate-700 shadow-[0_10px_24px_rgba(91,141,239,0.18)] motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:-translate-y-1 sm:block sm:-left-28 sm:w-32">
                         Need help?
                         <span className="block font-bold text-sky-500">Ask Lexi!</span>
                         <span className="absolute -right-2 top-8 h-4 w-4 rotate-45 border-r-2 border-t-2 border-sky-100 bg-white" />
@@ -268,7 +268,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
             {/* Chat panel */}
             {isOpen && (
                 <div
-                    className="fixed inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] flex h-[min(620px,calc(100dvh-env(safe-area-inset-bottom)-1rem))] max-h-[calc(100dvh-env(safe-area-inset-bottom)-1rem)] max-w-none animate-slideUp flex-col overflow-hidden rounded-[24px] border-4 border-white/80 shadow-[0_16px_0_rgba(91,141,239,0.10),0_26px_56px_rgba(45,60,90,0.18)] sm:inset-x-4 md:inset-x-auto md:bottom-6 md:right-6 md:h-[min(560px,calc(100dvh-3rem))] md:w-[410px] md:max-w-[410px] md:rounded-[28px]"
+                    className="fixed inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] flex h-[min(620px,calc(100dvh-env(safe-area-inset-bottom)-1rem))] max-h-[calc(100dvh-env(safe-area-inset-bottom)-1rem)] w-full max-w-md animate-slideUp flex-col overflow-hidden rounded-[24px] border-4 border-white/80 shadow-[0_16px_0_rgba(91,141,239,0.10),0_26px_56px_rgba(45,60,90,0.18)] sm:inset-x-4 md:inset-x-auto md:bottom-6 md:right-6 md:h-[min(560px,calc(100dvh-3rem))] md:w-[410px] md:rounded-[28px]"
                     style={{
                         zIndex: 'var(--z-chatbot)',
                         fontFamily: "'Nunito Sans', 'Quicksand', sans-serif",

@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { getApiBase } from '@/config';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_URL = getApiBase();
 
 export interface Badge {
     id: string;
