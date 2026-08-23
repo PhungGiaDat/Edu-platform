@@ -262,4 +262,4 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
 
 // ========== Export ==========
 
-export default LessonNode;
+export default LessonNode3D;
