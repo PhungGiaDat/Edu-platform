@@ -101,7 +101,7 @@ interface ARViewerTarget {
     word?: string;
 }
 
-const VIEWER_BOOTSTRAP_TIMEOUT_MS = 15_000;
+const VIEWER_BOOTSTRAP_TIMEOUT_MS = 30_000; // 30s — must exceed iframe BOOTSTRAP_DEADLINE_MS (25s) + arReady init
 // 7-second ACK timeout for SET_ACTIVE_TARGETS revisions (Task 8)
 const ACTIVE_TARGETS_ACK_TIMEOUT_MS = 7_000;
 export const ARContainerV2: React.FC<ARContainerV2Props> = ({

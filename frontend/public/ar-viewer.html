@@ -54,7 +54,10 @@
         (function () {
             var params = new URLSearchParams(window.location.search);
             var runtimeMindUrl = null;
-            var BOOTSTRAP_DEADLINE_MS = 8000;
+            // 25s — A-Frame + MindAR + .mind (5MB+) download can take 10-15s on
+            // mobile. 8s was triggering BOOTSTRAP_FAILED on iOS Safari before
+            // MindAR had a chance to fire arReady.
+            var BOOTSTRAP_DEADLINE_MS = 25000;
             var bootstrapStartedAt = Date.now();
             var bootstrapFailureReported = false;
             var overlayHidden = false;
