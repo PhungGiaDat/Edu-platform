@@ -28,30 +28,34 @@
   <script type="module" src="/src/main.tsx"></script>
   <!-- Mobile Debug - Enable with ?debug=true in URL -->
   <script src="/static/ar-assets/js/mobile-debug.js"></script>
-  <!-- Eruda mobile console - Activate on ?debug=true OR ?eruda=true in URL -->
+  <!-- Eruda mobile console - Activate only with ?eruda=true in URL -->
   <script>
     (function() {
+      var erudaRoot = null;
+
       function initEruda() {
         if (typeof eruda === 'undefined') return false;
+
+        // Never mount Eruda on document.body. Eruda assigns its container the
+        // #eruda id, so styling that id would otherwise resize the whole page
+        // and collapse the React/AR iframe to 0x0.
+        if (!erudaRoot) {
+          erudaRoot = document.createElement('div');
+          erudaRoot.setAttribute('data-eruda-root', 'true');
+          document.body.appendChild(erudaRoot);
+        }
+
         eruda.init({
-          container: document.body,
+          container: erudaRoot,
           tool: ['console', 'elements', 'network', 'sources', 'storage'],
           useSnapshots: false,
           overrideConsole: true,
           theme: 'dark',
         });
-        // Position panel to top-right corner (override Eruda's bottom-left default)
-        var erudaInterval = setInterval(function() {
-          var el = document.querySelector && document.querySelector('#eruda');
-          if (el) {
-            el.style.cssText = 'position:fixed!important;top:0!important;right:0!important;z-index:9999999!important;width:50%!important;max-width:280px!important;height:40%!important;box-shadow:0 0 20px rgba(0,0,0,0.8)!important;';
-            clearInterval(erudaInterval);
-          }
-        }, 200);
+
         // Auto-hide after 60s to not annoy user
         setTimeout(function() {
-          var el = document.querySelector && document.querySelector('#eruda');
-          if (el) el.style.display = 'none';
+          if (typeof eruda.hide === 'function') eruda.hide();
         }, 60000);
         console.log('[eruda] Mobile console enabled');
         return true;
@@ -72,7 +76,11 @@
         };
         document.head.appendChild(s);
       }
-      if (window.location.search.includes('debug=true') || window.location.search.includes('eruda=true')) {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('eruda') === 'true') {
+        // Only activate Eruda on explicit ?eruda=true to avoid interfering
+        // with camera/AR getUserMedia streams. ?debug=true still activates
+        // the Mobile Debug panel but not the full Eruda console.
         waitForEruda();
       }
     })();

@@ -36,7 +36,9 @@
                 color: #0f0;
                 font-family: 'Courier New', monospace;
                 font-size: 11px;
-                z-index: 100;
+                /* Must sit above .ar-container-v2 (z-index: 99999) without
+                   changing the AR iframe's dimensions or camera lifecycle. */
+                z-index: 1000000;
                 display: flex;
                 flex-direction: column;
                 border-top: 2px solid #0f0;
@@ -101,7 +103,7 @@
                 border-radius: 50%;
                 color: #000;
                 font-size: 20px;
-                z-index: 101;
+                z-index: 1000001;
                 display: none;
             }
             #mobile-debug-panel.minimized {
