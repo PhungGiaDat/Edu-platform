@@ -74,14 +74,28 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
 
   // Track when MindAR started initializing
   const mindarStartTimeRef = useRef<number | null>(null);
+  // Readiness and timeout are refs so a stale timeout callback cannot switch
+  // engines after the iframe has already reported AR_READY.
+  const mindarReadyRef = useRef(false);
+  const readyTimeoutRef = useRef<number | null>(null);
   // Track FPS samples for performance analysis
   const fpsSamplesRef = useRef<number[]>([]);
   // Low FPS duration tracker
   const lowFpsStartRef = useRef<number | null>(null);
 
+  const clearReadyTimeout = useCallback(() => {
+    if (readyTimeoutRef.current !== null) {
+      window.clearTimeout(readyTimeoutRef.current);
+      readyTimeoutRef.current = null;
+    }
+  }, []);
+
   // Core trigger function
   const triggerFallback = useCallback((reason: FallbackReason) => {
     if (engine !== 'mindar' || fallbackTriggered) return;
+    if (reason === 'TIMEOUT_NO_READY' && mindarReadyRef.current) return;
+
+    clearReadyTimeout();
 
     console.warn(`[AR-Fallback] Switching to XR engine. Reason: ${reason}`);
     setEngine('xr');
@@ -101,23 +115,25 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
     }));
 
     onFallbackTriggered?.(reason);
-  }, [engine, fallbackTriggered, onFallbackTriggered, timeToReady]);
+  }, [clearReadyTimeout, engine, fallbackTriggered, onFallbackTriggered, timeToReady]);
 
   // ── Logic 1: Timeout fallback ──────────────────────────────────────────────────
   useEffect(() => {
-    if (engine !== 'mindar' || fallbackTriggered) return;
+    if (engine !== 'mindar' || fallbackTriggered || mindarReadyRef.current) return;
 
     // Record start time on first effect run
     if (mindarStartTimeRef.current === null) {
       mindarStartTimeRef.current = performance.now();
     }
 
-    const timer = setTimeout(() => {
+    clearReadyTimeout();
+    readyTimeoutRef.current = window.setTimeout(() => {
+      readyTimeoutRef.current = null;
       triggerFallback('TIMEOUT_NO_READY');
     }, timeoutMs);
 
-    return () => clearTimeout(timer);
-  }, [engine, fallbackTriggered, triggerFallback, timeoutMs]);
+    return clearReadyTimeout;
+  }, [clearReadyTimeout, engine, fallbackTriggered, triggerFallback, timeoutMs]);
 
   // ── Logic 2: Listen for AR_READY (reset timeout) ─────────────────────────────
   // IMPORTANT: viewer fires AR_READY via postMessage, not a DOM CustomEvent.
@@ -128,7 +144,13 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
     const handleMessage = (event: MessageEvent) => {
       const msg = event.data;
       if (!msg || !msg.type || msg.type !== 'AR_READY') return;
-      if (msg.origin && msg.origin !== window.location.origin) return; // sanity check
+      // `msg.origin` is the protocol's logical marker (`child`). The browser's
+      // trusted MessageEvent.origin is what must be checked for same-origin.
+      if (event.origin !== window.location.origin) return;
+      if (mindarReadyRef.current) return;
+
+      mindarReadyRef.current = true;
+      clearReadyTimeout();
 
       const elapsed = mindarStartTimeRef.current !== null
         ? performance.now() - mindarStartTimeRef.current
@@ -137,12 +159,12 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
         setTimeToReady(elapsed);
         console.log(`[AR-Fallback] MindAR ready in ${elapsed.toFixed(0)}ms`);
       }
-      mindarStartTimeRef.current = null; // Cancel timeout
+      mindarStartTimeRef.current = null;
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [engine, fallbackTriggered]);
+  }, [clearReadyTimeout, engine, fallbackTriggered]);
 
   // ── Logic 3: Performance fallback ─────────────────────────────────────────────
   const handlePerformanceMetrics = useCallback((fps: number) => {
@@ -174,14 +196,16 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
 
   // ── Reset on engine change ─────────────────────────────────────────────────────
   const reset = useCallback(() => {
+    clearReadyTimeout();
     setEngine(initialEngine);
     setFallbackTriggered(false);
     setMetrics(null);
     setTimeToReady(null);
     mindarStartTimeRef.current = null;
+    mindarReadyRef.current = false;
     fpsSamplesRef.current = [];
     lowFpsStartRef.current = null;
-  }, [initialEngine]);
+  }, [clearReadyTimeout, initialEngine]);
 
   return {
     /** Current AR engine */

@@ -64,6 +64,7 @@
                 margin-left: 5px;
                 border-radius: 3px;
                 font-size: 10px;
+                touch-action: manipulation;
             }
             #debug-logs {
                 flex: 1;
@@ -116,6 +117,7 @@
         <div id="debug-header">
             <span>📱 Mobile Debug</span>
             <div id="debug-controls">
+                <button onclick="window.MobileDebug.copy()">Copy</button>
                 <button onclick="window.MobileDebug.clear()">Clear</button>
                 <button onclick="window.MobileDebug.toggle()">Toggle</button>
                 <button onclick="window.MobileDebug.hide()">Hide</button>
@@ -139,6 +141,8 @@
     const logsContainer = debugPanel.querySelector('#debug-logs');
     let logCount = 0;
     const MAX_LOGS = 100;
+    const MAX_BUFFERED_LOGS = 1000;
+    const logBuffer = [];
 
     // ========== LOGGER FUNCTIONS ==========
     function addLog(type, args) {
@@ -156,13 +160,19 @@
             }
             return String(arg);
         }).join(' ');
+        const plainText = `[${timestamp}] ${message}`;
 
         entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${escapeHtml(message)}`;
         logsContainer.appendChild(entry);
+        logBuffer.push(plainText);
+        if (logBuffer.length > MAX_BUFFERED_LOGS) {
+            logBuffer.shift();
+        }
 
         logCount++;
         if (logCount > MAX_LOGS) {
             logsContainer.removeChild(logsContainer.firstChild);
+            logCount = MAX_LOGS;
         }
 
         // Auto scroll to bottom
@@ -173,6 +183,37 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    async function copyLogs() {
+        const text = logBuffer.join('\n');
+        if (!text) return false;
+
+        try {
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                await navigator.clipboard.writeText(text);
+                return true;
+            }
+        } catch (_error) {
+            // Safari may reject Clipboard API despite a user gesture. Use the
+            // legacy textarea path below as a compatibility fallback.
+        }
+
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        textarea.setSelectionRange(0, textarea.value.length);
+        let copied = false;
+        try {
+            copied = typeof document.execCommand === 'function' && document.execCommand('copy');
+        } finally {
+            document.body.removeChild(textarea);
+        }
+        return copied;
     }
 
     // ========== OVERRIDE CONSOLE ==========
@@ -218,6 +259,11 @@
         clear: function () {
             logsContainer.innerHTML = '';
             logCount = 0;
+            logBuffer.length = 0;
+        },
+        copy: async function () {
+            const copied = await copyLogs();
+            addLog(copied ? 'info' : 'error', [copied ? '✅ Logs copied to clipboard' : '❌ Unable to copy logs']);
         },
         toggle: function () {
             debugPanel.classList.toggle('minimized');
