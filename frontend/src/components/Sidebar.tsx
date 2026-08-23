@@ -117,7 +117,7 @@ const iconComponents: Record<NavItem['iconKey'], React.FC<{ className?: string }
 
 const fullNavItems: NavItem[] = [
     { path: '/courses', label: 'Learn', shortLabel: 'Learn', iconKey: 'learn' },
-    { path: '/learning-path-3d', label: '3D Path', shortLabel: '3D', iconKey: 'path3d' },
+    { path: '/learning-path-3d', label: 'Learning Path', shortLabel: 'Path', iconKey: 'path3d' },
     { path: '/learn-ar', label: 'AR Practice', shortLabel: 'AR', iconKey: 'ar' },
     { path: '/flashcards', label: 'Flashcards', shortLabel: 'Cards', iconKey: 'flashcards' },
     { path: '/profile', label: 'Profile', shortLabel: 'Profile', iconKey: 'profile' },
