@@ -28,12 +28,35 @@
   <script type="module" src="/src/main.tsx"></script>
   <!-- Mobile Debug - Enable with ?debug=true in URL -->
   <script src="/static/ar-assets/js/mobile-debug.js"></script>
-  <!-- Eruda mobile console - Enable with ?eruda=true in URL -->
+  <!-- Eruda mobile console - Enable with ?debug=true OR ?eruda=true in URL -->
   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
   <script>
-    if (window.location.search.includes('eruda=true')) {
-      eruda.init();
-      console.log('[eruda] Mobile console enabled');
+    if (window.location.search.includes('debug=true') || window.location.search.includes('eruda=true')) {
+      eruda.init({
+        // Position: top-right corner, above everything
+        container: document.body,
+        tool: ['console', 'elements', 'network', 'sources', 'storage'],
+        useSnapshots: false,
+        overrideConsole: true,
+        theme: 'dark',
+      });
+      // Force Eruda panel to top-right corner via inline style override
+      // Eruda defaults to bottom-left; we override after init
+      var erudaInterval = setInterval(function() {
+        var el = document.querySelector && document.querySelector('#eruda');
+        if (el) {
+          el.style.cssText = 'position:fixed!important;top:0!important;right:0!important;z-index:9999999!important;width:50%!important;max-width:280px!important;height:40%!important;box-shadow:0 0 20px rgba(0,0,0,0.8)!important;';
+          clearInterval(erudaInterval);
+        }
+      }, 200);
+      // Fallback: hide after 60s to not annoy user
+      setTimeout(function() {
+        var el = document.querySelector && document.querySelector('#eruda');
+        if (el) {
+          el.style.display = 'none';
+        }
+      }, 60000);
+      console.log('[eruda] Mobile console enabled via ?debug=true');
     }
   </script>
 </body>
