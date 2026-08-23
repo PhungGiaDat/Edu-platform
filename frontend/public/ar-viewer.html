@@ -113,6 +113,60 @@
                         console.log('[←parent]', event.data);
                     });
                 })();
+
+                // Forward all console output from inside the iframe up to the
+                // parent so mobile users can see MindAR errors in the host's
+                // Mobile Debug panel without having to open DevTools inside
+                // the iframe (impossible on iOS Safari).
+                function forwardConsole(level) {
+                    var original = console[level].bind(console);
+                    console[level] = function() {
+                        try {
+                            var args = Array.prototype.slice.call(arguments);
+                            var text = args.map(function(a) {
+                                try {
+                                    if (a instanceof Error) return a.stack || a.message;
+                                    if (typeof a === 'object') return JSON.stringify(a, null, 2);
+                                    return String(a);
+                                } catch (_) { return String(a); }
+                            }).join(' ');
+                            postToParent('AR_DEBUG', {
+                                label: 'VIEWER_CONSOLE_' + level.toUpperCase(),
+                                details: { level: level, text: text.slice(0, 4000) },
+                                source: 'ar-viewer-console'
+                            });
+                        } catch (_) { /* never break the host console */ }
+                        return original.apply(console, arguments);
+                    };
+                }
+                forwardConsole('error');
+                forwardConsole('warn');
+                forwardConsole('log');
+
+                window.addEventListener('error', function(event) {
+                    postToParent('AR_DEBUG', {
+                        label: 'VIEWER_UNCAUGHT_ERROR',
+                        details: {
+                            message: event.message,
+                            filename: event.filename,
+                            lineno: event.lineno,
+                            colno: event.colno,
+                            stack: event.error && event.error.stack ? String(event.error.stack) : null
+                        },
+                        source: 'ar-viewer-console'
+                    });
+                });
+                window.addEventListener('unhandledrejection', function(event) {
+                    postToParent('AR_DEBUG', {
+                        label: 'VIEWER_UNHANDLED_REJECTION',
+                        details: {
+                            reason: event.reason instanceof Error
+                                ? (event.reason.stack || event.reason.message)
+                                : String(event.reason)
+                        },
+                        source: 'ar-viewer-console'
+                    });
+                });
             }
 
             window.addEventListener('message', function onViewerMessage(event) {
