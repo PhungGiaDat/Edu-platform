@@ -280,8 +280,11 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
                 // Single card: graceful fallback to legacy mindUrl, not required to reject.
                 // Combo path (second card) still requires catalog correctness.
                 console.warn('[useMultiFlashcard] Catalog validation failed, falling back to legacy mindUrl:', errorCode);
-                // Propagate the error code so the UI can show a rejection toast
-                onRejectRef.current?.({ qrId, code: errorCode, message: validationError instanceof Error ? validationError.message : undefined });
+                // Only show rejection toast when legacy fallback is also missing —
+                // otherwise the legacy .mind file is enough for single-card viewing.
+                if (!legacyMindUrl) {
+                    onRejectRef.current?.({ qrId, code: errorCode, message: validationError instanceof Error ? validationError.message : undefined });
+                }
                 mindUrl = legacyMindUrl;
             }
         }

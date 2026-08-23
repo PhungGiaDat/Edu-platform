@@ -48,24 +48,26 @@ import FlashcardView from "./pages/public/FlashcardView";
 // Shows PetUnlockModal as a global overlay on any page
 
 const API_BASE = getApiBase();
-const SESSION_KEY = "pet_notified_ids";
+const STORAGE_KEY = "pet_notified_ids";
 
-/** Load notified pet IDs from sessionStorage (resets on tab close) */
+/** Load notified pet IDs from localStorage (persists across tab close).
+ *  Previously used sessionStorage which reset on every tab open, causing
+ *  the unlock modal to re-show the same already-notified pets each visit. */
 function loadNotifiedIds(): Set<string> {
   try {
-    const stored = sessionStorage.getItem(SESSION_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY);
     return stored ? new Set(JSON.parse(stored)) : new Set();
   } catch {
     return new Set();
   }
 }
 
-/** Persist notified pet IDs to sessionStorage */
+/** Persist notified pet IDs to localStorage */
 function saveNotifiedIds(ids: Set<string>) {
   try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify([...ids]));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
   } catch {
-    // sessionStorage unavailable — silently ignore
+    // localStorage unavailable — silently ignore
   }
 }
 
