@@ -834,10 +834,13 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                     ref={iframeRef}
                     key={`main-${mindIdentityKey}`}
                     src={mainSrc}
-                    onLoad={() => emitDebug('PARENT_VIEWER_IFRAME_LOADED', {
-                        phase,
-                        src: phase === 'VIEWING' ? 'viewer' : 'scanner'
-                    })}
+                    onLoad={() => {
+                        emitDebug('PARENT_VIEWER_IFRAME_LOADED', {
+                            phase,
+                            src: phase === 'VIEWING' ? 'viewer' : 'scanner',
+                            iframeSrc: mainSrc,
+                        });
+                    }}
                     allow="camera; microphone; autoplay; fullscreen"
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', zIndex: 1 }}
                 />

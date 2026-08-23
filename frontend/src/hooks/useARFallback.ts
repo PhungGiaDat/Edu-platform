@@ -120,20 +120,29 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
   }, [engine, fallbackTriggered, triggerFallback, timeoutMs]);
 
   // ── Logic 2: Listen for AR_READY (reset timeout) ─────────────────────────────
+  // IMPORTANT: viewer fires AR_READY via postMessage, not a DOM CustomEvent.
+  // Must listen on the 'message' event to catch it.
   useEffect(() => {
     if (engine !== 'mindar' || fallbackTriggered) return;
 
-    const handleReady = () => {
-      if (mindarStartTimeRef.current !== null) {
-        setTimeToReady(performance.now() - mindarStartTimeRef.current);
-        console.log(`[AR-Fallback] MindAR ready in ${timeToReady?.toFixed(0) ?? '?'}ms`);
+    const handleMessage = (event: MessageEvent) => {
+      const msg = event.data;
+      if (!msg || !msg.type || msg.type !== 'AR_READY') return;
+      if (msg.origin && msg.origin !== window.location.origin) return; // sanity check
+
+      const elapsed = mindarStartTimeRef.current !== null
+        ? performance.now() - mindarStartTimeRef.current
+        : null;
+      if (elapsed !== null) {
+        setTimeToReady(elapsed);
+        console.log(`[AR-Fallback] MindAR ready in ${elapsed.toFixed(0)}ms`);
       }
       mindarStartTimeRef.current = null; // Cancel timeout
     };
 
-    window.addEventListener('AR_READY', handleReady);
-    return () => window.removeEventListener('AR_READY', handleReady);
-  }, [engine, fallbackTriggered, timeToReady]);
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [engine, fallbackTriggered]);
 
   // ── Logic 3: Performance fallback ─────────────────────────────────────────────
   const handlePerformanceMetrics = useCallback((fps: number) => {
