@@ -54,7 +54,7 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
           unityVersion: ${{ env.UNITY_VERSION }}
-          targetPlatform: ios
+          targetPlatform: iOS
           projectPath: mobile/unity
           buildMethod: iOSBuild.Build
           buildsPath: build-output
