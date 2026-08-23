@@ -20,7 +20,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ARContainerV2, { AREngine, ARPhase } from '@/components/ar/ARContainerV2';
 import { XRTargetData } from '@/lib/xr-engine-adapter';
-import { useToast } from '@/hooks/useToast';
+// TODO: Create useToast hook or use existing toast system
 import { ActiveViewerTarget } from '@/core/types/ARMessages';
 import './LearnAR8thWall.css';
 
@@ -62,7 +62,7 @@ interface DeckInfo {
 export const LearnAR8thWall: React.FC = () => {
   const { deckId } = useParams<{ deckId?: string }>();
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { showToast } = { showToast: (msg: string, _type?: string) => console.log('[Toast]', msg) };
 
   // State
   const [isLoading, setIsLoading] = useState(true);
