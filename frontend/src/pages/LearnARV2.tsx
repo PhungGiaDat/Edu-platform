@@ -39,7 +39,7 @@ import { usePets } from '@/hooks/usePets';
 import { useGamification } from '@/hooks/useGamification';
 import { useMultiFlashcard } from '@/hooks/useMultiFlashcard';
 import { useFlashcardSnapshot } from '@/hooks/useFlashcardSnapshot';
-import { useARFallback, type AREngine } from '@/hooks/useARFallback';
+import { useARFallback } from '@/hooks/useARFallback';
 import { HapticService } from '@/services/HapticService';
 import { SoundEffectService } from '@/services/SoundEffectService';
 import { SpeechService } from '@/services/SpeechService';
@@ -522,14 +522,6 @@ export default function LearnARV2() {
     // Derive user ID from JWT; guest mode has no user id and must stay read-only
     const USER_ID = isGuest ? null : (user?.id ?? null);
 
-    // ── AR Engine Fallback: navigate to 8th Wall when MindAR fails ──────────────
-    useEffect(() => {
-        if (arEngine === 'xr' && fallbackTriggered) {
-            const deckId = scannedTarget0?.mindCatalogId || 'claymorphic-animals-001';
-            navigate(`/learn-ar-xr/${deckId}`, { replace: true });
-        }
-    }, [arEngine, fallbackTriggered, scannedTarget0, navigate]);
-
     // ========== STATE ==========
     const [appState, setAppState] = useState<AppState>('SCANNING');
     const [displayMode, setDisplayMode] = useState<DisplayMode>('3D');
@@ -669,11 +661,9 @@ export default function LearnARV2() {
 
     // AR Engine Fallback (MindAR → 8th Wall)
     const {
-        engine: arEngine,
+        engine,
         fallbackTriggered,
-        handlePerformanceMetrics,
         handleSystemError,
-        triggerFallback,
     } = useARFallback({
         initialEngine: 'mindar',
         onFallbackTriggered: (reason) => {
@@ -745,6 +735,14 @@ export default function LearnARV2() {
     const scannedTarget0 = flashcardSnapshot.card0;
     const scannedTarget1 = flashcardSnapshot.card1;
     const scannedTargets = Array.from(detectedFlashcards.values()).slice(0, AR_MAX_TRACKS);
+
+    // ── AR Engine Fallback: navigate to 8th Wall when MindAR fails ──────────────
+    useEffect(() => {
+        if (engine === 'xr' && fallbackTriggered) {
+            const deckId = scannedTarget0?.mindCatalogId || 'claymorphic-animals-001';
+            navigate(`/learn-ar-xr/${deckId}`, { replace: true });
+        }
+    }, [engine, fallbackTriggered, scannedTarget0, navigate]);
 
     // Effect: Use backend combo_mind_url directly (no merge needed)
     // Task 9: Skip this effect when persistent viewer is enabled - combos use tag resolution instead
@@ -1311,7 +1309,7 @@ export default function LearnARV2() {
         <div className="learn-ar-v2" style={{ position: 'fixed', inset: 0 }}>
             {/* AR Container with iframe swapping */}
             <ARContainerV2
-                engine={arEngine}
+                engine={engine}
                 initialPhase={detectedQrId ? 'VIEWING' : 'SCANNING'}
                 // Spec A: auto QR-in-scene (single camera, no separate scanner phase)
                 autoQrScanEnabled={autoQrScanEnabled}

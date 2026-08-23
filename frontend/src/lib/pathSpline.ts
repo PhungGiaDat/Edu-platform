@@ -1,11 +1,10 @@
 import * as THREE from 'three';
-import type { LessonNode } from '../types/learning-path';
 
 /**
  * Creates a CatmullRom spline curve for the 3D learning path.
  * Generates an S-curve path with amplitude 4 and depth -40 units.
  */
-export function createPathSpline(nodes: LessonNode[]): THREE.CatmullRomCurve3 {
+export function createPathSpline(): THREE.CatmullRomCurve3 {
   const points: THREE.Vector3[] = [];
 
   // Generate S-curve control points

@@ -10,7 +10,7 @@
  * - Status indicators
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import type { LessonNode } from '@/types/learning-path';
 
 export interface LessonModalProps {
@@ -21,7 +21,7 @@ export interface LessonModalProps {
   /** Callback when modal is closed */
   onClose: () => void;
   /** Callback when lesson is started */
-  onStart: () => void;
+  onStart: (lesson: LessonNode) => void;
 }
 
 // Lesson type to display label mapping
@@ -46,21 +46,10 @@ export const LessonModal: React.FC<LessonModalProps> = ({
   onClose,
   onStart,
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  // Handle open/close with animation
-  useEffect(() => {
-    if (isOpen) {
-      setIsVisible(true);
-    } else {
-      setIsVisible(false);
-    }
-  }, [isOpen]);
-
   if (!isOpen || !lesson) return null;
 
   const handleStart = () => {
-    onStart();
+    onStart(lesson);
   };
 
   return (

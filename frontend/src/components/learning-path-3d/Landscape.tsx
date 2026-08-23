@@ -359,9 +359,6 @@ const Cloud: React.FC<CloudProps> = ({ position, speed = 0.01 }) => {
     });
   }, []);
 
-  // Store initial X position for reset
-  const initialX = position[0];
-
   useFrame(() => {
     if (groupRef.current) {
       groupRef.current.position.x += speed;

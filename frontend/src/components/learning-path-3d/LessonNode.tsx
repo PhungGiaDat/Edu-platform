@@ -16,7 +16,6 @@ import { getPointOnSpline, getTangentOnSpline } from '@/lib/pathSpline';
 // ========== Constants ==========
 
 const NODE_RADIUS = 0.4;
-const NODE_SEGMENTS = 32;
 
 // State colors
 const STATE_COLORS = {
@@ -45,7 +44,7 @@ const XP_BADGE_Y_OFFSET = 0.8;
 
 // ========== Component Props ==========
 
-export interface LessonNodeProps {
+export interface LessonNode3DProps {
   /** Lesson node data */
   node: LessonNode;
   /** Callback when node is clicked */
@@ -56,7 +55,7 @@ export interface LessonNodeProps {
 
 // ========== Component ==========
 
-export const LessonNode: React.FC<LessonNodeProps> = ({ node, onClick, spline }) => {
+export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, spline }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
@@ -167,7 +166,7 @@ export const LessonNode: React.FC<LessonNodeProps> = ({ node, onClick, spline })
         receiveShadow
       >
         {/* LOD: Use lower detail geometry for distant nodes */}
-        <icosahedronGeometry args={position[2] < -15 ? [NODE_RADIUS, 1] : [NODE_RADIUS, 2]} />
+        <icosahedronGeometry args={position.z < -15 ? [NODE_RADIUS, 1] : [NODE_RADIUS, 2]} />
         <primitive object={materials.main} attach="material" />
       </mesh>
 
@@ -175,7 +174,7 @@ export const LessonNode: React.FC<LessonNodeProps> = ({ node, onClick, spline })
       {node.status !== 'locked' && (
         <mesh scale={1.15}>
           {/* LOD: Use lower detail geometry for distant nodes */}
-          <icosahedronGeometry args={position[2] < -15 ? [NODE_RADIUS, 1] : [NODE_RADIUS, 2]} />
+          <icosahedronGeometry args={position.z < -15 ? [NODE_RADIUS, 1] : [NODE_RADIUS, 2]} />
           <meshBasicMaterial
             color={stateColor}
             transparent

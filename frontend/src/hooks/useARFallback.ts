@@ -91,7 +91,7 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
       reason,
       timestamp: Date.now(),
       fpsSamples: fpsSamplesRef.current,
-      timeToReady: timeToReady,
+      timeToReadyMs: timeToReady,
     };
     setMetrics(finalMetrics);
 

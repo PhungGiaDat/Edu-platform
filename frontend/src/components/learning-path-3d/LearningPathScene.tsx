@@ -12,7 +12,7 @@ import type { LessonNode } from '@/types/learning-path';
 import type { Pet } from '@/hooks/usePets';
 import { createPathSpline } from '@/lib/pathSpline';
 import ClayPath from './ClayPath';
-import LessonNode3D from './LessonNode';
+import { LessonNode3D } from './LessonNode';
 import PetGuide from './PetGuide';
 import Landscape from './Landscape';
 import PathCamera from './PathCamera';
@@ -72,7 +72,6 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
           {/* Pet guide */}
           {activePet && (
             <PetGuide
-              nodes={nodes}
               progress={currentProgress}
               pet={activePet}
             />

@@ -12,7 +12,6 @@ import { Float, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { createPathSpline, getPointOnSpline, getTangentOnSpline } from '@/lib/pathSpline';
 import type { Pet } from '@/hooks/usePets';
-import type { LessonNode } from '@/types/learning-path';
 
 // ========== Constants ==========
 
@@ -28,22 +27,20 @@ export interface PetGuideProps {
   pet: Pet;
   /** Current progress (0-1) along the path */
   progress: number;
-  /** Lesson nodes for spline calculation */
-  nodes: LessonNode[];
   /** Trigger celebration animation when lesson is completed */
   isCelebrating?: boolean;
 }
 
 // ========== Component ==========
 
-export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, nodes, isCelebrating = false }) => {
-  const groupRef = useRef<THREE.Group>(null);
+export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, isCelebrating = false }) => {
+  const groupRef = useRef<THREE.Group | null>(null);
   const targetRotation = useRef(0);
   const lastProgress = useRef(progress);
   const distanceTraveled = useRef(0);
 
   // Create spline from nodes
-  const spline = useMemo(() => createPathSpline(nodes), [nodes]);
+  const spline = useMemo(() => createPathSpline(), []);
 
   // Calculate position and rotation based on progress
   const { position, tangent } = useMemo(() => {
@@ -106,14 +103,8 @@ export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, nodes, isCele
 
 // ========== Pet Model Component ==========
 
-interface PetModelProps {
-  position: THREE.Vector3;
-  modelUrl: string;
-  groupRef: React.RefObject<THREE.Group | null>;
-  isCelebrating?: boolean;
-}
-
-const PetModel: React.FC<PetModelProps> = ({ position, modelUrl, groupRef, isCelebrating }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const PetModel: React.FC<{ position: THREE.Vector3; modelUrl: string; groupRef: any; isCelebrating?: boolean }> = ({ position, modelUrl, groupRef, isCelebrating }) => {
   const { scene } = useGLTF(modelUrl);
   const clonedScene = useMemo(() => scene.clone(), [scene]);
 
@@ -138,13 +129,8 @@ const PetModel: React.FC<PetModelProps> = ({ position, modelUrl, groupRef, isCel
 
 // ========== Pet Fallback Component (Claymorphic) ==========
 
-interface PetFallbackProps {
-  position: THREE.Vector3;
-  groupRef: React.RefObject<THREE.Group | null>;
-  isCelebrating?: boolean;
-}
-
-const PetFallback: React.FC<PetFallbackProps> = ({ position, groupRef, isCelebrating }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const PetFallback: React.FC<{ position: THREE.Vector3; groupRef: any; isCelebrating?: boolean }> = ({ position, groupRef, isCelebrating }) => {
   return (
     <group ref={groupRef} position={[position.x, position.y, position.z]}>
       {/* Main body - clay blob */}

@@ -33,8 +33,8 @@ export interface ClayPathProps {
 
 export const ClayPath: React.FC<ClayPathProps> = ({ nodes, currentProgress }) => {
   // Generate brick data along the spline
-  const { bricks, totalLength } = useMemo(() => {
-    const spline = createPathSpline(nodes);
+  const { bricks } = useMemo(() => {
+    const spline = createPathSpline();
     const length = spline.getLength();
 
     const brickData: Array<{
@@ -152,7 +152,7 @@ interface ProgressTrailProps {
 
 const ProgressTrail: React.FC<ProgressTrailProps> = ({ nodes, progress }) => {
   const trailGeometry = useMemo(() => {
-    const fullSpline = createPathSpline(nodes);
+    const fullSpline = createPathSpline();
     const length = fullSpline.getLength();
 
     // Create a spline from start to current progress
@@ -199,7 +199,7 @@ interface ProgressMarkerProps {
 
 const ProgressMarker: React.FC<ProgressMarkerProps> = ({ nodes, progress, accentColor }) => {
   const { position, quaternion } = useMemo(() => {
-    const spline = createPathSpline(nodes);
+    const spline = createPathSpline();
     const point = spline.getPointAt(progress);
     const tangent = spline.getTangentAt(progress);
 

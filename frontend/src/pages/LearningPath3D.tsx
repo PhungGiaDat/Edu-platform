@@ -75,7 +75,6 @@ export const LearningPath3D: React.FC = () => {
     setSelectedNode,
     openModal,
     closeModal,
-    completeLesson,
   } = useLearningPath3DStore();
 
   // Fetch learning path data on mount
