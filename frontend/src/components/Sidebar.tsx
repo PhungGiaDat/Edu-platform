@@ -20,7 +20,7 @@ interface NavItem {
     path: string;
     label: string;
     shortLabel: string;
-    iconKey: 'learn' | 'ar' | 'flashcards' | 'profile';
+    iconKey: 'learn' | 'ar' | 'flashcards' | 'profile' | 'path3d';
 }
 
 interface TrackerStats {
@@ -86,6 +86,15 @@ const TargetIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' })
     </svg>
 );
 
+const Path3DIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' }) => (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 17c3-3 6-6 9-3s6 0 9-3" />
+        <circle cx="6" cy="14" r="2" />
+        <circle cx="12" cy="11" r="2" />
+        <circle cx="18" cy="8" r="2" />
+    </svg>
+);
+
 const ChevronIcon: React.FC<{ expanded: boolean }> = ({ expanded }) => (
     <svg aria-hidden="true" className={`h-5 w-5 transition-transform ${expanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="m9 18 6-6-6-6" />
@@ -103,10 +112,12 @@ const iconComponents: Record<NavItem['iconKey'], React.FC<{ className?: string }
     ar: CubeARIcon,
     flashcards: FlashcardIcon,
     profile: UserIcon,
+    path3d: Path3DIcon,
 };
 
 const fullNavItems: NavItem[] = [
     { path: '/courses', label: 'Learn', shortLabel: 'Learn', iconKey: 'learn' },
+    { path: '/learning-path-3d', label: '3D Path', shortLabel: '3D', iconKey: 'path3d' },
     { path: '/learn-ar', label: 'AR Practice', shortLabel: 'AR', iconKey: 'ar' },
     { path: '/flashcards', label: 'Flashcards', shortLabel: 'Cards', iconKey: 'flashcards' },
     { path: '/profile', label: 'Profile', shortLabel: 'Profile', iconKey: 'profile' },
