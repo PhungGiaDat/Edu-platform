@@ -25,6 +25,7 @@
 import { useEffect, useState, useCallback, useRef, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ARContainerV2, ARPhase } from '@/components/ar/ARContainerV2';
+import { ArCardRejectedToast, type ArCardRejectedData } from '@/components/ar/ArCardRejectedToast';
 import { applyInteractionFeedback } from '@/components/ar/modelInteractionPolicy';
 import ARControlPanel from '@/components/panel/ARControlPanel';
 import { ARGamificationPanel } from '@/components/Gamification/ARGamificationPanel';
@@ -554,6 +555,9 @@ export default function LearnARV2() {
     const [petChat, setPetChat] = useState<{ petName: string; word: string } | null>(null);
     const [isPetSelectorOpen, setIsPetSelectorOpen] = useState(false);
 
+    // Card rejection toast state
+    const [rejectedCard, setRejectedCard] = useState<ArCardRejectedData | null>(null);
+
     // Track whether the AR target marker is visible (for 2D overlay)
     const [markerFound, setMarkerFound] = useState(false);
     // Freeze Pose: track which target is currently stabilized
@@ -634,7 +638,13 @@ export default function LearnARV2() {
         reset: resetMultiFlashcard,
         getFlashcardByIndex,
         getFlashcardByTag,
-    } = useMultiFlashcard();
+    } = useMultiFlashcard((event) => {
+        setRejectedCard({
+            qrId: event.qrId,
+            errorCode: event.code,
+            errorMessage: event.message,
+        });
+    });
 
     // ========== PERSISTENT VIEWER FLAG (must be before other refs/constants that use it) ==========
     const isPersistentViewerEnabled = isPersistentMindViewerEnabled();
@@ -1337,6 +1347,14 @@ export default function LearnARV2() {
                 onComboDetected={handleComboDetected}
                 onViewerAssetError={handleViewerAssetError}
             >
+                {/* Card Rejection Toast */}
+                {rejectedCard && (
+                    <ArCardRejectedToast
+                        data={rejectedCard}
+                        onDismiss={() => setRejectedCard(null)}
+                        autoHideMs={5000}
+                    />
+                )}
                 {/* Control Panel - Only show during VIEWING */}
                 {appState === 'VIEWING' && (
                     <ARControlPanel

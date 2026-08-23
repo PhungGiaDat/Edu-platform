@@ -98,7 +98,17 @@ interface MultiFlashcardState {
     comboResolution: ComboResolutionState;
 }
 
-export function useMultiFlashcard() {
+export interface FlashcardRejectedEvent {
+    qrId: string;
+    code: string;
+    message?: string;
+}
+
+export function useMultiFlashcard(onFlashcardRejected?: (event: FlashcardRejectedEvent) => void) {
+    // Stable ref so addFlashcardImpl never needs onFlashcardRejected in its deps
+    const onRejectRef = useRef(onFlashcardRejected);
+    onRejectRef.current = onFlashcardRejected;
+
     const [state, setState] = useState<MultiFlashcardState>({
         detectedFlashcards: new Map(),
         activeCombo: null,
@@ -156,6 +166,7 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
     }
     if (stateRef.current.detectedFlashcards.size >= 2) {
         emitArDebug('FLASHCARD_LIMIT_REACHED', { qrId, limit: 2 });
+        onRejectRef.current?.({ qrId, code: 'FLASHCARD_LIMIT_REACHED', message: 'Already tracking 2 cards' });
         return null;
     }
 
@@ -166,12 +177,18 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
         const response = await fetch(`${API_BASE}/api/v1/flashcard/${qrId}`, { signal });
         if (!response.ok) {
             console.error('[MultiFlashcard] Failed to fetch flashcard:', qrId);
+            if (response.status === 404) {
+                onRejectRef.current?.({ qrId, code: 'QR_NOT_IN_CATALOG', message: `Card not found (HTTP ${response.status})` });
+            } else {
+                onRejectRef.current?.({ qrId, code: 'CATALOG_FETCH_FAILED', message: `HTTP ${response.status}` });
+            }
             return null;
         }
 
         const data = await response.json();
         if (!data || !data.flashcard) {
             console.error('[MultiFlashcard] Flashcard data missing in response:', qrId);
+            onRejectRef.current?.({ qrId, code: 'QR_NOT_IN_CATALOG', message: 'Flashcard data missing in response' });
             return null;
         }
 
@@ -201,6 +218,7 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
                     arTag: arObject?.ar_tag || flashcard.ar_tag
                 });
                 // Fail fast - persistent mode cannot work without catalog identity
+                onRejectRef.current?.({ qrId, code: 'MIND_CATALOG_IDENTITY_MISSING', message: 'Missing mindCatalogId or mindTargetIndex' });
                 return null;
             }
         }
@@ -232,7 +250,13 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
                 // Preflight GLB
                 const model3dUrl = buildUrl(arObject?.model_3d_url) || '';
                 if (model3dUrl) {
-                    await preflightRequiredGlb(model3dUrl, signal);
+                    try {
+                        await preflightRequiredGlb(model3dUrl, signal);
+                    } catch (preflightError) {
+                        const errorCode = preflightError instanceof Error ? preflightError.message : 'MODEL_ASSET_UNAVAILABLE';
+                        onRejectRef.current?.({ qrId, code: errorCode, message: `GLB preflight failed: ${model3dUrl}` });
+                        return null;
+                    }
                 }
 
                 // Manifest validated — adopt its ``mindUrl`` as the source of truth
@@ -256,6 +280,8 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
                 // Single card: graceful fallback to legacy mindUrl, not required to reject.
                 // Combo path (second card) still requires catalog correctness.
                 console.warn('[useMultiFlashcard] Catalog validation failed, falling back to legacy mindUrl:', errorCode);
+                // Propagate the error code so the UI can show a rejection toast
+                onRejectRef.current?.({ qrId, code: errorCode, message: validationError instanceof Error ? validationError.message : undefined });
                 mindUrl = legacyMindUrl;
             }
         }
@@ -313,7 +339,9 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
             emitArDebug('FLASHCARD_FETCH_ABORTED', { qrId });
             return null;
         }
+        const errorCode = error instanceof Error ? error.message : 'CATALOG_FETCH_FAILED';
         console.error('[MultiFlashcard] Error fetching flashcard:', error);
+        onRejectRef.current?.({ qrId, code: errorCode, message: error instanceof Error ? error.message : undefined });
         return null;
     }
 }, [buildUrl]);
