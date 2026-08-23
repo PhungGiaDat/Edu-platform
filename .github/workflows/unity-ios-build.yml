@@ -47,10 +47,23 @@ jobs:
           lfs: true
           fetch-depth: 0
 
+      - name: Decode Unity License
+        id: decode_license
+        run: |
+          if [ -n "${{ secrets.UNITY_LICENSE }}" ]; then
+            echo "${{ secrets.UNITY_LICENSE }}" | base64 -d > ./unity-license.ulf
+            echo "UNITY_LICENSE_FILE=./unity-license.ulf" >> $GITHUB_ENV
+            echo "✅ License file created"
+          else
+            echo "⚠️ No UNITY_LICENSE secret found"
+          fi
+
       - name: Build Unity iOS Player
         id: unity_build
         uses: game-ci/unity-builder@v5
         env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
           unityVersion: ${{ env.UNITY_VERSION }}
