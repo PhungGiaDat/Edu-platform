@@ -190,6 +190,15 @@ Status: ✅ Working correctly
 - This is expected behavior for protected routes
 ```
 
+### Navbar Update
+```
+Status: ✅ Added to Sidebar
+- Added Path3DIcon SVG component
+- Added '3D Path' nav item at position 2 (after 'Learn')
+- Route: /learning-path-3d
+- Committed: f8a55d6
+```
+
 ---
 
 ## Blockers
