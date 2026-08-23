@@ -4,6 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>AR Viewer</title>
+    <!-- Install the parent bridge before any viewer/runtime script can fail. -->
+    <script>
+        (function installViewerDebugBridge() {
+            var debugEnabled = location.search.includes('debug') || location.hostname === 'localhost';
+
+            function postToParent(type, payload) {
+                window.parent.postMessage({
+                    type: type,
+                    payload: payload || {},
+                    timestamp: Date.now(),
+                    origin: 'child'
+                }, '*');
+            }
+
+            window.__AR_VIEWER_POST_TO_PARENT__ = postToParent;
+            if (!debugEnabled) return;
+
+            function serialiseConsoleArgs(args) {
+                return Array.prototype.slice.call(args).map(function(value) {
+                    try {
+                        if (value instanceof Error) return value.stack || value.message;
+                        if (typeof value === 'object') return JSON.stringify(value, null, 2);
+                        return String(value);
+                    } catch (_) {
+                        return String(value);
+                    }
+                }).join(' ').slice(0, 4000);
+            }
+
+            ['error', 'warn', 'log'].forEach(function(level) {
+                var original = console[level].bind(console);
+                console[level] = function() {
+                    try {
+                        postToParent('AR_DEBUG', {
+                            label: 'VIEWER_CONSOLE_' + level.toUpperCase(),
+                            details: { level: level, text: serialiseConsoleArgs(arguments) },
+                            source: 'ar-viewer-console'
+                        });
+                    } catch (_) { /* never break the viewer console */ }
+                    return original.apply(console, arguments);
+                };
+            });
+
+            window.addEventListener('error', function(event) {
+                postToParent('AR_DEBUG', {
+                    label: 'VIEWER_UNCAUGHT_ERROR',
+                    details: {
+                        message: event.message,
+                        filename: event.filename,
+                        lineno: event.lineno,
+                        colno: event.colno,
+                        stack: event.error && event.error.stack ? String(event.error.stack) : null
+                    },
+                    source: 'ar-viewer-console'
+                });
+            }, true);
+
+            window.addEventListener('unhandledrejection', function(event) {
+                postToParent('AR_DEBUG', {
+                    label: 'VIEWER_UNHANDLED_REJECTION',
+                    details: {
+                        reason: event.reason instanceof Error
+                            ? (event.reason.stack || event.reason.message)
+                            : String(event.reason)
+                    },
+                    source: 'ar-viewer-console'
+                });
+            });
+
+            postToParent('AR_DEBUG', {
+                label: 'VIEWER_DEBUG_BRIDGE_READY',
+                details: { href: location.href },
+                source: 'ar-viewer-console'
+            });
+        })();
+    </script>
     <!-- Eruda Debug Console - Mobile Web Debugging -->
     <script>
         if (location.search.includes('debug') || location.hostname === 'localhost') {
@@ -68,6 +144,10 @@
             var comboImageUrl = params.get('comboImage');
 
             function postToParent(type, payload) {
+                if (typeof window.__AR_VIEWER_POST_TO_PARENT__ === 'function') {
+                    window.__AR_VIEWER_POST_TO_PARENT__(type, payload);
+                    return;
+                }
                 window.parent.postMessage({
                     type: type,
                     payload: payload || {},
@@ -107,65 +187,8 @@
             // Listen for messages from the viewer script
             // Debug: log all incoming messages if ?debug
             if (location.search.includes('debug') || location.hostname === 'localhost') {
-                (function() {
-                    var origHandler = null;
-                    window.addEventListener('message', function debugMessage(event) {
-                        console.log('[←parent]', event.data);
-                    });
-                })();
-
-                // Forward all console output from inside the iframe up to the
-                // parent so mobile users can see MindAR errors in the host's
-                // Mobile Debug panel without having to open DevTools inside
-                // the iframe (impossible on iOS Safari).
-                function forwardConsole(level) {
-                    var original = console[level].bind(console);
-                    console[level] = function() {
-                        try {
-                            var args = Array.prototype.slice.call(arguments);
-                            var text = args.map(function(a) {
-                                try {
-                                    if (a instanceof Error) return a.stack || a.message;
-                                    if (typeof a === 'object') return JSON.stringify(a, null, 2);
-                                    return String(a);
-                                } catch (_) { return String(a); }
-                            }).join(' ');
-                            postToParent('AR_DEBUG', {
-                                label: 'VIEWER_CONSOLE_' + level.toUpperCase(),
-                                details: { level: level, text: text.slice(0, 4000) },
-                                source: 'ar-viewer-console'
-                            });
-                        } catch (_) { /* never break the host console */ }
-                        return original.apply(console, arguments);
-                    };
-                }
-                forwardConsole('error');
-                forwardConsole('warn');
-                forwardConsole('log');
-
-                window.addEventListener('error', function(event) {
-                    postToParent('AR_DEBUG', {
-                        label: 'VIEWER_UNCAUGHT_ERROR',
-                        details: {
-                            message: event.message,
-                            filename: event.filename,
-                            lineno: event.lineno,
-                            colno: event.colno,
-                            stack: event.error && event.error.stack ? String(event.error.stack) : null
-                        },
-                        source: 'ar-viewer-console'
-                    });
-                });
-                window.addEventListener('unhandledrejection', function(event) {
-                    postToParent('AR_DEBUG', {
-                        label: 'VIEWER_UNHANDLED_REJECTION',
-                        details: {
-                            reason: event.reason instanceof Error
-                                ? (event.reason.stack || event.reason.message)
-                                : String(event.reason)
-                        },
-                        source: 'ar-viewer-console'
-                    });
+                window.addEventListener('message', function debugMessage(event) {
+                    console.log('[←parent]', event.data);
                 });
             }
 
@@ -185,7 +208,6 @@
                               msg.payload && msg.payload.durationMs ? msg.payload.durationMs : 5000);
                     return;
                 }
-            });
             });
 
             // Spec C: Toast pill system for add-card hints
