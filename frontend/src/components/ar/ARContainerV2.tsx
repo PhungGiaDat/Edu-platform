@@ -282,6 +282,10 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             params.set('antialias', 'true');
             params.set('shadowEnabled', 'true');
 
+            // Forward ?debug so Eruda activates inside the iframe viewer
+            const debugParam = new URLSearchParams(window.location.search).get('debug');
+            if (debugParam) params.set('debug', debugParam);
+
             return `/ar-xr.html?${params.toString()}`;
         }
 
@@ -299,6 +303,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             params.set('targetCount', String(targetCount));
             params.set('maxTrack', '2');
             applyTuningParams(params);
+            // Forward ?debug so Eruda activates inside the iframe viewer
+            const debugParam = new URLSearchParams(window.location.search).get('debug');
+            if (debugParam) params.set('debug', debugParam);
             return `/ar-viewer.html?${params.toString()}`;
         }
 
@@ -335,8 +342,12 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         if (comboTextureUrl) params.set('comboTextureUrl', comboTextureUrl);
         if (comboPhrase) params.set('comboPhrase', comboPhrase);
         applyTuningParams(params);
+        // Forward ?debug so Eruda activates inside the iframe viewer — critical
+        // for seeing MindAR/WebGL errors that are otherwise invisible to the host.
+        const debugParam = new URLSearchParams(window.location.search).get('debug');
+        if (debugParam) params.set('debug', debugParam);
         return `/ar-viewer.html?${params.toString()}`;
-    }, [engine, mindUrl, catalogId, catalogTargetCount, modelUrl, activeTargets, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
+    }, [mindUrl, catalogId, catalogTargetCount, modelUrl, activeTargets, imageUrl, textureUrl, modelUrl2, imageUrl2, textureUrl2, word, word2, targets, cardCount, comboModelUrl, comboImageUrl, comboTextureUrl, comboPhrase]);
 
     useEffect(() => {
         emitDebug('PARENT_VIEWER_SRC_READY', {

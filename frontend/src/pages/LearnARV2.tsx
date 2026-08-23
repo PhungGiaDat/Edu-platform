@@ -666,6 +666,7 @@ export default function LearnARV2() {
         handleSystemError,
     } = useARFallback({
         initialEngine: 'mindar',
+        timeoutMs: 20_000,  // 20s — .mind files on mobile can be slow to download
         onFallbackTriggered: (reason) => {
             console.warn('[LearnARV2] AR fallback triggered:', reason);
             emitMobileDebug('AR_FALLBACK_TRIGGERED', { reason });
