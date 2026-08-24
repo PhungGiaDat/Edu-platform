@@ -163,35 +163,35 @@ function useStickerCounts() {
 
 function Tracker({ stats }: { stats: TrackerStats }) {
     const stickerCounts = useStickerCounts();
-    const metricClass = 'flex min-w-0 flex-col items-center justify-center rounded-[24px] border-[5px] border-[#E7EEFC] bg-white px-1 py-3 text-center shadow-[0_10px_0_#E7EEFC]';
-    const valueClass = 'mt-1 max-w-full truncate text-[20px] font-black leading-none text-slate-600';
-    const labelClass = 'mt-1 text-[11px] font-extrabold leading-tight text-slate-500';
+    const metricClass = 'learner-sidebar__metric flex min-w-0 flex-col items-center justify-center rounded-[22px] border-[4px] px-1 py-3 text-center';
+    const valueClass = 'learner-sidebar__metric-value mt-1 max-w-full truncate text-[20px] font-black leading-none';
+    const labelClass = 'learner-sidebar__metric-label mt-1 text-[11px] font-extrabold leading-tight';
 
     return (
-        <section className="learner-sidebar__tracker min-w-0 overflow-hidden rounded-[28px] bg-white p-4 shadow-[0_12px_0_rgba(15,23,42,0.08)]">
-            <h2 className="mb-4 text-base font-black text-slate-800">Progress Tracker</h2>
+        <section className="learner-sidebar__tracker min-w-0 overflow-hidden rounded-[28px] p-4">
+            <h2 className="learner-sidebar__tracker-title mb-4 text-base font-black">Progress Tracker</h2>
             <div className="mb-5 grid min-w-0 grid-cols-3 gap-2">
-                <div className={metricClass}>
+                <div className={`${metricClass} learner-sidebar__metric--xp`}>
                     <XpBoltIcon className="h-7 w-7 shrink-0" />
                     <div className={valueClass}>{stats.totalXp}</div>
                     <div className={labelClass}>XP</div>
                 </div>
-                <div className={metricClass}>
+                <div className={`${metricClass} learner-sidebar__metric--done`}>
                     <CompletedBookIcon className="h-7 w-7 shrink-0" />
                     <div className={valueClass}>{stats.completedLessons}</div>
                     <div className={labelClass}>Done</div>
                 </div>
-                <Link to="/stickers" className={`${metricClass} transition-transform motion-safe:hover:-translate-y-1`}>
+                <Link to="/stickers" className={`${metricClass} learner-sidebar__metric--stickers transition-transform motion-safe:hover:-translate-y-1`}>
                     <StickerStarIcon className="h-7 w-7 shrink-0" />
                     <div className={valueClass}>{stickerCounts.collected}/{stickerCounts.total || '—'}</div>
                     <div className={labelClass}>Stickers</div>
                 </Link>
             </div>
-            <div className="mb-2 text-sm font-extrabold text-slate-600">
+            <div className="learner-sidebar__tracker-caption mb-2 text-sm font-extrabold">
                 {stats.completedLessons}/{stats.totalLessons} lessons
             </div>
-            <div className="h-3 overflow-hidden rounded-full bg-slate-100 shadow-inner" role="progressbar" aria-label="Course completion" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.percent}>
-                <div className="clay-shimmer h-full rounded-full" style={{ width: `${stats.percent}%`, background: 'linear-gradient(90deg, #6EB9FF, #B4E197)' }} />
+            <div className="learner-sidebar__tracker-progress h-3 overflow-hidden rounded-full" role="progressbar" aria-label="Course completion" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.percent}>
+                <div className="clay-shimmer learner-sidebar__tracker-progress-fill h-full rounded-full" style={{ width: `${stats.percent}%` }} />
             </div>
         </section>
     );
@@ -417,10 +417,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                         </section>
 
                         {!isGuest && (
-                            <section className="learner-sidebar__daily clay-card-elevated min-w-0 overflow-hidden p-4">
-                                <div className="flex min-w-0 items-start gap-3">
+                            <section
+                                className="learner-sidebar__daily min-w-0 overflow-hidden"
+                                aria-label="Daily progress and learning streak"
+                            >
+                                <div className="learner-sidebar__daily-header">
+                                    <span>📅 Today's Goal</span>
+                                    <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-[#5B8DEF] shadow-[0_2px_0_rgba(110,185,255,0.15)]">
+                                        Daily
+                                    </span>
+                                </div>
+                                <div className="learner-sidebar__daily-rings">
                                     <DailyGoal variant="mini" showCelebration={false} />
+                                </div>
+                                <div className="learner-sidebar__daily-streak">
                                     <StreakBadge className="min-w-0 flex-1" />
+                                    <div className="ml-auto text-right">
+                                        <div className="text-[11px] font-extrabold uppercase tracking-wide text-[#8b6f47]">
+                                            Keep going
+                                        </div>
+                                        <div className="text-xs font-bold text-[#5d3a00]">
+                                            Learn a little today
+                                        </div>
+                                    </div>
                                 </div>
                             </section>
                         )}
@@ -467,7 +486,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                             const Icon = iconComponents[item.iconKey];
                             const active = isRouteActive(location.pathname, item.path);
                             return (
-                                <Link key={item.path} to={item.path} title={item.label} className={`flex min-h-[58px] w-full flex-col items-center justify-center rounded-2xl px-1 text-center ${active ? 'bg-[#5B8DEF] text-white shadow-[0_4px_0_#3F6FCB]' : 'text-slate-500 hover:bg-white'}`}>
+                                <Link key={item.path} to={item.path} title={item.label} className={`relative z-[1] flex min-h-[58px] w-full flex-col items-center justify-center rounded-2xl px-1 text-center ${active ? 'bg-[#5B8DEF] text-white shadow-[0_4px_0_#3F6FCB] z-[2]' : 'text-slate-500 hover:bg-white'}`}>
                                     <Icon className="h-6 w-6" /><span className="mt-1 text-[10px] font-extrabold leading-none">{item.shortLabel}</span>
                                 </Link>
                             );
@@ -492,7 +511,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                         const Icon = iconComponents[item.iconKey];
                         const active = isRouteActive(location.pathname, item.path);
                         return (
-                            <Link key={item.path} to={item.path} aria-current={active ? 'page' : undefined} className={`relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-[22px] px-1 transition-all ${active ? 'bg-white text-slate-800 shadow-[0_4px_0_rgba(0,0,0,0.15)]' : 'text-white/80 hover:text-white'}`}>
+                            <Link key={item.path} to={item.path} aria-current={active ? 'page' : undefined} className={`relative z-[1] flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-[22px] px-1 transition-all ${active ? 'bg-white text-slate-800 shadow-[0_4px_0_rgba(0,0,0,0.15)] z-[2]' : 'text-white/80 hover:text-white'}`}>
                                 <Icon className="h-6 w-6" /><span className="mt-1 max-w-full truncate text-[10px] font-extrabold leading-none">{item.shortLabel}</span>
                             </Link>
                         );

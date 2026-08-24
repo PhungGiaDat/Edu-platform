@@ -51,12 +51,11 @@
 .course-catalog__hero-topline {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 1rem;
   margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
 }
 
-.course-catalog__eyebrow,
 .course-catalog__demo-badge,
 .course-path-card__recommendation,
 .course-list-card__level,
@@ -68,21 +67,6 @@
   font-family: 'Baloo 2', 'Quicksand', system-ui, sans-serif;
   font-weight: 800;
   letter-spacing: 0.01em;
-}
-
-.course-catalog__eyebrow {
-  min-height: 2.75rem;
-  padding: 0.5rem 1.1rem;
-  border: 1.5px solid rgb(91 141 239 / 0.28);
-  border-radius: 999px;
-  color: #1e3a8a;
-  background: linear-gradient(120deg, rgb(255 255 255 / 0.96), rgb(238 244 255 / 0.94));
-  box-shadow:
-    0 6px 0 rgb(91 141 239 / 0.18),
-    0 12px 24px rgb(55 89 157 / 0.10),
-    inset 0 1px rgb(255 255 255 / 0.9);
-  font-size: 0.92rem;
-  letter-spacing: 0.015em;
 }
 
 .course-language-switch {

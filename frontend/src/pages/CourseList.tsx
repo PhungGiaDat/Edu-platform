@@ -34,7 +34,6 @@ type PathCard = {
 const copy = {
   en: {
     courseCatalog: 'Course Catalog',
-    heroKicker: 'Claymorphic learning hub',
     heroBody: 'Explore short lesson paths, beginner vocabulary, AR-ready activities, quizzes, and rewards built for young learners.',
     yourPaths: 'Your Learning Paths',
     priorityTopics: 'Priority topics',
@@ -66,7 +65,6 @@ const copy = {
   },
   vi: {
     courseCatalog: 'Danh sách khóa học',
-    heroKicker: 'Trung tâm học tập claymorphic',
     heroBody: 'Khám phá các lộ trình bài học ngắn, từ vựng cơ bản, hoạt động AR, quiz và phần thưởng dành cho trẻ nhỏ.',
     yourPaths: 'Lộ trình học của bạn',
     priorityTopics: 'Chủ đề ưu tiên',
@@ -593,7 +591,6 @@ export const CourseList: React.FC = () => {
         <header className="course-catalog__hero">
           <div className="course-catalog__hero-copy">
             <div className="course-catalog__hero-topline">
-              <span className="course-catalog__eyebrow">{ui.heroKicker}</span>
               <LanguageSwitch />
             </div>
             <h1>{pageTitle}</h1>
