@@ -304,6 +304,11 @@
         return Number.isFinite(first) && first > 0 ? first : null;
     }
 
+    // Fallback scales for when dynamic measurement fails. These are calibrated
+    // for typical educational AR card sizes (~8.5cm width) and should produce
+    // a model that fills roughly 75% of the visible card area.
+    const FALLBACK_SCALE_PER_TARGET = [0.75, 1.0]; // slot 0, slot 1
+
     function applyDynamicModelScale(modelEl, options) {
         const settings = options || {};
         const targetIndex = Number.isInteger(settings.targetIndex)
@@ -325,11 +330,18 @@
         try {
             const scalePolicy = window.ARModelScale;
             const mesh = modelEl?.getObject3D?.('mesh');
+
             if (!scalePolicy || !mesh || typeof THREE === 'undefined') {
+                // Use fallback scale instead of leaving model un-sized
+                const fallbackScale = FALLBACK_SCALE_PER_TARGET[targetIndex] || 0.75;
+                log('⚠️', `Dynamic scale unavailable (policy=${!!scalePolicy}, mesh=${!!mesh}, THREE=${typeof THREE}), applying fallback scale ${fallbackScale} to ${modelEl?.id}`);
+                modelEl.setAttribute('scale', `${fallbackScale} ${fallbackScale} ${fallbackScale}`);
+                if (targetIndex !== null) dynamicModelScales.set(targetIndex, fallbackScale);
                 sendDebug('MODEL_DYNAMIC_SCALE_SKIPPED', {
                     modelId: modelEl?.id || null,
                     source: settings.source || 'unknown',
-                    reason: !scalePolicy ? 'policy-unavailable' : (!mesh ? 'mesh-unavailable' : 'three-unavailable')
+                    reason: !scalePolicy ? 'policy-unavailable' : (!mesh ? 'mesh-unavailable' : 'three-unavailable'),
+                    fallbackScale: fallbackScale
                 });
                 return null;
             }
@@ -342,10 +354,16 @@
 
             const box = new THREE.Box3().setFromObject(mesh);
             if (typeof box.isEmpty === 'function' && box.isEmpty()) {
+                // Empty bounds — use fallback
+                const fallbackScale = FALLBACK_SCALE_PER_TARGET[targetIndex] || 0.75;
+                log('⚠️', `Empty bounding box for ${modelEl.id}, applying fallback scale ${fallbackScale}`);
+                modelEl.setAttribute('scale', `${fallbackScale} ${fallbackScale} ${fallbackScale}`);
+                if (targetIndex !== null) dynamicModelScales.set(targetIndex, fallbackScale);
                 sendDebug('MODEL_DYNAMIC_SCALE_SKIPPED', {
                     modelId: modelEl.id,
                     source: settings.source || 'unknown',
-                    reason: 'empty-bounds'
+                    reason: 'empty-bounds',
+                    fallbackScale: fallbackScale
                 });
                 return null;
             }
@@ -361,10 +379,16 @@
             );
 
             if (nextScale === null) {
+                // Could not compute scale — use fallback
+                const fallbackScale = FALLBACK_SCALE_PER_TARGET[targetIndex] || 0.75;
+                log('⚠️', `Could not compute dynamic scale (invalid bounds: ${size.x?.toFixed(2)}x${size.y?.toFixed(2)}x${size.z?.toFixed(2)}), applying fallback ${fallbackScale}`);
+                modelEl.setAttribute('scale', `${fallbackScale} ${fallbackScale} ${fallbackScale}`);
+                if (targetIndex !== null) dynamicModelScales.set(targetIndex, fallbackScale);
                 sendDebug('MODEL_DYNAMIC_SCALE_SKIPPED', {
                     modelId: modelEl.id,
                     source: settings.source || 'unknown',
                     reason: 'invalid-bounds',
+                    fallbackScale: fallbackScale,
                     size: { x: size.x, y: size.y, z: size.z }
                 });
                 return null;
@@ -384,7 +408,7 @@
             modelEl.dataset.dynamicScale = String(nextScale);
             if (targetIndex !== null) dynamicModelScales.set(targetIndex, nextScale);
 
-            log('📐', `Dynamic scale applied to ${modelEl.id}: ${nextScale.toFixed(4)}`);
+            log('📐', `Dynamic scale applied to ${modelEl.id}: ${nextScale.toFixed(4)} (mesh: ${displayedMaxDimension.toFixed(3)}, targetSpan: ${settings.targetSpan || 0.75})`);
             sendDebug('MODEL_DYNAMIC_SCALE_APPLIED', {
                 modelId: modelEl.id,
                 targetIndex,
@@ -397,11 +421,16 @@
             });
             return nextScale;
         } catch (error) {
-            log('⚠️', 'Dynamic scale failed:', error);
+            // Catch-all: apply fallback so user still sees a reasonable-sized model
+            const fallbackScale = FALLBACK_SCALE_PER_TARGET[targetIndex] || 0.75;
+            log('⚠️', `Dynamic scale threw (${error?.message}), applying fallback ${fallbackScale} to ${modelEl?.id}`);
+            modelEl.setAttribute('scale', `${fallbackScale} ${fallbackScale} ${fallbackScale}`);
+            if (targetIndex !== null) dynamicModelScales.set(targetIndex, fallbackScale);
             sendDebug('MODEL_DYNAMIC_SCALE_FAILED', {
                 modelId: modelEl?.id || null,
                 source: settings.source || 'unknown',
-                message: error?.message || String(error)
+                message: error?.message || String(error),
+                fallbackScale: fallbackScale
             });
             return null;
         }
@@ -413,7 +442,26 @@
         if (modelEl.__arDynamicScaleWired) return;
         modelEl.__arDynamicScaleWired = true;
         modelEl.addEventListener('model-loaded', () => {
-            applyDynamicModelScale(modelEl, modelEl.__arDynamicScaleOptions);
+            // Poll for mesh availability — A-Frame may fire model-loaded before
+            // the mesh is actually accessible via getObject3D('mesh').
+            let attempts = 0;
+            const MAX_ATTEMPTS = 20;
+            const POLL_INTERVAL = 50; // ms
+            function tryApplyScale() {
+                attempts++;
+                const mesh = modelEl?.getObject3D?.('mesh');
+                if (mesh || attempts >= MAX_ATTEMPTS) {
+                    const result = applyDynamicModelScale(modelEl, modelEl.__arDynamicScaleOptions);
+                    if (result === null && attempts < MAX_ATTEMPTS) {
+                        log('⏳', `Mesh not ready (attempt ${attempts}/${MAX_ATTEMPTS}), retrying...`);
+                        setTimeout(tryApplyScale, POLL_INTERVAL);
+                    }
+                } else {
+                    log('⏳', `Mesh not ready (attempt ${attempts}/${MAX_ATTEMPTS}), retrying...`);
+                    setTimeout(tryApplyScale, POLL_INTERVAL);
+                }
+            }
+            tryApplyScale();
         });
     }
 
@@ -423,9 +471,10 @@
 
     function getTargetModelScale(index) {
         if (dynamicModelScales.has(index)) return dynamicModelScales.get(index);
-        if (index === 0) return 0.25;
-        if (index === 1) return 0.5;
-        return 0.35;
+        // Return calibrated fallback scales (same as FALLBACK_SCALE_PER_TARGET)
+        if (index === 0) return 0.75;
+        if (index === 1) return 1.0;
+        return 0.75;
     }
 
     function ensureDynamicTargets() {
@@ -751,8 +800,10 @@
             modelEl.classList.add('clickable');
             modelEl.setAttribute('position', target.position || '0 0 0');
             modelEl.setAttribute('rotation', target.rotation || '0 0 0');
-            var scaleStr = target.scale || (target.mindTargetIndex === 0 ? '0.25 0.25 0.25' : '0.5 0.5 0.5');
-            modelEl.setAttribute('scale', scaleStr);
+            // Use calibrated fallback scale — dynamic scaling will override this once mesh is ready.
+            // These values (0.75 for slot 0, 1.0 for slot 1) are tuned for 8.5cm AR cards.
+            var initialScale = target.scale || (target.slotIndex === 0 ? '0.75 0.75 0.75' : '1.0 1.0 1.0');
+            modelEl.setAttribute('scale', initialScale);
             wireDynamicModelScale(modelEl, {
                 targetIndex: target.slotIndex,
                 explicitScale: target.scale,
@@ -1707,15 +1758,16 @@
         const LERP_FACTOR = 0.15; // Smooth interpolation factor for rotations
 
         // Default transforms for reset (Phase 5)
+        // Updated to use calibrated fallback scales (matching FALLBACK_SCALE_PER_TARGET)
         const DEFAULT_TRANSFORMS = {
             0: {
                 position: { x: 0, y: 0.05, z: 0 },
-                scale: { x: 0.25, y: 0.25, z: 0.25 },
+                scale: { x: 0.75, y: 0.75, z: 0.75 },
                 rotation: { x: 0, y: 0, z: 0 }
             },
             1: {
                 position: { x: 0, y: 0.1, z: 0 },
-                scale: { x: 0.5, y: 0.5, z: 0.5 },
+                scale: { x: 1.0, y: 1.0, z: 1.0 },
                 rotation: { x: 0, y: 0, z: 0 }
             }
         };
