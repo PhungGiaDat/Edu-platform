@@ -263,7 +263,151 @@
         };
     }
 
+    const dynamicModelScales = new Map();
+
+    function inferModelTargetIndex(modelEl) {
+        const match = modelEl?.id?.match(/(?:mode-3d|slot-model)-(\d+)$/);
+        return match ? Number(match[1]) : null;
+    }
+
+    function readUniformEntityScale(modelEl) {
+        const scale = modelEl?.object3D?.scale || modelEl?.getAttribute?.('scale');
+        const values = [Number(scale?.x), Number(scale?.y), Number(scale?.z)]
+            .filter(value => Number.isFinite(value) && value > 0);
+        return values.length > 0 ? Math.max(...values) : 1;
+    }
+
+    function parseExplicitUniformScale(value) {
+        if (!value) return null;
+        if (typeof value === 'object') {
+            const firstObjectScale = Number(value.x);
+            return Number.isFinite(firstObjectScale) && firstObjectScale > 0
+                ? firstObjectScale
+                : null;
+        }
+        const first = Number(String(value).trim().split(/\s+/)[0]);
+        return Number.isFinite(first) && first > 0 ? first : null;
+    }
+
+    function applyDynamicModelScale(modelEl, options) {
+        const settings = options || {};
+        const targetIndex = Number.isInteger(settings.targetIndex)
+            ? settings.targetIndex
+            : inferModelTargetIndex(modelEl);
+        const explicitScale = parseExplicitUniformScale(settings.explicitScale);
+
+        if (explicitScale !== null) {
+            if (targetIndex !== null) dynamicModelScales.set(targetIndex, explicitScale);
+            sendDebug('MODEL_DYNAMIC_SCALE_SKIPPED', {
+                modelId: modelEl?.id || null,
+                source: settings.source || 'unknown',
+                reason: 'explicit-scale',
+                scale: explicitScale
+            });
+            return explicitScale;
+        }
+
+        try {
+            const scalePolicy = window.ARModelScale;
+            const mesh = modelEl?.getObject3D?.('mesh');
+            if (!scalePolicy || !mesh || typeof THREE === 'undefined') {
+                sendDebug('MODEL_DYNAMIC_SCALE_SKIPPED', {
+                    modelId: modelEl?.id || null,
+                    source: settings.source || 'unknown',
+                    reason: !scalePolicy ? 'policy-unavailable' : (!mesh ? 'mesh-unavailable' : 'three-unavailable')
+                });
+                return null;
+            }
+
+            if (typeof mesh.updateWorldMatrix === 'function') {
+                mesh.updateWorldMatrix(true, true);
+            } else if (typeof mesh.updateMatrixWorld === 'function') {
+                mesh.updateMatrixWorld(true);
+            }
+
+            const box = new THREE.Box3().setFromObject(mesh);
+            if (typeof box.isEmpty === 'function' && box.isEmpty()) {
+                sendDebug('MODEL_DYNAMIC_SCALE_SKIPPED', {
+                    modelId: modelEl.id,
+                    source: settings.source || 'unknown',
+                    reason: 'empty-bounds'
+                });
+                return null;
+            }
+
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            const displayedMaxDimension = Math.max(size.x, size.y, size.z);
+            const previousScale = readUniformEntityScale(modelEl);
+            const nextScale = scalePolicy.computeUniformScale(
+                displayedMaxDimension,
+                previousScale,
+                { targetSpan: settings.targetSpan || scalePolicy.DEFAULT_TARGET_SPAN }
+            );
+
+            if (nextScale === null) {
+                sendDebug('MODEL_DYNAMIC_SCALE_SKIPPED', {
+                    modelId: modelEl.id,
+                    source: settings.source || 'unknown',
+                    reason: 'invalid-bounds',
+                    size: { x: size.x, y: size.y, z: size.z }
+                });
+                return null;
+            }
+
+            const scaleValue = `${nextScale} ${nextScale} ${nextScale}`;
+            modelEl.setAttribute('scale', scaleValue);
+            if (modelEl.object3D?.scale?.set) {
+                modelEl.object3D.scale.set(nextScale, nextScale, nextScale);
+            }
+            if (modelEl.id === 'combo-model' && modelEl.hasAttribute?.('animation__spawn')) {
+                modelEl.setAttribute(
+                    'animation__spawn',
+                    `property: scale; from: 0 0 0; to: ${scaleValue}; dur: 600; easing: easeOutBack`
+                );
+            }
+            modelEl.dataset.dynamicScale = String(nextScale);
+            if (targetIndex !== null) dynamicModelScales.set(targetIndex, nextScale);
+
+            log('📐', `Dynamic scale applied to ${modelEl.id}: ${nextScale.toFixed(4)}`);
+            sendDebug('MODEL_DYNAMIC_SCALE_APPLIED', {
+                modelId: modelEl.id,
+                targetIndex,
+                source: settings.source || 'unknown',
+                displayedMaxDimension,
+                previousScale,
+                targetSpan: settings.targetSpan || scalePolicy.DEFAULT_TARGET_SPAN,
+                nextScale,
+                size: { x: size.x, y: size.y, z: size.z }
+            });
+            return nextScale;
+        } catch (error) {
+            log('⚠️', 'Dynamic scale failed:', error);
+            sendDebug('MODEL_DYNAMIC_SCALE_FAILED', {
+                modelId: modelEl?.id || null,
+                source: settings.source || 'unknown',
+                message: error?.message || String(error)
+            });
+            return null;
+        }
+    }
+
+    function wireDynamicModelScale(modelEl, options) {
+        if (!modelEl) return;
+        modelEl.__arDynamicScaleOptions = options || {};
+        if (modelEl.__arDynamicScaleWired) return;
+        modelEl.__arDynamicScaleWired = true;
+        modelEl.addEventListener('model-loaded', () => {
+            applyDynamicModelScale(modelEl, modelEl.__arDynamicScaleOptions);
+        });
+    }
+
+    // The bootstrap URL-based combo path lives in ar-viewer.html. Expose the
+    // same scaler so it cannot drift from persistent/runtime-created models.
+    window.__AR_APPLY_DYNAMIC_MODEL_SCALE__ = applyDynamicModelScale;
+
     function getTargetModelScale(index) {
+        if (dynamicModelScales.has(index)) return dynamicModelScales.get(index);
         if (index === 0) return 0.25;
         if (index === 1) return 0.5;
         return 0.35;
@@ -590,6 +734,11 @@
             modelEl.setAttribute('rotation', target.rotation || '0 0 0');
             var scaleStr = target.scale || (target.mindTargetIndex === 0 ? '0.25 0.25 0.25' : '0.5 0.5 0.5');
             modelEl.setAttribute('scale', scaleStr);
+            wireDynamicModelScale(modelEl, {
+                targetIndex: target.slotIndex,
+                explicitScale: target.scale,
+                source: 'persistent-slot'
+            });
 
             var assetItem = document.createElement('a-asset-item');
             assetItem.setAttribute('id', 'slot-asset-' + target.slotIndex);
@@ -810,6 +959,7 @@
             assetItem.setAttribute('src', modelUrl);
             assetItem.setAttribute('crossorigin', 'anonymous');
             const model0El = document.getElementById('mode-3d-0');
+            wireDynamicModelScale(model0El, { targetIndex: 0, source: 'legacy-target' });
             // Update loading text on load events
             assetItem.addEventListener('loaded', () => {
                 log('✅', 'Model 0 loaded successfully');
@@ -931,6 +1081,7 @@
             let assetItem2 = null;
             const secondaryModelIsOptional = Boolean(comboModelUrl);
             const model1El = document.getElementById('mode-3d-1');
+            wireDynamicModelScale(model1El, { targetIndex: 1, source: 'legacy-target' });
             assetItem2 = document.createElement('a-asset-item');
             assetItem2.setAttribute('id', 'model-asset-1');
             assetItem2.setAttribute('src', modelUrl2);
@@ -1048,6 +1199,7 @@
             }
 
             if (target.modelUrl && modelEl) {
+                wireDynamicModelScale(modelEl, { targetIndex: target.index, source: 'dynamic-target' });
                 const assetItem = document.createElement('a-asset-item');
                 assetItem.setAttribute('id', `model-asset-${target.index}`);
                 assetItem.setAttribute('src', target.modelUrl);
@@ -1483,8 +1635,8 @@
         const DOUBLE_TAP_TIMEOUT = 300; // ms - taps < 300ms apart = double-tap
         const ROTATION_SPEED = 0.01; // radians per pixel drag (Phase 2)
         const ROTATION_SPEED_Z = 1.5; // multiplier for Z-axis rotation (Phase 4)
-        const MIN_SCALE = 0.15; // minimum model scale (Phase 3)
-        const MAX_SCALE = 2.5; // maximum model scale (Phase 3)
+        const MIN_SCALE_FACTOR = 0.35; // pinch limit relative to normalized scale
+        const MAX_SCALE_FACTOR = 3; // pinch limit relative to normalized scale
         const LERP_FACTOR = 0.15; // Smooth interpolation factor for rotations
 
         // Default transforms for reset (Phase 5)
@@ -1653,8 +1805,12 @@
                 const baseScale = touchState.initialScale.x;
                 let newScale = baseScale * scaleFactor;
                 
-                // Clamp scale to min/max limits
-                newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
+                // Clamp relative to the normalized model scale so very large
+                // source models do not jump back to the old hard-coded range.
+                const normalizedScale = getTargetModelScale(touchState.targetIndex);
+                const minScale = normalizedScale * MIN_SCALE_FACTOR;
+                const maxScale = normalizedScale * MAX_SCALE_FACTOR;
+                newScale = Math.max(minScale, Math.min(maxScale, newScale));
                 touchState.currentScale = newScale;
                 
                 // ✅ PERFORMANCE: Direct object3D manipulation
@@ -1824,8 +1980,8 @@
             setTimeout(() => modelEl.emit('touch-jump-down'), 200);
 
             // Scale pulse for feedback
-            const baseScale = targetIndex === 0 ? 0.25 : 0.5;
-            const pulseScale = baseScale + 0.07;
+            const baseScale = readUniformEntityScale(modelEl);
+            const pulseScale = baseScale * 1.12;
             
             modelEl.setAttribute('animation__touch_scale', [
                 'property: scale',
@@ -1868,14 +2024,14 @@
             const modelEl = document.getElementById(`mode-3d-${targetIndex}`);
             if (!modelEl) return;
 
-            const defaults = DEFAULT_TRANSFORMS[targetIndex] || {
+            const configuredDefaults = DEFAULT_TRANSFORMS[targetIndex] || {
                 position: { x: 0, y: targetIndex === 0 ? 0.05 : 0.1, z: 0 },
-                scale: {
-                    x: getTargetModelScale(targetIndex),
-                    y: getTargetModelScale(targetIndex),
-                    z: getTargetModelScale(targetIndex)
-                },
                 rotation: { x: 0, y: 0, z: 0 }
+            };
+            const normalizedScale = getTargetModelScale(targetIndex);
+            const defaults = {
+                ...configuredDefaults,
+                scale: { x: normalizedScale, y: normalizedScale, z: normalizedScale }
             };
 
             log('🔄', `Resetting model ${targetIndex} to default transform`);
@@ -2282,6 +2438,7 @@
         if (!comboModel) {
             comboModel = document.createElement('a-entity');
             comboModel.id = 'combo-model';
+            wireDynamicModelScale(comboModel, { source: 'combo-model', targetSpan: 1 });
             comboModel.setAttribute('gltf-model', comboModelUrl);
             comboModel.setAttribute('scale', '0.4 0.4 0.4'); // Bigger for impact!
             comboModel.setAttribute('visible', 'false');

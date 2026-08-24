@@ -393,6 +393,14 @@
                 comboEntity.setAttribute('position', '0 0.5 0');
                 comboEntity.setAttribute('scale', '0.3 0.3 0.3');
                 comboEntity.setAttribute('visible', 'false');
+                comboEntity.addEventListener('model-loaded', function() {
+                    if (typeof window.__AR_APPLY_DYNAMIC_MODEL_SCALE__ === 'function') {
+                        window.__AR_APPLY_DYNAMIC_MODEL_SCALE__(comboEntity, {
+                            source: 'bootstrap-combo',
+                            targetSpan: 1
+                        });
+                    }
+                });
 
                 // Add animation-mixer for GLTF animations
                 comboEntity.setAttribute('animation-mixer', 'clip: ' + animationClip + '; loop: repeat');
@@ -451,6 +459,7 @@
                 await loadScript('/static/vendor/jsQR-1.4.0.min.js', 'jsqr', deadlineAt);
                 await loadScript('/static/ar-assets/js/ar-target-registry.js', 'target-registry', deadlineAt);
                 await loadScript('/static/ar-assets/js/ar-add-card-scanner.js', 'add-card-scanner', deadlineAt);
+                await loadScript('/static/ar-assets/js/ar-model-scale.js', 'model-scale-policy', deadlineAt);
 
                 var maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));
                 // Fix D: read tuning params with same defaults as ar-viewer.js
