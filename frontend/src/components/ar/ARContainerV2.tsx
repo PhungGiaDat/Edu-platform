@@ -301,6 +301,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         // Priority 1: Persistent viewer (catalogId + mindUrl)
         // Model/word/combo assets sent via postMessage after AR_READY.
         // This path requires SET_ACTIVE_TARGETS to activate targets.
+        // ALSO include model/image/word as URL params as fallback for legacy bootstrap.
         if (catalogId && mindUrl) {
             const params = new URLSearchParams();
             params.set('mind', mindUrl);
@@ -310,6 +311,21 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 : 2;
             params.set('targetCount', String(targetCount));
             params.set('maxTrack', '2');
+
+            // Fallback: also include model/image/word so legacy bootstrap can load
+            if (modelUrl) {
+                params.set('model', modelUrl);
+                params.set('word', word || '');
+            }
+            if (imageUrl) params.set('image', imageUrl);
+            if (textureUrl) params.set('textureUrl', textureUrl);
+            if (modelUrl2) {
+                params.set('model2', modelUrl2);
+                params.set('word2', word2 || '');
+            }
+            if (imageUrl2) params.set('image2', imageUrl2);
+            if (textureUrl2) params.set('textureUrl2', textureUrl2);
+
             applyTuningParams(params);
             applyDebugParams(params);
             return `/ar-viewer.html?${params.toString()}`;
