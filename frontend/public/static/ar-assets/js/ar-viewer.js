@@ -304,10 +304,9 @@
         return Number.isFinite(first) && first > 0 ? first : null;
     }
 
-    // Fallback scales for when dynamic measurement fails. These are calibrated
-    // for typical educational AR card sizes (~8.5cm width) and should produce
-    // a model that fills roughly 75% of the visible card area.
-    const FALLBACK_SCALE_PER_TARGET = [0.75, 1.0]; // slot 0, slot 1
+    // Fallback scales for when dynamic measurement fails. Calibrated for 6-8.5cm AR cards.
+    // Increased from 0.75/1.0 to 1.2/1.5 to ensure models fill the card nicely.
+    const FALLBACK_SCALE_PER_TARGET = [1.2, 1.5]; // slot 0, slot 1
 
     function applyDynamicModelScale(modelEl, options) {
         const settings = options || {};
@@ -472,9 +471,9 @@
     function getTargetModelScale(index) {
         if (dynamicModelScales.has(index)) return dynamicModelScales.get(index);
         // Return calibrated fallback scales (same as FALLBACK_SCALE_PER_TARGET)
-        if (index === 0) return 0.75;
-        if (index === 1) return 1.0;
-        return 0.75;
+        if (index === 0) return 1.2;
+        if (index === 1) return 1.5;
+        return 1.2;
     }
 
     function ensureDynamicTargets() {
@@ -801,8 +800,8 @@
             modelEl.setAttribute('position', target.position || '0 0 0');
             modelEl.setAttribute('rotation', target.rotation || '0 0 0');
             // Use calibrated fallback scale — dynamic scaling will override this once mesh is ready.
-            // These values (0.75 for slot 0, 1.0 for slot 1) are tuned for 8.5cm AR cards.
-            var initialScale = target.scale || (target.slotIndex === 0 ? '0.75 0.75 0.75' : '1.0 1.0 1.0');
+            // These values (1.2 for slot 0, 1.5 for slot 1) are tuned for 8.5cm AR cards.
+            var initialScale = target.scale || (target.slotIndex === 0 ? '1.2 1.2 1.2' : '1.5 1.5 1.5');
             modelEl.setAttribute('scale', initialScale);
             wireDynamicModelScale(modelEl, {
                 targetIndex: target.slotIndex,
@@ -1762,12 +1761,12 @@
         const DEFAULT_TRANSFORMS = {
             0: {
                 position: { x: 0, y: 0.05, z: 0 },
-                scale: { x: 0.75, y: 0.75, z: 0.75 },
+                scale: { x: 1.2, y: 1.2, z: 1.2 },
                 rotation: { x: 0, y: 0, z: 0 }
             },
             1: {
                 position: { x: 0, y: 0.1, z: 0 },
-                scale: { x: 1.0, y: 1.0, z: 1.0 },
+                scale: { x: 1.5, y: 1.5, z: 1.5 },
                 rotation: { x: 0, y: 0, z: 0 }
             }
         };
