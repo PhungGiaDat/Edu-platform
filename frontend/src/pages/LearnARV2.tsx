@@ -12,8 +12,8 @@
  * - Proximity detection triggers combo effects when cards are close
  *
  * Session Management:
- * - useSessionTimer tracks elapsed time
- * - BreakReminder shown at 25 min warning / 30 min limit
+ * - GlobalSessionWatcher tracks elapsed time across learning routes
+ * - Normal sessions use 25/30 min; ?debug=true uses 7h55/8h for testing
  * - Session logged to backend /api/v1/sessions/start + /end
  *
  * Pronunciation:

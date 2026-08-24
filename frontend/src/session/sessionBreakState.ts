@@ -1,11 +1,13 @@
 import {
   SESSION_BREAK_SECS,
   SESSION_LIMIT_SECS,
+  SESSION_STATE_STORAGE_KEY,
   SESSION_WARNING_SECS,
 } from '../config';
 import { matchPath } from 'react-router-dom';
 
-export const SESSION_STATE_STORAGE_KEY = 'edu_session_state_v1';
+export { SESSION_STATE_STORAGE_KEY } from '../config';
+
 export const LEGACY_SESSION_KEYS = [
   'edu_session_started_at',
   'edu_session_paused_seconds',

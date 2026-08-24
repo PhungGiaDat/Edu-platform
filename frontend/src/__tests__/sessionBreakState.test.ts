@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SESSION_LIMIT_SECS, SESSION_WARNING_SECS } from '../config';
+import { resolveSessionWindow, SESSION_LIMIT_SECS, SESSION_WARNING_SECS } from '../config';
 import {
   beginLearningSession,
   getSessionSnapshot,
@@ -23,6 +23,19 @@ describe('sessionBreakState', () => {
     length: 0,
     ...methods,
   }) as Storage;
+
+  it('uses an isolated eight-hour session only for debug mode', () => {
+    expect(resolveSessionWindow('?debug=true')).toEqual({
+      limitMins: 480,
+      warningMins: 475,
+      storageKey: 'edu_session_state_debug_8h_v1',
+    });
+    expect(resolveSessionWindow('?debug=false')).toEqual({
+      limitMins: 30,
+      warningMins: 25,
+      storageKey: 'edu_session_state_v1',
+    });
+  });
 
   it('starts a fresh active session only on a learning route', () => {
     expect(beginLearningSession(null, now)).toEqual({

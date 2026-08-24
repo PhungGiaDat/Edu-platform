@@ -48,17 +48,42 @@ export const getSupabaseStorageBase = (): string => {
 export const AR_READY_TIMEOUT_MS = 10_000; // 10 seconds
 /** Minimum FPS before triggering performance-based fallback to XR. */
 export const MIN_PERFORMANCE_FPS = 15;
+export interface SessionWindowConfig {
+  limitMins: number;
+  warningMins: number;
+  storageKey: string;
+}
+
+/**
+ * Keep the child-safe 30-minute window for normal traffic, but give
+ * `?debug=true` a separate eight-hour session for long mobile AR tests.
+ * A separate key prevents an old `limit_reached` state from the normal
+ * session immediately locking a new debug session.
+ */
+export const resolveSessionWindow = (search = ''): SessionWindowConfig => {
+  const isDebugSession = new URLSearchParams(search).get('debug') === 'true';
+  return isDebugSession
+    ? { limitMins: 8 * 60, warningMins: 8 * 60 - 5, storageKey: 'edu_session_state_debug_8h_v1' }
+    : { limitMins: 30, warningMins: 25, storageKey: 'edu_session_state_v1' };
+};
+
+const sessionWindow = resolveSessionWindow(
+  typeof window === 'undefined' ? '' : window.location.search,
+);
+
 /** Maximum AR session duration before the session is ended. */
-export const AR_SESSION_LIMIT_MINS = 30;
+export const AR_SESSION_LIMIT_MINS = sessionWindow.limitMins;
 /** Warning threshold displayed before the AR session limit. */
-export const AR_SESSION_WARNING_MINS = 25;
+export const AR_SESSION_WARNING_MINS = sessionWindow.warningMins;
 /** Maximum number of AR tracks processed simultaneously. */
 export const AR_MAX_TRACKS = 2;
 
-/** Maximum session duration before hard lock (30 minutes = 1800 seconds). */
-export const SESSION_LIMIT_SECS = 30 * 60;
-/** Warning threshold shown before hard lock (25 minutes = 1500 seconds). */
-export const SESSION_WARNING_SECS = 25 * 60;
+/** Maximum session duration before hard lock. */
+export const SESSION_LIMIT_SECS = AR_SESSION_LIMIT_MINS * 60;
+/** Warning threshold shown before hard lock. */
+export const SESSION_WARNING_SECS = AR_SESSION_WARNING_MINS * 60;
+/** Storage key is isolated for the extended debug session. */
+export const SESSION_STATE_STORAGE_KEY = sessionWindow.storageKey;
 /** Mandatory cooldown after a completed learning session (5 minutes). */
 export const SESSION_BREAK_SECS = 5 * 60;
 /** Keep aliases for backward compat with LearnARV2 */
