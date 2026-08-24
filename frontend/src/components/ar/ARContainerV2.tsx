@@ -503,6 +503,18 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         const { type, payload } = msg as ARMessage;
         const fromPiP = event.source === pipRef.current?.contentWindow;
 
+        // Debug: log VIEWER_TARGETS_READY arrival
+        if (type === 'VIEWER_TARGETS_READY') {
+            console.log('[ARContainerV2] 🔔 VIEWER_TARGETS_READY arrived', {
+                type,
+                payload,
+                fromPiP,
+                phase,
+                iframeSrc: iframeRef.current?.contentWindow ? 'exists' : 'null',
+                eventSourceMatches: event.source === iframeRef.current?.contentWindow
+            });
+        }
+
         // Use callbacks from ref to ensure stability and freshness
         const {
             onQRDetected: cbQR,
@@ -555,7 +567,18 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             }
 
             case 'VIEWER_TARGETS_READY': {
-                if (fromPiP || phase !== 'VIEWING' || event.source !== iframeRef.current?.contentWindow) break;
+                console.log('[ARContainerV2] 📥 VIEWER_TARGETS_READY received', {
+                    fromPiP,
+                    phase,
+                    eventSourceMatches: event.source === iframeRef.current?.contentWindow,
+                    payload
+                });
+                if (fromPiP || phase !== 'VIEWING' || event.source !== iframeRef.current?.contentWindow) {
+                    console.log('[ARContainerV2] ⛔ VIEWER_TARGETS_READY blocked', {
+                        reason: fromPiP ? 'fromPiP' : phase !== 'VIEWING' ? `phase=${phase}` : 'source mismatch'
+                    });
+                    break;
+                }
                 const data = payload as ARMessagePayloadMap['VIEWER_TARGETS_READY'];
                 hasReceivedTargetTransportReadyRef.current = true;
                 emitDebug('PARENT_VIEWER_TARGETS_READY', data);

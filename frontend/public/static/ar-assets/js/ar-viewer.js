@@ -205,7 +205,11 @@
      * Send typed message to parent (ARMessage format)
      */
     function sendToParent(type, payload) {
-        if (window.parent && window.parent !== window) {
+        if (!window.parent || window.parent === window) {
+            log('⚠️', `sendToParent skipped: no valid parent (type=${type})`);
+            return;
+        }
+        try {
             const message = {
                 type: type,
                 payload: payload,
@@ -214,6 +218,13 @@
             };
             window.parent.postMessage(message, '*');
             log('📤', `Sent ${type}`);
+        } catch (err) {
+            log('❌', `sendToParent failed for ${type}: ${err && err.message}`);
+            sendDebug('SEND_TO_PARENT_ERROR', {
+                type: type,
+                error: err && err.message,
+                payloadType: typeof payload
+            });
         }
     }
 
@@ -934,10 +945,16 @@
 
         // The parent can now safely send SET_ACTIVE_TARGETS. Do this before
         // MindAR fires arReady so GLB download/parsing overlaps camera startup.
-        sendToParent('VIEWER_TARGETS_READY', {
-            catalogId: currentCatalogId || '',
-            targetCount
-        });
+        log('📤', `▶ VIEWER_TARGETS_READY: parentValid=${!!(window.parent && window.parent !== window)} catalogId=${currentCatalogId} targetCount=${targetCount}`);
+        try {
+            sendToParent('VIEWER_TARGETS_READY', {
+                catalogId: currentCatalogId || '',
+                targetCount
+            });
+            log('📤', `◀ VIEWER_TARGETS_READY done`);
+        } catch (e) {
+            log('❌', `VIEWER_TARGETS_READY throw: ${e && e.message}`);
+        }
 
         sendDebug('DYNAMIC_TARGETS_READY', {
             targetCount,
