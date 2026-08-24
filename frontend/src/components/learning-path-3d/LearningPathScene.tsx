@@ -42,16 +42,17 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
   const spline = useMemo(() => createPathSpline(), []);
 
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 touch-none">
       <Canvas
-        camera={{ position: [0, 3, 8], fov: 60 }}
+        camera={{ position: [0, 6, 12], fov: 55 }}
         gl={{ antialias: true, alpha: true }}
+        dpr={[1, 2]}
       >
         <Suspense fallback={null}>
           {/* Lighting */}
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[10, 20, 10]} intensity={0.8} />
-          <hemisphereLight args={['#87CEEB', '#B8E6B8', 0.4]} />
+          <ambientLight intensity={0.7} />
+          <directionalLight position={[10, 20, 10]} intensity={0.9} />
+          <hemisphereLight args={['#87CEEB', '#B8E6B8', 0.5]} />
 
           {/* Landscape background */}
           <Landscape />
@@ -77,10 +78,22 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
             />
           )}
 
-          {/* Follow camera */}
-          <PathCamera spline={spline} petProgress={currentProgress} />
+          {/* Follow camera (only when there are nodes) */}
+          {nodes.length > 0 && (
+            <PathCamera spline={spline} petProgress={currentProgress} />
+          )}
         </Suspense>
-        <OrbitControls enablePan={false} enableZoom={true} />
+        <OrbitControls
+          enablePan={false}
+          enableZoom={true}
+          enableRotate={true}
+          minDistance={4}
+          maxDistance={20}
+          minPolarAngle={0.2}
+          maxPolarAngle={Math.PI / 2.1}
+          target={[0, 0, -8]}
+          makeDefault
+        />
       </Canvas>
     </div>
   );

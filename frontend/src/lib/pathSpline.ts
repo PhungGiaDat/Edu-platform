@@ -2,15 +2,19 @@ import * as THREE from 'three';
 
 /**
  * Creates a CatmullRom spline curve for the 3D learning path.
- * Generates an S-curve path with amplitude 4 and depth -40 units.
+ * Generates an S-curve path with amplitude 3 and depth -22 units.
+ *
+ * The shorter depth (-22 vs -40) keeps the path framed inside the
+ * viewport on portrait mobile while still giving enough travel to
+ * place 5+ lesson nodes along the way.
  */
 export function createPathSpline(): THREE.CatmullRomCurve3 {
   const points: THREE.Vector3[] = [];
 
   // Generate S-curve control points
-  // Amplitude: 4 units lateral, Depth: -40 units
-  const amplitude = 4;
-  const depth = -40;
+  // Amplitude: 3 units lateral, Depth: -22 units
+  const amplitude = 3;
+  const depth = -22;
   const numSegments = 20;
 
   for (let i = 0; i <= numSegments; i++) {

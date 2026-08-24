@@ -593,7 +593,7 @@ export default function PetsPage() {
                                             <div className="text-center mb-2">
                                                 <span className="text-lg font-black text-purple-600">{petXP.xp} XP</span>
                                             </div>
-                                            {petXP.progress.next_stage && (
+                                            {petXP.progress && petXP.progress.next_stage && (
                                                 <div>
                                                     <div className="flex justify-between text-xs text-gray-500 mb-1">
                                                         <span>Progress to {petXP.progress.next_stage}</span>

@@ -234,6 +234,7 @@ class Settings(BaseSettings):
 
         always = [
             self.DEFAULT_FRONTEND_ORIGIN.rstrip("/"),
+            "https://edu-platform-dev.vercel.app",
             "https://edu-platform-dun.vercel.app",
         ]
         custom = [

@@ -2,10 +2,12 @@
  * PathCamera.tsx
  *
  * Follow camera that tracks the pet along the 3D learning path.
- * Stays behind the pet at a fixed offset and looks ahead along the path.
+ * Smoothly updates the OrbitControls target (look-at point) so the user
+ * can still freely orbit/zoom with controls while the framing follows
+ * the active node along the path.
  */
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { getPointOnSpline } from '@/lib/pathSpline';
@@ -23,30 +25,32 @@ export interface PathCameraProps {
 // ========== Component ==========
 
 export const PathCamera: React.FC<PathCameraProps> = ({ petProgress, spline }) => {
-  const { camera } = useThree();
-  const targetPosRef = useRef(new THREE.Vector3());
+  const { controls } = useThree() as any;
+  const targetRef = useRef(new THREE.Vector3());
+
+  useEffect(() => {
+    // Prime the look-at so the first frame already has a sensible framing
+    // before useFrame starts ticking.
+    const initial = getPointOnSpline(spline, petProgress);
+    targetRef.current.set(initial.x, initial.y + 1, initial.z);
+    if (controls && typeof controls.target !== 'undefined') {
+      controls.target.copy(targetRef.current);
+      controls.update?.();
+    }
+  }, [spline, controls]);
 
   useFrame(() => {
-    // Calculate positions along the spline
-    const behindProgress = petProgress - 0.05;
-    const behindPos = getPointOnSpline(spline, behindProgress);
+    if (!controls) return;
+
     const petPos = getPointOnSpline(spline, petProgress);
+    targetRef.current.set(petPos.x, petPos.y + 1, petPos.z);
 
-    // Camera position: behind and above the pet
-    targetPosRef.current.set(
-      behindPos.x,
-      petPos.y + 4,
-      behindPos.z + 6
-    );
-
-    // Smooth follow with lerp interpolation
-    camera.position.lerp(targetPosRef.current, 0.05);
-
-    // Look slightly ahead of the pet
-    camera.lookAt(petPos.x, petPos.y + 1, petPos.z);
+    // Smoothly move the orbit target so the user keeps manual control
+    // (rotate / zoom). We never overwrite camera.position here.
+    controls.target.lerp(targetRef.current, 0.08);
+    controls.update?.();
   });
 
-  // This component doesn't render any visible geometry
   return null;
 };
 

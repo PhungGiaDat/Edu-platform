@@ -170,7 +170,7 @@ export const LearningPath3D: React.FC = () => {
   }
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
       {/* 3D Scene */}
       <LearningPathScene
         nodes={nodes}
@@ -180,11 +180,11 @@ export const LearningPath3D: React.FC = () => {
       />
 
       {/* Header Overlay with Progress */}
-      <div className="absolute left-0 right-0 top-0 z-10 p-4">
-        <div className="mx-auto max-w-md rounded-2xl bg-white/90 p-4 shadow-lg backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-lg font-bold text-gray-800">Learning Path</h1>
-            <span className="text-sm font-semibold text-amber-600">
+      <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 p-3 sm:p-4">
+        <div className="pointer-events-auto mx-auto max-w-md rounded-2xl bg-white/90 p-3 shadow-lg backdrop-blur-sm sm:p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h1 className="text-base font-bold text-gray-800 sm:text-lg">Learning Path</h1>
+            <span className="text-xs font-semibold text-amber-600 sm:text-sm">
               {progressStats.completed}/{progressStats.total} Lessons
             </span>
           </div>
@@ -208,10 +208,10 @@ export const LearningPath3D: React.FC = () => {
       </div>
 
       {/* Instructions hint */}
-      <div className="absolute bottom-4 left-4 z-10">
-        <div className="rounded-lg bg-black/50 px-3 py-2 text-xs text-white">
+      <div className="pointer-events-none absolute bottom-4 left-4 z-10">
+        <div className="rounded-lg bg-black/50 px-3 py-1.5 text-xs text-white">
           <span className="mr-2">🖱️</span>
-          Drag to rotate, scroll to zoom
+          Drag to rotate · pinch to zoom
         </div>
       </div>
 
