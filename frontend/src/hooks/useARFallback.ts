@@ -41,6 +41,8 @@ interface UseARFallbackOptions {
   lowFpsGracePeriodMs?: number;
   /** Called when fallback is triggered */
   onFallbackTriggered?: (reason: FallbackReason) => void;
+  /** Allow timeout/performance/system-error fallback (default: true). */
+  automaticFallbackEnabled?: boolean;
 }
 
 export function useARFallback(options: UseARFallbackOptions = {}) {
@@ -50,6 +52,7 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
     minFps = MIN_PERFORMANCE_FPS,
     lowFpsGracePeriodMs = 5000,
     onFallbackTriggered,
+    automaticFallbackEnabled = true,
   } = options;
 
   const [engine, setEngine] = useState<AREngine>(() => {
@@ -92,6 +95,10 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
 
   // Core trigger function
   const triggerFallback = useCallback((reason: FallbackReason) => {
+    if (!automaticFallbackEnabled) {
+      console.warn(`[AR-Fallback] Automatic XR fallback disabled. Keeping MindAR active. Reason: ${reason}`);
+      return;
+    }
     if (engine !== 'mindar' || fallbackTriggered) return;
     if (reason === 'TIMEOUT_NO_READY' && mindarReadyRef.current) return;
 
@@ -115,11 +122,11 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
     }));
 
     onFallbackTriggered?.(reason);
-  }, [clearReadyTimeout, engine, fallbackTriggered, onFallbackTriggered, timeToReady]);
+  }, [automaticFallbackEnabled, clearReadyTimeout, engine, fallbackTriggered, onFallbackTriggered, timeToReady]);
 
   // ── Logic 1: Timeout fallback ──────────────────────────────────────────────────
   useEffect(() => {
-    if (engine !== 'mindar' || fallbackTriggered || mindarReadyRef.current) return;
+    if (!automaticFallbackEnabled || engine !== 'mindar' || fallbackTriggered || mindarReadyRef.current) return;
 
     // Record start time on first effect run
     if (mindarStartTimeRef.current === null) {
@@ -133,7 +140,7 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
     }, timeoutMs);
 
     return clearReadyTimeout;
-  }, [clearReadyTimeout, engine, fallbackTriggered, triggerFallback, timeoutMs]);
+  }, [automaticFallbackEnabled, clearReadyTimeout, engine, fallbackTriggered, triggerFallback, timeoutMs]);
 
   // ── Logic 2: Listen for AR_READY (reset timeout) ─────────────────────────────
   // IMPORTANT: viewer fires AR_READY via postMessage, not a DOM CustomEvent.
@@ -168,7 +175,7 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
 
   // ── Logic 3: Performance fallback ─────────────────────────────────────────────
   const handlePerformanceMetrics = useCallback((fps: number) => {
-    if (engine !== 'mindar' || fallbackTriggered) return;
+    if (!automaticFallbackEnabled || engine !== 'mindar' || fallbackTriggered) return;
 
     fpsSamplesRef.current.push(fps);
     // Keep only last 60 samples (30 seconds at 2Hz)
@@ -186,7 +193,7 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
       // Reset if FPS recovers
       lowFpsStartRef.current = null;
     }
-  }, [engine, fallbackTriggered, triggerFallback, minFps, lowFpsGracePeriodMs]);
+  }, [automaticFallbackEnabled, engine, fallbackTriggered, triggerFallback, minFps, lowFpsGracePeriodMs]);
 
   // ── Logic 4: System error handler (to be called from ARContainerV2) ───────────
   const handleSystemError = useCallback((errorCode: string) => {

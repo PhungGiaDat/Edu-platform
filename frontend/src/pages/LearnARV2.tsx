@@ -666,7 +666,11 @@ export default function LearnARV2() {
         handleSystemError,
     } = useARFallback({
         initialEngine: 'mindar',
-        timeoutMs: 35_000,  // 35s — exceeds iframe BOOTSTRAP (25s) + parent watchdog (30s)
+        timeoutMs: 55_000,  // used only if automatic fallback is re-enabled later
+        // This deck currently has no XR target endpoint (it returns 404).
+        // Keep the working MindAR session instead of navigating to a broken
+        // fallback. ?force-fallback=xr remains available for explicit tests.
+        automaticFallbackEnabled: false,
         onFallbackTriggered: (reason) => {
             console.warn('[LearnARV2] AR fallback triggered:', reason);
             emitMobileDebug('AR_FALLBACK_TRIGGERED', { reason });

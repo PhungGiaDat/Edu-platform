@@ -26,6 +26,7 @@ describe('AR viewer bootstrap fail-fast contract', () => {
     // CDN URLs must not be present in the vendor-first bootstrap
     expect(viewerHtml).not.toContain('aframe.io/releases');
     expect(viewerHtml).not.toContain('cdn.jsdelivr.net/npm/mind-ar');
+    expect(viewerJs).toContain('MINDAR_INITIALIZATION_TIMEOUT_MS = 45_000');
   });
 
   // ── Task 7: SET_ACTIVE_TARGETS + BEGIN_ADD_CARD_SCAN contract ────────────────

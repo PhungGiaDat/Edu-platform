@@ -28,7 +28,7 @@
   <script type="module" src="/src/main.tsx"></script>
   <!-- Mobile Debug - Enable with ?debug=true in URL -->
   <script src="/static/ar-assets/js/mobile-debug.js"></script>
-  <!-- Eruda mobile console - Activate only with ?eruda=true in URL -->
+  <!-- Eruda mobile console - Activate with ?debug=true or ?eruda=true -->
   <script>
     (function() {
       var erudaRoot = null;
@@ -77,10 +77,9 @@
         document.head.appendChild(s);
       }
       var params = new URLSearchParams(window.location.search);
-      if (params.get('eruda') === 'true') {
-        // Only activate Eruda on explicit ?eruda=true to avoid interfering
-        // with camera/AR getUserMedia streams. ?debug=true still activates
-        // the Mobile Debug panel but not the full Eruda console.
+      if (params.get('debug') === 'true' || params.get('eruda') === 'true') {
+        // The isolated root prevents Eruda from resizing document.body and
+        // collapsing the React/AR iframe while the camera is active.
         waitForEruda();
       }
     })();

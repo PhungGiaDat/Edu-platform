@@ -34,6 +34,7 @@
     let currentMode = '3D';
     let isReady = false;
     const initializationStartedAt = Date.now();
+    const MINDAR_INITIALIZATION_TIMEOUT_MS = 45_000;
     let initializationFailureReported = false;
     const activeTargets = new Map();
     const COMBO_THRESHOLD = 2;
@@ -1350,11 +1351,13 @@
             log('🎨', 'Scene render started');
         });
 
-        // Fail fast rather than leaving a child behind a permanent spinner.
+        // A 5MB+ catalog can take well over 12 seconds to initialize on iOS.
+        // Keep this below the parent watchdog, but long enough for MindAR to
+        // finish downloading and compiling targets on a real mobile network.
         window.setTimeout(() => {
             if (!isReady && !initializationFailureReported) {
                 initializationFailureReported = true;
-                log('⚠️', '⏰ Timeout reached - AR not ready after 10 seconds');
+                log('⚠️', `⏰ Timeout reached - AR not ready after ${MINDAR_INITIALIZATION_TIMEOUT_MS}ms`);
                 log('⚠️', 'Forcing loading overlay removal');
                 const overlay = document.getElementById('ar-loading-overlay');
                 if (overlay && overlay.style.display !== 'none') {
@@ -1368,7 +1371,7 @@
                     elapsedMs: Date.now() - initializationStartedAt
                 });
             }
-        }, 12000);
+        }, MINDAR_INITIALIZATION_TIMEOUT_MS);
 
         // Target tracking
         log('🎯', 'Setting up target tracking listeners for target-0 and target-1');

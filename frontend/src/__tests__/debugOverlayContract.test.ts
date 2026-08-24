@@ -18,8 +18,8 @@ function erudaBootstrap(html: string): string {
 }
 
 describe('mobile AR debug overlay contract', () => {
-  it('keeps debug=true on the lightweight overlay and isolates Eruda from body', () => {
-    expect(indexHtml).toContain("params.get('eruda') === 'true'");
+  it('enables parent Eruda for debug mode while isolating it from body', () => {
+    expect(indexHtml).toContain("params.get('debug') === 'true' || params.get('eruda') === 'true'");
     expect(indexHtml).not.toContain("container: document.body");
     expect(indexHtml).toContain('container: erudaRoot');
     expect(indexHtml).toContain("erudaRoot.setAttribute('data-eruda-root', 'true')");

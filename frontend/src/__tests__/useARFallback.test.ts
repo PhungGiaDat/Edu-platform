@@ -70,4 +70,24 @@ describe('useARFallback', () => {
     expect(result.current.engine).toBe('xr');
     expect(onFallbackTriggered).toHaveBeenCalledWith('TIMEOUT_NO_READY');
   });
+
+  it('keeps MindAR active when automatic XR fallback is disabled', () => {
+    const onFallbackTriggered = vi.fn();
+    const { result } = renderHook(() => useARFallback({
+      timeoutMs: 35_000,
+      automaticFallbackEnabled: false,
+      onFallbackTriggered,
+    }));
+
+    act(() => {
+      vi.advanceTimersByTime(70_000);
+      result.current.handleSystemError('MINDAR_INITIALIZATION_TIMEOUT');
+      result.current.handlePerformanceMetrics(1);
+      vi.advanceTimersByTime(10_000);
+    });
+
+    expect(result.current.engine).toBe('mindar');
+    expect(result.current.fallbackTriggered).toBe(false);
+    expect(onFallbackTriggered).not.toHaveBeenCalled();
+  });
 });
