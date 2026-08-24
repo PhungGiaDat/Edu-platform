@@ -59,6 +59,8 @@ export function useARFallback(options: UseARFallbackOptions = {}) {
     // Check URL param first
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
+      // ?engine=xr forces XR engine from start (for standalone testing)
+      if (params.get('engine') === 'xr') return 'xr';
       if (params.get('force-fallback') === 'xr') return 'xr';
     }
     return initialEngine;

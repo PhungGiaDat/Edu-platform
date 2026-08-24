@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>8th Wall AR - Claymorphic Flashcards</title>
 
-  <!-- Forward engine logs before XR/Three modules begin loading. The parent
-       owns the only Eruda instance and replays these from its early buffer. -->
+  <!-- Forward engine logs before MindAR module begins loading. -->
   <script>
     (function installXrDebugBridge() {
       var params = new URLSearchParams(location.search);
@@ -39,7 +38,7 @@
             sendDebug('XR_CONSOLE_' + level.toUpperCase(), {
               level: level,
               text: serialise(arguments),
-              engine: '8thwall'
+              engine: 'mindar-local'
             });
           } catch (_) { /* debug must never stop XR */ }
           return original.apply(console, arguments);
@@ -50,7 +49,7 @@
         sendDebug('XR_UNCAUGHT_ERROR', {
           level: 'error',
           text: String(event.message || event.error || 'Unknown XR error'),
-          engine: '8thwall'
+          engine: 'mindar-local'
         });
       }, true);
       window.addEventListener('unhandledrejection', function(event) {
@@ -59,7 +58,7 @@
           text: event.reason instanceof Error
             ? (event.reason.stack || event.reason.message)
             : String(event.reason),
-          engine: '8thwall'
+          engine: 'mindar-local'
         });
       });
 
@@ -67,9 +66,9 @@
     })();
   </script>
 
-  <!-- Eruda Debug Console - Mobile Web Debugging -->
+  <!-- Eruda Debug Console -->
   <script>
-    const xrDebugParams = new URLSearchParams(location.search);
+    var xrDebugParams = new URLSearchParams(location.search);
     if (xrDebugParams.get('eruda') === 'true' || location.hostname === 'localhost') {
       (function() {
         var s = document.createElement('script');
@@ -83,119 +82,125 @@
     }
   </script>
 
-  <!-- 8th Wall scripts - must be loaded first -->
-  <script src="https://cdn.8thwall.com/xr8/three.module.min.js" type="module"></script>
-  <script src="https://cdn.8thwall.com/xr8/webxr.min.js" defer></script>
-  <script src="https://cdn.8thwall.com/xr8/xrextras.min.js" defer></script>
-
-  <!-- Three.js (loaded as module for GLTFLoader) -->
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
-      }
-    }
-  </script>
-
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: system-ui, sans-serif; }
+
     #canvas-container { width: 100%; height: 100%; position: relative; }
     canvas { display: block; width: 100%; height: 100%; }
 
+    /* Loading overlay */
     #overlay {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(0,0,0,0.85); color: #fff; z-index: 100;
-      font-family: system-ui, -apple-system, sans-serif; text-align: center;
-      transition: opacity 0.3s ease;
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.9); color: #fff;
+      z-index: 100; transition: opacity 0.3s ease;
     }
     #overlay.hidden { opacity: 0; pointer-events: none; }
 
-    .loading-content { text-align: center; }
     .spinner {
       width: 50px; height: 50px;
-      border: 4px solid rgba(255,255,255,0.2);
+      border: 4px solid rgba(255,255,255,0.15);
       border-top-color: #4ecdc4;
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
+      margin-bottom: 20px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    #loading-text { font-size: 18px; margin-bottom: 8px; }
-    #hint-text { font-size: 14px; opacity: 0.7; }
-    #error-text { color: #FF6B6B; font-size: 16px; margin-top: 12px; }
+    #loading-text { font-size: 18px; margin-bottom: 8px; text-align: center; }
+    #hint-text { font-size: 14px; opacity: 0.6; text-align: center; }
+    #error-text { color: #FF6B6B; font-size: 14px; margin-top: 16px; text-align: center; max-width: 280px; }
 
+    /* Card name label on screen */
+    #card-label {
+      position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.7); color: #fff;
+      padding: 8px 20px; border-radius: 20px;
+      font-size: 18px; font-weight: 600;
+      z-index: 50; pointer-events: none;
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+    #card-label.visible { opacity: 1; }
+
+    /* Debug panel */
     #debug-panel {
       position: absolute; top: 10px; left: 10px;
-      background: rgba(0,0,0,0.7); color: #fff;
-      padding: 10px; border-radius: 8px; font-size: 12px;
+      background: rgba(0,0,0,0.75); color: #0f0;
+      padding: 8px 12px; border-radius: 8px; font-size: 11px;
       font-family: monospace; z-index: 200;
+      display: none;
     }
   </style>
 </head>
 <body>
-  <div id="canvas-container"></div>
+  <div id="canvas-container">
+    <canvas id="canvas"></canvas>
+  </div>
 
   <div id="overlay">
-    <div class="loading-content">
-      <div class="spinner"></div>
-      <div id="loading-text">Initializing 8th Wall AR...</div>
-      <div id="hint-text">Point camera at a flashcard</div>
-      <div id="error-text"></div>
-    </div>
+    <div class="spinner"></div>
+    <div id="loading-text">Loading AR Engine...</div>
+    <div id="hint-text">Point camera at flashcard</div>
+    <div id="error-text"></div>
   </div>
 
-  <div id="debug-panel" style="display: none;">
-    <div>Engine: 8th Wall XR</div>
-    <div id="debug-status">Loading...</div>
-    <div id="debug-targets">Targets: 0 found</div>
+  <div id="card-label"></div>
+
+  <div id="debug-panel">
+    <div id="debug-status">Initializing...</div>
+    <div id="debug-engine">Engine: MindAR-Local</div>
   </div>
 
-  <script type="module">
-    import * as THREE from 'three';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+  <!-- MindAR JS (local, no AppKey needed) -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/src/image-target/mindar-imageprod.js"></script>
+  <!-- A-Frame + Three.js (MindAR dependency) -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <!-- GLTFLoader for .glb models -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/loaders/GLTFLoader.js"></script>
+
+  <script>
+  (function() {
+    'use strict';
 
     // ========== PARAMS FROM URL ==========
-    const params = new URLSearchParams(window.location.search);
-    const targetJsonUrls = (params.get('targets') || '').split(',').filter(Boolean);
-    const modelUrl = params.get('model') || '';
-    const deckName = params.get('deck') || 'AR Experience';
-    const targetCount = parseInt(params.get('targetCount') || '10', 10);
+    var params = new URLSearchParams(window.location.search);
+    var qrId       = params.get('qr_id') || '';
+    var modelUrl   = params.get('model_3d_url') || '';
+    var mindFile   = params.get('mind_file_url') || '';
+    var targetImg  = params.get('xr_target_image_url') || params.get('reference_image_url') || '';
+    var word       = params.get('word') || qrId;
+    var position   = params.get('position') || '0 0 -0.5';
+    var rotation   = params.get('rotation') || '0 0 0';
+    var scale      = parseFloat(params.get('scale') || '1');
+    var isDebug    = window.location.hostname === 'localhost' || params.get('debug') === 'true';
 
-    // DOM elements
-    const overlay = document.getElementById('overlay');
-    const loadingText = document.getElementById('loading-text');
-    const hintText = document.getElementById('hint-text');
-    const errorText = document.getElementById('error-text');
-    const debugStatus = document.getElementById('debug-status');
-    const debugTargets = document.getElementById('debug-targets');
-    const debugPanel = document.getElementById('debug-panel');
+    // DOM
+    var overlay      = document.getElementById('overlay');
+    var loadingText   = document.getElementById('loading-text');
+    var hintText      = document.getElementById('hint-text');
+    var errorText     = document.getElementById('error-text');
+    var cardLabel     = document.getElementById('card-label');
+    var debugPanel    = document.getElementById('debug-panel');
+    var debugStatus   = document.getElementById('debug-status');
+    var canvas        = document.getElementById('canvas');
 
-    // Enable debug in development
-    const isDebug = window.location.hostname === 'localhost' || window.location.search.includes('debug');
     if (isDebug) {
       debugPanel.style.display = 'block';
-
-      // Debug postMessage - log both directions
-      window.addEventListener('message', (e) => {
-        console.log('[←parent]', e.data);
-      });
     }
 
-    // ========== POST MESSAGE BRIDGE ==========
-    function sendMessage(type, payload = {}) {
-      window.parent.postMessage({ type, payload, timestamp: Date.now() }, '*');
+    // ========== POST MESSAGE ==========
+    function sendMessage(type, payload) {
+      payload = payload || {};
+      window.parent.postMessage({ type: type, payload: payload, timestamp: Date.now() }, '*');
       console.log('[ar-xr] SEND:', type, payload);
     }
 
-    function showOverlay(text, hint = '') {
+    function showOverlay(text, hint) {
       overlay.classList.remove('hidden');
-      loadingText.textContent = text;
-      hintText.textContent = hint;
-      errorText.textContent = '';
+      loadingText.textContent = text || 'Loading...';
+      hintText.textContent   = hint  || '';
+      errorText.textContent  = '';
     }
 
     function hideOverlay() {
@@ -207,45 +212,46 @@
       console.error('[ar-xr] Error:', msg);
     }
 
-    function updateDebug(status, foundCount) {
-      debugStatus.textContent = status;
-      debugTargets.textContent = `Targets: ${foundCount} found`;
+    function updateDebug(text) {
+      debugStatus.textContent = text;
     }
 
-    // ========== THREE.JS SCENE SETUP ==========
-    let scene, camera, renderer, canvas;
+    function showCardLabel(name) {
+      cardLabel.textContent = name;
+      cardLabel.classList.add('visible');
+      setTimeout(function() { cardLabel.classList.remove('visible'); }, 3000);
+    }
 
-    function initScene() {
-      canvas = document.createElement('canvas');
-      canvas.style.width = '100%';
-      canvas.style.height = '100%';
-      document.getElementById('canvas-container').appendChild(canvas);
+    // ========== THREE.JS SCENE ==========
+    var scene, camera, renderer, loadedModel, mixer, clock;
 
+    function initThree() {
       scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
+      clock = new THREE.Clock();
 
-      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
+      camera.position.set(0, 0, 0);
+
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1;
+      renderer.toneMapping      = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.0;
 
-      // Lighting
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-      scene.add(ambientLight);
+      // Lighting for claymorphic style
+      var ambient = new THREE.AmbientLight(0xffffff, 1.2);
+      scene.add(ambient);
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
-      directionalLight.position.set(0, 5, 5);
-      directionalLight.castShadow = true;
-      scene.add(directionalLight);
+      var key = new THREE.DirectionalLight(0xffffff, 1.5);
+      key.position.set(0, 3, 5);
+      scene.add(key);
 
-      const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
-      fillLight.position.set(-5, 0, -5);
-      scene.add(fillLight);
+      var fill = new THREE.DirectionalLight(0xffffff, 0.4);
+      fill.position.set(-3, 0, -2);
+      scene.add(fill);
 
-      // Handle resize
-      window.addEventListener('resize', () => {
+      window.addEventListener('resize', function() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -253,34 +259,63 @@
     }
 
     // ========== MODEL LOADING ==========
-    const loader = new GLTFLoader();
-    const loadedModels = new Map(); // targetIndex -> THREE.Group
+    var pendingAnimations = [];
 
-    function loadModel(url, targetIndex) {
-      return new Promise((resolve, reject) => {
+    function loadModel(url) {
+      return new Promise(function(resolve, reject) {
+        var loader = new THREE.GLTFLoader();
         loader.load(url,
-          (gltf) => {
-            const model = gltf.scene;
+          function(gltf) {
+            var model = gltf.scene;
+            model.visible = false;
 
-            // Apply claymorphic-style material
-            model.traverse((child) => {
+            // Claymorphic look: soft edges + pastel tint
+            model.traverse(function(child) {
               if (child.isMesh) {
-                child.castShadow = true;
+                child.castShadow    = true;
                 child.receiveShadow = true;
+                // Mild claymorphic tint if material is basic
+                if (child.material && !child.material.map) {
+                  child.material = new THREE.MeshStandardMaterial({
+                    color: 0xf0e6d3,
+                    roughness: 0.7,
+                    metalness: 0.0,
+                  });
+                }
               }
             });
 
-            // Scale model to reasonable size
-            model.scale.set(0.3, 0.3, 0.3);
-            model.visible = false; // Start hidden
+            // Parse position — default Z=-0.5 (in front of camera) so '0 0 0' works
+            var pos = position.split(' ').map(Number);
+            var rot = rotation.split(' ').map(Number);
+            // MindAR camera is at origin, z negative = in front. Default to z=-0.5 if not set.
+            model.position.set(pos[0] || 0, pos[1] || 0, (pos[2] !== undefined ? pos[2] : -0.5));
+            model.rotation.set(rot[0] || 0, rot[1] || 0, rot[2] || 0);
+            model.scale.setScalar(scale || 1);
 
             scene.add(model);
-            loadedModels.set(targetIndex, model);
-            console.log('[ar-xr] Model loaded for target', targetIndex);
+            loadedModel = model;
+
+            // Store animations
+            if (gltf.animations && gltf.animations.length > 0) {
+              mixer = new THREE.AnimationMixer(model);
+              pendingAnimations = gltf.animations.map(function(clip) {
+                return { name: clip.name, clip: clip };
+              });
+              console.log('[ar-xr] Animations available:', pendingAnimations.map(function(a) { return a.name; }));
+
+              // Play first animation (IDLE) automatically
+              playAnimation(pendingAnimations[0].name);
+            }
+
+            console.log('[ar-xr] Model loaded:', url);
             resolve(model);
           },
-          undefined,
-          (error) => {
+          function(progress) {
+            var pct = progress.total ? Math.round((progress.loaded / progress.total) * 100) : '';
+            updateDebug('Loading model ' + pct + '%');
+          },
+          function(error) {
             console.error('[ar-xr] Model load error:', error);
             reject(error);
           }
@@ -288,333 +323,153 @@
       });
     }
 
-    // Load default model if provided
-    if (modelUrl) {
-      loadModel(modelUrl, -1).catch(e => console.warn('[ar-xr] Default model load failed:', e));
-    }
-
-    // ========== IMAGE TARGET DATA ==========
-    let imageTargetData = [];
-
-    async function loadImageTargetData() {
-      showOverlay('Loading image targets...', `${targetJsonUrls.length} targets`);
-      imageTargetData = [];
-
-      for (let i = 0; i < targetJsonUrls.length; i++) {
-        const url = targetJsonUrls[i].trim();
-        if (!url) continue;
-
-        try {
-          const response = await fetch(url);
-          if (!response.ok) {
-            console.warn('[ar-xr] Failed to fetch target JSON:', url);
-            continue;
-          }
-
-          const data = await response.json();
-
-          // Transform to 8th Wall format
-          // The JSON has imagePath relative to the JSON location, we need absolute URL
-          const baseUrl = url.substring(0, url.lastIndexOf('/') + 1);
-          const imagePath = data.imagePath || '';
-          const absoluteImageUrl = imagePath.startsWith('http')
-            ? imagePath
-            : baseUrl + imagePath;
-
-          imageTargetData.push({
-            ...data,
-            imageUrl: absoluteImageUrl,
-          });
-
-          console.log('[ar-xr] Loaded target:', data.name, absoluteImageUrl);
-        } catch (e) {
-          console.error('[ar-xr] Error loading target:', url, e);
-        }
+    function playAnimation(name) {
+      if (!mixer) return;
+      var clip = THREE.AnimationClip.findByName(pendingAnimations.map(function(a) { return a.clip; }), name);
+      if (clip) {
+        var action = mixer.clipAction(clip);
+        action.reset().fadeIn(0.3).play();
+        console.log('[ar-xr] Play animation:', name);
       }
-
-      console.log('[ar-xr] Total targets loaded:', imageTargetData.length);
-      return imageTargetData;
-    }
-
-    // ========== 8TH WALL XR SETUP ==========
-    let xrController = null;
-    const trackedTargets = new Set();
-    const targetPositions = new Map();
-
-    async function initXR() {
-      showOverlay('Starting XR session...', '');
-
-      try {
-        // Check if XR8 is available
-        if (typeof XR8 === 'undefined') {
-          throw new Error('8th Wall SDK not loaded. Check your 8th Wall app key.');
-        }
-
-        // Wait for XR8 to be fully loaded
-        if (!XR8.isLoaded()) {
-          await new Promise((resolve) => {
-            if (XR8.isLoaded()) {
-              resolve();
-            } else {
-              window.addEventListener('xrloaded', resolve, { once: true });
-            }
-          });
-        }
-
-        // Configure image targets
-        XR8.XrController.configure({
-          imageTargetData: imageTargetData.map(t => ({
-            image: t.imageUrl,
-            name: t.name,
-            physicalWidth: 0.08, // 8cm default physical width
-          })),
-        });
-
-        // Create camera pipeline with target tracking
-        const cameraPipelineModule = {
-          name: 'camera-pipeline',
-          onStart: ({ canvas, gl }) => {
-            console.log('[ar-xr] Camera pipeline started');
-            hideOverlay();
-            sendMessage('AR_READY', {
-              engine: 'xr',
-              targetCount: imageTargetData.length,
-              deckName: deckName,
-            });
-          },
-          onUpdate: (frame) => {
-            // Check each tracked location
-            imageTargetData.forEach((target, index) => {
-              const tracked = XR8.XrController.reality().cameraPixelsTracked(target.name);
-
-              if (tracked && !trackedTargets.has(index)) {
-                // Target found
-                trackedTargets.add(index);
-                console.log('[ar-xr] Target found:', target.name, index);
-
-                // Get world position from tracked location
-                const position = new THREE.Vector3();
-                const quaternion = new THREE.Quaternion();
-                // 8th Wall provides position/rotation in camera space
-                // We need to transform to world space
-
-                sendMessage('TARGET_FOUND', {
-                  targetIndex: index,
-                  qrId: target.name,
-                  position: position,
-                });
-
-                // Show model if loaded
-                const model = loadedModels.get(index) || loadedModels.get(-1);
-                if (model) {
-                  model.position.set(0, 0.05, 0);
-                  model.visible = true;
-                }
-
-                updateDebug('Target found', trackedTargets.size);
-                checkCombo();
-              } else if (!tracked && trackedTargets.has(index)) {
-                // Target lost
-                trackedTargets.delete(index);
-                console.log('[ar-xr] Target lost:', target.name, index);
-
-                sendMessage('TARGET_LOST', {
-                  targetIndex: index,
-                });
-
-                // Hide model
-                const model = loadedModels.get(index);
-                if (model) {
-                  model.visible = false;
-                }
-
-                updateDebug('Tracking', trackedTargets.size);
-              }
-            });
-          },
-        };
-
-        // Custom rendering module for Three.js
-        const renderModule = {
-          name: 'custom-render',
-          onStart: () => {
-            console.log('[ar-xr] Custom render module started');
-          },
-          onUpdate: () => {
-            // Render Three.js scene
-            if (renderer && scene && camera) {
-              renderer.render(scene, camera);
-            }
-          },
-        };
-
-        // Start XR session
-        await XR8.addCameraPipelineModule(cameraPipelineModule);
-        await XR8.addCameraPipelineModule(renderModule);
-        await XR8.startSession();
-
-        console.log('[ar-xr] XR session started successfully');
-
-      } catch (error) {
-        console.error('[ar-xr] XR init error:', error);
-        showError(error.message || 'Failed to start AR');
-        sendMessage('SYSTEM_ERROR', {
-          error: error.message || 'XR initialization failed',
-          code: 'XR_INIT_FAILED',
-        });
-      }
-    }
-
-    // ========== COMBO DETECTION ==========
-    function checkCombo() {
-      if (trackedTargets.size >= 2) {
-        const targets = Array.from(trackedTargets);
-        console.log('[ar-xr] Combo detected:', targets);
-
-        sendMessage('COMBO_DETECTED', {
-          targets: targets,
-        });
-
-        // Optional: animate models together
-        animateComboTargets(targets);
-      }
-    }
-
-    function animateComboTargets(targets) {
-      targets.forEach((targetIndex, i) => {
-        const model = loadedModels.get(targetIndex) || loadedModels.get(-1);
-        if (model) {
-          // Animate models moving together
-          const targetPos = new THREE.Vector3(i * 0.15 - 0.075, 0.05, 0);
-          const targetScale = 1.2;
-
-          // Simple animation - in production use GSAP or similar
-          model.position.lerp(targetPos, 0.1);
-          model.scale.setScalar(THREE.MathUtils.lerp(model.scale.x, targetScale, 0.1));
-        }
-      });
-    }
-
-    // ========== COMBO RULES (from backend) ==========
-    let comboRules = []; // Loaded from backend
-
-    async function loadComboRules() {
-      const deck = params.get('deck') || '';
-      try {
-        // Fetch combo rules from backend
-        const url = `/api/v1/combinations/rules?flashcard_set=${encodeURIComponent(deck)}`;
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
-          comboRules = data.rules || [];
-          console.log('[ar-xr] Loaded combo rules:', comboRules.length);
-        } else {
-          console.warn('[ar-xr] Failed to load combo rules:', response.status);
-        }
-      } catch (e) {
-        console.error('[ar-xr] Error loading combo rules:', e);
-      }
-    }
-
-    function checkSemanticCombo() {
-      const foundTags = imageTargetData
-        .filter((_, i) => trackedTargets.has(i))
-        .map(t => t.name);
-
-      for (const rule of comboRules) {
-        const hasAll = rule.tags.every(tag => foundTags.includes(tag));
-        if (hasAll) {
-          console.log('[ar-xr] Semantic combo matched:', rule.name);
-          sendMessage('COMBO_ACTIVATED', {
-            comboName: rule.name,
-            targets: foundTags,
-          });
-          return true;
-        }
-      }
-      return false;
     }
 
     // ========== ANIMATION LOOP ==========
     function animate() {
       requestAnimationFrame(animate);
+      var delta = clock.getDelta();
+      if (mixer) mixer.update(delta);
 
-      // Animate loaded models (idle animation)
-      loadedModels.forEach((model, index) => {
-        if (model.visible) {
-          // Simple idle animation
-          model.position.y = 0.05 + Math.sin(Date.now() * 0.002) * 0.01;
-        }
-      });
+      // Idle float animation on Y axis
+      if (loadedModel && loadedModel.visible) {
+        loadedModel.position.y += Math.sin(Date.now() * 0.002) * 0.0003;
+      }
 
       if (renderer && scene && camera) {
         renderer.render(scene, camera);
       }
     }
 
-    // ========== EVENT LISTENERS ==========
-    window.addEventListener('message', (event) => {
-      const { type, payload } = event.data || {};
-      console.log('[ar-xr] RECEIVE:', type, payload);
+    // ========== MINDAR (LOCAL ENGINE — NO APPKEY) ==========
+    var controller = null;
 
-      switch (type) {
-        case 'SET_ACTIVE_TARGETS':
-          // Reload targets with new configuration
-          console.log('[ar-xr] Reload targets requested');
-          break;
+    async function initMindAR() {
+      showOverlay('Starting AR engine...', mindFile ? 'Loading MindAR target' : 'Loading image target');
 
-        case 'RESUME_SCANNING':
-          showOverlay('Point camera at flashcard', '');
-          trackedTargets.clear();
-          updateDebug('Scanning', 0);
-          break;
+      try {
+        if (typeof MindARImage === 'undefined') {
+          throw new Error('MindAR not loaded. Check CDN.');
+        }
 
-        case 'SET_MODE':
-          console.log('[ar-xr] Mode change:', payload.mode);
-          break;
+        // Build target — prefer .mind file (more accurate), fallback to image URL
+        var targets = [];
+        if (mindFile) {
+          targets.push({ type: 'mindFile', src: mindFile });
+        } else if (targetImg) {
+          targets.push({ type: 'imageTarget', src: targetImg });
+        } else {
+          throw new Error('No mind file or target image URL provided');
+        }
 
+        var compiler = new MindARImage.Compiler();
+        var buffer;
+        if (mindFile) {
+          // .mind file already compiled — use directly
+          var resp = await fetch(mindFile);
+          buffer = await resp.arrayBuffer();
+        } else {
+          // Compile image target on the fly (slower, less accurate)
+          var imgBuffer = await fetch(targetImg).then(function(r) { return r.arrayBuffer(); });
+          var img = await createImageBitmap(new Blob([imgBuffer]));
+          buffer = await compiler.compileImageTarget(img);
+        }
+
+        var instance = new MindARImage.Instance({
+          canvas: canvas,
+          onTargetFound: function(targetIndex) {
+            console.log('[ar-xr] Target found:', targetIndex);
+            sendMessage('TARGET_FOUND', { targetIndex: targetIndex, qrId: qrId, word: word });
+            showCardLabel(word);
+            if (loadedModel) {
+              loadedModel.visible = true;
+            }
+          },
+          onTargetLost: function(targetIndex) {
+            console.log('[ar-xr] Target lost:', targetIndex);
+            sendMessage('TARGET_LOST', { targetIndex: targetIndex, qrId: qrId });
+            if (loadedModel) {
+              loadedModel.visible = false;
+            }
+          },
+          onUpdate: function(targetIndex) {
+            // Called every frame while target is tracked
+          },
+        });
+
+        controller = instance;
+
+        // Load model in parallel with AR engine
+        var modelPromise = modelUrl ? loadModel(modelUrl) : Promise.resolve(null);
+
+        await instance.start();
+        hideOverlay();
+        updateDebug('Tracking active');
+
+        sendMessage('AR_READY', {
+          engine: 'mindar-local',
+          qrId: qrId,
+          word: word,
+          hasModel: !!modelUrl,
+        });
+
+        // Wait for model
+        await modelPromise;
+
+      } catch (err) {
+        console.error('[ar-xr] MindAR init error:', err);
+        showError(err.message || 'Failed to start AR');
+        sendMessage('SYSTEM_ERROR', {
+          code: 'XR_INIT_FAILED',
+          message: err.message || 'AR initialization failed',
+        });
+      }
+    }
+
+    // ========== MESSAGE LISTENER (from parent) ==========
+    window.addEventListener('message', function(event) {
+      var data = event.data || {};
+      if (!data.type) return;
+      console.log('[ar-xr] RECV:', data.type, data.payload);
+
+      switch (data.type) {
         case 'DEBUG_TOGGLE':
-          debugPanel.style.display = payload.enabled ? 'block' : 'none';
+          debugPanel.style.display = data.payload && data.payload.enabled ? 'block' : 'none';
           break;
       }
     });
 
-    // Handle errors
-    window.addEventListener('error', (event) => {
-      console.error('[ar-xr] Global error:', event.error);
-      showError('An error occurred: ' + (event.error?.message || 'Unknown'));
-    });
-
-    // ========== MAIN INITIALIZATION ==========
+    // ========== MAIN ==========
     async function main() {
-      console.log('[ar-xr] Starting 8th Wall AR initialization');
-      console.log('[ar-xr] Targets:', targetJsonUrls);
-      console.log('[ar-xr] Model:', modelUrl || 'none');
+      console.log('[ar-xr] Initializing with params:', {
+        qr_id: qrId, mind_file: mindFile, target_img: targetImg,
+        model_url: modelUrl, word: word, isDebug: isDebug
+      });
 
-      // Initialize Three.js scene
-      initScene();
+      initThree();
+      updateDebug('Three.js ready');
 
-      // Load combo rules from backend (non-blocking)
-      loadComboRules();
+      // GLTFLoader lives on THREE global
+      THREE.GLTFLoader = THREE.GLTFLoader || GLTFLoader;
 
-      // Load image targets
-      await loadImageTargetData();
-
-      // Start XR session
-      await initXR();
-
-      // Start render loop
+      await initMindAR();
       animate();
-
-      console.log('[ar-xr] Initialization complete');
     }
 
-    // Start when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', main);
     } else {
       main();
     }
+  })();
   </script>
 </body>
 </html>
