@@ -82,7 +82,8 @@
     </script>
     <!-- Eruda Debug Console - Mobile Web Debugging -->
     <script>
-        if (location.search.includes('debug') || location.hostname === 'localhost') {
+        var viewerDebugParams = new URLSearchParams(location.search);
+        if (viewerDebugParams.get('eruda') === 'true' || location.hostname === 'localhost') {
             (function() {
                 var s = document.createElement('script');
                 s.src = 'https://cdn.jsdelivr.net/npm/eruda@3';

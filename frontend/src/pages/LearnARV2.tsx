@@ -1363,7 +1363,7 @@ export default function LearnARV2() {
                         onAppModeSwitch={handleAppModeChange}
                     />
                 )}
-                {appState === 'VIEWING' && !isComboViewer && flashcardCount < AR_MAX_TRACKS && (
+                {appState === 'VIEWING' && !isPersistentViewerEnabled && !isComboViewer && flashcardCount < AR_MAX_TRACKS && (
                     <button
                         type="button"
                         onClick={handleAddCardScan}

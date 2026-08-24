@@ -107,11 +107,16 @@ export const isTunnelMode = (): boolean => {
 };
 
 /**
- * Task 9: Check if persistent MindAR viewer is enabled.
- * Fails closed — returns false when flag is absent.
+ * Resolve the persistent MindAR viewer rollout flag.
+ * The continuous single-camera flow is now the default. Set the flag to the
+ * literal string "false" only when an explicit legacy rollback is required.
  */
+export function resolvePersistentMindViewerEnabled(flagValue: string | undefined): boolean {
+  return flagValue !== 'false';
+}
+
 export function isPersistentMindViewerEnabled(): boolean {
-  return import.meta.env.VITE_PERSISTENT_MIND_VIEWER === 'true';
+  return resolvePersistentMindViewerEnabled(import.meta.env.VITE_PERSISTENT_MIND_VIEWER);
 }
 
 // Export constants for debugging

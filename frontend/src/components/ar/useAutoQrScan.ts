@@ -66,7 +66,7 @@ export function useAutoQrScan(options: UseAutoQrScanOptions = {}): AutoQrScanHan
     }, [clearTimers]);
 
     const startScan = useCallback((excludedQrIds: string[], timeoutMs: number) => {
-        if (!enabled || !activeRef.current) return;
+        if (!enabled) return;
         stopScan();
         const sessionId = `autoqr-${++sessionCounter}-${crypto.randomUUID()}`;
         sessionIdRef.current = sessionId;
