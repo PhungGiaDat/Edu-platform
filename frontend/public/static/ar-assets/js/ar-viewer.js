@@ -794,6 +794,15 @@
             var existingAsset = document.getElementById('slot-asset-' + target.slotIndex);
             if (existingAsset) existingAsset.parentNode.removeChild(existingAsset);
 
+            // Hide the legacy model (mode-3d-{slotIndex}) to prevent duplicate rendering.
+            // The legacy model is created by ensureCatalogAnchors but should not display
+            // when we're using the persistent slot model path.
+            var legacyModel = document.getElementById('mode-3d-' + target.slotIndex);
+            if (legacyModel) {
+                legacyModel.setAttribute('visible', 'false');
+                log('🔒', 'Hidden legacy model: mode-3d-' + target.slotIndex);
+            }
+
             var modelEl = document.createElement('a-entity');
             modelEl.id = 'slot-model-' + target.slotIndex;
             modelEl.classList.add('clickable');
