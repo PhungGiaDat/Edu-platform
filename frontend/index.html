@@ -25,9 +25,9 @@
 
 <body>
   <div id="root"></div>
-  <script type="module" src="/src/main.tsx"></script>
-  <!-- Mobile Debug - Enable with ?debug=true in URL -->
+  <!-- Install the debug buffer before React and either AR engine can start. -->
   <script src="/static/ar-assets/js/mobile-debug.js"></script>
+  <script type="module" src="/src/main.tsx"></script>
   <!-- Eruda mobile console - Activate with ?debug=true or ?eruda=true -->
   <script>
     (function() {
@@ -52,6 +52,12 @@
           overrideConsole: true,
           theme: 'dark',
         });
+
+        // mobile-debug.js starts before React/camera and buffers the early
+        // lifecycle. Replay that snapshot only after Eruda owns console.*.
+        if (window.MobileDebug && typeof window.MobileDebug.attachEruda === 'function') {
+          window.MobileDebug.attachEruda();
+        }
 
         // Auto-hide after 60s to not annoy user
         setTimeout(function() {

@@ -19,8 +19,6 @@
         return;
     }
 
-    console.log('[MobileDebug] 🔧 Debug mode ENABLED');
-
     // ========== CREATE DEBUG OVERLAY ==========
     const debugPanel = document.createElement('div');
     debugPanel.id = 'mobile-debug-panel';
@@ -143,6 +141,12 @@
     const MAX_LOGS = 100;
     const MAX_BUFFERED_LOGS = 1000;
     const logBuffer = [];
+    const PERF_LOG_INTERVAL_MS = 5000;
+    let lastPerfLogAt = 0;
+    let suppressedPerfLogs = 0;
+    let isReplayingToEruda = false;
+    let erudaAttached = false;
+    let activeEngine = 'unknown';
 
     // ========== LOGGER FUNCTIONS ==========
     function addLog(type, args) {
@@ -164,7 +168,7 @@
 
         entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${escapeHtml(message)}`;
         logsContainer.appendChild(entry);
-        logBuffer.push(plainText);
+        logBuffer.push({ type, plainText, message });
         if (logBuffer.length > MAX_BUFFERED_LOGS) {
             logBuffer.shift();
         }
@@ -186,7 +190,7 @@
     }
 
     async function copyLogs() {
-        const text = logBuffer.join('\n');
+        const text = logBuffer.map(entry => entry.plainText).join('\n');
         if (!text) return false;
 
         try {
@@ -226,22 +230,22 @@
 
     console.log = function (...args) {
         originalConsole.log(...args);
-        addLog('log', args);
+        if (!isReplayingToEruda) addLog('log', args);
     };
 
     console.warn = function (...args) {
         originalConsole.warn(...args);
-        addLog('warn', args);
+        if (!isReplayingToEruda) addLog('warn', args);
     };
 
     console.error = function (...args) {
         originalConsole.error(...args);
-        addLog('error', args);
+        if (!isReplayingToEruda) addLog('error', args);
     };
 
     console.info = function (...args) {
         originalConsole.info(...args);
-        addLog('info', args);
+        if (!isReplayingToEruda) addLog('info', args);
     };
 
     // ========== GLOBAL ERROR HANDLER ==========
@@ -278,8 +282,114 @@
         },
         log: function (...args) {
             console.log('[Debug]', ...args);
+        },
+        attachEruda: function () {
+            if (erudaAttached) return;
+            erudaAttached = true;
+
+            // Snapshot first: the replay itself must not grow the Mobile Debug
+            // buffer or duplicate its DOM entries. At this point Eruda has
+            // already wrapped console.*, so these calls appear in Eruda too.
+            const earlyEntries = logBuffer.slice();
+            isReplayingToEruda = true;
+            try {
+                earlyEntries.forEach(function (entry) {
+                    const method = entry.type === 'error'
+                        ? 'error'
+                        : entry.type === 'warn'
+                            ? 'warn'
+                            : entry.type === 'info'
+                                ? 'info'
+                                : 'log';
+                    console[method]('[early]', entry.message);
+                });
+            } finally {
+                isReplayingToEruda = false;
+            }
+            console.info('[AR debug] Eruda attached; early lifecycle replayed:', earlyEntries.length);
         }
     };
+
+    function inferEngine(data) {
+        const payload = data && data.payload && typeof data.payload === 'object' ? data.payload : {};
+        const details = payload.details && typeof payload.details === 'object' ? payload.details : {};
+        const candidate = String(
+            payload.engine || details.engine || details.iframeSrc || payload.source || ''
+        ).toLowerCase();
+
+        if (candidate.includes('ar-xr') || candidate === 'xr' || candidate.includes('8th')) return '8thwall';
+        if (candidate.includes('ar-viewer') || candidate.includes('mindar')) return 'mindar';
+        if (candidate.includes('ar-scanner') || candidate.includes('scanner')) return 'scanner';
+        return activeEngine;
+    }
+
+    function viewerConsoleDetails(data) {
+        const payload = data && data.payload && typeof data.payload === 'object' ? data.payload : {};
+        const label = String(payload.label || '');
+        const isForwardedConsole = label.includes('CONSOLE_')
+            || label.includes('UNCAUGHT_ERROR')
+            || label.includes('UNHANDLED_REJECTION');
+        if (!isForwardedConsole) return null;
+        const details = payload.details && typeof payload.details === 'object' ? payload.details : {};
+        return {
+            label: label || 'IFRAME_CONSOLE',
+            level: label.includes('ERROR') || label.includes('REJECTION')
+                ? 'error'
+                : ['error', 'warn', 'info', 'log'].includes(details.level) ? details.level : 'log',
+            text: String(details.text || details.message || details.reason || ''),
+            engine: inferEngine(data),
+        };
+    }
+
+    function isNoisyPerformanceLog(text) {
+        return /^\[PERF\]/.test(text) || /^\[AR-Viewer\].*FPS:/.test(text);
+    }
+
+    function logIframeMessage(typeStr, data) {
+        const forwardedConsole = viewerConsoleDetails(data);
+        if (forwardedConsole) {
+            if (isNoisyPerformanceLog(forwardedConsole.text)) {
+                const now = Date.now();
+                if (now - lastPerfLogAt < PERF_LOG_INTERVAL_MS) {
+                    suppressedPerfLogs++;
+                    return;
+                }
+                const suffix = suppressedPerfLogs > 0
+                    ? ` (${suppressedPerfLogs} repetitive PERF/FPS logs suppressed)`
+                    : '';
+                lastPerfLogAt = now;
+                suppressedPerfLogs = 0;
+                console.info(`[iframe:${forwardedConsole.engine}]`, forwardedConsole.text + suffix);
+                return;
+            }
+
+            const method = forwardedConsole.level === 'error'
+                ? 'error'
+                : forwardedConsole.level === 'warn'
+                    ? 'warn'
+                    : 'info';
+            console[method](`[iframe:${forwardedConsole.engine}] ${forwardedConsole.label}`, forwardedConsole.text);
+            return;
+        }
+
+        const engine = inferEngine(data);
+        if (engine !== 'unknown' && engine !== 'scanner') activeEngine = engine;
+
+        if (typeStr === 'SCANNER_READY') {
+            console.info('[AR lifecycle] CAMERA_READY engine=scanner', data.payload || {});
+            return;
+        }
+        if (typeStr === 'AR_READY' || typeStr === 'SYSTEM_READY') {
+            console.info(`[AR lifecycle] ${typeStr} engine=${engine}`, data.payload || {});
+            return;
+        }
+        if (typeStr === 'AR_DEBUG' && data.payload && data.payload.label === 'PARENT_VIEWER_IFRAME_LOADED') {
+            console.info(`[AR lifecycle] ENGINE_START engine=${engine}`, data.payload.details || {});
+            return;
+        }
+
+        console.info(`📨 [iframe→parent:${engine}] ${typeStr}`, data.payload || {});
+    }
 
     // ========== INTERCEPT postMessage FROM IFRAMES ==========
     // The React bundle uses drop_console:true in production, stripping all
@@ -302,16 +412,19 @@
                     'TEXTURE_APPLIED', 'MODEL_CLICKED', 'AR_DEBUG',
                 ];
                 if (arTypes.includes(typeStr)) {
-                    const payload = JSON.stringify(data, null, 1);
-                    addLog('info', [`📨 [iframe→parent] ${typeStr}`, payload]);
+                    // Route through console so both the early buffer and Eruda
+                    // receive the same event stream. Repetitive performance
+                    // telemetry is throttled before touching either DOM.
+                    logIframeMessage(typeStr, data);
                 }
             }
         } catch (_e) { /* ignore parse errors */ }
     });
 
     // Initial log
-    console.log('🔧 Mobile Debug Panel Ready');
+    console.log('🔧 Mobile Debug Panel Ready (pre-React buffer active)');
     console.log('📱 User Agent:', navigator.userAgent);
     console.log('🌐 URL:', window.location.href);
+    console.info('[AR lifecycle] PAGE_BOOT engine=pending');
 
 })();

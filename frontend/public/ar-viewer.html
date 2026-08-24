@@ -33,13 +33,34 @@
                 }).join(' ').slice(0, 4000);
             }
 
+            var lastPerfForwardAt = 0;
+            var suppressedPerfForwards = 0;
+            var PERF_FORWARD_INTERVAL_MS = 5000;
+
+            function isNoisyPerformanceLog(text) {
+                return /^\[PERF\]/.test(text) || /^\[AR-Viewer\].*FPS:/.test(text);
+            }
+
             ['error', 'warn', 'log'].forEach(function(level) {
                 var original = console[level].bind(console);
                 console[level] = function() {
                     try {
+                        var text = serialiseConsoleArgs(arguments);
+                        if (level === 'log' && isNoisyPerformanceLog(text)) {
+                            var now = Date.now();
+                            if (now - lastPerfForwardAt < PERF_FORWARD_INTERVAL_MS) {
+                                suppressedPerfForwards++;
+                                return original.apply(console, arguments);
+                            }
+                            if (suppressedPerfForwards > 0) {
+                                text += ' (' + suppressedPerfForwards + ' repetitive PERF/FPS logs suppressed in viewer)';
+                            }
+                            lastPerfForwardAt = now;
+                            suppressedPerfForwards = 0;
+                        }
                         postToParent('AR_DEBUG', {
                             label: 'VIEWER_CONSOLE_' + level.toUpperCase(),
-                            details: { level: level, text: serialiseConsoleArgs(arguments) },
+                            details: { level: level, text: text, engine: 'mindar' },
                             source: 'ar-viewer-console'
                         });
                     } catch (_) { /* never break the viewer console */ }

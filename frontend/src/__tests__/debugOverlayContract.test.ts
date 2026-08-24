@@ -37,6 +37,31 @@ describe('mobile AR debug overlay contract', () => {
     expect(mobileDebugScript).toContain("navigator.clipboard.writeText(text)");
   });
 
+  it('buffers lifecycle logs before React and replays them after Eruda attaches', () => {
+    const mobileDebugIndex = indexHtml.indexOf('/static/ar-assets/js/mobile-debug.js');
+    const reactIndex = indexHtml.indexOf('/src/main.tsx');
+
+    expect(mobileDebugIndex).toBeGreaterThan(-1);
+    expect(mobileDebugIndex).toBeLessThan(reactIndex);
+    expect(indexHtml).toContain('window.MobileDebug.attachEruda()');
+    expect(mobileDebugScript).toContain('attachEruda: function ()');
+    expect(mobileDebugScript).toContain("'[AR lifecycle] PAGE_BOOT engine=pending'");
+  });
+
+  it('routes iframe logs to Eruda while throttling repetitive performance telemetry', () => {
+    expect(mobileDebugScript).toContain('PERF_LOG_INTERVAL_MS = 5000');
+    expect(mobileDebugScript).toContain('isNoisyPerformanceLog');
+    expect(mobileDebugScript).toContain('logIframeMessage(typeStr, data)');
+    expect(viewerHtml).toContain('PERF_FORWARD_INTERVAL_MS = 5000');
+    expect(viewerHtml).toContain('repetitive PERF/FPS logs suppressed in viewer');
+    expect(mobileDebugScript).toContain('ENGINE_START engine=');
+    expect(mobileDebugScript).toContain('CAMERA_READY engine=scanner');
+    expect(scannerHtml).toContain('SCANNER_CONSOLE_');
+    expect(scannerHtml).toContain('before camera bootstrap');
+    expect(xrHtml).toContain('XR_CONSOLE_');
+    expect(xrHtml).toContain('before engine bootstrap');
+  });
+
   it('renders the mobile debug controls above the AR stacking context', () => {
     expect(mobileDebugScript).toContain('z-index: 1000000');
     expect(mobileDebugScript).toContain('z-index: 1000001');

@@ -5,6 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>8th Wall AR - Claymorphic Flashcards</title>
 
+  <!-- Forward engine logs before XR/Three modules begin loading. The parent
+       owns the only Eruda instance and replays these from its early buffer. -->
+  <script>
+    (function installXrDebugBridge() {
+      var params = new URLSearchParams(location.search);
+      if (params.get('debug') !== 'true' && location.hostname !== 'localhost') return;
+
+      function sendDebug(label, details) {
+        window.parent.postMessage({
+          type: 'AR_DEBUG',
+          payload: { label: label, details: details || {}, source: 'ar-xr-console' },
+          timestamp: Date.now(),
+          origin: 'child'
+        }, '*');
+      }
+
+      function serialise(args) {
+        return Array.prototype.slice.call(args).map(function(value) {
+          try {
+            if (value instanceof Error) return value.stack || value.message;
+            return typeof value === 'object' ? JSON.stringify(value) : String(value);
+          } catch (_) {
+            return String(value);
+          }
+        }).join(' ').slice(0, 4000);
+      }
+
+      ['error', 'warn', 'log', 'info'].forEach(function(level) {
+        var original = console[level].bind(console);
+        console[level] = function() {
+          try {
+            sendDebug('XR_CONSOLE_' + level.toUpperCase(), {
+              level: level,
+              text: serialise(arguments),
+              engine: '8thwall'
+            });
+          } catch (_) { /* debug must never stop XR */ }
+          return original.apply(console, arguments);
+        };
+      });
+
+      window.addEventListener('error', function(event) {
+        sendDebug('XR_UNCAUGHT_ERROR', {
+          level: 'error',
+          text: String(event.message || event.error || 'Unknown XR error'),
+          engine: '8thwall'
+        });
+      }, true);
+      window.addEventListener('unhandledrejection', function(event) {
+        sendDebug('XR_UNHANDLED_REJECTION', {
+          level: 'error',
+          text: event.reason instanceof Error
+            ? (event.reason.stack || event.reason.message)
+            : String(event.reason),
+          engine: '8thwall'
+        });
+      });
+
+      console.info('[ar-xr] Debug bridge installed before engine bootstrap');
+    })();
+  </script>
+
   <!-- Eruda Debug Console - Mobile Web Debugging -->
   <script>
     const xrDebugParams = new URLSearchParams(location.search);
