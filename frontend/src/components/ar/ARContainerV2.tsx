@@ -318,15 +318,15 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
 
             // Fallback: include model/image/word so legacy bootstrap can load
             // Source 1: legacy props (may be undefined if card data not yet resolved)
-            // Source 2: activeTargets (always has latest resolved model URL)
-            const slot0 = activeTargets?.find(t => t.targetIndex === 0 || t.slotIndex === 0);
-            const slot1 = activeTargets?.find(t => t.targetIndex === 1 || t.slotIndex === 1);
-            const urlModel  = modelUrl  || slot0?.model3dUrl || slot0?.modelUrl;
-            const urlImage  = imageUrl  || slot0?.image2dUrl || slot0?.imageUrl;
-            const urlWord   = word      || slot0?.word || slot0?.displayName || '';
-            const urlModel2 = modelUrl2 || slot1?.model3dUrl || slot1?.modelUrl;
-            const urlImage2 = imageUrl2 || slot1?.image2dUrl || slot1?.imageUrl;
-            const urlWord2  = word2     || slot1?.word || slot1?.displayName || '';
+            // Source 2: activeTargets slotIndex 0 (always has latest resolved model URL)
+            const slot0 = activeTargets?.find(t => t.slotIndex === 0);
+            const slot1 = activeTargets?.find(t => t.slotIndex === 1);
+            const urlModel  = modelUrl  || slot0?.modelUrl;
+            const urlImage  = imageUrl;
+            const urlWord   = word      || slot0?.word || '';
+            const urlModel2 = modelUrl2 || slot1?.modelUrl;
+            const urlImage2 = imageUrl2;
+            const urlWord2  = word2     || slot1?.word || '';
             if (urlModel) {
                 params.set('model', urlModel);
                 params.set('word', urlWord);
