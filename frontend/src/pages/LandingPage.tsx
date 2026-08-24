@@ -254,10 +254,24 @@ export const LandingPage: React.FC = () => {
 
       {/* ── 1. Navbar ─────────────────────────────────────────────────────── */}
       <nav style={{
-        position: 'sticky', top: 0, zIndex: 100,
-        padding: 'clamp(12px, 3vw, 12px) clamp(16px, 5vw, 24px)',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        maxWidth: 1200, margin: '0 auto', width: '100%', boxSizing: 'border-box',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        paddingTop: 'clamp(12px, 3vw, 12px)',
+        paddingBottom: 'clamp(12px, 3vw, 12px)',
+        paddingLeft: 'max(env(safe-area-inset-left), clamp(16px, 5vw, 24px))',
+        paddingRight: 'max(env(safe-area-inset-right), clamp(16px, 5vw, 24px))',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        maxWidth: 1200,
+        margin: '0 auto',
+        width: '100%',
+        boxSizing: 'border-box',
+        backgroundColor: 'rgba(255, 255, 255, 0.92)',
+        backdropFilter: 'saturate(180%) blur(12px)',
+        WebkitBackdropFilter: 'saturate(180%) blur(12px)',
+        borderBottom: '1px solid rgba(15, 23, 42, 0.06)',
       }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

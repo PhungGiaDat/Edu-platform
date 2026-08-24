@@ -38,7 +38,7 @@ body,
 
 @media (min-width: 768px) {
   .learner-shell {
-    --learner-sidebar-width: 88px;
+    --learner-sidebar-width: 132px;
   }
 
   .learner-shell--sidebar-expanded {
