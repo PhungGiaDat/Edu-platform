@@ -102,8 +102,9 @@ export const LearnAR8thWall: React.FC = () => {
         const target: XRTarget = {
           qr_id: qrId,
           word: raw.word || qrId.replace('001', ''),
-          xr_target_json_url: raw.xr_target_json_url,
-          xr_target_image_url: raw.xr_target_image_url,
+          // 8th Wall needs the compiled target JSON (from Supabase)
+          xr_target_json_url: raw.tracking_target?.xr_target_json_url || raw.xr_target_json_url,
+          xr_target_image_url: raw.tracking_target?.xr_target_image_url || raw.xr_target_image_url,
           model_3d_url: raw.target?.model_3d_url || raw.model_3d_url,
           texture_url: raw.target?.texture_url || raw.texture_url,
           animations: raw.target?.animations || raw.animations,
@@ -188,8 +189,9 @@ export const LearnAR8thWall: React.FC = () => {
     const params = new URLSearchParams();
     params.set('qr_id', currentTarget.qr_id);
     params.set('word', currentTarget.word);
+    if (currentTarget.xr_target_json_url)   params.set('xr_target_json_url', currentTarget.xr_target_json_url);
+    if (currentTarget.xr_target_image_url)   params.set('xr_target_image_url', currentTarget.xr_target_image_url);
     if (currentTarget.model_3d_url)         params.set('model_3d_url', currentTarget.model_3d_url);
-    if (currentTarget.xr_target_image_url)  params.set('xr_target_image_url', currentTarget.xr_target_image_url);
     if (currentTarget.position)  params.set('position', currentTarget.position);
     if (currentTarget.rotation)  params.set('rotation', currentTarget.rotation);
     if (currentTarget.scale)     params.set('scale', currentTarget.scale);
