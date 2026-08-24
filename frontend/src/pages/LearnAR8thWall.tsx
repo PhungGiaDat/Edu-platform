@@ -79,30 +79,55 @@ export const LearnAR8thWall: React.FC = () => {
   const targetDeckId = useMemo(() => deckId || 'claymorphic-animals-001', [deckId]);
 
   /**
-   * Fetch XR targets and combo rules in PARALLEL
-   * Per async-parallel rule: independent ops should run concurrently
+   * Fetch XR targets and combo rules in PARALLEL.
+   * Per async-parallel rule: independent ops should run concurrently.
+   *
+   * WORKAROUND (2026-08-24): The `/xr-targets/deck/{deck_id}` endpoint returns
+   * HTTP 500 (Postgres SQL error in ar_object_repository.get_tracking_targets_with_xr).
+   * We bypass it by calling `/flashcard/{qr_id}/xr-urls` (status 200) for each
+   * known qr_id in the deck. The deck → qr_id mapping is hard-coded for now.
+   * TODO: revert once the deck endpoint is fixed in ar_object_repository.py.
    */
   const loadARData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
+    // Known qr_ids per deck — replace once `/xr-targets/deck/{deck_id}` is fixed.
+    const DECK_QR_IDS: Record<string, string[]> = {
+      'claymorphic-animals-001': [
+        'cat001', 'fish001', 'rabbit001', 'carrot001', 'elephant001',
+        'grass001', 'panda001', 'bamboo001', 'tiger001', 'meat001',
+      ],
+    };
+    const qrIds = DECK_QR_IDS[targetDeckId] || [];
+
+    if (!qrIds.length) {
+      setError(`No QR IDs configured for deck: ${targetDeckId}`);
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // Parallel fetch: targets + combo rules (no dependencies)
-      const [targetsRes, combosRes] = await Promise.all([
-        fetch(`${API_BASE}/api/flashcard/xr-targets/deck/${targetDeckId}`, {
+      // Parallel fetch: XR targets per qr_id + combo rules (no dependencies).
+      const xrUrlPromises = qrIds.map(qrId =>
+        fetch(`${API_BASE}/api/v1/flashcard/${qrId}/xr-urls`, {
           headers: { 'Content-Type': 'application/json' },
-        }),
-        fetch(`${API_BASE}/api/v1/combinations/rules?flashcard_set=${encodeURIComponent(targetDeckId)}`, {
-          headers: { 'Content-Type': 'application/json' },
-        }),
+        }).then(r => (r.ok ? r.json() : null)).catch(() => null)
+      );
+      const combosPromise = fetch(
+        `${API_BASE}/api/v1/combinations/rules?flashcard_set=${encodeURIComponent(targetDeckId)}`,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      const [xrResults, combosRes] = await Promise.all([
+        Promise.all(xrUrlPromises),
+        combosPromise,
       ]);
 
-      // Check targets response
-      if (!targetsRes.ok) {
-        throw new Error(`Failed to load XR targets: ${targetsRes.status}`);
+      const targetsData = xrResults.filter(Boolean);
+      if (!targetsData.length) {
+        throw new Error('No XR targets found for this deck');
       }
-
-      const targetsData: BackendTargetsResponse = await targetsRes.json();
 
       // Parse combos (may fail if endpoint not available)
       let combos: any[] = [];
@@ -111,56 +136,48 @@ export const LearnAR8thWall: React.FC = () => {
         combos = combosData.rules || combosData || [];
       }
 
-      // Process data
-      if (!targetsData.targets?.length) {
-        throw new Error('No XR targets found for this deck');
-      }
-
       // Set deck info
       setDeckInfo({
         deck_id: targetDeckId,
-        name: targetsData.targets[0]?.deck_name || 'AR Deck',
-        card_count: targetsData.target_count,
+        name: 'AR Deck',
+        card_count: targetsData.length,
       });
 
-      // Transform targets to XRTargetData format
-      const xrTargets: XRTargetData[] = targetsData.targets.map((t) => ({
+      // Build ActiveViewerTarget / XRTargetData list
+      const viewerTargets: ActiveViewerTarget[] = targetsData.map((t: any, index: number) => ({
+        slotIndex: (index % 2) as ActiveViewerTarget['slotIndex'],
+        mindTargetIndex: t.tracking_target?.mind_target_index ?? index,
+        arTag: t.qr_id,
+        modelUrl: t.target?.model_3d_url || '',
+        textureUrl: t.target?.texture_url,
+        word: t.word || t.qr_id.replace('001', ''),
+        position: t.target?.position || '0 0 0',
+        rotation: t.target?.rotation || '0 0 0',
+        scale: t.target?.scale || '1 1 1',
+        xr_target_json_url: t.xr_target_json_url,
+        xr_target_image_url: t.xr_target_image_url,
+        animations: t.target?.animations,
+        default_animation: t.target?.default_animation,
+        combo_animation: t.target?.combo_animation,
+      }));
+      const xrTargets: XRTargetData[] = targetsData.map((t: any) => ({
         qr_id: t.qr_id,
         xr_target_json_url: t.xr_target_json_url,
         xr_target_image_url: t.xr_target_image_url,
-        reference_image_url: t.reference_image_url,
-        mind_catalog_id: t.mind_catalog_id,
-        mind_target_index: t.mind_target_index,
-        model_3d_url: t.model_3d_url,
-        texture_url: t.texture_url,
-        animations: t.animations,
-        default_animation: t.default_animation || 'IDLE',
-        combo_animation: t.combo_animation,
-        position: t.position || '0 0 0',
-        rotation: t.rotation || '0 0 0',
-        scale: t.scale || '1 1 1',
+        reference_image_url: t.tracking_target?.reference_image_url,
+        mind_catalog_id: t.target?.mind_catalog_id,
+        mind_target_index: t.tracking_target?.mind_target_index,
+        model_3d_url: t.target?.model_3d_url,
+        texture_url: t.target?.texture_url,
+        animations: t.target?.animations,
+        default_animation: t.target?.default_animation || 'IDLE',
+        combo_animation: t.target?.combo_animation,
+        position: t.target?.position || '0 0 0',
+        rotation: t.target?.rotation || '0 0 0',
+        scale: t.target?.scale || '1 1 1',
       }));
 
       setTargets(xrTargets);
-
-      // Build ActiveViewerTarget for ARContainerV2
-      const viewerTargets: ActiveViewerTarget[] = targetsData.targets.map((t, index) => ({
-        slotIndex: (index % 2) as ActiveViewerTarget['slotIndex'], // 0 or 1
-        mindTargetIndex: t.mind_target_index ?? index,
-        arTag: t.qr_id,
-        modelUrl: t.model_3d_url || '',
-        textureUrl: t.texture_url,
-        word: t.word || t.qr_id.replace('001', ''),
-        position: t.position || '0 0 0',
-        rotation: t.rotation || '0 0 0',
-        scale: t.scale || '1 1 1',
-        xr_target_json_url: t.xr_target_json_url,
-        xr_target_image_url: t.xr_target_image_url,
-        animations: t.animations,
-        default_animation: t.default_animation,
-        combo_animation: t.combo_animation,
-      }));
-
       setActiveTargets(viewerTargets);
       setComboRules(combos);
 
