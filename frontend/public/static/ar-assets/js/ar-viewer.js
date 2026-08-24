@@ -724,9 +724,13 @@
                 return;
             }
 
-            // Remove existing slot model if present
+            // Remove the previous revision's model and asset. Leaving an old
+            // slot-asset-* behind creates duplicate IDs, so a later selector
+            // can bind the newly-created entity to stale GLB bytes.
             var existing = document.getElementById('slot-model-' + target.slotIndex);
             if (existing) existing.parentNode.removeChild(existing);
+            var existingAsset = document.getElementById('slot-asset-' + target.slotIndex);
+            if (existingAsset) existingAsset.parentNode.removeChild(existingAsset);
 
             var modelEl = document.createElement('a-entity');
             modelEl.id = 'slot-model-' + target.slotIndex;
@@ -743,34 +747,62 @@
 
             var assetItem = document.createElement('a-asset-item');
             assetItem.setAttribute('id', 'slot-asset-' + target.slotIndex);
-            assetItem.setAttribute('src', target.modelUrl);
             assetItem.setAttribute('crossorigin', 'anonymous');
             assetItem.setAttribute('timeout', '15000');
 
+            var settled = false;
+            var loadTimeout = setTimeout(function() {
+                fail(new Error('GLB entity load timed out: ' + target.modelUrl));
+            }, 20_000);
+
+            function succeed() {
+                if (settled) return;
+                settled = true;
+                clearTimeout(loadTimeout);
+                log('✅', 'Slot model rendered: slot=' + target.slotIndex + ' url=' + target.modelUrl);
+                resolve();
+            }
+
+            function fail(error) {
+                if (settled) return;
+                settled = true;
+                clearTimeout(loadTimeout);
+                reject(error);
+            }
+
+            // Register every listener before assigning src/appending. Cached
+            // assets on iOS can complete quickly enough to beat late handlers.
+            modelEl.addEventListener('model-loaded', succeed, { once: true });
+            modelEl.addEventListener('model-error', function(e) {
+                log('❌', 'Slot model entity error: ' + target.modelUrl, e);
+                fail(new Error('GLB entity failed: ' + target.modelUrl));
+            }, { once: true });
+
+            assetItem.addEventListener('loaded', function() {
+                log('✅', 'Slot GLB asset ready: slot=' + target.slotIndex + ' url=' + target.modelUrl);
+                anchor.appendChild(modelEl);
+                applyTextureWhenModelReady(modelEl, target.textureUrl);
+                modelEl.setAttribute('gltf-model', '#slot-asset-' + target.slotIndex);
+
+                // Wire word label
+                if (target.word) {
+                    window['_arWord' + target.slotIndex] = target.word;
+                }
+            }, { once: true });
+
+            assetItem.addEventListener('error', function(e) {
+                log('❌', 'Slot GLB load error: ' + target.modelUrl, e);
+                // Reject — caller handles ACTIVE_TARGETS_REJECTED, not fallback
+                fail(new Error('GLB load failed: ' + target.modelUrl));
+            }, { once: true });
+
+            assetItem.setAttribute('src', target.modelUrl);
             var assetsEl = document.querySelector('a-assets');
             if (assetsEl) {
                 assetsEl.appendChild(assetItem);
             } else {
                 document.body.appendChild(assetItem);
             }
-
-            assetItem.addEventListener('loaded', function() {
-                log('✅', 'Slot GLB loaded: slot=' + target.slotIndex + ' url=' + target.modelUrl);
-                modelEl.setAttribute('gltf-model', '#slot-asset-' + target.slotIndex);
-                anchor.appendChild(modelEl);
-
-                // Wire word label
-                if (target.word) {
-                    window['_arWord' + target.slotIndex] = target.word;
-                }
-                resolve();
-            });
-
-            assetItem.addEventListener('error', function(e) {
-                log('❌', 'Slot GLB load error: ' + target.modelUrl, e);
-                // Reject — caller handles ACTIVE_TARGETS_REJECTED, not fallback
-                reject(new Error('GLB load failed: ' + target.modelUrl));
-            });
         });
     }
 
@@ -900,6 +932,13 @@
         }
         ensureCatalogAnchors(targetCount);
 
+        // The parent can now safely send SET_ACTIVE_TARGETS. Do this before
+        // MindAR fires arReady so GLB download/parsing overlaps camera startup.
+        sendToParent('VIEWER_TARGETS_READY', {
+            catalogId: currentCatalogId || '',
+            targetCount
+        });
+
         sendDebug('DYNAMIC_TARGETS_READY', {
             targetCount,
             targets: targetConfigs.map(target => ({
@@ -1006,8 +1045,10 @@
                     loadTextureAndApply(model0El, textureUrl);
                 });
             }
-        } else {
+        } else if (!currentCatalogId) {
             log('⚠️', 'No 3D model URL provided for target 0');
+        } else {
+            log('⏳', 'Target 0 model deferred to SET_ACTIVE_TARGETS');
         }
 
         if (imageUrl) {
@@ -1030,7 +1071,7 @@
             });
             assetsEl.appendChild(imgAsset);
             document.getElementById('mode-2d-0').setAttribute('src', '#img-asset-0');
-        } else {
+        } else if (!currentCatalogId) {
             log('⚠️', 'No 2D image URL provided for target 0');
         }
 
@@ -1054,7 +1095,7 @@
             });
             assetsEl.appendChild(imgAsset2);
             document.getElementById('mode-2d-1').setAttribute('src', '#img-asset-1');
-        } else {
+        } else if (!currentCatalogId) {
             log('⚠️', 'No 2D image URL provided for target 1');
         }
 
@@ -1171,8 +1212,10 @@
                     loadTextureAndApply(model1El, textureUrl2);
                 });
             }
-        } else {
+        } else if (!currentCatalogId) {
             log('⚠️', 'No 3D model URL provided for target 1 (optional)');
+        } else {
+            log('⏳', 'Target 1 model deferred to SET_ACTIVE_TARGETS');
         }
 
         log('🎧', 'Setting up event listeners...');

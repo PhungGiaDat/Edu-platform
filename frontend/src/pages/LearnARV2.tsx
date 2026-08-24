@@ -1028,41 +1028,6 @@ export default function LearnARV2() {
               }))
             : undefined;
 
-    // Task 9: Add card scan session ref for new flow
-    const addCardScanSessionRef = useRef<string | null>(null);
-
-    // Task 9: Add card status for new flow
-    const [_addCardStatus, setAddCardStatus] = useState<'idle' | 'scanning' | 'success' | 'error' | 'timeout' | 'cancelled'>('idle');
-
-    const handleAddCardScan = useCallback(() => {
-        // Task 9: Fail closed if persistent viewer not enabled
-        if (!isPersistentViewerEnabled) {
-            console.warn('[LearnARV2] Persistent Mind Viewer not enabled. Set VITE_PERSISTENT_MIND_VIEWER=true to use.');
-            emitMobileDebug('PERSISTENT_VIEWER_DISABLED', {});
-            return;
-        }
-
-        HapticService.tap();
-        SoundEffectService.play('tap');
-
-        // Task 9: New catalog activation flow - does NOT switch appState or emit AR_SWITCH_TO_SCANNER
-        const sessionId = crypto.randomUUID();
-        addCardScanSessionRef.current = sessionId;
-        setIsAddingCard(true);
-        setAddCardStatus('scanning');
-
-        eventBus.emit('AR_BEGIN_ADD_CARD_SCAN' as any, {
-            sessionId,
-            excludedQrIds: Array.from(detectedFlashcards.keys()),
-            timeoutMs: 15000,
-        });
-
-        emitMobileDebug('AR_BEGIN_ADD_CARD_SCAN', {
-            sessionId,
-            excludedQrIds: Array.from(detectedFlashcards.keys()),
-        });
-    }, [isPersistentViewerEnabled, detectedFlashcards, emitMobileDebug]);
-
     const handleCancelAddCardScan = useCallback(() => {
         HapticService.tap();
         setIsAddingCard(false);
@@ -1366,30 +1331,6 @@ export default function LearnARV2() {
                         onDisplayModeToggle={() => handleDisplayModeChange(displayMode === '2D' ? '3D' : '2D')}
                         onAppModeSwitch={handleAppModeChange}
                     />
-                )}
-                {appState === 'VIEWING' && !isPersistentViewerEnabled && !isComboViewer && flashcardCount < AR_MAX_TRACKS && (
-                    <button
-                        type="button"
-                        onClick={handleAddCardScan}
-                        style={{
-                            position: 'fixed',
-                            right: 16,
-                            bottom: 'max(104px, calc(env(safe-area-inset-bottom) + 88px))',
-                            zIndex: 100004,
-                            minHeight: 48,
-                            padding: '10px 16px',
-                            borderRadius: 24,
-                            border: '3px solid rgba(255,255,255,0.9)',
-                            background: 'linear-gradient(135deg,#22c55e,#14b8a6)',
-                            color: '#fff',
-                            fontWeight: 900,
-                            fontSize: 14,
-                            boxShadow: '0 8px 24px rgba(20,184,166,0.35)',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        + Add card
-                    </button>
                 )}
                 {appState === 'VIEWING' && multiPreparation.status === 'preparing' && (
                     <div style={{

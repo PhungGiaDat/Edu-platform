@@ -7,7 +7,8 @@
  * Persistent Viewer flow (Task 8):
  * - viewer URL is built only from mind + catalogId + targetCount + maxTrack=2
  * - mindIdentityKey = catalogId|mindUrl — stable across activeTargets changes
- * - After AR_READY, sends SET_ACTIVE_TARGETS with revision 1
+ * - Once catalog anchors are ready, sends SET_ACTIVE_TARGETS with revision 1
+ *   (AR_READY remains a compatibility fallback)
  * - On activeTargets prop change, sends next SET_ACTIVE_TARGETS revision
  * - 7-second ACK timeout triggers rejection with ACTIVE_TARGETS_TIMEOUT
  * - No MIND_BUFFER props in the persistent viewer flow
@@ -179,6 +180,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     // Task 8: revision state machine — kept in a ref so the ACK timeout
     // and message handler can both mutate it without causing re-renders.
     const revisionStateRef = useRef<ActiveTargetRevisionState>(initialRevisionState);
+    const hasReceivedTargetTransportReadyRef = useRef(false);
     // Task 8: ACK timeout handle — cleared on each new revision
     const ackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -459,11 +461,12 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         armAckTimeout(next.desiredRevision);
     }, [sendActiveTargets, armAckTimeout]);
 
-    // When activeTargets prop changes, send a new revision (only after AR_READY
-    // has been received so the iframe is ready to receive SET_ACTIVE_TARGETS).
+    // When activeTargets changes, send a new revision once the iframe has
+    // created its catalog anchors. AR_READY is kept as a compatibility fallback
+    // for older viewer builds which do not emit VIEWER_TARGETS_READY.
     const hasReceivedARReadyRef = useRef(false);
     useEffect(() => {
-        if (!hasReceivedARReadyRef.current) return;
+        if (!hasReceivedTargetTransportReadyRef.current && !hasReceivedARReadyRef.current) return;
         if (!activeTargets?.length) return;
         requestActiveTargets(activeTargets);
     }, [activeTargets, requestActiveTargets]);
@@ -551,6 +554,21 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 break;
             }
 
+            case 'VIEWER_TARGETS_READY': {
+                if (fromPiP || phase !== 'VIEWING' || event.source !== iframeRef.current?.contentWindow) break;
+                const data = payload as ARMessagePayloadMap['VIEWER_TARGETS_READY'];
+                hasReceivedTargetTransportReadyRef.current = true;
+                emitDebug('PARENT_VIEWER_TARGETS_READY', data);
+
+                // Send the initial revision immediately so GLB parsing runs in
+                // parallel with MindAR camera startup. Guard revision 0 so a
+                // later AR_READY does not enqueue the same targets twice.
+                if (activeTargets?.length && revisionStateRef.current.desiredRevision === 0) {
+                    requestActiveTargets(activeTargets);
+                }
+                break;
+            }
+
             case 'AR_READY': {
                 if (fromPiP || phase !== 'VIEWING' || event.source !== iframeRef.current?.contentWindow) break;
                 cancelViewerBootstrapWatchdogRef.current?.();
@@ -569,7 +587,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
                 hasReceivedARReadyRef.current = true;
                 // Spec A: notify auto QR scanner that AR is ready
                 autoQr.markReady();
-                if (activeTargets?.length) {
+                if (activeTargets?.length && revisionStateRef.current.desiredRevision === 0) {
                     requestActiveTargets(activeTargets);
                 }
                 break;
@@ -804,6 +822,9 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         cancelViewerBootstrapWatchdogRef.current = null;
         setError(null);
         setIsReady(false);
+        hasReceivedTargetTransportReadyRef.current = false;
+        hasReceivedARReadyRef.current = false;
+        revisionStateRef.current = initialRevisionState;
         transitionTo('SCANNING');
     }, [transitionTo]);
 

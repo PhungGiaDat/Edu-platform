@@ -35,6 +35,10 @@ describe('mobile AR debug overlay contract', () => {
     expect(mobileDebugScript).toContain('window.MobileDebug.copy()');
     expect(mobileDebugScript).toContain('MAX_BUFFERED_LOGS = 1000');
     expect(mobileDebugScript).toContain("navigator.clipboard.writeText(text)");
+    expect(mobileDebugScript).toContain('return copied');
+    expect(indexHtml).toContain("data-eruda-copy-all");
+    expect(indexHtml).toContain('await window.MobileDebug.copy()');
+    expect(indexHtml).not.toContain("querySelectorAll(\".eruda-log-item\")");
   });
 
   it('buffers lifecycle logs before React and replays them after Eruda attaches', () => {

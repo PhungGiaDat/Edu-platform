@@ -268,6 +268,7 @@
         copy: async function () {
             const copied = await copyLogs();
             addLog(copied ? 'info' : 'error', [copied ? '✅ Logs copied to clipboard' : '❌ Unable to copy logs']);
+            return copied;
         },
         toggle: function () {
             debugPanel.classList.toggle('minimized');
@@ -404,7 +405,7 @@
                 // Only show AR-related messages to avoid noise
                 const arTypes = [
                     'SCANNER_READY', 'QR_DETECTED', 'SCANNER_ERROR',
-                    'AR_READY', 'TARGET_FOUND', 'TARGET_LOST',
+                    'VIEWER_TARGETS_READY', 'AR_READY', 'TARGET_FOUND', 'TARGET_LOST',
                     'SYSTEM_READY', 'SYSTEM_ERROR', 'AR_ERROR',
                     'MULTI_TARGET_DETECTED', 'AR_TRACKING_STATE',
                     'COMBO_PROXIMITY_DETECTED', 'COMBO_PROXIMITY_UPDATE',

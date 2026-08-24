@@ -27,14 +27,14 @@ describe('AR dynamic model scale policy', () => {
 
   it('normalizes relative to the current entity scale', () => {
     // A model with intrinsic max dimension 2 is currently displayed at 0.5
-    // because its entity scale is 0.25. It should end at scale 0.4 so the
-    // displayed max dimension becomes 0.8, not jump to 1.6.
-    expect(policy.computeUniformScale(0.5, 0.25)).toBeCloseTo(0.4, 8);
+    // because its entity scale is 0.25. It should end at scale 0.375 so the
+    // displayed max dimension becomes 0.75, not jump to 1.5.
+    expect(policy.computeUniformScale(0.5, 0.25)).toBeCloseTo(0.375, 8);
   });
 
   it('scales large and small source models to the same target span', () => {
-    expect(policy.computeUniformScale(25, 0.25)).toBeCloseTo(0.008, 8);
-    expect(policy.computeUniformScale(0.02, 0.25)).toBeCloseTo(10, 8);
+    expect(policy.computeUniformScale(25, 0.25)).toBeCloseTo(0.0075, 8);
+    expect(policy.computeUniformScale(0.02, 0.25)).toBeCloseTo(9.375, 8);
   });
 
   it('supports a larger target span for combo models', () => {

@@ -262,6 +262,36 @@ describe('ARContainerV2 — Persistent Viewer', () => {
     expect(payload.targets).toEqual(initialTargets);
   });
 
+  it('VIEWER_TARGETS_READY starts initial model transport before AR_READY without duplicating it', () => {
+    render(
+      <TestableARContainerV2
+        initialPhase="VIEWING"
+        catalogId="animals-v2"
+        mindUrl={MIND_URL}
+        catalogTargetCount={2}
+        activeTargets={[makeTarget()]}
+      />
+    );
+
+    giveIframesFakeContentWindow();
+    fakePostMessage.mockClear();
+
+    act(() => {
+      dispatchARMessage('VIEWER_TARGETS_READY', { catalogId: 'animals-v2', targetCount: 2 });
+    });
+
+    act(() => {
+      dispatchARMessage('AR_READY', { targetCount: 2 });
+    });
+
+    const targetMessages = fakePostMessage.mock.calls
+      .map(([data]) => data as { type: string; payload: { revision: number } })
+      .filter((message) => message.type === 'SET_ACTIVE_TARGETS');
+
+    expect(targetMessages).toHaveLength(1);
+    expect(targetMessages[0].payload.revision).toBe(1);
+  });
+
   // -------------------------------------------------------------------------
   // Test 5 — onActiveTargetsApplied callback is called when child ACKs revision
   // -------------------------------------------------------------------------

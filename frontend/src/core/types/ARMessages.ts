@@ -59,6 +59,7 @@ export type ARMessageType =
     | 'SCANNER_READY'
     | 'QR_DETECTED'
     | 'SCANNER_ERROR'
+    | 'VIEWER_TARGETS_READY'
     | 'AR_READY'
     | 'TARGET_FOUND'
     | 'TARGET_LOST'
@@ -137,6 +138,10 @@ export interface ARMessagePayloadMap {
     };
 
     // AR Viewer
+    VIEWER_TARGETS_READY: {
+        catalogId: string;
+        targetCount: number;
+    };
     AR_READY: {
         targetCount: number;
     };

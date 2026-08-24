@@ -6,7 +6,7 @@
 (function (root) {
     'use strict';
 
-    const DEFAULT_TARGET_SPAN = 0.8;
+    const DEFAULT_TARGET_SPAN = 0.75;
     const DEFAULT_MIN_SCALE = 0.001;
     const DEFAULT_MAX_SCALE = 20;
     const BOUNDS_EPSILON = 1e-6;

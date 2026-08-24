@@ -34,6 +34,30 @@ describe('AR viewer bootstrap fail-fast contract', () => {
     expect(viewerJs).toContain("case 'SET_ACTIVE_TARGETS'");
   });
 
+  it('announces target transport readiness before waiting for camera readiness', () => {
+    const anchorsReady = viewerJs.indexOf('ensureCatalogAnchors(targetCount)');
+    const transportReady = viewerJs.indexOf("sendToParent('VIEWER_TARGETS_READY'");
+    const cameraReady = viewerJs.indexOf("sendToParent('AR_READY'");
+
+    expect(anchorsReady).toBeGreaterThan(-1);
+    expect(transportReady).toBeGreaterThan(anchorsReady);
+    expect(cameraReady).toBeGreaterThan(transportReady);
+  });
+
+  it('waits for the rendered model before acknowledging persistent targets', () => {
+    const fnStart = viewerJs.indexOf('function loadSlotGlb');
+    const afterFn = viewerJs.substring(fnStart);
+    const nextFn = afterFn.indexOf('\n    function ', 1);
+    const fnBody = nextFn > 0 ? afterFn.substring(0, nextFn) : afterFn;
+
+    expect(fnBody).toContain("modelEl.addEventListener('model-loaded', succeed");
+    expect(fnBody).toContain("modelEl.addEventListener('model-error'");
+    expect(fnBody.indexOf("assetItem.addEventListener('loaded'")).toBeLessThan(
+      fnBody.indexOf("assetItem.setAttribute('src', target.modelUrl)"),
+    );
+    expect(fnBody).toContain("document.getElementById('slot-asset-' + target.slotIndex)");
+  });
+
   it('handles BEGIN_ADD_CARD_SCAN message', () => {
     expect(viewerJs).toContain("case 'BEGIN_ADD_CARD_SCAN'");
   });
