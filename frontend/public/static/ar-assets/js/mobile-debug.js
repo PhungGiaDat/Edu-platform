@@ -115,7 +115,7 @@
         <div id="debug-header">
             <span>📱 Mobile Debug</span>
             <div id="debug-controls">
-                <button onclick="window.MobileDebug.copy()">Copy</button>
+                <button data-copy-all-logs="true" onclick="window.MobileDebug.copy()">Copy All</button>
                 <button onclick="window.MobileDebug.clear()">Clear</button>
                 <button onclick="window.MobileDebug.toggle()">Toggle</button>
                 <button onclick="window.MobileDebug.hide()">Hide</button>
@@ -189,9 +189,34 @@
         return div.innerHTML;
     }
 
+    function copyLogsWithSelection(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('aria-hidden', 'true');
+        textarea.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;padding:0;border:0;opacity:0.01;font-size:16px;';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        textarea.setSelectionRange(0, textarea.value.length);
+        let copied = false;
+        try {
+            copied = typeof document.execCommand === 'function' && document.execCommand('copy');
+        } catch (_error) {
+            copied = false;
+        } finally {
+            document.body.removeChild(textarea);
+        }
+        return copied;
+    }
+
     async function copyLogs() {
         const text = logBuffer.map(entry => entry.plainText).join('\n');
         if (!text) return false;
+
+        // execCommand must run synchronously inside the tap handler on iOS.
+        // Trying the asynchronous Clipboard API first can lose user activation
+        // before Safari reaches the fallback.
+        if (copyLogsWithSelection(text)) return true;
 
         try {
             if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
@@ -199,25 +224,9 @@
                 return true;
             }
         } catch (_error) {
-            // Safari may reject Clipboard API despite a user gesture. Use the
-            // legacy textarea path below as a compatibility fallback.
+            // Both copy paths failed. The caller will display failure feedback.
         }
-
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.setAttribute('readonly', '');
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        textarea.setSelectionRange(0, textarea.value.length);
-        let copied = false;
-        try {
-            copied = typeof document.execCommand === 'function' && document.execCommand('copy');
-        } finally {
-            document.body.removeChild(textarea);
-        }
-        return copied;
+        return false;
     }
 
     // ========== OVERRIDE CONSOLE ==========

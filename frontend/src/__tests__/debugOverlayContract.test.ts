@@ -32,13 +32,47 @@ describe('mobile AR debug overlay contract', () => {
   });
 
   it('provides a copy control backed by a larger text buffer', () => {
+    const copyFunctionIndex = mobileDebugScript.indexOf('async function copyLogs()');
+    const selectionFallbackIndex = mobileDebugScript.indexOf(
+      'if (copyLogsWithSelection(text))',
+      copyFunctionIndex,
+    );
+    const clipboardIndex = mobileDebugScript.indexOf(
+      'navigator.clipboard.writeText(text)',
+      copyFunctionIndex,
+    );
+
     expect(mobileDebugScript).toContain('window.MobileDebug.copy()');
+    expect(mobileDebugScript).toContain('data-copy-all-logs="true"');
+    expect(mobileDebugScript).toContain('Copy All');
     expect(mobileDebugScript).toContain('MAX_BUFFERED_LOGS = 1000');
+    expect(mobileDebugScript).toContain('copyLogsWithSelection(text)');
     expect(mobileDebugScript).toContain("navigator.clipboard.writeText(text)");
     expect(mobileDebugScript).toContain('return copied');
     expect(indexHtml).toContain("data-eruda-copy-all");
+    expect(indexHtml).toContain("document.body.appendChild(copyButton)");
+    expect(indexHtml).toContain('📋 Copy All');
+    expect(indexHtml).not.toContain('erudaRoot.appendChild(copyButton)');
     expect(indexHtml).toContain('await window.MobileDebug.copy()');
     expect(indexHtml).not.toContain("querySelectorAll(\".eruda-log-item\")");
+    expect(selectionFallbackIndex).toBeGreaterThan(copyFunctionIndex);
+    expect(selectionFallbackIndex).toBeLessThan(clipboardIndex);
+  });
+
+  it('keeps the unused legacy WebVR DPDB out of the MindAR startup path', () => {
+    const compatIndex = viewerHtml.indexOf('installAFrameNonVrCompatibility();');
+    const aframeIndex = viewerHtml.indexOf("loadScript('/static/vendor/aframe-1.4.2.min.js'");
+
+    expect(viewerHtml).toContain("Object.defineProperty(navigator, 'getVRDisplays'");
+    expect(viewerHtml).toContain("label: 'AFRAME_NON_VR_COMPAT_READY'");
+    expect(compatIndex).toBeGreaterThan(-1);
+    expect(compatIndex).toBeLessThan(aframeIndex);
+  });
+
+  it('does not report resource failures as empty uncaught JavaScript errors', () => {
+    expect(viewerHtml).toContain("label: 'VIEWER_RESOURCE_LOAD_ERROR'");
+    expect(viewerHtml).toContain("message: 'Viewer resource failed to load'");
+    expect(viewerHtml).toContain('if (!event.message && event.target && event.target !== window)');
   });
 
   it('buffers lifecycle logs before React and replays them after Eruda attaches', () => {

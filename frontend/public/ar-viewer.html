@@ -69,6 +69,23 @@
             });
 
             window.addEventListener('error', function(event) {
+                // Capture-phase error events also include failed <script>,
+                // <img>, and model resources. Those are not JavaScript
+                // exceptions and do not have ErrorEvent.message/stack.
+                if (!event.message && event.target && event.target !== window) {
+                    var failedTarget = event.target;
+                    postToParent('AR_DEBUG', {
+                        label: 'VIEWER_RESOURCE_LOAD_ERROR',
+                        details: {
+                            message: 'Viewer resource failed to load',
+                            tagName: failedTarget.tagName || null,
+                            url: failedTarget.currentSrc || failedTarget.src || failedTarget.href || null,
+                            engine: 'mindar'
+                        },
+                        source: 'ar-viewer-console'
+                    });
+                    return;
+                }
                 postToParent('AR_DEBUG', {
                     label: 'VIEWER_UNCAUGHT_ERROR',
                     details: {
@@ -398,6 +415,42 @@
                 });
             }
 
+            function installAFrameNonVrCompatibility() {
+                // This iframe is an image-tracking viewer, not a VR viewer.
+                // A-Frame 1.4.2 otherwise starts its legacy WebVR polyfill on
+                // iOS Safari. Its stale DPDB cannot identify newer iPhones and
+                // emits a misleading error before falling back to generic lens
+                // measurements. Exposing an empty native WebVR result keeps
+                // that unused polyfill dormant without changing MindAR camera,
+                // image tracking, WebGL, or the disabled look-controls path.
+                if (navigator.xr || typeof navigator.getVRDisplays === 'function') return;
+
+                var emptyVRDisplays = function () { return Promise.resolve([]); };
+                try {
+                    Object.defineProperty(navigator, 'getVRDisplays', {
+                        configurable: true,
+                        value: emptyVRDisplays
+                    });
+                } catch (_error) {
+                    try {
+                        navigator.getVRDisplays = emptyVRDisplays;
+                    } catch (_assignmentError) {
+                        postToParent('AR_DEBUG', {
+                            label: 'AFRAME_NON_VR_COMPAT_SKIPPED',
+                            details: { reason: 'navigator-is-not-extensible' },
+                            source: 'ar-viewer-bootstrap'
+                        });
+                        return;
+                    }
+                }
+
+                postToParent('AR_DEBUG', {
+                    label: 'AFRAME_NON_VR_COMPAT_READY',
+                    details: { reason: 'mindar-image-tracking-does-not-use-webvr' },
+                    source: 'ar-viewer-bootstrap'
+                });
+            }
+
             async function loadESModule(src) {
                 return await import(src);
             }
@@ -475,6 +528,7 @@
                 var mindUrl = requestedMind;
                 if (!mindUrl) throw new Error('No Mind target source was provided');
 
+                installAFrameNonVrCompatibility();
                 await loadScript('/static/vendor/aframe-1.4.2.min.js', 'aframe', deadlineAt);
                 await loadScript('/static/vendor/mindar-image-aframe-1.2.5.prod.js', 'mindar', deadlineAt);
                 await loadScript('/static/vendor/jsQR-1.4.0.min.js', 'jsqr', deadlineAt);

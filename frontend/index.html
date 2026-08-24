@@ -55,17 +55,23 @@
 
         // Copy from MobileDebug's unified parent + iframe buffer instead of
         // scraping Eruda DOM (which is inaccessible when useShadowDom=true).
-        var copyButton = document.createElement('button');
-        copyButton.type = 'button';
-        copyButton.setAttribute('data-eruda-copy-all', 'true');
-        copyButton.textContent = '📋 Copy logs';
-        copyButton.style.cssText = 'position:fixed;top:max(8px,env(safe-area-inset-top));right:8px;z-index:2147483647;padding:8px 12px;border:0;border-radius:999px;background:#14b8a6;color:#fff;font-weight:800;box-shadow:0 4px 16px rgba(0,0,0,.35);';
-        copyButton.onclick = async function() {
-          var copied = Boolean(window.MobileDebug && await window.MobileDebug.copy());
-          copyButton.textContent = copied ? '✅ Copied' : '❌ Copy failed';
-          setTimeout(function() { copyButton.textContent = '📋 Copy logs'; }, 1600);
-        };
-        erudaRoot.appendChild(copyButton);
+        // Keep this control outside Eruda's managed root: on iOS Eruda's
+        // launcher and shadow host can otherwise cover or clip child controls.
+        var copyButton = document.querySelector('[data-eruda-copy-all="true"]');
+        if (!copyButton) {
+          copyButton = document.createElement('button');
+          copyButton.type = 'button';
+          copyButton.setAttribute('data-eruda-copy-all', 'true');
+          copyButton.setAttribute('aria-label', 'Copy all AR debug logs');
+          copyButton.textContent = '📋 Copy All';
+          copyButton.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:8px;z-index:2147483647;padding:9px 13px;border:1px solid rgba(255,255,255,.75);border-radius:999px;background:#0f766e;color:#fff;font:800 12px/1.2 system-ui,-apple-system,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.45);touch-action:manipulation;-webkit-user-select:none;user-select:none;';
+          copyButton.onclick = async function() {
+            var copied = Boolean(window.MobileDebug && await window.MobileDebug.copy());
+            copyButton.textContent = copied ? '✅ Copied' : '❌ Copy failed';
+            setTimeout(function() { copyButton.textContent = '📋 Copy All'; }, 1600);
+          };
+          document.body.appendChild(copyButton);
+        }
 
         // mobile-debug.js starts before React/camera and buffers the early
         // lifecycle. Replay that snapshot only after Eruda owns console.*.
