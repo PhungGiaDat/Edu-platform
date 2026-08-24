@@ -263,8 +263,12 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
         const parentParams = new URLSearchParams(window.location.search);
         const debugParam = parentParams.get('debug');
         const erudaParam = parentParams.get('eruda');
+        const targetSpanParam = parentParams.get('targetSpan');
         if (debugParam) p.set('debug', debugParam);
         if (erudaParam) p.set('eruda', erudaParam);
+        // Forward targetSpan override from parent URL (e.g. /learn-ar?targetSpan=1.0)
+        // for live tuning of dynamic model bounding-box scale without rebuilding.
+        if (targetSpanParam) p.set('targetSpan', targetSpanParam);
     };
 
     const viewerSrc = useMemo(() => {

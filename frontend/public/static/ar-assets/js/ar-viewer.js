@@ -167,10 +167,13 @@
     const pLossTimeout     = Math.max(100, Math.min(Number(params.get('lossTimeout') || 1200), 10000));
     const pRenderScale     = Math.max(0.1, Math.min(Number(params.get('renderScale') || 1), 2));
     const pWatchdogDisabled = params.get('adaptiveWatchdogDisabled') === 'true';
+    // Dynamic bounding-box target span: fraction of card width the model should occupy.
+    // 0.75 = 75% (legacy default). Increase to make models fill more of the card.
+    const pTargetSpan = Math.max(0.1, Math.min(Number(params.get('targetSpan') || 0.75), 2));
     // ───────────────────────────────────────────────────────────────────────────
 
     log('🔧', `Params: mind=${mindUrl}, model=${modelUrl}, texture=${textureUrl}, word=${window._arWord0}`);
-    log('⚙️', `FixD tuning: filterMinCF=${pFilterMinCF}, filterBeta=${pFilterBeta}, warmupTolerance=${pWarmupTolerance}, lossTimeout=${pLossTimeout}, renderScale=${pRenderScale}, watchdogDisabled=${pWatchdogDisabled}`);
+    log('⚙️', `FixD tuning: filterMinCF=${pFilterMinCF}, filterBeta=${pFilterBeta}, warmupTolerance=${pWarmupTolerance}, lossTimeout=${pLossTimeout}, renderScale=${pRenderScale}, watchdogDisabled=${pWatchdogDisabled}, targetSpan=${pTargetSpan}`);
 
     log('cards', `Viewer configured for ${cardCount} detected card(s)`);
 
@@ -753,6 +756,7 @@
             wireDynamicModelScale(modelEl, {
                 targetIndex: target.slotIndex,
                 explicitScale: target.scale,
+                targetSpan: pTargetSpan,
                 source: 'persistent-slot'
             });
 
@@ -1016,7 +1020,7 @@
             assetItem.setAttribute('src', modelUrl);
             assetItem.setAttribute('crossorigin', 'anonymous');
             const model0El = document.getElementById('mode-3d-0');
-            wireDynamicModelScale(model0El, { targetIndex: 0, source: 'legacy-target' });
+            wireDynamicModelScale(model0El, { targetIndex: 0, source: 'legacy-target', targetSpan: pTargetSpan });
             // Update loading text on load events
             assetItem.addEventListener('loaded', () => {
                 log('✅', 'Model 0 loaded successfully');
@@ -1140,7 +1144,7 @@
             let assetItem2 = null;
             const secondaryModelIsOptional = Boolean(comboModelUrl);
             const model1El = document.getElementById('mode-3d-1');
-            wireDynamicModelScale(model1El, { targetIndex: 1, source: 'legacy-target' });
+            wireDynamicModelScale(model1El, { targetIndex: 1, source: 'legacy-target', targetSpan: pTargetSpan });
             assetItem2 = document.createElement('a-asset-item');
             assetItem2.setAttribute('id', 'model-asset-1');
             assetItem2.setAttribute('src', modelUrl2);
@@ -1260,7 +1264,7 @@
             }
 
             if (target.modelUrl && modelEl) {
-                wireDynamicModelScale(modelEl, { targetIndex: target.index, source: 'dynamic-target' });
+                wireDynamicModelScale(modelEl, { targetIndex: target.index, source: 'dynamic-target', targetSpan: pTargetSpan });
                 const assetItem = document.createElement('a-asset-item');
                 assetItem.setAttribute('id', `model-asset-${target.index}`);
                 assetItem.setAttribute('src', target.modelUrl);
