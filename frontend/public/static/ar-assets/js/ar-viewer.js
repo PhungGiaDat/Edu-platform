@@ -435,10 +435,16 @@
             // Auto-centering: shift the model so its bounding box center is at (0,0,0) relative to anchor
             const center = new THREE.Vector3();
             box.getCenter(center);
-            // We need to apply the negative of the center, scaled by the new scale
-            const offsetX = -center.x * nextScale + pModelOffsetX;
-            const offsetY = -center.y * nextScale + pModelOffsetY;
-            const offsetZ = -center.z * nextScale + pModelOffsetZ;
+            
+            // Log raw center for debugging offset issues
+            log('🎯', `Model Box Center: ${center.x.toFixed(3)}, ${center.y.toFixed(3)}, ${center.z.toFixed(3)}`);
+
+            // Apply offsets. Note: we negate the center to move it to (0,0,0)
+            // but we must scale the center offset by the applied model scale.
+            const offsetX = (-center.x * nextScale) + pModelOffsetX;
+            const offsetY = (-center.y * nextScale) + pModelOffsetY;
+            const offsetZ = (-center.z * nextScale) + pModelOffsetZ;
+            
             modelEl.setAttribute('position', `${offsetX} ${offsetY} ${offsetZ}`);
             
             if (modelEl.id === 'combo-model' && modelEl.hasAttribute?.('animation__spawn')) {
