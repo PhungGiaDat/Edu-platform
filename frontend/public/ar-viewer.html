@@ -141,10 +141,12 @@
                                 '<button id="eruda-download-logs" style="width:100%;height:46px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-weight:bold;font-size:14px;box-shadow:0 4px 12px rgba(34,197,94,0.4);display:flex;align-items:center;justify-content:center;gap:8px;"><span>💾</span> Download Logs (.txt)</button>' +
                                 '<div style="margin-top:2px;color:#888;font-size:11px;text-align:center;">Sync to Discord for realtime desktop debugging</div></div>');
                             
-                            $el.on('click', '#eruda-sync-discord', function() {
-                                var btn = this;
-                                btn.disabled = true;
-                                btn.innerText = '⌛ Syncing...';
+                            window.syncToDiscord = function(externalBtn) {
+                                var btn = externalBtn || document.getElementById('eruda-sync-discord');
+                                if (btn) {
+                                    btn.disabled = true;
+                                    btn.innerText = '⌛ Syncing...';
+                                }
                                 
                                 var logs = [];
                                 var items = document.querySelectorAll('.eruda-console .eruda-log-item');
@@ -165,21 +167,29 @@
                                     body: formData
                                 }).then(function(res) {
                                     if (res.ok) {
-                                        btn.style.background = '#3ba55c';
-                                        btn.innerText = '✅ Synced to Discord!';
-                                        setTimeout(function() {
-                                            btn.disabled = false;
-                                            btn.style.background = '#5865F2';
-                                            btn.innerText = '🚀 Sync to Discord';
-                                        }, 3000);
+                                        if (btn) {
+                                            btn.style.background = '#3ba55c';
+                                            btn.innerText = '✅ Synced to Discord!';
+                                            setTimeout(function() {
+                                                btn.disabled = false;
+                                                btn.style.background = '#5865F2';
+                                                btn.innerText = '🚀 Sync to Discord';
+                                            }, 3000);
+                                        }
                                     } else {
                                         throw new Error('Webhook failed');
                                     }
                                 }).catch(function(err) {
+                                    if (btn) {
+                                        btn.disabled = false;
+                                        btn.innerText = '🚀 Sync to Discord';
+                                    }
                                     alert('❌ Discord Sync Failed: ' + err.message);
-                                    btn.disabled = false;
-                                    btn.innerText = '🚀 Sync to Discord';
                                 });
+                            };
+                            
+                            $el.on('click', '#eruda-sync-discord', function() {
+                                window.syncToDiscord(this);
                             });
 
                             $el.on('click', '#eruda-download-logs', function() {
@@ -206,143 +216,8 @@
         }
     </script>
     <link rel="stylesheet" href="/static/ar-assets/css/ar-viewer.css">
-    <style>
-        #ar-debug-overlay {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            z-index: 999999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: auto;
-        }
-        .debug-btn {
-            padding: 8px 12px;
-            background: #5865F2;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            cursor: pointer;
-            text-align: center;
-        }
-        .debug-controls {
-            background: rgba(0,0,0,0.7);
-            padding: 10px;
-            border-radius: 12px;
-            color: white;
-            font-size: 11px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            min-width: 140px;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        .debug-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-        .btn-group {
-            display: flex;
-            gap: 4px;
-        }
-        .adj-btn {
-            width: 28px;
-            height: 28px;
-            background: #333;
-            color: white;
-            border: 1px solid #555;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        .adj-btn:active { background: #555; }
-    </style>
 </head>
 <body>
-    <div id="ar-debug-overlay" style="display: none;">
-        <button id="main-sync-discord" class="debug-btn">🚀 Sync Discord</button>
-        <div class="debug-controls">
-            <div style="font-weight:bold; margin-bottom:2px; border-bottom:1px solid #444; padding-bottom:4px;">AR Offset Tuner</div>
-            <div class="debug-row">
-                <span>X (L/R)</span>
-                <div class="btn-group">
-                    <button class="adj-btn" onclick="adjustOffset('pModelOffsetX', -0.05)">-</button>
-                    <button class="adj-btn" onclick="adjustOffset('pModelOffsetX', 0.05)">+</button>
-                </div>
-            </div>
-            <div class="debug-row">
-                <span>Y (U/D)</span>
-                <div class="btn-group">
-                    <button class="adj-btn" onclick="adjustOffset('pModelOffsetY', -0.05)">-</button>
-                    <button class="adj-btn" onclick="adjustOffset('pModelOffsetY', 0.05)">+</button>
-                </div>
-            </div>
-            <div style="font-size:9px; color:#aaa; margin-top:4px;">Tip: Sync Discord to see logs</div>
-        </div>
-    </div>
-    <script>
-        function adjustOffset(param, delta) {
-            var url = new URL(window.location.href);
-            var current = parseFloat(url.searchParams.get(param)) || 0;
-            url.searchParams.set(param, (current + delta).toFixed(2));
-            window.location.href = url.toString();
-        }
-        
-        window.addEventListener('load', function() {
-            if (location.search.includes('debug=true') || location.hostname === 'localhost') {
-                document.getElementById('ar-debug-overlay').style.display = 'flex';
-            }
-            
-            document.getElementById('main-sync-discord').onclick = function() {
-                var btn = this;
-                btn.disabled = true;
-                btn.innerText = '⌛ Syncing...';
-                
-                var logs = [];
-                // Try to get logs from Eruda if available
-                var items = document.querySelectorAll('.eruda-console .eruda-log-item');
-                if (items.length > 0) {
-                    items.forEach(function(item) { logs.push(item.innerText); });
-                } else {
-                    logs.push("No Eruda logs found in DOM. Make sure Eruda is initialized.");
-                }
-                
-                var text = logs.join('\n');
-                var webhookUrl = 'https://discord.com/api/webhooks/1541864213222522980/n5KueLWwJSf75P5TIAeovTxqcZ5A_AL2DrfkJw04GT8Xtb5UWdwX3bEr0d4a5VPRv6kD';
-                
-                var formData = new FormData();
-                var blob = new Blob([text], { type: 'text/plain' });
-                formData.append('file', blob, 'ar-session-' + new Date().getTime() + '.txt');
-                formData.append('payload_json', JSON.stringify({
-                    content: '🔔 **AR Quick Sync (Iframe)**\n- URL: ' + location.href + '\n- Time: ' + new Date().toLocaleString()
-                }));
-
-                fetch(webhookUrl, {
-                    method: 'POST',
-                    body: formData
-                }).then(function(res) {
-                    btn.innerText = res.ok ? '✅ Synced!' : '❌ Failed';
-                    setTimeout(function() {
-                        btn.disabled = false;
-                        btn.innerText = '🚀 Sync Discord';
-                    }, 3000);
-                }).catch(function(err) {
-                    btn.innerText = '❌ Error';
-                    btn.disabled = false;
-                    setTimeout(() => btn.innerText = '🚀 Sync Discord', 3000);
-                });
-            };
-        });
-    </script>
     <!-- Spec C: Loading overlay - shows during MindAR warmup, fades when ready -->
     <div id="ar-loading-overlay">
         <div class="ar-spinner"></div>
@@ -430,13 +305,7 @@
                 }
             }
 
-            // Listen for messages from the viewer script
-            // Debug: log all incoming messages if ?debug
-            if (location.search.includes('debug') || location.hostname === 'localhost') {
-                window.addEventListener('message', function debugMessage(event) {
-                    console.log('[←parent]', event.data);
-                });
-            }
+
 
             window.addEventListener('message', function onViewerMessage(event) {
                 var msg = event.data;

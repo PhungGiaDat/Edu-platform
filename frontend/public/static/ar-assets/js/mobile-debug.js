@@ -112,15 +112,14 @@
                 display: none;
             }
         </style>
-        <div id="debug-header">
-            <span>📱 Mobile Debug</span>
-            <div id="debug-controls">
-                <button data-copy-all-logs="true" onclick="window.MobileDebug.copy()">Copy All</button>
-                <button onclick="window.MobileDebug.clear()">Clear</button>
-                <button onclick="window.MobileDebug.toggle()">Toggle</button>
-                <button onclick="window.MobileDebug.hide()">Hide</button>
-            </div>
-        </div>
+	        <div id="debug-header">
+	            <span>📱 Mobile Debug</span>
+	            <div id="debug-controls">
+	                <button onclick="window.MobileDebug.clear()">Clear</button>
+	                <button onclick="window.MobileDebug.toggle()">Toggle</button>
+	                <button onclick="window.MobileDebug.hide()">Hide</button>
+	            </div>
+	        </div>
         <div id="debug-logs"></div>
     `;
 

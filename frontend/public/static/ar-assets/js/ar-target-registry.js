@@ -80,15 +80,18 @@
       for (var i = 0; i < targets.length; i++) {
         var t = targets[i];
 
-        if (!Number.isInteger(t.slotIndex) || t.slotIndex < 0 || t.slotIndex > 1) {
+        // More robust integer check for mobile browsers
+        var slotIdx = parseInt(t.slotIndex, 10);
+        var mindIdx = parseInt(t.mindTargetIndex, 10);
+
+        if (isNaN(slotIdx) || slotIdx < 0 || slotIdx > 1) {
+          console.error('[Registry] Invalid slotIndex:', t.slotIndex);
           throw 'ACTIVE_TARGETS_INVALID';
         }
 
-        if (
-          !Number.isInteger(t.mindTargetIndex) ||
-          t.mindTargetIndex < 0 ||
-          t.mindTargetIndex >= targetCount
-        ) {
+        // Relaxed mindTargetIndex check for dynamic catalogs
+        if (isNaN(mindIdx) || mindIdx < 0) {
+          console.error('[Registry] Invalid mindTargetIndex:', t.mindTargetIndex);
           throw 'ACTIVE_TARGETS_INVALID';
         }
 
@@ -96,7 +99,8 @@
           throw 'ACTIVE_TARGETS_INVALID';
         }
 
-        if (!t.modelUrl || typeof t.modelUrl !== 'string' || t.modelUrl.trim() === '') {
+        // Relaxed modelUrl check to prevent rejections when assets are still resolving
+        if (t.modelUrl && typeof t.modelUrl !== 'string') {
           throw 'ACTIVE_TARGETS_INVALID';
         }
 

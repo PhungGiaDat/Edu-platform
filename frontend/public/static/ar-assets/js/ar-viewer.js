@@ -173,9 +173,9 @@
 
     // Model position offset for alignment tuning (in AR units, ~1 = 8.5cm)
     // Use negative values to move opposite direction. Typical range: -0.1 to 0.1
-    const pModelOffsetX = Number(params.get('modelOffsetX') || 0);
-    const pModelOffsetY = Number(params.get('modelOffsetY') || 0);
-    const pModelOffsetZ = Number(params.get('modelOffsetZ') || 0);
+    let pModelOffsetX = Number(params.get('modelOffsetX') || 0);
+    let pModelOffsetY = Number(params.get('modelOffsetY') || 0);
+    let pModelOffsetZ = Number(params.get('modelOffsetZ') || 0);
 
     // ───────────────────────────────────────────────────────────────────────────
 
@@ -632,8 +632,9 @@
 
         // Realtime Offset & Discord Sync Handling
         if (type === 'UPDATE_MANUAL_OFFSET') {
-            pModelOffsetX = payload.x || 0;
-            pModelOffsetY = payload.y || 0;
+            pModelOffsetX = typeof payload.x === 'number' ? payload.x : pModelOffsetX;
+            pModelOffsetY = typeof payload.y === 'number' ? payload.y : pModelOffsetY;
+            pModelOffsetZ = typeof payload.z === 'number' ? payload.z : pModelOffsetZ;
             log('🎯', 'Manual Offset Updated Realtime: ' + pModelOffsetX + ', ' + pModelOffsetY);
             
             // Re-apply to all active slot models
@@ -641,7 +642,8 @@
                 var model = document.getElementById('slot-model-' + i);
                 if (model) {
                     var slotIdx = i;
-                    var target = targetRegistry ? targetRegistry.getSlot(slotIdx) : null;
+                    // Use getBySlot instead of getSlot
+                    var target = targetRegistry ? targetRegistry.getBySlot(slotIdx) : null;
                     if (target) {
                         wireDynamicModelScale(model, {
                             targetIndex: target.slotIndex,
@@ -657,8 +659,11 @@
 
         if (type === 'SYNC_DISCORD_REQUEST') {
             log('🚀', 'Discord Sync requested by parent');
-            var syncBtn = document.getElementById('main-sync-discord');
-            if (syncBtn) syncBtn.click();
+            if (window.syncToDiscord) {
+                window.syncToDiscord();
+            } else {
+                log('❌', 'Discord sync function not available in iframe');
+            }
             return;
         }
 

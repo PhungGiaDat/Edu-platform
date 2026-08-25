@@ -1050,7 +1050,7 @@ export default function LearnARV2() {
         orderedComboTargets.length > 0 && catalogId && catalogMindUrl
             ? orderedComboTargets.map((target, index) => ({
                 slotIndex: index as 0 | 1,
-                mindTargetIndex: target.mindTargetIndex ?? index,
+	                mindTargetIndex: Number(target.mindTargetIndex ?? index),
                 arTag: target.arTag,
                 modelUrl: target.model3dUrl,
                 textureUrl: target.textureUrl,
@@ -1316,60 +1316,7 @@ export default function LearnARV2() {
     return (
         <div className="learn-ar-v2" style={{ position: 'fixed', inset: 0 }}>
             {/* AR Container with iframe swapping */}
-            {/* Parent Debug Overlay - Moved outside for max accessibility */}
-            {appState === 'VIEWING' && (
-                <div style={{
-                    position: 'fixed', 
-                    top: 'max(100px, env(safe-area-inset-top))', 
-                    left: 12,
-                    zIndex: 200000, // Extremely high z-index
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    gap: 8,
-                    pointerEvents: 'auto',
-                    touchAction: 'manipulation'
-                }}>
-                    <button 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleSyncDiscord();
-                        }}
-                        style={{
-                            padding: '10px 16px', background: '#5865F2', color: 'white',
-                            border: 'none', borderRadius: 20, fontWeight: 900, fontSize: 13,
-                            boxShadow: '0 6px 16px rgba(0,0,0,0.4)', cursor: 'pointer'
-                        }}
-                    >
-                        🚀 Sync Discord
-                    </button>
-                    
-                    <div style={{
-                        background: 'rgba(15,23,42,0.95)', padding: 12, borderRadius: 16,
-                        color: 'white', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 8,
-                        border: '2px solid rgba(255,255,255,0.3)', minWidth: 160,
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.5)'
-                    }}>
-                        <div style={{ fontWeight: 900, borderBottom: '1px solid #334155', paddingBottom: 6, marginBottom: 4 }}>AR Offset Tuner</div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontWeight: 700 }}>X: {manualOffset.x}</span>
-                            <div style={{ display: 'flex', gap: 6 }}>
-                                <button onClick={(e) => { e.stopPropagation(); handleAdjustOffset('x', -0.05); }} style={{ width: 32, height: 32, background: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: 8, fontWeight: 900, fontSize: 18 }}>-</button>
-                                <button onClick={(e) => { e.stopPropagation(); handleAdjustOffset('x', 0.05); }} style={{ width: 32, height: 32, background: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: 8, fontWeight: 900, fontSize: 18 }}>+</button>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontWeight: 700 }}>Y: {manualOffset.y}</span>
-                            <div style={{ display: 'flex', gap: 6 }}>
-                                <button onClick={(e) => { e.stopPropagation(); handleAdjustOffset('y', -0.05); }} style={{ width: 32, height: 32, background: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: 8, fontWeight: 900, fontSize: 18 }}>-</button>
-                                <button onClick={(e) => { e.stopPropagation(); handleAdjustOffset('y', 0.05); }} style={{ width: 32, height: 32, background: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: 8, fontWeight: 900, fontSize: 18 }}>+</button>
-                            </div>
-                        </div>
-                        <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 4, textAlign: 'center' }}>
-                            Changes apply realtime to viewer
-                        </div>
-                    </div>
-                </div>
-            )}
+
 
             <ARContainerV2
                 engine={engine}
@@ -1562,12 +1509,68 @@ export default function LearnARV2() {
                 </Suspense>
             )}
 
-            {/* Game Overlay */}
-            {appState === 'GAME' && gameData && (
-                <Suspense fallback={null}>
-                    <GameOverlay gameSession={gameData} onExit={handleExitGame} />
-                </Suspense>
-            )}
+	            {/* Game Overlay */}
+	            {appState === 'GAME' && gameData && (
+	                <Suspense fallback={null}>
+	                    <GameOverlay gameSession={gameData} onExit={handleExitGame} />
+	                </Suspense>
+	            )}
+
+			            {/* Parent Debug Overlay - Placed at the very end of body to avoid z-index/canvas issues */}
+			            {appState === 'VIEWING' && window.location.search.includes('debug=true') && (
+			                <div style={{
+			                    position: 'fixed', 
+			                    top: 100, 
+			                    left: 10,
+			                    zIndex: 2147483647, 
+			                    display: 'flex', 
+			                    flexDirection: 'column', 
+			                    gap: 10,
+			                    pointerEvents: 'auto',
+			                    touchAction: 'manipulation'
+			                }}>
+			                    <button 
+			                        type="button"
+			                        onClick={(e) => {
+			                            e.preventDefault();
+			                            e.stopPropagation();
+			                            handleSyncDiscord();
+			                        }}
+			                        style={{
+			                            padding: '12px 20px', background: '#5865F2', color: 'white',
+			                            border: '3px solid #fff', borderRadius: 24, fontWeight: 900, fontSize: 14,
+			                            boxShadow: '0 8px 25px rgba(0,0,0,0.8)', cursor: 'pointer',
+			                            touchAction: 'manipulation'
+			                        }}
+			                    >
+			                        🚀 Sync to Discord
+			                    </button>
+			                    
+			                    <div style={{
+			                        background: 'rgba(15,23,42,0.95)', padding: 15, borderRadius: 20,
+			                        color: 'white', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 10,
+			                        border: '2px solid #38bdf8', minWidth: 180,
+			                        boxShadow: '0 15px 35px rgba(0,0,0,0.9)',
+			                        touchAction: 'none'
+			                    }}>
+			                        <div style={{ fontWeight: 900, borderBottom: '1px solid #334155', paddingBottom: 6, marginBottom: 2, fontSize: 16, color: '#38bdf8', textAlign: 'center' }}>AR Offset Tuner</div>
+			                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+			                            <span style={{ fontWeight: 900 }}>X: {manualOffset.x.toFixed(2)}</span>
+			                            <div style={{ display: 'flex', gap: 8 }}>
+			                                <button type="button" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); handleAdjustOffset('x', -0.05); }} style={{ width: 40, height: 40, background: '#1e293b', color: '#fff', border: '1px solid #38bdf8', borderRadius: 10, fontWeight: 900, fontSize: 20, touchAction: 'manipulation' }}>-</button>
+			                                <button type="button" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); handleAdjustOffset('x', 0.05); }} style={{ width: 40, height: 40, background: '#1e293b', color: '#fff', border: '1px solid #38bdf8', borderRadius: 10, fontWeight: 900, fontSize: 20, touchAction: 'manipulation' }}>+</button>
+			                            </div>
+			                        </div>
+			                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+			                            <span style={{ fontWeight: 900 }}>Y: {manualOffset.y.toFixed(2)}</span>
+			                            <div style={{ display: 'flex', gap: 8 }}>
+			                                <button type="button" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); handleAdjustOffset('y', -0.05); }} style={{ width: 40, height: 40, background: '#1e293b', color: '#fff', border: '1px solid #38bdf8', borderRadius: 10, fontWeight: 900, fontSize: 20, touchAction: 'manipulation' }}>-</button>
+			                                <button type="button" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); handleAdjustOffset('y', 0.05); }} style={{ width: 40, height: 40, background: '#1e293b', color: '#fff', border: '1px solid #38bdf8', borderRadius: 10, fontWeight: 900, fontSize: 20, touchAction: 'manipulation' }}>+</button>
+			                            </div>
+			                        </div>
+			                    </div>
+			                </div>
+			            )}
 
             {/* Game Selector */}
             {showGameSelector && (
