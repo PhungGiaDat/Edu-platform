@@ -170,9 +170,20 @@
     // Dynamic bounding-box target span: fraction of card width the model should occupy.
     // 0.75 = 75% (legacy default). Increase to make models fill more of the card.
     const pTargetSpan = Math.max(0.1, Math.min(Number(params.get('targetSpan') || 0.75), 2));
+
+    // Model position offset for alignment tuning (in AR units, ~1 = 8.5cm)
+    // Use negative values to move opposite direction. Typical range: -0.1 to 0.1
+    const pModelOffsetX = Number(params.get('modelOffsetX') || 0);
+    const pModelOffsetY = Number(params.get('modelOffsetY') || 0);
+    const pModelOffsetZ = Number(params.get('modelOffsetZ') || 0);
+
     // ───────────────────────────────────────────────────────────────────────────
 
     log('🔧', `Params: mind=${mindUrl}, model=${modelUrl}, texture=${textureUrl}, word=${window._arWord0}`);
+    log('⚙️', `FixD tuning: filterMinCF=${pFilterMinCF}, filterBeta=${pFilterBeta}, warmupTolerance=${pWarmupTolerance}, lossTimeout=${pLossTimeout}, renderScale=${pRenderScale}, watchdogDisabled=${pWatchdogDisabled}, targetSpan=${pTargetSpan}`);
+    if (pModelOffsetX || pModelOffsetY || pModelOffsetZ) {
+        log('⚙️', `Model offset: x=${pModelOffsetX}, y=${pModelOffsetY}, z=${pModelOffsetZ}`);
+    }
     log('⚙️', `FixD tuning: filterMinCF=${pFilterMinCF}, filterBeta=${pFilterBeta}, warmupTolerance=${pWarmupTolerance}, lossTimeout=${pLossTimeout}, renderScale=${pRenderScale}, watchdogDisabled=${pWatchdogDisabled}, targetSpan=${pTargetSpan}`);
 
     log('cards', `Viewer configured for ${cardCount} detected card(s)`);
@@ -806,7 +817,12 @@
             var modelEl = document.createElement('a-entity');
             modelEl.id = 'slot-model-' + target.slotIndex;
             modelEl.classList.add('clickable');
-            modelEl.setAttribute('position', target.position || '0 0 0');
+            // Apply position offset for alignment tuning
+            var basePos = target.position ? target.position.split(' ').map(Number) : [0, 0, 0];
+            var posX = (basePos[0] || 0) + pModelOffsetX;
+            var posY = (basePos[1] || 0) + pModelOffsetY;
+            var posZ = (basePos[2] || 0) + pModelOffsetZ;
+            modelEl.setAttribute('position', posX + ' ' + posY + ' ' + posZ);
             modelEl.setAttribute('rotation', target.rotation || '0 0 0');
             // Use calibrated fallback scale — dynamic scaling will override this once mesh is ready.
             // These values (1.2 for slot 0, 1.5 for slot 1) are tuned for 8.5cm AR cards.
