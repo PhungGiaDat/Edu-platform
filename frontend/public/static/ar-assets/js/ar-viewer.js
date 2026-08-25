@@ -683,6 +683,7 @@
                 anchor.id = anchorId;
                 anchor.setAttribute('mindar-image-target', 'targetIndex: ' + i);
                 anchor.setAttribute('visible', 'true');
+                log('📍', `Created anchor ${anchorId} with mindar-image-target index=${i}`);
 
                 // 2-D image layer
                 var img = document.createElement('a-image');
@@ -700,14 +701,16 @@
                 var modelEl = document.createElement('a-entity');
                 modelEl.id = 'mode-3d-' + i;
                 modelEl.classList.add('clickable');
-                modelEl.setAttribute('position', '0 ' + (i === 0 ? '0.05' : '0.1') + ' 0');
+                var legacyY = i === 0 ? '0.05' : '0.1';
+                modelEl.setAttribute('position', '0 ' + legacyY + ' 0');
                 modelEl.setAttribute('rotation', '0 0 0');
                 modelEl.setAttribute('scale', modelScale + ' ' + modelScale + ' ' + modelScale);
                 modelEl.setAttribute('visible', 'true');
                 anchor.appendChild(modelEl);
+                log('📍', `Legacy model mode-3d-${i} position=0 ${legacyY} 0, scale=${modelScale}`);
 
                 scene.appendChild(anchor);
-                log('✅', 'Created anchor: ' + anchorId);
+                log('✅', 'Created anchor: ' + anchorId + ' with legacy model at position 0 ' + legacyY + ' 0');
             }
         }
     }
@@ -825,7 +828,7 @@
             var legacyModel = document.getElementById('mode-3d-' + target.slotIndex);
             if (legacyModel) {
                 legacyModel.setAttribute('visible', 'false');
-                log('🔒', 'Hidden legacy model: mode-3d-' + target.slotIndex);
+                log('🔒', 'Hidden legacy model: mode-3d-' + target.slotIndex + ' position=' + legacyModel.getAttribute('position'));
             }
 
             var modelEl = document.createElement('a-entity');
@@ -842,6 +845,9 @@
             // These values (1.2 for slot 0, 1.5 for slot 1) are tuned for 8.5cm AR cards.
             var initialScale = target.scale || (target.slotIndex === 0 ? '1.2 1.2 1.2' : '1.5 1.5 1.5');
             modelEl.setAttribute('scale', initialScale);
+
+            log('📍', `Slot model ${target.slotIndex} created: anchor=mind-target-${target.mindTargetIndex}, position=${posX+' '+posY+' '+posZ}, scale=${initialScale}, offsetX=${pModelOffsetX}, offsetY=${pModelOffsetY}`);
+
             wireDynamicModelScale(modelEl, {
                 targetIndex: target.slotIndex,
                 explicitScale: target.scale,
@@ -885,6 +891,7 @@
             assetItem.addEventListener('loaded', function() {
                 log('✅', 'Slot GLB asset ready: slot=' + target.slotIndex + ' url=' + target.modelUrl);
                 anchor.appendChild(modelEl);
+                log('📍', `Model attached to anchor: slot-model-${target.slotIndex} -> mind-target-${target.mindTargetIndex}, position=${modelEl.getAttribute('position')}`);
                 applyTextureWhenModelReady(modelEl, target.textureUrl);
                 modelEl.setAttribute('gltf-model', '#slot-asset-' + target.slotIndex);
 
@@ -1546,6 +1553,13 @@
             target.addEventListener('targetFound', () => {
                 log('🎯', `✨ TARGET ${index} FOUND! Image detected by MindAR`);
                 log('🎯', `Target ${index} is now being tracked`);
+
+                // Log anchor position info for debugging
+                var anchorPos = target.getAttribute('position');
+                var slotModel = document.getElementById('slot-model-' + index);
+                var legacyModel = document.getElementById('mode-3d-' + index);
+                log('📍', `TARGET ${index} FOUND - Anchor pos: ${JSON.stringify(anchorPos)}, slot-model-${index} pos: ${slotModel ? slotModel.getAttribute('position') : 'null'}, legacy visible: ${legacyModel ? legacyModel.getAttribute('visible') : 'N/A'}`);
+
                 const lostTimer = targetLostTimers.get(index);
                 if (lostTimer) {
                     clearTimeout(lostTimer);
@@ -1571,6 +1585,7 @@
                     parentPayload.slotIndex = entry.slotIndex;
                     parentPayload.mindTargetIndex = entry.mindTargetIndex;
                     parentPayload.arTag = entry.arTag;
+                    log('📍', `Registry entry: slotIndex=${entry.slotIndex}, mindTargetIndex=${entry.mindTargetIndex}, arTag=${entry.arTag}`);
                 }
                 sendToParent('TARGET_FOUND', parentPayload);
                 sendTrackingState(`target-${index}-found`);
