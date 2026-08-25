@@ -6,9 +6,11 @@ import { StreakBadge } from '@/components/Gamification/StreakBadge';
 import { CompletedBookIcon, StickerStarIcon, XpBoltIcon } from '@/components/icons/ProgressIcons';
 import { SessionTimerBadge } from './SessionTimerBadge';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocale, type Locale } from '@/contexts/LocaleContext';
 import { courseService } from '@/services/CourseService';
 import { apiClient } from '@/services/apiClient';
 import '@/styles/sidebar.css';
+import { courseCategoryLabel, courseTitle } from '@/lib/courseLocale';
 import type { Course, UserProgress } from '@/types/course';
 
 interface SidebarProps {
@@ -20,7 +22,7 @@ interface NavItem {
     path: string;
     label: string;
     shortLabel: string;
-    iconKey: 'learn' | 'ar' | 'flashcards' | 'profile' | 'path3d';
+    iconKey: 'learn' | 'ar' | 'flashcards' | 'profile' | 'path3d' | 'leaderboard' | 'challenge';
 }
 
 interface TrackerStats {
@@ -68,9 +70,13 @@ const GraduationCapIcon: React.FC<{ className?: string }> = ({ className = 'h-6 
 
 const PetIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' }) => (
     <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <ellipse cx="12" cy="17" rx="4" ry="3" />
-        <circle cx="7" cy="10" r="2" /><circle cx="17" cy="10" r="2" />
-        <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
+        <path d="M5 9 L4 4 L9 7" />
+        <path d="M19 9 L20 4 L15 7" />
+        <circle cx="12" cy="14" r="5.5" />
+        <circle cx="9.5" cy="13" r="1.1" fill="currentColor" stroke="none" />
+        <circle cx="14.5" cy="13" r="1.1" fill="currentColor" stroke="none" />
+        <path d="M11 15.6 L13 15.6 L12 16.7 Z" fill="currentColor" stroke="none" />
+        <path d="M10.5 17.2 Q12 18.4 13.5 17.2" />
     </svg>
 );
 
@@ -95,6 +101,25 @@ const Path3DIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' })
     </svg>
 );
 
+const TrophyIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' }) => (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+        <path d="M4 22h16" />
+        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" />
+        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
+        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </svg>
+);
+
+const ChallengeIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' }) => (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="12" r="5" />
+        <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+);
+
 const ChevronIcon: React.FC<{ expanded: boolean }> = ({ expanded }) => (
     <svg aria-hidden="true" className={`h-5 w-5 transition-transform ${expanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="m9 18 6-6-6-6" />
@@ -102,10 +127,48 @@ const ChevronIcon: React.FC<{ expanded: boolean }> = ({ expanded }) => (
 );
 
 const CloseIcon = () => (
-    <svg aria-hidden="true" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-        <path d="m6 6 12 12M18 6 6 18" />
+    <svg aria-hidden="true" className="block h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 6 18 18M18 6 6 18" />
     </svg>
 );
+
+const GlobeIcon: React.FC<{ className?: string }> = ({ className = 'h-5 w-5' }) => (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+        <path d="M2 12h20" />
+    </svg>
+);
+
+function LanguageToggle({ collapsed }: { collapsed: boolean }) {
+    const { locale, setLocale, t } = useLocale();
+
+    if (collapsed) {
+        return (
+            <button
+                type="button"
+                onClick={() => setLocale(locale === 'en' ? 'vi' : 'en')}
+                aria-label={t('switchLocale')}
+                title={t('switchLocale')}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#5B8DEF] text-xs font-black text-white shadow-[0_3px_0_#3F6FCB] transition-transform hover:-translate-y-0.5 active:translate-y-0.5"
+            >
+                {locale === 'en' ? 'VI' : 'EN'}
+            </button>
+        );
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={() => setLocale(locale === 'en' ? 'vi' : 'en')}
+            aria-label={`${t('language')}: ${locale === 'en' ? t('vietnamese') : t('english')}`}
+            className="flex items-center gap-1.5 rounded-xl bg-white px-2.5 py-1.5 text-xs font-bold text-slate-600 shadow-[0_3px_0_#DDE8FC] transition-colors hover:bg-blue-50 hover:text-blue-600"
+        >
+            <GlobeIcon className="h-4 w-4" />
+            {locale === 'en' ? 'VI' : 'EN'}
+        </button>
+    );
+}
 
 const iconComponents: Record<NavItem['iconKey'], React.FC<{ className?: string }>> = {
     learn: BookIcon,
@@ -113,14 +176,18 @@ const iconComponents: Record<NavItem['iconKey'], React.FC<{ className?: string }
     flashcards: FlashcardIcon,
     profile: UserIcon,
     path3d: Path3DIcon,
+    leaderboard: TrophyIcon,
+    challenge: ChallengeIcon,
 };
 
-const fullNavItems: NavItem[] = [
-    { path: '/courses', label: 'Learn', shortLabel: 'Learn', iconKey: 'learn' },
-    { path: '/learning-path-3d', label: 'Learning Path', shortLabel: 'Path', iconKey: 'path3d' },
-    { path: '/learn-ar', label: 'AR Practice', shortLabel: 'AR', iconKey: 'ar' },
-    { path: '/flashcards', label: 'Flashcards', shortLabel: 'Cards', iconKey: 'flashcards' },
-    { path: '/profile', label: 'Profile', shortLabel: 'Profile', iconKey: 'profile' },
+const fullNavItems: Array<{ path: string; iconKey: NavItem['iconKey']; labelKey: string; shortLabelKey: string }> = [
+    { path: '/courses', iconKey: 'learn', labelKey: 'navLearn', shortLabelKey: 'navLearn' },
+    { path: '/learning-path-3d', iconKey: 'path3d', labelKey: 'navLearningPath', shortLabelKey: 'navPathShort' },
+    { path: '/learn-ar', iconKey: 'ar', labelKey: 'navArPractice', shortLabelKey: 'navArShort' },
+    { path: '/leaderboard', iconKey: 'leaderboard', labelKey: 'navLeaderboard', shortLabelKey: 'navLeaderboardShort' },
+    { path: '/flashcards', iconKey: 'flashcards', labelKey: 'navFlashcards', shortLabelKey: 'navFlashcardsShort' },
+    { path: '/daily-challenge', iconKey: 'challenge', labelKey: 'navDailyChallenge', shortLabelKey: 'navChallengeShort' },
+    { path: '/profile', iconKey: 'profile', labelKey: 'navProfile', shortLabelKey: 'navProfile' },
 ];
 
 function isRouteActive(pathname: string, path: string) {
@@ -163,13 +230,14 @@ function useStickerCounts() {
 
 function Tracker({ stats }: { stats: TrackerStats }) {
     const stickerCounts = useStickerCounts();
+    const { t } = useLocale();
     const metricClass = 'learner-sidebar__metric flex min-w-0 flex-col items-center justify-center rounded-[22px] border-[4px] px-1 py-3 text-center';
     const valueClass = 'learner-sidebar__metric-value mt-1 max-w-full truncate text-[20px] font-black leading-none';
     const labelClass = 'learner-sidebar__metric-label mt-1 text-[11px] font-extrabold leading-tight';
 
     return (
         <section className="learner-sidebar__tracker min-w-0 overflow-hidden rounded-[28px] p-4">
-            <h2 className="learner-sidebar__tracker-title mb-4 text-base font-black">Progress Tracker</h2>
+            <h2 className="learner-sidebar__tracker-title mb-4 text-base font-black">{t('progressTracker')}</h2>
             <div className="mb-5 grid min-w-0 grid-cols-3 gap-2">
                 <div className={`${metricClass} learner-sidebar__metric--xp`}>
                     <XpBoltIcon className="h-7 w-7 shrink-0" />
@@ -179,18 +247,18 @@ function Tracker({ stats }: { stats: TrackerStats }) {
                 <div className={`${metricClass} learner-sidebar__metric--done`}>
                     <CompletedBookIcon className="h-7 w-7 shrink-0" />
                     <div className={valueClass}>{stats.completedLessons}</div>
-                    <div className={labelClass}>Done</div>
+                    <div className={labelClass}>{t('done')}</div>
                 </div>
                 <Link to="/stickers" className={`${metricClass} learner-sidebar__metric--stickers transition-transform motion-safe:hover:-translate-y-1`}>
                     <StickerStarIcon className="h-7 w-7 shrink-0" />
                     <div className={valueClass}>{stickerCounts.collected}/{stickerCounts.total || '—'}</div>
-                    <div className={labelClass}>Stickers</div>
+                    <div className={labelClass}>{t('stickers')}</div>
                 </Link>
             </div>
             <div className="learner-sidebar__tracker-caption mb-2 text-sm font-extrabold">
-                {stats.completedLessons}/{stats.totalLessons} lessons
+                {stats.completedLessons}/{stats.totalLessons} {t('lessons')}
             </div>
-            <div className="learner-sidebar__tracker-progress h-3 overflow-hidden rounded-full" role="progressbar" aria-label="Course completion" aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.percent}>
+            <div className="learner-sidebar__tracker-progress h-3 overflow-hidden rounded-full" role="progressbar" aria-label={t('courseCompletion')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={stats.percent}>
                 <div className="clay-shimmer learner-sidebar__tracker-progress-fill h-full rounded-full" style={{ width: `${stats.percent}%` }} />
             </div>
         </section>
@@ -198,46 +266,108 @@ function Tracker({ stats }: { stats: TrackerStats }) {
 }
 
 function CourseCatalog({ courses, progressByCourse, onNavigate }: { courses: Course[]; progressByCourse: Map<string, UserProgress>; onNavigate: (path: string) => void }) {
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set());
+    const { locale, t } = useLocale();
+    const categories = useMemo(() => {
+        const grouped = new Map<string, Course[]>();
+        courses.forEach((course) => {
+            const key = course.category_key || course.level || course.course_id;
+            grouped.set(key, [...(grouped.get(key) || []), course]);
+        });
+        return Array.from(grouped.entries()).map(([key, categoryCourses]) => {
+            const sample = categoryCourses[0];
+            const label = courseCategoryLabel(sample, locale);
+            return { key, label, icon: sample.category_icon || sample.theme, courses: categoryCourses };
+        });
+    }, [courses, locale]);
+
+    useEffect(() => {
+        if (categories.length === 0) return;
+        setExpandedCategories((current) => {
+            if (current.size > 0) return current;
+            const first = categories[0];
+            return new Set([first.key]);
+        });
+    }, [categories]);
+
+    const toggleCategory = (categoryKey: string) => {
+        setExpandedCategories((current) => {
+            const next = new Set(current);
+            if (next.has(categoryKey)) next.delete(categoryKey);
+            else next.add(categoryKey);
+            return next;
+        });
+    };
+
     return (
         <section className="learner-sidebar__catalog min-w-0 overflow-x-hidden rounded-[28px] bg-white p-4 shadow-[0_12px_0_rgba(15,23,42,0.08)]">
             <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
-                <h2 className="min-w-0 text-base font-black leading-tight text-slate-800">Course Catalog</h2>
+                <h2 className="min-w-0 text-base font-black leading-tight text-slate-800">{t('courseCatalog')}</h2>
                 <button onClick={() => onNavigate('/courses')} className="min-h-11 shrink-0 whitespace-nowrap rounded-xl px-2 text-sm font-extrabold text-[#5B8DEF] hover:bg-blue-50">
-                    View all
+                    {t('viewAll')}
                 </button>
             </div>
             <div className="min-w-0 space-y-3 overflow-x-hidden">
-                {courses.slice(0, 3).map((course) => {
-                    const courseProgress = progressByCourse.get(course.course_id);
-                    const total = course.lessons.length;
-                    const done = courseProgress?.completed_lessons?.length || 0;
-                    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+                {categories.map(({ key: categoryKey, label, icon, courses: categoryCourses }) => {
+                    const expanded = expandedCategories.has(categoryKey);
+                    const totalLessons = categoryCourses.reduce((sum, course) => sum + course.lessons.length, 0);
+                    const completedLessons = categoryCourses.reduce((sum, course) => sum + (progressByCourse.get(course.course_id)?.completed_lessons?.length || 0), 0);
+                    const percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+                    const mark = (icon || label).slice(0, 2).toUpperCase();
 
                     return (
-                        <button key={course.course_id} onClick={() => onNavigate(`/courses/${course.course_id}`)} className="clay-card-sunshine min-w-0 w-full overflow-hidden p-3 text-left">
-                            <div className="flex min-w-0 items-center gap-3">
-                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/70 text-xl font-black text-[#5B8DEF]">
-                                    {(course.theme || course.title).slice(0, 1).toUpperCase()}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <div
-                                        className="min-w-0 overflow-hidden text-sm font-black leading-snug text-slate-800"
-                                        style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 }}
-                                    >
-                                        {course.title}
-                                    </div>
-                                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/70">
-                                        <div className="h-full rounded-full" style={{ width: `${percent}%`, background: 'linear-gradient(90deg, #6EB9FF, #FF9F9F)' }} />
-                                    </div>
-                                </div>
-                                <span className="shrink-0 text-xs font-extrabold text-slate-600">{percent}%</span>
+                        <div key={categoryKey} className="learner-sidebar__category min-w-0 overflow-hidden rounded-2xl bg-[#FFF7EC] p-3">
+                            <div className="flex min-w-0 items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => onNavigate(`/courses/category/${categoryKey}`)}
+                                    className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl bg-white/80 px-2 text-left hover:bg-white"
+                                >
+                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-black text-[#5B8DEF] shadow-[0_2px_0_rgba(91,141,239,0.18)]">{mark}</span>
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block truncate text-sm font-black text-slate-800">{label}</span>
+                                        <span className="mt-1 block text-[11px] font-bold text-slate-500">{categoryCourses.length} course{categoryCourses.length === 1 ? '' : 's'} · {percent}%</span>
+                                        <span className="mt-2 block h-2 overflow-hidden rounded-full bg-white">
+                                            <span className="block h-full rounded-full bg-gradient-to-r from-[#6EB9FF] to-[#9DE8BB]" style={{ width: `${percent}%` }} />
+                                        </span>
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    aria-expanded={expanded}
+                                    aria-label={expanded ? `Collapse ${label}` : `Expand ${label}`}
+                                    onClick={() => toggleCategory(categoryKey)}
+                                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-[0_4px_0_#E5E7EB]"
+                                >
+                                    <ChevronIcon expanded={expanded} />
+                                </button>
                             </div>
-                        </button>
+                            {expanded && (
+                                <div className="mt-3 space-y-2 border-t border-white/80 pt-2">
+                                    {categoryCourses.map((course) => {
+                                        const total = course.lessons.length;
+                                        const done = progressByCourse.get(course.course_id)?.completed_lessons?.length || 0;
+                                        const coursePercent = total > 0 ? Math.round((done / total) * 100) : 0;
+                                        return (
+                                            <button
+                                                key={course.course_id}
+                                                type="button"
+                                                onClick={() => onNavigate(`/courses/${course.course_id}`)}
+                                                className="clay-card-sunshine flex min-h-11 w-full min-w-0 items-center gap-2 p-2 text-left"
+                                            >
+                                                <span className="min-w-0 flex-1 truncate text-xs font-extrabold text-slate-700">{courseTitle(course, locale)}</span>
+                                                <span className="shrink-0 text-[11px] font-black text-slate-500">{coursePercent}%</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
                     );
                 })}
                 {courses.length === 0 && (
                     <button onClick={() => onNavigate('/courses')} className="min-h-11 w-full rounded-2xl bg-slate-50 p-3 text-left text-sm font-bold text-slate-600">
-                        No published courses yet
+                        {t('noPublishedCourses')}
                     </button>
                 )}
             </div>
@@ -247,6 +377,7 @@ function CourseCatalog({ courses, progressByCourse, onNavigate }: { courses: Cou
 
 function MobileDailyGoalIndicator() {
     const { user } = useAuth();
+    const { t } = useLocale();
     const [minutes, setMinutes] = useState(0);
     const goal = 15;
 
@@ -288,6 +419,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
     const location = useLocation();
     const navigate = useNavigate();
     const { isGuest, user } = useAuth();
+    const { t } = useLocale();
     const [courses, setCourses] = useState<Course[]>([]);
     const [progress, setProgress] = useState<UserProgress[]>([]);
     const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
@@ -389,31 +521,39 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
         <>
             <aside
                 aria-label="Learning sidebar"
-                className="learner-sidebar learner-sidebar--desktop fixed left-0 top-0 z-[var(--z-nav)] hidden h-[100dvh] flex-col overflow-x-hidden border-r-4 border-white bg-[#FFF7EC] shadow-[4px_0_24px_rgba(91,141,239,0.10)] transition-[width] duration-300 md:flex motion-reduce:transition-none"
+                className={`learner-sidebar learner-sidebar--desktop fixed left-0 top-0 z-[var(--z-nav)] hidden h-[100dvh] flex-col overflow-x-hidden border-r-4 border-white bg-[#FFF7EC] shadow-[4px_0_24px_rgba(91,141,239,0.10)] transition-all duration-300 motion-reduce:transition-none md:flex ${isDesktopExpanded ? 'w-[272px]' : 'w-[120px]'}`}
             >
-                <div className={`learner-sidebar__header flex min-w-0 shrink-0 items-center gap-2 px-3 pb-1 pt-3 ${isDesktopExpanded ? 'justify-end' : 'justify-center'}`}>
-                    <SessionTimerBadge />
-                    <button
-                        type="button"
-                        onClick={() => onDesktopExpandedChange(!isDesktopExpanded)}
-                        aria-expanded={isDesktopExpanded}
-                        aria-label={isDesktopExpanded ? 'Collapse navigation' : 'Expand navigation'}
-                        className="learner-sidebar-toggle learner-sidebar__toggle flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white shadow-[0_4px_0_#DDE8FC]"
-                    >
-                        <ChevronIcon expanded={isDesktopExpanded} />
-                    </button>
+                <div className={`learner-sidebar__header flex min-w-0 shrink-0 items-center gap-1 px-2 pb-1 pt-3 ${isDesktopExpanded ? 'justify-between' : 'justify-center'}`}>
+                    {isDesktopExpanded && <SessionTimerBadge />}
+                    <div className="flex shrink-0 flex-col items-center gap-1">
+                        <LanguageToggle collapsed={!isDesktopExpanded} />
+                        <button
+                            type="button"
+                            onClick={() => onDesktopExpandedChange(!isDesktopExpanded)}
+                            aria-expanded={isDesktopExpanded}
+                            aria-label={isDesktopExpanded ? 'Collapse navigation' : 'Expand navigation'}
+                            className="learner-sidebar-toggle learner-sidebar__toggle flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white shadow-[0_4px_0_#DDE8FC]"
+                        >
+                            <ChevronIcon expanded={isDesktopExpanded} />
+                        </button>
+                    </div>
                 </div>
 
                 {isDesktopExpanded ? (
                     <div className="learner-sidebar__content no-scrollbar h-full min-w-0 space-y-5 overflow-x-hidden overflow-y-auto px-4 pb-6 pt-1">
                         <section className="learner-sidebar__brand clay-hero min-w-0 rounded-3xl p-5 text-center">
-                            <div className="mb-3 flex items-center justify-center gap-3">
-                                <div className="learner-sidebar__brand-mark flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6EB9FF] to-[#3A8FD1] text-white shadow-[0_4px_0_#3A8FD1]">
-                                    <GraduationCapIcon className="h-7 w-7" />
-                                </div>
-                                <h1 className="text-2xl font-black text-slate-800" style={{ fontFamily: "'Baloo 2', sans-serif" }}>Edu<span className="text-[#6EB9FF]">AR</span></h1>
+                            <div className="learner-sidebar__brand-sparkle" aria-hidden="true">
+                                <svg className="clay-shimmer-sparkle" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M10 0L11.8 7.2L19 10L11.8 12.8L10 20L8.2 12.8L1 10L8.2 7.2L10 0Z" fill="#FFD93D" />
+                                </svg>
                             </div>
-                            <p className="text-sm font-semibold text-slate-600">Play. Explore. Learn English.</p>
+                            <div className="mb-3 flex items-center justify-center gap-3">
+                                <div className="learner-sidebar__brand-mark flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFE066] via-[#FF9F9F] to-[#6EB9FF] text-white shadow-[0_4px_0_#D4A55A]">
+                                    <GraduationCapIcon className="h-7 w-7 drop-shadow-[0_1px_1px_rgba(0,0,0,0.18)]" />
+                                </div>
+                                <h1 className="clay-text-vibrant text-2xl font-black text-slate-800" style={{ fontFamily: "'Baloo 2', sans-serif" }}>Edu<span className="text-[#5B8DEF]">AR</span></h1>
+                            </div>
+                            <p className="clay-text-tagline text-sm font-semibold text-slate-600">{t('sidebarTagline')}</p>
                         </section>
 
                         {!isGuest && (
@@ -422,9 +562,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                                 aria-label="Daily progress and learning streak"
                             >
                                 <div className="learner-sidebar__daily-header">
-                                    <span>📅 Today's Goal</span>
+                                    <span>📅 {t('todaysGoal')}</span>
                                     <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-[#5B8DEF] shadow-[0_2px_0_rgba(110,185,255,0.15)]">
-                                        Daily
+                                        {t('dailyShort')}
                                     </span>
                                 </div>
                                 <div className="learner-sidebar__daily-rings">
@@ -434,10 +574,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                                     <StreakBadge className="min-w-0 flex-1" />
                                     <div className="ml-auto text-right">
                                         <div className="text-[11px] font-extrabold uppercase tracking-wide text-[#8b6f47]">
-                                            Keep going
+                                            {t('keepGoing')}
                                         </div>
                                         <div className="text-xs font-bold text-[#5d3a00]">
-                                            Learn a little today
+                                            {t('learnALittleToday')}
                                         </div>
                                     </div>
                                 </div>
@@ -445,24 +585,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                         )}
 
                         <section className="learner-sidebar__quick-links clay-card-elevated min-w-0 overflow-hidden p-4">
-                            <h2 className="learner-sidebar__quick-links-title mb-3 text-sm font-black text-slate-800">Quick Links</h2>
+                            <h2 className="learner-sidebar__quick-links-title mb-3 text-sm font-black text-slate-800">{t('quickLinks')}</h2>
                             <div className="learner-sidebar__quick-link-list grid grid-cols-1 gap-2">
                                 {navItems.map((item) => {
                                     const Icon = iconComponents[item.iconKey];
                                     const active = isRouteActive(location.pathname, item.path);
                                     return (
                                         <Link key={item.path} to={item.path} className={`learner-sidebar__nav-link clay-tab flex min-h-11 items-center gap-3 ${active ? 'clay-tab-active' : ''}`}>
-                                            <Icon className="h-5 w-5 shrink-0" /><span className="text-sm font-bold">{item.label}</span>
+                                            <Icon className="h-5 w-5 shrink-0" /><span className="text-sm font-bold">{t(item.labelKey)}</span>
                                         </Link>
                                     );
                                 })}
                                 {!isGuest && (
                                     <>
                                         <button onClick={() => goTo('/pets')} className={`learner-sidebar__nav-link clay-tab flex min-h-11 items-center gap-3 ${isRouteActive(location.pathname, '/pets') ? 'clay-tab-active' : ''}`}>
-                                            <PetIcon className="h-5 w-5 shrink-0" /><span className="text-sm font-bold">My Pet</span>
+                                            <PetIcon className="h-5 w-5 shrink-0" /><span className="text-sm font-bold">{t('navMyPet')}</span>
                                         </button>
                                         <button onClick={() => goTo('/stickers')} className={`learner-sidebar__nav-link clay-tab flex min-h-11 items-center gap-3 ${isRouteActive(location.pathname, '/stickers') ? 'clay-tab-active' : ''}`}>
-                                            <StickerStarIcon className="h-5 w-5 shrink-0" /><span className="text-sm font-bold">Stickers</span>
+                                            <StickerStarIcon className="h-5 w-5 shrink-0" /><span className="text-sm font-bold">{t('navStickers')}</span>
                                         </button>
                                     </>
                                 )}
@@ -473,12 +613,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                         <Tracker stats={stats} />
 
                         <section className="pb-4 text-center">
-                            <button onClick={() => goTo(isGuest ? '/register' : '/learn-ar')} className="clay-cta-primary min-h-11 w-full">{isGuest ? 'Start Free Trial' : 'Jump into AR'}</button>
-                            <button onClick={() => goTo('/courses')} className="clay-cta-secondary mt-3 min-h-11 w-full">Browse Courses</button>
+                            <button onClick={() => goTo(isGuest ? '/register' : '/learn-ar')} className="clay-cta-primary min-h-11 w-full">{isGuest ? t('startFreeTrial') : t('jumpIntoAr')}</button>
+                            <button onClick={() => goTo('/courses')} className="clay-cta-secondary mt-3 min-h-11 w-full">{t('browseCourses')}</button>
                         </section>
                     </div>
                 ) : (
-                    <div className="learner-sidebar__collapsed no-scrollbar flex h-full flex-col items-center gap-2 overflow-y-auto px-2 pb-4 pt-2">
+                    <div className="learner-sidebar__collapsed no-scrollbar flex min-h-0 flex-1 flex-col items-center gap-1.5 overflow-y-auto px-2 pb-4 pt-2">
                         <div className="mb-2 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6EB9FF] to-[#3A8FD1] text-white shadow-[0_4px_0_#3A8FD1]">
                             <GraduationCapIcon className="h-7 w-7" />
                         </div>
@@ -486,18 +626,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                             const Icon = iconComponents[item.iconKey];
                             const active = isRouteActive(location.pathname, item.path);
                             return (
-                                <Link key={item.path} to={item.path} title={item.label} className={`relative z-[1] flex min-h-[58px] w-full flex-col items-center justify-center rounded-2xl px-1 text-center ${active ? 'bg-[#5B8DEF] text-white shadow-[0_4px_0_#3F6FCB] z-[2]' : 'text-slate-500 hover:bg-white'}`}>
-                                    <Icon className="h-6 w-6" /><span className="mt-1 text-[10px] font-extrabold leading-none">{item.shortLabel}</span>
+                                <Link key={item.path} to={item.path} title={t(item.labelKey)} className={`learner-sidebar__collapsed-link relative z-[1] flex min-h-[52px] w-full flex-col items-center justify-center rounded-2xl px-1 text-center ${active ? 'learner-sidebar__collapsed-link--active bg-[#5B8DEF] text-white shadow-[0_4px_0_#3F6FCB] z-[2]' : 'text-slate-500 hover:bg-white'}`}>
+                                    <Icon className="h-5 w-5" /><span className="mt-0.5 text-[10px] font-extrabold leading-none">{t(item.shortLabelKey)}</span>
                                 </Link>
                             );
                         })}
                         {!isGuest && (
                             <>
-                                <button onClick={() => goTo('/pets')} title="My Pet" className={`flex min-h-[58px] w-full flex-col items-center justify-center rounded-2xl px-1 ${isRouteActive(location.pathname, '/pets') ? 'bg-[#FF9F9F] text-white shadow-[0_4px_0_#D97070]' : 'text-slate-500 hover:bg-white'}`}>
-                                    <PetIcon className="h-6 w-6" /><span className="mt-1 text-[10px] font-extrabold leading-none">Pet</span>
+                                <button onClick={() => goTo('/pets')} title={t('navMyPet')} className={`learner-sidebar__collapsed-link relative z-[1] flex min-h-[52px] w-full flex-col items-center justify-center rounded-2xl px-1 ${isRouteActive(location.pathname, '/pets') ? 'learner-sidebar__collapsed-link--active bg-[#FF9F9F] text-white shadow-[0_4px_0_#D97070] z-[2]' : 'text-slate-500 hover:bg-white'}`}>
+                                    <PetIcon className="h-5 w-5" /><span className="mt-0.5 text-[10px] font-extrabold leading-none">{t('navPetShort')}</span>
                                 </button>
-                                <button onClick={() => goTo('/stickers')} title="Stickers" className={`flex min-h-[58px] w-full flex-col items-center justify-center rounded-2xl px-1 ${isRouteActive(location.pathname, '/stickers') ? 'bg-[#FFD84D] text-slate-800 shadow-[0_4px_0_#E8B800]' : 'text-slate-500 hover:bg-white'}`}>
-                                    <StickerStarIcon className="h-6 w-6" /><span className="mt-1 text-[10px] font-extrabold leading-none">Stickers</span>
+                                <button onClick={() => goTo('/stickers')} title={t('navStickers')} className={`learner-sidebar__collapsed-link relative z-[1] flex min-h-[52px] w-full flex-col items-center justify-center rounded-2xl px-1 ${isRouteActive(location.pathname, '/stickers') ? 'learner-sidebar__collapsed-link--active bg-[#FFD84D] text-slate-800 shadow-[0_4px_0_#E8B800] z-[2]' : 'text-slate-500 hover:bg-white'}`}>
+                                    <StickerStarIcon className="h-5 w-5" /><span className="mt-0.5 text-[10px] font-extrabold leading-none">{t('navStickersShort')}</span>
                                 </button>
                             </>
                         )}
@@ -505,19 +645,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                 )}
             </aside>
 
-            <nav aria-label="Primary navigation" className="pointer-events-none fixed bottom-0 left-0 right-0 z-[var(--z-nav)] md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+            <nav aria-label={t('primaryNavigation')} className="pointer-events-none fixed bottom-0 left-0 right-0 z-[var(--z-nav)] md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
                 <div className="pointer-events-auto mx-3 mb-3 flex min-h-[76px] items-stretch justify-around gap-1 rounded-[30px] border-4 border-white bg-[#5B8DEF] p-1.5 shadow-[0_8px_0_rgba(59,100,180,0.30),0_8px_32px_rgba(91,141,239,0.25)]">
                     {navItems.map((item) => {
                         const Icon = iconComponents[item.iconKey];
                         const active = isRouteActive(location.pathname, item.path);
                         return (
                             <Link key={item.path} to={item.path} aria-current={active ? 'page' : undefined} className={`relative z-[1] flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-[22px] px-1 transition-all ${active ? 'bg-white text-slate-800 shadow-[0_4px_0_rgba(0,0,0,0.15)] z-[2]' : 'text-white/80 hover:text-white'}`}>
-                                <Icon className="h-6 w-6" /><span className="mt-1 max-w-full truncate text-[10px] font-extrabold leading-none">{item.shortLabel}</span>
+                                <Icon className="h-6 w-6" /><span className="mt-1 max-w-full truncate text-[10px] font-extrabold leading-none">{t(item.shortLabelKey)}</span>
                             </Link>
                         );
                     })}
                     <button ref={moreButtonRef} type="button" onClick={() => setIsMobileMoreOpen(true)} aria-expanded={isMobileMoreOpen} aria-controls="mobile-more-sheet" className={`relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-[22px] px-1 ${isMobileMoreOpen ? 'bg-white text-slate-800 shadow-[0_4px_0_rgba(0,0,0,0.15)]' : 'text-white/80 hover:text-white'}`}>
-                        <MoreIcon className="h-6 w-6" /><span className="mt-1 max-w-full truncate text-[10px] font-extrabold leading-none">More</span>
+                        <MoreIcon className="h-6 w-6" /><span className="mt-1 max-w-full truncate text-[10px] font-extrabold leading-none">{t('navMore')}</span>
                     </button>
                 </div>
             </nav>
