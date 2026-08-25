@@ -436,16 +436,27 @@
             const center = new THREE.Vector3();
             box.getCenter(center);
             
-            // Log raw center for debugging offset issues
-            log('🎯', `Model Box Center: ${center.x.toFixed(3)}, ${center.y.toFixed(3)}, ${center.z.toFixed(3)}`);
+            // Marker Center Compensation: 
+            // Most cards in animal-combo-v1 have the subject off-center (QR top-right).
+            var compensationX = -0.15; // Shift left
+            var compensationY = -0.25; // Shift down
 
             // Apply offsets. Note: we negate the center to move it to (0,0,0)
             // but we must scale the center offset by the applied model scale.
-            const offsetX = (-center.x * nextScale) + pModelOffsetX;
-            const offsetY = (-center.y * nextScale) + pModelOffsetY;
+            const offsetX = (-center.x * nextScale) + pModelOffsetX + compensationX;
+            const offsetY = (-center.y * nextScale) + pModelOffsetY + compensationY;
             const offsetZ = (-center.z * nextScale) + pModelOffsetZ;
             
             modelEl.setAttribute('position', `${offsetX} ${offsetY} ${offsetZ}`);
+            
+            // Log to parent so user can see it in Mobile Debug
+            sendDebug('MODEL_POSITION_CALIBRATED', {
+                modelId: modelEl.id,
+                boxCenter: { x: center.x, y: center.y, z: center.z },
+                appliedScale: nextScale,
+                finalPosition: { x: offsetX, y: offsetY, z: offsetZ },
+                compensation: { x: compensationX, y: compensationY }
+            });
             
             if (modelEl.id === 'combo-model' && modelEl.hasAttribute?.('animation__spawn')) {
                 modelEl.setAttribute(
