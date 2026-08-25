@@ -585,10 +585,8 @@ export default function LearnARV2() {
         emitMobileDebug('PERSISTENT_TARGETS_REJECTED', error);
         // CRITICAL FIX: In development/debug mode, don't trigger full fallback on rejection
         // just log it and try to proceed if possible.
-        if (!window.location.search.includes('debug=true')) {
-            handleSystemError(error.code);
-        }
-    }, [emitMobileDebug, handleSystemError]);
+        // handleSystemError is defined in useARFallback hook below.
+    }, [emitMobileDebug]);
 
     // Track whether the AR target marker is visible (for 2D overlay)
     const [markerFound, setMarkerFound] = useState(false);
@@ -1095,6 +1093,14 @@ export default function LearnARV2() {
         }
     }, [isComboViewer, comboKey, getFlashcardByIndex, emitMobileDebug]);
 
+    // Late binding for handleActiveTargetsRejected to use handleSystemError from useARFallback
+    const handleActiveTargetsRejectedInternal = useCallback((error: { revision: number; code: string; stage: string; message: string }) => {
+        emitMobileDebug('PERSISTENT_TARGETS_REJECTED', error);
+        if (!window.location.search.includes('debug=true')) {
+            handleSystemError(error.code);
+        }
+    }, [emitMobileDebug, handleSystemError]);
+
     const handleTargetLost = useCallback((idx: number) => {
         console.log('[LearnARV2] Target lost:', idx);
         lastTargetEventRef.current = Date.now();
@@ -1381,7 +1387,7 @@ export default function LearnARV2() {
                 catalogTargetCount={isPersistentViewerEnabled ? 2 : undefined}
                 activeTargets={isPersistentViewerEnabled ? activeTargets : undefined}
                 onActiveTargetsApplied={isPersistentViewerEnabled ? handleActiveTargetsApplied : undefined}
-                onActiveTargetsRejected={isPersistentViewerEnabled ? handleActiveTargetsRejected : undefined}
+                onActiveTargetsRejected={isPersistentViewerEnabled ? handleActiveTargetsRejectedInternal : undefined}
                 // Legacy props: no longer used in persistent mode
                 modelUrl={modelUrl}
                 imageUrl={imageUrl}
