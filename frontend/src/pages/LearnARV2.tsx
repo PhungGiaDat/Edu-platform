@@ -581,12 +581,7 @@ export default function LearnARV2() {
         emitMobileDebug('PERSISTENT_TARGETS_APPLIED', { revision });
     }, [emitMobileDebug]);
 
-    const handleActiveTargetsRejected = useCallback((error: { revision: number; code: string; stage: string; message: string }) => {
-        emitMobileDebug('PERSISTENT_TARGETS_REJECTED', error);
-        // CRITICAL FIX: In development/debug mode, don't trigger full fallback on rejection
-        // just log it and try to proceed if possible.
-        // handleSystemError is defined in useARFallback hook below.
-    }, [emitMobileDebug]);
+    // handleActiveTargetsRejected removed as handleActiveTargetsRejectedInternal is used instead.
 
     // Track whether the AR target marker is visible (for 2D overlay)
     const [markerFound, setMarkerFound] = useState(false);
