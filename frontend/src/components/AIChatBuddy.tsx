@@ -126,7 +126,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
             {!isOpen && show3DPet && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-[calc(env(safe-area-inset-bottom)+6rem)] right-2 flex h-14 w-14 cursor-pointer items-center justify-center p-0 transition-transform duration-300 motion-safe:hover:scale-105 sm:right-4 sm:bottom-6 sm:h-[68px] sm:w-[68px] md:bottom-6 md:right-6 md:h-20 md:w-20 lg:h-[92px] lg:w-[92px]"
+                    className="fixed bottom-[calc(env(safe-area-inset-bottom)+7.5rem)] right-2 flex h-14 w-14 cursor-pointer items-center justify-center p-0 transition-transform duration-300 motion-safe:hover:scale-105 sm:right-4 sm:bottom-6 sm:h-[68px] sm:w-[68px] md:bottom-6 md:right-6 md:h-20 md:w-20 lg:h-[92px] lg:w-[92px]"
                     style={{
                         zIndex: 'var(--z-chatbot)',
                         background: 'transparent',

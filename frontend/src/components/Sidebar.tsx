@@ -774,13 +774,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                         const Icon = iconComponents[item.iconKey];
                         const active = isRouteActive(location.pathname, item.path);
                         return (
-                            <Link key={item.path} to={item.path} aria-current={active ? 'page' : undefined} className={`relative z-[1] flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-[22px] px-1 transition-all ${active ? 'bg-white text-slate-800 shadow-[0_4px_0_rgba(0,0,0,0.15)] z-[2]' : 'text-white/80 hover:text-white'}`}>
-                                <Icon className="h-6 w-6" /><span className="mt-1 max-w-full truncate text-[10px] font-extrabold leading-none">{t(item.shortLabelKey)}</span>
+                            <Link key={item.path} to={item.path} aria-current={active ? 'page' : undefined} className={`relative z-[1] flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-[22px] px-0.5 transition-all ${active ? 'bg-white text-slate-800 shadow-[0_4px_0_rgba(0,0,0,0.15)] z-[2]' : 'text-white/80 hover:text-white'}`}>
+                                <Icon className="h-5 w-5 sm:h-6 sm:w-6" /><span className="mt-1 w-full text-center text-[9px] font-black leading-none sm:text-[10px]">{t(item.shortLabelKey)}</span>
                             </Link>
                         );
                     })}
-                    <button ref={moreButtonRef} type="button" onClick={() => setIsMobileMoreOpen(true)} aria-expanded={isMobileMoreOpen} aria-controls="mobile-more-sheet" className={`relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-[22px] px-1 ${isMobileMoreOpen ? 'bg-white text-slate-800 shadow-[0_4px_0_rgba(0,0,0,0.15)]' : 'text-white/80 hover:text-white'}`}>
-                        <MoreIcon className="h-6 w-6" /><span className="mt-1 max-w-full truncate text-[10px] font-extrabold leading-none">{t('navMore')}</span>
+                    <button ref={moreButtonRef} type="button" onClick={() => setIsMobileMoreOpen(true)} aria-expanded={isMobileMoreOpen} aria-controls="mobile-more-sheet" className={`relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-[22px] px-0.5 ${isMobileMoreOpen ? 'bg-white text-slate-800 shadow-[0_4px_0_rgba(0,0,0,0.15)]' : 'text-white/80 hover:text-white'}`}>
+                        <MoreIcon className="h-5 w-5 sm:h-6 sm:w-6" /><span className="mt-1 w-full text-center text-[9px] font-black leading-none sm:text-[10px]">{t('navMore')}</span>
                     </button>
                 </div>
             </nav>

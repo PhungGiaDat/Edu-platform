@@ -437,15 +437,23 @@
             box.getCenter(center);
             
             // Marker Center Compensation: 
-            // Most cards in animal-combo-v1 have the subject off-center (QR top-right).
-            var compensationX = -0.15; // Shift left
-            var compensationY = -0.25; // Shift down
+            // Use manual offsets from URL params if provided, otherwise fallback to catalog defaults.
+            const urlParams = new URLSearchParams(window.location.search);
+            let compensationX = parseFloat(urlParams.get('pModelOffsetX')) || 0;
+            let compensationY = parseFloat(urlParams.get('pModelOffsetY')) || 0;
+            let compensationZ = parseFloat(urlParams.get('pModelOffsetZ')) || 0;
+            
+            // Apply default catalog compensation ONLY if manual override is NOT provided
+            if (urlParams.get('catalogId') === 'animal-combo-v1') {
+                if (!urlParams.has('pModelOffsetX')) compensationX -= 0.15; // Shift left
+                if (!urlParams.has('pModelOffsetY')) compensationY -= 0.25; // Shift down
+            }
 
             // Apply offsets. Note: we negate the center to move it to (0,0,0)
             // but we must scale the center offset by the applied model scale.
-            const offsetX = (-center.x * nextScale) + pModelOffsetX + compensationX;
-            const offsetY = (-center.y * nextScale) + pModelOffsetY + compensationY;
-            const offsetZ = (-center.z * nextScale) + pModelOffsetZ;
+            const offsetX = (-center.x * nextScale) + compensationX;
+            const offsetY = (-center.y * nextScale) + compensationY;
+            const offsetZ = (-center.z * nextScale) + compensationZ;
             
             modelEl.setAttribute('position', `${offsetX} ${offsetY} ${offsetZ}`);
             
