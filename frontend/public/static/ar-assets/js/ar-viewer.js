@@ -838,13 +838,17 @@
                 return;
             }
 
-            // Remove the previous revision's model and asset. Leaving an old
-            // slot-asset-* behind creates duplicate IDs, so a later selector
-            // can bind the newly-created entity to stale GLB bytes.
+            // Deep cleanup: Remove ANY existing model or asset for this slot
+            // and also clear any children of the anchor to prevent duplicate rendering.
             var existing = document.getElementById('slot-model-' + target.slotIndex);
             if (existing) existing.parentNode.removeChild(existing);
             var existingAsset = document.getElementById('slot-asset-' + target.slotIndex);
             if (existingAsset) existingAsset.parentNode.removeChild(existingAsset);
+            
+            // Clear anchor children just in case something was left behind
+            while (anchor.firstChild) {
+                anchor.removeChild(anchor.firstChild);
+            }
 
             // Hide the legacy model (mode-3d-{slotIndex}) to prevent duplicate rendering.
             // The legacy model is created by ensureCatalogAnchors but should not display
@@ -860,9 +864,17 @@
             modelEl.classList.add('clickable');
             // Apply position offset for alignment tuning
             var basePos = target.position ? target.position.split(' ').map(Number) : [0, 0, 0];
-            var posX = (basePos[0] || 0) + pModelOffsetX;
-            var posY = (basePos[1] || 0) + pModelOffsetY;
+            
+            // Marker Center Compensation: 
+            // Most cards in animal-combo-v1 have the subject off-center (QR top-right).
+            // We apply a default compensation if not explicitly overridden.
+            var compensationX = -0.15; // Shift left
+            var compensationY = -0.25; // Shift down
+            
+            var posX = (basePos[0] || 0) + pModelOffsetX + compensationX;
+            var posY = (basePos[1] || 0) + pModelOffsetY + compensationY;
             var posZ = (basePos[2] || 0) + pModelOffsetZ;
+            
             modelEl.setAttribute('position', posX + ' ' + posY + ' ' + posZ);
             modelEl.setAttribute('rotation', target.rotation || '0 0 0');
             // Use calibrated fallback scale — dynamic scaling will override this once mesh is ready.

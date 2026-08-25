@@ -127,8 +127,9 @@
                 s.src = 'https://cdn.jsdelivr.net/npm/eruda@3';
                 s.onload = function() { 
                     eruda.init({
-                        defaults: { displaySize: 30, transparency: 0.8 },
-                        useShadowDom: true
+                        defaults: { displaySize: 30, transparency: 0.8, theme: 'Dark' },
+                        useShadowDom: true,
+                        maxLogNum: 5000 // Increase log limit to prevent truncation
                     });
                     // Add "Copy All" plugin to Eruda
                     var copyPlugin = {
