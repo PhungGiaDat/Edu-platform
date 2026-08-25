@@ -32,6 +32,7 @@ export interface AuthContextType {
   token: string | null;
   isGuest: boolean;
   isLoading: boolean;
+  isPostLoginLoading: boolean; // NEW: tracks the post-login loading overlay state
   error: string | null;
   isAuthenticated: boolean;
 
@@ -42,6 +43,8 @@ export interface AuthContextType {
   register: (email: string, password: string, username: string) => Promise<{ success: boolean; error?: string }>;
   refreshToken: () => Promise<boolean>;
   clearError: () => void;
+  startPostLoginLoading: () => void; // NEW: call to show overlay
+  endPostLoginLoading: () => void; // NEW: call to dismiss overlay
 }
 
 // ========== Context Creation ==========
@@ -188,6 +191,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPostLoginLoading, setIsPostLoginLoading] = useState(false); // NEW: post-login loading overlay state
   const [error, setError] = useState<string | null>(null);
 
   // Restore the token, then replace any stale stored user shape with /auth/me.
@@ -404,6 +408,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
   }, []);
 
+  // ========== Post-Login Loading (for Lexi overlay) ==========
+
+  /**
+   * Start the post-login loading overlay.
+   * Called by Login.tsx after successful login to show Lexi while navigating.
+   */
+  const startPostLoginLoading = useCallback(() => {
+    setIsPostLoginLoading(true);
+  }, []);
+
+  /**
+   * End the post-login loading overlay.
+   * Call this when navigation is complete or if an error occurs.
+   */
+  const endPostLoginLoading = useCallback(() => {
+    setIsPostLoginLoading(false);
+  }, []);
+
   // ========== Context Value ==========
 
   const value: AuthContextType = {
@@ -411,6 +433,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     token,
     isGuest,
     isLoading,
+    isPostLoginLoading,
     error,
     isAuthenticated: !!token && !!user,
     login,
@@ -419,6 +442,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     register,
     refreshToken,
     clearError,
+    startPostLoginLoading,
+    endPostLoginLoading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

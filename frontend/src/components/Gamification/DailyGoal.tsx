@@ -86,14 +86,14 @@ const MiniGoal: React.FC<{ data: DailyGoalData }> = ({ data }) => {
     return (
         <div className="flex gap-2">
             {/* Time Ring */}
-            <div className="relative w-10 h-10">
-                <svg className="w-10 h-10 transform -rotate-90">
+            <div className="clay-ring-container clay-ring-container--time">
+                <svg className="w-10 h-10 transform -rotate-90" aria-hidden="true">
                     <circle
                         cx="20"
                         cy="20"
                         r="16"
                         fill="none"
-                        stroke="#e5e7eb"
+                        stroke="#E8F4FF"
                         strokeWidth="4"
                     />
                     <circle
@@ -101,24 +101,29 @@ const MiniGoal: React.FC<{ data: DailyGoalData }> = ({ data }) => {
                         cy="20"
                         r="16"
                         fill="none"
-                        stroke={timePercent >= 100 ? '#22c55e' : '#0ea5e9'}
+                        stroke={timePercent >= 100 ? '#22c55e' : '#38BDF8'}
                         strokeWidth="4"
                         strokeDasharray={`${(timePercent / 100) * 100.5} 100.5`}
                         strokeLinecap="round"
                     />
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-xs">⏱️</span>
+                <span className="clay-ring-icon clay-ring-icon--time" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                </span>
             </div>
 
             {/* Words Ring */}
-            <div className="relative w-10 h-10">
-                <svg className="w-10 h-10 transform -rotate-90">
+            <div className="clay-ring-container clay-ring-container--words">
+                <svg className="w-10 h-10 transform -rotate-90" aria-hidden="true">
                     <circle
                         cx="20"
                         cy="20"
                         r="16"
                         fill="none"
-                        stroke="#e5e7eb"
+                        stroke="#FFF8E0"
                         strokeWidth="4"
                     />
                     <circle
@@ -126,13 +131,19 @@ const MiniGoal: React.FC<{ data: DailyGoalData }> = ({ data }) => {
                         cy="20"
                         r="16"
                         fill="none"
-                        stroke={wordsPercent >= 100 ? '#22c55e' : '#f59e0b'}
+                        stroke={wordsPercent >= 100 ? '#22c55e' : '#FBBF24'}
                         strokeWidth="4"
                         strokeDasharray={`${(wordsPercent / 100) * 100.5} 100.5`}
                         strokeLinecap="round"
                     />
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-xs">📚</span>
+                <span className="clay-ring-icon clay-ring-icon--words" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        <path d="M8 7h8M8 11h6" />
+                    </svg>
+                </span>
             </div>
         </div>
     );

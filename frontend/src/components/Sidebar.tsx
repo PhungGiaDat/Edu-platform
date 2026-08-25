@@ -6,7 +6,7 @@ import { StreakBadge } from '@/components/Gamification/StreakBadge';
 import { CompletedBookIcon, StickerStarIcon, XpBoltIcon } from '@/components/icons/ProgressIcons';
 import { SessionTimerBadge } from './SessionTimerBadge';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLocale, type Locale } from '@/contexts/LocaleContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { courseService } from '@/services/CourseService';
 import { apiClient } from '@/services/apiClient';
 import '@/styles/sidebar.css';
@@ -20,8 +20,8 @@ interface SidebarProps {
 
 interface NavItem {
     path: string;
-    label: string;
-    shortLabel: string;
+    labelKey: string;
+    shortLabelKey: string;
     iconKey: 'learn' | 'ar' | 'flashcards' | 'profile' | 'path3d' | 'leaderboard' | 'challenge';
 }
 
@@ -128,7 +128,8 @@ const ChevronIcon: React.FC<{ expanded: boolean }> = ({ expanded }) => (
 
 const CloseIcon = () => (
     <svg aria-hidden="true" className="block h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M6 6 18 18M18 6 6 18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="18" y1="6" x2="6" y2="18" />
     </svg>
 );
 
@@ -408,8 +409,8 @@ function MobileDailyGoalIndicator() {
                 <TargetIcon className="relative h-4 w-4" />
             </div>
             <div>
-                <div className="text-sm font-black">Daily goal</div>
-                <div className="text-xs font-bold text-slate-500">{minutes}/{goal} minutes</div>
+                <div className="text-sm font-black">{t('dailyGoal')}</div>
+                <div className="text-xs font-bold text-slate-500">{minutes}/{goal} {t('minutes')}</div>
             </div>
         </div>
     );
@@ -520,7 +521,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
     return (
         <>
             <aside
-                aria-label="Learning sidebar"
+                aria-label={t('learningSidebar')}
                 className={`learner-sidebar learner-sidebar--desktop fixed left-0 top-0 z-[var(--z-nav)] hidden h-[100dvh] flex-col overflow-x-hidden border-r-4 border-white bg-[#FFF7EC] shadow-[4px_0_24px_rgba(91,141,239,0.10)] transition-all duration-300 motion-reduce:transition-none md:flex ${isDesktopExpanded ? 'w-[272px]' : 'w-[120px]'}`}
             >
                 <div className={`learner-sidebar__header flex min-w-0 shrink-0 items-center gap-1 px-2 pb-1 pt-3 ${isDesktopExpanded ? 'justify-between' : 'justify-center'}`}>
@@ -531,7 +532,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                             type="button"
                             onClick={() => onDesktopExpandedChange(!isDesktopExpanded)}
                             aria-expanded={isDesktopExpanded}
-                            aria-label={isDesktopExpanded ? 'Collapse navigation' : 'Expand navigation'}
+                            aria-label={isDesktopExpanded ? t('collapseNavigation') : t('expandNavigation')}
                             className="learner-sidebar-toggle learner-sidebar__toggle flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white shadow-[0_4px_0_#DDE8FC]"
                         >
                             <ChevronIcon expanded={isDesktopExpanded} />
@@ -559,7 +560,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                         {!isGuest && (
                             <section
                                 className="learner-sidebar__daily min-w-0 overflow-hidden"
-                                aria-label="Daily progress and learning streak"
+                                aria-label={t('dailyProgressAndLearningStreak')}
                             >
                                 <div className="learner-sidebar__daily-header">
                                     <span>📅 {t('todaysGoal')}</span>
@@ -664,25 +665,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
 
             {isMobileMoreOpen && (
                 <div className="fixed inset-0 z-[var(--z-modal)] md:hidden" role="presentation">
-                    <button type="button" aria-label="Close more menu" className="absolute inset-0 h-full w-full bg-slate-900/35 backdrop-blur-[2px]" onClick={() => setIsMobileMoreOpen(false)} />
+                    <button type="button" aria-label={t('closeMoreMenu')} className="absolute inset-0 h-full w-full bg-slate-900/35 backdrop-blur-[2px]" onClick={() => setIsMobileMoreOpen(false)} />
                     <div ref={mobileSheetRef} id="mobile-more-sheet" role="dialog" aria-modal="true" aria-labelledby="mobile-more-title" className="absolute bottom-0 left-0 right-0 max-h-[88dvh] overflow-x-hidden overflow-y-auto rounded-t-[36px] bg-[#FFF7EC] px-4 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-4 shadow-[0_-12px_40px_rgba(15,23,42,0.22)]">
                         <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-slate-300" />
                         <div className="mb-5 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <SessionTimerBadge />
-                                <h2 id="mobile-more-title" className="text-xl font-black text-slate-800">More adventures</h2>
+                                <h2 id="mobile-more-title" className="text-xl font-black text-slate-800">{t('navMoreAdventures')}</h2>
                             </div>
-                            <button type="button" onClick={() => setIsMobileMoreOpen(false)} aria-label="Close more menu" className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-[0_4px_0_#E5E7EB]"><CloseIcon /></button>
+                            <button type="button" onClick={() => setIsMobileMoreOpen(false)} aria-label={t('closeMoreMenu')} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-[0_4px_0_#E5E7EB]"><CloseIcon /></button>
                         </div>
                         <div className="space-y-5">
                             {!isGuest && (
                                 <>
                                     <div className="grid grid-cols-2 gap-3">
                                         <button onClick={() => goTo('/pets')} className="flex min-h-16 items-center gap-3 rounded-3xl bg-white p-4 text-left shadow-[0_6px_0_#E8EDF7]">
-                                            <PetIcon className="h-7 w-7 shrink-0 text-[#E47777]" /><span className="text-sm font-black text-slate-700">My Pet</span>
+                                            <PetIcon className="h-7 w-7 shrink-0 text-[#E47777]" /><span className="text-sm font-black text-slate-700">{t('navMyPet')}</span>
                                         </button>
                                         <button onClick={() => goTo('/stickers')} className="flex min-h-16 items-center gap-3 rounded-3xl bg-white p-4 text-left shadow-[0_6px_0_#E8EDF7]">
-                                            <StickerStarIcon className="h-7 w-7 shrink-0" /><span className="text-sm font-black text-slate-700">Stickers</span>
+                                            <StickerStarIcon className="h-7 w-7 shrink-0" /><span className="text-sm font-black text-slate-700">{t('navStickers')}</span>
                                         </button>
                                     </div>
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -694,8 +695,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                             <CourseCatalog courses={courses} progressByCourse={progressByCourse} onNavigate={goTo} />
                             <Tracker stats={stats} />
                             <div className="grid grid-cols-1 gap-3 pb-2 sm:grid-cols-2">
-                                <button onClick={() => goTo(isGuest ? '/register' : '/learn-ar')} className="clay-cta-primary min-h-12 w-full">{isGuest ? 'Start Free Trial' : 'Jump into AR'}</button>
-                                <button onClick={() => goTo('/courses')} className="clay-cta-secondary min-h-12 w-full">Browse Courses</button>
+                                <button onClick={() => goTo(isGuest ? '/register' : '/learn-ar')} className="clay-cta-primary min-h-12 w-full">{isGuest ? t('startFreeTrial') : t('jumpIntoAr')}</button>
+                                <button onClick={() => goTo('/courses')} className="clay-cta-secondary min-h-12 w-full">{t('browseCourses')}</button>
                             </div>
                         </div>
                     </div>

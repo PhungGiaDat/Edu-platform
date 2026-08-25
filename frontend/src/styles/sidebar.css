@@ -34,17 +34,63 @@
 }
 
 .learner-sidebar__brand {
-  border: 4px solid rgb(255 255 255 / 0.9);
-  background: #fff7ec !important; /* flat warm pastel — claymorphic, no gradient */
+  border: 4px solid rgb(255 255 255 / 0.92);
+  background:
+    radial-gradient(circle at 22% 22%, rgb(255 200 80 / 0.45) 0%, transparent 52%),
+    radial-gradient(circle at 78% 82%, rgb(255 130 130 / 0.38) 0%, transparent 52%),
+    radial-gradient(circle at 50% 4%, rgb(255 255 255 / 0.88) 0%, transparent 52%),
+    linear-gradient(168deg, #fff8e8 0%, #ffeef5 38%, #e8f4ff 72%, #f0fff4 100%) !important;
   box-shadow:
-    0 6px 0 rgb(110 185 255 / 0.12),
-    0 12px 24px rgb(91 141 239 / 0.1),
-    inset 0 2px 0 rgb(255 255 255 / 0.9) !important;
+    0 6px 0 rgb(110 185 255 / 0.14),
+    0 12px 24px rgb(91 141 239 / 0.12),
+    0 2px 0 rgb(255 255 255 / 0.9),
+    inset 0 2px 0 rgb(255 255 255 / 0.95),
+    inset 0 -3px 8px rgb(255 200 80 / 0.08),
+    inset -2px 0 8px rgb(255 130 130 / 0.05) !important;
 }
 
 .learner-sidebar__brand-mark {
   border: 2px solid rgb(255 255 255 / 0.7);
-  box-shadow: 0 4px 0 #3a8fd1, 0 8px 14px rgb(58 143 209 / 0.21) !important;
+  box-shadow: 0 4px 0 #d4a55a, 0 8px 14px rgb(58 143 209 / 0.21) !important;
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease;
+}
+
+.learner-sidebar__brand-mark:hover {
+  transform: translateY(-2px) rotate(-3deg);
+  box-shadow: 0 6px 0 #d4a55a, 0 10px 18px rgb(58 143 209 / 0.26) !important;
+}
+
+.learner-sidebar__brand-sparkle {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  pointer-events: none;
+  animation: clay-sparkle-float 3.5s ease-in-out infinite;
+}
+
+.clay-shimmer-sparkle {
+  filter: drop-shadow(0 0 4px rgb(255 217 61 / 0.6));
+}
+
+@keyframes clay-sparkle-float {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  50% { transform: translateY(-4px) rotate(18deg) scale(1.12); opacity: 0.8; }
+}
+
+.clay-text-vibrant {
+  background: linear-gradient(135deg, #5B8DEF 0%, #FF9F9F 50%, #FFE066 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.7));
+}
+
+.clay-text-tagline {
+  background: linear-gradient(90deg, #5B8DEF, #FF9F9F, #FFE066);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.01em;
 }
 
 .learner-sidebar__daily {
@@ -71,6 +117,8 @@
   color: #8b6f47;
 }
 
+/* ─── Daily ring claymorphic icons ─────────────────────────── */
+
 .learner-sidebar__daily-rings {
   display: flex;
   justify-content: center;
@@ -80,6 +128,72 @@
   border-radius: 16px;
   background: rgb(255 255 255 / 0.6);
   box-shadow: inset 0 2px 4px rgb(91 141 239 / 0.08);
+}
+
+/* Claymorphic ring container — pill-shaped, elevated, tactile */
+.clay-ring-container {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, 0.12),
+    0 8px 16px rgba(0, 0, 0, 0.08),
+    inset 0 2px 0 rgb(255 255 255 / 0.9),
+    inset 0 -2px 0 rgb(0 0 0 / 0.04);
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease;
+  flex-shrink: 0;
+}
+
+.clay-ring-container:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 0 rgba(0, 0, 0, 0.12),
+    0 12px 20px rgba(0, 0, 0, 0.1),
+    inset 0 2px 0 rgb(255 255 255 / 0.9),
+    inset 0 -2px 0 rgb(0 0 0 / 0.04);
+}
+
+.clay-ring-container:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.12),
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    inset 0 2px 0 rgb(255 255 255 / 0.9),
+    inset 0 -2px 0 rgb(0 0 0 / 0.04);
+}
+
+/* Time ring — sky blue / cyan clay surface */
+.clay-ring-container--time {
+  background: linear-gradient(145deg, #BAE6FD, #7DD3FC);
+  border: 2px solid rgb(255 255 255 / 0.7);
+}
+
+/* Words ring — amber / sunshine clay surface */
+.clay-ring-container--words {
+  background: linear-gradient(145deg, #FDE68A, #FCD34D);
+  border: 2px solid rgb(255 255 255 / 0.7);
+}
+
+/* Inner icon — sits on top of the SVG ring */
+.clay-ring-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.clay-ring-icon--time {
+  color: #0369A1; /* deep sky-700 */
+}
+
+.clay-ring-icon--words {
+  color: #92400E; /* deep amber-800 */
 }
 
 .learner-sidebar__daily-streak {
@@ -189,54 +303,137 @@
   box-shadow: 0 5px 0 #3563c5, 0 12px 20px rgb(61 113 211 / 0.24) !important;
 }
 
+.learner-sidebar__collapsed-link {
+  color: #516683;
+  background-color: transparent;
+  transition: transform 180ms ease, color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.learner-sidebar__collapsed-link:hover {
+  color: #2e64bd;
+  background-color: #eff6ff;
+}
+
+.learner-sidebar__collapsed-link--active,
+.learner-sidebar__collapsed-link--active:hover,
+.learner-sidebar__collapsed-link--active:focus-visible {
+  color: #fff !important;
+  background: #5b8def !important;
+  box-shadow: 0 4px 0 #3f6fcb !important;
+}
+
 .learner-sidebar__catalog,
 .learner-sidebar__tracker {
-  border: 1px solid rgb(235 241 255 / 0.94);
-  box-shadow: 0 8px 0 rgb(77 96 139 / 0.07), 0 16px 25px rgb(66 82 124 / 0.06) !important;
+  border: 4px solid rgb(255 255 255 / 0.92);
+  box-shadow:
+    0 8px 0 rgb(77 96 139 / 0.07),
+    0 16px 25px rgb(66 82 124 / 0.06),
+    inset 0 2px 0 rgb(255 255 255 / 0.92) !important;
+}
+
+.learner-sidebar__category {
+  border: 2px solid rgb(255 255 255 / 0.85);
+  box-shadow:
+    0 4px 0 rgb(110 185 255 / 0.1),
+    inset 0 1px 0 rgb(255 255 255 / 0.9);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.learner-sidebar__category:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 6px 0 rgb(110 185 255 / 0.13),
+    inset 0 1px 0 rgb(255 255 255 / 0.9);
 }
 
 .learner-sidebar__tracker {
-  border: 4px solid #ffffff;
-  background: #dff4ff !important;
+  background: linear-gradient(155deg, #dff4ff 0%, #c2efff 100%) !important;
   box-shadow:
-    0 8px 0 #9ed7e9,
-    0 16px 26px rgb(70 139 180 / 0.18),
-    inset 0 2px 0 rgb(255 255 255 / 0.92) !important;
+    0 8px 0 rgb(70 130 168 / 0.28),
+    0 16px 28px rgb(60 110 155 / 0.22),
+    inset 0 2px 0 rgb(255 255 255 / 0.88),
+    inset 0 -1px 0 rgb(150 210 240 / 0.35) !important;
 }
 
 .learner-sidebar__tracker-title {
   color: #17436b;
   letter-spacing: -0.01em;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.9);
 }
 
 .learner-sidebar__metric {
-  border-color: rgb(255 255 255 / 0.9);
+  border-width: 4px;
+  border-style: solid;
+  border-color: rgb(255 255 255 / 0.88);
   box-shadow:
     0 6px 0 rgb(54 101 147 / 0.16),
-    inset 0 2px 0 rgb(255 255 255 / 0.85);
-  transition: transform 180ms ease, box-shadow 180ms ease;
+    0 10px 18px rgb(54 101 147 / 0.1),
+    inset 0 2px 0 rgb(255 255 255 / 0.88),
+    inset 0 -1px 0 rgb(0 0 0 / 0.04) !important;
+  transition: transform 200ms cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 200ms ease !important;
 }
 
 .learner-sidebar__metric:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow:
+    0 9px 0 rgb(54 101 147 / 0.2),
+    0 14px 22px rgb(54 101 147 / 0.13),
+    inset 0 2px 0 rgb(255 255 255 / 0.88),
+    inset 0 -1px 0 rgb(0 0 0 / 0.04) !important;
 }
 
 .learner-sidebar__metric--xp {
-  background: #ffd96a;
+  background: linear-gradient(155deg, #ffe066 0%, #ffd426 100%);
   color: #704600;
-  box-shadow: 0 6px 0 #e2ad35, inset 0 2px 0 rgb(255 255 255 / 0.8);
+  box-shadow:
+    0 6px 0 rgb(180 130 20 / 0.28),
+    0 10px 18px rgb(200 150 30 / 0.15),
+    inset 0 2px 0 rgb(255 255 255 / 0.8),
+    inset 0 -1px 0 rgb(200 150 30 / 0.2) !important;
+}
+
+.learner-sidebar__metric--xp:hover {
+  box-shadow:
+    0 9px 0 rgb(180 130 20 / 0.32),
+    0 14px 22px rgb(200 150 30 / 0.18),
+    inset 0 2px 0 rgb(255 255 255 / 0.8),
+    inset 0 -1px 0 rgb(200 150 30 / 0.2) !important;
 }
 
 .learner-sidebar__metric--done {
-  background: #b9edcf;
+  background: linear-gradient(155deg, #c1efd4 0%, #9de8bb 100%);
   color: #176344;
-  box-shadow: 0 6px 0 #79c69c, inset 0 2px 0 rgb(255 255 255 / 0.8);
+  box-shadow:
+    0 6px 0 rgb(80 150 110 / 0.26),
+    0 10px 18px rgb(80 150 110 / 0.14),
+    inset 0 2px 0 rgb(255 255 255 / 0.8),
+    inset 0 -1px 0 rgb(80 150 110 / 0.18) !important;
+}
+
+.learner-sidebar__metric--done:hover {
+  box-shadow:
+    0 9px 0 rgb(80 150 110 / 0.3),
+    0 14px 22px rgb(80 150 110 / 0.17),
+    inset 0 2px 0 rgb(255 255 255 / 0.8),
+    inset 0 -1px 0 rgb(80 150 110 / 0.18) !important;
 }
 
 .learner-sidebar__metric--stickers {
-  background: #ffb8b8;
+  background: linear-gradient(155deg, #ffc2c2 0%, #ff9999 100%);
   color: #873f52;
-  box-shadow: 0 6px 0 #dd858b, inset 0 2px 0 rgb(255 255 255 / 0.8);
+  box-shadow:
+    0 6px 0 rgb(190 90 100 / 0.28),
+    0 10px 18px rgb(190 90 100 / 0.15),
+    inset 0 2px 0 rgb(255 255 255 / 0.8),
+    inset 0 -1px 0 rgb(190 90 100 / 0.2) !important;
+}
+
+.learner-sidebar__metric--stickers:hover {
+  box-shadow:
+    0 9px 0 rgb(190 90 100 / 0.32),
+    0 14px 22px rgb(190 90 100 / 0.18),
+    inset 0 2px 0 rgb(255 255 255 / 0.8),
+    inset 0 -1px 0 rgb(190 90 100 / 0.2) !important;
 }
 
 .learner-sidebar__metric-label {
@@ -245,22 +442,120 @@
 
 .learner-sidebar__tracker-caption {
   color: #245274;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.6);
 }
 
 .learner-sidebar__tracker-progress {
-  padding: 2px;
-  background: rgb(255 255 255 / 0.72);
-  box-shadow: inset 0 2px 4px rgb(40 102 145 / 0.16);
+  padding: 3px;
+  background: rgb(255 255 255 / 0.65);
+  border-radius: 99px;
+  box-shadow:
+    inset 0 3px 6px rgb(40 90 140 / 0.14),
+    inset 0 -1px 0 rgb(255 255 255 / 0.9),
+    0 1px 0 rgb(255 255 255 / 0.7);
 }
 
 .learner-sidebar__tracker-progress-fill {
   min-width: 6px;
-  background: linear-gradient(90deg, #5b8def 0%, #66c7e8 52%, #8ed59b 100%);
-  box-shadow: 0 2px 0 rgb(45 111 145 / 0.22), inset 0 1px 0 rgb(255 255 255 / 0.6);
+  border-radius: 99px;
+  background: linear-gradient(90deg, #5b8def 0%, #72c9f5 50%, #9de8bb 100%);
+  box-shadow:
+    0 2px 4px rgb(60 110 160 / 0.3),
+    0 1px 0 rgb(255 255 255 / 0.5),
+    inset 0 1px 0 rgb(255 255 255 / 0.65),
+    inset 0 -1px 0 rgb(80 150 200 / 0.2);
+}
+
+/* ─── Daily streak claymorphic icon ──────────────────────────── */
+
+.clay-streak-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  margin-inline: auto;
+  margin-bottom: 4px;
+  box-shadow:
+    0 3px 0 rgba(0, 0, 0, 0.15),
+    0 6px 12px rgba(0, 0, 0, 0.08),
+    inset 0 2px 0 rgb(255 255 255 / 0.85);
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease;
+}
+
+.clay-streak-icon:hover {
+  transform: translateY(-2px) scale(1.05);
+}
+
+.clay-streak-icon:active {
+  transform: translateY(2px);
+}
+
+/* Hot streak (≥7 days) — vivid orange-red fire */
+.clay-streak-icon--hot {
+  background: linear-gradient(145deg, #FB923C, #F97316);
+  color: #7C2D12;
+}
+
+/* Cold streak (0 days) — icy sky blue */
+.clay-streak-icon--cold {
+  background: linear-gradient(145deg, #BAE6FD, #7DD3FC);
+  color: #075985;
+}
+
+/* Star badge for ≥7 day streaks */
+.clay-streak-star {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #FDE047, #FACC15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #713F12;
+  font-size: 11px;
+  box-shadow: 0 2px 0 #CA8A04, 0 4px 8px rgba(0,0,0,0.15);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .clay-streak-icon {
+    transition: none;
+  }
+  .clay-streak-icon:hover {
+    transform: none;
+  }
+  .clay-streak-icon:active {
+    transform: none;
+  }
+  .clay-ring-container {
+    transition: none;
+  }
+  .clay-ring-container:hover {
+    transform: none;
+  }
+  .clay-ring-container:active {
+    transform: none;
+  }
   .learner-sidebar__nav-link {
     transition: none;
+  }
+  .learner-sidebar__category {
+    transition: none;
+  }
+  .learner-sidebar__category:hover {
+    transform: none;
+  }
+  .learner-sidebar__brand-sparkle {
+    animation: none;
+  }
+  .learner-sidebar__brand-mark {
+    transition: none;
+  }
+  .learner-sidebar__brand-mark:hover {
+    transform: none;
   }
 }

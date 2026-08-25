@@ -14,10 +14,12 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { LandingPage } from "./pages/LandingPage";
 import { ProgressDashboard } from "./pages/ProgressDashboard";
+import { Leaderboard } from "./pages/Leaderboard";
 import { LearningPathSetup } from "./pages/LearningPathSetup";
 import { LearningPath3D } from "./pages/LearningPath3D";
 import PetsPage from "./pages/PetsPage";
 import StickersPage from "./pages/StickersPage";
+import { DailyChallengePage } from "./pages/DailyChallengePage";
 import { Layout } from "./components/Layout";
 import { AIChatBuddy } from "./components/AIChatBuddy";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -284,6 +286,8 @@ const App = () => {
         <Route path="/courses/:courseId/lessons/:lessonId" element={<RequireLearnerAccess><Layout><LessonPlayer /></Layout></RequireLearnerAccess>} />
         <Route path="/profile" element={<RequireUserAuth><Layout><Profile /></Layout></RequireUserAuth>} />
         <Route path="/progress" element={<RequireUserAuth><Layout><ProgressDashboard /></Layout></RequireUserAuth>} />
+        <Route path="/daily-challenge" element={<RequireUserAuth><Layout><DailyChallengePage /></Layout></RequireUserAuth>} />
+        <Route path="/leaderboard" element={<RequireUserAuth><Layout><Leaderboard /></Layout></RequireUserAuth>} />
         <Route path="/learning-path" element={<RequireUserAuth><Layout><LearningPathSetup /></Layout></RequireUserAuth>} />
         <Route path="/learning-path-3d" element={<RequireUserAuth><Layout><LearningPath3D /></Layout></RequireUserAuth>} />
 

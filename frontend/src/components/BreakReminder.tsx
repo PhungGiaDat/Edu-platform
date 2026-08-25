@@ -10,15 +10,20 @@
  */
 
 import React, { useEffect, useRef } from 'react';
+import { useLocale } from '../contexts/LocaleContext';
 
 const getFocusableElements = (dialog: HTMLElement) => Array.from(dialog.querySelectorAll<HTMLElement>(
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
 ));
 
-// Format remaining seconds as "Xm Ys" or "X min"
-function formatTime(secs: number): string {
+// Format remaining seconds using the active locale's natural time units.
+function formatTime(secs: number, locale: 'en' | 'vi'): string {
   const m = Math.floor(secs / 60);
   const s = secs % 60;
+  if (locale === 'vi') {
+    if (m >= 1) return s > 0 ? `${m} phút ${s} giây` : `${m} phút`;
+    return `${s} giây`;
+  }
   if (m >= 1) return s > 0 ? `${m}m ${s}s` : `${m} min`;
   return `${s}s`;
 }
@@ -150,6 +155,7 @@ export const BreakReminder: React.FC<BreakReminderProps> = ({
   onContinue,
   onExit,
 }) => {
+  const { locale, t } = useLocale();
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const prefersReducedMotion =
@@ -213,8 +219,9 @@ export const BreakReminder: React.FC<BreakReminderProps> = ({
   const accentColor = isLimitReached ? 'pink' : 'yellow';
   const titleColor = isLimitReached ? '#D97070' : '#E5B800';
 
-  const timeDisplay =
-    remainingSeconds > 0 ? `Only ${formatTime(remainingSeconds)} left!` : 'Great job!';
+  const timeDisplay = remainingSeconds > 0
+    ? t('sessionWarningTime').replace('{time}', formatTime(remainingSeconds, locale))
+    : t('sessionWarningGreatJob');
 
   return (
     <>
@@ -275,7 +282,7 @@ export const BreakReminder: React.FC<BreakReminderProps> = ({
                 color: titleColor,
               }}
             >
-              {isLimitReached ? "Time for a Break!" : "Almost Break Time!"}
+              {isLimitReached ? t('sessionLimitTitle') : t('sessionWarningTitle')}
             </h2>
 
             {/* Body message */}
@@ -288,8 +295,8 @@ export const BreakReminder: React.FC<BreakReminderProps> = ({
               }}
             >
               {isLimitReached
-                ? "You've been learning for a while. Let's rest your eyes!"
-                : `${timeDisplay} Great job learning today!`}
+                ? t('sessionLimitBody')
+                : `${timeDisplay} ${t('sessionWarningBodySuffix')}`}
             </p>
 
             {/* Actions */}
@@ -297,7 +304,7 @@ export const BreakReminder: React.FC<BreakReminderProps> = ({
               {/* "Keep Going!" — only in warning state */}
               {isWarning && onContinue && (
                 <ClayButton variant="green" onClick={onContinue}>
-                  ✨ Keep Going!
+                  ✨ {t('sessionKeepGoing')}
                 </ClayButton>
               )}
 
@@ -307,7 +314,7 @@ export const BreakReminder: React.FC<BreakReminderProps> = ({
                   variant={isLimitReached ? 'green' : 'gray'}
                   onClick={onExit}
                 >
-                  {isLimitReached ? '🌈 Take a Break!' : '👋 Exit for Now'}
+                  {isLimitReached ? `🌈 ${t('sessionTakeBreak')}` : `👋 ${t('sessionExitNow')}`}
                 </ClayButton>
               )}
             </div>
@@ -317,9 +324,7 @@ export const BreakReminder: React.FC<BreakReminderProps> = ({
               className="text-center text-xs text-[#94A3B8] mt-2"
               style={{ fontFamily: "'Nunito', sans-serif" }}
             >
-              {isLimitReached
-                ? 'Rest is important for learning! Come back soon!'
-                : 'You can always come back later!'}
+              {isLimitReached ? t('sessionLimitFooter') : t('sessionWarningFooter')}
             </p>
           </ClayCard>
         </div>

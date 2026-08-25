@@ -35,7 +35,7 @@ const copy = {
   en: {
     courseCatalog: 'Course Catalog',
     heroBody: 'Explore short lesson paths, beginner vocabulary, AR-ready activities, quizzes, and rewards built for young learners.',
-    yourPaths: 'Your Learning Paths',
+    yourPaths: 'Your Topics',
     priorityTopics: 'Priority topics',
     noPriorityTopics: 'Choose priority topics in Learning Path to reorder courses here.',
     browseTopics: 'Browse recommended themes first',
@@ -61,12 +61,12 @@ const copy = {
     hourLabel: 'hours',
     recommended: 'Recommended',
     demo: 'Demo',
-    allPaths: 'All paths',
+    allPaths: 'All topics',
   },
   vi: {
     courseCatalog: 'Danh sách khóa học',
     heroBody: 'Khám phá các lộ trình bài học ngắn, từ vựng cơ bản, hoạt động AR, quiz và phần thưởng dành cho trẻ nhỏ.',
-    yourPaths: 'Lộ trình học của bạn',
+    yourPaths: 'Chủ đề của bạn',
     priorityTopics: 'Chủ đề ưu tiên',
     noPriorityTopics: 'Hãy chọn chủ đề ưu tiên trong phần Lộ trình học để sắp xếp khóa học tại đây.',
     browseTopics: 'Xem trước các chủ đề được ưu tiên',
@@ -92,7 +92,7 @@ const copy = {
     hourLabel: 'giờ',
     recommended: 'Ưu tiên',
     demo: 'Demo',
-    allPaths: 'Tất cả lộ trình',
+    allPaths: 'Tất cả chủ đề',
   },
 } as const;
 
@@ -388,25 +388,6 @@ const buildTopicPath = (
   };
 };
 
-const LanguageSwitch: React.FC = () => {
-  const { locale, setLocale } = useLocale();
-
-  return (
-    <div className="course-language-switch" aria-label="Language">
-      {(['en', 'vi'] as Locale[]).map((option) => (
-        <button
-          key={option}
-          type="button"
-          onClick={() => setLocale(option)}
-          className={`course-language-switch__option ${locale === option ? 'is-active' : ''}`}
-        >
-          {option === 'en' ? 'EN' : 'VI'}
-        </button>
-      ))}
-    </div>
-  );
-};
-
 const BookOpenIcon: React.FC<{ className?: string }> = ({ className = 'h-8 w-8' }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 7v14" />
@@ -590,9 +571,6 @@ export const CourseList: React.FC = () => {
       <div className="course-catalog__canvas">
         <header className="course-catalog__hero">
           <div className="course-catalog__hero-copy">
-            <div className="course-catalog__hero-topline">
-              <LanguageSwitch />
-            </div>
             <h1>{pageTitle}</h1>
             <p className="course-catalog__hero-body">{ui.heroBody}</p>
 

@@ -10,6 +10,15 @@ type LocaleContextValue = {
 };
 
 const STORAGE_KEY = 'edu-platform-locale';
+const AUTO_DETECTED_KEY = 'edu-platform-locale-auto-detected';
+
+const isLocale = (value: unknown): value is Locale => value === 'vi' || value === 'en';
+
+const detectBrowserLocale = (): Locale => {
+  if (typeof navigator === 'undefined') return 'en';
+  const candidates = [navigator.language, ...(Array.isArray(navigator.languages) ? navigator.languages : [])];
+  return candidates.some((candidate) => typeof candidate === 'string' && candidate.toLowerCase().startsWith('vi')) ? 'vi' : 'en';
+};
 
 const messages: Record<Locale, Record<string, string>> = {
   en: {
@@ -17,7 +26,6 @@ const messages: Record<Locale, Record<string, string>> = {
     english: 'English',
     vietnamese: 'Vietnamese',
     switchLocale: 'VI',
-    courseCatalog: 'Course Catalog',
     navCourses: 'Courses',
     navLogin: 'Log in',
     navGetStarted: 'Get Started',
@@ -91,7 +99,8 @@ const messages: Record<Locale, Record<string, string>> = {
     heroKicker: 'Playful English learning',
     heroTitle: 'Choose a bright learning adventure',
     heroBody: 'Explore short video lessons, vocabulary games, AR flashcards, quizzes, rewards, and progress tracking in one kid-friendly course hub.',
-    browseCourses: 'Browse courses',
+    courseCatalog: 'Course Catalog',
+    viewAll: 'View all',
     continueLearning: 'Continue learning',
     startLearning: 'Start learning',
     enrollNow: 'Enroll now',
@@ -142,13 +151,79 @@ const messages: Record<Locale, Record<string, string>> = {
     grading: 'Grading...',
     lessonNotFound: 'Lesson not found.',
     loadingLesson: 'Opening lesson...',
+    navLearn: 'Learn',
+    navLearningPath: 'Learning Path',
+    navPathShort: 'Path',
+    navArPractice: 'AR Practice',
+    navArShort: 'AR',
+    navLeaderboard: 'Leaderboard',
+    navLeaderboardShort: 'Top',
+    navFlashcards: 'Flashcards',
+    navFlashcardsShort: 'Cards',
+    navDailyChallenge: 'Daily Challenge',
+    navChallengeShort: 'Challenge',
+    navProfile: 'Profile',
+    navMyPet: 'My Pet',
+    navPetShort: 'Pet',
+    navStickers: 'Stickers',
+    navStickersShort: 'Stickers',
+    navMore: 'More',
+    navMoreAdventures: 'More adventures',
+    expandNavigation: 'Expand navigation',
+    collapseNavigation: 'Collapse navigation',
+    primaryNavigation: 'Primary navigation',
+    learningSidebar: 'Learning sidebar',
+    dailyProgressAndLearningStreak: 'Daily progress and learning streak',
+    progressTracker: 'Progress Tracker',
+    courseCompletion: 'Course completion',
+    noPublishedCourses: 'No published courses yet',
+    dailyGoal: 'Daily goal',
+    minutes: 'minutes',
+    todaysGoal: "Today's Goal",
+    keepGoing: 'Keep going',
+    learnALittleToday: 'Learn a little today',
+    startFreeTrial: 'Start Free Trial',
+    jumpIntoAr: 'Jump into AR',
+    closeMoreMenu: 'Close more menu',
+    sidebarTagline: 'Play. Explore. Learn English.',
+    dailyShort: 'Daily',
+    quickLinks: 'Quick Links',
+    loginTitle: 'Welcome back',
+    loginEmail: 'Email',
+    loginPassword: 'Password',
+    loginSubmit: 'SIGN IN',
+    loginSubmitting: 'SIGNING IN...',
+    loginTryWithout: 'TRY WITHOUT ACCOUNT',
+    loginNewHere: 'New here?',
+    loginCreateAccount: 'Create an account',
+    registerTitle: 'Start your journey',
+    registerSubtitle: 'Build your learning profile and unlock full progress tracking.',
+    registerName: 'Your Name',
+    registerNamePlaceholder: 'Enter your name',
+    registerEmail: 'Email',
+    registerPassword: 'Password',
+    registerSubmit: 'CREATE ACCOUNT',
+    registerSubmitting: 'CREATING ACCOUNT...',
+    registerTryWithout: 'TRY WITHOUT ACCOUNT',
+    registerAlready: 'Already registered?',
+    registerSignIn: 'Sign in',
+    sessionWarningTitle: 'Almost Break Time!',
+    sessionLimitTitle: 'Time for a Break!',
+    sessionWarningTime: 'Only {time} left!',
+    sessionWarningGreatJob: 'Great job!',
+    sessionWarningBodySuffix: 'Great job learning today!',
+    sessionLimitBody: "You've been learning for a while. Let's rest your eyes!",
+    sessionKeepGoing: 'Keep Going!',
+    sessionTakeBreak: 'Take a Break!',
+    sessionExitNow: 'Exit for Now',
+    sessionLimitFooter: 'Rest is important for learning! Come back soon!',
+    sessionWarningFooter: 'You can always come back later!',
   },
   vi: {
     language: 'Ngôn ngữ',
     english: 'Tiếng Anh',
     vietnamese: 'Tiếng Việt',
     switchLocale: 'EN',
-    courseCatalog: 'Danh sách khóa học',
     navCourses: 'Khóa học',
     navLogin: 'Đăng nhập',
     navGetStarted: 'Bắt đầu',
@@ -222,7 +297,6 @@ const messages: Record<Locale, Record<string, string>> = {
     heroKicker: 'Học tiếng Anh thật vui',
     heroTitle: 'Chọn một hành trình học tập rực rỡ',
     heroBody: 'Khám phá bài học video ngắn, trò chơi từ vựng, flashcard AR, quiz, phần thưởng và theo dõi tiến độ trong một khu học tập thân thiện.',
-    browseCourses: 'Xem khóa học',
     continueLearning: 'Học tiếp',
     startLearning: 'Bắt đầu học',
     enrollNow: 'Đăng ký học',
@@ -273,6 +347,78 @@ const messages: Record<Locale, Record<string, string>> = {
     grading: 'Đang chấm điểm...',
     lessonNotFound: 'Không có bài học.',
     loadingLesson: 'Đang mở bài học...',
+    navLearn: 'Học tập',
+    navLearningPath: 'Lộ trình học',
+    navPathShort: 'Lộ trình',
+    navArPractice: 'Luyện tập AR',
+    navArShort: 'AR',
+    navLeaderboard: 'Bảng xếp hạng',
+    navLeaderboardShort: 'Top',
+    navFlashcards: 'Flashcard',
+    navFlashcardsShort: 'Thẻ',
+    navDailyChallenge: 'Thử thách hôm nay',
+    navChallengeShort: 'Thử thách',
+    navProfile: 'Hồ sơ',
+    navMyPet: 'Thú cưng',
+    navPetShort: 'Pet',
+    navStickers: 'Sticker',
+    navStickersShort: 'Sticker',
+    navMore: 'Thêm',
+    navMoreAdventures: 'Khám phá thêm',
+    expandNavigation: 'Mở rộng thanh điều hướng',
+    collapseNavigation: 'Thu gọn thanh điều hướng',
+    primaryNavigation: 'Điều hướng chính',
+    learningSidebar: 'Thanh học tập',
+    dailyProgressAndLearningStreak: 'Tiến độ hằng ngày và chuỗi học tập',
+    progressTracker: 'Theo dõi tiến độ',
+    stickers: 'Sticker',
+    courseCompletion: 'Hoàn thành khóa học',
+    courseCatalog: 'Danh mục khóa học',
+    viewAll: 'Xem tất cả',
+    noPublishedCourses: 'Chưa có khóa học được xuất bản',
+    dailyGoal: 'Mục tiêu hôm nay',
+    minutes: 'phút',
+    todaysGoal: 'Mục tiêu hôm nay',
+    keepGoing: 'Tiếp tục cố gắng',
+    learnALittleToday: 'Học một chút mỗi ngày',
+    startFreeTrial: 'Bắt đầu miễn phí',
+    jumpIntoAr: 'Khám phá AR',
+    browseCourses: 'Xem khóa học',
+    closeMoreMenu: 'Đóng menu thêm',
+    sidebarTagline: 'Chơi. Khám phá. Học tiếng Anh.',
+    dailyShort: 'Hằng ngày',
+    quickLinks: 'Liên kết nhanh',
+    // Auth page
+    loginTitle: 'Chào mừng quay lại',
+    loginEmail: 'Email',
+    loginPassword: 'Mật khẩu',
+    loginSubmit: 'ĐĂNG NHẬP',
+    loginSubmitting: 'ĐANG ĐĂNG NHẬP...',
+    loginTryWithout: 'THỬ KHÔNG CẦN TÀI KHOẢN',
+    loginNewHere: 'Chưa có tài khoản?',
+    loginCreateAccount: 'Tạo tài khoản',
+    registerTitle: 'Bắt đầu hành trình',
+    registerSubtitle: 'Tạo hồ sơ học tập và mở khóa theo dõi tiến độ đầy đủ.',
+    registerName: 'Tên của bạn',
+    registerNamePlaceholder: 'Nhập tên của bạn',
+    registerEmail: 'Email',
+    registerPassword: 'Mật khẩu',
+    registerSubmit: 'TẠO TÀI KHOẢN',
+    registerSubmitting: 'ĐANG TẠO TÀI KHOẢN...',
+    registerTryWithout: 'THỬ KHÔNG CẦN TÀI KHOẢN',
+    registerAlready: 'Đã có tài khoản?',
+    registerSignIn: 'Đăng nhập',
+    sessionWarningTitle: 'Sắp đến giờ nghỉ rồi!',
+    sessionLimitTitle: 'Đến giờ nghỉ rồi!',
+    sessionWarningTime: 'Còn {time} nữa thôi!',
+    sessionWarningGreatJob: 'Bạn làm tốt lắm!',
+    sessionWarningBodySuffix: 'Bạn đã học rất chăm chỉ hôm nay!',
+    sessionLimitBody: 'Bạn đã học được một lúc rồi. Hãy cho mắt nghỉ ngơi nhé!',
+    sessionKeepGoing: 'Tiếp tục học!',
+    sessionTakeBreak: 'Nghỉ giải lao!',
+    sessionExitNow: 'Thoát lúc này',
+    sessionLimitFooter: 'Nghỉ ngơi cũng rất quan trọng để học tốt! Hẹn gặp lại bạn sớm nhé!',
+    sessionWarningFooter: 'Bạn luôn có thể quay lại sau!',
   },
 };
 
@@ -282,7 +428,21 @@ export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [locale, setLocaleState] = useState<Locale>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      return stored === 'vi' || stored === 'en' ? stored : 'en';
+      if (isLocale(stored)) return stored;
+    } catch {
+      // Ignore storage failures.
+    }
+    try {
+      const wasAutoDetected = localStorage.getItem(AUTO_DETECTED_KEY) === '1';
+      const detected = detectBrowserLocale();
+      if (!wasAutoDetected) {
+        try {
+          localStorage.setItem(AUTO_DETECTED_KEY, '1');
+        } catch {
+          // Ignore storage failures.
+        }
+      }
+      return detected;
     } catch {
       return 'en';
     }
@@ -292,6 +452,8 @@ export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setLocaleState(nextLocale);
     try {
       localStorage.setItem(STORAGE_KEY, nextLocale);
+      // Once the user picks manually we stop honoring automatic detection.
+      localStorage.setItem(AUTO_DETECTED_KEY, '1');
     } catch {
       // Ignore storage failures.
     }

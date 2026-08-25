@@ -48,14 +48,6 @@
   filter: blur(18px);
 }
 
-.course-catalog__hero-topline {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
-}
-
 .course-catalog__demo-badge,
 .course-path-card__recommendation,
 .course-list-card__level,
@@ -937,10 +929,6 @@
     gap: 1.65rem;
   }
 
-  .course-catalog__hero-topline {
-    margin-bottom: 1.25rem;
-  }
-
   .course-catalog h1 {
     max-width: 10ch;
     font-size: clamp(3rem, 15vw, 4.25rem);
@@ -989,11 +977,6 @@
 }
 
 @media (max-width: 430px) {
-  .course-catalog__hero-topline {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .course-catalog__priority-panel {
     padding-left: 0.85rem;
   }

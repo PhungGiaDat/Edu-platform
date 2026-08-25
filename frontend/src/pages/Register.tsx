@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLocale } from '../contexts/LocaleContext';
 import { ClayCard } from '@/components/clay/ClayCard';
 import { ClayButton } from '@/components/clay/ClayButton';
 
@@ -30,6 +31,7 @@ export const Register: React.FC = () => {
   const [localError, setLocalError] = useState('');
   const navigate = useNavigate();
   const { register, enterGuestMode, isLoading } = useAuth();
+  const { t } = useLocale();
 
   const errorText = useMemo(() => localError.trim(), [localError]);
 
@@ -73,11 +75,8 @@ export const Register: React.FC = () => {
 
             <div className="mb-6">
               <h1 className="font-['Baloo_2'] text-4xl font-extrabold leading-tight text-slate-900 sm:text-5xl">
-                Start your journey
+                {t('registerTitle')}
               </h1>
-              <p className="mt-2 text-base text-slate-600 sm:text-lg">
-                Build your learning profile and unlock full progress tracking.
-              </p>
             </div>
 
             <form onSubmit={handleRegister} className="space-y-4">
@@ -88,19 +87,19 @@ export const Register: React.FC = () => {
               )}
 
               <label className="block">
-                <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">Your Name</span>
+                <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">{t('registerName')}</span>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your name"
+                  placeholder={t('registerNamePlaceholder')}
                   className="w-full rounded-2xl border-2 border-slate-200 bg-white px-4 py-3 text-base text-slate-800 outline-none transition focus:border-green-400"
                   required
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">Email</span>
+                <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">{t('registerEmail')}</span>
                 <input
                   type="email"
                   value={email}
@@ -112,7 +111,7 @@ export const Register: React.FC = () => {
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">Password</span>
+                <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">{t('registerPassword')}</span>
                 <input
                   type="password"
                   value={password}
@@ -124,7 +123,7 @@ export const Register: React.FC = () => {
               </label>
 
               <ClayButton type="submit" variant="green" size="lg" fullWidth disabled={isLoading}>
-                {isLoading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}
+                {isLoading ? t('registerSubmitting') : t('registerSubmit')}
               </ClayButton>
 
               <ClayButton
@@ -135,17 +134,13 @@ export const Register: React.FC = () => {
                 onClick={handleTryWithoutAccount}
                 icon={<SparkIcon />}
               >
-                TRY WITHOUT ACCOUNT
+                {t('registerTryWithout')}
               </ClayButton>
 
-              <p className="text-center text-xs text-slate-500 sm:text-sm">
-                Guest mode: AR + courses only (read-only), no pets, no session saving.
-              </p>
-
               <p className="pt-1 text-center text-sm text-slate-600 sm:text-base">
-                Already registered?{' '}
+                {t('registerAlready')}{' '}
                 <Link to="/login" className="font-bold text-green-700 hover:text-green-800">
-                  Sign in
+                  {t('registerSignIn')}
                 </Link>
               </p>
             </form>
