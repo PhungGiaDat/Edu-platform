@@ -380,6 +380,20 @@
 
             const size = new THREE.Vector3();
             box.getSize(size);
+            // Validate size - NaN indicates mesh not fully loaded
+            if (!Number.isFinite(size.x) || !Number.isFinite(size.y) || !Number.isFinite(size.z)) {
+                const fallbackScale = FALLBACK_SCALE_PER_TARGET[targetIndex] || 1.2;
+                log('⚠️', `Invalid bounding box size (${size.x}x${size.y}x${size.z}), applying fallback ${fallbackScale}`);
+                modelEl.setAttribute('scale', `${fallbackScale} ${fallbackScale} ${fallbackScale}`);
+                if (targetIndex !== null) dynamicModelScales.set(targetIndex, fallbackScale);
+                sendDebug('MODEL_DYNAMIC_SCALE_SKIPPED', {
+                    modelId: modelEl.id,
+                    source: settings.source || 'unknown',
+                    reason: 'nan-bounds',
+                    fallbackScale: fallbackScale
+                });
+                return null;
+            }
             const displayedMaxDimension = Math.max(size.x, size.y, size.z);
             const previousScale = readUniformEntityScale(modelEl);
             const nextScale = scalePolicy.computeUniformScale(
