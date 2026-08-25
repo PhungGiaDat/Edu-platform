@@ -15,6 +15,10 @@ import { Register } from "./pages/Register";
 import { LandingPage } from "./pages/LandingPage";
 import { ProgressDashboard } from "./pages/ProgressDashboard";
 import { Leaderboard } from "./pages/Leaderboard";
+import { GamesPage } from "./pages/GamesPage";
+import DragMatchGame from "./pages/games/DragMatchGame";
+import MemoryPairsGame from "./pages/games/MemoryPairsGame";
+import ColorLearnGame from "./pages/games/ColorLearnGame";
 import { LearningPathSetup } from "./pages/LearningPathSetup";
 import { LearningPath3D } from "./pages/LearningPath3D";
 import PetsPage from "./pages/PetsPage";
@@ -294,6 +298,12 @@ const App = () => {
         <Route path="/pets" element={<RequireUserAuth><Layout><PetsPage /></Layout></RequireUserAuth>} />
         <Route path="/stickers" element={<RequireUserAuth><Layout><StickersPage /></Layout></RequireUserAuth>} />
         <Route path="/scan" element={<Navigate to="/learn-ar" replace />} />
+
+        {/* Games Routes */}
+        <Route path="/games" element={<Layout><GamesPage /></Layout>} />
+        <Route path="/games/drag-match" element={<Layout><DragMatchGame /></Layout>} />
+        <Route path="/games/memory-pairs" element={<Layout><MemoryPairsGame /></Layout>} />
+        <Route path="/games/color-learn" element={<Layout><ColorLearnGame /></Layout>} />
 
         {/* Admin Routes - Require Teacher/Admin Role with Error Boundary */}
         <Route path="/admin" element={<RequireTeacherRole><AdminErrorBoundary><AdminDashboard /></AdminErrorBoundary></RequireTeacherRole>} />

@@ -22,7 +22,7 @@ interface NavItem {
     path: string;
     labelKey: string;
     shortLabelKey: string;
-    iconKey: 'learn' | 'ar' | 'flashcards' | 'profile' | 'path3d' | 'leaderboard' | 'challenge';
+    iconKey: 'learn' | 'ar' | 'flashcards' | 'profile' | 'path3d' | 'leaderboard' | 'challenge' | 'games';
 }
 
 interface TrackerStats {
@@ -120,6 +120,15 @@ const ChallengeIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6'
     </svg>
 );
 
+const GamesIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' }) => (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="6" width="20" height="12" rx="3" />
+        <circle cx="8" cy="12" r="2" fill="currentColor" stroke="none" />
+        <circle cx="16" cy="10" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="16" cy="14" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+);
+
 const ChevronIcon: React.FC<{ expanded: boolean }> = ({ expanded }) => (
     <svg aria-hidden="true" className={`h-5 w-5 transition-transform ${expanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="m9 18 6-6-6-6" />
@@ -138,6 +147,43 @@ const GlobeIcon: React.FC<{ className?: string }> = ({ className = 'h-5 w-5' }) 
         <circle cx="12" cy="12" r="10" />
         <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
         <path d="M2 12h20" />
+    </svg>
+);
+
+const ArrowRightIcon: React.FC<{ className?: string }> = ({ className = 'h-5 w-5' }) => (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7" />
+    </svg>
+);
+
+const ChevronUpIcon: React.FC<{ className?: string }> = ({ className = 'h-5 w-5' }) => (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m18 15-6-6-6 6" />
+    </svg>
+);
+
+const ChevronDownIcon: React.FC<{ className?: string }> = ({ className = 'h-5 w-5' }) => (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m6 9 6 6 6-6" />
+    </svg>
+);
+
+const GridIcon: React.FC<{ className?: string }> = ({ className = 'h-5 w-5' }) => (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
+);
+
+const PlayIcon: React.FC<{ className?: string }> = ({ className = 'h-5 w-5' }) => (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M8 5.14v14l11-7-11-7z" />
+    </svg>
+);
+
+const SparkleIcon: React.FC<{ className?: string }> = ({ className = 'h-5 w-5' }) => (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2L13.8 9.2L21 11L13.8 12.8L12 20L10.2 12.8L3 11L10.2 9.2L12 2Z" />
     </svg>
 );
 
@@ -179,11 +225,13 @@ const iconComponents: Record<NavItem['iconKey'], React.FC<{ className?: string }
     path3d: Path3DIcon,
     leaderboard: TrophyIcon,
     challenge: ChallengeIcon,
+    games: GamesIcon,
 };
 
 const fullNavItems: Array<{ path: string; iconKey: NavItem['iconKey']; labelKey: string; shortLabelKey: string }> = [
     { path: '/courses', iconKey: 'learn', labelKey: 'navLearn', shortLabelKey: 'navLearn' },
     { path: '/learning-path-3d', iconKey: 'path3d', labelKey: 'navLearningPath', shortLabelKey: 'navPathShort' },
+    { path: '/games', iconKey: 'games', labelKey: 'navGames', shortLabelKey: 'navGamesShort' },
     { path: '/learn-ar', iconKey: 'ar', labelKey: 'navArPractice', shortLabelKey: 'navArShort' },
     { path: '/leaderboard', iconKey: 'leaderboard', labelKey: 'navLeaderboard', shortLabelKey: 'navLeaderboardShort' },
     { path: '/flashcards', iconKey: 'flashcards', labelKey: 'navFlashcards', shortLabelKey: 'navFlashcardsShort' },
@@ -266,6 +314,71 @@ function Tracker({ stats }: { stats: TrackerStats }) {
     );
 }
 
+// Vibrant color palette for young children - claymorphism with more saturation
+const CATEGORY_THEMES: Record<string, { bg: string; accent: string; shadow: string; icon: string; gradient: string }> = {
+    colors: {
+        bg: 'bg-gradient-to-br from-[#FFE066] via-[#FFB347] to-[#FF7F7F]',
+        accent: '#FF6B6B',
+        shadow: '0 4px 0 rgba(180,80,80,0.35)',
+        icon: 'bg-white/90',
+        gradient: 'from-[#FFE066] via-[#FFB347] to-[#FF7F7F]',
+    },
+    animals: {
+        bg: 'bg-gradient-to-br from-[#A8E6CF] via-[#88D4AB] to-[#6EB9FF]',
+        accent: '#3DBE7C',
+        shadow: '0 4px 0 rgba(80,160,100,0.35)',
+        icon: 'bg-white/90',
+        gradient: 'from-[#A8E6CF] via-[#88D4AB] to-[#6EB9FF]',
+    },
+    default: {
+        bg: 'bg-gradient-to-br from-[#A8D8FF] via-[#C4B5FD] to-[#FFB4A2]',
+        accent: '#8B5CF6',
+        shadow: '0 4px 0 rgba(91,77,180,0.3)',
+        icon: 'bg-white/90',
+        gradient: 'from-[#A8D8FF] via-[#C4B5FD] to-[#FFB4A2]',
+    },
+};
+
+function getCategoryTheme(categoryKey: string) {
+    const key = categoryKey.toLowerCase();
+    if (key.includes('color')) return CATEGORY_THEMES.colors;
+    if (key.includes('animal')) return CATEGORY_THEMES.animals;
+    return CATEGORY_THEMES.default;
+}
+
+function CategoryIcon({ categoryKey, iconKey }: { categoryKey: string; iconKey: string }) {
+    const theme = getCategoryTheme(categoryKey);
+    return (
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${theme.icon} shadow-[0_3px_0_rgba(0,0,0,0.12)] transition-transform hover:scale-110`}>
+            {iconKey === 'palette' && (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke={theme.accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="13.5" cy="6.5" r=".5" fill={theme.accent} /><circle cx="17.5" cy="10.5" r=".5" fill={theme.accent} />
+                    <circle cx="8.5" cy="7.5" r=".5" fill={theme.accent} /><circle cx="6.5" cy="12.5" r=".5" fill={theme.accent} />
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2Z" />
+                </svg>
+            )}
+            {iconKey === 'paw' && (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill={theme.accent} stroke="none">
+                    <path d="M12 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2ZM6 13c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2ZM18 13c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2ZM8 17c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2ZM16 17c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2ZM12 22c-3.3 0-6-2.7-6-6h12c0 3.3-2.7 6-6 6Z" />
+                </svg>
+            )}
+            {(iconKey === 'book' || iconKey === 'default') && (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke={theme.accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+            )}
+        </span>
+    );
+}
+
+function getIconKey(categoryKey: string): string {
+    const key = categoryKey.toLowerCase();
+    if (key.includes('color')) return 'palette';
+    if (key.includes('animal')) return 'paw';
+    return 'book';
+}
+
 function CourseCatalog({ courses, progressByCourse, onNavigate }: { courses: Course[]; progressByCourse: Map<string, UserProgress>; onNavigate: (path: string) => void }) {
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set());
     const { locale, t } = useLocale();
@@ -304,32 +417,37 @@ function CourseCatalog({ courses, progressByCourse, onNavigate }: { courses: Cou
         <section className="learner-sidebar__catalog min-w-0 overflow-x-hidden rounded-[28px] bg-white p-4 shadow-[0_12px_0_rgba(15,23,42,0.08)]">
             <div className="mb-3 flex min-w-0 items-start justify-between gap-2">
                 <h2 className="min-w-0 text-base font-black leading-tight text-slate-800">{t('courseCatalog')}</h2>
-                <button onClick={() => onNavigate('/courses')} className="min-h-11 shrink-0 whitespace-nowrap rounded-xl px-2 text-sm font-extrabold text-[#5B8DEF] hover:bg-blue-50">
+                <button onClick={() => onNavigate('/courses')} className="min-h-11 shrink-0 whitespace-nowrap rounded-xl px-2 text-sm font-extrabold text-[#5B8DEF] hover:bg-blue-50 flex items-center gap-1">
+                    <GridIcon className="h-4 w-4" />
                     {t('viewAll')}
                 </button>
             </div>
             <div className="min-w-0 space-y-3 overflow-x-hidden">
-                {categories.map(({ key: categoryKey, label, icon, courses: categoryCourses }) => {
+                {categories.map(({ key: categoryKey, label, courses: categoryCourses }) => {
                     const expanded = expandedCategories.has(categoryKey);
                     const totalLessons = categoryCourses.reduce((sum, course) => sum + course.lessons.length, 0);
                     const completedLessons = categoryCourses.reduce((sum, course) => sum + (progressByCourse.get(course.course_id)?.completed_lessons?.length || 0), 0);
                     const percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-                    const mark = (icon || label).slice(0, 2).toUpperCase();
+                    const theme = getCategoryTheme(categoryKey);
+                    const iconKey = getIconKey(categoryKey);
 
                     return (
-                        <div key={categoryKey} className="learner-sidebar__category min-w-0 overflow-hidden rounded-2xl bg-[#FFF7EC] p-3">
+                        <div key={categoryKey} className="learner-sidebar__category min-w-0 overflow-hidden rounded-2xl bg-white p-3" style={{ boxShadow: `0 4px 0 ${theme.accent}30, inset 0 1px 0 rgba(255,255,255,0.9)` }}>
                             <div className="flex min-w-0 items-center gap-2">
                                 <button
                                     type="button"
                                     onClick={() => onNavigate(`/courses/category/${categoryKey}`)}
-                                    className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl bg-white/80 px-2 text-left hover:bg-white"
+                                    className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-xl bg-white/80 px-2 text-left hover:bg-white border border-white/60 transition-all hover:scale-[1.01]"
                                 >
-                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-sm font-black text-[#5B8DEF] shadow-[0_2px_0_rgba(91,141,239,0.18)]">{mark}</span>
+                                    <CategoryIcon categoryKey={categoryKey} iconKey={iconKey} />
                                     <span className="min-w-0 flex-1">
                                         <span className="block truncate text-sm font-black text-slate-800">{label}</span>
-                                        <span className="mt-1 block text-[11px] font-bold text-slate-500">{categoryCourses.length} course{categoryCourses.length === 1 ? '' : 's'} · {percent}%</span>
-                                        <span className="mt-2 block h-2 overflow-hidden rounded-full bg-white">
-                                            <span className="block h-full rounded-full bg-gradient-to-r from-[#6EB9FF] to-[#9DE8BB]" style={{ width: `${percent}%` }} />
+                                        <span className="mt-1 flex items-center gap-1.5">
+                                            <span className="text-[11px] font-bold text-slate-500">{categoryCourses.length} course{categoryCourses.length === 1 ? '' : 's'}</span>
+                                            <span className="rounded-full bg-gradient-to-r from-[#6EB9FF] to-[#9DE8BB] px-2 py-0.5 text-[11px] font-black text-white shadow-[0_2px_0_rgba(0,0,0,0.1)]">{percent}%</span>
+                                        </span>
+                                        <span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-white/80 shadow-inner">
+                                            <span className="block h-full rounded-full bg-gradient-to-r from-[#5B8DEF] via-[#6EB9FF] to-[#9DE8BB]" style={{ width: `${percent}%` }} />
                                         </span>
                                     </span>
                                 </button>
@@ -338,9 +456,9 @@ function CourseCatalog({ courses, progressByCourse, onNavigate }: { courses: Cou
                                     aria-expanded={expanded}
                                     aria-label={expanded ? `Collapse ${label}` : `Expand ${label}`}
                                     onClick={() => toggleCategory(categoryKey)}
-                                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-[0_4px_0_#E5E7EB]"
+                                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white shadow-[0_4px_0_rgba(0,0,0,0.1)] transition-all hover:scale-105 active:translate-y-1"
                                 >
-                                    <ChevronIcon expanded={expanded} />
+                                    {expanded ? <ChevronUpIcon className="h-5 w-5 text-slate-600" /> : <ChevronDownIcon className="h-5 w-5 text-slate-600" />}
                                 </button>
                             </div>
                             {expanded && (
@@ -354,10 +472,13 @@ function CourseCatalog({ courses, progressByCourse, onNavigate }: { courses: Cou
                                                 key={course.course_id}
                                                 type="button"
                                                 onClick={() => onNavigate(`/courses/${course.course_id}`)}
-                                                className="clay-card-sunshine flex min-h-11 w-full min-w-0 items-center gap-2 p-2 text-left"
+                                                className="flex min-h-11 w-full min-w-0 items-center gap-2 rounded-xl bg-gradient-to-r from-[#F0F7FF] to-[#FFF8F0] p-2 text-left shadow-[0_3px_0_rgba(91,141,239,0.12)] transition-all hover:scale-[1.01] active:translate-y-0.5"
                                             >
+                                                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#6EB9FF] to-[#9DE8BB] shadow-[0_2px_0_rgba(0,0,0,0.08)]">
+                                                    <PlayIcon className="h-3 w-3 text-white" />
+                                                </span>
                                                 <span className="min-w-0 flex-1 truncate text-xs font-extrabold text-slate-700">{courseTitle(course, locale)}</span>
-                                                <span className="shrink-0 text-[11px] font-black text-slate-500">{coursePercent}%</span>
+                                                <span className="shrink-0 rounded-full bg-[#FFE066] px-2 py-0.5 text-[11px] font-black text-[#704600] shadow-[0_2px_0_rgba(180,130,20,0.2)]">{coursePercent}%</span>
                                             </button>
                                         );
                                     })}
@@ -367,7 +488,8 @@ function CourseCatalog({ courses, progressByCourse, onNavigate }: { courses: Cou
                     );
                 })}
                 {courses.length === 0 && (
-                    <button onClick={() => onNavigate('/courses')} className="min-h-11 w-full rounded-2xl bg-slate-50 p-3 text-left text-sm font-bold text-slate-600">
+                    <button onClick={() => onNavigate('/courses')} className="min-h-11 w-full rounded-2xl bg-slate-50 p-3 text-left text-sm font-bold text-slate-600 flex items-center gap-2">
+                        <GridIcon className="h-4 w-4" />
                         {t('noPublishedCourses')}
                     </button>
                 )}
@@ -666,37 +788,59 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
             {isMobileMoreOpen && (
                 <div className="fixed inset-0 z-[var(--z-modal)] md:hidden" role="presentation">
                     <button type="button" aria-label={t('closeMoreMenu')} className="absolute inset-0 h-full w-full bg-slate-900/35 backdrop-blur-[2px]" onClick={() => setIsMobileMoreOpen(false)} />
-                    <div ref={mobileSheetRef} id="mobile-more-sheet" role="dialog" aria-modal="true" aria-labelledby="mobile-more-title" className="absolute bottom-0 left-0 right-0 max-h-[88dvh] overflow-x-hidden overflow-y-auto rounded-t-[36px] bg-[#FFF7EC] px-4 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-4 shadow-[0_-12px_40px_rgba(15,23,42,0.22)]">
-                        <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-slate-300" />
-                        <div className="mb-5 flex items-center justify-between">
+                    <div ref={mobileSheetRef} id="mobile-more-sheet" role="dialog" aria-modal="true" aria-labelledby="mobile-more-title" className="mobile-more-sheet absolute bottom-0 left-0 right-0 max-h-[88dvh] overflow-x-hidden overflow-y-auto rounded-t-[36px] px-4 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-4 shadow-[0_-12px_40px_rgba(15,23,42,0.22)]">
+                        {/* Decorative blobs */}
+                        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-t-[36px]" aria-hidden="true">
+                            <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-gradient-to-br from-[#FFE066] via-[#FF9F9F] to-[#6EB9FF] opacity-20 blur-3xl" />
+                            <div className="absolute -left-6 top-1/3 h-32 w-32 rounded-full bg-gradient-to-br from-[#A8E6CF] via-[#88D4AB] to-[#6EB9FF] opacity-25 blur-3xl" />
+                            <div className="absolute right-1/4 top-1/2 h-24 w-24 rounded-full bg-gradient-to-br from-[#D4A5FF] via-[#FFB4A2] to-[#FFE066] opacity-15 blur-2xl" />
+                        </div>
+                        {/* Sheet handle */}
+                        <div className="relative z-10 mx-auto mb-4 h-1.5 w-14 rounded-full bg-gradient-to-r from-[#FFE066] via-[#FF9F9F] to-[#6EB9FF]" />
+                        <div className="relative z-10 mb-5 flex items-center justify-between">
                             <div className="flex items-center gap-2">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFE066] to-[#FF9F9F] shadow-[0_4px_0_rgba(180,130,20,0.3)]">
+                                    <SparkleIcon className="h-5 w-5 text-[#704600]" />
+                                </div>
                                 <SessionTimerBadge />
                                 <h2 id="mobile-more-title" className="text-xl font-black text-slate-800">{t('navMoreAdventures')}</h2>
                             </div>
-                            <button type="button" onClick={() => setIsMobileMoreOpen(false)} aria-label={t('closeMoreMenu')} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-[0_4px_0_#E5E7EB]"><CloseIcon /></button>
+                            <button type="button" onClick={() => setIsMobileMoreOpen(false)} aria-label={t('closeMoreMenu')} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-[0_4px_0_#E5E7EB] transition-all hover:scale-105 active:translate-y-0.5">
+                                <CloseIcon />
+                            </button>
                         </div>
-                        <div className="space-y-5">
+                        <div className="relative z-10 space-y-5">
                             {!isGuest && (
                                 <>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <button onClick={() => goTo('/pets')} className="flex min-h-16 items-center gap-3 rounded-3xl bg-white p-4 text-left shadow-[0_6px_0_#E8EDF7]">
-                                            <PetIcon className="h-7 w-7 shrink-0 text-[#E47777]" /><span className="text-sm font-black text-slate-700">{t('navMyPet')}</span>
+                                        <button onClick={() => goTo('/pets')} className="flex min-h-16 items-center gap-3 rounded-3xl bg-gradient-to-br from-[#FFE066] via-[#FFD4A8] to-[#FF9F9F] p-4 text-left shadow-[0_6px_0_rgba(180,100,80,0.3),0_12px_24px_rgba(255,159,159,0.15)] transition-all hover:scale-[1.02] active:translate-y-0.5">
+                                            <PetIcon className="h-7 w-7 shrink-0 text-[#D97070]" />
+                                            <span className="text-sm font-black text-[#704600]">{t('navMyPet')}</span>
                                         </button>
-                                        <button onClick={() => goTo('/stickers')} className="flex min-h-16 items-center gap-3 rounded-3xl bg-white p-4 text-left shadow-[0_6px_0_#E8EDF7]">
-                                            <StickerStarIcon className="h-7 w-7 shrink-0" /><span className="text-sm font-black text-slate-700">{t('navStickers')}</span>
+                                        <button onClick={() => goTo('/stickers')} className="flex min-h-16 items-center gap-3 rounded-3xl bg-gradient-to-br from-[#A8E6CF] via-[#88D4AB] to-[#6EB9FF] p-4 text-left shadow-[0_6px_0_rgba(80,150,110,0.3),0_12px_24px_rgba(110,185,255,0.15)] transition-all hover:scale-[1.02] active:translate-y-0.5">
+                                            <StickerStarIcon className="h-7 w-7 shrink-0" />
+                                            <span className="text-sm font-black text-[#176344]">{t('navStickers')}</span>
                                         </button>
                                     </div>
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                         <MobileDailyGoalIndicator />
-                                        <div className="min-w-0 rounded-2xl bg-white p-3"><StreakBadge className="min-w-0" /></div>
+                                        <div className="min-w-0 rounded-2xl bg-white p-3 shadow-[0_4px_0_rgba(91,141,239,0.15)]"><StreakBadge className="min-w-0" /></div>
                                     </div>
                                 </>
                             )}
                             <CourseCatalog courses={courses} progressByCourse={progressByCourse} onNavigate={goTo} />
                             <Tracker stats={stats} />
                             <div className="grid grid-cols-1 gap-3 pb-2 sm:grid-cols-2">
-                                <button onClick={() => goTo(isGuest ? '/register' : '/learn-ar')} className="clay-cta-primary min-h-12 w-full">{isGuest ? t('startFreeTrial') : t('jumpIntoAr')}</button>
-                                <button onClick={() => goTo('/courses')} className="clay-cta-secondary min-h-12 w-full">{t('browseCourses')}</button>
+                                <button onClick={() => goTo(isGuest ? '/register' : '/learn-ar')} className="clay-cta-primary min-h-12 w-full flex items-center justify-center gap-2">
+                                    <SparkleIcon className="h-5 w-5" />
+                                    {isGuest ? t('startFreeTrial') : t('jumpIntoAr')}
+                                    <ArrowRightIcon className="h-5 w-5" />
+                                </button>
+                                <button onClick={() => goTo('/courses')} className="clay-cta-secondary min-h-12 w-full flex items-center justify-center gap-2">
+                                    <GridIcon className="h-5 w-5" />
+                                    {t('browseCourses')}
+                                    <ArrowRightIcon className="h-5 w-5" />
+                                </button>
                             </div>
                         </div>
                     </div>
