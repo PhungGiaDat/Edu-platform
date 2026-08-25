@@ -1315,6 +1315,61 @@ export default function LearnARV2() {
     return (
         <div className="learn-ar-v2" style={{ position: 'fixed', inset: 0 }}>
             {/* AR Container with iframe swapping */}
+            {/* Parent Debug Overlay - Moved outside for max accessibility */}
+            {appState === 'VIEWING' && (
+                <div style={{
+                    position: 'fixed', 
+                    top: 'max(100px, env(safe-area-inset-top))', 
+                    left: 12,
+                    zIndex: 200000, // Extremely high z-index
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: 8,
+                    pointerEvents: 'auto',
+                    touchAction: 'manipulation'
+                }}>
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleSyncDiscord();
+                        }}
+                        style={{
+                            padding: '10px 16px', background: '#5865F2', color: 'white',
+                            border: 'none', borderRadius: 20, fontWeight: 900, fontSize: 13,
+                            boxShadow: '0 6px 16px rgba(0,0,0,0.4)', cursor: 'pointer'
+                        }}
+                    >
+                        🚀 Sync Discord
+                    </button>
+                    
+                    <div style={{
+                        background: 'rgba(15,23,42,0.95)', padding: 12, borderRadius: 16,
+                        color: 'white', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 8,
+                        border: '2px solid rgba(255,255,255,0.3)', minWidth: 160,
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.5)'
+                    }}>
+                        <div style={{ fontWeight: 900, borderBottom: '1px solid #334155', paddingBottom: 6, marginBottom: 4 }}>AR Offset Tuner</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontWeight: 700 }}>X: {manualOffset.x}</span>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                                <button onClick={(e) => { e.stopPropagation(); handleAdjustOffset('x', -0.05); }} style={{ width: 32, height: 32, background: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: 8, fontWeight: 900, fontSize: 18 }}>-</button>
+                                <button onClick={(e) => { e.stopPropagation(); handleAdjustOffset('x', 0.05); }} style={{ width: 32, height: 32, background: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: 8, fontWeight: 900, fontSize: 18 }}>+</button>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontWeight: 700 }}>Y: {manualOffset.y}</span>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                                <button onClick={(e) => { e.stopPropagation(); handleAdjustOffset('y', -0.05); }} style={{ width: 32, height: 32, background: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: 8, fontWeight: 900, fontSize: 18 }}>-</button>
+                                <button onClick={(e) => { e.stopPropagation(); handleAdjustOffset('y', 0.05); }} style={{ width: 32, height: 32, background: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: 8, fontWeight: 900, fontSize: 18 }}>+</button>
+                            </div>
+                        </div>
+                        <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 4, textAlign: 'center' }}>
+                            Changes apply realtime to viewer
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <ARContainerV2
                 engine={engine}
                 initialPhase={detectedQrId ? 'VIEWING' : 'SCANNING'}
@@ -1362,54 +1417,12 @@ export default function LearnARV2() {
                 )}
                 {/* Control Panel - Only show during VIEWING */}
                 {appState === 'VIEWING' && (
-                    <>
-                        <ARControlPanel
-                            displayMode={displayMode}
-                            appMode={appMode}
-                            onDisplayModeToggle={() => handleDisplayModeChange(displayMode === '2D' ? '3D' : '2D')}
-                            onAppModeSwitch={handleAppModeChange}
-                        />
-                        
-                        {/* Parent Debug Overlay - Always clickable */}
-                        <div style={{
-                            position: 'fixed', top: 'max(100px, env(safe-area-inset-top))', left: 12,
-                            zIndex: 100005, display: 'flex', flexDirection: 'column', gap: 8,
-                            pointerEvents: 'auto'
-                        }}>
-                            <button 
-                                onClick={handleSyncDiscord}
-                                style={{
-                                    padding: '8px 12px', background: '#5865F2', color: 'white',
-                                    border: 'none', borderRadius: 20, fontWeight: 800, fontSize: 12,
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)', cursor: 'pointer'
-                                }}
-                            >
-                                🚀 Sync Discord
-                            </button>
-                            
-                            <div style={{
-                                background: 'rgba(15,23,42,0.9)', padding: 10, borderRadius: 14,
-                                color: 'white', fontSize: 11, display: 'flex', flexDirection: 'column', gap: 6,
-                                border: '1px solid rgba(255,255,255,0.2)', minWidth: 140
-                            }}>
-                                <div style={{ fontWeight: 900, borderBottom: '1px solid #334155', pb: 4, mb: 2 }}>AR Offset Tuner</div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>X: {manualOffset.x}</span>
-                                    <div style={{ display: 'flex', gap: 4 }}>
-                                        <button onClick={() => handleAdjustOffset('x', -0.05)} style={{ width: 26, height: 26, background: '#334155', color: '#fff', border: 'none', borderRadius: 6 }}>-</button>
-                                        <button onClick={() => handleAdjustOffset('x', 0.05)} style={{ width: 26, height: 26, background: '#334155', color: '#fff', border: 'none', borderRadius: 6 }}>+</button>
-                                    </div>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>Y: {manualOffset.y}</span>
-                                    <div style={{ display: 'flex', gap: 4 }}>
-                                        <button onClick={() => handleAdjustOffset('y', -0.05)} style={{ width: 26, height: 26, background: '#334155', color: '#fff', border: 'none', borderRadius: 6 }}>-</button>
-                                        <button onClick={() => handleAdjustOffset('y', 0.05)} style={{ width: 26, height: 26, background: '#334155', color: '#fff', border: 'none', borderRadius: 6 }}>+</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </>
+                    <ARControlPanel
+                        displayMode={displayMode}
+                        appMode={appMode}
+                        onDisplayModeToggle={() => handleDisplayModeChange(displayMode === '2D' ? '3D' : '2D')}
+                        onAppModeSwitch={handleAppModeChange}
+                    />
                 )}
                 {appState === 'VIEWING' && multiPreparation.status === 'preparing' && (
                     <div style={{
