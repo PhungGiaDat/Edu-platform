@@ -2,18 +2,13 @@
 // Standalone Leaderboard page for learner app - route: /leaderboard
 // Duolingo-inspired design with trophy header, enhanced podium, and celebration elements
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { GamificationService, type LeaderboardEntry } from '../services/GamificationService';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/claymorphic-utilities.css';
 
 type TimeFilter = 'all' | 'weekly' | 'daily';
-
-// Check for reduced motion preference
-const prefersReducedMotion = typeof window !== 'undefined'
-  ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  : false;
 
 interface UserPosition {
     user_id: string;
@@ -85,8 +80,8 @@ const LoadingSkeleton: React.FC = () => (
 
 // Empty state
 const EmptyState: React.FC = () => (
-    <div className="leaderboard-empty">
-        <div className="leaderboard-empty-icon">
+    <div className="leaderboard-empty" role="status" aria-live="polite">
+        <div className="leaderboard-empty-icon" aria-hidden="true">
             <TrophyIcon className="w-24 h-24" />
         </div>
         <h3 className="leaderboard-empty-title">No rankings yet</h3>
@@ -101,8 +96,8 @@ const EmptyState: React.FC = () => (
 
 // Error state
 const ErrorState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
-    <div className="leaderboard-empty">
-        <div className="leaderboard-empty-icon leaderboard-empty-icon-error">😢</div>
+    <div className="leaderboard-empty" role="alert" aria-live="assertive">
+        <div className="leaderboard-empty-icon leaderboard-empty-icon-error" aria-hidden="true">😢</div>
         <h3 className="leaderboard-empty-title">Could not load leaderboard</h3>
         <p className="leaderboard-empty-text">Something went wrong. Please try again.</p>
         <button onClick={onRetry} className="clay-cta-primary leaderboard-cta">
@@ -111,8 +106,8 @@ const ErrorState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
     </div>
 );
 
-// Enhanced Top 3 Podium with Duolingo styling
-const TopThreePodium: React.FC<{ entries: LeaderboardEntry[]; currentUserId?: string }> = ({
+// Enhanced Top 3 Podium with Duolingo styling (memoized for performance)
+const TopThreePodium: React.FC<{ entries: LeaderboardEntry[]; currentUserId?: string }> = React.memo(({
     entries,
     currentUserId,
 }) => {
@@ -147,9 +142,8 @@ const TopThreePodium: React.FC<{ entries: LeaderboardEntry[]; currentUserId?: st
                         third: { bg: 'bg-gradient-to-b from-[#FFCC99] to-[#CD7F32]', border: '#B87333', text: '#FFFFFF' },
                     };
                     const colorSet = isFirst ? colors.first : isSecond ? colors.second : colors.third;
+                    const rankKey = isFirst ? 'first' : isSecond ? 'second' : 'third';
 
-                    // Height based on rank
-                    const heights = { first: 'h-44', second: 'h-32', third: 'h-24' };
                     const avatarSizes = { first: 'w-20 h-20', second: 'w-16 h-16', third: 'w-14 h-14' };
                     const podiumHeights = { first: 'h-36', second: 'h-28', third: 'h-20' };
 
@@ -175,7 +169,7 @@ const TopThreePodium: React.FC<{ entries: LeaderboardEntry[]; currentUserId?: st
                                         boxShadow: isFirst ? '0 0 20px rgba(255, 217, 61, 0.5)' : 'none'
                                     }}
                                 >
-                                    <div className={`${avatarSizes[actualRank as keyof typeof avatarSizes]} bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center overflow-hidden`}>
+                                    <div className={`${avatarSizes[rankKey]} bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center overflow-hidden`}>
                                         {entry.avatar_url ? (
                                             <img src={entry.avatar_url} alt={entry.username} className="w-full h-full object-cover" />
                                         ) : (
@@ -198,7 +192,7 @@ const TopThreePodium: React.FC<{ entries: LeaderboardEntry[]; currentUserId?: st
 
                             {/* Podium block */}
                             <div
-                                className={`${podiumHeights[actualRank as keyof typeof podiumHeights]} w-24 sm:w-28 rounded-t-3xl mt-3 flex flex-col items-center justify-end pb-4 ${colorSet.bg} border-t-4`}
+                                className={`${podiumHeights[rankKey]} w-24 sm:w-28 rounded-t-3xl mt-3 flex flex-col items-center justify-end pb-4 ${colorSet.bg} border-t-4`}
                                 style={{ borderColor: colorSet.border }}
                             >
                                 <div className={`text-lg font-black ${isThird ? 'text-white' : colorSet.text}`}>
@@ -218,14 +212,14 @@ const TopThreePodium: React.FC<{ entries: LeaderboardEntry[]; currentUserId?: st
             </div>
         </div>
     );
-};
+});
 
-// Enhanced Leaderboard Row
+// Enhanced Leaderboard Row (memoized for list performance)
 const LeaderboardRow: React.FC<{
     entry: LeaderboardEntry;
     position: number;
     isCurrentUser: boolean;
-}> = ({ entry, position, isCurrentUser }) => {
+}> = React.memo(({ entry, position, isCurrentUser }) => {
     // Duolingo-style rank badges
     const getRankBadge = () => {
         if (position === 1) return 'leaderboard-rank-gold';
@@ -295,7 +289,7 @@ const LeaderboardRow: React.FC<{
             </div>
         </div>
     );
-};
+});
 
 // Time Filter Tabs
 const TimeFilterTabs: React.FC<{
@@ -309,14 +303,18 @@ const TimeFilterTabs: React.FC<{
     ];
 
     return (
-        <div className="leaderboard-filters">
+        <div className="leaderboard-filters" role="tablist" aria-label="Filter leaderboard by time period">
             {filters.map((filter) => (
                 <button
                     key={filter.key}
                     onClick={() => onChange(filter.key)}
                     className={`leaderboard-filter-btn ${active === filter.key ? 'leaderboard-filter-btn-active' : ''}`}
+                    role="tab"
+                    aria-selected={active === filter.key}
+                    aria-controls="leaderboard-content"
+                    id={`tab-${filter.key}`}
                 >
-                    <span>{filter.icon}</span>
+                    <span aria-hidden="true">{filter.icon}</span>
                     <span>{filter.label}</span>
                 </button>
             ))}
@@ -376,10 +374,10 @@ export const Leaderboard: React.FC = () => {
             {/* Duolingo-inspired Trophy Header */}
             <div className="leaderboard-header">
                 {/* Decorative elements */}
-                <div className="leaderboard-header-decoration leaderboard-header-decoration-left">
+                <div className="leaderboard-header-decoration leaderboard-header-decoration-left" aria-hidden="true">
                     <SparkleIcon className="w-6 h-6 animate-pulse" color="#FFE066" />
                 </div>
-                <div className="leaderboard-header-decoration leaderboard-header-decoration-right">
+                <div className="leaderboard-header-decoration leaderboard-header-decoration-right" aria-hidden="true">
                     <SparkleIcon className="w-4 h-4 animate-pulse" color="#FFE066" />
                 </div>
 
@@ -477,11 +475,11 @@ export const Leaderboard: React.FC = () => {
                         </section>
 
                         {/* CTA */}
-                        <section className="leaderboard-cta-section">
+                        <section className="leaderboard-cta-section" aria-label="Call to action">
                             <p className="leaderboard-cta-text">Want to climb the ranks?</p>
                             <Link to="/courses" className="clay-cta-primary leaderboard-cta-btn">
                                 <span>Start a lesson</span>
-                                <span className="text-lg">→</span>
+                                <span aria-hidden="true" className="text-lg">→</span>
                             </Link>
                         </section>
                     </>

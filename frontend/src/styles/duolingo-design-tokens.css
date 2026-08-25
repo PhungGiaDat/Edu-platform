@@ -1,0 +1,842 @@
+/**
+ * Duolingo-Inspired Design Tokens
+ * A vibrant, playful design system for Daily Challenge and Leaderboard pages
+ * Uses 'Baloo 2' font family as primary
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COLOR TOKENS — Duolingo Palette
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Primary — Vibrant Green (success, XP, completion) */
+:root {
+  /* Primary Green */
+  --duo-green: #58CC02;
+  --duo-green-hover: #4CAF00;
+  --duo-green-dark: #46A302;
+  --duo-green-light: #8AE623;
+  --duo-green-subtle: rgba(88, 204, 2, 0.12);
+
+  /* Accent — Warm Yellow (XP, rewards, highlights) */
+  --duo-yellow: #FFC800;
+  --duo-yellow-hover: #F5BE00;
+  --duo-yellow-dark: #E5B800;
+  --duo-yellow-light: #FFE066;
+  --duo-yellow-subtle: rgba(255, 200, 0, 0.12);
+
+  /* Orange (streaks, urgency, challenges) */
+  --duo-orange: #FF9600;
+  --duo-orange-hover: #E68600;
+  --duo-orange-dark: #D17A00;
+  --duo-orange-light: #FFB347;
+  --duo-orange-subtle: rgba(255, 150, 0, 0.12);
+
+  /* Blue (links, secondary actions) */
+  --duo-blue: #1CB0F6;
+  --duo-blue-hover: #1A9FDE;
+  --duo-blue-dark: #1890C6;
+  --duo-blue-light: #78CAFF;
+  --duo-blue-subtle: rgba(28, 176, 246, 0.12);
+
+  /* Red (errors, hearts, lives) */
+  --duo-red: #FF4B4B;
+  --duo-red-hover: #E63939;
+  --duo-red-dark: #CC3333;
+  --duo-red-light: #FF7A7A;
+  --duo-red-subtle: rgba(255, 75, 75, 0.12);
+
+  /* Purple (rankings, special achievements) */
+  --duo-purple: #CE82FF;
+  --duo-purple-hover: #B86EE6;
+  --duo-purple-dark: #A05ACC;
+  --duo-purple-light: #DFB3FF;
+  --duo-purple-subtle: rgba(206, 130, 255, 0.12);
+
+  /* Pink (celebration, hearts) */
+  --duo-pink: #FF78D0;
+  --duo-pink-hover: #E66ABD;
+  --duo-pink-dark: #CC58A8;
+  --duo-pink-light: #FFA6E5;
+  --duo-pink-subtle: rgba(255, 120, 208, 0.12);
+
+  /* ─── Neutrals ───────────────────────────────────────────────────────── */
+  --duo-ink: #1A2744;
+  --duo-ink-light: #2D3A4A;
+  --duo-ink-subtle: #6B7A8D;
+
+  --duo-gray-100: #F7F8FC;
+  --duo-gray-200: #E8ECF4;
+  --duo-gray-300: #D0D7E5;
+  --duo-gray-400: #A0AEC0;
+  --duo-gray-500: #6B7A8D;
+  --duo-gray-600: #4A5568;
+  --duo-gray-700: #2D3748;
+  --duo-gray-800: #1A202C;
+
+  /* ─── Surfaces ───────────────────────────────────────────────────────── */
+  --duo-surface: #FFFFFF;
+  --duo-surface-elevated: #FFFFFF;
+  --duo-surface-sunken: #F7F8FC;
+  --duo-surface-overlay: rgba(26, 39, 68, 0.5);
+
+  /* ─── Semantic Colors ─────────────────────────────────────────────────── */
+  --duo-success: var(--duo-green);
+  --duo-warning: var(--duo-yellow);
+  --duo-danger: var(--duo-red);
+  --duo-info: var(--duo-blue);
+
+  /* XP & Streak Colors */
+  --duo-xp-gold: #FFC800;
+  --duo-xp-glow: rgba(255, 200, 0, 0.4);
+  --duo-streak-flame: #FF9600;
+
+  /* Rank Colors */
+  --duo-rank-gold: #FFD700;
+  --duo-rank-silver: #C0C0C0;
+  --duo-rank-bronze: #CD7F32;
+
+  /* ─── Leaderboard Rank Colors ─────────────────────────────────────────── */
+  --duo-leader-1st: #FFD700;
+  --duo-leader-2nd: #C0C0C0;
+  --duo-leader-3rd: #CD7F32;
+  --duo-leader-default: var(--duo-blue);
+
+  /* ─── Challenge Difficulty ─────────────────────────────────────────────── */
+  --duo-easy: var(--duo-green);
+  --duo-medium: var(--duo-yellow);
+  --duo-hard: var(--duo-orange);
+  --duo-expert: var(--duo-red);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY TOKENS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Font Families */
+  --duo-font-primary: 'Baloo 2', 'Nunito', 'Quicksand', system-ui, sans-serif;
+  --duo-font-display: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+  --duo-font-body: 'Nunito', 'Quicksand', system-ui, sans-serif;
+  --duo-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Font Weights */
+  --duo-weight-regular: 400;
+  --duo-weight-medium: 500;
+  --duo-weight-semibold: 600;
+  --duo-weight-bold: 700;
+  --duo-weight-extrabold: 800;
+  --duo-weight-black: 900;
+
+  /* Font Sizes — 8px Grid Scale */
+  --duo-text-xs: 0.75rem;    /* 12px */
+  --duo-text-sm: 0.875rem;   /* 14px */
+  --duo-text-base: 1rem;     /* 16px */
+  --duo-text-lg: 1.125rem;   /* 18px */
+  --duo-text-xl: 1.25rem;    /* 20px */
+  --duo-text-2xl: 1.5rem;    /* 24px */
+  --duo-text-3xl: 1.875rem;  /* 30px */
+  --duo-text-4xl: 2.25rem;   /* 36px */
+  --duo-text-5xl: 3rem;      /* 48px */
+  --duo-text-6xl: 3.75rem;   /* 60px */
+
+  /* Line Heights */
+  --duo-leading-none: 1;
+  --duo-leading-tight: 1.2;
+  --duo-leading-snug: 1.35;
+  --duo-leading-normal: 1.5;
+  --duo-leading-relaxed: 1.65;
+
+  /* Letter Spacing */
+  --duo-tracking-tight: -0.02em;
+  --duo-tracking-normal: 0;
+  --duo-tracking-wide: 0.02em;
+  --duo-tracking-wider: 0.04em;
+  --duo-tracking-widest: 0.08em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SPACING TOKENS — 8px Grid
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --duo-space-0: 0;
+  --duo-space-1: 0.25rem;   /* 4px */
+  --duo-space-2: 0.5rem;    /* 8px */
+  --duo-space-3: 0.75rem;   /* 12px */
+  --duo-space-4: 1rem;      /* 16px */
+  --duo-space-5: 1.25rem;   /* 20px */
+  --duo-space-6: 1.5rem;    /* 24px */
+  --duo-space-8: 2rem;      /* 32px */
+  --duo-space-10: 2.5rem;   /* 40px */
+  --duo-space-12: 3rem;     /* 48px */
+  --duo-space-16: 4rem;     /* 64px */
+  --duo-space-20: 5rem;     /* 80px */
+  --duo-space-24: 6rem;     /* 96px */
+  --duo-space-32: 8rem;      /* 128px */
+
+  /* Component-specific spacing */
+  --duo-gap-xs: var(--duo-space-1);
+  --duo-gap-sm: var(--duo-space-2);
+  --duo-gap-md: var(--duo-space-4);
+  --duo-gap-lg: var(--duo-space-6);
+  --duo-gap-xl: var(--duo-space-8);
+  --duo-gap-2xl: var(--duo-space-12);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BORDER RADIUS TOKENS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --duo-radius-sm: 6px;
+  --duo-radius-md: 10px;
+  --duo-radius-lg: 14px;
+  --duo-radius-xl: 18px;
+  --duo-radius-2xl: 24px;
+  --duo-radius-3xl: 32px;
+  --duo-radius-full: 9999px;
+
+  /* Component-specific radii */
+  --duo-radius-button: var(--duo-radius-full);
+  --duo-radius-card: var(--duo-radius-2xl);
+  --duo-radius-badge: var(--duo-radius-full);
+  --duo-radius-input: var(--duo-radius-lg);
+  --duo-radius-avatar: var(--duo-radius-full);
+  --duo-radius-progress: var(--duo-radius-full);
+  --duo-radius-modal: var(--duo-radius-3xl);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHADOW TOKENS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Soft raised shadows (Duolingo style) */
+  --duo-shadow-sm: 0 2px 4px rgba(26, 39, 68, 0.08);
+  --duo-shadow-md: 0 4px 8px rgba(26, 39, 68, 0.1);
+  --duo-shadow-lg: 0 8px 16px rgba(26, 39, 68, 0.12);
+  --duo-shadow-xl: 0 16px 32px rgba(26, 39, 68, 0.16);
+
+  /* Claymorphic buttons (hard bottom edge) */
+  --duo-shadow-btn-sm: 0 3px 0 rgba(26, 39, 68, 0.2);
+  --duo-shadow-btn-md: 0 6px 0 rgba(26, 39, 68, 0.2);
+  --duo-shadow-btn-lg: 0 8px 0 rgba(26, 39, 68, 0.2);
+
+  /* Colored button shadows */
+  --duo-shadow-btn-green: 0 6px 0 var(--duo-green-dark);
+  --duo-shadow-btn-yellow: 0 6px 0 var(--duo-yellow-dark);
+  --duo-shadow-btn-orange: 0 6px 0 var(--duo-orange-dark);
+  --duo-shadow-btn-blue: 0 6px 0 var(--duo-blue-dark);
+  --duo-shadow-btn-red: 0 6px 0 var(--duo-red-dark);
+  --duo-shadow-btn-purple: 0 6px 0 var(--duo-purple-dark);
+
+  /* Card shadows */
+  --duo-shadow-card: 0 8px 0 rgba(26, 39, 68, 0.08), 0 4px 16px rgba(26, 39, 68, 0.06);
+  --duo-shadow-card-hover: 0 14px 0 rgba(26, 39, 68, 0.08), 0 8px 24px rgba(26, 39, 68, 0.12);
+
+  /* XP glow */
+  --duo-shadow-xp: 0 0 20px var(--duo-xp-glow);
+  --duo-shadow-xp-lg: 0 0 40px var(--duo-xp-glow);
+
+  /* Streak flame glow */
+  --duo-shadow-streak: 0 0 16px rgba(255, 150, 0, 0.5);
+
+  /* Inner highlight (claymorphic) */
+  --duo-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  --duo-inset-highlight-strong: inset 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Z-INDEX TOKENS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --duo-z-base: 0;
+  --duo-z-dropdown: 100;
+  --duo-z-sticky: 200;
+  --duo-z-overlay: 300;
+  --duo-z-modal: 400;
+  --duo-z-popover: 500;
+  --duo-z-tooltip: 600;
+  --duo-z-toast: 700;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATION TOKENS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Durations */
+  --duo-duration-instant: 100ms;
+  --duo-duration-fast: 150ms;
+  --duo-duration-normal: 250ms;
+  --duo-duration-slow: 400ms;
+  --duo-duration-slower: 600ms;
+
+  /* Easing */
+  --duo-ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --duo-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --duo-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --duo-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duo-ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* Transition */
+  --duo-transition-default: var(--duo-duration-normal) var(--duo-ease-default);
+  --duo-transition-bounce: var(--duo-duration-normal) var(--duo-ease-bounce);
+  --duo-transition-spring: var(--duo-duration-fast) var(--duo-ease-spring);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATION KEYFRAMES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Bounce — for success, completion, celebrations */
+@keyframes duo-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(-12px) scale(1.05);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.02);
+  }
+  75% {
+    transform: translateY(-8px) scale(1.03);
+  }
+}
+
+/* Pulse — for XP, notifications, live elements */
+@keyframes duo-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.02);
+  }
+}
+
+/* Shake — for errors, wrong answers */
+@keyframes duo-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+  20%, 40%, 60%, 80% { transform: translateX(6px); }
+}
+
+/* Spin — for loading, loading states */
+@keyframes duo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Float — for decorative elements */
+@keyframes duo-float {
+  0%, 100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+}
+
+/* XP Shimmer — for progress bars, XP indicators */
+@keyframes duo-xp-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* XP Glow Pulse — for active XP display */
+@keyframes duo-xp-glow {
+  0%, 100% {
+    box-shadow: 0 0 12px var(--duo-xp-glow), 0 0 24px rgba(255, 200, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 24px var(--duo-xp-glow), 0 0 48px rgba(255, 200, 0, 0.35);
+  }
+}
+
+/* Streak Flame — for streak counter animation */
+@keyframes duo-streak-flame {
+  0%, 100% {
+    transform: scale(1) rotate(-2deg);
+    filter: brightness(1);
+  }
+  25% {
+    transform: scale(1.1) rotate(1deg);
+    filter: brightness(1.15);
+  }
+  50% {
+    transform: scale(1.05) rotate(-1deg);
+    filter: brightness(1.1);
+  }
+  75% {
+    transform: scale(1.08) rotate(2deg);
+    filter: brightness(1.12);
+  }
+}
+
+/* Pop In — for modals, tooltips appearing */
+@keyframes duo-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Slide Up — for sheets, bottom drawers */
+@keyframes duo-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide Down — for dropdowns */
+@keyframes duo-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Confetti Burst — for achievement celebrations */
+@keyframes duo-confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(-100%) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(720deg);
+  }
+}
+
+/* Heartbeat — for hearts/lives indicator */
+@keyframes duo-heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.15); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.15); }
+  70% { transform: scale(1); }
+}
+
+/* Rank Up — for leaderboard rank changes */
+@keyframes duo-rank-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Wiggle — for correct answer feedback */
+@keyframes duo-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Bounce Animation */
+.duo-animate-bounce {
+  animation: duo-bounce 0.6s var(--duo-ease-bounce);
+}
+
+/* Pulse Animation */
+.duo-animate-pulse {
+  animation: duo-pulse 2s var(--duo-ease-default) infinite;
+}
+
+/* Shake Animation */
+.duo-animate-shake {
+  animation: duo-shake 0.5s var(--duo-ease-default);
+}
+
+/* Spin Animation */
+.duo-animate-spin {
+  animation: duo-spin 1s linear infinite;
+}
+
+/* Float Animation */
+.duo-animate-float {
+  animation: duo-float 4s var(--duo-ease-default) infinite;
+}
+
+/* XP Shimmer */
+.duo-animate-xp-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--duo-xp-gold) 0%,
+    var(--duo-yellow-light) 50%,
+    var(--duo-xp-gold) 100%
+  );
+  background-size: 200% 100%;
+  animation: duo-xp-shimmer 2s linear infinite;
+}
+
+/* XP Glow */
+.duo-animate-xp-glow {
+  animation: duo-xp-glow 2s var(--duo-ease-default) infinite;
+}
+
+/* Streak Flame */
+.duo-animate-streak {
+  animation: duo-streak-flame 1.5s var(--duo-ease-default) infinite;
+}
+
+/* Pop In */
+.duo-animate-pop-in {
+  animation: duo-pop-in 0.3s var(--duo-ease-bounce);
+}
+
+/* Slide Up */
+.duo-animate-slide-up {
+  animation: duo-slide-up 0.3s var(--duo-ease-out);
+}
+
+/* Heartbeat */
+.duo-animate-heartbeat {
+  animation: duo-heartbeat 1.2s var(--duo-ease-default) infinite;
+}
+
+/* Rank Up */
+.duo-animate-rank-up {
+  animation: duo-rank-up 0.5s var(--duo-ease-bounce);
+}
+
+/* Wiggle */
+.duo-animate-wiggle {
+  animation: duo-wiggle 0.4s var(--duo-ease-default);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPONENT BASE STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Base font styling */
+.duo-font {
+  font-family: var(--duo-font-primary);
+  font-weight: var(--duo-weight-bold);
+  letter-spacing: var(--duo-tracking-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Card base */
+.duo-card {
+  background: var(--duo-surface);
+  border-radius: var(--duo-radius-card);
+  box-shadow: var(--duo-shadow-card);
+  padding: var(--duo-space-6);
+  transition: transform var(--duo-transition-bounce), box-shadow var(--duo-transition-default);
+}
+
+.duo-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--duo-shadow-card-hover);
+}
+
+/* Button base */
+.duo-btn {
+  font-family: var(--duo-font-primary);
+  font-weight: var(--duo-weight-extrabold);
+  font-size: var(--duo-text-base);
+  border-radius: var(--duo-radius-button);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--duo-space-2);
+  transition: transform var(--duo-duration-fast) var(--duo-ease-bounce),
+              box-shadow var(--duo-duration-fast) var(--duo-ease-default);
+}
+
+.duo-btn:hover {
+  transform: translateY(-2px);
+}
+
+.duo-btn:active {
+  transform: translateY(2px);
+}
+
+/* Primary Button */
+.duo-btn-primary {
+  background: var(--duo-green);
+  color: #FFFFFF;
+  padding: var(--duo-space-4) var(--duo-space-6);
+  box-shadow: var(--duo-shadow-btn-green), var(--duo-inset-highlight);
+}
+
+.duo-btn-primary:hover {
+  background: var(--duo-green-hover);
+  box-shadow: 0 8px 0 var(--duo-green-dark), var(--duo-inset-highlight);
+}
+
+.duo-btn-primary:active {
+  box-shadow: 0 3px 0 var(--duo-green-dark), var(--duo-inset-highlight);
+}
+
+/* XP Badge */
+.duo-xp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--duo-space-1);
+  background: var(--duo-yellow);
+  color: var(--duo-ink);
+  font-weight: var(--duo-weight-extrabold);
+  font-size: var(--duo-text-sm);
+  padding: var(--duo-space-1) var(--duo-space-3);
+  border-radius: var(--duo-radius-badge);
+  box-shadow: 0 3px 0 var(--duo-yellow-dark);
+}
+
+.duo-xp-badge-glow {
+  animation: duo-xp-glow 2s var(--duo-ease-default) infinite;
+}
+
+/* Streak Badge */
+.duo-streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--duo-space-2);
+  background: var(--duo-orange);
+  color: #FFFFFF;
+  font-weight: var(--duo-weight-extrabold);
+  font-size: var(--duo-text-lg);
+  padding: var(--duo-space-2) var(--duo-space-4);
+  border-radius: var(--duo-radius-badge);
+  box-shadow: 0 4px 0 var(--duo-orange-dark);
+}
+
+.duo-streak-badge .streak-flame {
+  animation: duo-streak-flame 1.5s var(--duo-ease-default) infinite;
+}
+
+/* Progress Bar */
+.duo-progress {
+  height: 12px;
+  background: var(--duo-gray-200);
+  border-radius: var(--duo-radius-progress);
+  overflow: hidden;
+}
+
+.duo-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--duo-green), var(--duo-green-light));
+  border-radius: var(--duo-radius-progress);
+  transition: width var(--duo-duration-slow) var(--duo-ease-out);
+}
+
+.duo-progress-fill-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--duo-green) 0%,
+    var(--duo-green-light) 50%,
+    var(--duo-green) 100%
+  );
+  background-size: 200% 100%;
+  animation: duo-xp-shimmer 1.5s linear infinite;
+}
+
+/* Leaderboard Row */
+.duo-leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: var(--duo-space-4);
+  padding: var(--duo-space-4);
+  background: var(--duo-surface);
+  border-radius: var(--duo-radius-lg);
+  transition: transform var(--duo-duration-fast) var(--duo-ease-bounce),
+              box-shadow var(--duo-duration-fast) var(--duo-ease-default);
+}
+
+.duo-leaderboard-row:hover {
+  transform: translateX(4px);
+  box-shadow: var(--duo-shadow-md);
+}
+
+.duo-leaderboard-row.current-user {
+  background: var(--duo-green-subtle);
+  border: 2px solid var(--duo-green);
+}
+
+/* Rank Badge */
+.duo-rank {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--duo-radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--duo-weight-extrabold);
+  font-size: var(--duo-text-lg);
+  color: #FFFFFF;
+}
+
+.duo-rank-1 {
+  background: linear-gradient(135deg, var(--duo-leader-1st), #FFA500);
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.5);
+}
+
+.duo-rank-2 {
+  background: linear-gradient(135deg, var(--duo-leader-2nd), #A8A8A8);
+}
+
+.duo-rank-3 {
+  background: linear-gradient(135deg, var(--duo-leader-3rd), #A0522D);
+}
+
+.duo-rank-default {
+  background: var(--duo-gray-400);
+}
+
+/* Challenge Card */
+.duo-challenge-card {
+  background: var(--duo-surface);
+  border-radius: var(--duo-radius-2xl);
+  padding: var(--duo-space-6);
+  box-shadow: var(--duo-shadow-card);
+  border: 4px solid transparent;
+  transition: transform var(--duo-transition-bounce),
+              border-color var(--duo-transition-default);
+}
+
+.duo-challenge-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: var(--duo-blue);
+}
+
+.duo-challenge-card.completed {
+  border-color: var(--duo-green);
+  background: linear-gradient(180deg, var(--duo-surface) 0%, rgba(88, 204, 2, 0.05) 100%);
+}
+
+.duo-challenge-card.locked {
+  opacity: 0.6;
+  filter: grayscale(0.5);
+}
+
+/* Difficulty Badge */
+.duo-difficulty {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--duo-space-1);
+  font-weight: var(--duo-weight-bold);
+  font-size: var(--duo-text-xs);
+  padding: var(--duo-space-1) var(--duo-space-3);
+  border-radius: var(--duo-radius-badge);
+  text-transform: uppercase;
+  letter-spacing: var(--duo-tracking-wider);
+}
+
+.duo-difficulty-easy {
+  background: var(--duo-easy);
+  color: #FFFFFF;
+}
+
+.duo-difficulty-medium {
+  background: var(--duo-medium);
+  color: var(--duo-ink);
+}
+
+.duo-difficulty-hard {
+  background: var(--duo-hard);
+  color: #FFFFFF;
+}
+
+.duo-difficulty-expert {
+  background: var(--duo-expert);
+  color: #FFFFFF;
+}
+
+/* Avatar */
+.duo-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--duo-radius-avatar);
+  object-fit: cover;
+  border: 3px solid var(--duo-surface);
+  box-shadow: var(--duo-shadow-md);
+}
+
+.duo-avatar-sm {
+  width: 32px;
+  height: 32px;
+}
+
+.duo-avatar-lg {
+  width: 64px;
+  height: 64px;
+}
+
+.duo-avatar-xl {
+  width: 96px;
+  height: 96px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACCESSIBILITY
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .duo-animate-bounce,
+  .duo-animate-pulse,
+  .duo-animate-shake,
+  .duo-animate-spin,
+  .duo-animate-float,
+  .duo-animate-xp-shimmer,
+  .duo-animate-xp-glow,
+  .duo-animate-streak,
+  .duo-animate-pop-in,
+  .duo-animate-slide-up,
+  .duo-animate-heartbeat,
+  .duo-animate-rank-up,
+  .duo-animate-wiggle,
+  .duo-card,
+  .duo-btn,
+  .duo-leaderboard-row,
+  .duo-challenge-card {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Focus states for keyboard navigation */
+.duo-btn:focus-visible,
+.duo-card:focus-visible,
+.duo-leaderboard-row:focus-visible,
+.duo-challenge-card:focus-visible {
+  outline: 4px solid var(--duo-blue);
+  outline-offset: 4px;
+}

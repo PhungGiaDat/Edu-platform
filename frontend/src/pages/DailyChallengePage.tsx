@@ -40,8 +40,16 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
   const offset = circumference - (progress / 100) * circumference;
 
   return (
-    <div className="duo-progress-ring" style={{ width: size, height: size }}>
-      <svg viewBox={`0 0 ${size} ${size}`}>
+    <div
+      className="duo-progress-ring"
+      style={{ width: size, height: size }}
+      role="progressbar"
+      aria-valuenow={progress}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={`${progress}% complete`}
+    >
+      <svg viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
         <circle
           className="duo-progress-ring-track"
           cx={size / 2}
@@ -105,13 +113,18 @@ const XPCounter: React.FC<XPCounterProps> = ({ xp, prefix = '+' }) => {
   }, [xp]);
 
   return (
-    <div className={`duo-xp-badge ${isAnimating ? 'duo-xp-animated' : ''}`}>
+    <div
+      className={`duo-xp-badge ${isAnimating ? 'duo-xp-animated' : ''}`}
+      role="status"
+      aria-live="polite"
+      aria-label={`${xp} experience points available`}
+    >
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
       </svg>
       <span>
-        <span className="duo-xp-plus">{prefix}</span>
-        {displayXp} XP
+        <span className="duo-xp-plus" aria-hidden="true">{prefix}</span>
+        <span>{displayXp} XP</span>
       </span>
     </div>
   );
@@ -160,7 +173,7 @@ const RewardCard: React.FC<RewardCardProps> = ({ reward, isComplete }) => (
 
 // ─── Celebration Overlay ──────────────────────────────────────────
 const CelebrationOverlay: React.FC = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+  <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
     {[...Array(8)].map((_, i) => (
       <div
         key={i}
@@ -177,7 +190,7 @@ const CelebrationOverlay: React.FC = () => (
 
 // ─── Loading Skeleton ─────────────────────────────────────────────
 const LoadingSkeleton: React.FC = () => (
-  <div className="space-y-4 animate-pulse">
+  <div className="space-y-4 animate-pulse" role="status" aria-label="Loading challenge">
     <div className="h-56 bg-gray-200 rounded-b-3xl" />
     <div className="h-48 bg-gray-200 rounded-3xl mx-4" />
     <div className="h-32 bg-gray-200 rounded-3xl mx-4" />
@@ -186,9 +199,9 @@ const LoadingSkeleton: React.FC = () => (
 
 // ─── Error State ─────────────────────────────────────────────────
 const ErrorState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
-  <div className="flex min-h-screen items-center justify-center p-4 pb-24 md:pb-8 md:pl-24 lg:pl-72">
+  <div className="flex min-h-screen items-center justify-center p-4 pb-24 md:pb-8 md:pl-24 lg:pl-72" role="alert" aria-live="assertive">
     <div className="max-w-sm w-full text-center">
-      <div className="text-7xl mb-6">😢</div>
+      <div className="text-7xl mb-6" aria-hidden="true">😢</div>
       <h2 className="text-2xl font-black mb-2" style={{ color: DUO.text }}>
         Could not load challenge
       </h2>
@@ -204,9 +217,9 @@ const ErrorState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
 
 // ─── Empty State ─────────────────────────────────────────────────
 const EmptyState: React.FC = () => (
-  <div className="flex min-h-screen items-center justify-center p-4 pb-24 md:pb-8 md:pl-24 lg:pl-72">
+  <div className="flex min-h-screen items-center justify-center p-4 pb-24 md:pb-8 md:pl-24 lg:pl-72" role="status" aria-live="polite">
     <div className="max-w-sm w-full text-center">
-      <div className="text-7xl mb-6">🎯</div>
+      <div className="text-7xl mb-6" aria-hidden="true">🎯</div>
       <h2 className="text-2xl font-black mb-2" style={{ color: DUO.text }}>
         No challenge today
       </h2>
@@ -266,20 +279,28 @@ export const DailyChallengePage: React.FC = () => {
   const target = challenge.target || 1;
   const percent = Math.min(100, Math.round((progress / Math.max(1, target)) * 100));
   const isComplete = progress >= target;
-  const streak = profile?.streak || 0;
+  const streak = profile?.summary.streak_days || 0;
   const xpReward = isComplete ? 50 : 10;
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
+    <main className="min-h-screen pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all" aria-label="Daily Challenge">
+      {/* Skip link for keyboard users */}
+      <a
+        href="#challenge-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-0 focus:left-0 focus:z-50 focus:bg-white focus:px-4 focus:py-3 focus:text-green-700 focus:font-bold focus:rounded-br-lg focus:shadow-lg"
+      >
+        Skip to challenge content
+      </a>
+
       {/* Duolingo-style Header with Green Gradient */}
-      <div className="duo-header px-4 pt-6 pb-10" style={{ background: DUO.headerBg }}>
+      <div id="challenge-content" className="duo-header px-4 pt-6 pb-10" style={{ background: DUO.headerBg }}>
         {/* Top Row: Title and Streak */}
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
             <h1 className="text-3xl font-black text-white mb-1">
               Daily Challenge
             </h1>
-            <p className="text-white/80 text-sm">
+            <p className="text-white/90 text-sm">
               Complete the challenge to earn your reward!
             </p>
           </div>
@@ -297,6 +318,7 @@ export const DailyChallengePage: React.FC = () => {
           <div
             className="w-20 h-20 rounded-2xl mx-auto mb-4 flex items-center justify-center text-4xl"
             style={{ background: isComplete ? `${DUO.green}20` : `${DUO.yellow}20` }}
+            aria-hidden="true"
           >
             {isComplete ? '🏆' : '🎯'}
           </div>
@@ -342,9 +364,17 @@ export const DailyChallengePage: React.FC = () => {
             {/* Progress Details */}
             <div className="flex-1 space-y-3">
               {/* Progress Bar */}
-              <div className="h-4 rounded-full overflow-hidden" style={{ background: '#E8E8E8' }}>
+              <div
+                className="h-4 rounded-full overflow-hidden"
+                style={{ background: '#E8E8E8' }}
+                role="progressbar"
+                aria-valuenow={percent}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`${percent}% of challenge completed`}
+              >
                 <div
-                  className="h-full rounded-full transition-all duration-700"
+                  className="h-full rounded-full"
                   style={{
                     width: `${percent}%`,
                     background: isComplete
@@ -380,20 +410,22 @@ export const DailyChallengePage: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-3 space-y-3">
+        <nav className="pt-3 space-y-3" aria-label="Challenge actions">
           <Link
             to="/courses"
             className="duo-btn duo-btn--primary duo-focus"
+            aria-label={isComplete ? 'Claim your reward' : 'Start today\'s challenge'}
           >
             {isComplete ? 'Claim Reward!' : 'Start Challenge'}
           </Link>
           <Link
             to="/progress"
             className="duo-btn duo-btn--secondary duo-focus"
+            aria-label="View your learning progress"
           >
             View Progress
           </Link>
-        </div>
+        </nav>
 
         {/* Motivational Footer */}
         <div className="text-center pt-4 pb-2">
@@ -406,7 +438,7 @@ export const DailyChallengePage: React.FC = () => {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

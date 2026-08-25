@@ -155,7 +155,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
             {/* Chat panel */}
             {isOpen && (
                 <div
-                    className="fixed inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] flex h-[min(620px,calc(100dvh-env(safe-area-inset-bottom)-1rem))] max-h-[calc(100dvh-env(safe-area-inset-bottom)-1rem)] min-h-0 animate-slideUp flex-col overflow-hidden rounded-[24px] border-4 border-white/80 shadow-[0_16px_0_rgba(91,141,239,0.10),0_26px_56px_rgba(45,60,90,0.18)] sm:inset-x-4 md:inset-x-auto md:bottom-6 md:right-6 md:h-[min(560px,calc(100dvh-3rem))] md:w-[410px] md:rounded-[28px]"
+                    className="fixed inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] top-[calc(env(safe-area-inset-top)+0.5rem)] flex h-[min(620px,calc(100dvh-env(safe-area-inset-bottom)-env(safe-area-inset-top)-1rem))] max-h-[calc(100dvh-env(safe-area-inset-bottom)-env(safe-area-inset-top)-1rem)] min-h-0 animate-slideUp flex-col overflow-hidden rounded-[24px] border-4 border-white/80 shadow-[0_16px_0_rgba(91,141,239,0.10),0_26px_56px_rgba(45,60,90,0.18)] sm:inset-x-4 sm:bottom-6 sm:top-auto sm:h-[min(560px,calc(100dvh-3rem))] sm:max-h-[calc(100dvh-3rem)] md:inset-x-auto md:bottom-6 md:top-auto md:h-[min(560px,calc(100dvh-3rem))] md:max-h-[calc(100dvh-3rem)] md:w-[410px] md:rounded-[28px]"
                     style={{
                         zIndex: 'var(--z-chatbot)',
                         fontFamily: "'Nunito Sans', 'Quicksand', sans-serif",
@@ -199,7 +199,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
 
                     {/* Messages */}
                     <div
-                        className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-2.5 sm:p-4"
+                        className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pb-[calc(3.5rem+env(safe-area-inset-bottom))] p-2.5 sm:pb-4"
                         style={{ background: 'linear-gradient(180deg, #F8FCFF 0%, #FFF8ED 100%)' }}
                     >
                         {messages.map((msg) => (
