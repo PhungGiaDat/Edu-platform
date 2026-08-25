@@ -627,9 +627,42 @@
         const data = event.data;
         if (!data || !data.type) return;
 
-        // Support both new format { type, payload } and legacy { type, ...data }
         const type = data.type;
         const payload = data.payload || data;
+
+        // Realtime Offset & Discord Sync Handling
+        if (type === 'UPDATE_MANUAL_OFFSET') {
+            pModelOffsetX = payload.x || 0;
+            pModelOffsetY = payload.y || 0;
+            log('🎯', 'Manual Offset Updated Realtime: ' + pModelOffsetX + ', ' + pModelOffsetY);
+            
+            // Re-apply to all active slot models
+            for (var i = 0; i < 2; i++) {
+                var model = document.getElementById('slot-model-' + i);
+                if (model) {
+                    var slotIdx = i;
+                    var target = targetRegistry ? targetRegistry.getSlot(slotIdx) : null;
+                    if (target) {
+                        wireDynamicModelScale(model, {
+                            targetIndex: target.slotIndex,
+                            explicitScale: target.scale,
+                            targetSpan: pTargetSpan,
+                            source: 'realtime-update'
+                        });
+                    }
+                }
+            }
+            return;
+        }
+
+        if (type === 'SYNC_DISCORD_REQUEST') {
+            log('🚀', 'Discord Sync requested by parent');
+            var syncBtn = document.getElementById('main-sync-discord');
+            if (syncBtn) syncBtn.click();
+            return;
+        }
+
+        if (data.origin !== 'parent') return;
 
         log('📥', `Received ${type}`, payload);
 

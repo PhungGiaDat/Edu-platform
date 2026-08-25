@@ -550,6 +550,46 @@ export default function LearnARV2() {
     // Card rejection toast state
     const [rejectedCard, setRejectedCard] = useState<ArCardRejectedData | null>(null);
 
+    // Realtime Offset Tuning State
+    const [manualOffset, setManualOffset] = useState({ x: 0, y: 0 });
+
+    const handleSyncDiscord = useCallback(() => {
+        // Forward sync request to Iframe
+        const iframe = document.querySelector('iframe');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'SYNC_DISCORD_REQUEST' }, '*');
+        }
+    }, []);
+
+    const handleAdjustOffset = useCallback((axis: 'x' | 'y', delta: number) => {
+        setManualOffset(prev => {
+            const next = { ...prev, [axis]: parseFloat((prev[axis] + delta).toFixed(2)) };
+            // Send update to Iframe immediately
+            const iframe = document.querySelector('iframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ 
+                    type: 'UPDATE_MANUAL_OFFSET', 
+                    payload: { x: next.x, y: next.y } 
+                }, '*');
+            }
+            return next;
+        });
+    }, []);
+
+    // Task 9: Callbacks for revision ACK/reject from persistent viewer
+    const handleActiveTargetsApplied = useCallback((revision: number) => {
+        emitMobileDebug('PERSISTENT_TARGETS_APPLIED', { revision });
+    }, [emitMobileDebug]);
+
+    const handleActiveTargetsRejected = useCallback((error: { revision: number; code: string; stage: string; message: string }) => {
+        emitMobileDebug('PERSISTENT_TARGETS_REJECTED', error);
+        // CRITICAL FIX: In development/debug mode, don't trigger full fallback on rejection
+        // just log it and try to proceed if possible.
+        if (!window.location.search.includes('debug=true')) {
+            handleSystemError(error.code);
+        }
+    }, [emitMobileDebug, handleSystemError]);
+
     // Track whether the AR target marker is visible (for 2D overlay)
     const [markerFound, setMarkerFound] = useState(false);
     // Freeze Pose: track which target is currently stabilized
@@ -1001,15 +1041,7 @@ export default function LearnARV2() {
     }, [trackFlashcardView, addFlashcard, emitMobileDebug, appState, flashcardCount]);
 
     // Task 9: Callbacks for revision ACK/reject from persistent viewer
-    const handleActiveTargetsApplied = useCallback((revision: number) => {
-        emitMobileDebug('PERSISTENT_TARGETS_APPLIED', { revision });
-    }, [emitMobileDebug]);
 
-    const handleActiveTargetsRejected = useCallback((error: { revision: number; code: string; stage: string; message: string }) => {
-        emitMobileDebug('PERSISTENT_TARGETS_REJECTED', error);
-        // Trigger AR fallback on catalog rejection (catalog not found, mismatch, etc.)
-        handleSystemError(error.code);
-    }, [emitMobileDebug, handleSystemError]);
 
     // Task 9: Derive catalog props from the first card's flashcard data
     // The catalog is shared across all cards in a lesson, so we use the first card's catalog identity
@@ -1330,12 +1362,54 @@ export default function LearnARV2() {
                 )}
                 {/* Control Panel - Only show during VIEWING */}
                 {appState === 'VIEWING' && (
-                    <ARControlPanel
-                        displayMode={displayMode}
-                        appMode={appMode}
-                        onDisplayModeToggle={() => handleDisplayModeChange(displayMode === '2D' ? '3D' : '2D')}
-                        onAppModeSwitch={handleAppModeChange}
-                    />
+                    <>
+                        <ARControlPanel
+                            displayMode={displayMode}
+                            appMode={appMode}
+                            onDisplayModeToggle={() => handleDisplayModeChange(displayMode === '2D' ? '3D' : '2D')}
+                            onAppModeSwitch={handleAppModeChange}
+                        />
+                        
+                        {/* Parent Debug Overlay - Always clickable */}
+                        <div style={{
+                            position: 'fixed', top: 'max(100px, env(safe-area-inset-top))', left: 12,
+                            zIndex: 100005, display: 'flex', flexDirection: 'column', gap: 8,
+                            pointerEvents: 'auto'
+                        }}>
+                            <button 
+                                onClick={handleSyncDiscord}
+                                style={{
+                                    padding: '8px 12px', background: '#5865F2', color: 'white',
+                                    border: 'none', borderRadius: 20, fontWeight: 800, fontSize: 12,
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)', cursor: 'pointer'
+                                }}
+                            >
+                                🚀 Sync Discord
+                            </button>
+                            
+                            <div style={{
+                                background: 'rgba(15,23,42,0.9)', padding: 10, borderRadius: 14,
+                                color: 'white', fontSize: 11, display: 'flex', flexDirection: 'column', gap: 6,
+                                border: '1px solid rgba(255,255,255,0.2)', minWidth: 140
+                            }}>
+                                <div style={{ fontWeight: 900, borderBottom: '1px solid #334155', pb: 4, mb: 2 }}>AR Offset Tuner</div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>X: {manualOffset.x}</span>
+                                    <div style={{ display: 'flex', gap: 4 }}>
+                                        <button onClick={() => handleAdjustOffset('x', -0.05)} style={{ width: 26, height: 26, background: '#334155', color: '#fff', border: 'none', borderRadius: 6 }}>-</button>
+                                        <button onClick={() => handleAdjustOffset('x', 0.05)} style={{ width: 26, height: 26, background: '#334155', color: '#fff', border: 'none', borderRadius: 6 }}>+</button>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>Y: {manualOffset.y}</span>
+                                    <div style={{ display: 'flex', gap: 4 }}>
+                                        <button onClick={() => handleAdjustOffset('y', -0.05)} style={{ width: 26, height: 26, background: '#334155', color: '#fff', border: 'none', borderRadius: 6 }}>-</button>
+                                        <button onClick={() => handleAdjustOffset('y', 0.05)} style={{ width: 26, height: 26, background: '#334155', color: '#fff', border: 'none', borderRadius: 6 }}>+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </>
                 )}
                 {appState === 'VIEWING' && multiPreparation.status === 'preparing' && (
                     <div style={{
