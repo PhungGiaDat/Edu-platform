@@ -339,7 +339,15 @@
 
         try {
             const scalePolicy = window.ARModelScale;
-            const mesh = modelEl?.getObject3D?.('mesh');
+            // Improved mesh discovery: search recursively for any Object3D that contains geometry
+            let mesh = modelEl?.getObject3D?.('mesh');
+            if (!mesh && modelEl?.object3D) {
+                modelEl.object3D.traverse(function(obj) {
+                    if (!mesh && (obj.isMesh || (obj.type === 'Group' && obj.children.length > 0))) {
+                        mesh = obj;
+                    }
+                });
+            }
 
             if (!scalePolicy || !mesh || typeof THREE === 'undefined') {
                 // Use fallback scale instead of leaving model un-sized
@@ -423,6 +431,16 @@
             if (modelEl.object3D?.scale?.set) {
                 modelEl.object3D.scale.set(nextScale, nextScale, nextScale);
             }
+            
+            // Auto-centering: shift the model so its bounding box center is at (0,0,0) relative to anchor
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            // We need to apply the negative of the center, scaled by the new scale
+            const offsetX = -center.x * nextScale + pModelOffsetX;
+            const offsetY = -center.y * nextScale + pModelOffsetY;
+            const offsetZ = -center.z * nextScale + pModelOffsetZ;
+            modelEl.setAttribute('position', `${offsetX} ${offsetY} ${offsetZ}`);
+            
             if (modelEl.id === 'combo-model' && modelEl.hasAttribute?.('animation__spawn')) {
                 modelEl.setAttribute(
                     'animation__spawn',
@@ -432,7 +450,7 @@
             modelEl.dataset.dynamicScale = String(nextScale);
             if (targetIndex !== null) dynamicModelScales.set(targetIndex, nextScale);
 
-            log('📐', `Dynamic scale applied to ${modelEl.id}: ${nextScale.toFixed(4)} (mesh: ${displayedMaxDimension.toFixed(3)}, targetSpan: ${settings.targetSpan || 0.75})`);
+            log('📐', `Dynamic scale applied to ${modelEl.id}: ${nextScale.toFixed(4)} (mesh: ${displayedMaxDimension.toFixed(3)}, targetSpan: ${settings.targetSpan || 0.75}, offset: ${offsetX.toFixed(3)} ${offsetY.toFixed(3)} ${offsetZ.toFixed(3)})`);
             sendDebug('MODEL_DYNAMIC_SCALE_APPLIED', {
                 modelId: modelEl.id,
                 targetIndex,

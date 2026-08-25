@@ -646,6 +646,11 @@ export default function LearnARV2() {
         isPersistentViewerEnabled &&
         appState === 'VIEWING' &&
         flashcardCount < 2;
+    
+    // Explicitly force isAddingCard to false to hide any legacy UI triggers
+    useEffect(() => {
+        if (isAddingCard) setIsAddingCard(false);
+    }, [isAddingCard]);
 
     // ========== DATA HOOKS ==========
     const { arData, error: arError } = useArData(detectedQrId);
