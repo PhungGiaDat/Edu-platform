@@ -550,20 +550,83 @@ export default function LearnARV2() {
     // Card rejection toast state
     const [rejectedCard, setRejectedCard] = useState<ArCardRejectedData | null>(null);
 
+    // ========== MULTI-FLASHCARD DETECTION ==========
+    const {
+        addFlashcard,
+        removeFlashcard,
+        detectedFlashcards,
+        flashcardCount,
+        activeCombo,
+        comboMindUrl,
+        hasCombo,
+        isProximityCombo,
+        comboTriggered,
+        comboKey,
+        comboResolution,
+        shouldUseComboMindUrl,
+        proximity: _proximity, // eslint-disable-line @typescript-eslint/no-unused-vars
+        handleProximityDetected,
+        handleProximityEnded,
+        handleProximityUpdate,
+        rejectCombo,
+        reset: resetMultiFlashcard,
+        getFlashcardByIndex,
+        getFlashcardByTag,
+    } = useMultiFlashcard((event) => {
+        setRejectedCard({
+            qrId: event.qrId,
+            errorCode: event.code,
+            errorMessage: event.message,
+        });
+    });
+
     // Realtime Offset Tuning State
     const [manualOffset, setManualOffset] = useState({ x: 0, y: 0 });
+    const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
 
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
-    const handleSyncDiscord = useCallback(() => {
-        // Forward sync request to Iframe using stable ref
-        if (iframeRef.current && iframeRef.current.contentWindow) {
-            iframeRef.current.contentWindow.postMessage({ type: 'SYNC_DISCORD_REQUEST' }, '*');
-            HapticService.success();
-        } else {
-            console.warn('[LearnARV2] Sync failed: iframeRef not ready');
+    const handleSyncDiscord = useCallback(async () => {
+        if (syncStatus === 'syncing') return;
+        setSyncStatus('syncing');
+        HapticService.tap();
+        const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1541864213222522980/n5KueLWwJSf75P5TIAeovTxqcZ5A_AL2DrfkJw04GT8Xtb5UWdwX3bEr0d4a5VPRv6kD";
+        
+        const logs = (window as any).MobileDebug?.getLogs?.() || "No logs found in Parent buffer.";
+        
+        const content = `🚀 **AR Sync Report**\n` +
+            `**Offset:** X:${manualOffset.x}, Y:${manualOffset.y}\n` +
+            `**URL:** \`${window.location.href}\`\n` +
+            `**Flashcards:** ${flashcardCount}\n` +
+            `**Engine:** ${(window as any).MobileDebug?.activeEngine || 'unknown'}\n` +
+            `**Time:** ${new Date().toISOString()}\n\n` +
+            `**Logs Snapshot:**\n\`\`\`\n${logs.slice(-1500)}\n\`\`\``;
+
+        try {
+            const response = await fetch(DISCORD_WEBHOOK, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content })
+            });
+            
+            if (response.ok) {
+                setSyncStatus('success');
+                HapticService.success();
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+        } catch (e) {
+            console.error('❌ Parent Discord Sync Failed:', e);
+            setSyncStatus('error');
+            HapticService.error();
+            // Fallback: try to trigger iframe sync
+            if (iframeRef.current && iframeRef.current.contentWindow) {
+                iframeRef.current.contentWindow.postMessage({ type: 'SYNC_DISCORD_REQUEST' }, '*');
+            }
+        } finally {
+            setTimeout(() => setSyncStatus('idle'), 3000);
         }
-    }, []);
+    }, [manualOffset, flashcardCount, comboKey, syncStatus]);
 
     const handleAdjustOffset = useCallback((axis: 'x' | 'y', delta: number) => {
         setManualOffset(prev => {
@@ -652,35 +715,7 @@ export default function LearnARV2() {
          
     }, []);
 
-    // ========== MULTI-FLASHCARD DETECTION ==========
-    const {
-        addFlashcard,
-        removeFlashcard,
-        detectedFlashcards,
-        flashcardCount,
-        activeCombo,
-        comboMindUrl,
-        hasCombo,
-        isProximityCombo,
-        comboTriggered,
-        comboKey,
-        comboResolution,
-        shouldUseComboMindUrl,
-        proximity: _proximity, // eslint-disable-line @typescript-eslint/no-unused-vars
-        handleProximityDetected,
-        handleProximityEnded,
-        handleProximityUpdate,
-        rejectCombo,
-        reset: resetMultiFlashcard,
-        getFlashcardByIndex,
-        getFlashcardByTag,
-    } = useMultiFlashcard((event) => {
-        setRejectedCard({
-            qrId: event.qrId,
-            errorCode: event.code,
-            errorMessage: event.message,
-        });
-    });
+
 
     // ========== PERSISTENT VIEWER FLAG (must be before other refs/constants that use it) ==========
     const isPersistentViewerEnabled = isPersistentMindViewerEnabled();
@@ -1570,13 +1605,20 @@ export default function LearnARV2() {
 				                        <button 
 				                            type="button"
 				                            onClick={handleSyncDiscord}
+				                            disabled={syncStatus === 'syncing'}
 				                            style={{
-				                                marginTop: 4, padding: '8px 12px', background: '#5865F2', color: 'white',
+				                                marginTop: 4, padding: '8px 12px', 
+				                                background: syncStatus === 'success' ? '#3ba55c' : (syncStatus === 'error' ? '#ed4245' : '#5865F2'), 
+				                                color: 'white',
 				                                border: 'none', borderRadius: 14, fontWeight: 800, fontSize: 11,
-				                                cursor: 'pointer'
+				                                cursor: syncStatus === 'syncing' ? 'wait' : 'pointer',
+				                                transition: 'all 0.3s ease',
+				                                opacity: syncStatus === 'syncing' ? 0.7 : 1
 				                            }}
 				                        >
-				                            🚀 Sync Discord
+				                            {syncStatus === 'syncing' ? '⌛ Syncing...' : 
+				                             syncStatus === 'success' ? '✅ Synced!' : 
+				                             syncStatus === 'error' ? '❌ Failed' : '🚀 Sync Discord'}
 				                        </button>
 				                    </div>
 				                </div>

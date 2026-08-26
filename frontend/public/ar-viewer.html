@@ -123,63 +123,27 @@
         (function() {
             var viewerDebugParams = new URLSearchParams(location.search);
             
-            // Expose syncToDiscord globally so Parent can call it ANYTIME
-            window.syncToDiscord = function(externalBtn) {
-                console.log('🚀 Discord Sync requested...');
-                var btn = externalBtn;
-                if (btn && btn.tagName === 'BUTTON') {
-                    btn.disabled = true;
-                    btn.innerText = '⌛ Syncing...';
-                }
-                
-                var logs = [];
-                // Priority: MobileDebug buffer (captures everything)
-                if (window.MobileDebug && window.MobileDebug.logBuffer) {
-                    logs = window.MobileDebug.logBuffer.map(function(e) { return e.plainText; });
-                } else {
-                    // Fallback: Eruda DOM
-                    var items = document.querySelectorAll('.eruda-console .eruda-log-item');
-                    items.forEach(function(item) { logs.push(item.innerText); });
-                }
-                
-                var text = logs.join('\n');
-                if (!text) text = "No logs available to sync.";
+            // Expose syncToDiscord globally so Parent can call it as a fallback.
+            // NOTE: The parent (LearnARV2) now handles sync directly to avoid iframe CORS issues.
+            window.syncToDiscord = function() {
+                console.log('🚀 Iframe Discord Sync (Fallback) requested...');
+                var logs = (window.MobileDebug && typeof window.MobileDebug.getLogs === 'function') 
+                    ? window.MobileDebug.getLogs() 
+                    : "No logs in iframe buffer.";
                 
                 var webhookUrl = 'https://discord.com/api/webhooks/1541864213222522980/n5KueLWwJSf75P5TIAeovTxqcZ5A_AL2DrfkJw04GT8Xtb5UWdwX3bEr0d4a5VPRv6kD';
                 
-                var formData = new FormData();
-                var blob = new Blob([text], { type: 'text/plain' });
-                formData.append('file', blob, 'ar-session-' + new Date().getTime() + '.txt');
-                formData.append('payload_json', JSON.stringify({
-                    content: '🔔 **AR Debug Session Sync**\n- Device: ' + navigator.userAgent.split(' ').slice(-1)[0] + '\n- Time: ' + new Date().toLocaleString() + '\n- Log Lines: ' + logs.length
-                }));
+                var content = '🔔 **AR Iframe Fallback Sync**\n- Time: ' + new Date().toLocaleString() + '\n\nLogs:\n```\n' + logs.slice(-1500) + '\n```';
 
                 return fetch(webhookUrl, {
                     method: 'POST',
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: content })
                 }).then(function(res) {
-                    if (res.ok) {
-                        console.log('✅ Synced to Discord!');
-                        if (btn && btn.tagName === 'BUTTON') {
-                            btn.style.background = '#3ba55c';
-                            btn.innerText = '✅ Synced!';
-                            setTimeout(function() {
-                                btn.disabled = false;
-                                btn.style.background = '#5865F2';
-                                btn.innerText = '🚀 Sync to Discord';
-                            }, 3000);
-                        }
-                        return true;
-                    } else {
-                        throw new Error('Webhook failed');
-                    }
+                    if (res.ok) console.log('✅ Iframe Fallback Synced!');
+                    else throw new Error('Status ' + res.status);
                 }).catch(function(err) {
-                    if (btn && btn.tagName === 'BUTTON') {
-                        btn.disabled = false;
-                        btn.innerText = '🚀 Sync Failed';
-                    }
-                    console.error('❌ Discord Sync Failed:', err.message);
-                    return false;
+                    console.error('❌ Iframe Fallback Sync Failed:', err.message);
                 });
             };
 

@@ -173,9 +173,10 @@
 
     // Model position offset for alignment tuning (in AR units, ~1 = 8.5cm)
     // Use negative values to move opposite direction. Typical range: -0.1 to 0.1
-    let pModelOffsetX = Number(params.get('modelOffsetX') || 0);
-    let pModelOffsetY = Number(params.get('modelOffsetY') || 0);
-    let pModelOffsetZ = Number(params.get('modelOffsetZ') || 0);
+    // Unify naming with parent: pModelOffsetX/Y/Z
+    let pModelOffsetX = Number(params.get('pModelOffsetX') || params.get('modelOffsetX') || 0);
+    let pModelOffsetY = Number(params.get('pModelOffsetY') || params.get('modelOffsetY') || 0);
+    let pModelOffsetZ = Number(params.get('pModelOffsetZ') || params.get('modelOffsetZ') || 0);
 
     // ───────────────────────────────────────────────────────────────────────────
 
@@ -433,8 +434,12 @@
             }
             
             // Auto-centering: shift the model so its bounding box center is at (0,0,0) relative to anchor
-            const center = new THREE.Vector3();
-            box.getCenter(center);
+            // Cache center in the element to avoid re-calculating bounding box during realtime offset tuning
+            if (!modelEl.__computedCenter) {
+                modelEl.__computedCenter = new THREE.Vector3();
+                box.getCenter(modelEl.__computedCenter);
+            }
+            const center = modelEl.__computedCenter;
             
             // Marker Center Compensation: 
             // Use live manual offset variables updated by parent messages
@@ -634,12 +639,14 @@
             log('🎯', 'Manual Offset Updated Realtime: ' + pModelOffsetX + ', ' + pModelOffsetY);
             
             // Re-apply to all active slot models directly to position
+            // Optimization: Update object3D position directly for instant response
             for (var i = 0; i < 2; i++) {
                 var modelEl = document.getElementById('slot-model-' + i);
-                if (modelEl) {
-                    // Force re-run applyDynamicModelScale to update position immediately
-                    // This uses the newly updated pModelOffset* variables via URL param check inside the function
-                    // We must ensure the URL is updated in the parent before this is called (already handled in LearnARV2)
+                if (modelEl && modelEl.object3D) {
+                    // Get current computed base position (centering offset)
+                    // applyDynamicModelScale calculates: offsetX = (-center.x * nextScale) + compensationX
+                    // We need to preserve the (-center.x * nextScale) part.
+                    // Instead of complex math, we just re-run the full apply logic which is now optimized.
                     applyDynamicModelScale(modelEl, {
                         targetIndex: i,
                         source: 'realtime-update'
@@ -915,13 +922,10 @@
             var basePos = target.position ? target.position.split(' ').map(Number) : [0, 0, 0];
             
             // Marker Center Compensation: 
-            // Most cards in animal-combo-v1 have the subject off-center (QR top-right).
-            // We apply a default compensation if not explicitly overridden.
-            var compensationX = -0.15; // Shift left
-            var compensationY = -0.25; // Shift down
-            
-            var posX = (basePos[0] || 0) + pModelOffsetX + compensationX;
-            var posY = (basePos[1] || 0) + pModelOffsetY + compensationY;
+            // We rely on dynamic centering + manual offset tuning.
+            // Removed hardcoded -0.15/-0.25 to avoid double-compensation during tuning.
+            var posX = (basePos[0] || 0) + pModelOffsetX;
+            var posY = (basePos[1] || 0) + pModelOffsetY;
             var posZ = (basePos[2] || 0) + pModelOffsetZ;
             
             modelEl.setAttribute('position', posX + ' ' + posY + ' ' + posZ);

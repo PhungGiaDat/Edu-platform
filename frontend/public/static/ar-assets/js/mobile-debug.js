@@ -280,7 +280,7 @@
     };
 
     // ========== PUBLIC API ==========
-    window.MobileDebug = {
+    const MobileDebug = {
         clear: function () {
             logsContainer.innerHTML = '';
             logCount = 0;
@@ -305,6 +305,11 @@
         log: function (...args) {
             console.log('[Debug]', ...args);
         },
+        getLogs: function() {
+            return logBuffer.map(e => e.plainText).join('\n');
+        },
+        logBuffer: logBuffer,
+        activeEngine: activeEngine,
         attachEruda: function () {
             if (erudaAttached) return;
             erudaAttached = true;
@@ -331,6 +336,16 @@
             console.info('[AR debug] Eruda attached; early lifecycle replayed:', earlyEntries.length);
         }
     };
+
+    // Update activeEngine on the object whenever it changes
+    const originalInferEngine = inferEngine;
+    inferEngine = function(data) {
+        const engine = originalInferEngine(data);
+        if (engine !== 'unknown') MobileDebug.activeEngine = engine;
+        return engine;
+    };
+
+    window.MobileDebug = MobileDebug;
 
     function inferEngine(data) {
         const payload = data && data.payload && typeof data.payload === 'object' ? data.payload : {};
