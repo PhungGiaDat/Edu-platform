@@ -132,6 +132,9 @@
         if (lower.endsWith('/elephant_tree_combo_layered.png')) return COMBO_IMAGE_URL;
         return url;
     }
+
+    // Parse essential params early to avoid ReferenceError in Registry init
+    const catalogIdParam = params.get('catalogId');
     const mindUrl = window.__AR_VIEWER_RESOLVED_MIND_URL__ || params.get('mind');
     const modelUrl = normalizeViewerAssetUrl(params.get('model'));
     const imageUrl = normalizeViewerAssetUrl(params.get('image'));
@@ -143,7 +146,6 @@
     const comboImageUrl = normalizeViewerAssetUrl(params.get('comboImage')); // 2D layered fallback for combo scene
     const comboTextureUrl = normalizeViewerAssetUrl(params.get('comboTextureUrl')); // Texture for combo model
     const comboPhrase = params.get('comboPhrase') || '';
-    const catalogIdParam = params.get('catalogId');
     const maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));
     const cardCount = Math.max(1, Math.min(Number(params.get('cardCount') || params.get('targetCount')) || 1, 5));
     const targetCount = Math.max(1, Math.min(Number(params.get('targetCount')) || cardCount, maxTrack, 5));
