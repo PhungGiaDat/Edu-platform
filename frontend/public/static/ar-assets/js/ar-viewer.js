@@ -946,6 +946,7 @@
 
             log('📍', `Slot model ${target.slotIndex} created: anchor=mind-target-${target.mindTargetIndex}, position=${posX+' '+posY+' '+posZ}, scale=${initialScale}, offsetX=${pModelOffsetX}, offsetY=${pModelOffsetY}`);
 
+            log('📐', `Dynamic scale wiring: slot=${target.slotIndex}, explicitScale=${target.scale || 'none'}, targetSpan=${pTargetSpan}`);
             wireDynamicModelScale(modelEl, {
                 targetIndex: target.slotIndex,
                 explicitScale: target.scale,
