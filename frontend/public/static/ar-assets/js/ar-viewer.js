@@ -41,6 +41,10 @@
     const targetLostTimers = new Map();
     const TARGET_LOST_GRACE_MS = 900;
 
+    // ============ URL PARAMS ============
+    const params = new URLSearchParams(window.location.search);
+    const catalogIdParam = params.get('catalogId');
+
     // ── Task 7: AR Target Registry (revisioned slot map) ─────────────────────
     let targetRegistry = null;   // ARTargetRegistry instance
     let currentCatalogId = catalogIdParam || null; // Initialise from URL param if available
@@ -54,9 +58,6 @@
     let proximityCheckTimer = null;
     let lastProximityState = false;
     let comboEffectsActive = false;
-
-    // ============ URL PARAMS ============
-    const params = new URLSearchParams(window.location.search);
 
     // Resolve Supabase storage base from parent-provided param; fall back to
     // the project's primary dev bucket so the iframe still works when the
@@ -134,7 +135,6 @@
     }
 
     // Parse essential params early to avoid ReferenceError in Registry init
-    const catalogIdParam = params.get('catalogId');
     const mindUrl = window.__AR_VIEWER_RESOLVED_MIND_URL__ || params.get('mind');
     const modelUrl = normalizeViewerAssetUrl(params.get('model'));
     const imageUrl = normalizeViewerAssetUrl(params.get('image'));
