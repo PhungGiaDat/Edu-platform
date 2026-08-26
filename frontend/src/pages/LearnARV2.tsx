@@ -646,11 +646,17 @@ export default function LearnARV2() {
                 throw new Error(`HTTP ${response.status}`);
             }
         } catch (e) {
-            console.error('❌ Parent Discord Sync Failed:', e);
+            const err = e instanceof Error ? e : new Error(String(e));
+            console.error('❌ Parent Discord Sync Failed:', err.message);
+            emitMobileDebug('DISCORD_SYNC_PARENT_FAILED', {
+                error: err.message,
+                iframeSyncTriggered: !!iframeRef.current
+            });
             setSyncStatus('error');
             HapticService.error();
             // Fallback: try to trigger iframe sync
             if (iframeRef.current && iframeRef.current.contentWindow) {
+                console.log('→ Falling back to iframe Discord sync');
                 iframeRef.current.contentWindow.postMessage({ type: 'SYNC_DISCORD_REQUEST' }, '*');
             }
         } finally {

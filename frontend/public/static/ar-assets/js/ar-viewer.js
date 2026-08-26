@@ -45,6 +45,12 @@
     const MAX_IFRAME_LOGS = 500;
     const iframeLogBuffer = [];
 
+    // Discord sync — assigned at bottom of IIFE; stub here so handler can reference it
+    let syncToDiscordStub = function() {
+        console.warn('[AR-Viewer] syncToDiscord not yet initialized');
+    };
+    window.syncToDiscord = syncToDiscordStub;
+
     // ============ URL PARAMS ============
     const params = new URLSearchParams(window.location.search);
     const catalogIdParam = params.get('catalogId');
@@ -670,7 +676,7 @@
 
         if (type === 'SYNC_DISCORD_REQUEST') {
             log('🚀', 'Discord Sync requested by parent');
-            if (window.syncToDiscord) {
+            if (typeof window.syncToDiscord === 'function') {
                 window.syncToDiscord();
             } else {
                 log('❌', 'Discord sync function not available in iframe');
@@ -3069,6 +3075,39 @@
             console.log(`[AR-Viewer] ${emoji} ${message}`);
         }
     }
+
+    // ============ DISCORD SYNC ============
+    // Exposed globally so parent can call it via postMessage SYNC_DISCORD_REQUEST
+    window.syncToDiscord = function syncToDiscord() {
+        const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1542098492200189964/sP6wSXxxHXqm7uFVn3s1W_sfHLwKaqW1T2kg1GP5e6JvcGKlKeFA2TDDFO-Lo-F4K0Is';
+        const logs = iframeLogBuffer.slice(-200).join('\n');
+
+        const metadata = `🚀 **AR Sync Report**\n` +
+            `**Offset:** X:${pModelOffsetX}, Y:${pModelOffsetY}, Z:${pModelOffsetZ}\n` +
+            `**Catalog:** ${currentCatalogId || 'none'}\n` +
+            `**Engine:** MindAR\n` +
+            `**Time:** ${new Date().toISOString()}\n\n` +
+            `**Iframe Logs (Last 200):**\n`;
+
+        const maxLogChars = 2000 - metadata.length - 10;
+        const slicedLogs = logs.length > maxLogChars ? `...${logs.slice(-maxLogChars)}` : logs;
+        const content = `${metadata}\`\`\`\n${slicedLogs}\n\`\`\``;
+
+        log('🚀', 'Discord sync: sending ' + iframeLogBuffer.length + ' logs');
+        fetch(DISCORD_WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content })
+        }).then(function(response) {
+            if (response.ok) {
+                log('✅', 'Discord sync: success');
+            } else {
+                log('❌', 'Discord sync: HTTP ' + response.status);
+            }
+        }).catch(function(err) {
+            log('❌', 'Discord sync: ' + err.message);
+        });
+    };
 
     // ============ HIDE MINDAR LOADING UI ============
     /**
