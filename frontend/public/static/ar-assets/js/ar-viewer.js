@@ -43,7 +43,7 @@
 
     // ── Task 7: AR Target Registry (revisioned slot map) ─────────────────────
     let targetRegistry = null;   // ARTargetRegistry instance
-    let currentCatalogId = null; // set by ensureCatalogAnchors / bootstrap
+    let currentCatalogId = catalogIdParam || null; // Initialise from URL param if available
 
     // ── Task 7: Add-card scanner ──────────────────────────────────────────────
     let addCardScanner = null;
@@ -143,6 +143,7 @@
     const comboImageUrl = normalizeViewerAssetUrl(params.get('comboImage')); // 2D layered fallback for combo scene
     const comboTextureUrl = normalizeViewerAssetUrl(params.get('comboTextureUrl')); // Texture for combo model
     const comboPhrase = params.get('comboPhrase') || '';
+    const catalogIdParam = params.get('catalogId');
     const maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));
     const cardCount = Math.max(1, Math.min(Number(params.get('cardCount') || params.get('targetCount')) || 1, 5));
     const targetCount = Math.max(1, Math.min(Number(params.get('targetCount')) || cardCount, maxTrack, 5));
@@ -812,7 +813,8 @@
 
         // Lazily initialise the registry on first SET_ACTIVE_TARGETS so catalogId
         // comes from the parent's authoritative payload rather than from URL params.
-        if (!targetRegistry) {
+        if (!targetRegistry || (payload.catalogId && payload.catalogId !== currentCatalogId)) {
+            log('🏗️', 'Initialising/Updating Registry with catalogId: ' + payload.catalogId + ' (was: ' + currentCatalogId + ')');
             targetRegistry = window.ARTargetRegistry.create({
                 catalogId: payload.catalogId,
                 targetCount: targetCount,

@@ -592,7 +592,17 @@ export default function LearnARV2() {
         HapticService.tap();
         const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1541864213222522980/n5KueLWwJSf75P5TIAeovTxqcZ5A_AL2DrfkJw04GT8Xtb5UWdwX3bEr0d4a5VPRv6kD";
         
-        const logs = (window as any).MobileDebug?.getLogs?.() || "No logs found in Parent buffer.";
+        // Collect logs from parent buffer
+        let logs = (window as any).MobileDebug?.getLogs?.() || "No logs found in Parent buffer.";
+        
+        // Also try to grab logs from iframe buffer if possible
+        if (iframeRef.current?.contentWindow) {
+            try {
+                // We can't directly read iframe memory, but we can ask it to send logs back
+                // For now, we rely on the parent's MobileDebug which should have most logs 
+                // forwarded via the AR_DEBUG/CONSOLE_LOG postMessage protocol.
+            } catch (e) { /* ignore cross-origin */ }
+        }
         
         const content = `🚀 **AR Sync Report**\n` +
             `**Offset:** X:${manualOffset.x}, Y:${manualOffset.y}\n` +
