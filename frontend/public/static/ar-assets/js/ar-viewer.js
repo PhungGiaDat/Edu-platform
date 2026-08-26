@@ -41,6 +41,10 @@
     const targetLostTimers = new Map();
     const TARGET_LOST_GRACE_MS = 900;
 
+    // ============ LOG BUFFER (must be declared before any log() call) ============
+    const MAX_IFRAME_LOGS = 500;
+    const iframeLogBuffer = [];
+
     // ============ URL PARAMS ============
     const params = new URLSearchParams(window.location.search);
     const catalogIdParam = params.get('catalogId');
@@ -3051,8 +3055,6 @@
     }
 
     // ============ LOGGING ============
-    const MAX_IFRAME_LOGS = 500;
-    const iframeLogBuffer = [];
     function log(emoji, message, data) {
         const timestamp = new Date().toLocaleTimeString();
         const dataStr = data ? ' ' + JSON.stringify(data) : '';

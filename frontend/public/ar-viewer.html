@@ -23,12 +23,11 @@
             window.__AR_VIEWER_POST_TO_PARENT__ = postToParent;
 
             // Forward all iframe console.log to parent for MobileDebug buffering.
-            // No throttling in production — the parent side handles throttling if needed.
+            // Throttling only applies in debug mode for noisy PERF/FPS logs;
+            // in production we forward everything so Discord sync has full data.
             var lastPerfForwardAt = 0;
             var suppressedPerfForwards = 0;
-            var PERF_FORWARD_INTERVAL_MS = debugMode ? 5000 : 999999999; // effectively disable in prod
-            // Always install — throttling is controlled by debugMode flag
-            // REMOVED: if (!debugMode) return; — iframe logs must reach parent in production too
+            var PERF_FORWARD_INTERVAL_MS = 5000;
 
             function serialiseConsoleArgs(args) {
                 return Array.prototype.slice.call(args).map(function(value) {
@@ -51,7 +50,8 @@
                 console[level] = function() {
                     try {
                         var text = serialiseConsoleArgs(arguments);
-                        if (level === 'log' && isNoisyPerformanceLog(text)) {
+                        // Throttle PERF/FPS logs in debug mode only; forward everything in production
+                        if (level === 'log' && debugMode && isNoisyPerformanceLog(text)) {
                             var now = Date.now();
                             if (now - lastPerfForwardAt < PERF_FORWARD_INTERVAL_MS) {
                                 suppressedPerfForwards++;
