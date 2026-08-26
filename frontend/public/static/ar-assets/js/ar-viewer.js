@@ -674,6 +674,16 @@
             return;
         }
 
+        // Handle REQUEST_IFRAME_LOGS: send recent console logs to parent for Discord sync
+        if (type === 'REQUEST_IFRAME_LOGS') {
+            log('📤', 'Sending iframe logs to parent for Discord sync');
+            sendToParent('IFRAME_LOGS_FOR_DISCORD', {
+                logs: iframeLogBuffer.slice(-200).join('\n'), // Last 200 logs
+                count: Math.min(iframeLogBuffer.length, 200)
+            });
+            return;
+        }
+
         if (data.origin !== 'parent') return;
 
         log('📥', `Received ${type}`, payload);
@@ -3041,7 +3051,16 @@
     }
 
     // ============ LOGGING ============
+    const MAX_IFRAME_LOGS = 500;
+    const iframeLogBuffer = [];
     function log(emoji, message, data) {
+        const timestamp = new Date().toLocaleTimeString();
+        const dataStr = data ? ' ' + JSON.stringify(data) : '';
+        const logLine = `[${timestamp}] [AR-Viewer] ${emoji} ${message}${dataStr}`;
+        iframeLogBuffer.push(logLine);
+        if (iframeLogBuffer.length > MAX_IFRAME_LOGS) {
+            iframeLogBuffer.shift();
+        }
         if (data) {
             console.log(`[AR-Viewer] ${emoji} ${message}`, data);
         } else {

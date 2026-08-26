@@ -7,7 +7,9 @@
     <!-- Install the parent bridge before any viewer/runtime script can fail. -->
     <script>
         (function installViewerDebugBridge() {
-            var debugEnabled = location.search.includes('debug') || location.hostname === 'localhost';
+            // Always install the bridge so iframe logs reach parent even in production.
+            // Performance throttling is controlled by the debug param.
+            var debugMode = location.search.includes('debug') || location.hostname === 'localhost';
 
             function postToParent(type, payload) {
                 window.parent.postMessage({
@@ -19,7 +21,14 @@
             }
 
             window.__AR_VIEWER_POST_TO_PARENT__ = postToParent;
-            if (!debugEnabled) return;
+
+            // Forward all iframe console.log to parent for MobileDebug buffering.
+            // No throttling in production — the parent side handles throttling if needed.
+            var lastPerfForwardAt = 0;
+            var suppressedPerfForwards = 0;
+            var PERF_FORWARD_INTERVAL_MS = debugMode ? 5000 : 999999999; // effectively disable in prod
+            // Always install — throttling is controlled by debugMode flag
+            // REMOVED: if (!debugMode) return; — iframe logs must reach parent in production too
 
             function serialiseConsoleArgs(args) {
                 return Array.prototype.slice.call(args).map(function(value) {
@@ -32,10 +41,6 @@
                     }
                 }).join(' ').slice(0, 4000);
             }
-
-            var lastPerfForwardAt = 0;
-            var suppressedPerfForwards = 0;
-            var PERF_FORWARD_INTERVAL_MS = 5000;
 
             function isNoisyPerformanceLog(text) {
                 return /^\[PERF\]/.test(text) || /^\[AR-Viewer\].*FPS:/.test(text);

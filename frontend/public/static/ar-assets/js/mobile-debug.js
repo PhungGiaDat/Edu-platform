@@ -438,6 +438,14 @@
             const data = event.data;
             if (data && typeof data === 'object' && data.type) {
                 const typeStr = String(data.type);
+
+                // Buffer iframe console logs for Discord sync
+                // VIEWER_CONSOLE_* messages are forwarded from ar-viewer.html console bridge
+                if (data.payload && data.payload.label && data.payload.label.startsWith('VIEWER_CONSOLE_')) {
+                    const iframeLog = `[iframe] ${data.payload.details && data.payload.details.text ? data.payload.details.text : data.payload.details || ''}`;
+                    addLog(data.payload.details && data.payload.details.level === 'error' ? 'error' : 'log', [iframeLog]);
+                }
+
                 // Only show AR-related messages to avoid noise
                 const arTypes = [
                     'SCANNER_READY', 'QR_DETECTED', 'SCANNER_ERROR',

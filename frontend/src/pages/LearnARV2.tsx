@@ -583,29 +583,53 @@ export default function LearnARV2() {
     // Realtime Offset Tuning State
     const [manualOffset, setManualOffset] = useState({ x: 0, y: 0 });
     const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+    const [iframeLogs, setIframeLogs] = useState<string>('');
 
     const iframeRef = useRef<HTMLIFrameElement>(null);
+
+    // Listen for iframe logs forwarded for Discord sync
+    useEffect(() => {
+        const handler = (event: MessageEvent) => {
+            if (event.data?.type === 'IFRAME_LOGS_FOR_DISCORD') {
+                setIframeLogs(event.data.payload?.logs || '');
+            }
+        };
+        window.addEventListener('message', handler);
+        return () => window.removeEventListener('message', handler);
+    }, []);
 
     const handleSyncDiscord = useCallback(async () => {
         if (syncStatus === 'syncing') return;
         setSyncStatus('syncing');
         HapticService.tap();
+
+        // Request iframe logs before syncing
+        if (iframeRef.current?.contentWindow) {
+            iframeRef.current.contentWindow.postMessage({ type: 'REQUEST_IFRAME_LOGS' }, '*');
+        }
+
+        // Small delay to allow iframe logs to arrive
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1542098492200189964/sP6wSXxxHXqm7uFVn3s1W_sfHLwKaqW1T2kg1GP5e6JvcGKlKeFA2TDDFO-Lo-F4K0Is";
-        
-        // Collect logs from parent buffer
-        let logs = (window as any).MobileDebug?.getLogs?.() || "No logs found in Parent buffer.";
-        
-        // Discord has a 2000 character limit for 'content'. 
-        // We'll keep metadata and take the last 1400 chars of logs to be safe.
+
+        // Collect logs from parent buffer + iframe logs
+        let parentLogs = (window as any).MobileDebug?.getLogs?.() || "No parent logs.";
+        let allLogs = `=== PARENT LOGS ===\n${parentLogs}`;
+        if (iframeLogs) {
+            allLogs += `\n\n=== IFRAME LOGS (Last 200) ===\n${iframeLogs}`;
+        }
+
+        // Discord has a 2000 character limit for 'content'.
         const metadata = `🚀 **AR Sync Report**\n` +
             `**Offset:** X:${manualOffset.x}, Y:${manualOffset.y}\n` +
             `**Flashcards:** ${flashcardCount}\n` +
             `**Engine:** ${(window as any).MobileDebug?.activeEngine || 'unknown'}\n` +
             `**Time:** ${new Date().toISOString()}\n\n` +
             `**Logs Snapshot:**\n`;
-            
-        const maxLogChars = 2000 - metadata.length - 10; // -10 for code block backticks
-        const slicedLogs = logs.length > maxLogChars ? `...${logs.slice(-maxLogChars)}` : logs;
+
+        const maxLogChars = 2000 - metadata.length - 10;
+        const slicedLogs = allLogs.length > maxLogChars ? `...${allLogs.slice(-maxLogChars)}` : allLogs;
         const content = `${metadata}\`\`\`\n${slicedLogs}\n\`\`\``;
 
         try {
@@ -614,7 +638,7 @@ export default function LearnARV2() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content })
             });
-            
+
             if (response.ok) {
                 setSyncStatus('success');
                 HapticService.success();
@@ -632,7 +656,7 @@ export default function LearnARV2() {
         } finally {
             setTimeout(() => setSyncStatus('idle'), 3000);
         }
-    }, [manualOffset, flashcardCount, comboKey, syncStatus]);
+    }, [manualOffset, flashcardCount, comboKey, syncStatus, iframeLogs]);
 
     const handleAdjustOffset = useCallback((axis: 'x' | 'y', delta: number) => {
         setManualOffset(prev => {
