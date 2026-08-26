@@ -590,27 +590,23 @@ export default function LearnARV2() {
         if (syncStatus === 'syncing') return;
         setSyncStatus('syncing');
         HapticService.tap();
-        const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1541864213222522980/n5KueLWwJSf75P5TIAeovTxqcZ5A_AL2DrfkJw04GT8Xtb5UWdwX3bEr0d4a5VPRv6kD";
+        const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1542098492200189964/sP6wSXxxHXqm7uFVn3s1W_sfHLwKaqW1T2kg1GP5e6JvcGKlKeFA2TDDFO-Lo-F4K0Is";
         
         // Collect logs from parent buffer
         let logs = (window as any).MobileDebug?.getLogs?.() || "No logs found in Parent buffer.";
         
-        // Also try to grab logs from iframe buffer if possible
-        if (iframeRef.current?.contentWindow) {
-            try {
-                // We can't directly read iframe memory, but we can ask it to send logs back
-                // For now, we rely on the parent's MobileDebug which should have most logs 
-                // forwarded via the AR_DEBUG/CONSOLE_LOG postMessage protocol.
-            } catch (e) { /* ignore cross-origin */ }
-        }
-        
-        const content = `🚀 **AR Sync Report**\n` +
+        // Discord has a 2000 character limit for 'content'. 
+        // We'll keep metadata and take the last 1400 chars of logs to be safe.
+        const metadata = `🚀 **AR Sync Report**\n` +
             `**Offset:** X:${manualOffset.x}, Y:${manualOffset.y}\n` +
-            `**URL:** \`${window.location.href}\`\n` +
             `**Flashcards:** ${flashcardCount}\n` +
             `**Engine:** ${(window as any).MobileDebug?.activeEngine || 'unknown'}\n` +
             `**Time:** ${new Date().toISOString()}\n\n` +
-            `**Logs Snapshot:**\n\`\`\`\n${logs.slice(-1500)}\n\`\`\``;
+            `**Logs Snapshot:**\n`;
+            
+        const maxLogChars = 2000 - metadata.length - 10; // -10 for code block backticks
+        const slicedLogs = logs.length > maxLogChars ? `...${logs.slice(-maxLogChars)}` : logs;
+        const content = `${metadata}\`\`\`\n${slicedLogs}\n\`\`\``;
 
         try {
             const response = await fetch(DISCORD_WEBHOOK, {

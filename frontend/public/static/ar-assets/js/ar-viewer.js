@@ -430,11 +430,16 @@
                 return null;
             }
 
-            const scaleValue = `${nextScale} ${nextScale} ${nextScale}`;
+            // Safety: ensure scale is not zero or extremely small
+            const finalScale = Math.max(nextScale, 0.01);
+            const scaleValue = `${finalScale} ${finalScale} ${finalScale}`;
+            
             modelEl.setAttribute('scale', scaleValue);
             if (modelEl.object3D?.scale?.set) {
-                modelEl.object3D.scale.set(nextScale, nextScale, nextScale);
+                modelEl.object3D.scale.set(finalScale, finalScale, finalScale);
             }
+            
+            log('📐', `Scale applied: ${finalScale.toFixed(4)} (original: ${nextScale.toFixed(4)})`);
             
             // Auto-centering: shift the model so its bounding box center is at (0,0,0) relative to anchor
             // Cache center in the element to avoid re-calculating bounding box during realtime offset tuning
@@ -983,9 +988,17 @@
 
             assetItem.addEventListener('loaded', function() {
                 log('✅', 'Slot GLB asset ready: slot=' + target.slotIndex + ' url=' + target.modelUrl);
+                
+                // Ensure model is visible and has correct initial state
+                modelEl.setAttribute('visible', 'true');
+                
                 anchor.appendChild(modelEl);
                 log('📍', `Model attached to anchor: slot-model-${target.slotIndex} -> mind-target-${target.mindTargetIndex}, position=${modelEl.getAttribute('position')}`);
+                
                 applyTextureWhenModelReady(modelEl, target.textureUrl);
+                
+                // Add explicit logging for A-Frame component attachment
+                log('⚙️', `Setting gltf-model for slot ${target.slotIndex}...`);
                 modelEl.setAttribute('gltf-model', '#slot-asset-' + target.slotIndex);
 
                 // Wire word label
