@@ -437,17 +437,13 @@
             box.getCenter(center);
             
             // Marker Center Compensation: 
-            // Use manual offsets from URL params if provided, otherwise fallback to catalog defaults.
-            const urlParams = new URLSearchParams(window.location.search);
-            let compensationX = parseFloat(urlParams.get('pModelOffsetX')) || 0;
-            let compensationY = parseFloat(urlParams.get('pModelOffsetY')) || 0;
-            let compensationZ = parseFloat(urlParams.get('pModelOffsetZ')) || 0;
+            // Use live manual offset variables updated by parent messages
+            let compensationX = pModelOffsetX;
+            let compensationY = pModelOffsetY;
+            let compensationZ = pModelOffsetZ;
             
-            // Apply default catalog compensation ONLY if manual override is NOT provided
-            if (urlParams.get('catalogId') === 'animal-combo-v1') {
-                if (!urlParams.has('pModelOffsetX')) compensationX -= 0.15; // Shift left
-                if (!urlParams.has('pModelOffsetY')) compensationY -= 0.25; // Shift down
-            }
+            // Manual override logic: use pModelOffset* from URL if present.
+            // (Speculative catalog-wide hardcoded offsets removed to avoid conflict with manual tuning)
 
             // Apply offsets. Note: we negate the center to move it to (0,0,0)
             // but we must scale the center offset by the applied model scale.
@@ -637,21 +633,17 @@
             pModelOffsetZ = typeof payload.z === 'number' ? payload.z : pModelOffsetZ;
             log('🎯', 'Manual Offset Updated Realtime: ' + pModelOffsetX + ', ' + pModelOffsetY);
             
-            // Re-apply to all active slot models
+            // Re-apply to all active slot models directly to position
             for (var i = 0; i < 2; i++) {
-                var model = document.getElementById('slot-model-' + i);
-                if (model) {
-                    var slotIdx = i;
-                    // Use getBySlot instead of getSlot
-                    var target = targetRegistry ? targetRegistry.getBySlot(slotIdx) : null;
-                    if (target) {
-                        wireDynamicModelScale(model, {
-                            targetIndex: target.slotIndex,
-                            explicitScale: target.scale,
-                            targetSpan: pTargetSpan,
-                            source: 'realtime-update'
-                        });
-                    }
+                var modelEl = document.getElementById('slot-model-' + i);
+                if (modelEl) {
+                    // Force re-run applyDynamicModelScale to update position immediately
+                    // This uses the newly updated pModelOffset* variables via URL param check inside the function
+                    // We must ensure the URL is updated in the parent before this is called (already handled in LearnARV2)
+                    applyDynamicModelScale(modelEl, {
+                        targetIndex: i,
+                        source: 'realtime-update'
+                    });
                 }
             }
             return;

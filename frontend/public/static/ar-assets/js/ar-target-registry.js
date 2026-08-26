@@ -58,10 +58,12 @@
      */
     function apply(snapshot) {
       if (snapshot.catalogId !== catalogId) {
-        throw 'ACTIVE_TARGETS_INVALID';
+        console.error('[Registry] Catalog mismatch:', snapshot.catalogId, 'expected:', catalogId);
+        throw 'ACTIVE_TARGETS_INVALID_CATALOG';
       }
 
       if (typeof snapshot.revision !== 'number' || snapshot.revision !== currentRevision + 1) {
+        console.warn('[Registry] Stale revision:', snapshot.revision, 'expected:', currentRevision + 1);
         throw 'ACTIVE_TARGETS_STALE';
       }
 
@@ -71,7 +73,8 @@
         targets.length < 1 ||
         targets.length > 2
       ) {
-        throw 'ACTIVE_TARGETS_INVALID';
+        console.error('[Registry] Invalid target count:', targets ? targets.length : 0);
+        throw 'ACTIVE_TARGETS_INVALID_COUNT';
       }
 
       var seenSlots = new Set();
@@ -86,29 +89,33 @@
 
         if (isNaN(slotIdx) || slotIdx < 0 || slotIdx > 1) {
           console.error('[Registry] Invalid slotIndex:', t.slotIndex);
-          throw 'ACTIVE_TARGETS_INVALID';
+          throw 'ACTIVE_TARGETS_INVALID_SLOT';
         }
 
         // Relaxed mindTargetIndex check for dynamic catalogs
         if (isNaN(mindIdx) || mindIdx < 0) {
           console.error('[Registry] Invalid mindTargetIndex:', t.mindTargetIndex);
-          throw 'ACTIVE_TARGETS_INVALID';
+          throw 'ACTIVE_TARGETS_INVALID_MIND_INDEX';
         }
 
         if (!t.arTag || typeof t.arTag !== 'string' || t.arTag.trim() === '') {
-          throw 'ACTIVE_TARGETS_INVALID';
+          console.error('[Registry] Invalid arTag:', t.arTag);
+          throw 'ACTIVE_TARGETS_INVALID_TAG';
         }
 
         // Relaxed modelUrl check to prevent rejections when assets are still resolving
         if (t.modelUrl && typeof t.modelUrl !== 'string') {
-          throw 'ACTIVE_TARGETS_INVALID';
+          console.error('[Registry] Invalid modelUrl:', t.modelUrl);
+          throw 'ACTIVE_TARGETS_INVALID_MODEL_URL';
         }
 
         if (seenSlots.has(t.slotIndex)) {
-          throw 'ACTIVE_TARGETS_INVALID';
+          console.error('[Registry] Duplicate slotIndex:', t.slotIndex);
+          throw 'ACTIVE_TARGETS_DUPLICATE_SLOT';
         }
         if (seenMind.has(t.mindTargetIndex)) {
-          throw 'ACTIVE_TARGETS_INVALID';
+          console.error('[Registry] Duplicate mindTargetIndex:', t.mindTargetIndex);
+          throw 'ACTIVE_TARGETS_DUPLICATE_MIND_INDEX';
         }
 
         seenSlots.add(t.slotIndex);

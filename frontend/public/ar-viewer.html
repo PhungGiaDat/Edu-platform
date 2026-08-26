@@ -120,100 +120,82 @@
     </script>
     <!-- Eruda Debug Console - Mobile Web Debugging -->
     <script>
-        var viewerDebugParams = new URLSearchParams(location.search);
-        if (viewerDebugParams.get('eruda') === 'true' || location.hostname === 'localhost') {
-            (function() {
+        (function() {
+            var viewerDebugParams = new URLSearchParams(location.search);
+            
+            // Expose syncToDiscord globally so Parent can call it ANYTIME
+            window.syncToDiscord = function(externalBtn) {
+                console.log('🚀 Discord Sync requested...');
+                var btn = externalBtn;
+                if (btn && btn.tagName === 'BUTTON') {
+                    btn.disabled = true;
+                    btn.innerText = '⌛ Syncing...';
+                }
+                
+                var logs = [];
+                // Priority: MobileDebug buffer (captures everything)
+                if (window.MobileDebug && window.MobileDebug.logBuffer) {
+                    logs = window.MobileDebug.logBuffer.map(function(e) { return e.plainText; });
+                } else {
+                    // Fallback: Eruda DOM
+                    var items = document.querySelectorAll('.eruda-console .eruda-log-item');
+                    items.forEach(function(item) { logs.push(item.innerText); });
+                }
+                
+                var text = logs.join('\n');
+                if (!text) text = "No logs available to sync.";
+                
+                var webhookUrl = 'https://discord.com/api/webhooks/1541864213222522980/n5KueLWwJSf75P5TIAeovTxqcZ5A_AL2DrfkJw04GT8Xtb5UWdwX3bEr0d4a5VPRv6kD';
+                
+                var formData = new FormData();
+                var blob = new Blob([text], { type: 'text/plain' });
+                formData.append('file', blob, 'ar-session-' + new Date().getTime() + '.txt');
+                formData.append('payload_json', JSON.stringify({
+                    content: '🔔 **AR Debug Session Sync**\n- Device: ' + navigator.userAgent.split(' ').slice(-1)[0] + '\n- Time: ' + new Date().toLocaleString() + '\n- Log Lines: ' + logs.length
+                }));
+
+                return fetch(webhookUrl, {
+                    method: 'POST',
+                    body: formData
+                }).then(function(res) {
+                    if (res.ok) {
+                        console.log('✅ Synced to Discord!');
+                        if (btn && btn.tagName === 'BUTTON') {
+                            btn.style.background = '#3ba55c';
+                            btn.innerText = '✅ Synced!';
+                            setTimeout(function() {
+                                btn.disabled = false;
+                                btn.style.background = '#5865F2';
+                                btn.innerText = '🚀 Sync to Discord';
+                            }, 3000);
+                        }
+                        return true;
+                    } else {
+                        throw new Error('Webhook failed');
+                    }
+                }).catch(function(err) {
+                    if (btn && btn.tagName === 'BUTTON') {
+                        btn.disabled = false;
+                        btn.innerText = '🚀 Sync Failed';
+                    }
+                    console.error('❌ Discord Sync Failed:', err.message);
+                    return false;
+                });
+            };
+
+            if (viewerDebugParams.get('eruda') === 'true' || location.hostname === 'localhost') {
                 var s = document.createElement('script');
                 s.src = 'https://cdn.jsdelivr.net/npm/eruda@3';
                 s.onload = function() { 
                     eruda.init({
                         defaults: { displaySize: 30, transparency: 0.8, theme: 'Dark' },
                         useShadowDom: true,
-                        maxLogNum: 5000 // Increase log limit to prevent truncation
+                        maxLogNum: 5000
                     });
-                    // Add "Copy All" plugin to Eruda
-                    var copyPlugin = {
-                        name: 'copy-logs',
-                        init: function($el) {
-                            this._$el = $el;
-                            $el.html('<div style="padding:10px; background:#111; height:100%; display:flex; flex-direction:column; gap:10px;">' +
-                                '<button id="eruda-sync-discord" style="width:100%;height:46px;background:#5865F2;color:#fff;border:none;border-radius:12px;font-weight:bold;font-size:14px;box-shadow:0 4px 12px rgba(88,101,242,0.4);display:flex;align-items:center;justify-content:center;gap:8px;"><span>🚀</span> Sync to Discord</button>' +
-                                '<button id="eruda-download-logs" style="width:100%;height:46px;background:#22c55e;color:#fff;border:none;border-radius:12px;font-weight:bold;font-size:14px;box-shadow:0 4px 12px rgba(34,197,94,0.4);display:flex;align-items:center;justify-content:center;gap:8px;"><span>💾</span> Download Logs (.txt)</button>' +
-                                '<div style="margin-top:2px;color:#888;font-size:11px;text-align:center;">Sync to Discord for realtime desktop debugging</div></div>');
-                            
-                            window.syncToDiscord = function(externalBtn) {
-                                var btn = externalBtn || document.getElementById('eruda-sync-discord');
-                                if (btn) {
-                                    btn.disabled = true;
-                                    btn.innerText = '⌛ Syncing...';
-                                }
-                                
-                                var logs = [];
-                                var items = document.querySelectorAll('.eruda-console .eruda-log-item');
-                                items.forEach(function(item) { logs.push(item.innerText); });
-                                var text = logs.join('\n');
-                                
-                                var webhookUrl = 'https://discord.com/api/webhooks/1541864213222522980/n5KueLWwJSf75P5TIAeovTxqcZ5A_AL2DrfkJw04GT8Xtb5UWdwX3bEr0d4a5VPRv6kD';
-                                
-                                var formData = new FormData();
-                                var blob = new Blob([text], { type: 'text/plain' });
-                                formData.append('file', blob, 'ar-session-' + new Date().getTime() + '.txt');
-                                formData.append('payload_json', JSON.stringify({
-                                    content: '🔔 **AR Debug Session Sync**\n- Device: ' + navigator.userAgent.split(' ').slice(-1)[0] + '\n- Time: ' + new Date().toLocaleString() + '\n- Log Lines: ' + logs.length
-                                }));
-
-                                fetch(webhookUrl, {
-                                    method: 'POST',
-                                    body: formData
-                                }).then(function(res) {
-                                    if (res.ok) {
-                                        if (btn) {
-                                            btn.style.background = '#3ba55c';
-                                            btn.innerText = '✅ Synced to Discord!';
-                                            setTimeout(function() {
-                                                btn.disabled = false;
-                                                btn.style.background = '#5865F2';
-                                                btn.innerText = '🚀 Sync to Discord';
-                                            }, 3000);
-                                        }
-                                    } else {
-                                        throw new Error('Webhook failed');
-                                    }
-                                }).catch(function(err) {
-                                    if (btn) {
-                                        btn.disabled = false;
-                                        btn.innerText = '🚀 Sync to Discord';
-                                    }
-                                    alert('❌ Discord Sync Failed: ' + err.message);
-                                });
-                            };
-                            
-                            $el.on('click', '#eruda-sync-discord', function() {
-                                window.syncToDiscord(this);
-                            });
-
-                            $el.on('click', '#eruda-download-logs', function() {
-                                var logs = [];
-                                var items = document.querySelectorAll('.eruda-console .eruda-log-item');
-                                items.forEach(function(item) { logs.push(item.innerText); });
-                                var text = logs.join('\n');
-                                var blob = new Blob([text], { type: 'text/plain' });
-                                var url = window.URL.createObjectURL(blob);
-                                var a = document.createElement('a');
-                                a.href = url;
-                                a.download = 'ar-debug-logs-' + new Date().getTime() + '.txt';
-                                document.body.appendChild(a);
-                                a.click();
-                                window.URL.revokeObjectURL(url);
-                                document.body.removeChild(a);
-                            });
-                        }
-                    };
-                    eruda.add(copyPlugin);
                 };
                 document.head.appendChild(s);
-            })();
-        }
+            }
+        })();
     </script>
     <link rel="stylesheet" href="/static/ar-assets/css/ar-viewer.css">
 </head>

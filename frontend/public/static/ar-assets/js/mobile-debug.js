@@ -113,10 +113,11 @@
             }
         </style>
 	        <div id="debug-header">
-	            <span>📱 Mobile Debug</span>
+	            <span>📱 AR Debug Console</span>
 	            <div id="debug-controls">
 	                <button onclick="window.MobileDebug.clear()">Clear</button>
-	                <button onclick="window.MobileDebug.toggle()">Toggle</button>
+	                <button onclick="window.MobileDebug.copy()">Copy</button>
+	                <button onclick="window.MobileDebug.toggle()">Min</button>
 	                <button onclick="window.MobileDebug.hide()">Hide</button>
 	            </div>
 	        </div>
@@ -140,6 +141,18 @@
     const MAX_LOGS = 100;
     const MAX_BUFFERED_LOGS = 1000;
     const logBuffer = [];
+    window.MobileDebug = window.MobileDebug || {};
+    window.MobileDebug.getLogs = () => logBuffer.map(e => e.plainText).join('\n');
+    window.MobileDebug.logBuffer = logBuffer; // For direct access if needed
+    
+    // Legacy API support for older code
+    window.MobileDebug.add = (level, label, message, details) => addLog(level, [label, message, details]);
+    window.MobileDebug.clear = () => {
+        logsContainer.innerHTML = '';
+        logCount = 0;
+        logBuffer.length = 0;
+    };
+
     const PERF_LOG_INTERVAL_MS = 5000;
     let lastPerfLogAt = 0;
     let suppressedPerfLogs = 0;

@@ -105,7 +105,7 @@ interface ARViewerTarget {
 const VIEWER_BOOTSTRAP_TIMEOUT_MS = 50_000; // exceeds iframe MindAR initialization timeout (45s)
 // 7-second ACK timeout for SET_ACTIVE_TARGETS revisions (Task 8)
 const ACTIVE_TARGETS_ACK_TIMEOUT_MS = 7_000;
-export const ARContainerV2: React.FC<ARContainerV2Props> = ({
+export const ARContainerV2 = React.forwardRef<HTMLIFrameElement, ARContainerV2Props>(({
     initialPhase = 'SCANNING',
     engine = 'mindar', // Default to MindAR for backward compatibility
     autoQrScanEnabled,
@@ -143,7 +143,7 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     onComboDeactivated,
     onDualDisplayModeChange,
     children
-}) => {
+}, ref) => {
     const [phase, setPhase] = useState<ARPhase>(initialPhase);
     const [error, setError] = useState<string | null>(null);
     const [isReady, setIsReady] = useState(false);
@@ -174,7 +174,10 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
     // Get combo info from store
     const comboData = getDisplayInfo();
 
-    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const internalIframeRef = useRef<HTMLIFrameElement>(null);
+    // Combine refs: use forwardRef for parent access, internalRef for local postMessage logic
+    const iframeRef = (ref as React.RefObject<HTMLIFrameElement>) || internalIframeRef;
+
     const pipRef = useRef<HTMLIFrameElement>(null);
     const cancelViewerBootstrapWatchdogRef = useRef<(() => void) | null>(null);
     // Task 8: revision state machine — kept in a ref so the ACK timeout
@@ -954,6 +957,6 @@ export const ARContainerV2: React.FC<ARContainerV2Props> = ({
             {debugOverlay}
         </div>
     );
-};
+});
 
 export default ARContainerV2;

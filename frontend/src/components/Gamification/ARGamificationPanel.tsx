@@ -193,18 +193,14 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
                     ❤️ {petHappiness}
                 </div>
 
-                {/* Quick Action: Feed */}
-                <button
-                    onClick={handleFeedPet}
-                    className="absolute -bottom-1 -right-1 bg-yellow-400 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg shadow-lg z-20 border-2 border-white hover:scale-110 active:scale-90 transition-transform"
-                    title="Quick Feed"
-                >
-                    🍎
-                </button>
-
-                <div className="absolute -top-1 -right-1 bg-sky-400 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg z-10 animate-pulse border-2 border-white">
-                    ✨
-                </div>
+	                {/* Quick Action: Feed */}
+	                <button
+	                    onClick={handleFeedPet}
+	                    className="absolute -bottom-1 -right-1 bg-yellow-400 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg shadow-lg z-20 border-2 border-white hover:scale-110 active:scale-90 transition-transform"
+	                    title="Quick Feed"
+	                >
+	                    🍎
+	                </button>
 
                 <PetViewer3DCompact
                     modelUrl={activePet?.model_url || ''}

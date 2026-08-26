@@ -553,25 +553,36 @@ export default function LearnARV2() {
     // Realtime Offset Tuning State
     const [manualOffset, setManualOffset] = useState({ x: 0, y: 0 });
 
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+
     const handleSyncDiscord = useCallback(() => {
-        // Forward sync request to Iframe
-        const iframe = document.querySelector('iframe');
-        if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage({ type: 'SYNC_DISCORD_REQUEST' }, '*');
+        // Forward sync request to Iframe using stable ref
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+            iframeRef.current.contentWindow.postMessage({ type: 'SYNC_DISCORD_REQUEST' }, '*');
+            HapticService.success();
+        } else {
+            console.warn('[LearnARV2] Sync failed: iframeRef not ready');
         }
     }, []);
 
     const handleAdjustOffset = useCallback((axis: 'x' | 'y', delta: number) => {
         setManualOffset(prev => {
-            const next = { ...prev, [axis]: parseFloat((prev[axis] + delta).toFixed(2)) };
-            // Send update to Iframe immediately
-            const iframe = document.querySelector('iframe');
-            if (iframe && iframe.contentWindow) {
-                iframe.contentWindow.postMessage({ 
+            const nextValue = parseFloat((prev[axis as keyof typeof prev] + delta).toFixed(2));
+            const next = { ...prev, [axis]: nextValue };
+            
+            // Update URL for persistence
+            const url = new URL(window.location.href);
+            url.searchParams.set(`pModelOffset${axis.toUpperCase()}`, nextValue.toString());
+            window.history.replaceState({}, '', url.toString());
+            
+            // Send update to Iframe immediately using stable ref
+            if (iframeRef.current && iframeRef.current.contentWindow) {
+                iframeRef.current.contentWindow.postMessage({ 
                     type: 'UPDATE_MANUAL_OFFSET', 
-                    payload: { x: next.x, y: next.y } 
+                    payload: next 
                 }, '*');
             }
+            HapticService.tap();
             return next;
         });
     }, []);
@@ -674,16 +685,18 @@ export default function LearnARV2() {
     // ========== PERSISTENT VIEWER FLAG (must be before other refs/constants that use it) ==========
     const isPersistentViewerEnabled = isPersistentMindViewerEnabled();
 
-    // Spec A: enable auto QR-in-scene when persistent viewer active, VIEWING phase, and fewer than 2 cards
-    const autoQrScanEnabled =
-        isPersistentViewerEnabled &&
-        appState === 'VIEWING' &&
-        flashcardCount < 2;
-    
-    // Explicitly force isAddingCard to false to hide any legacy UI triggers
-    useEffect(() => {
-        if (isAddingCard) setIsAddingCard(false);
-    }, [isAddingCard]);
+	    // Spec A: enable auto QR-in-scene when persistent viewer active, VIEWING phase, and fewer than 2 cards
+	    const autoQrScanEnabled =
+	        isPersistentViewerEnabled &&
+	        appState === 'VIEWING' &&
+	        flashcardCount < 2;
+	    
+	    // Explicitly force isAddingCard to false to hide any legacy UI triggers
+	    useEffect(() => {
+	        if (isPersistentViewerEnabled && isAddingCard) {
+	            setIsAddingCard(false);
+	        }
+	    }, [isAddingCard, isPersistentViewerEnabled]);
 
     // ========== DATA HOOKS ==========
     const { arData, error: arError } = useArData(detectedQrId);
@@ -1319,6 +1332,7 @@ export default function LearnARV2() {
 
 
             <ARContainerV2
+                ref={iframeRef}
                 engine={engine}
                 initialPhase={detectedQrId ? 'VIEWING' : 'SCANNING'}
                 // Spec A: auto QR-in-scene (single camera, no separate scanner phase)
@@ -1516,61 +1530,57 @@ export default function LearnARV2() {
 	                </Suspense>
 	            )}
 
-			            {/* Parent Debug Overlay - Placed at the very end of body to avoid z-index/canvas issues */}
-			            {appState === 'VIEWING' && window.location.search.includes('debug=true') && (
-			                <div style={{
-			                    position: 'fixed', 
-			                    top: 100, 
-			                    left: 10,
-			                    zIndex: 2147483647, 
-			                    display: 'flex', 
-			                    flexDirection: 'column', 
-			                    gap: 10,
-			                    pointerEvents: 'auto',
-			                    touchAction: 'manipulation'
-			                }}>
-			                    <button 
-			                        type="button"
-			                        onClick={(e) => {
-			                            e.preventDefault();
-			                            e.stopPropagation();
-			                            handleSyncDiscord();
-			                        }}
-			                        style={{
-			                            padding: '12px 20px', background: '#5865F2', color: 'white',
-			                            border: '3px solid #fff', borderRadius: 24, fontWeight: 900, fontSize: 14,
-			                            boxShadow: '0 8px 25px rgba(0,0,0,0.8)', cursor: 'pointer',
-			                            touchAction: 'manipulation'
-			                        }}
-			                    >
-			                        🚀 Sync to Discord
-			                    </button>
-			                    
-			                    <div style={{
-			                        background: 'rgba(15,23,42,0.95)', padding: 15, borderRadius: 20,
-			                        color: 'white', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 10,
-			                        border: '2px solid #38bdf8', minWidth: 180,
-			                        boxShadow: '0 15px 35px rgba(0,0,0,0.9)',
-			                        touchAction: 'none'
-			                    }}>
-			                        <div style={{ fontWeight: 900, borderBottom: '1px solid #334155', paddingBottom: 6, marginBottom: 2, fontSize: 16, color: '#38bdf8', textAlign: 'center' }}>AR Offset Tuner</div>
-			                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-			                            <span style={{ fontWeight: 900 }}>X: {manualOffset.x.toFixed(2)}</span>
-			                            <div style={{ display: 'flex', gap: 8 }}>
-			                                <button type="button" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); handleAdjustOffset('x', -0.05); }} style={{ width: 40, height: 40, background: '#1e293b', color: '#fff', border: '1px solid #38bdf8', borderRadius: 10, fontWeight: 900, fontSize: 20, touchAction: 'manipulation' }}>-</button>
-			                                <button type="button" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); handleAdjustOffset('x', 0.05); }} style={{ width: 40, height: 40, background: '#1e293b', color: '#fff', border: '1px solid #38bdf8', borderRadius: 10, fontWeight: 900, fontSize: 20, touchAction: 'manipulation' }}>+</button>
-			                            </div>
-			                        </div>
-			                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-			                            <span style={{ fontWeight: 900 }}>Y: {manualOffset.y.toFixed(2)}</span>
-			                            <div style={{ display: 'flex', gap: 8 }}>
-			                                <button type="button" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); handleAdjustOffset('y', -0.05); }} style={{ width: 40, height: 40, background: '#1e293b', color: '#fff', border: '1px solid #38bdf8', borderRadius: 10, fontWeight: 900, fontSize: 20, touchAction: 'manipulation' }}>-</button>
-			                                <button type="button" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); handleAdjustOffset('y', 0.05); }} style={{ width: 40, height: 40, background: '#1e293b', color: '#fff', border: '1px solid #38bdf8', borderRadius: 10, fontWeight: 900, fontSize: 20, touchAction: 'manipulation' }}>+</button>
-			                            </div>
-			                        </div>
-			                    </div>
-			                </div>
-			            )}
+				            {/* Parent Debug Overlay - Minimal Tuner */}
+				            {appState === 'VIEWING' && window.location.search.includes('debug=true') && (
+				                <div style={{
+				                    position: 'fixed', 
+				                    top: 'max(140px, calc(env(safe-area-inset-top) + 120px))', 
+				                    left: 10,
+				                    zIndex: 2147483647, 
+				                    display: 'flex', 
+				                    flexDirection: 'column', 
+				                    gap: 12,
+				                    pointerEvents: 'auto',
+				                    touchAction: 'none'
+				                }}>
+				                    <div style={{
+				                        background: 'rgba(15,23,42,0.92)', padding: 12, borderRadius: 20,
+				                        color: 'white', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 8,
+				                        border: '2px solid #38bdf8', minWidth: 160,
+				                        boxShadow: '0 10px 30px rgba(0,0,0,0.6)'
+				                    }}>
+				                        <div style={{ fontWeight: 900, color: '#38bdf8', textAlign: 'center', fontSize: 14 }}>Offset Tuner</div>
+				                        
+				                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+				                            <span style={{ fontWeight: 800 }}>X: {manualOffset.x.toFixed(2)}</span>
+				                            <div style={{ display: 'flex', gap: 6 }}>
+				                                <button type="button" onClick={() => handleAdjustOffset('x', -0.05)} style={{ width: 36, height: 36, background: '#1e293b', color: '#fff', border: '1px solid #38bdf8', borderRadius: 10, fontWeight: 900 }}>-</button>
+				                                <button type="button" onClick={() => handleAdjustOffset('x', 0.05)} style={{ width: 36, height: 36, background: '#1e293b', color: '#fff', border: '1px solid #38bdf8', borderRadius: 10, fontWeight: 900 }}>+</button>
+				                            </div>
+				                        </div>
+				                        
+				                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+				                            <span style={{ fontWeight: 800 }}>Y: {manualOffset.y.toFixed(2)}</span>
+				                            <div style={{ display: 'flex', gap: 6 }}>
+				                                <button type="button" onClick={() => handleAdjustOffset('y', -0.05)} style={{ width: 36, height: 36, background: '#1e293b', color: '#fff', border: '1px solid #38bdf8', borderRadius: 10, fontWeight: 900 }}>-</button>
+				                                <button type="button" onClick={() => handleAdjustOffset('y', 0.05)} style={{ width: 36, height: 36, background: '#1e293b', color: '#fff', border: '1px solid #38bdf8', borderRadius: 10, fontWeight: 900 }}>+</button>
+				                            </div>
+				                        </div>
+
+				                        <button 
+				                            type="button"
+				                            onClick={handleSyncDiscord}
+				                            style={{
+				                                marginTop: 4, padding: '8px 12px', background: '#5865F2', color: 'white',
+				                                border: 'none', borderRadius: 14, fontWeight: 800, fontSize: 11,
+				                                cursor: 'pointer'
+				                            }}
+				                        >
+				                            🚀 Sync Discord
+				                        </button>
+				                    </div>
+				                </div>
+				            )}
 
             {/* Game Selector */}
             {showGameSelector && (
