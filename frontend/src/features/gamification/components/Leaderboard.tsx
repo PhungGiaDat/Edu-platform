@@ -1,5 +1,5 @@
 import React from 'react';
-import { LeaderboardEntry } from '../../services/GamificationService';
+import { LeaderboardEntry } from '@/features/gamification/services/GamificationService';
 
 interface LeaderboardProps {
     entries: LeaderboardEntry[];

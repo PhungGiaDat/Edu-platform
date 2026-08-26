@@ -2,8 +2,8 @@
 // Enhanced virtual pet with evolution stages, outfits, and accessories
 
 import React, { useState } from 'react';
-import { HapticService } from '../../services/HapticService';
-import { SoundEffectService } from '../../services/SoundEffectService';
+import { HapticService } from '@/services/HapticService';
+import { SoundEffectService } from '@/services/SoundEffectService';
 
 export type PetType = string;
 export type PetMood = 'happy' | 'content' | 'sad' | 'sleeping';
@@ -102,18 +102,18 @@ export function getEvolutionProgress(xp: number): { current: number; next: numbe
     const stage = getEvolutionStage(xp);
     const stages: EvolutionStage[] = ['baby', 'child', 'teen', 'adult'];
     const currentIndex = stages.indexOf(stage);
-    
+
     if (stage === 'adult') {
         return { current: xp, next: xp, percentage: 100 };
     }
-    
+
     const nextStage = stages[currentIndex + 1];
     const currentThreshold = EVOLUTION_THRESHOLDS[stage];
     const nextThreshold = EVOLUTION_THRESHOLDS[nextStage];
-    
+
     const progress = xp - currentThreshold;
     const needed = nextThreshold - currentThreshold;
-    
+
     return {
         current: progress,
         next: needed,
@@ -130,7 +130,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
     showOutfitSelector = false
 }) => {
     const [isOutfitOpen, setIsOutfitOpen] = useState(false);
-    
+
     // Calculate mood from happiness
     const getMood = (happiness: number): PetMood => {
         if (happiness >= 80) return 'happy';
@@ -138,7 +138,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
         if (happiness >= 20) return 'sad';
         return 'sleeping';
     };
-    
+
     const mood = getMood(pet.happiness);
     const stage = pet.stage || getEvolutionStage(pet.xpEarned || 0);
     const petVisuals = PET_VISUALS[pet.type] || DEFAULT_PET_VISUALS;
@@ -146,26 +146,26 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
     const outfit = pet.outfit || 'none';
     const outfitEmoji = OUTFIT_VISUALS[outfit]?.emoji || '';
     const evolutionProgress = getEvolutionProgress(pet.xpEarned || 0);
-    
+
     const handleFeed = () => {
         HapticService.tap();
         SoundEffectService.play('tap');
         onFeed?.();
     };
-    
+
     const handlePlay = () => {
         HapticService.tap();
         SoundEffectService.play('tap');
         onPlay?.();
     };
-    
+
     const handleOutfitClick = (outfitId: OutfitId) => {
         HapticService.success();
         SoundEffectService.play('success');
         onChangeOutfit?.(outfitId);
         setIsOutfitOpen(false);
     };
-    
+
     // Compact mode for AR overlay
     if (compact) {
         return (
@@ -210,7 +210,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
             </button>
         );
     }
-    
+
     // Full mode
     return (
         <div
@@ -243,7 +243,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                     {STAGE_LABELS[stage]} {pet.type.charAt(0).toUpperCase() + pet.type.slice(1)}
                 </p>
             </div>
-            
+
             {/* Happiness bar */}
             <div className="mb-2">
                 <div className="flex justify-between text-white text-xs font-bold mb-1">
@@ -267,7 +267,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                     />
                 </div>
             </div>
-            
+
             {/* Evolution progress bar */}
             {stage !== 'adult' && (
                 <div className="mb-3">
@@ -292,7 +292,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                     </p>
                 </div>
             )}
-            
+
             {stage === 'adult' && (
                 <div className="text-center mb-2">
                     <span className="inline-block px-3 py-1 rounded-full text-xs font-bold text-white bg-sky-500/80">
@@ -300,7 +300,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                     </span>
                 </div>
             )}
-            
+
             {/* Action buttons */}
             <div className="flex gap-2 mb-2">
                 <button
@@ -328,7 +328,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                     🎾 Play
                 </button>
             </div>
-            
+
             {/* Outfit button */}
             {showOutfitSelector && (
                 <button
@@ -344,7 +344,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                     👗 Change Outfit
                 </button>
             )}
-            
+
             {/* Outfit selector modal */}
             {isOutfitOpen && (
                 <div
@@ -363,7 +363,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                         <h3 className="text-lg font-black text-orange-600 text-center mb-3">
                             👗 Choose Outfit
                         </h3>
-                        
+
                         <div className="grid grid-cols-3 gap-2">
                             {Object.entries(OUTFIT_VISUALS).map(([id, outfitInfo]) => (
                                 <button
@@ -390,7 +390,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                                 </button>
                             ))}
                         </div>
-                        
+
                         <button
                             onClick={() => setIsOutfitOpen(false)}
                             className="w-full mt-3 py-2 rounded-xl font-bold text-white transition-transform active:scale-95"
@@ -404,7 +404,7 @@ export const VirtualPetEvolved: React.FC<VirtualPetEvolvedProps> = ({
                     </div>
                 </div>
             )}
-            
+
             {/* Mood message */}
             <p className="text-center text-white/90 text-xs mt-2 font-semibold">
                 {mood === 'happy' && '💕 So happy to learn with you!'}

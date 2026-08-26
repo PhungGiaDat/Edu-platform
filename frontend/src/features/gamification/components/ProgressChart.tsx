@@ -51,21 +51,21 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
     colorScheme = 'blue'
 }) => {
     const colors = COLOR_SCHEMES[colorScheme];
-    
+
     // Calculate max value for normalization
     const calculatedMax = maxValue || Math.max(
         ...data.map(d => Math.max(d.value, d.secondary || 0)),
         1 // Prevent division by zero
     );
-    
+
     // Calculate bar height as percentage
     const getBarHeight = (value: number): number => {
         return Math.min((value / calculatedMax) * 100, 100);
     };
-    
+
     // Get today's day name
     const today = new Date().toLocaleDateString('en-US', { weekday: 'short' });
-    
+
     return (
         <div
             className="rounded-2xl p-4 shadow-lg"
@@ -75,18 +75,18 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
             }}
         >
             {/* Title */}
-            <h3 
+            <h3
                 className="font-bold text-lg mb-4 flex items-center gap-2"
                 style={{ color: colors.text }}
             >
                 <span>📊</span>
                 {title}
             </h3>
-            
+
             {/* Legend */}
             <div className="flex gap-4 mb-4 text-xs">
                 <div className="flex items-center gap-1">
-                    <div 
+                    <div
                         className="w-3 h-3 rounded"
                         style={{ background: colors.primary }}
                     />
@@ -94,7 +94,7 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
                 </div>
                 {showSecondary && (
                     <div className="flex items-center gap-1">
-                        <div 
+                        <div
                             className="w-3 h-3 rounded"
                             style={{ background: colors.secondary }}
                         />
@@ -102,18 +102,18 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
                     </div>
                 )}
             </div>
-            
+
             {/* Chart */}
             <div className="flex items-end justify-between gap-2 h-32">
                 {data.map((point, index) => {
                     const isToday = point.label === today;
                     const barHeight = getBarHeight(point.value);
-                    const secondaryHeight = showSecondary && point.secondary 
-                        ? getBarHeight(point.secondary) 
+                    const secondaryHeight = showSecondary && point.secondary
+                        ? getBarHeight(point.secondary)
                         : 0;
-                    
+
                     return (
-                        <div 
+                        <div
                             key={index}
                             className="flex flex-col items-center flex-1"
                         >
@@ -136,7 +136,7 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
                                         </div>
                                     )}
                                 </div>
-                                
+
                                 {/* Secondary bar */}
                                 {showSecondary && (
                                     <div
@@ -157,7 +157,7 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
                                     </div>
                                 )}
                             </div>
-                            
+
                             {/* Day label */}
                             <div
                                 className={`text-xs mt-2 font-bold ${isToday ? 'text-white px-2 py-0.5 rounded' : 'text-gray-500'}`}
@@ -169,9 +169,9 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
                     );
                 })}
             </div>
-            
+
             {/* Summary line */}
-            <div 
+            <div
                 className="mt-4 pt-3 border-t text-center text-sm"
                 style={{ borderColor: colors.bg }}
             >

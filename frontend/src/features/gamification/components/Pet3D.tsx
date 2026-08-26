@@ -165,19 +165,19 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
     const groupRef = useRef<THREE.Group>(null);
     const eyeLeftRef = useRef<THREE.Mesh>(null);
     const eyeRightRef = useRef<THREE.Mesh>(null);
-    
+
     // Use safe color getter to prevent crashes on invalid petType
     const colors = getPetColors(petType);
     const scale = STAGE_SCALES[stage] || 1;
-    
+
     // Animate the pet
     useFrame((state) => {
         if (!groupRef.current) return;
-        
+
         // Gentle idle breathing animation
         const breathe = Math.sin(state.clock.elapsedTime * 2) * 0.02;
         groupRef.current.scale.y = scale * (1 + breathe);
-        
+
         // Blink animation
         if (eyeLeftRef.current && eyeRightRef.current) {
             const blinkCycle = Math.sin(state.clock.elapsedTime * 0.5);
@@ -186,14 +186,14 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
             eyeLeftRef.current.scale.y = blinkScale;
             eyeRightRef.current.scale.y = blinkScale;
         }
-        
+
         // Happy bounce when happiness is high
         if (happiness > 70) {
             const bounce = Math.abs(Math.sin(state.clock.elapsedTime * 4)) * 0.05;
             groupRef.current.position.y = bounce;
         }
     });
-    
+
     // Eye shape based on mood
     const eyeScaleY = useMemo(() => {
         switch (mood) {
@@ -204,23 +204,23 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
             default: return 1;
         }
     }, [mood]);
-    
+
     return (
         <group ref={groupRef} scale={scale}>
             {/* Main body - rounded cube */}
             <RoundedBox args={[1, 1, 0.8]} radius={0.2} smoothness={4} position={[0, 0, 0]}>
-                <MeshWobbleMaterial 
-                    color={colors.body} 
-                    factor={0.1} 
+                <MeshWobbleMaterial
+                    color={colors.body}
+                    factor={0.1}
                     speed={2}
                 />
             </RoundedBox>
-            
+
             {/* Head - slightly larger rounded cube */}
             <RoundedBox args={[0.9, 0.8, 0.7]} radius={0.2} smoothness={4} position={[0, 0.7, 0.1]}>
                 <meshStandardMaterial color={colors.body} />
             </RoundedBox>
-            
+
             {/* Ears - different based on pet type */}
             {petType === 'bunny' && (
                 <>
@@ -240,7 +240,7 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
                     </RoundedBox>
                 </>
             )}
-            
+
             {petType === 'cat' && (
                 <>
                     {/* Triangle cat ears */}
@@ -254,7 +254,7 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
                     </mesh>
                 </>
             )}
-            
+
             {petType === 'dog' && (
                 <>
                     {/* Floppy dog ears */}
@@ -266,7 +266,7 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
                     </RoundedBox>
                 </>
             )}
-            
+
             {petType === 'panda' && (
                 <>
                     {/* Round panda ears */}
@@ -280,7 +280,7 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
                     </mesh>
                 </>
             )}
-            
+
             {/* Eyes */}
             <mesh ref={eyeLeftRef} position={[-0.2, 0.75, 0.35]} scale={[1, eyeScaleY, 1]}>
                 <sphereGeometry args={[0.1, 16, 16]} />
@@ -290,7 +290,7 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
                 <sphereGeometry args={[0.1, 16, 16]} />
                 <meshStandardMaterial color="#333333" />
             </mesh>
-            
+
             {/* Eye highlights */}
             <mesh position={[-0.17, 0.78, 0.42]}>
                 <sphereGeometry args={[0.03, 8, 8]} />
@@ -300,13 +300,13 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
                 <sphereGeometry args={[0.03, 8, 8]} />
                 <meshBasicMaterial color="#FFFFFF" />
             </mesh>
-            
+
             {/* Nose */}
             <mesh position={[0, 0.6, 0.4]}>
                 <sphereGeometry args={[0.06, 8, 8]} />
                 <meshStandardMaterial color={petType === 'panda' ? '#000000' : '#333333'} />
             </mesh>
-            
+
             {/* Cheeks */}
             <mesh position={[-0.3, 0.55, 0.3]}>
                 <sphereGeometry args={[0.08, 8, 8]} />
@@ -316,7 +316,7 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
                 <sphereGeometry args={[0.08, 8, 8]} />
                 <meshStandardMaterial color={colors.cheek} transparent opacity={0.6} />
             </mesh>
-            
+
             {/* Mouth - smile based on mood */}
             {mood === 'happy' && (
                 <mesh position={[0, 0.5, 0.38]} rotation={[0, 0, Math.PI]}>
@@ -324,7 +324,7 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
                     <meshStandardMaterial color="#333333" />
                 </mesh>
             )}
-            
+
             {/* Panda eye patches */}
             {petType === 'panda' && (
                 <>
@@ -338,7 +338,7 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
                     </mesh>
                 </>
             )}
-            
+
             {/* Little feet */}
             <RoundedBox args={[0.25, 0.15, 0.3]} radius={0.05} position={[-0.25, -0.55, 0.1]}>
                 <meshStandardMaterial color={colors.body} />
@@ -346,7 +346,7 @@ function PetModel({ petType, stage, mood, happiness }: Omit<Pet3DProps, 'visible
             <RoundedBox args={[0.25, 0.15, 0.3]} radius={0.05} position={[0.25, -0.55, 0.1]}>
                 <meshStandardMaterial color={colors.body} />
             </RoundedBox>
-            
+
             {/* Sparkle effect for adult stage */}
             {stage === 'adult' && (
                 <Float speed={4} rotationIntensity={0} floatIntensity={2}>
@@ -370,7 +370,7 @@ export const Pet3D: React.FC<Pet3DProps> = ({
     onClick
 }) => {
     if (!visible) return null;
-    
+
     return (
         <Pet3DErrorBoundary
             fallback={
@@ -401,7 +401,7 @@ export const Pet3D: React.FC<Pet3DProps> = ({
                     <ambientLight intensity={0.6} />
                     <directionalLight position={[5, 5, 5]} intensity={0.8} />
                     <pointLight position={[-5, 5, 5]} intensity={0.4} color="#FFB6C1" />
-                    
+
                     {/* Floating animation wrapper */}
                     <Float
                         speed={2}

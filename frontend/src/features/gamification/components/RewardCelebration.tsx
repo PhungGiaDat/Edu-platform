@@ -2,15 +2,15 @@
 // Kid-friendly celebration overlay for rewards, level-ups, and stickers
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { HapticService } from '../../services/HapticService';
-import { SoundEffectService } from '../../services/SoundEffectService';
-import { eventBus } from '../../runtime/EventBus';
+import { HapticService } from '@/services/HapticService';
+import { SoundEffectService } from '@/services/SoundEffectService';
+import { eventBus } from '@/runtime/EventBus';
 
-export type CelebrationType = 
-    | 'level_up' 
-    | 'sticker_earned' 
-    | 'badge_earned' 
-    | 'pet_evolved' 
+export type CelebrationType =
+    | 'level_up'
+    | 'sticker_earned'
+    | 'badge_earned'
+    | 'pet_evolved'
     | 'streak_milestone';
 
 interface CelebrationData {
@@ -79,7 +79,7 @@ export const RewardCelebration: React.FC<RewardCelebrationProps> = ({
     const generateConfetti = useCallback((type: CelebrationType) => {
         const config = CELEBRATION_CONFIGS[type];
         const pieces: { id: number; emoji: string; left: string; delay: string }[] = [];
-        
+
         for (let i = 0; i < 30; i++) {
             pieces.push({
                 id: i,
@@ -88,7 +88,7 @@ export const RewardCelebration: React.FC<RewardCelebrationProps> = ({
                 delay: `${Math.random() * 2}s`,
             });
         }
-        
+
         setConfettiPieces(pieces);
     }, []);
 
@@ -97,11 +97,11 @@ export const RewardCelebration: React.FC<RewardCelebrationProps> = ({
         setCelebration(data);
         setIsVisible(true);
         generateConfetti(data.type);
-        
+
         // Haptic + Sound
         HapticService.levelUp();
         SoundEffectService.play('levelUp');
-        
+
         // Auto-hide after 4 seconds
         setTimeout(() => {
             setIsVisible(false);
@@ -240,7 +240,7 @@ export const RewardCelebration: React.FC<RewardCelebrationProps> = ({
                     style={{ fontSize: '64px' }}
                 >
                     {celebration.emoji}
-                    
+
                     {/* Sparkle effects */}
                     <span
                         className="absolute text-xl animate-ping"
@@ -350,7 +350,7 @@ export const RewardCelebration: React.FC<RewardCelebrationProps> = ({
                 .animate-confetti-fall {
                     animation: confetti-fall 4s ease-out forwards;
                 }
-                
+
                 @keyframes celebration-pop {
                     0% {
                         transform: scale(0.5);

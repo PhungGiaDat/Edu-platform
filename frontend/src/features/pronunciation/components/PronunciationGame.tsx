@@ -4,14 +4,14 @@
 // AI feedback: POST /api/v1/pronunciation/attempt + /ai-feedback
 
 import React, { useState, useCallback, useEffect } from 'react';
-import type { GameChallenge } from '../../types';
-import { SpeechService } from '../../services/SpeechService';
-import { AudioService } from '../../services/AudioService';
-import { HapticService } from '../../services/HapticService';
-import { SoundEffectService } from '../../services/SoundEffectService';
-import { eventBus } from '../../runtime/EventBus';
-import { useAuth } from '../../contexts/AuthContext';
-import { getApiBase } from '../../config';
+import type { GameChallenge } from '@/types';
+import { SpeechService } from '@/features/pronunciation/services/SpeechService';
+import { AudioService } from '@/services/AudioService';
+import { HapticService } from '@/services/HapticService';
+import { SoundEffectService } from '@/services/SoundEffectService';
+import { eventBus } from '@/runtime/EventBus';
+import { useAuth } from '@/contexts/AuthContext';
+import { getApiBase } from '@/config';
 import { apiClient } from '@/services/apiClient';
 
 const API_BASE = getApiBase();

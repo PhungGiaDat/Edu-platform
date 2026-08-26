@@ -13,7 +13,7 @@ import type {
   SectionGame,
   VideoScene,
   VocabularyItem,
-} from '@/types/course';
+} from '@/features/courses/types';
 
 const blockCopy = {
   en: {

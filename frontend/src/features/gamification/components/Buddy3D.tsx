@@ -49,12 +49,12 @@ class CanvasErrorBoundary extends Component<CanvasErrorBoundaryProps, CanvasErro
 }
 
 // GLB Model Loader Component - Uses safe GLTF loading
-function BuddyModel({ 
+function BuddyModel({
     modelPath = '/assets/models/buddy.glb',
     bounceSpeed = 2,
     onLoad,
     onError,
-}: { 
+}: {
     modelPath: string;
     bounceSpeed: number;
     onLoad?: () => void;
@@ -63,10 +63,10 @@ function BuddyModel({
     const groupRef = useRef<THREE.Group>(null);
     const hasNotifiedLoad = useRef(false);
     const hasNotifiedError = useRef(false);
-    
+
     // Use safe GLTF loading - will never throw during render
     const { gltf, state, error } = useSafeGLTF(modelPath);
-    
+
     // Notify parent of load success
     useEffect(() => {
         if (state === 'loaded' && gltf && !hasNotifiedLoad.current) {
@@ -74,7 +74,7 @@ function BuddyModel({
             onLoad?.();
         }
     }, [state, gltf, onLoad]);
-    
+
     // Notify parent of errors
     useEffect(() => {
         if (state === 'error' && error && !hasNotifiedError.current) {
@@ -83,11 +83,11 @@ function BuddyModel({
             onError?.(error);
         }
     }, [state, error, onError]);
-    
+
     // Clone the scene to avoid sharing issues
     const clonedScene = React.useMemo(() => {
         if (!gltf?.scene) return null;
-        
+
         const clone = gltf.scene.clone();
         // Ensure materials are properly set up
         clone.traverse((child) => {
@@ -107,33 +107,33 @@ function BuddyModel({
         });
         return clone;
     }, [gltf?.scene]);
-    
+
     // Idle animation - gentle bounce and sway
     useFrame((frameState) => {
         if (!groupRef.current) return;
-        
+
         // Gentle bounce
         const bounce = Math.sin(frameState.clock.elapsedTime * bounceSpeed) * 0.05;
         groupRef.current.position.y = bounce;
-        
+
         // Subtle rotation sway
         groupRef.current.rotation.y = Math.sin(frameState.clock.elapsedTime * 0.5) * 0.1;
     });
-    
+
     // Show nothing while loading (Suspense fallback will show)
     if (state === 'loading' || state === 'idle') {
         return null;
     }
-    
+
     // Show nothing on error
     if (state === 'error' || !clonedScene) {
         return null;
     }
-    
+
     return (
         <group ref={groupRef}>
-            <primitive 
-                object={clonedScene} 
+            <primitive
+                object={clonedScene}
                 scale={0.8}
                 position={[0, -0.5, 0]}
             />
@@ -144,13 +144,13 @@ function BuddyModel({
 // Fallback component when model is loading
 function LoadingFallback() {
     const meshRef = useRef<THREE.Mesh>(null);
-    
+
     useFrame((state) => {
         if (meshRef.current) {
             meshRef.current.rotation.y = state.clock.elapsedTime * 2;
         }
     });
-    
+
     return (
         <mesh ref={meshRef}>
             <boxGeometry args={[0.5, 0.5, 0.5]} />
@@ -188,9 +188,9 @@ export const Buddy3D: React.FC<Buddy3DProps> = ({
     bounceSpeed = 2
 }) => {
     const [hasError, setHasError] = useState(false);
-    
+
     if (!visible) return null;
-    
+
     // If 3D completely failed, show fallback
     if (hasError) {
         return (
@@ -206,7 +206,7 @@ export const Buddy3D: React.FC<Buddy3DProps> = ({
             </div>
         );
     }
-    
+
     return (
         <div
             onClick={onClick}
@@ -229,17 +229,17 @@ export const Buddy3D: React.FC<Buddy3DProps> = ({
                     <directionalLight position={[5, 5, 5]} intensity={0.8} />
                     <pointLight position={[-5, 5, 5]} intensity={0.3} color="#FFB6C1" />
                     <pointLight position={[0, -3, 3]} intensity={0.2} color="#4ECDC4" />
-                    
+
                     {/* Optional auto-rotate controls */}
                     {autoRotate && (
-                        <OrbitControls 
+                        <OrbitControls
                             enableZoom={false}
                             enablePan={false}
                             autoRotate
                             autoRotateSpeed={2}
                         />
                     )}
-                    
+
                     {/* Floating animation wrapper */}
                     <Float
                         speed={1.5}
@@ -247,7 +247,7 @@ export const Buddy3D: React.FC<Buddy3DProps> = ({
                         floatIntensity={0.3}
                     >
                         <Suspense fallback={<LoadingFallback />}>
-                            <BuddyModel 
+                            <BuddyModel
                                 modelPath={modelPath}
                                 bounceSpeed={bounceSpeed}
                                 onError={() => setHasError(true)}

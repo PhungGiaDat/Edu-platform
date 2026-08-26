@@ -3,7 +3,7 @@
 // Clean, professional design suitable for parent dashboard
 
 import React from 'react';
-import type { WeeklySummary, WeeklyComparison, Achievement } from '../../hooks/useProgressReport';
+import type { WeeklySummary, WeeklyComparison, Achievement } from '@/hooks/useProgressReport';
 
 interface WeeklyReportProps {
     summary: WeeklySummary;
@@ -22,11 +22,11 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({
 }) => {
     // Format week range if not provided
     const displayRange = weekRange || getDefaultWeekRange();
-    
+
     // Determine trend icon and color
     const getTrendDisplay = () => {
         if (!comparison) return null;
-        
+
         switch (comparison.trend) {
             case 'up':
                 return { icon: '📈', color: '#22c55e', bgColor: '#dcfce7' };
@@ -36,9 +36,9 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({
                 return { icon: '➡️', color: '#6b7280', bgColor: '#f3f4f6' };
         }
     };
-    
+
     const trend = getTrendDisplay();
-    
+
     return (
         <div
             className="rounded-2xl overflow-hidden shadow-lg"
@@ -69,7 +69,7 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({
                     )}
                 </div>
             </div>
-            
+
             {/* Stats Grid */}
             <div className="p-4">
                 <div className="grid grid-cols-2 gap-3 mb-4">
@@ -80,7 +80,7 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({
                         value={summary.words_learned}
                         change={comparison?.wordsChange}
                     />
-                    
+
                     {/* Time Spent */}
                     <StatCard
                         icon="⏱️"
@@ -89,14 +89,14 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({
                         unit="mins"
                         change={comparison?.timeChange}
                     />
-                    
+
                     {/* Games Completed */}
                     <StatCard
                         icon="🎮"
                         label="Games Played"
                         value={summary.games_completed}
                     />
-                    
+
                     {/* Pronunciation */}
                     <StatCard
                         icon="🎤"
@@ -106,7 +106,7 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({
                         isPercentage
                     />
                 </div>
-                
+
                 {/* Comparison Message */}
                 {comparison && (
                     <div
@@ -118,7 +118,7 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({
                         </p>
                     </div>
                 )}
-                
+
                 {/* Recent Achievements */}
                 {recentAchievements.length > 0 && (
                     <div>
@@ -143,14 +143,14 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({
                     </div>
                 )}
             </div>
-            
+
             {/* Footer - Encouragement */}
             <div
                 className="px-4 py-3 text-center border-t"
                 style={{ borderColor: '#e2e8f0', background: '#f8fafc' }}
             >
                 <p className="text-gray-600 text-sm">
-                    {summary.words_learned >= 10 
+                    {summary.words_learned >= 10
                         ? `Amazing week! ${childName} is making great progress!`
                         : summary.words_learned >= 5
                         ? `Good effort! Keep encouraging ${childName} to practice!`
@@ -183,7 +183,7 @@ const StatCard: React.FC<StatCardProps> = ({
     const displayValue = isPercentage ? value : value;
     const changeDisplay = change !== undefined && change !== 0;
     const isPositive = (change || 0) > 0;
-    
+
     return (
         <div
             className="p-3 rounded-xl"
@@ -221,11 +221,11 @@ function getDefaultWeekRange(): string {
     const now = new Date();
     const weekStart = new Date(now);
     weekStart.setDate(weekStart.getDate() - 6);
-    
+
     const formatDate = (date: Date) => {
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     };
-    
+
     return `${formatDate(weekStart)} - ${formatDate(now)}`;
 }
 

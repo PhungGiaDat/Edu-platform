@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge } from '../../services/GamificationService';
+import { Badge } from '@/features/gamification/services/GamificationService';
 
 interface BadgeListProps {
     badges: Badge[];

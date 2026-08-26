@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { PetViewer3DCompact } from '@/components/pets/PetViewer3D';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { usePets } from '@/hooks/usePets';
 import { eventBus } from '@/runtime/EventBus';
 import { apiClient } from '@/services/apiClient';
@@ -76,13 +76,13 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
         try {
             await apiClient.post('/api/v1/gamification/pet/feed', { user_id: userId });
             setPetHappiness(prev => Math.min(100, prev + 10));
-            
+
             // Event-driven AR communication: trigger animation in scene
             eventBus.emit('AR_COMMAND', {
                 type: 'TRIGGER_ANIMATION',
                 payload: { clip: 'happy', loop: false }
             });
-            
+
             onFeedPet?.();
             } catch {
                 // Optimistic update
@@ -94,7 +94,7 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
         // Event-driven pattern: Notify other components that pet was clicked
         const petName = activePet?.name || 'Buddy';
         eventBus.emit('PET_CHAT_OPEN', { petName, word: '' });
-        
+
         onPetClick?.();
     };
 
@@ -186,7 +186,7 @@ export const ARGamificationPanel: React.FC<ARGamificationPanelProps> = ({
                 title={`Change ${activePet?.name || 'Buddy'}`}
             >
                 {/* Happiness Badge */}
-                <div 
+                <div
                     className="absolute -top-1 -left-1 bg-pink-500 text-white rounded-full px-2 py-0.5 flex items-center gap-1 text-[10px] font-bold shadow-lg z-10 border-2 border-white"
                     title={`Happiness: ${petHappiness}%`}
                 >

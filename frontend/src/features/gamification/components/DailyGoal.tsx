@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '@/services/apiClient';
 import { useAuth } from '@/contexts/AuthContext';
-import type { DailyGoalData } from '@/types/gamification';
+import type { DailyGoalData } from '@/features/gamification/types';
 
 interface DailyGoalProps {
     userId?: string;

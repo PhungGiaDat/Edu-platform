@@ -2,8 +2,8 @@
 // Kid-friendly sticker collection display with rarity effects
 
 import React, { useState } from 'react';
-import { HapticService } from '../../services/HapticService';
-import { SoundEffectService } from '../../services/SoundEffectService';
+import { HapticService } from '@/services/HapticService';
+import { SoundEffectService } from '@/services/SoundEffectService';
 
 export interface Sticker {
     id: string;
