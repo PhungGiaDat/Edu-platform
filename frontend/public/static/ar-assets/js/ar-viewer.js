@@ -52,6 +52,7 @@
     // ── Task 7: AR Target Registry (revisioned slot map) ─────────────────────
     let targetRegistry = null;   // ARTargetRegistry instance
     let currentCatalogId = catalogIdParam || null; // Initialise from URL param if available
+    let currentActiveSnapshot = null; // Last applied target snapshot for idempotency
 
     // ── Task 7: Add-card scanner ──────────────────────────────────────────────
     let addCardScanner = null;
@@ -360,6 +361,8 @@
                 reason: 'explicit-scale',
                 scale: explicitScale
             });
+            // Call onScaleReady for explicit scale (scale is already known)
+            settings.onScaleReady?.();
             return explicitScale;
         }
 
@@ -418,6 +421,7 @@
                     reason: !scalePolicy ? 'policy-unavailable' : (!mesh ? 'mesh-unavailable' : 'three-unavailable'),
                     fallbackScale: fallbackScale
                 });
+                settings.onScaleReady?.();
                 return null;
             }
 
@@ -450,6 +454,7 @@
                     reason: 'empty-bounds',
                     fallbackScale: fallbackScale
                 });
+                settings.onScaleReady?.();
                 return null;
             }
 
@@ -467,6 +472,7 @@
                     reason: 'nan-bounds',
                     fallbackScale: fallbackScale
                 });
+                settings.onScaleReady?.();
                 return null;
             }
             const displayedMaxDimension = Math.max(size.x, size.y, size.z);
@@ -490,6 +496,7 @@
                     fallbackScale: fallbackScale,
                     size: { x: size.x, y: size.y, z: size.z }
                 });
+                settings.onScaleReady?.();
                 return null;
             }
 
@@ -558,6 +565,12 @@
                 nextScale,
                 size: { x: size.x, y: size.y, z: size.z }
             });
+            // Notify that model is ready to be shown (prevents scale pop)
+            // Only call once - check settled flag to avoid multiple triggers
+            if (settings.onScaleReady && !modelEl.__arScaleSettled) {
+                modelEl.__arScaleSettled = true;
+                settings.onScaleReady();
+            }
             return nextScale;
         } catch (error) {
             // Catch-all: apply fallback so user still sees a reasonable-sized model
@@ -580,6 +593,7 @@
         modelEl.__arDynamicScaleOptions = options || {};
         if (modelEl.__arDynamicScaleWired) return;
         modelEl.__arDynamicScaleWired = true;
+        modelEl.__arScaleSettled = false; // Track if scale callback was called
         modelEl.addEventListener('model-loaded', () => {
             // Poll for mesh availability — A-Frame may fire model-loaded before
             // the mesh is actually accessible via getObject3D('mesh').
@@ -922,6 +936,35 @@
             }
         }
 
+        // --- Idempotency check: skip if targets are identical to current state ---
+        // Compare by slotIndex + mindTargetIndex + modelUrl (the fields that matter for rendering)
+        var currentSnapshot = currentActiveSnapshot || { targets: [] };
+        var isIdentical = payload.targets.length === currentSnapshot.targets.length &&
+            payload.targets.every(function(newTarget, i) {
+                var curr = currentSnapshot.targets[i];
+                return curr &&
+                    curr.slotIndex === newTarget.slotIndex &&
+                    curr.mindTargetIndex === newTarget.mindTargetIndex &&
+                    curr.modelUrl === newTarget.modelUrl;
+            });
+
+        if (isIdentical) {
+            log('⏭️', 'Skipping applyActiveTargets r' + payload.revision + ' - identical to current state');
+            sendToParent('ACTIVE_TARGETS_APPLIED', {
+                catalogId: payload.catalogId,
+                revision: payload.revision,
+                targets: payload.targets.map(function(t) {
+                    return {
+                        slotIndex: t.slotIndex,
+                        mindTargetIndex: t.mindTargetIndex,
+                        arTag: t.arTag,
+                    };
+                }),
+            });
+            return;
+        }
+        currentActiveSnapshot = payload;
+
         // --- Step 2 + 3: load GLBs and attach under anchors ---
         var loadPromises = payload.targets.map(function(target) {
             return loadSlotGlb(target);
@@ -991,16 +1034,19 @@
             var modelEl = document.createElement('a-entity');
             modelEl.id = 'slot-model-' + target.slotIndex;
             modelEl.classList.add('clickable');
+            // Keep model hidden initially to prevent scale pop (fallback 1.2 → dynamic 0.001)
+            // Will be shown by wireDynamicModelScale once mesh is ready
+            modelEl.setAttribute('visible', 'false');
             // Apply position offset for alignment tuning
             var basePos = target.position ? target.position.split(' ').map(Number) : [0, 0, 0];
-            
-            // Marker Center Compensation: 
+
+            // Marker Center Compensation:
             // We rely on dynamic centering + manual offset tuning.
             // Removed hardcoded -0.15/-0.25 to avoid double-compensation during tuning.
             var posX = (basePos[0] || 0) + pModelOffsetX;
             var posY = (basePos[1] || 0) + pModelOffsetY;
             var posZ = (basePos[2] || 0) + pModelOffsetZ;
-            
+
             modelEl.setAttribute('position', posX + ' ' + posY + ' ' + posZ);
             modelEl.setAttribute('rotation', target.rotation || '0 0 0');
             // Use calibrated fallback scale — dynamic scaling will override this once mesh is ready.
@@ -1015,7 +1061,12 @@
                 targetIndex: target.slotIndex,
                 explicitScale: target.scale,
                 targetSpan: pTargetSpan,
-                source: 'persistent-slot'
+                source: 'persistent-slot',
+                // Pass callback to show model only after scale is calibrated
+                onScaleReady: function() {
+                    modelEl.setAttribute('visible', 'true');
+                    log('👁️', 'Model visible after scale calibration: slot=' + target.slotIndex);
+                }
             });
 
             var assetItem = document.createElement('a-asset-item');
