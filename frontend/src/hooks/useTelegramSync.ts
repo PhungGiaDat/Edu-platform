@@ -8,7 +8,6 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { HapticService } from '@/services/HapticService';
 import { apiClient } from '@/services/apiClient';
 
-export const TELEGRAM_MESSAGE_LIMIT = 4096;
 const IFRAME_LOG_REQUEST_TIMEOUT_MS = 1000;
 
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
@@ -34,9 +33,7 @@ export function buildTelegramMessage({
     `Time: ${new Date().toISOString()}\n\n` +
     `Logs Snapshot:\n`;
 
-  // Telegram's per-message limit is enforced by the backend, which splits the
-  // complete report into ordered messages. Keep the complete snapshot here so
-  // the beginning of the diagnostic session is not silently discarded.
+  // Keep the complete snapshot here; the backend uploads it as one text file.
   return metadata + logs;
 }
 

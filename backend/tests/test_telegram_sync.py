@@ -10,11 +10,9 @@ from fastapi.testclient import TestClient
 from pydantic import SecretStr
 
 from api.telegram import (
-    TELEGRAM_CHUNK_CONTENT_LENGTH,
-    TELEGRAM_MAX_MESSAGE_LENGTH,
+    TELEGRAM_DOCUMENT_CAPTION,
     TELEGRAM_MAX_REPORT_LENGTH,
     router,
-    split_telegram_report,
 )
 from core.security import get_current_teacher, get_current_user
 from settings import settings
@@ -79,7 +77,7 @@ def test_sync_returns_service_unavailable_when_not_configured(
     assert response.json()["detail"] == "Telegram sync is not configured"
 
 
-def test_sync_forwards_text_to_telegram(
+def test_sync_forwards_report_as_text_document(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -89,7 +87,7 @@ def test_sync_forwards_text_to_telegram(
     response_from_telegram = httpx.Response(
         200,
         json={"ok": True, "result": {"message_id": 1}},
-        request=httpx.Request("POST", "https://api.telegram.org/bot/sendMessage"),
+        request=httpx.Request("POST", "https://api.telegram.org/bot/sendDocument"),
     )
     upstream = AsyncMock()
     upstream.post.return_value = response_from_telegram
@@ -104,22 +102,21 @@ def test_sync_forwards_text_to_telegram(
 
     assert response.status_code == 200
     assert response.json() == {"ok": True}
-    upstream.post.assert_awaited_once_with(
-        "https://api.telegram.org/bottest-bot-token/sendMessage",
-        json={"chat_id": "-100123", "text": "AR report"},
-    )
+    upstream.post.assert_awaited_once()
+    request = upstream.post.await_args
+    assert request.args[0] == "https://api.telegram.org/bottest-bot-token/sendDocument"
+    assert request.kwargs["data"] == {
+        "chat_id": "-100123",
+        "caption": TELEGRAM_DOCUMENT_CAPTION,
+    }
+    filename, content, content_type = request.kwargs["files"]["document"]
+    assert filename.startswith("ar-sync-")
+    assert filename.endswith(".txt")
+    assert content == b"AR report"
+    assert content_type == "text/plain"
 
 
-def test_split_telegram_report_preserves_all_content() -> None:
-    report = "first-line\n" + ("x" * TELEGRAM_CHUNK_CONTENT_LENGTH) + "\nlast-line"
-
-    chunks = split_telegram_report(report)
-
-    assert "".join(chunks) == report
-    assert all(len(chunk) <= TELEGRAM_CHUNK_CONTENT_LENGTH for chunk in chunks)
-
-
-def test_sync_sends_long_reports_as_ordered_messages(
+def test_sync_sends_long_reports_as_one_downloadable_document(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -130,7 +127,7 @@ def test_sync_sends_long_reports_as_ordered_messages(
     response_from_telegram = httpx.Response(
         200,
         json={"ok": True, "result": {"message_id": 1}},
-        request=httpx.Request("POST", "https://api.telegram.org/bot/sendMessage"),
+        request=httpx.Request("POST", "https://api.telegram.org/bot/sendDocument"),
     )
     upstream = AsyncMock()
     upstream.post.return_value = response_from_telegram
@@ -144,16 +141,13 @@ def test_sync_sends_long_reports_as_ordered_messages(
         )
 
     assert response.status_code == 200
-    messages = [call.kwargs["json"]["text"] for call in upstream.post.await_args_list]
-    assert len(messages) > 1
-    assert all(len(message) <= TELEGRAM_MAX_MESSAGE_LENGTH for message in messages)
-
-    content = []
-    for index, message in enumerate(messages, start=1):
-        prefix = f"[AR Sync {index}/{len(messages)}]\n"
-        assert message.startswith(prefix)
-        content.append(message.removeprefix(prefix))
-    assert "".join(content) == report
+    upstream.post.assert_awaited_once()
+    request = upstream.post.await_args
+    filename, content, content_type = request.kwargs["files"]["document"]
+    assert filename.endswith(".txt")
+    assert content == report.encode("utf-8")
+    assert content_type == "text/plain"
+    assert request.kwargs["data"]["caption"] == TELEGRAM_DOCUMENT_CAPTION
 
 
 def test_sync_maps_telegram_rejection_to_bad_gateway(

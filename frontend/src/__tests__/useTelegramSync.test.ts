@@ -2,7 +2,6 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildTelegramMessage,
-  TELEGRAM_MESSAGE_LIMIT,
   useTelegramSync,
 } from '../hooks/useTelegramSync';
 import { apiClient } from '@/services/apiClient';
@@ -22,7 +21,6 @@ describe('buildTelegramMessage', () => {
       engine: 'MindAR',
     });
 
-    expect(message.length).toBeGreaterThan(TELEGRAM_MESSAGE_LIMIT);
     expect(message).toContain('AR Sync Report');
     expect(message).toContain('Offset: X:0.1, Y:-0.2');
     expect(message).toContain('start\n');

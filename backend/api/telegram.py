@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import logging
 
 import httpx
@@ -16,8 +17,7 @@ from settings import settings
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/telegram", tags=["Telegram"])
 
-TELEGRAM_MAX_MESSAGE_LENGTH = 4096
-TELEGRAM_CHUNK_CONTENT_LENGTH = 3900
+TELEGRAM_DOCUMENT_CAPTION = "AR Sync Report - full log attached"
 TELEGRAM_MAX_REPORT_LENGTH = 200_000
 
 
@@ -27,38 +27,30 @@ class TelegramSyncRequest(BaseModel):
     text: str = Field(min_length=1, max_length=TELEGRAM_MAX_REPORT_LENGTH)
 
 
-def split_telegram_report(text: str) -> list[str]:
-    """Split a report without losing content, preferring line boundaries."""
-
-    chunks: list[str] = []
-    start = 0
-
-    while start < len(text):
-        end = min(start + TELEGRAM_CHUNK_CONTENT_LENGTH, len(text))
-        if end < len(text):
-            line_break = text.rfind("\n", start, end)
-            if line_break > start:
-                end = line_break + 1
-
-        chunks.append(text[start:end])
-        start = end
-
-    return chunks
-
-
-async def send_telegram_message(
+async def send_telegram_document(
     client: httpx.AsyncClient,
     telegram_url: str,
     chat_id: str,
-    text: str,
+    report: str,
 ) -> None:
-    """Send one Telegram message and normalize upstream failures."""
+    """Upload one complete AR report as a downloadable text document."""
 
     response: httpx.Response | None = None
     try:
+        filename = f"ar-sync-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}.txt"
         response = await client.post(
             telegram_url,
-            json={"chat_id": chat_id, "text": text},
+            data={
+                "chat_id": chat_id,
+                "caption": TELEGRAM_DOCUMENT_CAPTION,
+            },
+            files={
+                "document": (
+                    filename,
+                    report.encode("utf-8"),
+                    "text/plain",
+                )
+            },
         )
         response.raise_for_status()
         telegram_result = response.json()
@@ -114,16 +106,10 @@ async def sync_to_telegram(
             detail="Telegram sync is not configured",
         )
 
-    telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    report_chunks = split_telegram_report(payload.text)
-    total_chunks = len(report_chunks)
+    telegram_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
 
     async with httpx.AsyncClient(timeout=10.0) as client:
-        for index, chunk in enumerate(report_chunks, start=1):
-            message = chunk
-            if total_chunks > 1:
-                message = f"[AR Sync {index}/{total_chunks}]\n{chunk}"
-            await send_telegram_message(client, telegram_url, chat_id, message)
+        await send_telegram_document(client, telegram_url, chat_id, payload.text)
 
     logger.info("[TelegramSync] AR report sent for user_id=%s", current_user.id)
     return {"ok": True}
