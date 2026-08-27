@@ -53,7 +53,11 @@ function buildStats(careState: PetCareState): PetCareStat[] {
 
 export const PetsScreen: React.FC = () => {
   const { pets, loading, refreshing, error, refresh, getPet, setActivePet } = usePets();
-  const { userId, activePet: userActivePet } = useUser();
+  const {
+    userId,
+    activePet: userActivePet,
+    refresh: refreshUser,
+  } = useUser();
   const { t } = useLocale();
   const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
@@ -125,6 +129,10 @@ export const PetsScreen: React.FC = () => {
         .then(([nextActivePet, fullPet]) => {
           if (nextActivePet) {
             setSelectedPet(nextActivePet);
+            // Refresh useUser so the source-of-truth activePet matches the
+            // backend; otherwise the unlock CTA / sync between selector and
+            // detail card can drift until the next /pets/active/current poll.
+            void refreshUser();
             return;
           }
 
@@ -138,7 +146,7 @@ export const PetsScreen: React.FC = () => {
           setIsSelectingPet(false);
         });
     },
-    [getPet, setActivePet, t],
+    [getPet, refreshUser, setActivePet, t],
   );
 
   if (loading && pets.length === 0) {
@@ -203,12 +211,46 @@ export const PetsScreen: React.FC = () => {
                 variant="sm"
                 disabled={isSelectingPet}
                 onPress={() => {
-                  setUnlockContext({
-                    name: activePet.name,
-                    rarity: activePet.rarity,
-                    stage: careState?.stage ?? 'baby',
-                  });
-                  setUnlockVisible(true);
+                  if (activePet.is_active) {
+                    setUnlockContext({
+                      name: activePet.name,
+                      rarity: activePet.rarity,
+                      stage: careState?.stage ?? 'baby',
+                    });
+                    setUnlockVisible(true);
+                    return;
+                  }
+
+                  setIsSelectingPet(true);
+                  setCareStateError(null);
+                  void setActivePet(activePet.pet_id)
+                    .then((activatedPet) => {
+                      if (!activatedPet) {
+                        setCareStateError(t('pets.activePetFailed'));
+                        return;
+                      }
+
+                      const promoted = activatedPet;
+                      setSelectedPet(promoted);
+                      setSelectedPetId(promoted.pet_id);
+                      setUnlockContext({
+                        name: promoted.name,
+                        rarity: promoted.rarity,
+                        stage: careState?.stage ?? 'baby',
+                      });
+                      setUnlockVisible(true);
+                      void refreshUser();
+                    })
+                    .catch((activateError) => {
+                      console.error(
+                        'PetsScreen: activate pet from CTA failed',
+                        activateError,
+                      );
+                      setCareStateError(t('pets.activePetFailed'));
+                    })
+                    .finally(() => {
+                      setIsSelectingPet(false);
+                    });
                 }}
               >
                 {isSelectingPet ? t('pets.updatingActivePet') : t('pets.activePetCta')}
