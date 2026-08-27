@@ -24,6 +24,8 @@ import { LearningPath3D } from "./pages/LearningPath3D";
 import PetsPage from "./pages/PetsPage";
 import StickersPage from "./pages/StickersPage";
 import { DailyChallengePage } from "./pages/DailyChallengePage";
+import { NotebookPage } from "./pages/NotebookPage";
+import { DictionaryPage } from "./pages/DictionaryPage";
 import { Layout } from "./components/Layout";
 import { AIChatBuddy } from "./components/AIChatBuddy";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -299,11 +301,16 @@ const App = () => {
         <Route path="/stickers" element={<RequireUserAuth><Layout><StickersPage /></Layout></RequireUserAuth>} />
         <Route path="/scan" element={<Navigate to="/learn-ar" replace />} />
 
-        {/* Games Routes */}
-        <Route path="/games" element={<Layout><GamesPage /></Layout>} />
-        <Route path="/games/drag-match" element={<Layout><DragMatchGame /></Layout>} />
-        <Route path="/games/memory-pairs" element={<Layout><MemoryPairsGame /></Layout>} />
-        <Route path="/games/color-learn" element={<Layout><ColorLearnGame /></Layout>} />
+        {/* Games Routes — RequireUserAuth: game completion awards XP server-side;
+            unauthenticated/guest play would 401 mid-game and hard-redirect, losing progress */}
+        <Route path="/games" element={<RequireUserAuth><Layout><GamesPage /></Layout></RequireUserAuth>} />
+        <Route path="/games/drag-match" element={<RequireUserAuth><Layout><DragMatchGame /></Layout></RequireUserAuth>} />
+        <Route path="/games/memory-pairs" element={<RequireUserAuth><Layout><MemoryPairsGame /></Layout></RequireUserAuth>} />
+        <Route path="/games/color-learn" element={<RequireUserAuth><Layout><ColorLearnGame /></Layout></RequireUserAuth>} />
+
+        {/* Notebook (SRS) + Dictionary — backend contracts READY (PG-backed) */}
+        <Route path="/notebook" element={<RequireUserAuth><Layout><NotebookPage /></Layout></RequireUserAuth>} />
+        <Route path="/dictionary" element={<RequireUserAuth><Layout><DictionaryPage /></Layout></RequireUserAuth>} />
 
         {/* Admin Routes - Require Teacher/Admin Role with Error Boundary */}
         <Route path="/admin" element={<RequireTeacherRole><AdminErrorBoundary><AdminDashboard /></AdminErrorBoundary></RequireTeacherRole>} />

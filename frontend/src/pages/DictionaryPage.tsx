@@ -10,6 +10,7 @@ import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { Badge } from '../components/ui/Badge';
 import { colors, shadows } from '../design-tokens/claymorphic';
 import { notebookApi } from '../services/notebookApi';
+import { apiClient } from '../services/apiClient';
 import type { TranslateResponse, WordBreakdown, RelatedWord } from '../types/notebook';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -31,23 +32,13 @@ export function DictionaryPage() {
     setSavedWord(null);
 
     try {
-      const response = await fetch('/api/v1/dictionary/translate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: inputText,
-          context: context || undefined,
-          target_lang: 'vi',
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Translation failed');
-      }
-
-      const data: TranslateResponse = await response.json();
+      // apiClient injects the correct API base URL + Bearer token (raw fetch
+      // broke auth and only worked through the dev proxy)
+      const data = await apiClient.post('/api/v1/dictionary/translate', {
+        text: inputText,
+        context: context || undefined,
+        target_lang: 'vi',
+      }) as TranslateResponse;
       setResult(data);
     } catch (err) {
       console.error('[DictionaryPage] Translation failed:', err);
