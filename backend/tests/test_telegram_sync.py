@@ -11,6 +11,7 @@ from pydantic import SecretStr
 
 from api.telegram import (
     TELEGRAM_DOCUMENT_CAPTION,
+    TELEGRAM_DOCUMENT_MEDIA_TYPE,
     TELEGRAM_MAX_REPORT_LENGTH,
     router,
 )
@@ -77,7 +78,7 @@ def test_sync_returns_service_unavailable_when_not_configured(
     assert response.json()["detail"] == "Telegram sync is not configured"
 
 
-def test_sync_forwards_report_as_text_document(
+def test_sync_forwards_report_as_markdown_document(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -111,9 +112,9 @@ def test_sync_forwards_report_as_text_document(
     }
     filename, content, content_type = request.kwargs["files"]["document"]
     assert filename.startswith("ar-sync-")
-    assert filename.endswith(".txt")
+    assert filename.endswith(".md")
     assert content == b"AR report"
-    assert content_type == "text/plain"
+    assert content_type == TELEGRAM_DOCUMENT_MEDIA_TYPE
 
 
 def test_sync_sends_long_reports_as_one_downloadable_document(
@@ -144,9 +145,9 @@ def test_sync_sends_long_reports_as_one_downloadable_document(
     upstream.post.assert_awaited_once()
     request = upstream.post.await_args
     filename, content, content_type = request.kwargs["files"]["document"]
-    assert filename.endswith(".txt")
+    assert filename.endswith(".md")
     assert content == report.encode("utf-8")
-    assert content_type == "text/plain"
+    assert content_type == TELEGRAM_DOCUMENT_MEDIA_TYPE
     assert request.kwargs["data"]["caption"] == TELEGRAM_DOCUMENT_CAPTION
 
 

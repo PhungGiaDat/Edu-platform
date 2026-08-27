@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/telegram", tags=["Telegram"])
 
 TELEGRAM_DOCUMENT_CAPTION = "AR Sync Report - full log attached"
+TELEGRAM_DOCUMENT_MEDIA_TYPE = "text/markdown"
 TELEGRAM_MAX_REPORT_LENGTH = 200_000
 
 
@@ -33,11 +34,11 @@ async def send_telegram_document(
     chat_id: str,
     report: str,
 ) -> None:
-    """Upload one complete AR report as a downloadable text document."""
+    """Upload one complete AR report as a downloadable Markdown document."""
 
     response: httpx.Response | None = None
     try:
-        filename = f"ar-sync-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}.txt"
+        filename = f"ar-sync-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}.md"
         response = await client.post(
             telegram_url,
             data={
@@ -48,7 +49,7 @@ async def send_telegram_document(
                 "document": (
                     filename,
                     report.encode("utf-8"),
-                    "text/plain",
+                    TELEGRAM_DOCUMENT_MEDIA_TYPE,
                 )
             },
         )
