@@ -5,6 +5,9 @@
 
 .opencode
 
+# Local agent permissions and MCP credentials
+.claude/settings.local.json
+
 # Scripts (root level)
 !/scripts/
 scripts/*.py

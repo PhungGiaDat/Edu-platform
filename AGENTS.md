@@ -481,80 +481,79 @@ Your SDLC Agent Team is ready to help with any development task.
 
 ## Graduation Release Execution Policy
 
-### MOBILE-FIRST PRODUCT DIRECTION
+### WEB-FIRST PRODUCT DIRECTION (REVISED)
 
-Effective immediately, the primary graduation-project release target is the native MOBILE application.
+Effective immediately, the primary graduation-project release target is the **MOBILE-WEB APPLICATION in `frontend/`** — a responsive web app optimized for mobile browsers, with progressive enhancement toward a PWA.
 
 Primary implementation surfaces:
-- `mobile/rn/**`
-- `mobile/unity/**`
+- `frontend/**` (responsive mobile-web learner app; PWA-ready)
 - `backend/**`
 
-`frontend/**` is now a **LEGACY / REFERENCE / FALLBACK** surface.
+`mobile/rn/**` and `mobile/unity/**` are **PAUSED**:
+- Do NOT start new feature work on React Native or Unity native surfaces.
+- Keep existing code compiling where practical, but do not invest in parity, polish, or device E2E.
+- They remain reference implementations for API contracts and behavior.
 
-**Do NOT** implement new learner-facing product features in `frontend/**` unless the user explicitly requests them.
-
-**Do NOT** spend implementation time pursuing Web parity while mobile READY work remains.
-
-The Web application may still be used for:
+The native mobile application may still be used for:
 - behavior/reference inspection
 - legacy API contract discovery
-- MindAR-specific maintenance when explicitly assigned
-- regression/compatibility investigation
-- fallback demo support if time remains
-
-Web completeness is NOT a graduation-release gate.
+- regression/compatibility investigation when explicitly assigned
 
 ---
 
 ### RELEASE PRIORITY
 
-When multiple valid tasks are available, prioritize work that moves the physical mobile application closer to end-to-end usability.
+When multiple valid tasks are available, prioritize work that moves the mobile-web application in `frontend/` closer to end-to-end usability.
 
 Preferred priority:
-1. React Native learner shell and navigation
+1. Web learner shell, responsive layout & navigation (mobile-browser-first)
 2. Backend/API connectivity
 3. Courses / Learning Path / Lessons
 4. Interactive Flashcards
 5. Gamification / Progress
 6. Core Educational Games
 7. Pronunciation product integration
-8. Unity native AR integration
+8. PWA progressive enhancement (installability, offline shell) when core flows are stable
 9. Pets / stickers / session-time / reporting
-10. Android physical-device E2E
-11. iOS E2E when environment permits
-12. Legacy Web improvements only if time remains
+10. Cross-browser + mobile-device browser E2E
+11. MindAR/WebAR integration if explicitly assigned
+12. Native RN/Unity work only if explicitly un-paused by the user
 
-Prefer a working vertical slice: `Auth → Course → Lesson → Flashcard → Reward/Progress → AR`
+Prefer a working vertical slice: `Auth → Course → Lesson → Flashcard → Reward/Progress`
 
 ---
 
-### MOBILE RELEASE GATE
+### WEB RELEASE GATE
 
 A feature is not considered fully verified only because unit tests pass.
 
 Use these verification levels:
 - **CODE_VERIFIED**: compile/typecheck/tests pass
-- **RUNTIME_VERIFIED**: feature exercised in emulator/simulator/runtime environment
-- **DEVICE_VERIFIED**: feature exercised on a physical mobile device
+- **RUNTIME_VERIFIED**: feature exercised in a running dev server / browser environment
+- **DEVICE_BROWSER_VERIFIED**: feature exercised in a real mobile browser (Chrome Android / Safari iOS) or responsive-mode emulation
 
-For native AR and final graduation acceptance: **ANDROID DEVICE_VERIFIED is a release gate.**
+For final graduation acceptance: **mobile-browser RUNTIME_VERIFIED is the release gate.**
 
-XR Simulation / Editor validation does NOT replace device verification.
+Desktop-browser-only validation does NOT replace mobile-browser verification for learner-facing flows.
+
+PWA-specific gates (when PWA work is active):
+- installable (manifest + service worker registered)
+- offline shell loads without network
+- no stale-cache regressions after deploy
 
 ---
 
 ### BACKEND CONTRACT STABILITY
 
-React Native and Unity communicate through FastAPI contracts.
+The web app (`frontend/`) and the paused native clients (RN/Unity) communicate through FastAPI contracts.
 
-**Do NOT** couple RN or Unity directly to the persistence implementation.
+**Do NOT** couple any client directly to the persistence implementation.
 
 Required boundary:
 ```
-React Native / Unity
+frontend (web) / RN / Unity
         ↓
-     FastAPI
+      FastAPI
         ↓
 Service / Repository
         ↓
@@ -563,7 +562,7 @@ Service / Repository
 
 Database migrations must preserve externally observable API behavior whenever possible.
 
-**Do NOT** rewrite RN merely because backend persistence changes.
+**Do NOT** rewrite clients merely because backend persistence changes.
 
 ---
 
@@ -591,7 +590,7 @@ Keep:
 - Qdrant for vector/RAG/search responsibilities
 - FastAPI as the backend gateway
 
-**Do NOT** introduce direct RN/Unity database access.
+**Do NOT** introduce direct client (web/RN/Unity) database access.
 
 **Do NOT** add Redis, Kafka, RabbitMQ, CQRS, microservice splits, or other infrastructure unless a demonstrated requirement exists.
 
@@ -610,8 +609,8 @@ For each MongoDB → PostgreSQL domain migration:
 5. Preserve existing API contracts unless a contract change is explicitly approved.
 6. Run the SAME behavioral/regression tests after migration.
 7. Only mark the domain migrated when externally observable behavior remains coherent.
-8. Migrate according to MOBILE dependency priority, not simply collection order.
-9. Do not migrate unused Web-only legacy data merely for theoretical parity if it is not required by the graduation mobile product.
+8. Migrate according to WEB dependency priority, not simply collection order.
+9. Do not migrate unused legacy data merely for theoretical parity if it is not required by the graduation mobile-web product.
 10. Preserve IDs/references where practical to avoid unnecessary frontend, media, AR, or vector-store rewrites.
 
 ---
@@ -635,8 +634,8 @@ authoritative progression response
 
 Rules:
 - backend decides authoritative XP
-- RN does not decide authoritative XP amounts
-- Unity does not persist XP
+- no client (web/RN/Unity) decides authoritative XP amounts
+- clients do not persist authoritative progression
 - retry of the same semantic event must reuse the same `event_id`
 - HTTP retry is NOT a new reward event
 - `event_id` is not the same concept as lesson_id, qr_id, ar_tag, combo_id, or AR Foundation TrackableId
@@ -647,14 +646,15 @@ During PostgreSQL migration, preserve these semantics and reuse the existing ide
 
 ---
 
-### UNITY / AR OWNERSHIP
+### UNITY / AR OWNERSHIP (PAUSED)
 
-Native AR remains:
+Native AR is **PAUSED** under the web-first direction. The architecture below is preserved as reference for when/if native work resumes:
+
 ```
 React Native → Unity host → AR Foundation → image tracking → runtime reference image library → card registry → GLTFast → multi-card/combo → semantic Unity event → RN → authenticated backend mutation
 ```
 
-Rules:
+Rules (reference, not active work):
 - native tracking is IMAGE TRACKING
 - QR identity is business/backend identity, not the native tracking target
 - `.mind` is legacy MindAR-only data
@@ -663,27 +663,24 @@ Rules:
 - TrackableId is runtime/ephemeral identity
 - Unity emits semantic events; backend remains authoritative for rewards
 
-**Do NOT** block native mobile AR development on Web/MindAR parity.
+**Do NOT** start new native AR feature work unless the user explicitly un-pauses it.
 
 ---
 
-### FRONTEND-WEB POLICY
+### FRONTEND-WEB POLICY (PRIMARY SURFACE)
 
-Treat `frontend/**` as legacy unless explicitly assigned.
+`frontend/**` is the **PRIMARY implementation surface** for all learner-facing product work.
 
-Allowed work:
-- critical bug fixes
-- MindAR-specific maintenance explicitly requested by the user
-- behavior/API reference investigation
-- emergency compatibility fixes
+Expected work:
+- new learner product features land here first
+- responsive mobile-browser-first UX
+- PWA progressive enhancement when core flows are stable
+- MindAR/WebAR integration if explicitly assigned
 
 **Do NOT:**
-- port new learner product features to Web
-- redesign Web UI
-- pursue Web/native feature parity
-- spend migration time on unused Web-only flows
-
-If a Web issue does not block: mobile, backend contract, graduation demo, or explicit user requirement — defer it.
+- start new feature work in `mobile/rn/**` or `mobile/unity/**`
+- invest in RN/Unity parity, polish, or device E2E while web-first work remains
+- break existing API contracts consumed by the paused native clients
 
 ---
 
@@ -698,7 +695,7 @@ Current status, test counts, blockers, and completed task IDs belong in:
 
 `AGENTS.md` contains durable execution policy.
 
-Approved specifications/plans remain architectural baselines, but when an older plan conflicts with this explicit MOBILE-FIRST release policy, do not silently follow the older Web-parity priority. Record the conflict and apply the current mobile-first release direction.
+Approved specifications/plans remain architectural baselines, but when an older plan conflicts with this explicit WEB-FIRST release policy, do not silently follow the older mobile-first priority. Record the conflict and apply the current web-first release direction.
 
 ---
 
@@ -723,7 +720,7 @@ when repository evidence is sufficient to implement safely.
 
 ### CURRENT PRODUCT DEFINITION OF DONE
 
-The graduation release is primarily judged by a coherent MOBILE learner experience.
+The graduation release is primarily judged by a coherent MOBILE-WEB learner experience.
 
 Target:
 - authentication works
@@ -735,17 +732,13 @@ Target:
 - meaningful learner actions can award idempotent XP
 - progression is visible
 - core games are usable
-- native Unity AR launches from RN
-- image tracking works on physical Android
-- remote 3D content loads correctly
-- multi-card/combo path works
-- semantic AR events can reach RN/backend
 - PostgreSQL is the authoritative structured persistence after migration
 - Supabase Storage/Qdrant continue in their intended roles
 - demo data is reproducible
-- Android physical-device E2E succeeds
+- mobile-browser E2E (responsive layout, touch interactions) succeeds
+- PWA installability + offline shell (when PWA work is active)
 
-Legacy Web completeness is optional unless explicitly re-promoted.
+Native RN/Unity AR completeness is optional unless explicitly un-paused by the user.
 
 ---
 
