@@ -196,6 +196,24 @@
 
     log('cards', `Viewer configured for ${cardCount} detected card(s)`);
 
+    // ── Engine Monitor Setup ───────────────────────────────────────────
+    // Wire engine state tracking with clean separation of concerns
+    var engineMonitor = window.AREngineMonitor && window.AREngineMonitor.create({
+        emit: function(label, data) {
+            sendDebug('ENGINE_' + label, data);
+        },
+        getLogger: function() {
+            return log;
+        }
+    });
+
+    if (engineMonitor) {
+        engineMonitor.startEngine('mindar');
+        log('💚', 'Engine monitor initialized: tracking MindAR lifecycle');
+    } else {
+        log('⚠️', 'Engine monitor not available - state tracking disabled');
+    }
+
     function retryModelWithFallback(assetItem, modelEl, originalUrl, label) {
         log('fallback', `${label} failed from source URL. Local model fallback is disabled; verify the Supabase object URL and CORS.`, {
             originalUrl,
@@ -1564,6 +1582,12 @@
             log('✅', 'Camera and tracking are now active');
             isReady = true;
             initializationFailureReported = false;
+
+            // ── Engine Monitor: mark ready ───────────────────────────────────
+            if (engineMonitor) {
+                engineMonitor.onEngineReady(Date.now() - initializationStartedAt);
+                engineMonitor.recordHealth('ok', { event: 'arReady' });
+            }
             sendDebug('MINDAR_READY', {
                 targetCount
             });
@@ -1607,6 +1631,12 @@
                             frames = 0;
                             lastTime = now;
                             fpsHistory.push(fps);
+
+                            // ── Engine Monitor: record FPS ─────────────────────────────────
+                            if (engineMonitor) {
+                                engineMonitor.recordFps(fps);
+                            }
+
                             log('📊', `FPS: ${fps} (low-run: ${consecutiveLow}/${CONSECUTIVE})`);
 
                             if (fps < WARNING_FPS) {
@@ -1640,6 +1670,12 @@
             log('❌', 'AR Error details:', e.detail);
             log('❌', 'This usually means MindAR failed to initialize or MIND file is invalid');
             setLoadingText('❌ AR Error');
+
+            // ── Engine Monitor: mark error ───────────────────────────────────
+            if (engineMonitor) {
+                engineMonitor.onEngineError(e.detail || 'Unknown error', 'mindar-initialization');
+                engineMonitor.recordHealth('error', { event: 'arError', detail: e.detail });
+            }
             const overlay = document.getElementById('ar-loading-overlay');
             if (overlay) {
                 overlay.style.opacity = '0';
@@ -1683,6 +1719,15 @@
                 const aframeReady = AFRAME?.scenes?.[0]?.hasLoaded;
                 const hasEntities = scene?.children?.length > 0;
                 log('💚', `Health check #${healthCheckCount}: aframeLoaded=${aframeReady}, entities=${hasEntities}, isReady=${isReady}`);
+
+                // ── Engine Monitor: record health ─────────────────────────────────
+                if (engineMonitor) {
+                    engineMonitor.recordHealth(aframeReady ? 'ok' : 'initializing', {
+                        healthCheckNum: healthCheckCount,
+                        aframeReady: aframeReady,
+                        entities: hasEntities
+                    });
+                }
             }
             if (healthCheckCount > 10) {
                 clearInterval(healthCheckInterval);
@@ -1708,6 +1753,12 @@
                     stage: 'mindar-initialization',
                     elapsedMs: Date.now() - initializationStartedAt
                 });
+
+                // ── Engine Monitor: mark timeout ─────────────────────────────────
+                if (engineMonitor) {
+                    engineMonitor.onTimeout(MINDAR_INITIALIZATION_TIMEOUT_MS);
+                    engineMonitor.recordHealth('timeout', { event: 'timeout', elapsedMs: Date.now() - initializationStartedAt });
+                }
             }
         }, MINDAR_INITIALIZATION_TIMEOUT_MS);
 

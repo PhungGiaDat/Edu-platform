@@ -16,7 +16,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import './LearnAR8thWall.css';
+import '../styles/LearnAR8thWall.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://edu-platform-api-do20.onrender.com';
 
