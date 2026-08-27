@@ -1540,7 +1540,8 @@
     // ============ EVENT LISTENERS ============
     function setupEventListeners() {
         log('🎧', 'Setting up scene event listeners...');
-        
+        log('🎧', 'Scene element tag:', scene?.tagName, 'Components:', Object.keys(scene?.components || {}).join(', '));
+
         scene.addEventListener('arReady', () => {
             log('✅', '🎉 AR READY EVENT FIRED - MindAR initialized successfully!');
             log('✅', 'Camera and tracking are now active');
@@ -1641,11 +1642,35 @@
             log('✅', 'A-Frame scene loaded event fired');
             log('📊', 'Scene children count:', scene.children.length);
         });
-        
+
         // Monitor for any render errors
         scene.addEventListener('renderstart', () => {
             log('🎨', 'Scene render started');
         });
+
+        // Log any A-Frame component errors
+        scene.addEventListener('componenterror', (e) => {
+            log('❌', 'A-Frame component error:', e.detail);
+        });
+
+        // Log schema events for MindAR
+        scene.addEventListener('schemaupdated', (e) => {
+            log('🔧', 'A-Frame schema updated:', e.detail);
+        });
+
+        // Periodic health check - log if arReady hasn't fired after certain time
+        let healthCheckCount = 0;
+        const healthCheckInterval = setInterval(() => {
+            healthCheckCount++;
+            if (!isReady && healthCheckCount <= 10) {
+                const aframeReady = AFRAME?.scenes?.[0]?.hasLoaded;
+                const hasEntities = scene?.children?.length > 0;
+                log('💚', `Health check #${healthCheckCount}: aframeLoaded=${aframeReady}, entities=${hasEntities}, isReady=${isReady}`);
+            }
+            if (healthCheckCount > 10) {
+                clearInterval(healthCheckInterval);
+            }
+        }, 2000);
 
         // A 5MB+ catalog can take well over 12 seconds to initialize on iOS.
         // Keep this below the parent watchdog, but long enough for MindAR to
