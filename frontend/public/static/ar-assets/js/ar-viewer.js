@@ -347,14 +347,38 @@
 
         try {
             const scalePolicy = window.ARModelScale;
-            // Improved mesh discovery: search recursively for any Object3D that contains geometry
+            // Improved mesh discovery: try multiple strategies
             let mesh = modelEl?.getObject3D?.('mesh');
+
+            // Strategy 1: Direct getObject3D
+            if (mesh) {
+                log('📐', `Mesh found via getObject3D for ${modelEl.id}`);
+            }
+
+            // Strategy 2: Traverse object3D for any mesh with geometry
             if (!mesh && modelEl?.object3D) {
                 modelEl.object3D.traverse(function(obj) {
-                    if (!mesh && (obj.isMesh || (obj.type === 'Group' && obj.children.length > 0))) {
+                    if (!mesh && obj.isMesh && obj.geometry && obj.geometry.attributes.position) {
                         mesh = obj;
+                        log('📐', `Mesh found via traverse: ${obj.type}, geometry: ${obj.geometry.type}`);
                     }
                 });
+            }
+
+            // Strategy 3: Check if model has loaded scene directly
+            if (!mesh && modelEl?.getAttribute?.('gltf-model')) {
+                const src = modelEl.getAttribute('src') || modelEl.getAttribute('gltf-model');
+                log('📐', `Checking GLTF src: ${src}`);
+                // A-Frame stores loaded model in components
+                const comp = modelEl.components?.['gltf-model'] || modelEl.components?.gltf;
+                if (comp?.scene) {
+                    comp.scene.traverse(function(obj) {
+                        if (!mesh && obj.isMesh && obj.geometry && obj.geometry.attributes.position) {
+                            mesh = obj;
+                            log('📐', `Mesh found via gltf-component scene traverse`);
+                        }
+                    });
+                }
             }
 
             if (!scalePolicy || !mesh || typeof THREE === 'undefined') {
@@ -668,12 +692,13 @@
             return;
         }
 
-        // Handle REQUEST_IFRAME_LOGS: send recent console logs to the parent.
+        // Handle REQUEST_IFRAME_LOGS: send the complete current buffer to the parent.
         if (type === 'REQUEST_IFRAME_LOGS') {
             log('📤', 'Sending iframe logs to parent for debug sync');
             sendToParent('IFRAME_LOGS', {
-                logs: iframeLogBuffer.slice(-200).join('\n'), // Last 200 logs
-                count: Math.min(iframeLogBuffer.length, 200)
+                requestId: typeof payload.requestId === 'string' ? payload.requestId : undefined,
+                logs: iframeLogBuffer.slice().join('\n'),
+                count: iframeLogBuffer.length
             });
             return;
         }
