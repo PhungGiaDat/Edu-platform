@@ -352,7 +352,14 @@
 
             // Strategy 1: Direct getObject3D
             if (mesh) {
-                log('📐', `Mesh found via getObject3D for ${modelEl.id}`);
+                // Detailed mesh state logging
+                const hasGeometry = Boolean(mesh.geometry);
+                const hasPosition = hasGeometry && Boolean(mesh.geometry.attributes?.position);
+                const positionCount = hasPosition ? mesh.geometry.attributes.position.count : 0;
+                const hasBoundingBox = hasGeometry && Boolean(mesh.geometry.boundingBox);
+                const boundingBoxValid = hasBoundingBox && mesh.geometry.boundingBox &&
+                    Number.isFinite(mesh.geometry.boundingBox.min?.x);
+                log('📐', `Mesh found via getObject3D for ${modelEl.id}: geometry=${hasGeometry}, position=${hasPosition}, count=${positionCount}, bbValid=${boundingBoxValid}`);
             }
 
             // Strategy 2: Traverse object3D for any mesh with geometry
@@ -401,6 +408,16 @@
             } else if (typeof mesh.updateMatrixWorld === 'function') {
                 mesh.updateMatrixWorld(true);
             }
+
+            // Detailed mesh state before bounding box calculation
+            const meshType = mesh.type || 'unknown';
+            const hasGeo = Boolean(mesh.geometry);
+            const hasPos = hasGeo && Boolean(mesh.geometry.attributes?.position);
+            const posCount = hasPos ? mesh.geometry.attributes.position.count : 0;
+            const hasBB = hasGeo && Boolean(mesh.geometry.boundingBox);
+            const bbMin = hasGeo && mesh.geometry.boundingBox?.min;
+            const bbMax = hasGeo && mesh.geometry.boundingBox?.max;
+            log('📐', `Pre-Box3 mesh state: type=${meshType}, geometry=${hasGeo}, position=${hasPos}, posCount=${posCount}, hasBB=${hasBB}, bbMin=${bbMin ? `${bbMin.x.toFixed(2)},${bbMin.y.toFixed(2)},${bbMin.z.toFixed(2)}` : 'null'}, bbMax=${bbMax ? `${bbMax.x.toFixed(2)},${bbMax.y.toFixed(2)},${bbMax.z.toFixed(2)}` : 'null'}`);
 
             const box = new THREE.Box3().setFromObject(mesh);
             if (typeof box.isEmpty === 'function' && box.isEmpty()) {
