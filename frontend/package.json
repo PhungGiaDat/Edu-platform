@@ -17,9 +17,10 @@
     "ar:catalog:verify": "vitest run src/__tests__/mindCatalogContract.test.ts",
     "ar:catalog:verify-remote": "node scripts/verifyRemoteMindCatalog.mjs",
     "vendor:jsqr": "node scripts/vendor-jsqr.cjs",
-    "postinstall": "node scripts/vendor-jsqr.cjs"
+    "postinstall": "node scripts/vendor-jsqr.cjs && node scripts/vendor-8thwall.cjs"
   },
   "dependencies": {
+    "@8thwall/engine-binary": "^1.0.0",
     "@msgpack/msgpack": "^3.1.2",
     "@react-three/drei": "^9.88.13",
     "@react-three/fiber": "^8.15.11",
