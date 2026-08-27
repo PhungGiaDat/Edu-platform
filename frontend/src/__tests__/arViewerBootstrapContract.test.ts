@@ -62,6 +62,14 @@ describe('AR viewer bootstrap fail-fast contract', () => {
     expect(viewerJs).toContain("case 'BEGIN_ADD_CARD_SCAN'");
   });
 
+  it('returns the complete retained iframe log buffer with request correlation', () => {
+    expect(viewerJs).toContain(
+      "requestId: typeof payload.requestId === 'string' ? payload.requestId : undefined",
+    );
+    expect(viewerJs).toContain("logs: iframeLogBuffer.slice().join('\\n')");
+    expect(viewerJs).not.toContain('iframeLogBuffer.slice(-200)');
+  });
+
   it('applyActiveTargets does not call showImageFallbackForTarget on model error', () => {
     // The new applyActiveTargets() must reject via ACTIVE_TARGETS_REJECTED
     // and must NOT fall back to the legacy showImageFallbackForTarget path.

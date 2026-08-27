@@ -9,6 +9,7 @@ import { HapticService } from '@/services/HapticService';
 import { apiClient } from '@/services/apiClient';
 
 export const TELEGRAM_MESSAGE_LIMIT = 4096;
+const IFRAME_LOG_REQUEST_TIMEOUT_MS = 1000;
 
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
 
@@ -17,12 +18,6 @@ interface TelegramMessageInput {
   manualOffset: { x: number; y: number };
   flashcardCount: number;
   engine: string;
-}
-
-function truncateTail(value: string, maxLength: number): string {
-  if (value.length <= maxLength) return value;
-  if (maxLength <= 3) return value.slice(-maxLength);
-  return `...${value.slice(-(maxLength - 3))}`;
 }
 
 export function buildTelegramMessage({
@@ -39,11 +34,10 @@ export function buildTelegramMessage({
     `Time: ${new Date().toISOString()}\n\n` +
     `Logs Snapshot:\n`;
 
-  if (metadata.length >= TELEGRAM_MESSAGE_LIMIT) {
-    return metadata.slice(0, TELEGRAM_MESSAGE_LIMIT);
-  }
-
-  return metadata + truncateTail(logs, TELEGRAM_MESSAGE_LIMIT - metadata.length);
+  // Telegram's per-message limit is enforced by the backend, which splits the
+  // complete report into ordered messages. Keep the complete snapshot here so
+  // the beginning of the diagnostic session is not silently discarded.
+  return metadata + logs;
 }
 
 interface UseTelegramSyncOptions {
@@ -58,6 +52,17 @@ interface UseTelegramSyncOptions {
 interface MobileDebugApi {
   getLogs?: () => string;
   activeEngine?: string;
+}
+
+interface IframeLogsPayload {
+  requestId?: string;
+  logs?: string;
+}
+
+interface PendingIframeLogsRequest {
+  requestId: string;
+  resolve: (logs: string) => void;
+  timeoutId: number;
 }
 
 function getMobileDebug(): MobileDebugApi | undefined {
@@ -75,19 +80,70 @@ export function useTelegramSync({
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [iframeLogs, setIframeLogs] = useState<string>('');
   const iframeLogsRef = useRef('');
+  const pendingIframeLogsRef = useRef<PendingIframeLogsRequest | null>(null);
+  const iframeLogRequestSequenceRef = useRef(0);
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
       if (event.data?.type !== 'IFRAME_LOGS') return;
 
-      const logs = event.data.payload?.logs || '';
+      const iframeWindow = iframeRef.current?.contentWindow;
+      if (event.source && iframeWindow && event.source !== iframeWindow) return;
+
+      const payload = (event.data.payload || {}) as IframeLogsPayload;
+      const logs = typeof payload.logs === 'string' ? payload.logs : '';
       iframeLogsRef.current = logs;
       setIframeLogs(logs);
+
+      const pendingRequest = pendingIframeLogsRef.current;
+      if (!pendingRequest || payload.requestId !== pendingRequest.requestId) return;
+
+      window.clearTimeout(pendingRequest.timeoutId);
+      pendingIframeLogsRef.current = null;
+      pendingRequest.resolve(logs);
     };
 
     window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
-  }, []);
+    return () => {
+      window.removeEventListener('message', handler);
+      const pendingRequest = pendingIframeLogsRef.current;
+      if (!pendingRequest) return;
+
+      window.clearTimeout(pendingRequest.timeoutId);
+      pendingIframeLogsRef.current = null;
+      pendingRequest.resolve(iframeLogsRef.current);
+    };
+  }, [iframeRef]);
+
+  const requestIframeLogs = useCallback((): Promise<string> => {
+    const iframeWindow = iframeRef.current?.contentWindow;
+    if (!iframeWindow) return Promise.resolve(iframeLogsRef.current);
+
+    const requestId = `telegram-log-${Date.now()}-${iframeLogRequestSequenceRef.current++}`;
+
+    return new Promise((resolve) => {
+      const timeoutId = window.setTimeout(() => {
+        const pendingRequest = pendingIframeLogsRef.current;
+        if (!pendingRequest || pendingRequest.requestId !== requestId) return;
+
+        pendingIframeLogsRef.current = null;
+        resolve(iframeLogsRef.current);
+      }, IFRAME_LOG_REQUEST_TIMEOUT_MS);
+
+      pendingIframeLogsRef.current = { requestId, resolve, timeoutId };
+
+      try {
+        iframeWindow.postMessage(
+          { type: 'REQUEST_IFRAME_LOGS', payload: { requestId } },
+          '*',
+        );
+      } catch {
+        window.clearTimeout(timeoutId);
+        pendingIframeLogsRef.current = null;
+        resolve(iframeLogsRef.current);
+      }
+    });
+  }, [iframeRef]);
 
   const syncTelegram = useCallback(async () => {
     if (!enabled || syncStatus === 'syncing') return;
@@ -95,17 +151,12 @@ export function useTelegramSync({
     setSyncStatus('syncing');
     HapticService.tap();
 
-    iframeRef.current?.contentWindow?.postMessage(
-      { type: 'REQUEST_IFRAME_LOGS' },
-      '*',
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const currentIframeLogs = await requestIframeLogs();
 
     const parentLogs = getParentLogs();
     let allLogs = `=== PARENT LOGS ===\n${parentLogs}`;
-    if (iframeLogsRef.current) {
-      allLogs += `\n\n=== IFRAME LOGS (Last 200) ===\n${iframeLogsRef.current}`;
+    if (currentIframeLogs) {
+      allLogs += `\n\n=== IFRAME LOGS (buffer snapshot) ===\n${currentIframeLogs}`;
     }
 
     const text = buildTelegramMessage({
@@ -131,6 +182,7 @@ export function useTelegramSync({
     enabled,
     syncStatus,
     iframeRef,
+    requestIframeLogs,
     manualOffset,
     flashcardCount,
     getParentLogs,
