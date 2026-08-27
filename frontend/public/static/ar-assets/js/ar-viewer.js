@@ -45,12 +45,6 @@
     const MAX_IFRAME_LOGS = 500;
     const iframeLogBuffer = [];
 
-    // Discord sync — assigned at bottom of IIFE; stub here so handler can reference it
-    let syncToDiscordStub = function() {
-        console.warn('[AR-Viewer] syncToDiscord not yet initialized');
-    };
-    window.syncToDiscord = syncToDiscordStub;
-
     // ============ URL PARAMS ============
     const params = new URLSearchParams(window.location.search);
     const catalogIdParam = params.get('catalogId');
@@ -649,7 +643,7 @@
         const type = data.type;
         const payload = data.payload || data;
 
-        // Realtime Offset & Discord Sync Handling
+        // Realtime Offset & Debug Log Handling
         if (type === 'UPDATE_MANUAL_OFFSET') {
             pModelOffsetX = typeof payload.x === 'number' ? payload.x : pModelOffsetX;
             pModelOffsetY = typeof payload.y === 'number' ? payload.y : pModelOffsetY;
@@ -674,20 +668,10 @@
             return;
         }
 
-        if (type === 'SYNC_DISCORD_REQUEST') {
-            log('🚀', 'Discord Sync requested by parent');
-            if (typeof window.syncToDiscord === 'function') {
-                window.syncToDiscord();
-            } else {
-                log('❌', 'Discord sync function not available in iframe');
-            }
-            return;
-        }
-
-        // Handle REQUEST_IFRAME_LOGS: send recent console logs to parent for Discord sync
+        // Handle REQUEST_IFRAME_LOGS: send recent console logs to the parent.
         if (type === 'REQUEST_IFRAME_LOGS') {
-            log('📤', 'Sending iframe logs to parent for Discord sync');
-            sendToParent('IFRAME_LOGS_FOR_DISCORD', {
+            log('📤', 'Sending iframe logs to parent for debug sync');
+            sendToParent('IFRAME_LOGS', {
                 logs: iframeLogBuffer.slice(-200).join('\n'), // Last 200 logs
                 count: Math.min(iframeLogBuffer.length, 200)
             });
@@ -3075,29 +3059,6 @@
             console.log(`[AR-Viewer] ${emoji} ${message}`);
         }
     }
-
-    // ============ DISCORD SYNC ============
-    // Use extracted ARDiscordSync module
-    if (typeof window.ARDiscordSync !== 'undefined') {
-        var discordSync = window.ARDiscordSync.create({
-            webhookUrl: 'https://discord.com/api/webhooks/1542098492200189964/sP6wSXxxHXqm7uFVn3s1W_sfHLwKaqW1T2kg1GP5e6JvcGKlKeFA2TDDFO-Lo-F4K0Is',
-            getLogs: function() { return iframeLogBuffer.slice(-200).join('\n'); },
-            getMetadata: function() { return {
-                offsetX: pModelOffsetX,
-                offsetY: pModelOffsetY,
-                offsetZ: pModelOffsetZ,
-                catalogId: currentCatalogId,
-                engine: 'MindAR'
-            }; },
-            onSuccess: function() { log('✅', 'Discord sync: success'); },
-            onError: function(msg) { log('❌', 'Discord sync: ' + msg); }
-        });
-        syncToDiscordStub = function() {
-            log('🚀', 'Discord sync: sending ' + iframeLogBuffer.length + ' logs');
-            discordSync.sync();
-        };
-    }
-    window.syncToDiscord = syncToDiscordStub;
 
     // ============ HIDE MINDAR LOADING UI ============
     /**

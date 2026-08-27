@@ -439,7 +439,7 @@
             if (data && typeof data === 'object' && data.type) {
                 const typeStr = String(data.type);
 
-                // Buffer iframe console logs for Discord sync
+                // Buffer iframe console logs for debug sync
                 // VIEWER_CONSOLE_* messages are forwarded from ar-viewer.html console bridge
                 if (data.payload && data.payload.label && data.payload.label.startsWith('VIEWER_CONSOLE_')) {
                     const iframeLog = `[iframe] ${data.payload.details && data.payload.details.text ? data.payload.details.text : data.payload.details || ''}`;

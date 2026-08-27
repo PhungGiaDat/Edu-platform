@@ -40,7 +40,7 @@ import { useGamification } from '@/hooks/useGamification';
 import { useMultiFlashcard } from '@/hooks/useMultiFlashcard';
 import { useFlashcardSnapshot } from '@/hooks/useFlashcardSnapshot';
 import { useARFallback } from '@/hooks/useARFallback';
-import { useDiscordSync } from '@/hooks/useDiscordSync';
+import { useTelegramSync } from '@/hooks/useTelegramSync';
 import { HapticService } from '@/services/HapticService';
 import { SoundEffectService } from '@/services/SoundEffectService';
 import { SpeechService } from '@/services/SpeechService';
@@ -522,6 +522,12 @@ export default function LearnARV2() {
 
     // Derive user ID from JWT; guest mode has no user id and must stay read-only
     const USER_ID = isGuest ? null : (user?.id ?? null);
+    const canSyncTelegram = isAuthenticated && (
+        user?.is_superuser === true ||
+        user?.role === 'teacher' ||
+        user?.role === 'admin' ||
+        user?.roles?.some(role => role === 'teacher' || role === 'admin') === true
+    );
 
     // ========== STATE ==========
     const [appState, setAppState] = useState<AppState>('SCANNING');
@@ -585,10 +591,11 @@ export default function LearnARV2() {
     const [manualOffset, setManualOffset] = useState({ x: 0, y: 0 });
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
-    const { syncDiscord, syncStatus } = useDiscordSync({
+    const { syncTelegram, syncStatus } = useTelegramSync({
         iframeRef,
         manualOffset,
         flashcardCount,
+        enabled: canSyncTelegram,
     });
 
     const handleAdjustOffset = useCallback((axis: 'x' | 'y', delta: number) => {
@@ -1567,21 +1574,22 @@ export default function LearnARV2() {
 
 				                        <button 
 				                            type="button"
-				                            onClick={syncDiscord}
-				                            disabled={syncStatus === 'syncing'}
+					                            onClick={syncTelegram}
+					                            disabled={!canSyncTelegram || syncStatus === 'syncing'}
 				                            style={{
 				                                marginTop: 4, padding: '8px 12px', 
-				                                background: syncStatus === 'success' ? '#3ba55c' : (syncStatus === 'error' ? '#ed4245' : '#5865F2'), 
+					                                background: syncStatus === 'success' ? '#3ba55c' : (syncStatus === 'error' ? '#ed4245' : '#229ED9'),
 				                                color: 'white',
 				                                border: 'none', borderRadius: 14, fontWeight: 800, fontSize: 11,
-				                                cursor: syncStatus === 'syncing' ? 'wait' : 'pointer',
+					                                cursor: !canSyncTelegram ? 'not-allowed' : (syncStatus === 'syncing' ? 'wait' : 'pointer'),
 				                                transition: 'all 0.3s ease',
-				                                opacity: syncStatus === 'syncing' ? 0.7 : 1
+					                                opacity: !canSyncTelegram || syncStatus === 'syncing' ? 0.7 : 1
 				                            }}
 				                        >
-				                            {syncStatus === 'syncing' ? '⌛ Syncing...' : 
+					                            {!canSyncTelegram ? '🔒 Teacher access required' :
+					                             syncStatus === 'syncing' ? '⌛ Syncing...' :
 				                             syncStatus === 'success' ? '✅ Synced!' : 
-				                             syncStatus === 'error' ? '❌ Failed' : '🚀 Sync Discord'}
+				                             syncStatus === 'error' ? '❌ Failed' : '🚀 Sync Telegram'}
 				                        </button>
 				                    </div>
 				                </div>
