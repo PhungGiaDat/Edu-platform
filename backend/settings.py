@@ -76,6 +76,11 @@ class Settings(BaseSettings):
     # Dicebear (or compatible) avatar service base URL.
     AVATAR_SERVICE_URL: str = "https://api.dicebear.com/7.x/avataaars/svg"
 
+    # Telegram debug sync. These values are server-only and must never be
+    # exposed through the frontend bundle.
+    TELEGRAM_BOT_TOKEN: Optional[SecretStr] = None
+    TELEGRAM_CHAT_ID: Optional[str] = None
+
     # ========== Frontend Origin (CORS — single prod origin) ==========
     # Required. The deployed Vercel frontend origin (no trailing slash).
     DEFAULT_FRONTEND_ORIGIN: str

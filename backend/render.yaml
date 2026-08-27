@@ -54,6 +54,12 @@ services:
       - key: AVATAR_SERVICE_URL
         value: https://api.dicebear.com/7.x/avataaars/svg
 
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false  # Set in Render dashboard; keep server-only
+
+      - key: TELEGRAM_CHAT_ID
+        sync: false  # Set in Render dashboard
+
       - key: DEFAULT_FRONTEND_ORIGIN
         sync: false  # Set to the deployed Vercel frontend origin
     

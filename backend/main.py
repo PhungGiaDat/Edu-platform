@@ -45,6 +45,7 @@ from api import (
     notebook_router,
     dictionary_router,
     vocabulary_topics_router,
+    telegram_router,
 )
 from api.pronunciation_enhanced import router as pronunciation_enhanced_router
 from api.lessons import router as lessons_router
@@ -338,6 +339,12 @@ app.include_router(
     vocabulary_topics_router,
     prefix=settings.API_V1_PREFIX,
     tags=["Vocabulary Topics"]
+)
+
+app.include_router(
+    telegram_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Telegram"]
 )
 
 logger.info("✅ All routers registered")
