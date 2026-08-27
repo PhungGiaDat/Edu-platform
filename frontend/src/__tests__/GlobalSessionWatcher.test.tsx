@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GlobalSessionWatcher } from '../components/GlobalSessionWatcher';
 import { BreakReminder } from '../components/BreakReminder';
 import { SessionProvider } from '../context/SessionContext';
+import { LocaleProvider } from '../contexts/LocaleContext';
 
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({ isAuthenticated: false, isGuest: false }),
@@ -15,24 +16,26 @@ vi.mock('../contexts/AuthContext', () => ({
 
 function renderWatcher(initialPath: string) {
   return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <SessionProvider>
-        <Routes>
-          <Route
-            path="/courses/animals"
-            element={(
-              <>
-                <button type="button">Obscured course control</button>
-                <div data-testid="course-route" />
-              </>
-            )}
-          />
-          <Route path="/learn-ar" element={<div data-testid="learn-ar-route" />} />
-          <Route path="/profile" element={<div data-testid="profile-route" />} />
-        </Routes>
-        <GlobalSessionWatcher />
-      </SessionProvider>
-    </MemoryRouter>,
+    <LocaleProvider>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <SessionProvider>
+          <Routes>
+            <Route
+              path="/courses/animals"
+              element={(
+                <>
+                  <button type="button">Obscured course control</button>
+                  <div data-testid="course-route" />
+                </>
+              )}
+            />
+            <Route path="/learn-ar" element={<div data-testid="learn-ar-route" />} />
+            <Route path="/profile" element={<div data-testid="profile-route" />} />
+          </Routes>
+          <GlobalSessionWatcher />
+        </SessionProvider>
+      </MemoryRouter>
+    </LocaleProvider>,
   );
 }
 
@@ -72,6 +75,26 @@ describe('GlobalSessionWatcher', () => {
     expect(screen.queryByText('Time for a Break!')).not.toBeInTheDocument();
     expect(JSON.parse(localStorage.getItem('edu_session_state_v1')!).phase).toBe('on_break');
     expect(screen.queryByRole('button', { name: /10 more minutes/i })).not.toBeInTheDocument();
+  });
+
+  it('renders the session reminder in Vietnamese when the selected locale is Vietnamese', () => {
+    localStorage.setItem('edu-platform-locale', 'vi');
+    render(
+      <LocaleProvider>
+        <BreakReminder
+          isWarning
+          isLimitReached={false}
+          remainingSeconds={65}
+          onContinue={vi.fn()}
+          onExit={vi.fn()}
+        />
+      </LocaleProvider>,
+    );
+
+    expect(screen.getByText('Sắp đến giờ nghỉ rồi!')).toBeInTheDocument();
+    expect(screen.getByText('Còn 1 phút 5 giây nữa thôi! Bạn đã học rất chăm chỉ hôm nay!')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /tiếp tục học/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /thoát lúc này/i })).toBeInTheDocument();
   });
 
   it('shows a cooldown notice on learning routes and returns to the profile', async () => {
@@ -129,24 +152,28 @@ describe('GlobalSessionWatcher', () => {
 
     try {
       const { rerender } = render(
-        <BreakReminder
-          isWarning
-          isLimitReached={false}
-          remainingSeconds={60}
-          onContinue={vi.fn()}
-          onExit={vi.fn()}
-        />,
+        <LocaleProvider>
+          <BreakReminder
+            isWarning
+            isLimitReached={false}
+            remainingSeconds={60}
+            onContinue={vi.fn()}
+            onExit={vi.fn()}
+          />
+        </LocaleProvider>,
       );
 
       expect(screen.getByRole('button', { name: /keep going/i })).toHaveFocus();
 
       rerender(
-        <BreakReminder
-          isWarning={false}
-          isLimitReached
-          remainingSeconds={0}
-          onExit={vi.fn()}
-        />,
+        <LocaleProvider>
+          <BreakReminder
+            isWarning={false}
+            isLimitReached
+            remainingSeconds={0}
+            onExit={vi.fn()}
+          />
+        </LocaleProvider>,
       );
 
       const takeBreak = screen.getByRole('button', { name: /take a break/i });

@@ -37,7 +37,9 @@ describe('PetsScreen Task #6 — active pet + care-state wiring', () => {
       'PetsScreen should import useUser',
     );
     assert.ok(
-      petsScreenSrc.includes('const { userId, activePet: userActivePet } = useUser();'),
+      petsScreenSrc.includes('userId,') &&
+        petsScreenSrc.includes('activePet: userActivePet,') &&
+        petsScreenSrc.includes('} = useUser();'),
       'PetsScreen should read userId and activePet from useUser()',
     );
     assert.ok(
@@ -77,6 +79,35 @@ describe('PetsScreen Task #6 — active pet + care-state wiring', () => {
     assert.ok(
       petsScreenSrc.includes('Promise.all([setActivePet(pet.pet_id), getPet(pet.pet_id)])'),
       'PetsScreen should persist the selected pet before resolving its details',
+    );
+  });
+
+  it('activates the pet from the detail-card CTA before showing the unlock modal', () => {
+    // The CTA must trigger setActivePet, not just open the modal.
+    assert.ok(
+      petsScreenSrc.includes("void setActivePet(activePet.pet_id)"),
+      'PetsScreen CTA handler should call setActivePet for the displayed pet',
+    );
+    assert.ok(
+      petsScreenSrc.includes('setUnlockVisible(true);'),
+      'PetsScreen CTA handler should still surface the unlock celebration modal',
+    );
+    // The CTA path must keep the in-flight guard so we do not flash the modal
+    // before the backend has confirmed activation.
+    assert.ok(
+      petsScreenSrc.includes('setIsSelectingPet(true);'),
+      'PetsScreen CTA handler should toggle the selecting flag around the activation call',
+    );
+  });
+
+  it('refreshes useUser active pet after a successful activation', () => {
+    assert.ok(
+      petsScreenSrc.includes('refresh: refreshUser'),
+      'PetsScreen should destructure refreshUser from useUser',
+    );
+    assert.ok(
+      petsScreenSrc.includes('void refreshUser();'),
+      'PetsScreen should re-fetch useUser after setActivePet resolves',
     );
   });
 

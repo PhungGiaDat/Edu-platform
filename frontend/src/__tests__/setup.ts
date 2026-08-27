@@ -13,6 +13,9 @@ declare global {
   }
 }
 
+// Mock Element.scrollIntoView (jsdom doesn't implement it)
+Element.prototype.scrollIntoView = vi.fn();
+
 // Mock IntersectionObserver
 const mockIntersectionObserver = vi.fn(() => ({
   observe: vi.fn(),
