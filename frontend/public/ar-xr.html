@@ -602,18 +602,23 @@
           animationFrameId = requestAnimationFrame(check);
           return;
         }
-        const frameData = window.XR8.XrController.frameData();
-        if (frameData) {
-          const detected = frameData.detectedImages || [];
-          const targetName = qrId || word;
-          const found = detected.some(img => img.name === targetName);
-          if (found && !trackedTargets.has(targetName)) {
-            trackedTargets.add(targetName);
-            onTargetFound(targetName);
-          } else if (!found && trackedTargets.has(targetName)) {
-            trackedTargets.delete(targetName);
-            onTargetLost(targetName);
+        try {
+          const fd = window.XR8.XrController.frameData;
+          const frameData = typeof fd === 'function' ? fd() : null;
+          if (frameData) {
+            const detected = frameData.detectedImages || [];
+            const targetName = qrId || word;
+            const found = detected.some(img => img.name === targetName);
+            if (found && !trackedTargets.has(targetName)) {
+              trackedTargets.add(targetName);
+              onTargetFound(targetName);
+            } else if (!found && trackedTargets.has(targetName)) {
+              trackedTargets.delete(targetName);
+              onTargetLost(targetName);
+            }
           }
+        } catch(e) {
+          // frameData API may not exist in this SDK version — silently ignore
         }
         animationFrameId = requestAnimationFrame(check);
       }
