@@ -66,13 +66,20 @@ export const LearnAR8thWall: React.FC = () => {
   // All scanned cards this session
   const [foundCards, setFoundCards] = useState<Set<string>>(new Set());
 
+  // Buffer AR_DEBUG messages from viewer iframe for Telegram sync
+  const arDebugBufferRef = useRef<string[]>([]);
+
   // Telegram Sync integration
   const { syncTelegram, syncStatus, iframeLogs } = useTelegramSync({
     iframeRef: viewerRef,
     flashcardCount: foundCards.size || 1,
     getParentLogs: () => {
       const md = (window as any).MobileDebug;
-      return md?.getLogs?.() || 'No parent logs available';
+      const mdLogs = md?.getLogs?.() || '';
+      const arDebugLogs = arDebugBufferRef.current.join('\n') || '';
+      const parentLogs = mdLogs || 'No MobileDebug logs';
+      const debugLogs = arDebugLogs || 'No AR_DEBUG logs';
+      return `=== MOBILE DEBUG ===\n${parentLogs}\n\n=== PARENT AR_DEBUG BUFFER ===\n${debugLogs}`;
     },
     getActiveEngine: () => '8th-wall',
   });
@@ -178,7 +185,13 @@ export const LearnAR8thWall: React.FC = () => {
       if (!data || typeof data.type !== 'string') return;
 
       if (data.type === 'AR_DEBUG') {
-        console.log('[LearnAR8thWall:viewer]', data.payload?.label, data.payload?.details);
+        const label = data.payload?.label || '?';
+        const details = data.payload?.details || {};
+        const ts = new Date().toISOString().substring(11, 23);
+        const entry = `${ts} [${label}] ${JSON.stringify(details)}`;
+        arDebugBufferRef.current.push(entry);
+        if (arDebugBufferRef.current.length > 200) arDebugBufferRef.current.shift();
+        console.log('[LearnAR8thWall:viewer]', label, details);
         return;
       }
 

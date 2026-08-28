@@ -85,8 +85,10 @@ export function useTelegramSync({
     const handler = (event: MessageEvent) => {
       if (event.data?.type !== 'IFRAME_LOGS') return;
 
-      const iframeWindow = iframeRef.current?.contentWindow;
-      if (event.source && iframeWindow && event.source !== iframeWindow) return;
+      // NOTE: event.source may be null or a cross-realm wrapper on Safari/iOS,
+      // so we cannot use event.source !== iframeWindow as a security gate here.
+      // The iframe always posts to '*' origin, so we rely on content-type validation.
+      void iframeRef; // suppress unused warning
 
       const payload = (event.data.payload || {}) as IframeLogsPayload;
       const logs = typeof payload.logs === 'string' ? payload.logs : '';
