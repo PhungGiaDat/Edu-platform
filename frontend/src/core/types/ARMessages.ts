@@ -58,6 +58,7 @@ export type ARMessageType =
     // Tracking (Child → Parent)
     | 'SCANNER_READY'
     | 'QR_DETECTED'
+    | 'SCANNER_CAMERA_RELEASED'
     | 'SCANNER_ERROR'
     | 'VIEWER_TARGETS_READY'
     | 'AR_READY'
@@ -136,6 +137,7 @@ export interface ARMessagePayloadMap {
     SCANNER_ERROR: {
         error: string;
     };
+    SCANNER_CAMERA_RELEASED: Record<string, never>;
 
     // AR Viewer
     VIEWER_TARGETS_READY: {

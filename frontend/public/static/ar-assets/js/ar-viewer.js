@@ -601,21 +601,12 @@
         modelEl.__arDynamicScaleWired = true;
         modelEl.__arScaleSettled = false; // Track if scale callback was called
         modelEl.addEventListener('model-loaded', () => {
-            // Poll for mesh availability — A-Frame may fire model-loaded before
-            // the mesh is actually accessible via getObject3D('mesh').
-            let attempts = 0;
-            const MAX_ATTEMPTS = 20;
-            const POLL_INTERVAL = 50; // ms
-            function tryApplyScale() {
-                attempts++;
-                const isFinalAttempt = attempts >= MAX_ATTEMPTS;
-                const result = applyDynamicModelScale(modelEl, modelEl.__arDynamicScaleOptions, isFinalAttempt);
-                if (result === null && !isFinalAttempt) {
-                    log('⏳', `Mesh not ready (attempt ${attempts}/${MAX_ATTEMPTS}), retrying...`);
-                    setTimeout(tryApplyScale, POLL_INTERVAL);
-                }
+            // Apply scale once on model-loaded - no polling needed
+            // A-Frame guarantees mesh is ready when model-loaded fires
+            const result = applyDynamicModelScale(modelEl, modelEl.__arDynamicScaleOptions, true);
+            if (result === null) {
+                log('⚠️', `Dynamic scale failed for ${modelEl.id}, using fallback`);
             }
-            tryApplyScale();
         });
     }
 
@@ -1261,11 +1252,30 @@
             activeConfig: scene.getAttribute('mindar-image')
         });
 
-        // ── Task 7: pre-create every catalog anchor before MindAR starts ──
-        if (window.ARTargetRegistry) {
-            targetRegistry = window.ARTargetRegistry.create({ catalogId: currentCatalogId, targetCount: targetCount });
+        // ── Task 7: Create catalog anchors AFTER scene.loaded to avoid A-Frame warnings ──
+        // The anchor creation must happen after the A-Frame scene is fully initialized,
+        // otherwise we get "attempting to attach <A-IMAGE>/<A-ENTITY> outside of an A-Frame scene"
+        function setupAnchorsWhenReady() {
+            if (window.ARTargetRegistry) {
+                targetRegistry = window.ARTargetRegistry.create({ catalogId: currentCatalogId, targetCount: targetCount });
+            }
+            ensureCatalogAnchors(targetCount);
+            log('📍', 'Catalog anchors created after scene.loaded');
         }
-        ensureCatalogAnchors(targetCount);
+
+        // If scene already loaded, create anchors immediately
+        // Otherwise wait for loaded event
+        if (scene.hasLoaded) {
+            log('📍', 'Scene already loaded, creating anchors now');
+            setupAnchorsWhenReady();
+        } else {
+            log('⏳', 'Waiting for scene.loaded before creating anchors...');
+            scene.addEventListener('loaded', function onSceneLoaded() {
+                scene.removeEventListener('loaded', onSceneLoaded);
+                log('✅', 'A-Frame scene loaded, now creating anchors');
+                setupAnchorsWhenReady();
+            });
+        }
 
         // The parent can now safely send SET_ACTIVE_TARGETS. Do this before
         // MindAR fires arReady so GLB download/parsing overlaps camera startup.

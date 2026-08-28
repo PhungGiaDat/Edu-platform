@@ -1,2 +1,0 @@
-// Compatibility export. Shared icons own these components.
-export { HomeIcon, UsersIcon, BookOpenIcon, ChartBarIcon, CardsIcon, LightningBoltIcon, FireIcon, SearchIcon, PlusIcon, ChevronRightIcon, ChevronLeftIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, TrashIcon, EditIcon, ClockIcon, SettingsIcon, SaveIcon, CheckCircleIcon, TargetIcon, VolumeUpIcon, default } from '@/shared/components/icons/Icons';
