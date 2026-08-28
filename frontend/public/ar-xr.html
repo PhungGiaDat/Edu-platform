@@ -483,7 +483,9 @@
 
       await new Promise((resolve, reject) => {
         const check = () => {
-          if (typeof XR8 === 'undefined') {
+          // window.XR8 is set asynchronously after the promise resolves.
+          // Poll the global, not a local reference.
+          if (typeof window.XR8 === 'undefined') {
             if (Date.now() > deadline) {
               reject(new Error('8th Wall SDK timed out loading.'));
             } else {
@@ -491,7 +493,7 @@
             }
             return;
           }
-          if (!XR8.XrController) {
+          if (!window.XR8.XrController) {
             if (Date.now() > deadline) {
               reject(new Error('XR8 loaded but XrController submodule missing (check data-preload-chunks).'));
             } else {
@@ -500,8 +502,10 @@
             return;
           }
           logToBuffer('info', 'XR8 SDK ready', {
-            hasXrController: !!XR8.XrController,
-            hasIsLoaded: typeof XR8.isLoaded === 'function',
+            hasXrController: !!window.XR8.XrController,
+            isInitialized: typeof window.XR8.isInitialized === 'function'
+              ? window.XR8.isInitialized()
+              : 'unknown',
           });
           resolve(true);
         };
@@ -510,21 +514,6 @@
 
       updateDebug('8th Wall ready');
       sendARDebug('XR_SDK_READY');
-
-      // Configure image targets
-      XR8.XrController.configure({
-        imageTargetData: [{
-          image: targetData.image,
-          name: targetData.name,
-          physicalWidth: targetData.physicalWidth,
-        }],
-      });
-
-      sendARDebug('XR_TARGETS_CONFIGURED', {
-        image: targetData.image,
-        name: targetData.name,
-        physicalWidth: targetData.physicalWidth,
-      });
 
       // Camera pipeline — handles frame loop and target tracking
       const cameraPipelineModule = {
@@ -572,10 +561,27 @@
         },
       };
 
-      // Start XR session
-      await XR8.addCameraPipelineModule(cameraPipelineModule);
-      await XR8.addCameraPipelineModule(renderModule);
-      await XR8.startSession({ requestedFeatures: ['image-targets'] });
+      // Start XR session — self-hosted engine uses XrController.configure() then run()
+      // The XrController handles session lifecycle internally.
+      window.XR8.addCameraPipelineModule(cameraPipelineModule);
+      window.XR8.addCameraPipelineModule(renderModule);
+
+      window.XR8.XrController.configure({
+        imageTargetData: [{
+          image: targetData.image,
+          name: targetData.name,
+          physicalWidth: targetData.physicalWidth,
+        }],
+      });
+
+      sendARDebug('XR_TARGETS_CONFIGURED', {
+        image: targetData.image,
+        name: targetData.name,
+        physicalWidth: targetData.physicalWidth,
+      });
+
+      // Initialize SDK (loads camera, starts frame loop)
+      window.XR8.run();
 
       updateDebug('Tracking active');
       sendARDebug('XR_SESSION_STARTED');
@@ -589,11 +595,11 @@
     let animationFrameId = null;
     function watchTargets() {
       function check() {
-        if (!XR8.XrController) {
+        if (!window.XR8?.XrController) {
           animationFrameId = requestAnimationFrame(check);
           return;
         }
-        const reality = XR8.XrController.reality();
+        const reality = window.XR8.XrController.reality();
         if (reality && reality.cameraPixelsTracked) {
           const targetName = qrId || word;
           const tracked = reality.cameraPixelsTracked(targetName);
