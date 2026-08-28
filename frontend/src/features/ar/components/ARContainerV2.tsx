@@ -588,7 +588,7 @@ export const ARContainerV2 = React.forwardRef<HTMLIFrameElement, ARContainerV2Pr
                     transitionTo('LOADING');
                     // Camera handoff: stop scanner camera before mounting MindAR
                     emitDebug('SCANNER_STOPPING', {});
-                    sendTypedMessage(scannerRef.current, 'STOP_SCANNER', {});
+                    sendToScanner('STOP_SCANNER', {});
                 }
                 break;
             }
