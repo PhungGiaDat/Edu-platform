@@ -580,8 +580,8 @@
         physicalWidth: targetData.physicalWidth,
       });
 
-      // Initialize SDK (loads camera, starts frame loop)
-      window.XR8.run();
+      // Initialize SDK — canvas element is required
+      window.XR8.run({ canvas: document.getElementById('canvas') });
 
       updateDebug('Tracking active');
       sendARDebug('XR_SESSION_STARTED');
