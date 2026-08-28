@@ -22,11 +22,33 @@
     }
   </script>
 
-  <!-- Console capture bridge — sends logs to parent AR_DEBUG channel -->
+  <!-- Console capture bridge — sends logs to parent AR_DEBUG channel.
+       Installed EARLY (before module script) so we capture errors even
+       if the module fails to load on Safari iOS. -->
   <script>
     (function installViewerDebugBridge() {
       var params = new URLSearchParams(location.search);
       if (params.get('debug') !== 'true' && location.hostname !== 'localhost') return;
+
+      // Fire a beacon immediately — proves the iframe JS context is alive
+      // even if everything below fails.
+      try {
+        window.parent.postMessage({
+          type: 'AR_DEBUG',
+          payload: {
+            label: 'VIEWER_JS_ALIVE',
+            details: {
+              ts: Date.now(),
+              href: location.href,
+              ua: navigator.userAgent.substring(0, 80),
+              moduleSupported: 'no-modules' in HTMLScriptElement.prototype,
+            },
+            source: 'ar-viewer-console',
+          },
+          timestamp: Date.now(),
+          origin: 'child'
+        }, '*');
+      } catch (_) {}
 
       function sendDebug(label, details) {
         try {
@@ -68,9 +90,18 @@
         sendDebug('VIEWER_UNCAUGHT_ERROR', {
           level: 'error',
           text: String(event.message || event.error || 'Unknown viewer error'),
-          engine: '8th-wall'
+          url: event.filename,
+          line: event.lineno,
         });
       }, true);
+
+      window.addEventListener('unhandledrejection', function(event) {
+        var reason = event.reason;
+        sendDebug('VIEWER_UNHANDLED_REJECTION', {
+          level: 'error',
+          text: reason instanceof Error ? (reason.stack || reason.message) : String(reason),
+        });
+      });
 
       console.info('[ar-xr] Debug bridge installed');
     })();
