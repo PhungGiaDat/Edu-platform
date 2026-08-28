@@ -458,3 +458,23 @@
     font-size: 28px;
   }
 }
+
+/* Debug Phase Indicator */
+.debug-phase-indicator {
+  position: fixed;
+  top: 70px;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.85);
+  color: #0f0;
+  font-family: monospace;
+  font-size: 11px;
+  padding: 6px 12px;
+  text-align: center;
+  z-index: 999;
+  border-bottom: 1px solid #333;
+}
+
+.debug-phase-indicator strong {
+  color: #ff0;
+}

@@ -10,6 +10,10 @@ const mobileDebugScript = fs.readFileSync(
 const viewerHtml = fs.readFileSync(path.resolve(process.cwd(), 'public/ar-viewer.html'), 'utf8');
 const scannerHtml = fs.readFileSync(path.resolve(process.cwd(), 'public/ar-scanner.html'), 'utf8');
 const xrHtml = fs.readFileSync(path.resolve(process.cwd(), 'public/ar-xr.html'), 'utf8');
+const learnAR8thWallPage = fs.readFileSync(
+  path.resolve(process.cwd(), 'src/pages/LearnAR8thWall.tsx'),
+  'utf8',
+);
 
 function erudaBootstrap(html: string): string {
   const start = html.indexOf('<!-- Eruda Debug Console');
@@ -103,5 +107,13 @@ describe('mobile AR debug overlay contract', () => {
   it('renders the mobile debug controls above the AR stacking context', () => {
     expect(mobileDebugScript).toContain('z-index: 1000000');
     expect(mobileDebugScript).toContain('z-index: 1000001');
+  });
+
+  it('keeps the XR route debuggable and exposes Telegram sync during all phases', () => {
+    expect(mobileDebugScript).toContain("pathname === '/learn-ar-xr'");
+    expect(mobileDebugScript).toContain("pathname.startsWith('/learn-ar-xr/')");
+    expect(learnAR8thWallPage).toContain('Telegram Sync Button: available throughout the AR lifecycle');
+    expect(learnAR8thWallPage).toContain('disabled={syncStatus === \'syncing\'}');
+    expect(learnAR8thWallPage).toContain('Send ${phase.toLowerCase()} AR logs to Telegram');
   });
 });

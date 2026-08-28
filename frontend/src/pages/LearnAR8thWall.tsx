@@ -53,6 +53,12 @@ export const LearnAR8thWall: React.FC = () => {
   // Phase state machine
   const [phase, setPhase] = useState<Phase>('SCANNING');
 
+  // Debug: log phase changes
+  useEffect(() => {
+    console.log('[LearnAR8thWall] Phase changed to:', phase);
+    console.log('[LearnAR8thWall] Scanner iframe:', scannerRef.current ? 'exists' : 'null');
+  }, [phase]);
+
   // Current scanned target
   const [currentTarget, setCurrentTarget] = useState<XRTarget | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -226,8 +232,20 @@ export const LearnAR8thWall: React.FC = () => {
   // ========================================================================
   // RENDER
   // ========================================================================
+  // Debug overlay for diagnostics
+  const isDebugMode = new URLSearchParams(window.location.search).get('debug') === 'true';
+
   return (
     <div className="ar-xr-page">
+
+      {/* Debug Phase Indicator */}
+      {isDebugMode && (
+        <div className="debug-phase-indicator">
+          Phase: <strong>{phase}</strong> |
+          Scanner: <strong>{phase === 'SCANNING' ? 'active' : 'hidden'}</strong> |
+          Camera: <strong>{foundCards.size}</strong> cards
+        </div>
+      )}
 
       {/* Header */}
       <div className="ar-xr-header">
@@ -302,16 +320,17 @@ export const LearnAR8thWall: React.FC = () => {
 
       </div>
 
-      {/* Telegram Sync Button */}
-      {phase === 'VIEWING' && (
-        <button
-          className={`telegram-sync-btn ${syncStatus}`}
-          onClick={syncTelegram}
-          title="Sync logs to Telegram (Ctrl+Shift+S)"
-        >
-          {syncStatus === 'syncing' ? '...' : syncStatus === 'success' ? 'OK' : syncStatus === 'error' ? 'ERR' : 'TG'}
-        </button>
-      )}
+      {/* Telegram Sync Button: available throughout the AR lifecycle for debugging. */}
+      <button
+        type="button"
+        className={`telegram-sync-btn ${syncStatus}`}
+        onClick={syncTelegram}
+        disabled={syncStatus === 'syncing'}
+        aria-label={`Send ${phase.toLowerCase()} AR logs to Telegram`}
+        title={`Sync ${phase.toLowerCase()} logs to Telegram (Ctrl+Shift+S)`}
+      >
+        {syncStatus === 'syncing' ? '...' : syncStatus === 'success' ? 'OK' : syncStatus === 'error' ? 'ERR' : 'TG'}
+      </button>
 
       {/* Found Cards Badge */}
       {foundCards.size > 0 && (

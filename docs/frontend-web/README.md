@@ -9,8 +9,8 @@ do not set the active product priority.
 | Document | Purpose | Status |
 |---|---|---|
 | [UI approach decision](decisions/2026-08-28-ui-approach.md) | Records the selected frontend modernization strategy and rejected alternatives | Accepted |
-| [Mobile-web product UI specification](spec/2026-08-28-mobile-web-product-ui.md) | Defines the learner journey, UI contracts, boundaries, and acceptance gates | Review pending |
-| Mobile-web UI execution plan | Converts the approved specification into testable implementation tasks | Created after specification review |
+| [Mobile-web product UI specification](spec/2026-08-28-mobile-web-product-ui.md) | Defines the learner journey, UI contracts, boundaries, and acceptance gates | Approved |
+| [Mobile-web UI execution plan](plan/2026-08-28-mobile-web-ui-execution.md) | Converts the approved specification into testable implementation tasks | Ready for execution |
 
 ## Folder convention
 

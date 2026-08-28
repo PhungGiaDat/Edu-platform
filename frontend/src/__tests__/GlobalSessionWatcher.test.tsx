@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -60,8 +60,7 @@ describe('GlobalSessionWatcher', () => {
     localStorage.clear();
   });
 
-  it('lets a child take a break and leave the limit overlay', async () => {
-    const user = userEvent.setup();
+  it('keeps the learning route available while the global limit overlay is disabled', () => {
     localStorage.setItem('edu_session_state_v1', JSON.stringify({
       version: 1,
       phase: 'limit_reached',
@@ -69,12 +68,10 @@ describe('GlobalSessionWatcher', () => {
 
     renderWatcher('/courses/animals');
 
-    expect(screen.getByText('Time for a Break!')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /take a break/i }));
-    expect(screen.getByTestId('profile-route')).toBeInTheDocument();
-    expect(screen.queryByText('Time for a Break!')).not.toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('edu_session_state_v1')!).phase).toBe('on_break');
-    expect(screen.queryByRole('button', { name: /10 more minutes/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId('course-route')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('profile-route')).not.toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('edu_session_state_v1')!).phase).toBe('limit_reached');
   });
 
   it('renders the session reminder in Vietnamese when the selected locale is Vietnamese', () => {
@@ -97,8 +94,7 @@ describe('GlobalSessionWatcher', () => {
     expect(screen.getByRole('button', { name: /thoát lúc này/i })).toBeInTheDocument();
   });
 
-  it('shows a cooldown notice on learning routes and returns to the profile', async () => {
-    const user = userEvent.setup();
+  it('keeps the learning route available during cooldown while the global overlay is disabled', () => {
     localStorage.setItem('edu_session_state_v1', JSON.stringify({
       version: 1,
       phase: 'on_break',
@@ -107,14 +103,12 @@ describe('GlobalSessionWatcher', () => {
 
     renderWatcher('/courses/animals');
 
-    expect(screen.getByRole('dialog', { name: /break time in progress/i })).toBeInTheDocument();
-    expect(screen.getByText(/\d{2}:\d{2}/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /back to profile/i }));
-    expect(screen.getByTestId('profile-route')).toBeInTheDocument();
+    expect(screen.getByTestId('course-route')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('profile-route')).not.toBeInTheDocument();
   });
 
-  it('contains focus in the hard-limit reminder and restores it after navigation', async () => {
-    const user = userEvent.setup();
+  it('does not intercept focus while the global session overlay is disabled', () => {
     const trigger = document.createElement('button');
     trigger.textContent = 'Open course';
     document.body.appendChild(trigger);
@@ -126,18 +120,9 @@ describe('GlobalSessionWatcher', () => {
 
     try {
       renderWatcher('/courses/animals');
-      const takeBreak = screen.getByRole('button', { name: /take a break/i });
 
-      expect(takeBreak).toHaveFocus();
-      await user.tab();
-      expect(takeBreak).toHaveFocus();
-      await user.tab({ shift: true });
-      expect(takeBreak).toHaveFocus();
-      expect(screen.getByRole('button', { name: /obscured course control/i })).not.toHaveFocus();
-
-      await user.click(takeBreak);
-      expect(screen.getByTestId('profile-route')).toBeInTheDocument();
       expect(trigger).toHaveFocus();
+      expect(screen.getByRole('button', { name: /obscured course control/i })).not.toHaveFocus();
     } finally {
       trigger.remove();
     }
@@ -163,7 +148,7 @@ describe('GlobalSessionWatcher', () => {
         </LocaleProvider>,
       );
 
-      expect(screen.getByRole('button', { name: /keep going/i })).toHaveFocus();
+      expect(screen.getByRole('button', { name: /sessionKeepGoing/i })).toHaveFocus();
 
       rerender(
         <LocaleProvider>
@@ -176,7 +161,7 @@ describe('GlobalSessionWatcher', () => {
         </LocaleProvider>,
       );
 
-      const takeBreak = screen.getByRole('button', { name: /take a break/i });
+      const takeBreak = screen.getByRole('button', { name: /sessionTakeBreak/i });
       expect(takeBreak).toHaveFocus();
       await user.tab();
       expect(takeBreak).toHaveFocus();
@@ -187,7 +172,10 @@ describe('GlobalSessionWatcher', () => {
     }
   });
 
-  it.each(['/COURSES/animals/', '/LEARN-AR/'])('shows cooldown on a React Router learning-path variant: %s', initialPath => {
+  it.each([
+    ['/COURSES/animals/', 'course-route'],
+    ['/LEARN-AR/', 'learn-ar-route'],
+  ])('keeps %s available without a global cooldown overlay', (initialPath, routeTestId) => {
     localStorage.setItem('edu_session_state_v1', JSON.stringify({
       version: 1,
       phase: 'on_break',
@@ -196,11 +184,11 @@ describe('GlobalSessionWatcher', () => {
 
     renderWatcher(initialPath);
 
-    expect(screen.getByRole('dialog', { name: /break time in progress/i })).toBeInTheDocument();
+    expect(screen.getByTestId(routeTestId)).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('returns to profile after take-break storage writes fail', async () => {
-    const user = userEvent.setup();
+  it('keeps the learning route unchanged when break storage writes fail', () => {
     localStorage.setItem('edu_session_state_v1', JSON.stringify({
       version: 1,
       phase: 'limit_reached',
@@ -212,39 +200,29 @@ describe('GlobalSessionWatcher', () => {
     try {
       renderWatcher('/courses/animals');
 
-      await user.click(screen.getByRole('button', { name: /take a break/i }));
-      expect(screen.getByTestId('profile-route')).toBeInTheDocument();
+      expect(screen.getByTestId('course-route')).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('profile-route')).not.toBeInTheDocument();
     } finally {
       storageFailure.mockRestore();
     }
   });
 
-  it('takes a break and returns to profile when the localStorage getter is blocked', () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-08-05T00:00:00Z'));
+  it('keeps the learning route available when the localStorage getter is blocked', () => {
     const restoreLocalStorage = makeLocalStorageUnavailable();
 
     try {
       renderWatcher('/courses/animals');
 
-      act(() => {
-        vi.setSystemTime(new Date('2026-08-05T00:30:00Z'));
-        vi.advanceTimersByTime(1_000);
-      });
-
-      const takeBreak = screen.getByRole('button', { name: /take a break/i });
-      fireEvent.click(takeBreak);
-
-      expect(screen.getByTestId('profile-route')).toBeInTheDocument();
-      expect(screen.queryByText('Time for a Break!')).not.toBeInTheDocument();
+      expect(screen.getByTestId('course-route')).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('profile-route')).not.toBeInTheDocument();
     } finally {
       restoreLocalStorage();
-      vi.useRealTimers();
     }
   });
 
-  it('traps focus in the cooldown dialog and restores the prior focus on unmount', async () => {
-    const user = userEvent.setup();
+  it('does not move focus when the global cooldown overlay is disabled', () => {
     const trigger = document.createElement('button');
     document.body.appendChild(trigger);
     trigger.focus();
@@ -255,14 +233,9 @@ describe('GlobalSessionWatcher', () => {
     }));
 
     const { unmount } = renderWatcher('/courses/animals');
-    const backToProfile = screen.getByRole('button', { name: /back to profile/i });
 
-    expect(backToProfile).toHaveFocus();
-    await user.tab();
-    expect(backToProfile).toHaveFocus();
-    await user.tab({ shift: true });
-    expect(backToProfile).toHaveFocus();
-
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
     unmount();
     expect(trigger).toHaveFocus();
     trigger.remove();

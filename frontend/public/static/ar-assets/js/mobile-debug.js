@@ -12,7 +12,11 @@
     // Check if debug mode enabled via URL param
     const urlParams = new URLSearchParams(window.location.search);
     const isDebugMode = urlParams.get('debug') === 'true';
-    const isARPage = window.location.pathname === '/learn-ar' || urlParams.get('mobileDebug') === 'all';
+    const pathname = window.location.pathname;
+    const isLearnARPage = pathname === '/learn-ar'
+        || pathname === '/learn-ar-xr'
+        || pathname.startsWith('/learn-ar-xr/');
+    const isARPage = isLearnARPage || urlParams.get('mobileDebug') === 'all';
 
     if (!isDebugMode || !isARPage) {
         console.log('[MobileDebug] Debug mode disabled. Add ?debug=true to URL to enable.');

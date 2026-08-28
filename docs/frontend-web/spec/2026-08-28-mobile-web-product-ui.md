@@ -1,6 +1,6 @@
 # Mobile-Web Learner Product UI Specification
 
-**Status:** Review pending after approach approval on 2026-08-28.
+**Status:** Approved by the product owner on 2026-08-28.
 
 ## 1. Purpose
 
