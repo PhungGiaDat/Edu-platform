@@ -28,6 +28,36 @@
 
 ---
 
+## Known cross-system acceptance gap
+
+The current course completion service prevents ordinary repeat rewards through
+`was_already_completed`, and its response exposes authoritative
+`gamification.xp_earned`. However,
+`backend/repositories/orm_completion_reward_repository.py` currently creates
+`event_id = f"legacy:{uuid4().hex}"` for a lesson-completion reward. That does
+not satisfy the durable semantic-event requirement by itself.
+
+This frontend plan must not compensate by generating XP or calling a second
+gamification mutation. Tasks 1-9 may proceed, and Task 6 must render the
+authoritative response. The reward portion of Tasks 10-11 cannot be marked as a
+final release pass until a separately owned backend task either:
+
+1. changes completion reward persistence to derive and reuse a stable semantic
+   event id while preserving the existing completion endpoint; or
+2. supplies concurrency and failure-recovery evidence proving equivalent
+   exactly-once behavior for the current transaction boundary.
+
+Before starting the reward slice, run from `backend/`:
+
+```powershell
+py -m pytest tests/test_course_service_gamification.py tests/test_completion_transaction_boundary.py tests/test_gamification_idempotency.py -q
+```
+
+Record the exact result in the progress artifact. A failure blocks only the
+reward acceptance gate; it does not justify redesigning the frontend API.
+
+---
+
 ## File and responsibility map
 
 ### New shared UI files

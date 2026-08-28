@@ -97,6 +97,9 @@ export const LearnAR8thWall: React.FC = () => {
       const data = event.data;
       if (!data || typeof data.type !== 'string') return;
 
+      // Log all incoming messages for debugging
+      console.log('[LearnAR8thWall:message]', data.type, data);
+
       // Handle debug bridge messages from scanner
       if (data.type === 'AR_DEBUG') {
         console.log('[LearnAR8thWall:scanner]', data.payload?.label, data.payload?.details);
@@ -105,7 +108,9 @@ export const LearnAR8thWall: React.FC = () => {
 
       if (data.type !== 'QR_DETECTED') return;
 
-      const { qrId } = data.payload || {};
+      // Scanner sends: { type: 'QR_DETECTED', qrId: 'cat001', timestamp: ... }
+      // Some senders nest it in payload — handle both shapes.
+      const qrId = data.qrId || data.payload?.qrId;
       if (!qrId) return;
 
       console.log('[LearnAR8thWall] QR detected:', qrId);
