@@ -8,7 +8,8 @@
   <!-- Eruda Debug Console -->
   <script>
     var xrDebugParams = new URLSearchParams(location.search);
-    if (xrDebugParams.get('eruda') === 'true' || location.hostname === 'localhost') {
+    // Enable eruda when debug=true OR eruda=true OR localhost
+    if (xrDebugParams.get('eruda') === 'true' || xrDebugParams.get('debug') === 'true' || location.hostname === 'localhost') {
       (function() {
         var s = document.createElement('script');
         s.src = 'https://cdn.jsdelivr.net/npm/eruda@3';
@@ -19,6 +20,60 @@
         document.head.appendChild(s);
       })();
     }
+  </script>
+
+  <!-- Console capture bridge — sends logs to parent AR_DEBUG channel -->
+  <script>
+    (function installViewerDebugBridge() {
+      var params = new URLSearchParams(location.search);
+      if (params.get('debug') !== 'true' && location.hostname !== 'localhost') return;
+
+      function sendDebug(label, details) {
+        try {
+          window.parent.postMessage({
+            type: 'AR_DEBUG',
+            payload: { label: label, details: details || {}, source: 'ar-viewer-console' },
+            timestamp: Date.now(),
+            origin: 'child'
+          }, '*');
+        } catch (_) {}
+      }
+
+      function serialise(args) {
+        return Array.prototype.slice.call(args).map(function(value) {
+          try {
+            if (value instanceof Error) return value.stack || value.message;
+            return typeof value === 'object' ? JSON.stringify(value) : String(value);
+          } catch (_) {
+            return String(value);
+          }
+        }).join(' ').slice(0, 4000);
+      }
+
+      ['error', 'warn', 'log', 'info'].forEach(function(level) {
+        var original = console[level].bind(console);
+        console[level] = function() {
+          try {
+            sendDebug('VIEWER_CONSOLE_' + level.toUpperCase(), {
+              level: level,
+              text: serialise(arguments),
+              engine: '8th-wall'
+            });
+          } catch (_) {}
+          return original.apply(console, arguments);
+        };
+      });
+
+      window.addEventListener('error', function(event) {
+        sendDebug('VIEWER_UNCAUGHT_ERROR', {
+          level: 'error',
+          text: String(event.message || event.error || 'Unknown viewer error'),
+          engine: '8th-wall'
+        });
+      }, true);
+
+      console.info('[ar-xr] Debug bridge installed');
+    })();
   </script>
 
   <style>

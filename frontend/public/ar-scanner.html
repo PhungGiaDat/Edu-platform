@@ -70,7 +70,8 @@
     <!-- Eruda Debug Console - Mobile Web Debugging -->
     <script>
         var scannerDebugParams = new URLSearchParams(location.search);
-        if (scannerDebugParams.get('eruda') === 'true' || location.hostname === 'localhost') {
+        // Enable eruda when debug=true OR eruda=true OR localhost
+        if (scannerDebugParams.get('eruda') === 'true' || scannerDebugParams.get('debug') === 'true' || location.hostname === 'localhost') {
             (function() {
                 var s = document.createElement('script');
                 s.src = 'https://cdn.jsdelivr.net/npm/eruda@3';
