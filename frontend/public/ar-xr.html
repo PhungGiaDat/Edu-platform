@@ -467,10 +467,12 @@
       sendARDebug('XR_INIT_START', { targetName: targetData.name });
       showOverlay('Starting XR session...', '');
 
-      // Wait for XR8 to be ready
-      const checkLoaded = () => new Promise(resolve => {
-        if (XR8.isLoaded()) { resolve(true); return; }
-        window.addEventListener('xrloaded', resolve, { once: true });
+      // Wait for XR8 to be ready via xrloaded event + timeout fallback
+      await new Promise(resolve => {
+        window.addEventListener('xrloaded', () => {
+          logToBuffer('info', 'xrloaded event fired');
+          resolve(true);
+        }, { once: true });
         // Timeout fallback after 8s
         setTimeout(() => {
           logToBuffer('warn', 'XR8 load timeout, proceeding anyway');
@@ -478,16 +480,9 @@
         }, 8000);
       });
 
-      await checkLoaded();
-
       if (typeof XR8 === 'undefined') {
         sendARDebug('XR_INIT_ERROR', { error: '8th Wall SDK not loaded' });
         throw new Error('8th Wall engine failed to load. Check CDN connectivity.');
-      }
-
-      if (!XR8.isLoaded()) {
-        sendARDebug('XR_INIT_ERROR', { error: '8th Wall SDK not ready' });
-        throw new Error('8th Wall SDK did not load. Try refreshing.');
       }
 
       updateDebug('8th Wall ready');
