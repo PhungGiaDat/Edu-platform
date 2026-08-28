@@ -768,19 +768,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                 )}
             </aside>
 
-            <nav aria-label={t('primaryNavigation')} className="pointer-events-none fixed bottom-0 left-0 right-0 z-[var(--z-nav)] md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-                <div className="pointer-events-auto mx-2 mb-2.5 flex min-h-[72px] items-stretch justify-around gap-0.5 rounded-[28px] border-[3px] border-white bg-[#5B8DEF] p-1 shadow-[0_8px_0_rgba(59,100,180,0.30),0_8px_32px_rgba(91,141,239,0.25)]">
+            <nav aria-label={t('primaryNavigation')} className="learner-mobile-nav pointer-events-none fixed bottom-0 left-0 right-0 z-[var(--z-nav)] md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+                <div className="learner-mobile-nav__bar pointer-events-auto mx-2 mb-2.5 flex min-h-[72px] items-stretch justify-around gap-0.5 rounded-[28px] p-1">
                     {navItems.map((item) => {
                         const Icon = iconComponents[item.iconKey];
                         const active = isRouteActive(location.pathname, item.path);
                         return (
-                            <Link key={item.path} to={item.path} aria-current={active ? 'page' : undefined} title={t(item.labelKey)} className={`relative z-[1] flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[22px] px-0.5 transition-all ${active ? 'bg-white text-slate-800 shadow-[0_4px_0_rgba(0,0,0,0.15)] z-[2]' : 'text-white/80 hover:text-white'}`}>
+                            <Link key={item.path} to={item.path} aria-current={active ? 'page' : undefined} title={t(item.labelKey)} className={`learner-mobile-nav__item relative z-[1] flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[22px] px-0.5 transition-[transform,background,box-shadow,color] duration-200 motion-reduce:transition-none ${active ? 'learner-mobile-nav__item--active z-[2]' : 'text-[#3F6FCB]'}`}>
                                 <Icon className="h-5 w-5 shrink-0" />
                                 <span className="mt-0.5 w-full truncate text-center text-[9px] font-black leading-none tracking-tight sm:text-[10px]">{t(item.shortLabelKey)}</span>
                             </Link>
                         );
                     })}
-                    <button ref={moreButtonRef} type="button" onClick={() => setIsMobileMoreOpen(true)} aria-expanded={isMobileMoreOpen} aria-controls="mobile-more-sheet" title={t('navMore')} className={`relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[22px] px-0.5 ${isMobileMoreOpen ? 'bg-white text-slate-800 shadow-[0_4px_0_rgba(0,0,0,0.15)]' : 'text-white/80 hover:text-white'}`}>
+                    <button ref={moreButtonRef} type="button" onClick={() => setIsMobileMoreOpen(true)} aria-expanded={isMobileMoreOpen} aria-controls="mobile-more-sheet" title={t('navMore')} className={`learner-mobile-nav__item learner-mobile-nav__more-button relative z-[1] flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[22px] px-0.5 transition-[transform,background,box-shadow,color] duration-200 motion-reduce:transition-none ${isMobileMoreOpen ? 'learner-mobile-nav__item--active z-[2]' : 'text-[#3F6FCB]'}`}>
                         <MoreIcon className="h-5 w-5 shrink-0" />
                         <span className="mt-0.5 w-full truncate text-center text-[9px] font-black leading-none tracking-tight sm:text-[10px]">{t('navMore')}</span>
                     </button>

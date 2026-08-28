@@ -522,6 +522,56 @@
 }
 
 /* Mobile more sheet claymorphism */
+.learner-mobile-nav {
+  isolation: isolate;
+}
+
+/* Keep the mobile bar transparent so only the current destination gets a raised surface. */
+.learner-mobile-nav__bar {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.learner-mobile-nav__item {
+  border: 3px solid transparent;
+  color: #3f6fcb;
+}
+
+.learner-mobile-nav__item:not(.learner-mobile-nav__item--active):hover {
+  background: rgba(91, 141, 239, 0.1) !important;
+  border-color: transparent !important;
+  color: #2d5cb3 !important;
+  box-shadow: none !important;
+}
+
+.learner-mobile-nav__item--active {
+  background: linear-gradient(145deg, #ffffff 0%, #eef6ff 100%) !important;
+  border-color: rgba(255, 255, 255, 0.96) !important;
+  color: #1f3f7a !important;
+  transform: translateY(-5px);
+  box-shadow:
+    0 5px 0 #3f6fcb,
+    0 12px 24px rgba(91, 141, 239, 0.24),
+    inset 0 2px 0 rgba(255, 255, 255, 0.95) !important;
+}
+
+/* The global button surface is white; the closed More trigger stays transparent. */
+.learner-mobile-nav__more-button {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none;
+}
+
+.learner-mobile-nav__more-button.learner-mobile-nav__item--active {
+  background: linear-gradient(145deg, #ffffff 0%, #eef6ff 100%) !important;
+  border-color: rgba(255, 255, 255, 0.96) !important;
+  box-shadow:
+    0 5px 0 #3f6fcb,
+    0 12px 24px rgba(91, 141, 239, 0.24),
+    inset 0 2px 0 rgba(255, 255, 255, 0.95) !important;
+}
+
 .mobile-more-sheet {
   background:
     radial-gradient(circle at 85% 8%, rgba(255, 224, 102, 0.35) 0%, transparent 40%),
@@ -549,6 +599,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .learner-mobile-nav__item--active {
+    transform: none;
+  }
+
   .learner-sidebar__brand-sparkle {
     animation: none;
   }
