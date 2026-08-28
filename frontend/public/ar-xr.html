@@ -586,12 +586,15 @@
       updateDebug('Tracking active');
       sendARDebug('XR_SESSION_STARTED');
 
-      // Watch for target found/lost via frame data
-      watchTargets();
+      // Watch for detected images using frameData
+      // Must not throw — any error would bubble up to main() and set phase to 'error'
+      try { watchTargets(); } catch(e) {
+        logToBuffer('warn', 'watchTargets error (non-fatal)', { error: String(e) });
+      }
 
     } // initXR
 
-    // Poll tracked targets each animation frame
+    // Poll tracked targets using frame data
     let animationFrameId = null;
     function watchTargets() {
       function check() {
@@ -599,14 +602,15 @@
           animationFrameId = requestAnimationFrame(check);
           return;
         }
-        const reality = window.XR8.XrController.reality();
-        if (reality && reality.cameraPixelsTracked) {
+        const frameData = window.XR8.XrController.frameData();
+        if (frameData) {
+          const detected = frameData.detectedImages || [];
           const targetName = qrId || word;
-          const tracked = reality.cameraPixelsTracked(targetName);
-          if (tracked && !trackedTargets.has(targetName)) {
+          const found = detected.some(img => img.name === targetName);
+          if (found && !trackedTargets.has(targetName)) {
             trackedTargets.add(targetName);
             onTargetFound(targetName);
-          } else if (!tracked && trackedTargets.has(targetName)) {
+          } else if (!found && trackedTargets.has(targetName)) {
             trackedTargets.delete(targetName);
             onTargetLost(targetName);
           }
