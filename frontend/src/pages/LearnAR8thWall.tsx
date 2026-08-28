@@ -133,12 +133,15 @@ export const LearnAR8thWall: React.FC = () => {
       setCurrentTarget(null);
       setScanError(null);
 
+      console.log('[LearnAR8thWall] PHASE→LOADING, fetching XR target for:', qrId);
+
       try {
         // Fetch XR target data for this specific QR
         const res = await fetch(`${API_BASE}/api/v1/flashcard/${qrId}/xr-urls`);
         if (!res.ok) throw new Error(`API error: ${res.status}`);
 
         const raw = await res.json();
+        console.log('[LearnAR8thWall] API response raw:', JSON.stringify(raw).substring(0, 200));
 
         // Build XRTarget from API response
         const target: XRTarget = {
@@ -157,6 +160,8 @@ export const LearnAR8thWall: React.FC = () => {
           scale: raw.target?.scale || '1 1 1',
         };
 
+        console.log('[LearnAR8thWall] Built XRTarget:', JSON.stringify(target).substring(0, 300));
+
         if (!target.xr_target_json_url && !target.xr_target_image_url) {
           throw new Error(`No XR target URL for: ${qrId}`);
         }
@@ -164,6 +169,7 @@ export const LearnAR8thWall: React.FC = () => {
         setCurrentTarget(target);
         setFoundCards(prev => new Set([...prev, qrId]));
         setPhase('VIEWING');
+        console.log('[LearnAR8thWall] PHASE→VIEWING, viewer iframe src built');
 
       } catch (err) {
         console.error('[LearnAR8thWall] Fetch error:', err);
@@ -314,6 +320,7 @@ export const LearnAR8thWall: React.FC = () => {
             title="AR Viewer"
             allow="camera; xr-spatial-tracking; gyroscope; accelerometer"
             style={{ width: '100%', height: '100%', border: 'none' }}
+            onLoad={() => console.log('[LearnAR8thWall] VIEWER IFRAME LOADED, src:', viewerSrc)}
           />
         )}
 
