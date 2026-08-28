@@ -173,7 +173,13 @@
   </div>
 
   <!-- Self-hosted 8th Wall Engine (no AppKey needed) -->
-  <script src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1.0.0/dist/xr.js"></script>
+  <!-- data-preload-chunks MUST match requested features; image-targets needed for this page -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1.0.0/dist/xr.js"
+    async
+    crossorigin="anonymous"
+    data-preload-chunks="image-targets"
+  ></script>
 
   <!-- Three.js importmap -->
   <script type="importmap">
@@ -467,23 +473,40 @@
       sendARDebug('XR_INIT_START', { targetName: targetData.name });
       showOverlay('Starting XR session...', '');
 
-      // Wait for XR8 to be ready via xrloaded event + timeout fallback
-      await new Promise(resolve => {
-        window.addEventListener('xrloaded', () => {
-          logToBuffer('info', 'xrloaded event fired');
-          resolve(true);
-        }, { once: true });
-        // Timeout fallback after 8s
-        setTimeout(() => {
-          logToBuffer('warn', 'XR8 load timeout, proceeding anyway');
-          resolve(false);
-        }, 8000);
-      });
+      // Poll until XR8 and its submodules are fully loaded.
+      // The xrloaded event may not fire in self-hosted mode; polling is reliable.
+      const SDK_TIMEOUT_MS = 15000;
+      const POLL_INTERVAL_MS = 200;
+      const deadline = Date.now() + SDK_TIMEOUT_MS;
 
-      if (typeof XR8 === 'undefined') {
-        sendARDebug('XR_INIT_ERROR', { error: '8th Wall SDK not loaded' });
-        throw new Error('8th Wall engine failed to load. Check CDN connectivity.');
-      }
+      logToBuffer('info', 'Waiting for XR8 SDK...');
+
+      await new Promise((resolve, reject) => {
+        const check = () => {
+          if (typeof XR8 === 'undefined') {
+            if (Date.now() > deadline) {
+              reject(new Error('8th Wall SDK timed out loading.'));
+            } else {
+              setTimeout(check, POLL_INTERVAL_MS);
+            }
+            return;
+          }
+          if (!XR8.XrController) {
+            if (Date.now() > deadline) {
+              reject(new Error('XR8 loaded but XrController submodule missing (check data-preload-chunks).'));
+            } else {
+              setTimeout(check, POLL_INTERVAL_MS);
+            }
+            return;
+          }
+          logToBuffer('info', 'XR8 SDK ready', {
+            hasXrController: !!XR8.XrController,
+            hasIsLoaded: typeof XR8.isLoaded === 'function',
+          });
+          resolve(true);
+        };
+        check();
+      });
 
       updateDebug('8th Wall ready');
       sendARDebug('XR_SDK_READY');
