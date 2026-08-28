@@ -586,18 +586,6 @@ export const ARContainerV2 = React.forwardRef<HTMLIFrameElement, ARContainerV2Pr
                 });
                 if (!fromPiP && phase === 'SCANNING' && !deferQrTransition) {
                     transitionTo('LOADING');
-                    // Camera handoff: stop scanner camera before mounting MindAR
-                    emitDebug('SCANNER_STOPPING', {});
-                    sendToScanner('STOP_SCANNER', {});
-                }
-                break;
-            }
-
-            case 'SCANNER_CAMERA_RELEASED': {
-                emitDebug('SCANNER_CAMERA_RELEASED', {});
-                // Now safe to mount MindAR - camera has been released
-                if (phase === 'LOADING') {
-                    transitionTo('VIEWING');
                 }
                 break;
             }
@@ -854,8 +842,12 @@ export const ARContainerV2 = React.forwardRef<HTMLIFrameElement, ARContainerV2Pr
     }, [transitionTo, sendToMain, sendToScanner, sendTypedMessage]);
 
     // ========== AUTO TRANSITIONS ==========
-    // NOTE: Removed automatic transition from LOADING→VIEWING
-    // Camera handoff now waits for SCANNER_CAMERA_RELEASED message
+    useEffect(() => {
+        if (phase === 'LOADING' && mindUrl) {
+            const t = setTimeout(() => transitionTo('VIEWING'), 100);
+            return () => clearTimeout(t);
+        }
+    }, [phase, mindUrl, transitionTo]);
 
     useEffect(() => {
         cancelViewerBootstrapWatchdogRef.current?.();

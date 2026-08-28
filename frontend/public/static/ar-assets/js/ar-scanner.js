@@ -82,8 +82,7 @@
         CONTROL_MESSAGES: Object.freeze({
             PAUSE: 'PAUSE_SCANNING',
             RESUME: 'RESUME_SCANNING',
-            RESET: 'RESET_SCANNER',
-            STOP: 'STOP_SCANNER'
+            RESET: 'RESET_SCANNER'
         })
     });
 
@@ -299,7 +298,6 @@
 
         lastDetectedCode = data;
         detectionCooldown = true;
-        scanning = false;
 
         log('🎯', `QR Detected: ${data}`);
 
@@ -313,26 +311,6 @@
         setTimeout(() => {
             detectionCooldown = false;
         }, DETECTION_COOLDOWN_MS);
-    }
-
-    // ============ CAMERA RELEASE ============
-    function stopScannerCamera() {
-        log('🛑', 'Stopping scanner camera...');
-        sendDebug('SCANNER_CAMERA_STOPPING', {});
-
-        // Stop all MediaStream tracks
-        if (video?.srcObject) {
-            const stream = video.srcObject;
-            stream.getTracks().forEach(track => {
-                log('🛑', `Stopping ${track.kind} track: ${track.id}`);
-                track.stop();
-            });
-            video.srcObject = null;
-        }
-
-        sendDebug('SCANNER_TRACK_STOPPED', {});
-        sendToParent('SCANNER_CAMERA_RELEASED', {});
-        log('✅', 'Camera released, scanner stopped');
     }
 
     // ============ PARENT CONTROL CHANNEL ============
@@ -350,9 +328,6 @@
             case CONTROL_MESSAGES.RESET:
                 lastDetectedCode = null;
                 detectionCooldown = false;
-                break;
-            case CONTROL_MESSAGES.STOP:
-                stopScannerCamera();
                 break;
         }
     });

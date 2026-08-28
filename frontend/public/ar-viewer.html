@@ -142,8 +142,8 @@
             }
         })();
     </script>
-    <!-- NOTE: 8th Wall Engine is NOT loaded here - MindAR path uses only MindAR runtime -->
-    <!-- For 8th Wall AR, use /ar-xr.html instead -->
+    <!-- 8th Wall Engine Binary - loaded async for fallback AR -->
+    <script src="/external/xr/xr.js" async data-preload-chunks="slam"></script>
     <link rel="stylesheet" href="/static/ar-assets/css/ar-viewer.css">
 </head>
 <body>
