@@ -69,17 +69,27 @@ export const LearnAR8thWall: React.FC = () => {
   // Buffer AR_DEBUG messages from viewer iframe for Telegram sync
   const arDebugBufferRef = useRef<string[]>([]);
 
+  // Parent-side trace logs for Telegram sync (React state, always accessible)
+  const [parentTraceLogs, setParentTraceLogs] = useState<string[]>([]);
+
+  // Helper: push timestamped trace into parentTraceLogs state
+  const trace = (label: string, detail: string) => {
+    const ts = new Date().toISOString().substring(11, 23);
+    const entry = `${ts} [${label}] ${detail}`;
+    setParentTraceLogs(prev => {
+      const next = [...prev, entry];
+      return next.length > 200 ? next.slice(-200) : next;
+    });
+  };
+
   // Telegram Sync integration
   const { syncTelegram, syncStatus, iframeLogs } = useTelegramSync({
     iframeRef: viewerRef,
     flashcardCount: foundCards.size || 1,
     getParentLogs: () => {
-      const md = (window as any).MobileDebug;
-      const mdLogs = md?.getLogs?.() || '';
-      const arDebugLogs = arDebugBufferRef.current.join('\n') || '';
-      const parentLogs = mdLogs || 'No MobileDebug logs';
-      const debugLogs = arDebugLogs || 'No AR_DEBUG logs';
-      return `=== MOBILE DEBUG ===\n${parentLogs}\n\n=== PARENT AR_DEBUG BUFFER ===\n${debugLogs}`;
+      const arDebug = arDebugBufferRef.current.join('\n') || 'No AR_DEBUG logs';
+      const traces = parentTraceLogs.join('\n') || 'No parent traces';
+      return `=== PARENT TRACES ===\n${traces}\n\n=== AR_DEBUG BUFFER ===\n${arDebug}`;
     },
     getActiveEngine: () => '8th-wall',
   });
@@ -124,7 +134,7 @@ export const LearnAR8thWall: React.FC = () => {
 
       // Prevent re-scanning the same card in this session
       if (foundCards.has(qrId)) {
-        (window as any).MobileDebug?.add?.('log', 'QR_DUPLICATE', `Already scanned: ${qrId}`, null);
+        trace('QR_DUPLICATE', `Already scanned: ${qrId}`);
         return;
       }
 
@@ -133,7 +143,7 @@ export const LearnAR8thWall: React.FC = () => {
       setCurrentTarget(null);
       setScanError(null);
 
-      (window as any).MobileDebug?.add?.('log', 'QR_DETECTED_PARENT', `QR=${qrId} → PHASE=LOADING`, null);
+      trace('QR_DETECTED_PARENT', `QR=${qrId} → PHASE=LOADING`);
 
       try {
         // Fetch XR target data for this specific QR
@@ -141,7 +151,7 @@ export const LearnAR8thWall: React.FC = () => {
         if (!res.ok) throw new Error(`API error: ${res.status}`);
 
         const raw = await res.json();
-        (window as any).MobileDebug?.add?.('log', 'API_RESPONSE', JSON.stringify(raw).substring(0, 200), null);
+        trace('API_RESPONSE', JSON.stringify(raw).substring(0, 200));
 
         // Build XRTarget from API response
         const target: XRTarget = {
@@ -160,7 +170,7 @@ export const LearnAR8thWall: React.FC = () => {
           scale: raw.target?.scale || '1 1 1',
         };
 
-        (window as any).MobileDebug?.add?.('log', 'XR_TARGET_BUILT', JSON.stringify(target).substring(0, 300), null);
+        trace('XR_TARGET_BUILT', JSON.stringify(target).substring(0, 300));
 
         if (!target.xr_target_json_url && !target.xr_target_image_url) {
           throw new Error(`No XR target URL for: ${qrId}`);
@@ -169,10 +179,10 @@ export const LearnAR8thWall: React.FC = () => {
         setCurrentTarget(target);
         setFoundCards(prev => new Set([...prev, qrId]));
         setPhase('VIEWING');
-        (window as any).MobileDebug?.add?.('log', 'PHASE_VIEWING', `Viewer src built, phase=VIEWING`, null);
+        trace('PHASE_VIEWING', `Viewer src built, phase=VIEWING`);
 
       } catch (err) {
-        (window as any).MobileDebug?.add?.('error', 'API_ERROR', String(err), null);
+        trace('API_ERROR', String(err));
         setScanError(err instanceof Error ? err.message : 'Failed to load XR target');
         setPhase('ERROR');
       }
@@ -197,7 +207,6 @@ export const LearnAR8thWall: React.FC = () => {
         const entry = `${ts} [${label}] ${JSON.stringify(details)}`;
         arDebugBufferRef.current.push(entry);
         if (arDebugBufferRef.current.length > 200) arDebugBufferRef.current.shift();
-        console.log('[LearnAR8thWall:viewer]', label, details);
         return;
       }
 
@@ -320,7 +329,7 @@ export const LearnAR8thWall: React.FC = () => {
             title="AR Viewer"
             allow="camera; xr-spatial-tracking; gyroscope; accelerometer"
             style={{ width: '100%', height: '100%', border: 'none' }}
-            onLoad={() => (window as any).MobileDebug?.add?.('log', 'VIEWER_IFRAME_LOADED', viewerSrc, null)}
+            onLoad={() => trace('VIEWER_IFRAME_LOADED', viewerSrc)}
           />
         )}
 
