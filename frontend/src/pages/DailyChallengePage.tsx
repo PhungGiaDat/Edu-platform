@@ -156,7 +156,7 @@ const RewardCard: React.FC<RewardCardProps> = ({ reward, isComplete }) => (
       <span className="text-3xl">{isComplete ? '🎉' : '🎁'}</span>
       <div>
         <div className="text-xs font-extrabold uppercase tracking-wide" style={{ color: isComplete ? DUO.green : '#B8860B' }}>
-          {isComplete ? 'Claimed!' : 'Your Reward'}
+          {isComplete ? 'Claimed!' : 'Reward'}
         </div>
         <div className="font-black" style={{ color: DUO.text }}>
           {reward}
@@ -304,7 +304,27 @@ export const DailyChallengePage: React.FC = () => {
               Complete the challenge to earn your reward!
             </p>
           </div>
-          <StreakBadge streak={streak} />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={fetchChallenge}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-2 border-white/40 bg-white/20 text-white shadow-lg backdrop-blur-sm transition hover:bg-white/30 focus:outline-none focus-visible:ring-4 focus-visible:ring-white/60"
+              aria-label="Refresh challenge"
+              title="Refresh challenge"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+                <path
+                  d="M20 11a8.1 8.1 0 0 0-14.7-3L3 10m0 0V4m0 6h6M4 13a8.1 8.1 0 0 0 14.7 3L21 14m0 0v6m0-6h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                />
+              </svg>
+            </button>
+            <StreakBadge streak={streak} />
+          </div>
         </div>
 
         {/* XP Counter */}
@@ -392,7 +412,7 @@ export const DailyChallengePage: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <span className="duo-motivational--highlight">{target - progress} more</span> to complete your challenge
+                    <span className="duo-motivational--highlight">{target - progress} more to go</span>
                   </>
                 )}
               </p>
@@ -414,14 +434,14 @@ export const DailyChallengePage: React.FC = () => {
           <Link
             to="/courses"
             className="duo-btn duo-btn--primary duo-focus"
-            aria-label={isComplete ? 'Claim your reward' : 'Start today\'s challenge'}
+            aria-label="Go to Courses"
           >
-            {isComplete ? 'Claim Reward!' : 'Start Challenge'}
+            Go to Courses
           </Link>
           <Link
             to="/progress"
             className="duo-btn duo-btn--secondary duo-focus"
-            aria-label="View your learning progress"
+            aria-label="View Progress"
           >
             View Progress
           </Link>

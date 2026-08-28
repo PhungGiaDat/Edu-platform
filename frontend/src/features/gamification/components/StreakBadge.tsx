@@ -8,6 +8,7 @@
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '@/services/apiClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { CodexPetSprite, type CodexPetAnimationState } from '@/features/pets/components/CodexPetSprite';
 
 interface StreakData {
   current_streak: number;
@@ -15,23 +16,6 @@ interface StreakData {
   last_activity: string;
   streak_active_today: boolean;
 }
-
-// Inline SVG icons — vibrant claymorphic style, avoids emoji
-const FireIcon: React.FC<{ className?: string }> = ({ className = 'h-5 w-5' }) => (
-    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-    </svg>
-);
-
-const SnowflakeIcon: React.FC<{ className?: string }> = ({ className = 'h-5 w-5' }) => (
-    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="2" x2="12" y2="22" />
-        <line x1="2" y1="12" x2="22" y2="12" />
-        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-        <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
-        <circle cx="12" cy="12" r="3" />
-    </svg>
-);
 
 const StarIcon: React.FC<{ className?: string }> = ({ className = 'text-xs' }) => (
     <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -85,8 +69,13 @@ export const StreakBadge: React.FC<{ className?: string }> = ({ className = '' }
   if (isLoading) {
     return (
       <div className={`clay-stat-card ${className}`}>
-        <div className="clay-streak-icon clay-streak-icon--hot" aria-hidden="true">
-          <FireIcon className="h-5 w-5" />
+        <div className="clay-streak-icon clay-streak-icon--hot" data-animation-state="waiting">
+          <CodexPetSprite
+            animationState="waiting"
+            label="Lexi preparing your streak"
+            size={40}
+            className="drop-shadow-sm"
+          />
         </div>
         <div className="clay-stat-number">...</div>
         <div className="clay-stat-label">Streak</div>
@@ -96,11 +85,20 @@ export const StreakBadge: React.FC<{ className?: string }> = ({ className = '' }
 
   const isHotStreak = streak.current_streak >= 7;
   const hasStreak = streak.current_streak > 0;
+  const mascotAnimation: CodexPetAnimationState = isHotStreak ? 'jumping' : hasStreak ? 'idle' : 'waiting';
+  const mascotLabel = isHotStreak
+    ? 'Lexi celebrating your hot streak'
+    : hasStreak
+      ? 'Lexi cheering your learning streak'
+      : 'Lexi waiting for your next streak';
 
   return (
     <div className={`clay-stat-card ${className}`}>
-      <div className={`clay-streak-icon ${isHotStreak ? 'clay-streak-icon--hot' : 'clay-streak-icon--cold'} ${isHotStreak ? 'motion-safe:animate-pulse' : ''}`} aria-hidden="true">
-        {hasStreak ? <FireIcon className="h-5 w-5" /> : <SnowflakeIcon className="h-5 w-5" />}
+      <div
+        className={`clay-streak-icon ${isHotStreak ? 'clay-streak-icon--hot' : 'clay-streak-icon--cold'} ${isHotStreak ? 'motion-safe:animate-pulse' : ''}`}
+        data-animation-state={mascotAnimation}
+      >
+        <CodexPetSprite animationState={mascotAnimation} label={mascotLabel} size={40} className="drop-shadow-sm" />
       </div>
       <div
         className="clay-stat-number"

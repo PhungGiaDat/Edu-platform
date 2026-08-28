@@ -58,6 +58,7 @@ export function CodexPetSprite({
         if (typeof window.matchMedia !== 'function') return;
 
         const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        if (!mediaQuery) return;
         const updateMotionPreference = () => {
             setReduceMotion(mediaQuery.matches);
             if (mediaQuery.matches) setFrame(0);

@@ -119,13 +119,13 @@ describe('Leaderboard', () => {
       });
     });
 
-    it('shows trophy emoji in empty state', async () => {
+    it('shows Lexi in the empty state', async () => {
       vi.mocked(GamificationService.getLeaderboard).mockResolvedValue([]);
 
       render(<Leaderboard />, { wrapper: TestWrapper });
 
       await waitFor(() => {
-        expect(screen.getByText('🏆')).toBeInTheDocument();
+        expect(screen.getByRole('img', { name: 'Lexi, your leaderboard companion' })).toBeInTheDocument();
       });
     });
 
@@ -185,15 +185,16 @@ describe('Leaderboard', () => {
       });
     });
 
-    it('shows medals for top 3', async () => {
+    it('shows one semantic SVG medal for each podium rank', async () => {
       vi.mocked(GamificationService.getLeaderboard).mockResolvedValue(mockLeaderboardEntries);
 
       render(<Leaderboard />, { wrapper: TestWrapper });
 
       await waitFor(() => {
-        expect(screen.getByText('🥇')).toBeInTheDocument();
-        expect(screen.getByText('🥈')).toBeInTheDocument();
-        expect(screen.getByText('🥉')).toBeInTheDocument();
+        expect(screen.getByRole('img', { name: '1st place medal' })).toBeInTheDocument();
+        expect(screen.getByRole('img', { name: '2nd place medal' })).toBeInTheDocument();
+        expect(screen.getByRole('img', { name: '3rd place medal' })).toBeInTheDocument();
+        expect(screen.getAllByRole('img', { name: /place medal$/i })).toHaveLength(3);
       });
     });
   });
@@ -205,8 +206,7 @@ describe('Leaderboard', () => {
       render(<Leaderboard />, { wrapper: TestWrapper });
 
       await waitFor(() => {
-        // Check for crown emoji (for first place)
-        expect(screen.getByText('👑')).toBeInTheDocument();
+        expect(screen.getByRole('img', { name: '1st place medal' })).toBeInTheDocument();
       });
     });
 
@@ -230,9 +230,9 @@ describe('Leaderboard', () => {
       render(<Leaderboard />, { wrapper: TestWrapper });
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /All/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Weekly/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Daily/i })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: /All Time/i })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: /Weekly/i })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: /Daily/i })).toBeInTheDocument();
       });
     });
 
@@ -242,8 +242,8 @@ describe('Leaderboard', () => {
       render(<Leaderboard />, { wrapper: TestWrapper });
 
       await waitFor(() => {
-        const allTab = screen.getByRole('button', { name: /All/i });
-        expect(allTab).toHaveClass('bg-white');
+        const allTab = screen.getByRole('tab', { name: /All Time/i });
+        expect(allTab).toHaveClass('leaderboard-filter-btn-active');
       });
     });
 
@@ -253,13 +253,13 @@ describe('Leaderboard', () => {
       render(<Leaderboard />, { wrapper: TestWrapper });
 
       await waitFor(() => {
-        const weeklyTab = screen.getByRole('button', { name: /Weekly/i });
+        const weeklyTab = screen.getByRole('tab', { name: /Weekly/i });
         fireEvent.click(weeklyTab);
       });
 
       await waitFor(() => {
-        const weeklyTab = screen.getByRole('button', { name: /Weekly/i });
-        expect(weeklyTab).toHaveClass('bg-white');
+        const weeklyTab = screen.getByRole('tab', { name: /Weekly/i });
+        expect(weeklyTab).toHaveClass('leaderboard-filter-btn-active');
       });
     });
 
@@ -269,7 +269,7 @@ describe('Leaderboard', () => {
       render(<Leaderboard />, { wrapper: TestWrapper });
 
       await waitFor(() => {
-        expect(screen.getByText('All')).toBeInTheDocument();
+        expect(screen.getByText('All Time')).toBeInTheDocument();
         expect(screen.getByText('Weekly')).toBeInTheDocument();
         expect(screen.getByText('Daily')).toBeInTheDocument();
       });
@@ -322,14 +322,15 @@ describe('Leaderboard', () => {
       });
     });
 
-    it('filter tabs are accessible buttons', async () => {
+    it('filter tabs expose an accessible tablist', async () => {
       vi.mocked(GamificationService.getLeaderboard).mockResolvedValue(mockLeaderboardEntries);
 
       render(<Leaderboard />, { wrapper: TestWrapper });
 
       await waitFor(() => {
-        const tabs = screen.getAllByRole('button');
-        expect(tabs.length).toBeGreaterThan(0);
+        const tablist = screen.getByRole('tablist', { name: /filter leaderboard by time period/i });
+        expect(tablist).toBeInTheDocument();
+        expect(screen.getAllByRole('tab')).toHaveLength(3);
       });
     });
   });
@@ -354,7 +355,7 @@ describe('Leaderboard', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Solo')).toBeInTheDocument();
-        expect(screen.getByText('🏆')).toBeInTheDocument();
+        expect(screen.getByRole('img', { name: '1st place medal' })).toBeInTheDocument();
       });
     });
 

@@ -103,6 +103,38 @@
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+    // ========== LOGGING BUFFER ==========
+    const MAX_LOG_BUFFER = 500;
+    const logBuffer = [];
+
+    function logToBuffer(level, message, details = null) {
+      const timestamp = new Date().toISOString().substring(11, 23);
+      const entry = { timestamp, level, message, details };
+      logBuffer.push(entry);
+      if (logBuffer.length > MAX_LOG_BUFFER) {
+        logBuffer.shift();
+      }
+
+      // Also log to console
+      const prefix = `[${timestamp}]`;
+      if (details) {
+        console.log(prefix, `[${level.toUpperCase()}]`, message, details);
+      } else {
+        console.log(prefix, `[${level.toUpperCase()}]`, message);
+      }
+    }
+
+    // Public API for MobileDebug integration
+    window.XRDebug = {
+      getLogs: () => {
+        return logBuffer.map(e => {
+          const details = e.details ? ` ${JSON.stringify(e.details)}` : '';
+          return `${e.timestamp} [${e.level.toUpperCase()}] ${e.message}${details}`;
+        }).join('\n');
+      },
+      logBuffer: logBuffer,
+    };
+
     // ========== PARAMS FROM URL ==========
     const params = new URLSearchParams(location.search);
     const qrId           = params.get('qr_id') || '';
@@ -124,10 +156,34 @@
 
     if (isDebug) debugPanel.style.display = 'block';
 
+    logToBuffer('info', 'ar-xr.html loaded', { qrId, isDebug });
+
     // ========== POST MESSAGE ==========
     function sendMessage(type, payload = {}) {
       window.parent.postMessage({ type, payload, timestamp: Date.now() }, '*');
-      console.log('[ar-xr] SEND:', type, payload);
+    }
+
+    // ========== AR_DEBUG MESSAGE ==========
+    function sendARDebug(label, details = {}) {
+      const debugPayload = {
+        label,
+        details,
+        source: 'ar-xr',
+        phase: currentPhase,
+        engine: '8th-wall',
+        qrId: qrId,
+        word: word,
+      };
+      sendMessage('AR_DEBUG', debugPayload);
+      logToBuffer('debug', label, details);
+    }
+
+    // Phase tracking for AR_DEBUG messages
+    let currentPhase = 'initializing';
+
+    function setPhase(phase) {
+      currentPhase = phase;
+      sendARDebug('PHASE_CHANGE', { from: currentPhase, to: phase });
     }
 
     function showOverlay(text, hint = '') {
@@ -143,7 +199,7 @@
 
     function showError(msg) {
       errorText.textContent = msg;
-      console.error('[ar-xr] Error:', msg);
+      logToBuffer('error', 'Error shown to user', { message: msg });
     }
 
     function updateDebug(text) {
@@ -163,6 +219,7 @@
     let modelScale = 1;
 
     function initThree() {
+      logToBuffer('info', 'Initializing Three.js');
       scene = new THREE.Scene();
 
       camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
@@ -190,10 +247,17 @@
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
       });
+
+      logToBuffer('info', 'Three.js scene ready');
     }
 
     // ========== MODEL LOADING ==========
+    let modelLoadState = 'pending';
+
     function loadModel(url) {
+      modelLoadState = 'loading';
+      sendARDebug('MODEL_LOAD_START', { url });
+
       return new Promise((resolve, reject) => {
         const loader = new GLTFLoader();
         loader.load(url,
@@ -223,6 +287,15 @@
 
             scene.add(model);
             loadedModel = model;
+            modelLoadState = 'loaded';
+
+            sendARDebug('MODEL_LOAD_COMPLETE', {
+              url,
+              animations: gltf.animations?.map(a => a.name) || [],
+              position: pos,
+              rotation: rot,
+              scale: sc,
+            });
 
             // Animations
             if (gltf.animations?.length > 0) {
@@ -231,19 +304,21 @@
                 a.name.toUpperCase().includes('IDLE')
               ) || gltf.animations[0];
               mixer.clipAction(defaultClip).play();
-              console.log('[ar-xr] Animations:', gltf.animations.map(a => a.name));
+              logToBuffer('info', 'Animations available', { animations: gltf.animations.map(a => a.name) });
             }
 
-            console.log('[ar-xr] Model loaded:', url);
             resolve(model);
           },
           (progress) => {
             if (progress.total) {
-              updateDebug(`Model ${Math.round(progress.loaded / progress.total * 100)}%`);
+              const percent = Math.round(progress.loaded / progress.total * 100);
+              updateDebug(`Model ${percent}%`);
             }
           },
           (error) => {
-            console.error('[ar-xr] Model load error:', error);
+            modelLoadState = 'error';
+            sendARDebug('MODEL_LOAD_ERROR', { url, error: String(error) });
+            logToBuffer('error', 'Model load failed', { error: String(error) });
             reject(error);
           }
         );
@@ -252,6 +327,8 @@
 
     // ========== LOAD TARGET JSON FROM SUPABASE ==========
     async function loadTargetData() {
+      sendARDebug('TARGET_LOAD_START');
+
       // Prefer explicit target JSON URL, else build from base
       let jsonUrl = targetJsonUrl;
       if (!jsonUrl && targetImageUrl) {
@@ -267,7 +344,6 @@
       }
 
       showOverlay('Loading target data...', jsonUrl.split('/').pop());
-      updateDebug('Fetching: ' + jsonUrl.split('/').pop());
 
       const res = await fetch(jsonUrl);
       if (!res.ok) throw new Error(`Failed to fetch target JSON: ${res.status}`);
@@ -284,7 +360,11 @@
       // physicalWidth in meters (default 8cm — standard flashcard width)
       const physicalWidth = data.properties?.physicalWidth || 0.08;
 
-      console.log('[ar-xr] Target:', data.name, '| Image:', imageUrl, '| Width:', physicalWidth + 'm');
+      sendARDebug('TARGET_LOAD_COMPLETE', {
+        name: data.name,
+        imageUrl,
+        physicalWidth,
+      });
 
       return {
         name: data.name || qrId,
@@ -298,6 +378,7 @@
     const trackedTargets = new Set();
 
     async function initXR(targetData) {
+      sendARDebug('XR_INIT_START', { targetName: targetData.name });
       showOverlay('Starting XR session...', '');
 
       // Wait for XR8 to be ready
@@ -305,20 +386,26 @@
         if (XR8.isLoaded()) { resolve(true); return; }
         window.addEventListener('xrloaded', resolve, { once: true });
         // Timeout fallback after 8s
-        setTimeout(resolve, 8000);
+        setTimeout(() => {
+          logToBuffer('warn', 'XR8 load timeout, proceeding anyway');
+          resolve(false);
+        }, 8000);
       });
 
       await checkLoaded();
 
       if (typeof XR8 === 'undefined') {
+        sendARDebug('XR_INIT_ERROR', { error: '8th Wall SDK not loaded' });
         throw new Error('8th Wall engine failed to load. Check CDN connectivity.');
       }
 
       if (!XR8.isLoaded()) {
+        sendARDebug('XR_INIT_ERROR', { error: '8th Wall SDK not ready' });
         throw new Error('8th Wall SDK did not load. Try refreshing.');
       }
 
       updateDebug('8th Wall ready');
+      sendARDebug('XR_SDK_READY');
 
       // Configure image targets
       XR8.XrController.configure({
@@ -329,19 +416,32 @@
         }],
       });
 
+      sendARDebug('XR_TARGETS_CONFIGURED', {
+        image: targetData.image,
+        name: targetData.name,
+        physicalWidth: targetData.physicalWidth,
+      });
+
       // Camera pipeline — handles frame loop and target tracking
       const cameraPipelineModule = {
         name: 'camera-pipeline',
         onStart: ({ canvas: c, gl }) => {
-          console.log('[ar-xr] Camera pipeline started');
           updateDebug('Camera active');
           hideOverlay();
+          setPhase('viewing');
 
           sendMessage('AR_READY', {
             engine: '8th-wall-self-hosted',
             qrId: qrId,
             word: word,
             hasModel: !!modelUrl,
+            hasModelLoaded: !!loadedModel,
+          });
+
+          sendARDebug('CAMERA_START', {
+            canvasWidth: c?.width,
+            canvasHeight: c?.height,
+            glContext: gl ? 'active' : 'missing',
           });
         },
         onUpdate: (frame) => {
@@ -359,7 +459,7 @@
       const renderModule = {
         name: 'custom-render',
         onStart: () => {
-          console.log('[ar-xr] Render module started');
+          logToBuffer('info', 'Render module started');
         },
         onUpdate: () => {
           if (renderer && scene && camera) {
@@ -373,8 +473,8 @@
       await XR8.addCameraPipelineModule(renderModule);
       await XR8.startSession({ requestedFeatures: ['image-targets'] });
 
-      console.log('[ar-xr] XR session started');
       updateDebug('Tracking active');
+      sendARDebug('XR_SESSION_STARTED');
 
       // Watch for target found/lost via frame data
       watchTargets();
@@ -385,7 +485,10 @@
     let animationFrameId = null;
     function watchTargets() {
       function check() {
-        if (!XR8.XrController) { animationFrameId = requestAnimationFrame(check); return; }
+        if (!XR8.XrController) {
+          animationFrameId = requestAnimationFrame(check);
+          return;
+        }
         const reality = XR8.XrController.reality();
         if (reality && reality.cameraPixelsTracked) {
           const targetName = qrId || word;
@@ -404,16 +507,26 @@
     }
 
     function onTargetFound(name) {
-      console.log('[ar-xr] Target found:', name);
+      logToBuffer('info', 'Target found', { name });
+      sendARDebug('TARGET_FOUND', { qrId: name, word: word });
+
       sendMessage('TARGET_FOUND', { targetIndex: 0, qrId: name, word: word });
       showCardLabel(word);
-      if (loadedModel) loadedModel.visible = true;
+      if (loadedModel) {
+        loadedModel.visible = true;
+        sendARDebug('MODEL_VISIBLE', { reason: 'target_found', qrId: name });
+      }
     }
 
     function onTargetLost(name) {
-      console.log('[ar-xr] Target lost:', name);
+      logToBuffer('info', 'Target lost', { name });
+      sendARDebug('TARGET_LOST', { qrId: name });
+
       sendMessage('TARGET_LOST', { targetIndex: 0, qrId: name });
-      if (loadedModel) loadedModel.visible = false;
+      if (loadedModel) {
+        loadedModel.visible = false;
+        sendARDebug('MODEL_HIDDEN', { reason: 'target_lost', qrId: name });
+      }
     }
 
     // ========== COMBO DETECTION (from backend) ==========
@@ -428,10 +541,10 @@
         if (res.ok) {
           const data = await res.json();
           comboRules = data.rules || data || [];
-          console.log('[ar-xr] Combo rules loaded:', comboRules.length);
+          logToBuffer('info', 'Combo rules loaded', { count: comboRules.length });
         }
       } catch (e) {
-        console.warn('[ar-xr] Combo rules unavailable:', e);
+        logToBuffer('warn', 'Combo rules unavailable', { error: String(e) });
       }
     }
 
@@ -439,34 +552,124 @@
     window.addEventListener('message', (event) => {
       const { type, payload } = event.data || {};
       if (!type) return;
-      console.log('[ar-xr] RECV:', type, payload);
 
+      // Handle REQUEST_IFRAME_LOGS for Telegram sync
+      if (type === 'REQUEST_IFRAME_LOGS') {
+        const requestId = payload?.requestId || 'unknown';
+        const logs = window.XRDebug?.getLogs() || 'No logs available';
+
+        window.parent.postMessage({
+          type: 'IFRAME_LOGS',
+          payload: {
+            requestId,
+            logs,
+            engine: '8th-wall',
+            qrId: qrId,
+            word: word,
+          },
+          timestamp: Date.now(),
+        }, '*');
+
+        logToBuffer('debug', 'Sent iframe logs', { requestId, logCount: logBuffer.length });
+        return;
+      }
+
+      // Handle DEBUG_TOGGLE
       if (type === 'DEBUG_TOGGLE') {
         debugPanel.style.display = payload?.enabled ? 'block' : 'none';
+        logToBuffer('debug', 'Debug panel toggled', { enabled: payload?.enabled });
+        return;
       }
+
+      // Handle TELEGRAM_SYNC trigger
+      if (type === 'TRIGGER_TELEGRAM_SYNC') {
+        const parentLogs = payload?.parentLogs || '';
+        const manualOffset = payload?.manualOffset || { x: 0, y: 0 };
+
+        const fullLogs =
+          `=== PARENT LOGS ===\n${parentLogs}\n\n` +
+          `=== 8TH WALL IFRAME LOGS ===\n${window.XRDebug?.getLogs() || 'No logs'}\n\n` +
+          `=== STATE ===\n` +
+          `qrId: ${qrId}\n` +
+          `word: ${word}\n` +
+          `modelLoaded: ${!!loadedModel}\n` +
+          `modelVisible: ${loadedModel?.visible || false}\n` +
+          `trackedTargets: ${Array.from(trackedTargets).join(', ') || 'none'}\n` +
+          `modelLoadState: ${modelLoadState}\n` +
+          `currentPhase: ${currentPhase}\n`;
+
+        window.parent.postMessage({
+          type: 'TELEGRAM_SYNC_READY',
+          payload: {
+            logs: fullLogs,
+            manualOffset,
+            engine: '8th-wall',
+            flashcardCount: trackedTargets.size || 1,
+          },
+          timestamp: Date.now(),
+        }, '*');
+
+        logToBuffer('debug', 'Telegram sync prepared', {
+          logLines: logBuffer.length,
+          trackedTargets: trackedTargets.size,
+        });
+        return;
+      }
+
+      // Log other messages
+      logToBuffer('debug', 'Message received', { type, payload });
     });
 
     // ========== MAIN ==========
     async function main() {
-      console.log('[ar-xr] Initializing 8th Wall (self-hosted)');
-      console.log('[ar-xr] Params:', { qrId, modelUrl, targetJsonUrl, targetImageUrl, word, isDebug });
+      logToBuffer('info', 'Main started', {
+        qrId,
+        modelUrl,
+        targetJsonUrl,
+        targetImageUrl,
+        word,
+        isDebug,
+      });
 
-      initThree();
-      updateDebug('Three.js ready');
+      sendARDebug('PAGE_LOAD');
 
-      // Load combo rules in background
-      loadComboRules();
+      try {
+        initThree();
+        updateDebug('Three.js ready');
 
-      // Load model and target data in parallel
-      const targetData = await loadTargetData();
-      const modelPromise = modelUrl ? loadModel(modelUrl) : Promise.resolve(null);
+        // Load combo rules in background
+        loadComboRules();
 
-      await initXR(targetData);
+        // Load model and target data in parallel
+        const targetData = await loadTargetData();
 
-      // Also wait for model
-      await modelPromise;
+        setPhase('loading');
+        sendARDebug('LOADING_ASSETS', {
+          hasModel: !!modelUrl,
+          hasTarget: !!targetData,
+        });
 
-      console.log('[ar-xr] Initialization complete');
+        const modelPromise = modelUrl ? loadModel(modelUrl) : Promise.resolve(null);
+
+        await initXR(targetData);
+
+        // Also wait for model
+        await modelPromise;
+
+        setPhase('viewing');
+        sendARDebug('INIT_COMPLETE', {
+          modelLoaded: !!loadedModel,
+          targetName: targetData.name,
+        });
+
+        logToBuffer('info', 'Initialization complete');
+
+      } catch (error) {
+        setPhase('error');
+        sendARDebug('INIT_ERROR', { error: String(error), stack: error?.stack });
+        logToBuffer('error', 'Initialization failed', { error: String(error) });
+        showError(String(error));
+      }
     }
 
     if (document.readyState === 'loading') {

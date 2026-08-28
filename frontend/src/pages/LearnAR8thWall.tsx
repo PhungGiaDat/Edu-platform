@@ -16,6 +16,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTelegramSync } from '@/hooks/useTelegramSync';
 import '../styles/LearnAR8thWall.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://edu-platform-api-do20.onrender.com';
@@ -58,6 +59,29 @@ export const LearnAR8thWall: React.FC = () => {
 
   // All scanned cards this session
   const [foundCards, setFoundCards] = useState<Set<string>>(new Set());
+
+  // Telegram Sync integration
+  const { syncTelegram, syncStatus, iframeLogs } = useTelegramSync({
+    iframeRef: viewerRef,
+    flashcardCount: foundCards.size || 1,
+    getParentLogs: () => {
+      const md = (window as any).MobileDebug;
+      return md?.getLogs?.() || 'No parent logs available';
+    },
+    getActiveEngine: () => '8th-wall',
+  });
+
+  // Keyboard shortcut for Telegram sync (Ctrl+Shift+S)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+        e.preventDefault();
+        syncTelegram();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [syncTelegram]);
 
   // ========================================================================
   // LISTEN: QR_DETECTED from scanner iframe
@@ -277,6 +301,17 @@ export const LearnAR8thWall: React.FC = () => {
         )}
 
       </div>
+
+      {/* Telegram Sync Button */}
+      {phase === 'VIEWING' && (
+        <button
+          className={`telegram-sync-btn ${syncStatus}`}
+          onClick={syncTelegram}
+          title="Sync logs to Telegram (Ctrl+Shift+S)"
+        >
+          {syncStatus === 'syncing' ? '...' : syncStatus === 'success' ? 'OK' : syncStatus === 'error' ? 'ERR' : 'TG'}
+        </button>
+      )}
 
       {/* Found Cards Badge */}
       {foundCards.size > 0 && (

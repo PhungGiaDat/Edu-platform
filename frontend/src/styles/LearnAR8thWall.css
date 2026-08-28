@@ -382,6 +382,52 @@
   font-size: 14px;
 }
 
+/* Telegram Sync Button */
+.telegram-sync-btn {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom) + 90px);
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: #229ED9;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 300;
+  transition: transform 0.2s, background 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.telegram-sync-btn:hover {
+  transform: scale(1.1);
+  background: #1a8bc4;
+}
+
+.telegram-sync-btn:active {
+  transform: scale(0.95);
+}
+
+.telegram-sync-btn.syncing {
+  background: #f59e0b;
+  animation: pulse 1s infinite;
+}
+
+.telegram-sync-btn.success {
+  background: #10b981;
+}
+
+.telegram-sync-btn.error {
+  background: #ef4444;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 /* Mobile adjustments */
 @media (max-width: 480px) {
   .ar-xr-header {

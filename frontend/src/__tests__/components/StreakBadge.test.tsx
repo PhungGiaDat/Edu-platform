@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 
+import '@testing-library/jest-dom/vitest';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 
@@ -93,8 +94,8 @@ describe('StreakBadge Component', () => {
     });
   });
 
-  describe('Fire Emoji Display', () => {
-    it('should show fire emoji when streak > 0', async () => {
+  describe('Lexi Mascot Display', () => {
+    it('should show Lexi cheering when streak > 0', async () => {
       vi.mocked(apiClient.get).mockResolvedValue({
         current_streak: 5,
         longest_streak: 10,
@@ -102,14 +103,14 @@ describe('StreakBadge Component', () => {
         streak_active_today: true,
       });
 
-      const { container } = render(<StreakBadge />);
+      render(<StreakBadge />);
 
       await waitFor(() => {
-        expect(container.textContent).toContain('🔥');
+        expect(screen.getByRole('img', { name: 'Lexi cheering your learning streak' })).toBeInTheDocument();
       });
     });
 
-    it('should show snow emoji when streak is 0', async () => {
+    it('should show Lexi waiting when streak is 0', async () => {
       vi.mocked(apiClient.get).mockResolvedValue({
         current_streak: 0,
         longest_streak: 0,
@@ -117,10 +118,10 @@ describe('StreakBadge Component', () => {
         streak_active_today: false,
       });
 
-      const { container } = render(<StreakBadge />);
+      render(<StreakBadge />);
 
       await waitFor(() => {
-        expect(container.textContent).toContain('❄️');
+        expect(screen.getByRole('img', { name: 'Lexi waiting for your next streak' })).toBeInTheDocument();
       });
     });
   });
@@ -170,7 +171,7 @@ describe('StreakBadge Component', () => {
       const { container } = render(<StreakBadge />);
 
       await waitFor(() => {
-        expect(container.textContent).toContain('⭐');
+        expect(container.querySelector('.clay-streak-star svg')).toBeInTheDocument();
       });
     });
 
@@ -379,8 +380,8 @@ describe('StreakBadge Component', () => {
       const { container } = render(<StreakBadge />);
 
       await waitFor(() => {
-        const emojiElement = container.querySelector('.animate-pulse');
-        expect(emojiElement?.textContent).toContain('🔥');
+        expect(container.querySelector('[data-animation-state="jumping"]')).toBeInTheDocument();
+        expect(container.querySelector('.clay-streak-icon--hot')).toHaveClass('motion-safe:animate-pulse');
       });
     });
 
@@ -395,8 +396,8 @@ describe('StreakBadge Component', () => {
       const { container } = render(<StreakBadge />);
 
       await waitFor(() => {
-        const emojiElement = container.querySelector('.animate-pulse');
-        expect(emojiElement).toBeNull();
+        expect(container.querySelector('[data-animation-state="jumping"]')).toBeNull();
+        expect(container.querySelector('.clay-streak-icon--cold')).not.toHaveClass('motion-safe:animate-pulse');
       });
     });
   });
