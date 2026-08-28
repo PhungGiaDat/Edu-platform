@@ -4,9 +4,9 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from '../../../node_modules/react-i18next';
-import { AdminLayout } from '../../components/admin/AdminLayout';
-import { SectionCard, StatCard } from '../../components/admin/AdminCard';
-import { ChartBarIcon, UsersIcon, ClockIcon, FireIcon } from '../../components/Icons';
+import { AdminLayout } from '@/features/admin/components/AdminLayout';
+import { SectionCard, StatCard } from '@/features/admin/components/AdminCard';
+import { ChartBarIcon, UsersIcon, ClockIcon, FireIcon } from '@/shared/components/icons/Icons';
 import { adminAnalyticsApi } from '../../services/adminApi';
 import type { ProgressAnalytics, EngagementAnalytics } from '../../types/admin';
 

@@ -3,7 +3,7 @@ import {
   type MindCatalogManifest,
   preflightRequiredGlb,
   validateCardForCatalog,
-} from '@/components/ar/arCatalogContract';
+} from '@/features/ar/components/arCatalogContract';
 
 const manifest: MindCatalogManifest = {
   schemaVersion: 1,

@@ -6,10 +6,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSwipeable } from 'react-swipeable';
 import { notebookApi } from '../services/notebookApi';
 import type { NotebookEntry, VocabularyTopic } from '../types/notebook';
-import { ClayCard } from '../components/clay/ClayCard';
-import { Button } from '../components/ui/Button';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { Badge } from '../components/ui/Badge';
+import { ClayCard } from '@/shared/components/clay/ClayCard';
+import { Button } from '@/shared/components/ui/Button';
+import { LoadingSpinner } from '@/shared/components/ui/LoadingSpinner';
+import { Badge } from '@/shared/components/ui/Badge';
 import { colors } from '../design-tokens/claymorphic';
 
 interface FlashcardsPageProps {

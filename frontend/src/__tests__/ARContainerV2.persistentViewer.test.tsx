@@ -500,4 +500,4 @@ function TestableARContainerV2(props: PersistentViewerProps) {
 }
 
 // Re-export the real component so the test file is self-contained.
-import { ARContainerV2 as RealARContainerV2 } from '@/components/ar/ARContainerV2';
+import { ARContainerV2 as RealARContainerV2 } from '@/features/ar/components/ARContainerV2';

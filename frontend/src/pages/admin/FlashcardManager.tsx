@@ -5,11 +5,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../../node_modules/react-i18next';
-import { AdminLayout } from '../../components/admin/AdminLayout';
-import { AdminCard } from '../../components/admin/AdminCard';
+import { AdminLayout } from '@/features/admin/components/AdminLayout';
+import { AdminCard } from '@/features/admin/components/AdminCard';
 import { adminDecksApi, adminFlashcardsApi } from '../../services/adminApi';
 import type { FlashcardDeck, Flashcard, PaginatedResponse } from '../../types/admin';
-import { CardsIcon, PlusIcon, BookOpenIcon, TrashIcon, EditIcon, ChevronRightIcon } from '../../components/Icons';
+import { CardsIcon, PlusIcon, BookOpenIcon, TrashIcon, EditIcon, ChevronRightIcon } from '@/shared/components/icons/Icons';
 
 type ViewMode = 'decks' | 'deck-detail';
 

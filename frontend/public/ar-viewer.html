@@ -142,6 +142,8 @@
             }
         })();
     </script>
+    <!-- 8th Wall Engine Binary - loaded async for fallback AR -->
+    <script src="/external/xr/xr.js" async data-preload-chunks="slam"></script>
     <link rel="stylesheet" href="/static/ar-assets/css/ar-viewer.css">
 </head>
 <body>
@@ -242,6 +244,20 @@
                 if (msg.type === 'AR_READY') {
                     hideOverlay();
                     return;
+                }
+
+                // Engine state change logging
+                if (msg.type === 'AR_DEBUG' && msg.payload && msg.payload.label) {
+                    var label = msg.payload.label;
+                    if (label.startsWith('ENGINE_')) {
+                        var details = msg.payload.details || {};
+                        console.log('[ENGINE] ' + label, details);
+                        postToParent('AR_DEBUG', {
+                            label: label,
+                            details: details,
+                            source: 'engine-monitor'
+                        });
+                    }
                 }
 
                 // Spec C: Show toast when add-card scan starts
@@ -538,6 +554,7 @@
                 await loadScript('/static/ar-assets/js/ar-target-registry.js', 'target-registry', deadlineAt);
                 await loadScript('/static/ar-assets/js/ar-add-card-scanner.js', 'add-card-scanner', deadlineAt);
                 await loadScript('/static/ar-assets/js/ar-model-scale.js', 'model-scale-policy', deadlineAt);
+                await loadScript('/static/ar-assets/js/ar-engine-monitor.js', 'engine-monitor', deadlineAt);
 
                 var maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));
                 // Fix D: read tuning params with same defaults as ar-viewer.js

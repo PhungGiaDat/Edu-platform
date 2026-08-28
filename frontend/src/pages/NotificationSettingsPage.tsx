@@ -3,12 +3,12 @@
  * Configure spaced repetition push notification schedules
  */
 import { useState, useEffect } from 'react';
-import { ClayCard } from '../components/clay/ClayCard';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Switch } from '../components/ui/Switch';
-import { Badge } from '../components/ui/Badge';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { ClayCard } from '@/shared/components/clay/ClayCard';
+import { Button } from '@/shared/components/ui/Button';
+import { Input } from '@/shared/components/ui/Input';
+import { Switch } from '@/shared/components/ui/Switch';
+import { Badge } from '@/shared/components/ui/Badge';
+import { LoadingSpinner } from '@/shared/components/ui/LoadingSpinner';
 import { colors, shadows } from '../design-tokens/claymorphic';
 import { useAuth } from '../contexts/AuthContext';
 

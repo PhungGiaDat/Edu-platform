@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../../node_modules/react-i18next';
-import { AdminLayout } from '../../components/admin/AdminLayout';
-import { AdminCard, SectionCard, StatCard } from '../../components/admin/AdminCard';
+import { AdminLayout } from '@/features/admin/components/AdminLayout';
+import { AdminCard, SectionCard, StatCard } from '@/features/admin/components/AdminCard';
 import { adminDashboardApi } from '../../services/adminApi';
 import type { DashboardStats } from '../../types/admin';
 import {
@@ -12,7 +12,7 @@ import {
   FireIcon,
   LightningBoltIcon,
   UsersIcon,
-} from '../../components/Icons';
+} from '@/shared/components/icons/Icons';
 
 const DashboardSkeleton: React.FC = () => {
   const { t } = useTranslation();

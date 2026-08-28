@@ -6,8 +6,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import Flashcard from "../components/Flashcard";
-import { PronunciationPractice } from "../components/PronunciationPractice";
+import Flashcard from '@/features/learning/components/Flashcard';
+import { PronunciationPractice } from '@/features/pronunciation/components/PronunciationPractice';
 import { apiClient } from "../services/apiClient";
 import { useAuth } from "../contexts/AuthContext";
 import jungle from "../../public/assets/flashcards/jungle.jpg";

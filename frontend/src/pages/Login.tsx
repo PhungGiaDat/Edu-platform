@@ -2,9 +2,9 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocale } from '../contexts/LocaleContext';
-import { ClayCard } from '@/components/clay/ClayCard';
-import { ClayButton } from '@/components/clay/ClayButton';
-import { LexiLoginLoader } from '@/components/LexiLoginLoader';
+import { ClayCard } from '@/shared/components/clay/ClayCard';
+import { ClayButton } from '@/shared/components/clay/ClayButton';
+import { LexiLoginLoader } from '@/features/auth/components/LexiLoginLoader';
 
 const bgLayers = {
   page: {

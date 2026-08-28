@@ -2,7 +2,7 @@
 // Compact gamification UI for AR view - shows pet, XP, and quick leaderboard
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { PetViewer3DCompact } from '@/components/pets/PetViewer3D';
+import { PetViewer3DCompact } from '@/features/pets/components/PetViewer3D';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePets } from '@/hooks/usePets';
 import { eventBus } from '@/runtime/EventBus';

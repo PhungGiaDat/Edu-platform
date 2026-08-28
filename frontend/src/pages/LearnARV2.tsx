@@ -24,14 +24,14 @@
 
 import { useEffect, useState, useCallback, useRef, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ARContainerV2, ARPhase } from '@/components/ar/ARContainerV2';
-import { ArCardRejectedToast, type ArCardRejectedData } from '@/components/ar/ArCardRejectedToast';
-import { applyInteractionFeedback } from '@/components/ar/modelInteractionPolicy';
-import ARControlPanel from '@/components/panel/ARControlPanel';
-import { ARGamificationPanel } from '@/components/Gamification/ARGamificationPanel';
-import { PetSelector } from '@/components/pets/PetSelector';
-import { RewardCelebration } from '@/components/Gamification/RewardCelebration';
-import { ErrorFriendly } from '@/components/ErrorFriendly';
+import { ARContainerV2, ARPhase } from '@/features/ar/components/ARContainerV2';
+import { ArCardRejectedToast, type ArCardRejectedData } from '@/features/ar/components/ArCardRejectedToast';
+import { applyInteractionFeedback } from '@/features/ar/components/modelInteractionPolicy';
+import ARControlPanel from '@/features/ar/components/ARControlPanel';
+import { ARGamificationPanel } from '@/features/gamification/components/ARGamificationPanel';
+import { PetSelector } from '@/features/pets/components/PetSelector';
+import { RewardCelebration } from '@/features/gamification/components/RewardCelebration';
+import { ErrorFriendly } from '@/shared/components/feedback/ErrorFriendly';
 import { useArData } from '@/hooks/useArData';
 import { useQuizData } from '@/hooks/useQuizData';
 import { useGameData } from '@/hooks/useGameData';
@@ -55,8 +55,8 @@ import type { GameDifficulty, GameType } from '@/types';
 const API_BASE = getApiBase();
 
 // Lazy-load heavy overlay components to reduce initial bundle
-const QuizOverlay = lazy(() => import('@/components/Quiz').then(m => ({ default: m.QuizOverlay })));
-const GameOverlay = lazy(() => import('@/components/GameOverlay').then(m => ({ default: m.GameOverlay })));
+const QuizOverlay = lazy(() => import('@/features/games/components/Quiz').then(m => ({ default: m.QuizOverlay })));
+const GameOverlay = lazy(() => import('@/features/games/components/GameOverlay').then(m => ({ default: m.GameOverlay })));
 
 const RECOVERABLE_AR_ERROR_CODES = new Set([
     'MODEL_LOAD_ERROR',

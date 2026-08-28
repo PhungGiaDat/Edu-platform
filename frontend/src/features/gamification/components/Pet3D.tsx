@@ -7,6 +7,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, MeshWobbleMaterial, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 import type { PetType, EvolutionStage, PetMood } from './VirtualPetEvolved';
+import { sentryMonitoringService } from '@/services/sentryMonitoringService';
 
 interface Pet3DProps {
     petType: PetType;
@@ -33,6 +34,11 @@ class Pet3DErrorBoundary extends Component<{ children: React.ReactNode; fallback
     }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        sentryMonitoringService.captureException(error, {
+            feature: 'gamification',
+            component: 'Pet3D',
+            componentStack: errorInfo.componentStack,
+        });
         console.error('[Pet3D] Render error (caught by boundary):', error.message, errorInfo);
     }
 

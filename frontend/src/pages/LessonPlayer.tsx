@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { AssetTile, ImageQuiz, RewardPopup } from '@/components/courses/CourseLearningBlocks';
-import { LessonMedia } from '@/components/LessonMedia';
-import { LessonVideoPlayer } from '@/components/LessonVideoPlayer';
-import { LessonImageGallery } from '@/components/LessonImageGallery';
-import { SceneViewer } from '@/components/SceneViewer';
+import { AssetTile, ImageQuiz, RewardPopup } from '@/features/courses/components/CourseLearningBlocks';
+import { LessonMedia } from '@/features/courses/components/LessonMedia';
+import { LessonVideoPlayer } from '@/features/courses/components/LessonVideoPlayer';
+import { LessonImageGallery } from '@/features/courses/components/LessonImageGallery';
+import { SceneViewer } from '@/features/courses/components/SceneViewer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { eventBus } from '@/runtime/EventBus';

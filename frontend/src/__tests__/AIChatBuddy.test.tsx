@@ -3,10 +3,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
-import { AIChatBuddy } from '../components/AIChatBuddy';
+import { AIChatBuddy } from '@/features/chat/components/AIChatBuddy';
 
 // ── Mock CodexPetSprite ─────────────────────────────────────────────────────
-vi.mock('@/components/pets/CodexPetSprite', () => ({
+vi.mock('@/features/pets/components/CodexPetSprite', () => ({
     CodexPetSprite: ({ label }: { label: string; animationState: string; className?: string; size?: string }) => (
         <span data-testid={`pet-${label.toLowerCase()}`} aria-label={label}>{label}</span>
     ),

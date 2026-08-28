@@ -3,11 +3,11 @@
  * Web screen for AI-powered translation
  */
 import { useState, useCallback } from 'react';
-import { ClayCard } from '../components/clay/ClayCard';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { Badge } from '../components/ui/Badge';
+import { ClayCard } from '@/shared/components/clay/ClayCard';
+import { Button } from '@/shared/components/ui/Button';
+import { Input } from '@/shared/components/ui/Input';
+import { LoadingSpinner } from '@/shared/components/ui/LoadingSpinner';
+import { Badge } from '@/shared/components/ui/Badge';
 import { colors, shadows } from '../design-tokens/claymorphic';
 import { notebookApi } from '../services/notebookApi';
 import { apiClient } from '../services/apiClient';

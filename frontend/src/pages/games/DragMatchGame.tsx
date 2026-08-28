@@ -3,8 +3,8 @@
  * Tap English word, then tap Vietnamese meaning to match
  */
 import React, { useState, useEffect } from 'react';
-import { ClayCard } from '@/components/clay/ClayCard';
-import { Button } from '@/components/ui/Button';
+import { ClayCard } from '@/shared/components/clay/ClayCard';
+import { Button } from '@/shared/components/ui/Button';
 import { colors, shadows } from '@/design-tokens/claymorphic';
 
 // ─── Types ───────────────────────────────────────────────────────────────────

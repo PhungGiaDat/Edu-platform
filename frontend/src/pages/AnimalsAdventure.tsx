@@ -10,8 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAnimalsCourse, useAnimalsProgress } from '@/hooks/useAnimalsCourse';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
-import { AnimalsHero } from '@/components/animals/AnimalsHero';
-import { AnimalsLessonCard } from '@/components/animals/AnimalsLessonCard';
+import { AnimalsHero } from '@/features/animals/components/AnimalsHero';
+import { AnimalsLessonCard } from '@/features/animals/components/AnimalsLessonCard';
 import '@/styles/animals.css';
 
 const ANIMALS_COURSE_ID = 'animals-adventure-en-5-7';

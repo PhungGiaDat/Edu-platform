@@ -232,7 +232,7 @@ const addFlashcardImpl = useCallback(async (qrId: string, signal: AbortSignal): 
         if (mindCatalogId && mindTargetIndex !== undefined) {
             try {
                 // Import catalog validation functions
-                const { loadMindCatalog, validateCardForCatalog, preflightRequiredGlb } = await import('@/components/ar/arCatalogContract');
+                const { loadMindCatalog, validateCardForCatalog, preflightRequiredGlb } = await import('@/features/ar/components/arCatalogContract');
 
                 // Load and validate manifest
                 const manifest = await loadMindCatalog(mindCatalogId, signal);

@@ -5,8 +5,8 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { EnhancedVideoPlayer } from '@/components/EnhancedVideoPlayer';
-import { ImageGallery } from '@/components/EnhancedImageGallery';
+import { EnhancedVideoPlayer } from '@/features/courses/components/EnhancedVideoPlayer';
+import { ImageGallery } from '@/features/courses/components/EnhancedImageGallery';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import { enhancedCourseService, type StartSessionResponse } from '@/services/EnhancedCourseService';

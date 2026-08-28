@@ -6,6 +6,7 @@
  */
 
 import axios from 'axios';
+import { sentryMonitoringService } from '@/services/sentryMonitoringService';
 
 const TOKEN_KEY = 'authToken';
 
@@ -25,6 +26,10 @@ axios.interceptors.request.use(
     return config;
   },
   (error) => {
+    sentryMonitoringService.captureException(error, {
+      feature: 'axios',
+      operation: 'request-interceptor',
+    });
     return Promise.reject(error);
   }
 );
@@ -35,6 +40,14 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
+    sentryMonitoringService.captureApiFailure(error, {
+      feature: 'axios',
+      client: 'axios',
+      method: error.config?.method?.toUpperCase(),
+      endpoint: error.config?.url,
+      status: error.response?.status,
+    });
+
     // Handle 401 Unauthorized - redirect to login
     if (error.response?.status === 401) {
       try {

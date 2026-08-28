@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { CourseCard } from '@/components/CourseCard';
+import { CourseCard } from '@/features/courses/components/CourseCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale, type Locale } from '@/contexts/LocaleContext';
 import { colors, radius, shadows, transitions } from '@/design-tokens/claymorphic';

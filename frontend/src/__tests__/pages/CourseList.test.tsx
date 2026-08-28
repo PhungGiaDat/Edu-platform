@@ -26,7 +26,7 @@ vi.mock('@/services/LearningPathService', () => ({
   learningPathService: { get: vi.fn().mockResolvedValue(null) },
 }));
 
-vi.mock('@/components/CourseCard', () => ({
+vi.mock('@/features/courses/components/CourseCard', () => ({
   CourseCard: ({ course }: { course: { title: string } }) => <article>{course.title}</article>,
 }));
 

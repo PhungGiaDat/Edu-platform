@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { armViewerBootstrapWatchdog } from '@/components/ar/viewerBootstrapWatchdog';
+import { armViewerBootstrapWatchdog } from '@/features/ar/components/viewerBootstrapWatchdog';
 
 describe('armViewerBootstrapWatchdog', () => {
   it('fires exactly once when the viewer never reports readiness', () => {

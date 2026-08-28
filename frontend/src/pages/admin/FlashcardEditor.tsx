@@ -2,13 +2,13 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type Konva from 'konva';
-import { AdminLayout } from '../../components/admin/AdminLayout';
-import { ChevronLeftIcon } from '../../components/Icons';
+import { AdminLayout } from '@/features/admin/components/AdminLayout';
+import { ChevronLeftIcon } from '@/shared/components/icons/Icons';
 import { adminDecksApi, adminFlashcardsApi } from '../../services/adminApi';
 import useFlashcardEditorStore from '../../stores/flashcard-editor.store';
-import FlashcardCanvas from '../../components/flashcard-editor/FlashcardCanvas';
-import EditorToolbar from '../../components/flashcard-editor/EditorToolbar';
-import PropertiesPanel from '../../components/flashcard-editor/PropertiesPanel';
+import FlashcardCanvas from '@/features/admin/components/flashcard-editor/FlashcardCanvas';
+import EditorToolbar from '@/features/admin/components/flashcard-editor/EditorToolbar';
+import PropertiesPanel from '@/features/admin/components/flashcard-editor/PropertiesPanel';
 import { exportDualImages, base64ToPlain } from '../../utils/flashcard-export';
 import type { FlashcardCreate, FlashcardUpdate, LocalizedString } from '../../types/admin';
 

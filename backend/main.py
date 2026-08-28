@@ -8,15 +8,21 @@ import logging
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
-
 # Add backend directory to Python path
 backend_dir = Path(__file__).parent
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
+
+# Initialize monitoring before importing routers so startup and request
+# exceptions are captured consistently across the application.
+from services.sentry_monitoring_service import sentry_monitoring_service
+
+sentry_monitoring_service.initialize()
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 
 # Import settings and database
 from settings import settings
@@ -91,6 +97,7 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Database connected successfully")
     except Exception as e:
         logger.error(f"❌ Database connection failed: {e}")
+        sentry_monitoring_service.capture_exception(e)
         raise
     
     # Connect to Redis (optional, falls back gracefully if unavailable)
@@ -439,6 +446,7 @@ async def root():
 async def global_exception_handler(request, exc):
     """Global exception handler"""
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    sentry_monitoring_service.capture_exception(exc)
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error occurred"}

@@ -7,8 +7,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LearningPathScene } from '@/components/learning-path-3d/LearningPathScene';
-import { LessonModal } from '@/components/learning-path-3d/LessonModal';
+import { LearningPathScene } from '@/features/learning-path/components/LearningPathScene';
+import { LessonModal } from '@/features/learning-path/components/LessonModal';
 import { useLearningPath3DStore } from '@/hooks/useLearningPath3D';
 import { usePets } from '@/hooks/usePets';
 import { useAuth } from '@/contexts/AuthContext';

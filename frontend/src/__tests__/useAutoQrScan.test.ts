@@ -11,7 +11,7 @@ vi.mock('@/runtime/EventBus', () => ({
   eventBus: eventBusMocks,
 }));
 
-import { useAutoQrScan } from '@/components/ar/useAutoQrScan';
+import { useAutoQrScan } from '@/features/ar/components/useAutoQrScan';
 
 describe('useAutoQrScan', () => {
   beforeEach(() => {

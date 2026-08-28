@@ -2,7 +2,7 @@ import React from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { SessionProvider, useSession } from '../context/SessionContext';
+import { SessionProvider, useSession } from '../contexts/SessionContext';
 import sessionApi from '../services/sessionApi';
 
 vi.mock('../contexts/AuthContext', () => ({

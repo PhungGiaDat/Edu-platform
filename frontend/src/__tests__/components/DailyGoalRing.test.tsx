@@ -22,7 +22,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 }));
 
 // Import after mocking
-import { DailyGoalRing, CompactGoalRing } from '../../components/Gamification/DailyGoalRing';
+import { DailyGoalRing, CompactGoalRing } from '@/features/gamification/components/DailyGoalRing';
 import { apiClient } from '@/services/apiClient';
 
 describe('DailyGoalRing Component', () => {
@@ -413,7 +413,7 @@ describe('DailyGoalRing Component', () => {
         },
       }));
 
-      const { DailyGoalRing } = await import('../../components/Gamification/DailyGoalRing');
+      const { DailyGoalRing } = await import('@/features/gamification/components/DailyGoalRing');
       const { apiClient: nullApiClient } = await import('@/services/apiClient');
 
       render(<DailyGoalRing />);
@@ -435,7 +435,7 @@ describe('DailyGoalRing Component', () => {
         },
       }));
 
-      const { DailyGoalRing } = await import('../../components/Gamification/DailyGoalRing');
+      const { DailyGoalRing } = await import('@/features/gamification/components/DailyGoalRing');
       const { apiClient: noIdApiClient } = await import('@/services/apiClient');
 
       render(<DailyGoalRing />);

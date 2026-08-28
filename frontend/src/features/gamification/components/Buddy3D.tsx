@@ -7,6 +7,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { useSafeGLTF, preloadGLTFSafe } from '@/hooks/useSafeGLTF';
+import { sentryMonitoringService } from '@/services/sentryMonitoringService';
 
 interface Buddy3DProps {
     modelPath?: string; // Default: /assets/models/buddy.glb
@@ -37,6 +38,11 @@ class CanvasErrorBoundary extends Component<CanvasErrorBoundaryProps, CanvasErro
     }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        sentryMonitoringService.captureException(error, {
+            feature: 'gamification',
+            component: 'Buddy3D',
+            componentStack: errorInfo.componentStack,
+        });
         console.error('[Buddy3D] Canvas error:', error, errorInfo);
     }
 

@@ -5,11 +5,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../../node_modules/react-i18next';
-import { AdminLayout } from '../../components/admin/AdminLayout';
-import { AdminCard, SectionCard } from '../../components/admin/AdminCard';
+import { AdminLayout } from '@/features/admin/components/AdminLayout';
+import { AdminCard, SectionCard } from '@/features/admin/components/AdminCard';
 import { adminStudentsApi, adminLearningGoalsApi } from '../../services/adminApi';
 import type { StudentProgress, LearningGoal } from '../../types/admin';
-import { UsersIcon, FireIcon, ClockIcon, BookOpenIcon, CardsIcon, ChevronLeftIcon, CheckCircleIcon } from '../../components/Icons';
+import { UsersIcon, FireIcon, ClockIcon, BookOpenIcon, CardsIcon, ChevronLeftIcon, CheckCircleIcon } from '@/shared/components/icons/Icons';
 
 const StudentDetail: React.FC = () => {
   const { t } = useTranslation();

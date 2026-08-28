@@ -31,11 +31,11 @@ vi.mock('../../services/adminApi', () => ({
   },
 }));
 
-vi.mock('../../components/admin/AdminLayout', () => ({
+vi.mock('@/features/admin/components/AdminLayout', () => ({
   AdminLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
-vi.mock('../../components/Icons', () => ({
+vi.mock('@/shared/components/icons/Icons', () => ({
   ChevronLeftIcon: () => <span aria-hidden="true" />,
 }));
 
@@ -82,15 +82,15 @@ vi.mock('../../utils/flashcard-export', () => ({
 }));
 
 // Mock sub-components
-vi.mock('../../components/flashcard-editor/FlashcardCanvas', () => ({
+vi.mock('@/features/admin/components/flashcard-editor/FlashcardCanvas', () => ({
   default: vi.fn(() => <div data-testid="flashcard-canvas">Canvas</div>),
 }));
 
-vi.mock('../../components/flashcard-editor/EditorToolbar', () => ({
+vi.mock('@/features/admin/components/flashcard-editor/EditorToolbar', () => ({
   default: vi.fn(() => <div data-testid="editor-toolbar">Toolbar</div>),
 }));
 
-vi.mock('../../components/flashcard-editor/PropertiesPanel', () => ({
+vi.mock('@/features/admin/components/flashcard-editor/PropertiesPanel', () => ({
   default: vi.fn(() => <div data-testid="properties-panel">Properties</div>),
 }));
 

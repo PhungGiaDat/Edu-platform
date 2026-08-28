@@ -30,6 +30,15 @@ export default defineConfig(({ mode }) => {
       '**/*.mind',
       '**/*.flist'
     ],
+
+    // 8th Wall Engine Binary - serve from public folder (already copied)
+    // xr.js, xr-face.js, xr-slam.js are loaded via <script> tags in ar-viewer.html
+    publicDir: 'public',
+
+    // Exclude 8th Wall files from Vite processing
+    optimizeDeps: {
+      exclude: ['@8thwall/engine-binary']
+    },
     build: {
       // Use terser to strip all console.log/debugger calls from production bundle.
       // The project has 200+ console.log calls across AR/game/pet code — removing

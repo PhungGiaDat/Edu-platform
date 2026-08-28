@@ -8,6 +8,7 @@
  */
 
 import { getApiBase } from '@/config';
+import { sentryMonitoringService } from '@/services/sentryMonitoringService';
 
 const API_BASE = getApiBase();
 const TOKEN_KEY = 'authToken';
@@ -239,9 +240,10 @@ export async function request(
 
   const url = buildUrl(endpoint, params);
   const headers = prepareHeaders({ ...fetchOptions, skipAuth, body });
+  let response: Response | undefined;
 
   try {
-    const response = await fetch(url, {
+    response = await fetch(url, {
       ...fetchOptions,
       headers,
       body: serializeRequestBody(body),
@@ -249,6 +251,12 @@ export async function request(
 
     return await handleResponse(response);
   } catch (error) {
+    sentryMonitoringService.captureApiFailure(error, {
+      feature: 'api-client',
+      method: options.method || 'GET',
+      endpoint,
+      status: response?.status,
+    });
     console.error(`[ApiClient] ${options.method || 'GET'} ${endpoint}:`, error);
     throw error;
   }

@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { HapticService } from '@/services/HapticService';
 import { apiClient } from '@/services/apiClient';
+import { sentryMonitoringService } from '@/services/sentryMonitoringService';
 
 const IFRAME_LOG_REQUEST_TIMEOUT_MS = 1000;
 
@@ -169,6 +170,15 @@ export function useTelegramSync({
       HapticService.success();
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
+      // apiClient already captures server/network failures. Keep this
+      // feature-specific breadcrumb so the shared event retains Telegram
+      // context without creating a duplicate Sentry issue.
+      sentryMonitoringService.addBreadcrumb('Telegram sync failed', {
+        feature: 'telegram-sync',
+        operation: 'send-report',
+        endpoint: '/api/v1/telegram/sync',
+        errorMessage: error.message,
+      }, 'error', 'telegram');
       console.error('❌ Telegram Sync Failed:', error.message);
       setSyncStatus('error');
       HapticService.error();

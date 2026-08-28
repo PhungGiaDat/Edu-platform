@@ -4,7 +4,7 @@ import {
   initialRevisionState,
   rejectRevision,
   requestRevision,
-} from '@/components/ar/activeTargetRevision';
+} from '@/features/ar/components/activeTargetRevision';
 import type { ActiveViewerTarget } from '@/core/types/ARMessages';
 
 const elephant: ActiveViewerTarget = {

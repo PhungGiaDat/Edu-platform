@@ -3,8 +3,8 @@
  * Tap a color to hear its name pronounced
  */
 import React, { useState } from 'react';
-import { ClayCard } from '@/components/clay/ClayCard';
-import { Button } from '@/components/ui/Button';
+import { ClayCard } from '@/shared/components/clay/ClayCard';
+import { Button } from '@/shared/components/ui/Button';
 import { useSpeech } from '@/hooks/useSpeech';
 import { colors, shadows } from '@/design-tokens/claymorphic';
 

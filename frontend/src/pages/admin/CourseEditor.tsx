@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AdminLayout } from '../../components/admin/AdminLayout';
+import { AdminLayout } from '@/features/admin/components/AdminLayout';
 import {
   BookOpenIcon,
   CardsIcon,
@@ -11,7 +11,7 @@ import {
   PlusIcon,
   SaveIcon,
   TrashIcon,
-} from '../../components/Icons';
+} from '@/shared/components/icons/Icons';
 import { adminCoursesApi } from '../../services/adminApi';
 import type { CourseCreate, CourseUpdate, Lesson } from '../../types/admin';
 

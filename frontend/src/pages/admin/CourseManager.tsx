@@ -5,11 +5,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../../node_modules/react-i18next';
-import { AdminLayout } from '../../components/admin/AdminLayout';
-import { AdminCard } from '../../components/admin/AdminCard';
+import { AdminLayout } from '@/features/admin/components/AdminLayout';
+import { AdminCard } from '@/features/admin/components/AdminCard';
 import { adminCoursesApi } from '../../services/adminApi';
 import type { Course, PaginatedResponse } from '../../types/admin';
-import { BookOpenIcon, PlusIcon, TrashIcon, EditIcon } from '../../components/Icons';
+import { BookOpenIcon, PlusIcon, TrashIcon, EditIcon } from '@/shared/components/icons/Icons';
 
 const CourseManager: React.FC = () => {
   const { t, i18n: _i18n } = useTranslation();

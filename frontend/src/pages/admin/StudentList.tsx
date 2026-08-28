@@ -5,11 +5,11 @@
 import React, { useEffect, useState, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../../node_modules/react-i18next';
-import { AdminLayout } from '../../components/admin/AdminLayout';
-import { AdminCard } from '../../components/admin/AdminCard';
+import { AdminLayout } from '@/features/admin/components/AdminLayout';
+import { AdminCard } from '@/features/admin/components/AdminCard';
 import { adminStudentsApi } from '../../services/adminApi';
 import type { StudentProgress, PaginatedResponse } from '../../types/admin';
-import { UsersIcon, SearchIcon, FireIcon, ChevronRightIcon, ChevronLeftIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '../../components/Icons';
+import { UsersIcon, SearchIcon, FireIcon, ChevronRightIcon, ChevronLeftIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@/shared/components/icons/Icons';
 import { formatDistanceToNow } from '../../utils/dateUtils';
 
 // Memoized student row component

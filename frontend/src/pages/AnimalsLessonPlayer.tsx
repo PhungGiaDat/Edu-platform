@@ -14,10 +14,10 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { colors, shadows, radius } from '../design-tokens/claymorphic';
-import { VocabularyCard } from '../components/animals/VocabularyCard';
-import { QuizQuestion } from '../components/animals/QuizQuestion';
-import { ProgressBar } from '../components/animals/ProgressBar';
-import { RewardAnimation } from '../components/animals/RewardAnimation';
+import { VocabularyCard } from '@/features/animals/components/VocabularyCard';
+import { QuizQuestion } from '@/features/animals/components/QuizQuestion';
+import { ProgressBar } from '@/features/animals/components/ProgressBar';
+import { RewardAnimation } from '@/features/animals/components/RewardAnimation';
 import type { Lesson } from '../types/course';
 
 interface Section {

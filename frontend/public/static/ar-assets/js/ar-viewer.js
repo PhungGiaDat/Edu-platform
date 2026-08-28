@@ -346,7 +346,7 @@
     // Increased from 0.75/1.0 to 1.2/1.5 to ensure models fill the card nicely.
     const FALLBACK_SCALE_PER_TARGET = [1.2, 1.5]; // slot 0, slot 1
 
-    function applyDynamicModelScale(modelEl, options) {
+    function applyDynamicModelScale(modelEl, options, isFinalAttempt) {
         const settings = options || {};
         const targetIndex = Number.isInteger(settings.targetIndex)
             ? settings.targetIndex
@@ -421,7 +421,8 @@
                     reason: !scalePolicy ? 'policy-unavailable' : (!mesh ? 'mesh-unavailable' : 'three-unavailable'),
                     fallbackScale: fallbackScale
                 });
-                settings.onScaleReady?.();
+                // Only call onScaleReady on final attempt to avoid premature visibility
+                if (isFinalAttempt) settings.onScaleReady?.();
                 return null;
             }
 
@@ -454,7 +455,8 @@
                     reason: 'empty-bounds',
                     fallbackScale: fallbackScale
                 });
-                settings.onScaleReady?.();
+                // Only call onScaleReady on final attempt
+                if (isFinalAttempt) settings.onScaleReady?.();
                 return null;
             }
 
@@ -472,7 +474,8 @@
                     reason: 'nan-bounds',
                     fallbackScale: fallbackScale
                 });
-                settings.onScaleReady?.();
+                // Only call onScaleReady on final attempt
+                if (isFinalAttempt) settings.onScaleReady?.();
                 return null;
             }
             const displayedMaxDimension = Math.max(size.x, size.y, size.z);
@@ -496,7 +499,8 @@
                     fallbackScale: fallbackScale,
                     size: { x: size.x, y: size.y, z: size.z }
                 });
-                settings.onScaleReady?.();
+                // Only call onScaleReady on final attempt
+                if (isFinalAttempt) settings.onScaleReady?.();
                 return null;
             }
 
@@ -584,6 +588,8 @@
                 message: error?.message || String(error),
                 fallbackScale: fallbackScale
             });
+            // Only call onScaleReady on final attempt
+            if (isFinalAttempt) settings.onScaleReady?.();
             return null;
         }
     }
@@ -602,14 +608,9 @@
             const POLL_INTERVAL = 50; // ms
             function tryApplyScale() {
                 attempts++;
-                const mesh = modelEl?.getObject3D?.('mesh');
-                if (mesh || attempts >= MAX_ATTEMPTS) {
-                    const result = applyDynamicModelScale(modelEl, modelEl.__arDynamicScaleOptions);
-                    if (result === null && attempts < MAX_ATTEMPTS) {
-                        log('⏳', `Mesh not ready (attempt ${attempts}/${MAX_ATTEMPTS}), retrying...`);
-                        setTimeout(tryApplyScale, POLL_INTERVAL);
-                    }
-                } else {
+                const isFinalAttempt = attempts >= MAX_ATTEMPTS;
+                const result = applyDynamicModelScale(modelEl, modelEl.__arDynamicScaleOptions, isFinalAttempt);
+                if (result === null && !isFinalAttempt) {
                     log('⏳', `Mesh not ready (attempt ${attempts}/${MAX_ATTEMPTS}), retrying...`);
                     setTimeout(tryApplyScale, POLL_INTERVAL);
                 }
@@ -862,7 +863,8 @@
                 img.setAttribute('visible', 'false');
                 anchor.appendChild(img);
 
-                // 3-D model layer
+                // 3-D model layer (hidden initially - slot model path takes precedence)
+                // Only shown as fallback if slot model fails to load
                 var modelScale = getTargetModelScale(i);
                 var modelEl = document.createElement('a-entity');
                 modelEl.id = 'mode-3d-' + i;
@@ -871,9 +873,9 @@
                 modelEl.setAttribute('position', '0 ' + legacyY + ' 0');
                 modelEl.setAttribute('rotation', '0 0 0');
                 modelEl.setAttribute('scale', modelScale + ' ' + modelScale + ' ' + modelScale);
-                modelEl.setAttribute('visible', 'true');
+                modelEl.setAttribute('visible', 'false');
                 anchor.appendChild(modelEl);
-                log('📍', `Legacy model mode-3d-${i} position=0 ${legacyY} 0, scale=${modelScale}`);
+                log('📍', `Legacy model mode-3d-${i} hidden initially (slot model takes precedence)`);
 
                 scene.appendChild(anchor);
                 log('✅', 'Created anchor: ' + anchorId + ' with legacy model at position 0 ' + legacyY + ' 0');
@@ -1814,9 +1816,9 @@
         }, MINDAR_INITIALIZATION_TIMEOUT_MS);
 
         // Target tracking
-        log('🎯', 'Setting up target tracking listeners for target-0 and target-1');
+        log('🎯', 'Setting up target tracking listeners for mind-target-0 and mind-target-1');
         targetConfigs.forEach(({ index }) => {
-            const id = `target-${index}`;
+            const id = `mind-target-${index}`;
             const target = document.getElementById(id);
             sendDebug('TARGET_LOOKUP', {
                 targetId: id,

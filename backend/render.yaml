@@ -62,6 +62,17 @@ services:
 
       - key: DEFAULT_FRONTEND_ORIGIN
         sync: false  # Set to the deployed Vercel frontend origin
+
+      # Sentry backend monitoring. The DSN is server-side and must be entered
+      # manually in Render; tracing is intentionally sampled in production.
+      - key: SENTRY_DSN
+        sync: false
+
+      - key: SENTRY_ENVIRONMENT
+        value: production
+
+      - key: SENTRY_TRACES_SAMPLE_RATE
+        value: 0.1
     
     # Health check
     healthCheckPath: /health

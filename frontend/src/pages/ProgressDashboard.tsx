@@ -4,10 +4,10 @@
 
 import React, { useState } from 'react';
 import { useProgressReport } from '../hooks/useProgressReport';
-import { ProgressChart } from '../components/Gamification/ProgressChart';
-import { WeeklyReport } from '../components/Gamification/WeeklyReport';
-import { StreakBadge } from '../components/Gamification/StreakBadge';
-import { DailyGoal } from '../components/Gamification/DailyGoal';
+import { ProgressChart } from '@/features/gamification/components/ProgressChart';
+import { WeeklyReport } from '@/features/gamification/components/WeeklyReport';
+import { StreakBadge } from '@/features/gamification/components/StreakBadge';
+import { DailyGoal } from '@/features/gamification/components/DailyGoal';
 import { useAuth } from '../contexts/AuthContext';
 
 type ViewMode = 'overview' | 'detailed';

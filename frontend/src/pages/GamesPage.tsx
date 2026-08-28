@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ClayCard } from '@/components/clay/ClayCard';
+import { ClayCard } from '@/shared/components/clay/ClayCard';
 import { colors, shadows } from '@/design-tokens/claymorphic';
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────

@@ -5,9 +5,9 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { GlobalSessionWatcher } from '../components/GlobalSessionWatcher';
-import { BreakReminder } from '../components/BreakReminder';
-import { SessionProvider } from '../context/SessionContext';
+import { GlobalSessionWatcher } from '@/features/session/components/GlobalSessionWatcher';
+import { BreakReminder } from '@/features/session/components/BreakReminder';
+import { SessionProvider } from '../contexts/SessionContext';
 import { LocaleProvider } from '../contexts/LocaleContext';
 
 vi.mock('../contexts/AuthContext', () => ({

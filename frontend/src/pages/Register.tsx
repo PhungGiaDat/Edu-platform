@@ -2,8 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocale } from '../contexts/LocaleContext';
-import { ClayCard } from '@/components/clay/ClayCard';
-import { ClayButton } from '@/components/clay/ClayButton';
+import { ClayCard } from '@/shared/components/clay/ClayCard';
+import { ClayButton } from '@/shared/components/clay/ClayButton';
 
 const pageBackground =
   'radial-gradient(circle at 15% 20%, rgba(180, 225, 151, 0.32), transparent 45%), radial-gradient(circle at 85% 88%, rgba(255, 179, 71, 0.3), transparent 42%), linear-gradient(140deg, #eefdf4 0%, #fffaf0 48%, #eef7ff 100%)';

@@ -3,8 +3,8 @@
  * Flip cards to find matching image-word pairs
  */
 import React, { useState, useCallback } from 'react';
-import { ClayCard } from '@/components/clay/ClayCard';
-import { Button } from '@/components/ui/Button';
+import { ClayCard } from '@/shared/components/clay/ClayCard';
+import { Button } from '@/shared/components/ui/Button';
 import { colors, shadows } from '@/design-tokens/claymorphic';
 
 // ─── Types ───────────────────────────────────────────────────────────────────

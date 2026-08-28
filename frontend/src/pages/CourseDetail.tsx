@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
-import { AssetTile } from '@/components/courses/CourseLearningBlocks';
+import { AssetTile } from '@/features/courses/components/CourseLearningBlocks';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
@@ -284,4 +284,3 @@ export const CourseDetail: React.FC = () => {
 };
 
 export default CourseDetail;
-

@@ -1,7 +1,7 @@
 // frontend-web/src/pages/public/FlashcardView.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeftIcon, VolumeUpIcon } from '../../components/Icons';
+import { ChevronLeftIcon, VolumeUpIcon } from '@/shared/components/icons/Icons';
 import { apiClient } from '../../services/apiClient';
 
 interface PublicFlashcardResponse {

@@ -19,6 +19,7 @@ import * as THREE from 'three';
 import { rarityConfig } from './PetCard';
 import type { Pet } from '@/features/pets/hooks/usePets';
 import { useSafeGLTF, preloadGLTFSafe } from '@/hooks/useSafeGLTF';
+import { sentryMonitoringService } from '@/services/sentryMonitoringService';
 
 export type PetViewerMood = 'happy' | 'content' | 'hungry' | 'sad' | 'sleeping' | 'tired';
 export type PetViewerInteraction = 'idle' | 'feed' | 'play';
@@ -53,6 +54,15 @@ class CanvasErrorBoundary extends Component<CanvasErrorBoundaryProps, CanvasErro
             errorMessage.includes('body') ||
             errorMessage.includes('Cannot read properties of undefined');
 
+        sentryMonitoringService.captureException(
+            isIgnorableError ? new Error('3D model failed to load') : error,
+            {
+                feature: 'pets',
+                component: 'PetViewer3D',
+                recoverable: isIgnorableError,
+                componentStack: errorInfo.componentStack,
+            },
+        );
         console.error('[CanvasErrorBoundary] 3D Canvas error:', error, errorInfo);
 
         if (!isIgnorableError) {

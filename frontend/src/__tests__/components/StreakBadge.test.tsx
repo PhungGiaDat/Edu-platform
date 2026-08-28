@@ -21,7 +21,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 }));
 
 // Import after mocking
-import { StreakBadge } from '../../components/Gamification/StreakBadge';
+import { StreakBadge } from '@/features/gamification/components/StreakBadge';
 import { apiClient } from '@/services/apiClient';
 
 describe('StreakBadge Component', () => {
@@ -337,7 +337,7 @@ describe('StreakBadge Component', () => {
         },
       }));
 
-      const { StreakBadge } = await import('../../components/Gamification/StreakBadge');
+      const { StreakBadge } = await import('@/features/gamification/components/StreakBadge');
       const { apiClient: nullApiClient } = await import('@/services/apiClient');
 
       render(<StreakBadge />);
@@ -358,7 +358,7 @@ describe('StreakBadge Component', () => {
         },
       }));
 
-      const { StreakBadge } = await import('../../components/Gamification/StreakBadge');
+      const { StreakBadge } = await import('@/features/gamification/components/StreakBadge');
       const { apiClient: noIdApiClient } = await import('@/services/apiClient');
 
       render(<StreakBadge />);

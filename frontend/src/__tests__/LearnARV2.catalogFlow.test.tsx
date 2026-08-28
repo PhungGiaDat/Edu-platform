@@ -13,7 +13,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ActiveViewerTarget } from '@/core/types/ARMessages';
-import { initialRevisionState, requestRevision, acknowledgeRevision } from '@/components/ar/activeTargetRevision';
+import { initialRevisionState, requestRevision, acknowledgeRevision } from '@/features/ar/components/activeTargetRevision';
 
 // ---- Mock modules ----
 
@@ -51,7 +51,7 @@ const mockARContainerV2 = vi.fn(({ catalogId, mindUrl, catalogTargetCount, activ
   return null; // Render nothing - we only capture props
 });
 
-vi.mock('@/components/ar/ARContainerV2', () => ({
+vi.mock('@/features/ar/components/ARContainerV2', () => ({
   ARContainerV2: mockARContainerV2,
   ARPhase: {
     IDLE: 'IDLE',
