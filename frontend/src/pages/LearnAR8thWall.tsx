@@ -124,7 +124,7 @@ export const LearnAR8thWall: React.FC = () => {
 
       // Prevent re-scanning the same card in this session
       if (foundCards.has(qrId)) {
-        (window as any).MobileDebug?.add('log', 'QR_DUPLICATE', `Already scanned: ${qrId}`, null);
+        (window as any).MobileDebug?.add?.('log', 'QR_DUPLICATE', `Already scanned: ${qrId}`, null);
         return;
       }
 
@@ -133,7 +133,7 @@ export const LearnAR8thWall: React.FC = () => {
       setCurrentTarget(null);
       setScanError(null);
 
-      (window as any).MobileDebug?.add('log', 'QR_DETECTED_PARENT', `QR=${qrId} → PHASE=LOADING`, null);
+      (window as any).MobileDebug?.add?.('log', 'QR_DETECTED_PARENT', `QR=${qrId} → PHASE=LOADING`, null);
 
       try {
         // Fetch XR target data for this specific QR
@@ -141,7 +141,7 @@ export const LearnAR8thWall: React.FC = () => {
         if (!res.ok) throw new Error(`API error: ${res.status}`);
 
         const raw = await res.json();
-        (window as any).MobileDebug?.add('log', 'API_RESPONSE', JSON.stringify(raw).substring(0, 200), null);
+        (window as any).MobileDebug?.add?.('log', 'API_RESPONSE', JSON.stringify(raw).substring(0, 200), null);
 
         // Build XRTarget from API response
         const target: XRTarget = {
@@ -160,7 +160,7 @@ export const LearnAR8thWall: React.FC = () => {
           scale: raw.target?.scale || '1 1 1',
         };
 
-        (window as any).MobileDebug?.add('log', 'XR_TARGET_BUILT', JSON.stringify(target).substring(0, 300), null);
+        (window as any).MobileDebug?.add?.('log', 'XR_TARGET_BUILT', JSON.stringify(target).substring(0, 300), null);
 
         if (!target.xr_target_json_url && !target.xr_target_image_url) {
           throw new Error(`No XR target URL for: ${qrId}`);
@@ -169,10 +169,10 @@ export const LearnAR8thWall: React.FC = () => {
         setCurrentTarget(target);
         setFoundCards(prev => new Set([...prev, qrId]));
         setPhase('VIEWING');
-        (window as any).MobileDebug?.add('log', 'PHASE_VIEWING', `Viewer src built, phase=VIEWING`, null);
+        (window as any).MobileDebug?.add?.('log', 'PHASE_VIEWING', `Viewer src built, phase=VIEWING`, null);
 
       } catch (err) {
-        (window as any).MobileDebug?.add('error', 'API_ERROR', String(err), null);
+        (window as any).MobileDebug?.add?.('error', 'API_ERROR', String(err), null);
         setScanError(err instanceof Error ? err.message : 'Failed to load XR target');
         setPhase('ERROR');
       }
@@ -320,7 +320,7 @@ export const LearnAR8thWall: React.FC = () => {
             title="AR Viewer"
             allow="camera; xr-spatial-tracking; gyroscope; accelerometer"
             style={{ width: '100%', height: '100%', border: 'none' }}
-            onLoad={() => (window as any).MobileDebug?.add('log', 'VIEWER_IFRAME_LOADED', viewerSrc, null)}
+            onLoad={() => (window as any).MobileDebug?.add?.('log', 'VIEWER_IFRAME_LOADED', viewerSrc, null)}
           />
         )}
 
