@@ -16,6 +16,46 @@ async function openLexi(page: Page) {
 
 test.describe('AIChatBuddy responsive layout', () => {
   for (const viewport of MOBILE_VIEWPORTS) {
+    test(`keeps Lexi visible in a clay FAB at ${viewport.width}px`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.addInitScript(() => localStorage.setItem('guestMode', 'true'));
+      await page.goto('/courses', { waitUntil: 'networkidle' });
+
+      const fab = page.getByRole('button', { name: 'Talk to Lexi' });
+      const metrics = await fab.evaluate((button) => {
+        const sprite = button.querySelector('[role="img"]');
+        const nav = document.querySelector('nav[aria-label="primaryNavigation"]');
+        const buttonBounds = button.getBoundingClientRect();
+        const spriteBounds = sprite?.getBoundingClientRect();
+        const navBounds = nav?.getBoundingClientRect();
+        const styles = getComputedStyle(button);
+
+        return {
+          buttonWidth: buttonBounds.width,
+          buttonHeight: buttonBounds.height,
+          spriteWidth: spriteBounds?.width ?? 0,
+          spriteHeight: spriteBounds?.height ?? 0,
+          backgroundImage: styles.backgroundImage,
+          boxShadow: styles.boxShadow,
+          buttonBottom: buttonBounds.bottom,
+          navTop: navBounds?.top ?? window.innerHeight,
+          right: buttonBounds.right,
+          viewportWidth: window.innerWidth,
+        };
+      });
+
+      expect(metrics.buttonWidth).toBeGreaterThanOrEqual(64);
+      expect(metrics.buttonHeight).toBeGreaterThanOrEqual(64);
+      expect(metrics.spriteWidth).toBeGreaterThan(30);
+      expect(metrics.spriteHeight).toBeGreaterThan(30);
+      expect(metrics.backgroundImage).not.toBe('none');
+      expect(metrics.boxShadow).not.toBe('none');
+      expect(metrics.right).toBeLessThanOrEqual(metrics.viewportWidth);
+      expect(metrics.buttonBottom).toBeLessThanOrEqual(metrics.navTop);
+    });
+  }
+
+  for (const viewport of MOBILE_VIEWPORTS) {
     test(`fits the chat panel without horizontal overflow at ${viewport.width}px`, async ({ page }) => {
       await page.setViewportSize(viewport);
       await openLexi(page);

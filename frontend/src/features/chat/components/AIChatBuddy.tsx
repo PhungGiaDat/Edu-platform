@@ -126,15 +126,17 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
             {!isOpen && show3DPet && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="ai-chat-buddy__fab group fixed bottom-[calc(env(safe-area-inset-bottom)+7.5rem)] right-2 flex h-14 w-14 cursor-pointer items-center justify-center p-0 transition-transform duration-300 sm:right-4 sm:h-[68px] sm:w-[68px] md:bottom-6 md:right-6 md:h-20 md:w-20 lg:h-[92px] lg:w-[92px]"
+                    className="ai-chat-buddy__fab group fixed bottom-[calc(env(safe-area-inset-bottom)+7.5rem)] right-2 flex h-16 w-16 cursor-pointer items-center justify-center rounded-full p-0 transition-transform duration-300 sm:right-4 sm:h-[72px] sm:w-[72px] md:bottom-6 md:right-6 md:h-20 md:w-20 lg:h-[92px] lg:w-[92px]"
                     style={{
                         zIndex: 'var(--z-chatbot)',
-                        background: 'transparent',
-                        border: 0,
-                        borderRadius: 0,
-                        boxShadow: 'none',
+                        background: 'linear-gradient(145deg, rgba(255,255,255,0.99) 0%, rgba(255,248,213,0.99) 48%, rgba(219,244,255,0.99) 100%)',
+                        border: '4px solid rgba(255, 255, 255, 0.96)',
+                        borderRadius: '9999px',
+                        boxShadow: '0 6px 0 #3F6FCB, 0 12px 24px rgba(45,70,125,0.22), inset 0 2px 0 rgba(255,255,255,0.98)',
+                        padding: 0,
                         minWidth: 0,
                         minHeight: 0,
+                        overflow: 'visible',
                         outlineOffset: 6,
                         WebkitTapHighlightColor: 'transparent',
                     }}
@@ -148,7 +150,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                         <span className="block font-bold text-sky-500">Ask Lexi!</span>
                         <span className="absolute -right-2 top-8 h-4 w-4 rotate-45 border-r-2 border-t-2 border-sky-100 bg-white" />
                     </span>
-                    <CodexPetSprite animationState="waiting" className="h-full w-full drop-shadow-2xl" label="Lexi" size="100%" />
+                    <CodexPetSprite animationState="waiting" className="h-full w-full min-h-0 min-w-0 flex-1 drop-shadow-2xl" label="Lexi" size="100%" />
                 </button>
             )}
 
@@ -271,7 +273,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                                 onChange={(event) => setInput(event.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Ask Lexi..."
-                                className="min-h-[44px] min-w-0 flex-1 rounded-2xl border-2 border-sky-100 bg-sky-50/70 px-4 py-3 text-sm font-bold text-slate-700 placeholder-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                                className="min-h-[44px] min-w-0 flex-1 rounded-2xl border-2 border-sky-100 bg-sky-50/70 px-4 py-3 text-base font-bold text-slate-700 placeholder-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 sm:text-sm"
                                 disabled={isLoading}
                             />
                             <button
