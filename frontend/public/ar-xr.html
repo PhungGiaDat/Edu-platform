@@ -593,8 +593,11 @@
         },
       };
 
-      // Start XR session — self-hosted engine uses XrController.configure() then run()
-      // The XrController handles session lifecycle internally.
+      // REQUIRED: 8th Wall pipeline modules (order matters)
+      // GlTextureRenderer draws the camera feed to the canvas.
+      // Threejs manages the AR scene/renderer lifecycle.
+      window.XR8.addCameraPipelineModule(window.XR8.GlTextureRenderer.pipelineModule());
+      window.XR8.addCameraPipelineModule(window.XR8.Threejs.pipelineModule());
       window.XR8.addCameraPipelineModule(cameraPipelineModule);
       window.XR8.addCameraPipelineModule(renderModule);
 
@@ -633,6 +636,12 @@
       if (!canvasEl) {
         throw new Error('Canvas #camerafeed not found');
       }
+
+      // Size canvas to match the viewport — prevents 300×150 default backing resolution
+      canvasEl.width  = window.innerWidth;
+      canvasEl.height = window.innerHeight;
+      logToBuffer('info', 'Canvas sized', { w: canvasEl.width, h: canvasEl.height });
+
       logToBuffer('info', 'Calling XR8.run', {
         canvasId: canvasEl.id,
         canvasWidth: canvasEl.width,
