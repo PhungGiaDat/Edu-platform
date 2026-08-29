@@ -112,7 +112,7 @@
     html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: system-ui, sans-serif; }
 
     #canvas-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
-    #canvas { display: block; width: 100%; height: 100%; }
+    #camerafeed { display: block; width: 100%; height: 100%; }
     #model-canvas {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
@@ -162,7 +162,8 @@
 </head>
 <body>
   <div id="canvas-container">
-    <canvas id="canvas"></canvas>
+    <!-- 8th Wall self-hosted binary auto-discovers canvas with id="camerafeed" -->
+    <canvas id="camerafeed"></canvas>
     <!-- Three.js renders the 3D model here — separate from 8th Wall camera canvas -->
     <canvas id="model-canvas"></canvas>
   </div>
@@ -253,7 +254,7 @@
     const cardLabel    = document.getElementById('card-label');
     const debugPanel   = document.getElementById('debug-panel');
     const debugStatus  = document.getElementById('debug-status');
-    const canvas       = document.getElementById('canvas');
+    const canvas       = document.getElementById('camerafeed');
 
     if (isDebug) debugPanel.style.display = 'block';
 
@@ -590,8 +591,8 @@
         physicalWidth: targetData.physicalWidth,
       });
 
-      // Initialize SDK — canvas element is required
-      window.XR8.run({ canvas: document.getElementById('canvas') });
+      // Initialize SDK — self-hosted binary auto-discovers canvas id="camerafeed"
+      window.XR8.run();
 
       updateDebug('Tracking active');
       sendARDebug('XR_SESSION_STARTED');
