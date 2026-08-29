@@ -54,3 +54,118 @@ async def test_lookup_flags_unsafe_wiki_text(monkeypatch):
 
 def _async(v):
     fut = __import__("asyncio").get_event_loop().create_future(); fut.set_result(v); return fut
+
+
+# ── Task 3b: Wiktionary definition fallback ───────────────────────────────────
+
+WIKTIONARY_PAYLOAD = {
+    "en": [
+        {"partOfSpeech": "Adjective", "language": "English",
+         "definitions": [
+             {"definition": 'Possessing <a rel="mw:WikiLink" href="/wiki/beauty">beauty</a>. '
+                            '<style data-mw-deduplicate="TemplateStyles:r90144991">'
+                            ".mw-parser-output .defdate{font-size:smaller}</style>",
+              "examples": []},
+             {"definition": "Made <b>beautiful</b>.", "examples": []},
+             {"definition": '<link rel="mw:PageProp/Category" href="/wiki/Category:English_adjectives"/>Third sense.',
+              "examples": []},
+             {"definition": "Fourth sense — should be capped out.", "examples": []},
+         ]},
+        {"partOfSpeech": "Noun", "language": "English",
+         "definitions": [
+             {"definition": "A person who is beautiful.", "examples": []},
+             {"definition": "", "examples": []},
+         ]},
+        {"partOfSpeech": "Symbol", "language": "Translingual",
+         "definitions": [{"definition": "ISO 639-3 language code for Kirundi", "examples": []}]},
+        {"partOfSpeech": "Noun", "language": "Vietnamese",
+         "definitions": [{"definition": "Từ tiếng Việt — must be excluded", "examples": []}]},
+    ]
+}
+
+def _wiktionary_transport():
+    return httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda req: httpx.Response(200, json=WIKTIONARY_PAYLOAD)),
+        base_url="https://en.wiktionary.org")
+
+@pytest.mark.asyncio
+async def test_fetch_definitions_strips_html_excludes_foreign_caps_senses():
+    svc = WikipediaService()
+    svc._client_factory = _wiktionary_transport
+    blob = await svc.fetch_definitions("beautiful")
+    assert blob is not None
+    assert "<" not in blob and "style" not in blob.lower()
+    assert "Kirundi" not in blob              # Translingual group excluded
+    assert "Từ tiếng Việt" not in blob        # foreign-language group excluded
+    assert "Possessing beauty." in blob       # HTML stripped, style fragment removed
+    assert "Made beautiful." in blob
+    assert "Third sense." in blob
+    assert "Fourth sense" not in blob         # capped to WIKTIONARY_MAX_SENSES per POS
+
+@pytest.mark.asyncio
+async def test_fetch_definitions_returns_none_on_404():
+    svc = WikipediaService()
+    svc._client_factory = lambda: httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda req: httpx.Response(404, json={})),
+        base_url="https://en.wiktionary.org")
+    assert await svc.fetch_definitions("zzqqx") is None
+
+@pytest.mark.asyncio
+async def test_lookup_falls_back_to_wiktionary_when_summary_is_none(monkeypatch):
+    fake = FakeQdrant(cached=None)
+    svc = WikipediaService(qdrant=fake)
+    # summary None = 404 or type != "standard" on BOTH simple and en Wikipedia
+    monkeypatch.setattr(svc, "fetch_summary", lambda w: _async(None))
+    monkeypatch.setattr(svc, "fetch_definitions", lambda w: _async("Run means to move quickly."))
+    out = await svc.lookup_with_cache("run")
+    assert out["summary"] == "Run means to move quickly."
+    assert out["source_type"] == "wiktionary_definitions"
+    assert fake.upserted[0]["source_type"] == "wiktionary_definitions"
+    assert fake.upserted[0]["safety_label"] == "clean"
+
+@pytest.mark.asyncio
+async def test_lookup_blocks_unsafe_wiktionary_senses(monkeypatch):
+    fake = FakeQdrant(cached=None)
+    svc = WikipediaService(qdrant=fake)
+    monkeypatch.setattr(svc, "fetch_summary", lambda w: _async(None))
+    monkeypatch.setattr(svc, "fetch_definitions", lambda w: _async("this is about porn stuff"))
+    out = await svc.lookup_with_cache("run")
+    assert out["summary"] is None
+    assert fake.upserted[0]["safety_label"] == "review"
+    assert fake.upserted[0]["source_type"] == "wiktionary_definitions"
+
+def _summary_chain_transport(simple_status=200, simple_type="standard",
+                             en_status=200, en_type="standard"):
+    def handler(request):
+        url = str(request.url)
+        if "simple.wikipedia.org" in url:
+            if simple_status != 200:
+                return httpx.Response(simple_status, json={})
+            return httpx.Response(200, json={
+                "title": "Run (simple)", "extract": "Simple extract.", "type": simple_type,
+                "content_urls": {"desktop": {"page": "https://simple.wikipedia.org/wiki/Run"}}})
+        return httpx.Response(en_status, json={
+            "title": "Run", "extract": "English extract.", "type": en_type,
+            "content_urls": {"desktop": {"page": "https://en.wikipedia.org/wiki/Run"}}})
+    return httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="https://en.wikipedia.org")
+
+@pytest.mark.asyncio
+async def test_fetch_summary_prefers_simple_wikipedia():
+    svc = WikipediaService()
+    svc._client_factory = lambda: _summary_chain_transport()
+    s = await svc.fetch_summary("run")
+    assert s is not None and s.extract == "Simple extract."
+
+@pytest.mark.asyncio
+async def test_fetch_summary_uses_en_when_simple_missing():
+    svc = WikipediaService()
+    svc._client_factory = lambda: _summary_chain_transport(simple_status=404)
+    s = await svc.fetch_summary("run")
+    assert s is not None and s.extract == "English extract."
+
+@pytest.mark.asyncio
+async def test_fetch_summary_skips_simple_disambiguation_for_en():
+    svc = WikipediaService()
+    svc._client_factory = lambda: _summary_chain_transport(simple_type="disambiguation")
+    s = await svc.fetch_summary("run")
+    assert s is not None and s.extract == "English extract."

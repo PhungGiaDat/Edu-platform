@@ -124,6 +124,9 @@ class Settings(BaseSettings):
     WIKI_FETCH_TIMEOUT_SECONDS: float = 8.0
     WIKI_SUMMARY_MAX_CHARS: int = 1200
     WIKI_USER_AGENT: str = "EduPlatform-Lexi/1.0 (educational dictionary; graduation project)"
+    # Wiktionary definition fallback (Task 3b)
+    WIKTIONARY_MAX_SENSES: int = 3
+    WIKTIONARY_TEXT_MAX_CHARS: int = 800
 
     # ========== Redis Configuration ==========
     REDIS_HOST: str = "localhost"
