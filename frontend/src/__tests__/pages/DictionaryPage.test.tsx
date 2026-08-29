@@ -71,7 +71,9 @@ describe('DictionaryPage — word lookup (primary mode)', () => {
   });
 
   it('shows the kid-friendly message when the word is blocked (422)', async () => {
-    vi.mocked(dictionaryApi.lookup).mockRejectedValue({ status: 422 });
+    vi.mocked(dictionaryApi.lookup).mockRejectedValue(
+      Object.assign(new Error('Từ này không phù hợp để tra. Bạn thử từ khác nhé!'), { status: 422 })
+    );
     renderPage();
     await userEvent.type(screen.getByLabelText(/Từ cần tra/i), 'badword');
     await userEvent.click(screen.getByRole('button', { name: /Tra từ/i }));

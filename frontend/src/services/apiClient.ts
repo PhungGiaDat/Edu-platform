@@ -180,28 +180,39 @@ function prepareHeaders(options: ApiClientOptions = {}): Headers {
 }
 
 /**
+ * Build an Error carrying the HTTP status of the failing response.
+ * Status is attached additively so existing consumers (message-based) are
+ * unaffected while status-aware callers can branch on it (e.g. 422).
+ */
+function apiError(message: string, status: number): Error & { status: number } {
+  const err = new Error(message) as Error & { status: number };
+  err.status = status;
+  return err;
+}
+
+/**
  * Handle API response
  */
 async function handleResponse(response: Response): Promise<any> {
   // Handle 401 Unauthorized
   if (response.status === 401) {
     handle401();
-    throw new Error('Unauthorized');
+    throw apiError('Unauthorized', response.status);
   }
 
   // Handle 403 Forbidden
   if (response.status === 403) {
-    throw new Error('Forbidden');
+    throw apiError('Forbidden', response.status);
   }
 
   // Handle 404 Not Found
   if (response.status === 404) {
-    throw new Error('Not found');
+    throw apiError('Not found', response.status);
   }
 
   // Handle server errors
   if (response.status >= 500) {
-    throw new Error('Server error');
+    throw apiError('Server error', response.status);
   }
 
   // Parse JSON response
@@ -211,11 +222,11 @@ async function handleResponse(response: Response): Promise<any> {
 
     // Check for non-ok responses with error details
     if (!response.ok && data.detail) {
-      throw new Error(data.detail);
+      throw apiError(data.detail, response.status);
     }
 
     if (!response.ok) {
-      throw new Error(data.message || 'Request failed');
+      throw apiError(data.message || 'Request failed', response.status);
     }
 
     return data;
@@ -223,7 +234,7 @@ async function handleResponse(response: Response): Promise<any> {
 
   // For non-JSON responses
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
+    throw apiError(`HTTP ${response.status}`, response.status);
   }
 
   return response;

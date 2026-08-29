@@ -36,11 +36,20 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [dueCards, setDueCards] = useState<DueCardsResponse | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<NotebookEntry | null>(null);
+
+  // Debounce search input by 300ms before triggering a fetch
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery]);
 
   // Fetch entries
   const fetchEntries = useCallback(async () => {
@@ -53,7 +62,7 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
       const response: NotebookListResponse = await notebookApi.list({
         topic: selectedTopic || undefined,
         difficulty: selectedDifficulty || undefined,
-        search: searchQuery || undefined,
+        search: debouncedSearch || undefined,
         page: 1,
         per_page: 50,
       });
@@ -69,7 +78,7 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
     } finally {
       setLoading(false);
     }
-  }, [user, searchQuery, selectedTopic, selectedDifficulty]);
+  }, [user, debouncedSearch, selectedTopic, selectedDifficulty]);
 
   // Fetch topics
   const fetchTopics = useCallback(async () => {
