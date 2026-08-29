@@ -119,7 +119,12 @@ class Settings(BaseSettings):
     QDRANT_SCORE_THRESHOLD: float = 0.35
     QDRANT_RETRIEVAL_LIMIT: int = 8
     QDRANT_CONTEXT_LIMIT: int = 3
-    
+
+    # ========== Wikipedia Retrieval ==========
+    WIKI_FETCH_TIMEOUT_SECONDS: float = 8.0
+    WIKI_SUMMARY_MAX_CHARS: int = 1200
+    WIKI_USER_AGENT: str = "EduPlatform-Lexi/1.0 (educational dictionary; graduation project)"
+
     # ========== Redis Configuration ==========
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379

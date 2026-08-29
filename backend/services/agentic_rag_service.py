@@ -105,7 +105,7 @@ class AgenticRAGService:
          "- Dựa vào Context để trả lời chính xác\n"
          "- Nếu không tìm thấy: 'Mình chưa biết từ này, hỏi thầy cô nhé! 📚'\n"
          "- Không bịa đặt\n"
-         "Qdrant animal-document context:\n{context}"
+         "Qdrant kid-learning context (animals + Wikipedia summaries):\n{context}"
         ),
         ("human", "Câu hỏi: {question}")
     ])

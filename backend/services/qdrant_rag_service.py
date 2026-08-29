@@ -1,6 +1,8 @@
 """Small, safe boundary around Qdrant Cloud Inference for Lexi retrieval."""
 
 import asyncio
+import hashlib
+import uuid
 from typing import Any, Optional, Sequence
 
 from qdrant_client import QdrantClient, models
@@ -182,6 +184,55 @@ class QdrantRAGService:
             raise QdrantRAGUnavailable(
                 f"Qdrant upsert failed after {completed_documents} of {len(documents)} documents"
             ) from exc
+        return len(points)
+
+    @staticmethod
+    def wiki_point_id(word: str) -> str:
+        return str(uuid.uuid5(uuid.NAMESPACE_URL, f"wiki:{word.strip().lower()}"))
+
+    async def get_wiki_doc(self, word: str) -> Optional[dict[str, Any]]:
+        pid = self.wiki_point_id(word)
+        def _fetch():
+            return self._get_client().retrieve(
+                collection_name=settings.QDRANT_COLLECTION,
+                ids=[pid], with_payload=True, with_vectors=False)
+        try:
+            response = await self._breaker.acall(asyncio.to_thread, _fetch)
+        except (CircuitOpenError, QdrantRAGUnavailable, Exception):
+            return None  # cache miss on any failure — never block the lookup
+        points = getattr(response, "points", response) or []
+        if not points:
+            return None
+        return dict(points[0].payload or {})
+
+    async def upsert_wiki_documents(self, documents: Sequence[dict[str, Any]]) -> int:
+        if not documents:
+            return 0
+        points = []
+        for doc in documents:
+            word = doc["word"].strip().lower()
+            text = doc["text"]
+            payload = {
+                "text": text, "doc_id": f"wiki:{word}",
+                "canonical_group": f"wiki:{word}", "topic": "wiki",
+                "level": "A0", "age_range": "5-8",
+                "safety_label": doc.get("safety_label", "clean"),
+                "source_type": doc.get("source_type", "wikipedia_summary"),
+                "chunk_index": 0,
+                "content_hash": hashlib.sha256(text.encode()).hexdigest(),
+                "embedding_model": settings.QDRANT_EMBEDDING_MODEL,
+                "source_url": doc.get("source_url"),
+                "dataset_version": "wiki-2026-08-30",
+            }
+            points.append(models.PointStruct(
+                id=self.wiki_point_id(word),
+                vector=models.Document(text=text, model=settings.QDRANT_EMBEDDING_MODEL),
+                payload=payload))
+        client = self._get_client()
+        for start in range(0, len(points), 32):
+            await self._breaker.acall(asyncio.to_thread,
+                client.upsert, collection_name=settings.QDRANT_COLLECTION,
+                points=points[start:start + 32], wait=True)
         return len(points)
 
     def verify_document_ids(self, point_ids: Sequence[str]) -> None:
