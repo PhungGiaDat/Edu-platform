@@ -316,7 +316,17 @@
 
     // ============ PARENT CONTROL CHANNEL ============
     window.addEventListener('message', (event) => {
-        const type = event.data && event.data.type;
+        const data = event.data;
+        const type = data && data.type;
+
+        // Debug: log every incoming message so we can verify parent is talking to us
+        sendDebug('SCANNER_MESSAGE_RECEIVED', {
+            type: type || '(no type)',
+            origin: event.origin || '(unknown)',
+            dataPreview: data ? JSON.stringify(data).substring(0, 120) : '(no data)'
+        });
+
+        if (!type) return;
 
         switch (type) {
             case CONTROL_MESSAGES.PAUSE:
@@ -331,7 +341,11 @@
                 detectionCooldown = false;
                 break;
             case CONTROL_MESSAGES.RELEASE_CAMERA:
+                log('📥', `RELEASE_CAMERA received (CONTROL_MESSAGES.RELEASE_CAMERA=${CONTROL_MESSAGES.RELEASE_CAMERA})`);
                 releaseCamera();
+                break;
+            default:
+                // Unhandled type — already logged above as SCANNER_MESSAGE_RECEIVED
                 break;
         }
     });
