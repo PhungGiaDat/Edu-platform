@@ -123,6 +123,17 @@ export const LearnAR8thWall: React.FC = () => {
         return;
       }
 
+      // Orchestrator: wait for camera release before mounting viewer
+      if (data.type === 'SCANNER_CAMERA_RELEASED') {
+        console.log('[LearnAR8thWall] Scanner camera released — mounting viewer');
+        trace('SCANNER_CAMERA_RELEASED', 'Camera released, will mount ar-xr.html');
+        // Viewer is already in DOM with phase=VIEWING; just update phase state
+        // to signal to the rest of the app that XR is booting
+        setPhase('VIEWING');
+        trace('XR_BOOTING', 'ar-xr.html iframe loaded, XR engine initializing...');
+        return;
+      }
+
       if (data.type !== 'QR_DETECTED') return;
 
       // Scanner sends: { type: 'QR_DETECTED', qrId: 'cat001', timestamp: ... }
@@ -138,7 +149,7 @@ export const LearnAR8thWall: React.FC = () => {
         return;
       }
 
-      // Switch to loading state
+      // Orchestrator step 1: fetch XR metadata while scanner is still running
       setPhase('LOADING');
       setCurrentTarget(null);
       setScanError(null);
@@ -176,10 +187,20 @@ export const LearnAR8thWall: React.FC = () => {
           throw new Error(`No XR target URL for: ${qrId}`);
         }
 
+        // Orchestrator step 2: store target, transition to LOADING+VIEWING
+        // (viewer iframe mounts in DOM but XR8 hasn't started yet)
         setCurrentTarget(target);
         setFoundCards(prev => new Set([...prev, qrId]));
-        setPhase('VIEWING');
-        trace('PHASE_VIEWING', `Viewer src built, phase=VIEWING`);
+        setPhase('LOADING');
+        trace('XR_TARGET_BUILT_AND_VIEWER_MOUNTED', 'Viewer in DOM, requesting camera release from scanner...');
+
+        // Orchestrator step 3: tell scanner to release camera BEFORE XR starts
+        // This is CRITICAL on iOS Safari — 8th Wall needs sole camera access
+        scannerRef.current?.contentWindow?.postMessage(
+          { type: 'RELEASE_CAMERA' },
+          '*'
+        );
+        trace('CAMERA_RELEASE_REQUESTED', 'Sent RELEASE_CAMERA to scanner');
 
       } catch (err) {
         trace('API_ERROR', String(err));
@@ -193,7 +214,7 @@ export const LearnAR8thWall: React.FC = () => {
   }, [foundCards]);
 
   // ========================================================================
-  // LISTEN: messages from viewer iframe
+  // LISTEN: messages from viewer iframe (orchestrated lifecycle events)
   // ========================================================================
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -210,16 +231,50 @@ export const LearnAR8thWall: React.FC = () => {
         return;
       }
 
-      if (data.type === 'AR_READY') {
-        console.log('[LearnAR8thWall] AR viewer ready');
-      }
+      // XR lifecycle events from ar-xr.html (orchestrated by parent)
+      switch (data.type) {
+        case 'XR_ENGINE_READY':
+          console.log('[LearnAR8thWall] XR engine ready');
+          trace('XR_ENGINE_READY', '8th Wall binary loaded');
+          break;
 
-      if (data.type === 'TARGET_FOUND') {
-        console.log('[LearnAR8thWall] Target found in viewer:', data.payload);
-      }
+        case 'XR_SLAM_LOADED':
+          console.log('[LearnAR8thWall] XR SLAM loaded');
+          trace('XR_SLAM_LOADED', 'Camera+tracking module ready');
+          break;
 
-      if (data.type === 'TARGET_LOST') {
-        console.log('[LearnAR8thWall] Target lost in viewer:', data.payload);
+        case 'XR_PIPELINE_READY':
+          console.log('[LearnAR8thWall] XR pipeline ready');
+          trace('XR_PIPELINE_READY', 'All pipeline modules registered');
+          break;
+
+        case 'XR_CAMERA_STATUS':
+          trace('XR_CAMERA_STATUS', data.payload?.status || '?');
+          break;
+
+        case 'XR_CAMERA_HAS_VIDEO':
+          console.log('[LearnAR8thWall] XR camera has video — AR is LIVE');
+          trace('XR_CAMERA_HAS_VIDEO', 'Camera feed visible, AR tracking active');
+          break;
+
+        case 'XR_STARTED':
+          console.log('[LearnAR8thWall] AR viewer ready');
+          break;
+
+        case 'XR_ERROR':
+          console.error('[LearnAR8thWall] XR error:', data.payload);
+          trace('XR_ERROR', data.payload?.message || 'Unknown XR error');
+          setScanError(data.payload?.message || 'XR session failed');
+          setPhase('ERROR');
+          break;
+
+        case 'TARGET_FOUND':
+          console.log('[LearnAR8thWall] Target found in viewer:', data.payload);
+          break;
+
+        case 'TARGET_LOST':
+          console.log('[LearnAR8thWall] Target lost in viewer:', data.payload);
+          break;
       }
     };
 

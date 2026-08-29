@@ -82,7 +82,8 @@
         CONTROL_MESSAGES: Object.freeze({
             PAUSE: 'PAUSE_SCANNING',
             RESUME: 'RESUME_SCANNING',
-            RESET: 'RESET_SCANNER'
+            RESET: 'RESET_SCANNER',
+            RELEASE_CAMERA: 'RELEASE_CAMERA'
         })
     });
 
@@ -329,8 +330,39 @@
                 lastDetectedCode = null;
                 detectionCooldown = false;
                 break;
+            case CONTROL_MESSAGES.RELEASE_CAMERA:
+                releaseCamera();
+                break;
         }
     });
+
+    // ============ CAMERA RELEASE ============
+    function releaseCamera() {
+        log('📤', 'RELEASE_CAMERA received — releasing all camera tracks');
+        sendDebug('SCANNER_CAMERA_STOP_BEGIN', {});
+
+        const stream = video && video.srcObject;
+        if (stream instanceof MediaStream) {
+            stream.getTracks().forEach((track) => {
+                log('🔴', `Stopping track ${track.kind} (readyState=${track.readyState})`);
+                track.stop();
+                sendDebug('SCANNER_TRACK_STOPPED', {
+                    kind: track.kind,
+                    readyState: track.readyState
+                });
+            });
+        }
+
+        if (video) {
+            video.pause();
+            video.srcObject = null;
+        }
+
+        scanning = false;
+        sendDebug('SCANNER_CAMERA_RELEASED', {});
+        sendToParent('SCANNER_CAMERA_RELEASED');
+        log('✅', 'All camera tracks released');
+    }
 
     // ============ START ============
     initCamera();
