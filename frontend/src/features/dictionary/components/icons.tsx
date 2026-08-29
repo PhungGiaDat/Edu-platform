@@ -86,3 +86,54 @@ export const ArrowDownIcon: React.FC<IconProps> = ({ className = 'h-5 w-5' }) =>
     <path d="m6 14 6 6 6-6" />
   </svg>
 );
+
+/** Close — dismiss controls, replaces the ✕ glyph */
+export const CloseIcon: React.FC<IconProps> = ({ className = 'h-5 w-5' }) => (
+  <svg {...base} className={className}>
+    <path d="M18 6 6 18" />
+    <path d="m6 6 12 12" />
+  </svg>
+);
+
+/** Notebook spine — the Sổ tay surface and manually-noted entries */
+export const NotebookIcon: React.FC<IconProps> = ({ className = 'h-5 w-5' }) => (
+  <svg {...base} className={className}>
+    <rect x="5" y="3" width="14" height="18" rx="2" />
+    <path d="M9 3v18" />
+    <path d="M13 8h3M13 12h3" />
+  </svg>
+);
+
+/** Stacked cards — flashcard-sourced entries */
+export const CardsIcon: React.FC<IconProps> = ({ className = 'h-5 w-5' }) => (
+  <svg {...base} className={className}>
+    <rect x="3" y="7" width="13" height="14" rx="2" />
+    <path d="M8 4h11a2 2 0 0 1 2 2v11" />
+  </svg>
+);
+
+/** Pencil — manually written entries */
+export const PencilIcon: React.FC<IconProps> = ({ className = 'h-5 w-5' }) => (
+  <svg {...base} className={className}>
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+  </svg>
+);
+
+/** Grid — switch to the grid view */
+export const GridViewIcon: React.FC<IconProps> = ({ className = 'h-5 w-5' }) => (
+  <svg {...base} className={className}>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+  </svg>
+);
+
+/** List — switch to the compact list view */
+export const ListViewIcon: React.FC<IconProps> = ({ className = 'h-5 w-5' }) => (
+  <svg {...base} className={className}>
+    <path d="M8 6h13M8 12h13M8 18h13" />
+    <path d="M3 6h.01M3 12h.01M3 18h.01" />
+  </svg>
+);

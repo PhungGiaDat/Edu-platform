@@ -11,6 +11,17 @@ import { Button } from '@/shared/components/ui/Button';
 import { Input } from '@/shared/components/ui/Input';
 import { LoadingSpinner } from '@/shared/components/ui/LoadingSpinner';
 import { Badge } from '@/shared/components/ui/Badge';
+import { NotebookEntryDetail } from '@/features/notebook/components/NotebookEntryDetail';
+import {
+  NotebookIcon,
+  CardsIcon,
+  PencilIcon,
+  SparkleIcon,
+  BookIcon,
+  CheckIcon,
+  GridViewIcon,
+  ListViewIcon,
+} from '@/features/dictionary/components/icons';
 import { colors, shadows } from '../design-tokens/claymorphic';
 import { VocabularyTopics } from '@/features/learning/components/VocabularyTopics';
 
@@ -29,6 +40,7 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [dueCards, setDueCards] = useState<DueCardsResponse | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<NotebookEntry | null>(null);
 
   // Fetch entries
   const fetchEntries = useCallback(async () => {
@@ -80,26 +92,27 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
     setSearchQuery(query);
   }, []);
 
-  // Delete entry
+  // Delete entry — also closes the detail dialog if that entry was open
   const handleDelete = async (id: string) => {
     if (!confirm('Bạn có chắc muốn xóa từ này?')) return;
 
     try {
       await notebookApi.delete(id);
       setEntries(prev => prev.filter(e => e.id !== id));
+      setSelectedEntry(prev => (prev?.id === id ? null : prev));
     } catch (err) {
       console.error('[NotebookPage] Delete failed:', err);
       alert('Xóa thất bại');
     }
   };
 
-  // Get source icon
+  // Where an entry came from, shown as a line icon rather than an emoji
   const getSourceIcon = (source: string) => {
     switch (source) {
-      case 'ai_translation': return '🤖';
-      case 'flashcard': return '🃏';
-      case 'manual': return '✏️';
-      default: return '📝';
+      case 'ai_translation': return <SparkleIcon className="h-5 w-5" />;
+      case 'flashcard': return <CardsIcon className="h-5 w-5" />;
+      case 'manual': return <PencilIcon className="h-5 w-5" />;
+      default: return <NotebookIcon className="h-5 w-5" />;
     }
   };
 
@@ -125,8 +138,9 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-bold" style={{ color: colors.deepSlate }}>
-                📓 Sổ tay từ vựng
+              <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: colors.deepSlate }}>
+                <NotebookIcon className="h-6 w-6" />
+                Sổ tay từ vựng
               </h1>
               <p className="text-sm" style={{ color: colors.mediumGray }}>
                 {entries.length} từ đã lưu
@@ -143,8 +157,9 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => setViewMode(v => v === 'grid' ? 'list' : 'grid')}
+                aria-label={viewMode === 'grid' ? 'Chuyển sang dạng danh sách' : 'Chuyển sang dạng lưới'}
               >
-                {viewMode === 'grid' ? '📋' : '🔲'}
+                {viewMode === 'grid' ? <ListViewIcon className="h-5 w-5" /> : <GridViewIcon className="h-5 w-5" />}
               </Button>
             </div>
           </div>
@@ -170,10 +185,10 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
-                  style={{ backgroundColor: colors.neonTeal + '30' }}
+                  className="w-12 h-12 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: colors.neonTeal + '30', color: colors.deepSlate }}
                 >
-                  📚
+                  <BookIcon className="h-6 w-6" />
                 </div>
                 <div className="flex-1">
                   <p className="font-bold" style={{ color: colors.deepSlate }}>
@@ -234,7 +249,9 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
           </div>
         ) : entries.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-5xl mb-4">📓</div>
+            <div className="flex justify-center mb-4" style={{ color: colors.mediumGray }}>
+              <NotebookIcon className="h-12 w-12" />
+            </div>
             <h3 className="text-lg font-bold mb-2" style={{ color: colors.deepSlate }}>
               Chưa có từ nào
             </h3>
@@ -248,10 +265,10 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
               <ClayCard
                 key={entry.id}
                 className="p-4 cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => {/* TODO: Show detail */}}
+                onClick={() => setSelectedEntry(entry)}
               >
                 <div className="flex items-start justify-between mb-2">
-                  <span className="text-lg">{getSourceIcon(entry.source)}</span>
+                  <span style={{ color: colors.mediumGray }}>{getSourceIcon(entry.source)}</span>
                   {entry.difficulty && (
                     <div
                       className="w-3 h-3 rounded-full"
@@ -260,8 +277,19 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
                   )}
                 </div>
 
-                <h3 className="font-bold text-lg mb-1" style={{ color: colors.deepSlate }}>
-                  {entry.word}
+                <h3 className="mb-1">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedEntry(entry);
+                    }}
+                    className="font-bold text-lg text-left break-words"
+                    style={{ color: colors.deepSlate }}
+                    aria-label={`Xem chi tiết ${entry.word}`}
+                  >
+                    {entry.word}
+                  </button>
                 </h3>
                 <p className="text-sm" style={{ color: colors.mediumGray }}>
                   {entry.translation_vi}
@@ -297,22 +325,34 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
               <ClayCard
                 key={entry.id}
                 className="p-4 flex items-center gap-4"
+                onClick={() => setSelectedEntry(entry)}
               >
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
-                  style={{ backgroundColor: colors.skyBlue + '20' }}
+                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: colors.skyBlue + '20', color: colors.deepSlate }}
                 >
                   {getSourceIcon(entry.source)}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold" style={{ color: colors.deepSlate }}>
-                      {entry.word}
+                    <h3>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedEntry(entry);
+                        }}
+                        className="font-bold text-left truncate"
+                        style={{ color: colors.deepSlate }}
+                        aria-label={`Xem chi tiết ${entry.word}`}
+                      >
+                        {entry.word}
+                      </button>
                     </h3>
                     {entry.difficulty && (
                       <div
-                        className="w-2 h-2 rounded-full"
+                        className="w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: getDifficultyColor(entry.difficulty) }}
                       />
                     )}
@@ -322,14 +362,19 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   {entry.topic && (
                     <Badge variant="secondary" size="sm">
                       {entry.topic}
                     </Badge>
                   )}
-                  <span className="text-xs" style={{ color: colors.mediumGray }}>
-                    {entry.review_count} ✓
+                  <span
+                    className="text-xs flex items-center gap-1"
+                    style={{ color: colors.mediumGray }}
+                    aria-label={`${entry.review_count} lần ôn`}
+                  >
+                    {entry.review_count}
+                    <CheckIcon className="h-3.5 w-3.5" />
                   </span>
                 </div>
               </ClayCard>
@@ -337,6 +382,14 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
           </div>
         )}
       </div>
+
+      {selectedEntry && (
+        <NotebookEntryDetail
+          entry={selectedEntry}
+          onClose={() => setSelectedEntry(null)}
+          onDelete={(id) => void handleDelete(id)}
+        />
+      )}
     </div>
   );
 }
