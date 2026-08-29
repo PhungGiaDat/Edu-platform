@@ -101,7 +101,13 @@ export function SentenceTranslateCard({ onWordSelect }: SentenceTranslateCardPro
             onClick={() => void handleTranslate()}
             disabled={translating || !inputText.trim()}
             className="w-full text-lg py-4"
-            style={{ backgroundColor: brandColors.primary, boxShadow: '0 6px 0 #1D4ED8, inset 0 1px 0 rgba(255,255,255,0.4)' }}
+            style={{
+              backgroundColor: brandColors.primary,
+              // See DictionaryPage: a caller-supplied `style` replaces <Button>'s
+              // variant object, so the variant's `color: 'white'` must be restated.
+              color: '#FFFFFF',
+              boxShadow: '0 6px 0 #1D4ED8, inset 0 1px 0 rgba(255,255,255,0.4)',
+            }}
           >
             {translating ? (
               <span className="flex items-center justify-center gap-2">

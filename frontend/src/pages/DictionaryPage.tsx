@@ -151,6 +151,10 @@ export function DictionaryPage() {
                 className="w-full text-lg py-4 mt-4"
                 style={{
                   backgroundColor: brandColors.primary,
+                  // <Button> spreads {...props} after its own style object, so a
+                  // caller-supplied style REPLACES the variant styles and drops
+                  // `color: 'white'`. Re-declare it or the label renders dark.
+                  color: '#FFFFFF',
                   boxShadow: '0 6px 0 #1D4ED8, inset 0 1px 0 rgba(255,255,255,0.4)',
                 }}
               >
