@@ -13,7 +13,7 @@ import { CodexPetSprite } from '@/features/pets/components/CodexPetSprite';
 import { DefinitionCard } from '@/features/dictionary/components/DefinitionCard';
 import { SentenceTranslateCard } from '@/features/dictionary/components/SentenceTranslateCard';
 import { SearchIcon, AlertIcon } from '@/features/dictionary/components/icons';
-import { colors, shadows } from '../design-tokens/claymorphic';
+import { colors, brandColors, dangerColors } from '../design-tokens/claymorphic';
 import { dictionaryApi } from '../services/dictionaryApi';
 import { notebookApi } from '../services/notebookApi';
 import type { LookupResponse } from '../types/dictionary';
@@ -149,7 +149,10 @@ export function DictionaryPage() {
                 onClick={() => void handleLookup()}
                 disabled={lookupState === 'loading' || !word.trim()}
                 className="w-full text-lg py-4 mt-4"
-                style={{ backgroundColor: colors.skyBlue, boxShadow: shadows.clayBlue }}
+                style={{
+                  backgroundColor: brandColors.primary,
+                  boxShadow: '0 6px 0 #1D4ED8, inset 0 1px 0 rgba(255,255,255,0.4)',
+                }}
               >
                 {lookupState === 'loading' ? (
                   <span className="flex items-center gap-2">
@@ -176,7 +179,7 @@ export function DictionaryPage() {
               {lookupState === 'blocked' && (
                 <div
                   className="p-4 rounded-2xl flex items-start gap-3"
-                  style={{ backgroundColor: colors.coralPink + '20', color: colors.coralPink }}
+                  style={{ backgroundColor: dangerColors.surface, color: dangerColors.ink }}
                   role="alert"
                 >
                   <CodexPetSprite animationState="waiting" label="Lexi đang chờ từ khác" size={48} />
@@ -189,7 +192,7 @@ export function DictionaryPage() {
               {lookupState === 'error' && (
                 <div
                   className="p-4 rounded-2xl flex flex-col gap-3"
-                  style={{ backgroundColor: colors.coralPink + '20', color: colors.coralPink }}
+                  style={{ backgroundColor: dangerColors.surface, color: dangerColors.ink }}
                   role="alert"
                 >
                   <p className="text-sm font-semibold flex items-center gap-2">

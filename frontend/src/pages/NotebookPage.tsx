@@ -22,7 +22,7 @@ import {
   GridViewIcon,
   ListViewIcon,
 } from '@/features/dictionary/components/icons';
-import { colors, shadows } from '../design-tokens/claymorphic';
+import { colors, shadows, dangerColors } from '../design-tokens/claymorphic';
 import { VocabularyTopics } from '@/features/learning/components/VocabularyTopics';
 
 interface NotebookPageProps {
@@ -311,7 +311,7 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
                       handleDelete(entry.id);
                     }}
                     className="text-xs px-2 py-1 rounded"
-                    style={{ backgroundColor: colors.coralPink + '20', color: colors.coralPink }}
+                    style={{ backgroundColor: dangerColors.surface, color: dangerColors.ink }}
                   >
                     Xóa
                   </button>

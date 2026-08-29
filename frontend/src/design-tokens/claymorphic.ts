@@ -152,6 +152,15 @@ export const brandColors = {
   foreground: '#0F172A',
 } as const;
 
+// ─── Danger surface (spec 2026-08-30 dictionary/notebook) ──────────────────
+// The UI-design palette pairs #DC2626 with the #FEE2E2 tint, but that measures
+// 3.95:1 and fails the doc's own ≥4.5:1 text gate. The tint is kept and the ink
+// steps one shade darker to red-700, which measures 5.30:1.
+export const dangerColors = {
+  surface: '#FEE2E2',
+  ink: '#B91C1C',
+} as const;
+
 // ─── Type Exports ─────────────────────────────────────────────
 export type ColorKey = keyof typeof colors;
 export type ShadowKey = keyof typeof shadows;
