@@ -143,6 +143,15 @@ export function staggerDelay(index: number, delay: number = 100): string {
   return `${index * delay}ms`;
 }
 
+// ─── Learner Brand Palette (spec 2026-08-28-gamification-mascot-ui) ─────
+export const brandColors = {
+  primary: '#2563EB',
+  secondary: '#7C3AED',
+  accent: '#F59E0B',
+  background: '#EFF6FF',
+  foreground: '#0F172A',
+} as const;
+
 // ─── Type Exports ─────────────────────────────────────────────
 export type ColorKey = keyof typeof colors;
 export type ShadowKey = keyof typeof shadows;
