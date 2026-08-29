@@ -495,11 +495,11 @@
         xr8XcType: typeof window.XR8?.XrController,
       });
 
-      // Load the image-targets chunk — required before XrController.configure() is usable
-      logToBuffer('info', 'Loading XR8 image-targets chunk...');
+      // Load the slam chunk — required before XrController.configure() is usable
+      logToBuffer('info', 'Loading XR8 slam chunk...');
       try {
-        await window.XR8.loadChunk('image-targets');
-        logToBuffer('info', 'XR8 image-targets chunk loaded');
+        await window.XR8.loadChunk('slam');
+        logToBuffer('info', 'XR8 slam chunk loaded');
       } catch(chunkErr) {
         logToBuffer('error', 'XR8.loadChunk failed', { error: String(chunkErr) });
         throw chunkErr;
@@ -526,7 +526,7 @@
           }
           if (!window.XR8.XrController) {
             if (Date.now() > deadline) {
-              reject(new Error('XR8 XrController still unavailable after chunk load + timeout.'));
+              reject(new Error('XR8 XrController still unavailable after slam chunk load + timeout.'));
             } else {
               setTimeout(check, POLL_INTERVAL_MS);
             }
