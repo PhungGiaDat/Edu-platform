@@ -55,6 +55,8 @@ export const LearnAR8thWall: React.FC = () => {
   const scannerRef = useRef<HTMLIFrameElement>(null);
   // Viewer iframe ref
   const viewerRef = useRef<HTMLIFrameElement>(null);
+  // Retry timer for RELEASE_CAMERA postMessage (cleared on SCANNER_CAMERA_RELEASED)
+  const releaseRetryRef = useRef<number | null>(null);
 
   // Phase state machine
   const [phase, setPhase] = useState<Phase>('SCANNING');
@@ -133,6 +135,11 @@ export const LearnAR8thWall: React.FC = () => {
       if (data.type === 'SCANNER_CAMERA_RELEASED') {
         console.log('[LearnAR8thWall] Scanner camera released — mounting viewer');
         trace('SCANNER_CAMERA_RELEASED', 'Camera released, transitioning to XR_BOOTING');
+        // Clear any pending retry timer — release succeeded.
+        if (releaseRetryRef.current) {
+          clearTimeout(releaseRetryRef.current);
+          releaseRetryRef.current = null;
+        }
         // Move to XR_BOOTING — this mounts the viewer iframe.
         // The XR engine will boot inside it; we only go to VIEWING once
         // we receive XR_CAMERA_HAS_VIDEO from the viewer.
@@ -222,6 +229,26 @@ export const LearnAR8thWall: React.FC = () => {
 
         scannerWindow.postMessage({ type: 'RELEASE_CAMERA' }, '*');
         trace('CAMERA_RELEASE_REQUESTED', 'RELEASE_CAMERA actually posted');
+
+        // Retry safety net: iOS Safari may suspend idle iframes, dropping
+        // the first postMessage. Retry up to 3 times with 500ms backoff.
+        // Once SCANNER_CAMERA_RELEASED arrives, we clear the retry timer
+        // (handled in the message handler via releaseRetryRef).
+        if (releaseRetryRef.current) clearTimeout(releaseRetryRef.current);
+        let attempts = 0;
+        const sendReleaseWithRetry = () => {
+          attempts += 1;
+          const w = scannerRef.current?.contentWindow;
+          if (!w) return; // scanner unmounted — release already succeeded
+          if (attempts > 3) {
+            trace('CAMERA_RELEASE_RETRY_EXHAUSTED', `${attempts - 1} retries failed`);
+            return;
+          }
+          w.postMessage({ type: 'RELEASE_CAMERA' }, '*');
+          trace('CAMERA_RELEASE_RETRY', `attempt ${attempts}/3`);
+          releaseRetryRef.current = window.setTimeout(sendReleaseWithRetry, 500);
+        };
+        releaseRetryRef.current = window.setTimeout(sendReleaseWithRetry, 500);
 
       } catch (err) {
         trace('API_ERROR', String(err));

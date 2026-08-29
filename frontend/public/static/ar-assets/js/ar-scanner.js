@@ -365,6 +365,12 @@
                     readyState: track.readyState
                 });
             });
+        } else {
+            log('⚠️', `video.srcObject is not a MediaStream (was: ${typeof stream})`);
+            sendDebug('SCANNER_NO_MEDIASTREAM', {
+                hasVideo: !!video,
+                srcObjectType: video && video.srcObject ? video.srcObject.constructor.name : 'null'
+            });
         }
 
         if (video) {
@@ -374,7 +380,14 @@
 
         scanning = false;
         sendDebug('SCANNER_CAMERA_RELEASED', {});
-        sendToParent('SCANNER_CAMERA_RELEASED');
+        // Use postMessage directly with origin '*' to maximize delivery chances
+        try {
+            window.parent.postMessage({ type: 'SCANNER_CAMERA_RELEASED' }, '*');
+            log('✅', 'Sent SCANNER_CAMERA_RELEASED to parent');
+        } catch (err) {
+            log('❌', `Failed to send SCANNER_CAMERA_RELEASED: ${err}`);
+        }
+        sendDebug('SCANNER_CAMERA_ACK_SENT', {});
         log('✅', 'All camera tracks released');
     }
 
