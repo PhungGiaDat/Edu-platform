@@ -81,3 +81,43 @@ describe('DictionaryPage — word lookup (primary mode)', () => {
     expect(screen.getAllByRole('img', { name: /Lexi/ }).length).toBeGreaterThan(0);
   });
 });
+
+describe('DictionaryPage — sentence mode', () => {
+  beforeEach(() => {
+    vi.mocked(dictionaryApi.translate).mockReset();
+    vi.mocked(dictionaryApi.lookup).mockReset();
+  });
+
+  it('translates a sentence and renders clickable word chips', async () => {
+    vi.mocked(dictionaryApi.translate).mockResolvedValue({
+      original: 'The elephant drinks water',
+      translation: { vi: 'Con voi uống nước' },
+      word_breakdown: [
+        { word: 'elephant', translation: 'voi' },
+        { word: 'drinks', translation: 'uống' },
+      ],
+    } as never);
+    renderPage();
+    await userEvent.click(screen.getByRole('tab', { name: /Dịch câu/i }));
+    await userEvent.type(screen.getByLabelText(/Câu tiếng Anh/i), 'The elephant drinks water');
+    await userEvent.click(screen.getByRole('button', { name: /Dịch ngay/i }));
+    expect(await screen.findByText('Con voi uống nước')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tra từ: elephant' })).toBeInTheDocument();
+  });
+
+  it('switches to word mode and looks up the clicked chip word', async () => {
+    vi.mocked(dictionaryApi.translate).mockResolvedValue({
+      original: 'The elephant drinks water', translation: { vi: 'Con voi uống nước' },
+      word_breakdown: [{ word: 'elephant', translation: 'voi' }],
+    } as never);
+    vi.mocked(dictionaryApi.lookup).mockResolvedValue(lookupResult);
+    renderPage();
+    await userEvent.click(screen.getByRole('tab', { name: /Dịch câu/i }));
+    await userEvent.type(screen.getByLabelText(/Câu tiếng Anh/i), 'The elephant drinks water');
+    await userEvent.click(screen.getByRole('button', { name: /Dịch ngay/i }));
+    await screen.findByRole('button', { name: 'Tra từ: elephant' });
+    await userEvent.click(screen.getByRole('button', { name: 'Tra từ: elephant' }));
+    await waitFor(() => expect(dictionaryApi.lookup).toHaveBeenCalledWith('elephant'));
+    expect(await screen.findByText('con voi')).toBeInTheDocument();
+  });
+});

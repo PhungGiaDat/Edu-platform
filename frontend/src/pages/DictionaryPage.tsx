@@ -9,16 +9,14 @@ import { ClayCard } from '@/shared/components/clay/ClayCard';
 import { Button } from '@/shared/components/ui/Button';
 import { Input } from '@/shared/components/ui/Input';
 import { LoadingSpinner } from '@/shared/components/ui/LoadingSpinner';
-import { Badge } from '@/shared/components/ui/Badge';
 import { CodexPetSprite } from '@/features/pets/components/CodexPetSprite';
 import { DefinitionCard } from '@/features/dictionary/components/DefinitionCard';
+import { SentenceTranslateCard } from '@/features/dictionary/components/SentenceTranslateCard';
 import { SearchIcon, AlertIcon } from '@/features/dictionary/components/icons';
 import { colors, shadows } from '../design-tokens/claymorphic';
 import { dictionaryApi } from '../services/dictionaryApi';
 import { notebookApi } from '../services/notebookApi';
-import { apiClient } from '../services/apiClient';
 import type { LookupResponse } from '../types/dictionary';
-import type { TranslateResponse, WordBreakdown, RelatedWord } from '../types/notebook';
 import { useAuth } from '../contexts/AuthContext';
 
 type Mode = 'word' | 'sentence';
@@ -43,12 +41,7 @@ export function DictionaryPage() {
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const saveResetTimer = useRef<number | undefined>(undefined);
 
-  // ── Dịch câu (secondary) ────────────────────────────────────────────────
-  const [inputText, setInputText] = useState('');
-  const [context, setContext] = useState('');
-  const [translating, setTranslating] = useState(false);
-  const [translation, setTranslation] = useState<TranslateResponse | null>(null);
-  const [translateError, setTranslateError] = useState<string | null>(null);
+  // Dịch câu (secondary) keeps its own state inside SentenceTranslateCard.
 
   useEffect(() => () => window.clearTimeout(saveResetTimer.current), []);
 
@@ -93,29 +86,6 @@ export function DictionaryPage() {
       setSaveState('error');
     }
   }, [result, user]);
-
-  const handleTranslate = useCallback(async () => {
-    if (!inputText.trim()) return;
-
-    setTranslating(true);
-    setTranslateError(null);
-    setTranslation(null);
-
-    try {
-      // dictionaryApi injects the API base URL + Bearer token through apiClient
-      const data = await apiClient.post('/api/v1/dictionary/translate', {
-        text: inputText,
-        context: context || undefined,
-        target_lang: 'vi',
-      }) as TranslateResponse;
-      setTranslation(data);
-    } catch (err) {
-      console.error('[DictionaryPage] Translation failed:', err);
-      setTranslateError('Không thể dịch. Vui lòng thử lại.');
-    } finally {
-      setTranslating(false);
-    }
-  }, [inputText, context]);
 
   return (
     <div className="dict-page min-h-screen pb-24">
@@ -240,186 +210,13 @@ export function DictionaryPage() {
         )}
 
         {mode === 'sentence' && (
-          <div id="panel-sentence" role="tabpanel" aria-labelledby="tab-sentence" className="space-y-4">
-            {/* Input Section */}
-            <ClayCard className="p-4">
-              <div className="space-y-4">
-                {/* Main Input */}
-                <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: colors.deepSlate }}>
-                    Câu tiếng Anh
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder="Nhập câu tiếng Anh..."
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleTranslate()}
-                    className="w-full text-lg"
-                  />
-                </div>
-
-                {/* Context (Optional) */}
-                <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: colors.deepSlate }}>
-                    Ngữ cảnh (tùy chọn)
-                  </label>
-                  <textarea
-                    placeholder="Thêm ngữ cảnh để dịch chính xác hơn..."
-                    value={context}
-                    onChange={(e) => setContext(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl resize-none"
-                    style={{
-                      backgroundColor: colors.warmWhite,
-                      border: `2px solid ${colors.lightGray}`,
-                      color: colors.deepSlate,
-                    }}
-                    rows={2}
-                  />
-                </div>
-
-                {/* Translate Button */}
-                <Button
-                  variant="primary"
-                  onClick={handleTranslate}
-                  disabled={translating || !inputText.trim()}
-                  className="w-full text-lg py-4"
-                  style={{
-                    backgroundColor: colors.skyBlue,
-                    boxShadow: shadows.clayBlue,
-                  }}
-                >
-                  {translating ? (
-                    <span className="flex items-center gap-2">
-                      <LoadingSpinner size="sm" /> Đang dịch...
-                    </span>
-                  ) : (
-                    '🔍 Dịch ngay'
-                  )}
-                </Button>
-              </div>
-            </ClayCard>
-
-            {/* Error Message */}
-            {translateError && (
-              <div
-                className="mt-4 p-4 rounded-xl text-center"
-                style={{ backgroundColor: colors.coralPink + '20', color: colors.coralPink }}
-              >
-                {translateError}
-              </div>
-            )}
-
-            {/* Result */}
-            {translation && (
-              <div className="mt-6 space-y-4 animate-fade-in">
-                {/* Main Translation */}
-                <ClayCard className="p-5">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <Badge variant="primary" size="sm">
-                        🤖 AI Translation
-                      </Badge>
-                    </div>
-                  </div>
-
-                  {/* Original */}
-                  <div className="mb-4">
-                    <p className="text-xs uppercase tracking-wider mb-1" style={{ color: colors.mediumGray }}>
-                      Tiếng Anh
-                    </p>
-                    <p className="text-lg font-medium" style={{ color: colors.deepSlate }}>
-                      {translation.original}
-                    </p>
-                  </div>
-
-                  {/* Arrow */}
-                  <div className="flex justify-center py-2">
-                    <span className="text-2xl">⬇️</span>
-                  </div>
-
-                  {/* Translation */}
-                  <div>
-                    <p className="text-xs uppercase tracking-wider mb-1" style={{ color: colors.mediumGray }}>
-                      Tiếng Việt
-                    </p>
-                    <p className="text-xl font-bold" style={{ color: colors.skyBlue }}>
-                      {translation.translation.vi}
-                    </p>
-                  </div>
-
-                  {/* Literal Translation */}
-                  {translation.translation.literalTranslation && (
-                    <div className="mt-3 pt-3 border-t" style={{ borderColor: colors.lightGray }}>
-                      <p className="text-xs uppercase tracking-wider mb-1" style={{ color: colors.mediumGray }}>
-                        Dịch từng từ
-                      </p>
-                      <p className="text-sm italic" style={{ color: colors.mediumGray }}>
-                        {translation.translation.literalTranslation}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Context Note */}
-                  {translation.translation.contextualNote && (
-                    <div className="mt-3 pt-3 border-t" style={{ borderColor: colors.lightGray }}>
-                      <p className="text-xs uppercase tracking-wider mb-1" style={{ color: colors.mediumGray }}>
-                        💡 Giải thích
-                      </p>
-                      <p className="text-sm" style={{ color: colors.deepSlate }}>
-                        {translation.translation.contextualNote}
-                      </p>
-                    </div>
-                  )}
-                </ClayCard>
-
-                {/* Word Breakdown */}
-                {translation.word_breakdown && translation.word_breakdown.length > 0 && (
-                  <ClayCard className="p-4">
-                    <h3 className="font-bold mb-3" style={{ color: colors.deepSlate }}>
-                      📖 Phân tích từ
-                    </h3>
-                    <div className="space-y-2">
-                      {translation.word_breakdown.slice(0, 8).map((w: WordBreakdown, i: number) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-3 p-2 rounded-lg"
-                          style={{ backgroundColor: colors.warmWhite }}
-                        >
-                          <span className="font-medium w-24 truncate" style={{ color: colors.deepSlate }}>
-                            {w.word}
-                          </span>
-                          {w.pronunciation && (
-                            <span className="text-xs" style={{ color: colors.mediumGray }}>
-                              {w.pronunciation}
-                            </span>
-                          )}
-                          <span className="flex-1 text-right" style={{ color: colors.skyBlue }}>
-                            {w.translation}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </ClayCard>
-                )}
-
-                {/* Related Words */}
-                {translation.related_words && translation.related_words.length > 0 && (
-                  <ClayCard className="p-4">
-                    <h3 className="font-bold mb-3" style={{ color: colors.deepSlate }}>
-                      🔗 Từ liên quan
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {translation.related_words.slice(0, 8).map((w: RelatedWord, i: number) => (
-                        <Badge key={i} variant="secondary">
-                          {w.word}
-                        </Badge>
-                      ))}
-                    </div>
-                  </ClayCard>
-                )}
-              </div>
-            )}
+          <div id="panel-sentence" role="tabpanel" aria-labelledby="tab-sentence">
+            <SentenceTranslateCard
+              onWordSelect={(w) => {
+                setMode('word');
+                void handleLookup(w);
+              }}
+            />
           </div>
         )}
       </div>
