@@ -25,7 +25,7 @@ export function PWAInstallButton({ variant = 'button', className = '' }: PWAInst
     if (showIOSHelp) {
       return (
         <div
-          className={`fixed bottom-20 left-4 right-4 z-50 p-4 rounded-${radius['3xl']} ${className}`}
+          className={`pwa-install-surface fixed bottom-20 left-4 right-4 z-50 p-4 rounded-${radius['3xl']} ${className}`}
           style={{
             backgroundColor: colors.warmWhite,
             boxShadow: shadows.clay,
@@ -91,7 +91,7 @@ export function PWAInstallButton({ variant = 'button', className = '' }: PWAInst
   if (canInstall && variant === 'banner') {
     return (
       <div
-        className={`fixed bottom-20 left-4 right-4 z-50 p-4 rounded-${radius['3xl']} flex items-center gap-4 ${className}`}
+        className={`pwa-install-surface fixed bottom-20 left-4 right-4 z-50 p-4 rounded-${radius['3xl']} flex items-center gap-4 ${className}`}
         style={{
           backgroundColor: colors.warmWhite,
           boxShadow: shadows.clay,

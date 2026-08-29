@@ -26,8 +26,9 @@ test.describe('Mobile learner navigation', () => {
 
       const navBar = page.locator('.learner-mobile-nav__bar');
       await expect(navBar).toBeVisible();
-      await expect.poll(() => navBar.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
-      await expect.poll(() => navBar.evaluate((element) => getComputedStyle(element).boxShadow)).toBe('none');
+      await expect.poll(() => navBar.evaluate((element) => getComputedStyle(element).backgroundImage)).not.toBe('none');
+      await expect.poll(() => navBar.evaluate((element) => getComputedStyle(element).borderTopWidth)).toBe('3px');
+      await expect.poll(() => navBar.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe('none');
 
       const activeItem = page.locator('nav[aria-label="primaryNavigation"] a[aria-current="page"]');
       await expect(activeItem).toHaveCount(1);

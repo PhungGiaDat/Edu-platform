@@ -7,8 +7,8 @@
 const VAPID_PUBLIC_KEY = 'BCkbs2z3qXwWGqT7GkhDJVQeJzN3R8mQ9Q5Y5Q5Y5Q5Y5Q5Y5Q5Y5Q5Y5Q5Y5Q5Y5Q5Y5Q5Y5Q5Y5Q5Y5Q5Y5Q5Y=';
 
 // Cache names
-const STATIC_CACHE = 'eduar-static-v1';
-const DYNAMIC_CACHE = 'eduar-dynamic-v1';
+const STATIC_CACHE = 'eduar-static-v2';
+const DYNAMIC_CACHE = 'eduar-dynamic-v2';
 
 // Static assets to cache
 const STATIC_ASSETS = [
@@ -54,15 +54,32 @@ self.addEventListener('activate', (event) => {
  * Fetch event - serve from cache, fallback to network
  */
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') return;
+  const request = event.request;
+
+  // Skip non-GET and cross-origin requests.
+  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
 
   // Skip API requests
-  if (event.request.url.includes('/api/')) return;
+  if (request.url.includes('/api/')) return;
+
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request).catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request);
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+
+      return fetch(request).then((response) => {
+        if (response.ok) {
+          const responseToCache = response.clone();
+          caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, responseToCache));
+        }
+        return response;
+      });
     })
   );
 });
@@ -77,7 +94,7 @@ self.addEventListener('push', (event) => {
     title: 'EduAR - Học tập',
     body: 'Đã đến lúc ôn tập từ vựng!',
     icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+    badge: '/icons/icon-72x72.png',
     tag: 'notebook-review',
     data: {},
   };
@@ -233,5 +250,3 @@ async function syncReviewData() {
     console.error('[SW] Sync failed:', error);
   }
 }
-
-module.exports = { VAPID_PUBLIC_KEY };

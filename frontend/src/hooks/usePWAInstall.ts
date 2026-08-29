@@ -38,8 +38,15 @@ export function usePWAInstall(): PWAInstallPrompt {
     const mediaQuery = window.matchMedia('(display-mode: standalone)');
     mediaQuery.addEventListener('change', checkStandalone);
 
+    const handleAppInstalled = () => {
+      setCanInstall(false);
+      setIsInstalled(true);
+    };
+    window.addEventListener('appinstalled', handleAppInstalled);
+
     return () => {
       mediaQuery.removeEventListener('change', checkStandalone);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
@@ -93,7 +100,8 @@ export function usePWAInstall(): PWAInstallPrompt {
  * Check if device is iOS
  */
 export function isIOS(): boolean {
-  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
 /**

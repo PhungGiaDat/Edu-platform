@@ -1,9 +1,10 @@
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { AIChatBuddy } from '@/features/chat/components/AIChatBuddy';
+import { ChatService } from '@/services/ChatService';
 
 // ── Mock CodexPetSprite ─────────────────────────────────────────────────────
 vi.mock('@/features/pets/components/CodexPetSprite', () => ({
@@ -186,6 +187,11 @@ describe('AIChatBuddy — mobile viewport behavior', () => {
 
     it('input is disabled while a message is loading', async () => {
         const user = userEvent.setup();
+        let resolveResponse!: (response: Awaited<ReturnType<typeof ChatService.sendRAGMessage>>) => void;
+        const pendingResponse = new Promise<Awaited<ReturnType<typeof ChatService.sendRAGMessage>>>((resolve) => {
+            resolveResponse = resolve;
+        });
+        vi.mocked(ChatService.sendRAGMessage).mockReturnValueOnce(pendingResponse);
         renderChatBuddy(true);
 
         const input = screen.getByPlaceholderText('Ask Lexi...');
@@ -199,5 +205,8 @@ describe('AIChatBuddy — mobile viewport behavior', () => {
         // The loading indicator (three bouncing dots) should appear
         const loadingDots = document.querySelectorAll('[class*="animate-bounce"]');
         expect(loadingDots.length).toBeGreaterThan(0);
+
+        resolveResponse({ response: 'Mock AI response', sources: [], session_id: 'pending-session' });
+        await waitFor(() => expect(input).not.toBeDisabled());
     });
 });

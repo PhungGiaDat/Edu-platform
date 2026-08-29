@@ -14,7 +14,24 @@ body,
   max-width: 100vw;
   min-width: 0;
   height: 100%;
+  min-height: 100dvh;
   overflow-x: hidden;
+}
+
+/* Extend the app into the safe-area, then keep learner content below the
+   Dynamic Island/notch and above the home indicator on mobile/PWA. */
+@media (max-width: 767px) {
+  #root {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+}
+
+.pwa-install-surface {
+  bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)) !important;
+  left: max(1rem, env(safe-area-inset-left, 0px)) !important;
+  right: max(1rem, env(safe-area-inset-right, 0px)) !important;
 }
 
 *,
@@ -344,6 +361,13 @@ button:focus-visible {
 
 .animate-slideUp {
   animation: slideUp 0.3s ease-out;
+}
+
+/* Hover polish is reserved for precise pointers; touch browsers must not retain a hover scale. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .ai-chat-buddy__fab:hover {
+    transform: scale(1.05);
+  }
 }
 
 /* Bounce (for chat bubble) */
