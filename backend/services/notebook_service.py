@@ -8,6 +8,7 @@ from datetime import datetime
 import logging
 
 from repositories.notebook_repository import NotebookRepository
+from services.content_safety_service import assert_safe
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +29,20 @@ class NotebookService:
         source: str = "manual",
         topic: Optional[str] = None,
         difficulty: Optional[str] = None,
+        pronunciation: Optional[str] = None,
+        part_of_speech: Optional[str] = None,
+        definition_en: Optional[str] = None,
+        wiki_summary: Optional[str] = None,
     ) -> dict:
         """Create a new notebook entry"""
         logger.info(f"[NotebookService] Creating entry for user {user_id}: {word}")
+
+        assert_safe(word, field="word")
+        assert_safe(translation_vi, field="translation_vi")
+        for optional, name in ((translation_en, "translation_en"), (context, "context"),
+                               (definition_en, "definition_en"), (wiki_summary, "wiki_summary")):
+            if optional:
+                assert_safe(optional, field=name)
 
         entry = await self.repository.create(
             user_id=user_id,
@@ -41,12 +53,42 @@ class NotebookService:
             source=source,
             topic=topic,
             difficulty=difficulty,
+            pronunciation=pronunciation,
+            part_of_speech=part_of_speech,
+            definition_en=definition_en,
+            wiki_summary=wiki_summary,
         )
 
         if entry:
             logger.info(f"[NotebookService] Entry created: {entry['id']}")
 
         return entry
+
+    async def get_or_create_entry(
+        self, user_id: UUID, word: str, translation_vi: str,
+        translation_en: Optional[str] = None, context: Optional[str] = None,
+        source: str = "manual", topic: Optional[str] = None,
+        difficulty: Optional[str] = None, pronunciation: Optional[str] = None,
+        part_of_speech: Optional[str] = None, definition_en: Optional[str] = None,
+        wiki_summary: Optional[str] = None,
+    ) -> Tuple[dict, bool]:
+        """Idempotent save: returns (entry, created). Duplicate word -> existing."""
+        assert_safe(word, field="word")
+        assert_safe(translation_vi, field="translation_vi")
+        for optional, name in ((translation_en, "translation_en"), (context, "context"),
+                               (definition_en, "definition_en"), (wiki_summary, "wiki_summary")):
+            if optional:
+                assert_safe(optional, field=name)
+        existing = await self.repository.get_by_word(user_id, word)
+        if existing:
+            return existing, False
+        entry = await self.repository.create(
+            user_id=user_id, word=word.strip(), translation_vi=translation_vi.strip(),
+            translation_en=translation_en, context=context, source=source,
+            topic=topic, difficulty=difficulty, pronunciation=pronunciation,
+            part_of_speech=part_of_speech, definition_en=definition_en,
+            wiki_summary=wiki_summary)
+        return entry, entry is not None
 
     async def get_entry(self, entry_id: UUID, user_id: UUID) -> Optional[dict]:
         """Get a single entry"""
@@ -83,6 +125,12 @@ class NotebookService:
         **fields,
     ) -> Optional[dict]:
         """Update entry fields"""
+        # Safety gate on text fields
+        for key in ('word', 'translation_vi', 'translation_en', 'context',
+                    'definition_en', 'wiki_summary'):
+            if key in fields and fields[key]:
+                assert_safe(str(fields[key]), field=key)
+
         # Strip string fields
         for key in ['word', 'translation_vi', 'translation_en', 'context']:
             if key in fields and fields[key]:

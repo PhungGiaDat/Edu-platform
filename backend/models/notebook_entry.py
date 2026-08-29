@@ -13,6 +13,7 @@ class EntrySource(str, Enum):
     AI_TRANSLATION = "ai_translation"
     FLASHCARD = "flashcard"
     MANUAL = "manual"
+    WORD_LOOKUP = "word_lookup"
 
 
 class Difficulty(str, Enum):
@@ -34,6 +35,10 @@ class NotebookEntryCreate(BaseModel):
     source: EntrySource = Field(..., description="How the word was added")
     topic: Optional[str] = Field(None, max_length=100, description="Topic slug")
     difficulty: Optional[Difficulty] = Field(None, description="Word difficulty")
+    pronunciation: Optional[str] = Field(None, max_length=100, description="IPA pronunciation")
+    part_of_speech: Optional[str] = Field(None, max_length=50, description="Part of speech")
+    definition_en: Optional[str] = Field(None, description="English definition")
+    wiki_summary: Optional[str] = Field(None, description="Wikipedia summary excerpt")
 
 
 class NotebookEntryUpdate(BaseModel):
@@ -44,6 +49,10 @@ class NotebookEntryUpdate(BaseModel):
     context: Optional[str] = None
     topic: Optional[str] = Field(None, max_length=100)
     difficulty: Optional[Difficulty] = None
+    pronunciation: Optional[str] = Field(None, max_length=100)
+    part_of_speech: Optional[str] = Field(None, max_length=50)
+    definition_en: Optional[str] = None
+    wiki_summary: Optional[str] = None
 
 
 class ReviewSubmit(BaseModel):
@@ -79,6 +88,10 @@ class NotebookEntryResponse(BaseModel):
     ease_factor: float = 2.5
     interval_days: int = 0
     next_review_at: Optional[datetime] = None
+    pronunciation: Optional[str] = None
+    part_of_speech: Optional[str] = None
+    definition_en: Optional[str] = None
+    wiki_summary: Optional[str] = None
 
     class Config:
         from_attributes = True

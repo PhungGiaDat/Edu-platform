@@ -28,19 +28,26 @@ class NotebookRepository:
         source: str = "manual",
         topic: Optional[str] = None,
         difficulty: Optional[str] = None,
+        pronunciation: Optional[str] = None,
+        part_of_speech: Optional[str] = None,
+        definition_en: Optional[str] = None,
+        wiki_summary: Optional[str] = None,
     ) -> dict:
         """Create a new notebook entry"""
         query = text("""
             INSERT INTO notebook_entries (
                 user_id, word, translation_vi, translation_en, context,
-                source, topic, difficulty
+                source, topic, difficulty, pronunciation, part_of_speech,
+                definition_en, wiki_summary
             )
             VALUES (
                 :user_id, :word, :translation_vi, :translation_en, :context,
-                :source, :topic, :difficulty
+                :source, :topic, :difficulty, :pronunciation, :part_of_speech,
+                :definition_en, :wiki_summary
             )
             RETURNING id, user_id, word, translation_vi, translation_en, context,
-                      source, topic, difficulty, created_at, review_count,
+                      source, topic, difficulty, pronunciation, part_of_speech,
+                      definition_en, wiki_summary, created_at, review_count,
                       ease_factor, interval_days
         """)
 
@@ -53,6 +60,10 @@ class NotebookRepository:
             "source": source,
             "topic": topic,
             "difficulty": difficulty,
+            "pronunciation": pronunciation,
+            "part_of_speech": part_of_speech,
+            "definition_en": definition_en,
+            "wiki_summary": wiki_summary,
         })
         row = result.fetchone()
         await self.db.commit()
@@ -62,7 +73,8 @@ class NotebookRepository:
         """Get entry by ID, ensure user owns it"""
         query = text("""
             SELECT id, user_id, word, translation_vi, translation_en, context,
-                   source, topic, difficulty, created_at, last_reviewed_at,
+                   source, topic, difficulty, pronunciation, part_of_speech,
+                   definition_en, wiki_summary, created_at, last_reviewed_at,
                    review_count, ease_factor, interval_days, next_review_at
             FROM notebook_entries
             WHERE id = :id AND user_id = :user_id
@@ -71,6 +83,20 @@ class NotebookRepository:
             "id": str(entry_id),
             "user_id": str(user_id),
         })
+        row = result.fetchone()
+        return dict(row._mapping) if row else None
+
+    async def get_by_word(self, user_id: UUID, word: str) -> Optional[dict]:
+        """Get entry by word for a user (case-insensitive), or None."""
+        query = text("""
+            SELECT id, user_id, word, translation_vi, translation_en, context,
+                   source, topic, difficulty, pronunciation, part_of_speech,
+                   definition_en, wiki_summary, created_at, last_reviewed_at,
+                   review_count, ease_factor, interval_days, next_review_at
+            FROM notebook_entries
+            WHERE user_id = :user_id AND LOWER(word) = LOWER(:word)
+        """)
+        result = await self.db.execute(query, {"user_id": str(user_id), "word": word.strip()})
         row = result.fetchone()
         return dict(row._mapping) if row else None
 
@@ -114,7 +140,8 @@ class NotebookRepository:
 
         list_query = text(f"""
             SELECT id, user_id, word, translation_vi, translation_en, context,
-                   source, topic, difficulty, created_at, last_reviewed_at,
+                   source, topic, difficulty, pronunciation, part_of_speech,
+                   definition_en, wiki_summary, created_at, last_reviewed_at,
                    review_count, ease_factor, interval_days, next_review_at
             FROM notebook_entries
             WHERE {where_clause}
@@ -154,7 +181,8 @@ class NotebookRepository:
             SET {", ".join(set_clauses)}
             WHERE id = :id AND user_id = :user_id
             RETURNING id, user_id, word, translation_vi, translation_en, context,
-                      source, topic, difficulty, created_at, last_reviewed_at,
+                      source, topic, difficulty, pronunciation, part_of_speech,
+                      definition_en, wiki_summary, created_at, last_reviewed_at,
                       review_count, ease_factor, interval_days, next_review_at
         """)
         result = await self.db.execute(query, params)
@@ -185,7 +213,8 @@ class NotebookRepository:
         """Get cards due for review (next_review_at <= now OR is NULL)"""
         query = text("""
             SELECT id, user_id, word, translation_vi, translation_en, context,
-                   source, topic, difficulty, created_at, last_reviewed_at,
+                   source, topic, difficulty, pronunciation, part_of_speech,
+                   definition_en, wiki_summary, created_at, last_reviewed_at,
                    review_count, ease_factor, interval_days, next_review_at
             FROM notebook_entries
             WHERE user_id = :user_id

@@ -2,10 +2,11 @@
 """
 Notebook API Router - Sổ tay endpoints
 """
-from fastapi import Depends, HTTPException, status, Query
+from fastapi import Depends, HTTPException, status, Query, Response
 from core.base_router import create_router
 from core.security import get_current_user
 from services.notebook_service import NotebookService
+from services.content_safety_service import ContentSafetyError
 from repositories.notebook_repository import NotebookRepository
 from repositories.postgres_user_repository import PostgresUser
 from models.notebook_entry import (
@@ -45,14 +46,15 @@ async def get_notebook_service(
 @router.post("", response_model=NotebookEntryResponse, status_code=status.HTTP_201_CREATED)
 async def create_entry(
     entry: NotebookEntryCreate,
+    response: Response,
     current_user: PostgresUser = Depends(get_current_user),
     service: NotebookService = Depends(get_notebook_service),
 ):
-    """Create a new notebook entry."""
+    """Create a new notebook entry. Duplicate (user, word) returns the existing entry with 200."""
     logger.info(f"[API] POST /notebook - User {current_user.id}: {entry.word}")
 
     try:
-        result = await service.create_entry(
+        result, created = await service.get_or_create_entry(
             user_id=current_user.id,
             word=entry.word,
             translation_vi=entry.translation_vi,
@@ -61,6 +63,10 @@ async def create_entry(
             source=entry.source.value if hasattr(entry.source, 'value') else entry.source,
             topic=entry.topic,
             difficulty=entry.difficulty.value if hasattr(entry.difficulty, 'value') else entry.difficulty,
+            pronunciation=entry.pronunciation,
+            part_of_speech=entry.part_of_speech,
+            definition_en=entry.definition_en,
+            wiki_summary=entry.wiki_summary,
         )
 
         if not result:
@@ -69,8 +75,16 @@ async def create_entry(
                 detail="Failed to create notebook entry"
             )
 
+        if not created:
+            response.status_code = status.HTTP_200_OK
+
         return _format_entry(result)
 
+    except ContentSafetyError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Từ này không phù hợp để lưu."
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -245,4 +259,8 @@ def _format_entry(data: dict) -> dict:
         "ease_factor": float(data.get('ease_factor', 2.5)),
         "interval_days": data.get('interval_days', 0),
         "next_review_at": data.get('next_review_at'),
+        "pronunciation": data.get('pronunciation'),
+        "part_of_speech": data.get('part_of_speech'),
+        "definition_en": data.get('definition_en'),
+        "wiki_summary": data.get('wiki_summary'),
     }
