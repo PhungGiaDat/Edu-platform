@@ -1,125 +1,248 @@
 {
   "$schema": "https://opencode.ai/config.json",
+
+  "model": "bai/glm-5.3-flash",
+  "default_agent": "orchestrator",
+
   "compaction": {
     "auto": true,
-    "prune": true,
-    "reserved": 10000
+    "keep": {
+      "tokens": 15000
+    },
+    "buffer": 10000
   },
-  "default_agent": "orchestrator",
-  "agent": {
+
+"providers": {
+  "bai": {
+    "name": "B.AI",
+    "env": [
+      "BAI_API_KEY"
+    ],
+    "package": "@opencode-ai/ai/providers/openai-compatible",
+
+    "settings": {
+      "baseURL": "https://api.b.ai/v1",
+      "apiKey": "{env:BAI_API_KEY}"
+    },
+
+    "models": {
+      "glm-5.3-flash": {
+        "modelID": "glm-5.3-flash",
+        "name": "GLM-5.3-Flash",
+        "limit": {
+          "context": 1000000,
+          "output": 131072
+        }
+      },
+
+      "deepseek-v4-flash": {
+        "modelID": "deepseek-v4-flash",
+        "name": "DeepSeek-V4-Flash"
+      },
+
+      "mimo-v2.5": {
+        "modelID": "mimo-v2.5",
+        "name": "MiMo-V2.5"
+      },
+
+      "qwen3.8-flash": {
+        "modelID": "qwen3.8-flash",
+        "name": "Qwen3.8-Flash"
+      }
+    }
+  }
+},
+
+  "permissions": [
+    {
+      "action": "edit",
+      "resource": "*",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "*",
+      "effect": "allow"
+    }
+  ],
+
+  "agents": {
     "orchestrator": {
       "description": "Team orchestrator that coordinates SDLC agents and manages development workflow",
       "mode": "primary",
-      "model": "github-copilot/GPT-5.2-Codex",
-      "temperature": 0.3,
+      "model": "bai/glm-5.3-flash",
+      "system": "At the start of the task, read .cursor/agents/sdlc-orchestrator.md and follow its role instructions while coordinating the available subagents. Superpowers skill discipline is injected automatically by the .opencode/plugins/superpowers.js plugin; load skills with the native `skill` tool, never by reading SKILL.md file paths.",
+      "request": {
+        "body": {
+          "temperature": 0.3
+        }
+      },
+      "permissions": [
+        {
+          "action": "subagent",
+          "resource": "*",
+          "effect": "allow"
+        }
+      ],
       "color": "#8E44AD"
     },
+
     "planner": {
       "description": "Strategic planner for requirements gathering, architecture design, and project planning",
       "mode": "subagent",
-      "model": "github-copilot/GPT-5.2-Codex",
-      "temperature": 0.2,
+      "model": "bai/glm-5.3-flash",
+      "system": "Before working, read .cursor/agents/planner.md and follow its role instructions.",
+      "request": {
+        "body": {
+          "temperature": 0.2
+        }
+      },
       "color": "#2ECC71"
     },
+
     "researcher": {
       "description": "Research specialist for investigating technologies, debugging issues, and gathering information",
       "mode": "subagent",
-      "model": "github-copilot/GPT-5.2-Codex",
-      "temperature": 0.2,
+      "model": "bai/glm-5.3-flash",
+      "system": "Before working, read .cursor/agents/researcher.md and follow its role instructions.",
+      "request": {
+        "body": {
+          "temperature": 0.2
+        }
+      },
       "color": "#3498DB"
     },
+
     "debug": {
       "description": "Expert debugger specializing in root cause analysis, issue investigation, and problem diagnosis",
       "mode": "subagent",
-      "model": "github-copilot/GPT-5.2-Codex",
-      "temperature": 0.2,
+      "model": "bai/glm-5.3-flash",
+      "system": "Before working, read .cursor/agents/debug.md and follow its role instructions.",
+      "request": {
+        "body": {
+          "temperature": 0.2
+        }
+      },
       "color": "#E67E22"
     },
+
     "fix": {
       "description": "Expert bug fixer specializing in implementing clean, safe, and tested solutions to identified issues",
       "mode": "subagent",
-      "model": "github-copilot/GPT-5.2-Codex",
-      "temperature": 0.1,
+      "model": "bai/glm-5.3-flash",
+      "system": "Before working, read .cursor/agents/fix.md and follow its role instructions.",
+      "request": {
+        "body": {
+          "temperature": 0.1
+        }
+      },
       "color": "#E74C3C"
     },
+
     "reviewer": {
       "description": "Code reviewer specializing in code quality, security audit, and maintainability",
       "mode": "subagent",
-      "model": "github-copilot/GPT-5.2-Codex",
-      "temperature": 0.1,
+      "model": "bai/glm-5.3-flash",
+      "system": "Before working, read .cursor/agents/reviewer.md and follow its role instructions.",
+      "request": {
+        "body": {
+          "temperature": 0.1
+        }
+      },
       "color": "#9B59B6"
     },
+
     "tester": {
       "description": "QA engineer specializing in test creation, quality assurance, and coverage improvement",
       "mode": "subagent",
-      "model": "github-copilot/GPT-5.2-Codex",
-      "temperature": 0.1,
+      "model": "bai/glm-5.3-flash",
+      "system": "Before working, read .cursor/agents/tester.md and follow its role instructions.",
+      "request": {
+        "body": {
+          "temperature": 0.1
+        }
+      },
       "color": "#1ABC9C"
     },
+
     "documenter": {
       "description": "Technical writer specializing in documentation, READMEs, API docs, and user guides",
       "mode": "subagent",
-      "model": "github-copilot/GPT-5.2-Codex",
-      "temperature": 0.2,
+      "model": "bai/glm-5.3-flash",
+      "system": "Before working, read .cursor/agents/documenter.md and follow its role instructions.",
+      "request": {
+        "body": {
+          "temperature": 0.2
+        }
+      },
       "color": "#16A085"
     },
+
     "git-manager": {
       "description": "DevOps specialist for version control, branching, merging, and release management",
       "mode": "subagent",
-      "model": "github-copilot/GPT-5.2-Codex",
-      "temperature": 0.1,
+      "model": "bai/glm-5.3-flash",
+      "system": "Before working, read .cursor/agents/git-manager.md and follow its role instructions.",
+      "request": {
+        "body": {
+          "temperature": 0.1
+        }
+      },
       "color": "#F39C12"
     },
+
     "devops": {
       "description": "DevOps specialist for CI/CD, deployment, infrastructure, and containerization",
       "mode": "subagent",
-      "model": "github-copilot/GPT-5.2-Codex",
-      "temperature": 0.1,
+      "model": "bai/glm-5.3-flash",
+      "system": "Before working, read .cursor/agents/devops.md and follow its role instructions.",
+      "request": {
+        "body": {
+          "temperature": 0.1
+        }
+      },
       "color": "#D35400"
     },
+
     "database-admin": {
       "description": "Database administrator specializing in schema design, query optimization, indexing, and migrations",
       "mode": "subagent",
-      "model": "github-copilot/GPT-5.2-Codex",
-      "temperature": 0.1,
+      "model": "bai/glm-5.3-flash",
+      "system": "Before working, read .cursor/agents/database-admin.md and follow its role instructions.",
+      "request": {
+        "body": {
+          "temperature": 0.1
+        }
+      },
       "color": "#7F8C8D"
     }
   },
-  "permission": {
-    "edit": "allow",
-    "bash": "allow"
-  },
-  "instructions": [
-    "./.cursor/rules/superpowers-bootstrap.mdc",
-    "./.cursor/agents/sdlc-orchestrator.md",
-    "./.cursor/agents/planner.md",
-    "./.cursor/agents/researcher.md",
-    "./.cursor/agents/debug.md",
-    "./.cursor/agents/fix.md",
-    "./.cursor/agents/reviewer.md",
-    "./.cursor/agents/tester.md",
-    "./.cursor/agents/documenter.md",
-    "./.cursor/agents/git-manager.md",
-    "./.cursor/agents/devops.md",
-    "./.cursor/agents/database-admin.md",
-    "./AGENTS.md"
-  ],
+
   "mcp": {
-    "ast-grep": {
-      "type": "local",
-      "command": [
-        "sh",
-        "-c",
-        "[ -f .ast-grep/sgconfig.yml ] || (mkdir -p .ast-grep && printf 'ruleDirs: []\\n' > .ast-grep/sgconfig.yml); exec uvx --from git+https://github.com/ast-grep/ast-grep-mcp ast-grep-server --config .ast-grep/sgconfig.yml"
-      ]
-    },
-    "mcpls": {
-      "type": "local",
-      "command": ["mcpls"]
-    },
-    "qmd": {
-      "type": "local",
-      "command": ["qmd", "mcp"]
+    "servers": {
+      "ast-grep": {
+        "type": "local",
+        "command": [
+          "sh",
+          "-c",
+          "[ -f .ast-grep/sgconfig.yml ] || (mkdir -p .ast-grep && printf 'ruleDirs: []\\n' > .ast-grep/sgconfig.yml); exec uvx --from git+https://github.com/ast-grep/ast-grep-mcp ast-grep-server --config .ast-grep/sgconfig.yml"
+        ]
+      },
+
+      "mcpls": {
+        "type": "local",
+        "command": [
+          "mcpls"
+        ]
+      },
+
+      "qmd": {
+        "type": "local",
+        "command": [
+          "qmd",
+          "mcp"
+        ]
+      }
     }
   }
 }

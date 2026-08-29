@@ -3,7 +3,26 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-.opencode
+# OpenCode workspace config IS version-controlled (agents, commands, plugins,
+# rules, package manifest).
+#
+# skills/ is deliberately NOT tracked. It is a vendored mirror: 122 of 132 dirs
+# are byte-identical copies of .cursor/skills, 10 more have silently drifted,
+# and the remaining unity-* skills are already tracked under .claude/skills and
+# .agents/skills. OpenCode V2 discovers skills from those compatibility sources
+# too (verified: it loads .claude/skills, .agents/skills and .opencode/skills),
+# so nothing is lost by ignoring this copy.
+.opencode/skills
+.opencode/node_modules
+
+# Each vendored superpowers copy ships its own (V1-only) .opencode/ plugin dir.
+# The previous blanket ".opencode" pattern matched at every depth and hid these;
+# now that the root config is tracked they surface as untracked noise, so ignore
+# them explicitly to stop a stray "git add -A" from committing the dead V1
+# plugin three more times.
+.claude/skills/*/.opencode/
+.agents/skills/*/.opencode/
+.cursor/skills/*/.opencode/
 
 # Local agent permissions and MCP credentials
 .claude/settings.local.json

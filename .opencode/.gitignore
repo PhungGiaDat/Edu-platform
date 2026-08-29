@@ -1,0 +1,4 @@
+# Only the install output is ignored. package.json / lockfile / this file are
+# tracked so `@opencode-ai/plugin` (pinned to the running opencode2 build) is
+# reproducible from a fresh clone.
+node_modules

@@ -1,0 +1,17 @@
+scan_date: null
+git_commit: null
+git_branch: null
+project_root: "."
+total_files: 0
+total_symbols: 0
+languages: []
+rules_applied: 0
+findings:
+  critical: 0
+  warning: 0
+  suggestion: 0
+tools:
+  mcpls_available: null
+  astgrep_available: null
+  astgrep_version: null
+file_manifest: []
