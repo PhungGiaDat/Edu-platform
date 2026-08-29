@@ -213,17 +213,27 @@ export const LearnAR8thWall: React.FC = () => {
 
         // Orchestrator step 3: tell scanner to release camera BEFORE XR starts
         // CRITICAL on iOS Safari — 8th Wall needs sole camera access.
-        // Guard: throw if scannerRef is already gone (would indicate a bug).
-        const scannerWindow = scannerRef.current?.contentWindow;
+        // We try two lookup paths because the scannerRef can be stale after a
+        // React re-render or Strict Mode mount cycle:
+        //   1) scannerRef.current.contentWindow (the ref attached via JSX)
+        //   2) window.frames['scanner-iframe'] (the named iframe)
+        // Whichever resolves first wins; we log both for diagnostics.
+        const refWin = scannerRef.current?.contentWindow;
+        const namedWin = (() => {
+          try { return window.frames['scanner-iframe']; } catch { return null; }
+        })();
+        const scannerWindow = refWin || namedWin;
 
         trace('CAMERA_RELEASE_SEND_ATTEMPT', JSON.stringify({
           scannerRefExists: !!scannerRef.current,
-          contentWindowExists: !!scannerWindow,
+          refContentWindowExists: !!refWin,
+          namedFrameExists: !!namedWin,
+          sameRefAsNamed: refWin === namedWin,
+          refEqualsNamedFrame: scannerRef.current === (namedWin && (namedWin as any).frameElement),
         }));
 
         if (!scannerWindow) {
-          // This would be a bug — scanner should still be alive in RELEASING_CAMERA
-          trace('CAMERA_RELEASE_SEND_FAILED', 'Scanner iframe/contentWindow is null');
+          trace('CAMERA_RELEASE_SEND_FAILED', 'Both ref and named frame are null');
           throw new Error('Cannot release camera: scanner iframe already unmounted');
         }
 
@@ -238,14 +248,18 @@ export const LearnAR8thWall: React.FC = () => {
         let attempts = 0;
         const sendReleaseWithRetry = () => {
           attempts += 1;
-          const w = scannerRef.current?.contentWindow;
+          const refW = scannerRef.current?.contentWindow;
+          const namedW = (() => {
+            try { return window.frames['scanner-iframe']; } catch { return null; }
+          })();
+          const w = refW || namedW;
           if (!w) return; // scanner unmounted — release already succeeded
           if (attempts > 3) {
             trace('CAMERA_RELEASE_RETRY_EXHAUSTED', `${attempts - 1} retries failed`);
             return;
           }
           w.postMessage({ type: 'RELEASE_CAMERA' }, '*');
-          trace('CAMERA_RELEASE_RETRY', `attempt ${attempts}/3`);
+          trace('CAMERA_RELEASE_RETRY', `attempt ${attempts}/3 via ${refW ? 'ref' : 'namedFrame'}`);
           releaseRetryRef.current = window.setTimeout(sendReleaseWithRetry, 500);
         };
         releaseRetryRef.current = window.setTimeout(sendReleaseWithRetry, 500);
@@ -410,9 +424,15 @@ export const LearnAR8thWall: React.FC = () => {
       <div className="ar-viewport">
 
         {/* SCANNING | LOADING_TARGET | RELEASING_CAMERA: scanner iframe stays alive
-            so we can send RELEASE_CAMERA before XR starts. */}
+            so we can send RELEASE_CAMERA before XR starts. The `key="scanner-iframe"`
+            prevents React from replacing the iframe element on re-render, and
+            `name="scanner-iframe"` lets us look up the live contentWindow via
+            window.frames['scanner-iframe'] (more reliable than scannerRef when
+            React Strict Mode double-mounts or React recycles the ref). */}
         {['SCANNING', 'LOADING_TARGET', 'RELEASING_CAMERA'].includes(phase) && (
           <iframe
+            key="scanner-iframe"
+            name="scanner-iframe"
             ref={scannerRef}
             src="/ar-scanner.html?debug=true"
             title="AR Scanner"
