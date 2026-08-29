@@ -482,6 +482,19 @@
       sendARDebug('XR_INIT_START', { targetName: targetData.name });
       showOverlay('Starting XR session...', '');
 
+      // Log XR8 state before polling
+      logToBuffer('info', 'Pre-init XR8 state', {
+        xr8: typeof window.XR8,
+        xr8Keys: window.XR8 ? Object.keys(window.XR8).slice(0, 20) : null,
+        xr8Run: typeof window.XR8?.run,
+        xr8XrController: typeof window.XR8?.XrController,
+      });
+      sendARDebug('PRE_INIT_XR8', {
+        xr8Type: typeof window.XR8,
+        xr8RunType: typeof window.XR8?.run,
+        xr8XcType: typeof window.XR8?.XrController,
+      });
+
       // Poll until XR8 and its submodules are fully loaded.
       // The xrloaded event may not fire in self-hosted mode; polling is reliable.
       const SDK_TIMEOUT_MS = 15000;
@@ -589,8 +602,33 @@
         physicalWidth: targetData.physicalWidth,
       });
 
-      // Initialize SDK — self-hosted binary auto-discovers canvas id="camerafeed"
-      window.XR8.run();
+      // Initialize SDK — try without canvas first (auto-discovery)
+      const canvasEl = document.getElementById('camerafeed');
+      logToBuffer('info', 'Canvas lookup', {
+        canvasFound: canvasEl !== null,
+        canvasTagName: canvasEl?.tagName,
+        canvasId: canvasEl?.id,
+        canvasWidth: canvasEl?.width,
+        canvasHeight: canvasEl?.height,
+        canvasBoundingRect: canvasEl ? JSON.stringify(canvasEl.getBoundingClientRect()) : null,
+        xr8Type: typeof window.XR8,
+        xr8RunType: typeof window.XR8?.run,
+        xr8Itself: String(window.XR8).substring(0, 200),
+      });
+      sendARDebug('BEFORE_XR_RUN', {
+        canvasFound: canvasEl !== null,
+        xr8Ready: typeof window.XR8 === 'function',
+        xr8RunReady: typeof window.XR8?.run === 'function',
+      });
+      try {
+        window.XR8.run();
+      } catch(runErr) {
+        logToBuffer('error', 'XR8.run threw', {
+          message: String(runErr),
+          canvasEl: canvasEl ? { id: canvasEl.id, tagName: canvasEl.tagName, w: canvasEl.width, h: canvasEl.height } : null,
+        });
+        throw runErr;
+      }
 
       updateDebug('Tracking active');
       sendARDebug('XR_SESSION_STARTED');
