@@ -22,7 +22,9 @@ interface NavItem {
     path: string;
     labelKey: string;
     shortLabelKey: string;
-    iconKey: 'learn' | 'ar' | 'flashcards' | 'profile' | 'path3d' | 'leaderboard' | 'challenge' | 'games';
+    /** Falsy keeps a route out of the crowded mobile bar; it still lives in the More sheet. */
+    showInMobileBar?: boolean;
+    iconKey: 'learn' | 'ar' | 'flashcards' | 'profile' | 'path3d' | 'leaderboard' | 'challenge' | 'games' | 'dictionary' | 'notebook';
 }
 
 interface TrackerStats {
@@ -129,6 +131,18 @@ const GamesIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' }) 
     </svg>
 );
 
+const DictionaryIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' }) => (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /><path d="M8 11h6M11 8v6" />
+    </svg>
+);
+
+const NotebookIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' }) => (
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="5" y="3" width="14" height="18" rx="2" /><path d="M9 3v18" /><path d="M13 8h3M13 12h3" />
+    </svg>
+);
+
 const ChevronIcon: React.FC<{ expanded: boolean }> = ({ expanded }) => (
     <svg aria-hidden="true" className={`h-5 w-5 transition-transform ${expanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="m9 18 6-6-6-6" />
@@ -226,15 +240,25 @@ const iconComponents: Record<NavItem['iconKey'], React.FC<{ className?: string }
     leaderboard: TrophyIcon,
     challenge: ChallengeIcon,
     games: GamesIcon,
+    dictionary: DictionaryIcon,
+    notebook: NotebookIcon,
 };
 
-const fullNavItems: Array<{ path: string; iconKey: NavItem['iconKey']; labelKey: string; shortLabelKey: string }> = [
+const fullNavItems: Array<{
+    path: string;
+    iconKey: NavItem['iconKey'];
+    labelKey: string;
+    shortLabelKey: string;
+    showInMobileBar?: boolean;
+}> = [
     { path: '/courses', iconKey: 'learn', labelKey: 'navLearn', shortLabelKey: 'navLearn' },
     { path: '/learning-path-3d', iconKey: 'path3d', labelKey: 'navLearningPath', shortLabelKey: 'navPathShort' },
     { path: '/games', iconKey: 'games', labelKey: 'navGames', shortLabelKey: 'navGamesShort' },
     { path: '/learn-ar', iconKey: 'ar', labelKey: 'navArPractice', shortLabelKey: 'navArShort' },
     { path: '/leaderboard', iconKey: 'leaderboard', labelKey: 'navLeaderboard', shortLabelKey: 'navLeaderboardShort' },
     { path: '/flashcards', iconKey: 'flashcards', labelKey: 'navFlashcards', shortLabelKey: 'navFlashcardsShort' },
+    { path: '/dictionary', iconKey: 'dictionary', labelKey: 'navDictionary', shortLabelKey: 'navDictionaryShort', showInMobileBar: false },
+    { path: '/notebook', iconKey: 'notebook', labelKey: 'navNotebook', shortLabelKey: 'navNotebookShort', showInMobileBar: false },
     { path: '/daily-challenge', iconKey: 'challenge', labelKey: 'navDailyChallenge', shortLabelKey: 'navChallengeShort' },
     { path: '/profile', iconKey: 'profile', labelKey: 'navProfile', shortLabelKey: 'navProfile' },
 ];
@@ -770,7 +794,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
 
             <nav aria-label={t('primaryNavigation')} className="learner-mobile-nav pointer-events-none fixed bottom-0 left-0 right-0 z-[var(--z-nav)] md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
                 <div className="learner-mobile-nav__bar pointer-events-auto mx-2 mb-2.5 flex min-h-[72px] items-stretch justify-around gap-0.5 rounded-[28px] p-1">
-                    {navItems.map((item) => {
+                    {navItems.filter((item) => item.showInMobileBar !== false).map((item) => {
                         const Icon = iconComponents[item.iconKey];
                         const active = isRouteActive(location.pathname, item.path);
                         return (
@@ -822,6 +846,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                                         <button onClick={() => goTo('/stickers')} className="flex min-h-16 items-center gap-3 rounded-3xl bg-gradient-to-br from-[#A8E6CF] via-[#88D4AB] to-[#6EB9FF] p-4 text-left shadow-[0_6px_0_rgba(80,150,110,0.3),0_12px_24px_rgba(110,185,255,0.15)] transition-all hover:scale-[1.02] active:translate-y-0.5">
                                             <StickerStarIcon className="h-7 w-7 shrink-0" />
                                             <span className="text-sm font-black text-[#176344]">{t('navStickers')}</span>
+                                        </button>
+                                        <button onClick={() => goTo('/dictionary')} className="flex min-h-16 items-center gap-3 rounded-3xl bg-gradient-to-br from-[#DBEAFE] via-[#BFDBFE] to-[#93C5FD] p-4 text-left shadow-[0_6px_0_rgba(37,99,235,0.3)] transition-all hover:scale-[1.02] active:translate-y-0.5">
+                                            <DictionaryIcon className="h-7 w-7 shrink-0 text-[#1D4ED8]" />
+                                            <span className="text-sm font-black text-[#1E3A8A]">{t('navDictionary')}</span>
+                                        </button>
+                                        <button onClick={() => goTo('/notebook')} className="flex min-h-16 items-center gap-3 rounded-3xl bg-gradient-to-br from-[#EDE9FE] via-[#DDD6FE] to-[#C7D2FE] p-4 text-left shadow-[0_6px_0_rgba(124,58,237,0.3)] transition-all hover:scale-[1.02] active:translate-y-0.5">
+                                            <NotebookIcon className="h-7 w-7 shrink-0 text-[#6D28D9]" />
+                                            <span className="text-sm font-black text-[#4C1D95]">{t('navNotebook')}</span>
                                         </button>
                                     </div>
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
