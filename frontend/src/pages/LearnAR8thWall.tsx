@@ -21,7 +21,13 @@ import '../styles/LearnAR8thWall.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://edu-platform-api-do20.onrender.com';
 
-type Phase = 'SCANNING' | 'LOADING' | 'VIEWING' | 'ERROR';
+type Phase =
+  | 'SCANNING'
+  | 'LOADING_TARGET'
+  | 'RELEASING_CAMERA'
+  | 'XR_BOOTING'
+  | 'VIEWING'
+  | 'ERROR';
 
 /** XR target data for one flashcard, fetched after QR scan */
 interface XRTarget {
@@ -126,11 +132,12 @@ export const LearnAR8thWall: React.FC = () => {
       // Orchestrator: wait for camera release before mounting viewer
       if (data.type === 'SCANNER_CAMERA_RELEASED') {
         console.log('[LearnAR8thWall] Scanner camera released — mounting viewer');
-        trace('SCANNER_CAMERA_RELEASED', 'Camera released, will mount ar-xr.html');
-        // Viewer is already in DOM with phase=VIEWING; just update phase state
-        // to signal to the rest of the app that XR is booting
-        setPhase('VIEWING');
-        trace('XR_BOOTING', 'ar-xr.html iframe loaded, XR engine initializing...');
+        trace('SCANNER_CAMERA_RELEASED', 'Camera released, transitioning to XR_BOOTING');
+        // Move to XR_BOOTING — this mounts the viewer iframe.
+        // The XR engine will boot inside it; we only go to VIEWING once
+        // we receive XR_CAMERA_HAS_VIDEO from the viewer.
+        setPhase('XR_BOOTING');
+        trace('XR_BOOTING', 'ar-xr.html iframe loading, XR engine initializing...');
         return;
       }
 
@@ -150,11 +157,11 @@ export const LearnAR8thWall: React.FC = () => {
       }
 
       // Orchestrator step 1: fetch XR metadata while scanner is still running
-      setPhase('LOADING');
+      setPhase('LOADING_TARGET');
       setCurrentTarget(null);
       setScanError(null);
 
-      trace('QR_DETECTED_PARENT', `QR=${qrId} → PHASE=LOADING`);
+      trace('QR_DETECTED_PARENT', `QR=${qrId} → PHASE=LOADING_TARGET`);
 
       try {
         // Fetch XR target data for this specific QR
@@ -187,20 +194,34 @@ export const LearnAR8thWall: React.FC = () => {
           throw new Error(`No XR target URL for: ${qrId}`);
         }
 
-        // Orchestrator step 2: store target, transition to LOADING+VIEWING
-        // (viewer iframe mounts in DOM but XR8 hasn't started yet)
+        // Store target — do NOT transition phase yet.
+        // Scanner stays alive throughout LOADING_TARGET and RELEASING_CAMERA.
         setCurrentTarget(target);
         setFoundCards(prev => new Set([...prev, qrId]));
-        setPhase('LOADING');
-        trace('XR_TARGET_BUILT_AND_VIEWER_MOUNTED', 'Viewer in DOM, requesting camera release from scanner...');
+
+        // Orchestrator step 2: transition to RELEASING_CAMERA
+        // Scanner iframe stays mounted so we can send RELEASE_CAMERA to it.
+        setPhase('RELEASING_CAMERA');
+        trace('RELEASING_CAMERA', 'Camera release in progress...');
 
         // Orchestrator step 3: tell scanner to release camera BEFORE XR starts
-        // This is CRITICAL on iOS Safari — 8th Wall needs sole camera access
-        scannerRef.current?.contentWindow?.postMessage(
-          { type: 'RELEASE_CAMERA' },
-          '*'
-        );
-        trace('CAMERA_RELEASE_REQUESTED', 'Sent RELEASE_CAMERA to scanner');
+        // CRITICAL on iOS Safari — 8th Wall needs sole camera access.
+        // Guard: throw if scannerRef is already gone (would indicate a bug).
+        const scannerWindow = scannerRef.current?.contentWindow;
+
+        trace('CAMERA_RELEASE_SEND_ATTEMPT', JSON.stringify({
+          scannerRefExists: !!scannerRef.current,
+          contentWindowExists: !!scannerWindow,
+        }));
+
+        if (!scannerWindow) {
+          // This would be a bug — scanner should still be alive in RELEASING_CAMERA
+          trace('CAMERA_RELEASE_SEND_FAILED', 'Scanner iframe/contentWindow is null');
+          throw new Error('Cannot release camera: scanner iframe already unmounted');
+        }
+
+        scannerWindow.postMessage({ type: 'RELEASE_CAMERA' }, '*');
+        trace('CAMERA_RELEASE_REQUESTED', 'RELEASE_CAMERA actually posted');
 
       } catch (err) {
         trace('API_ERROR', String(err));
@@ -255,6 +276,10 @@ export const LearnAR8thWall: React.FC = () => {
         case 'XR_CAMERA_HAS_VIDEO':
           console.log('[LearnAR8thWall] XR camera has video — AR is LIVE');
           trace('XR_CAMERA_HAS_VIDEO', 'Camera feed visible, AR tracking active');
+          // Only transition to VIEWING once the camera feed is actually live.
+          // The user can now see the AR scene.
+          setPhase('VIEWING');
+          trace('PHASE', 'VIEWING — AR session active');
           break;
 
         case 'XR_STARTED':
@@ -292,6 +317,7 @@ export const LearnAR8thWall: React.FC = () => {
   const handleRetry = useCallback(() => {
     setPhase('SCANNING');
     setScanError(null);
+    setCurrentTarget(null);
   }, []);
 
   const handleSwitchToMindAR = useCallback(() => {
@@ -330,7 +356,7 @@ export const LearnAR8thWall: React.FC = () => {
       {isDebugMode && (
         <div className="debug-phase-indicator">
           Phase: <strong>{phase}</strong> |
-          Scanner: <strong>{phase === 'SCANNING' ? 'active' : 'hidden'}</strong> |
+          Scanner: <strong>{['SCANNING', 'LOADING_TARGET', 'RELEASING_CAMERA'].includes(phase) ? 'active' : 'hidden'}</strong> |
           Camera: <strong>{foundCards.size}</strong> cards
         </div>
       )}
@@ -356,8 +382,9 @@ export const LearnAR8thWall: React.FC = () => {
       {/* AR Viewport */}
       <div className="ar-viewport">
 
-        {/* SCANNING: camera + jsQR */}
-        {phase === 'SCANNING' && (
+        {/* SCANNING | LOADING_TARGET | RELEASING_CAMERA: scanner iframe stays alive
+            so we can send RELEASE_CAMERA before XR starts. */}
+        {['SCANNING', 'LOADING_TARGET', 'RELEASING_CAMERA'].includes(phase) && (
           <iframe
             ref={scannerRef}
             src="/ar-scanner.html?debug=true"
@@ -367,17 +394,26 @@ export const LearnAR8thWall: React.FC = () => {
           />
         )}
 
-        {/* LOADING: spinner while fetching XR target */}
-        {phase === 'LOADING' && (
+        {/* LOADING_TARGET: overlay while fetching XR target */}
+        {(phase === 'LOADING_TARGET') && (
           <div className="ar-loading">
             <div className="loading-spinner" />
             <p>Loading XR target...</p>
-            <p className="loading-hint">Connecting to 8th Wall engine</p>
+            <p className="loading-hint">Fetching AR data</p>
           </div>
         )}
 
-        {/* VIEWING: 8th Wall XR viewer */}
-        {phase === 'VIEWING' && viewerSrc && (
+        {/* RELEASING_CAMERA: overlay while waiting for scanner to release camera */}
+        {phase === 'RELEASING_CAMERA' && (
+          <div className="ar-loading">
+            <div className="loading-spinner" />
+            <p>Preparing AR...</p>
+            <p className="loading-hint">Releasing camera for XR engine</p>
+          </div>
+        )}
+
+        {/* XR_BOOTING | VIEWING: 8th Wall XR viewer */}
+        {(phase === 'XR_BOOTING' || phase === 'VIEWING') && viewerSrc && (
           <iframe
             ref={viewerRef}
             src={viewerSrc}
@@ -437,6 +473,12 @@ export const LearnAR8thWall: React.FC = () => {
       {phase === 'SCANNING' && (
         <div className="ar-instructions">
           <p>Point camera at flashcard QR code</p>
+        </div>
+      )}
+
+      {(phase === 'LOADING_TARGET' || phase === 'RELEASING_CAMERA' || phase === 'XR_BOOTING') && (
+        <div className="ar-instructions">
+          <p>Preparing AR experience...</p>
         </div>
       )}
 
