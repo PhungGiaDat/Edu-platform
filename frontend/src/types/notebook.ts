@@ -2,7 +2,7 @@
  * Notebook (Sổ tay) TypeScript types
  */
 
-export type EntrySource = 'ai_translation' | 'flashcard' | 'manual';
+export type EntrySource = 'ai_translation' | 'flashcard' | 'manual' | 'word_lookup';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export interface NotebookEntry {
@@ -15,6 +15,10 @@ export interface NotebookEntry {
   source: EntrySource;
   topic?: string;
   difficulty?: Difficulty;
+  pronunciation?: string;
+  part_of_speech?: string;
+  definition_en?: string;
+  wiki_summary?: string;
   created_at: string;
   last_reviewed_at?: string;
   review_count: number;
@@ -31,6 +35,10 @@ export interface CreateEntryRequest {
   source: EntrySource;
   topic?: string;
   difficulty?: Difficulty;
+  pronunciation?: string;
+  part_of_speech?: string;
+  definition_en?: string;
+  wiki_summary?: string;
 }
 
 export interface UpdateEntryRequest {
@@ -40,6 +48,10 @@ export interface UpdateEntryRequest {
   context?: string;
   topic?: string;
   difficulty?: Difficulty;
+  pronunciation?: string;
+  part_of_speech?: string;
+  definition_en?: string;
+  wiki_summary?: string;
 }
 
 export interface ReviewSubmit {
