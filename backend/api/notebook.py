@@ -91,7 +91,7 @@ async def create_entry(
         logger.error(f"[API] Notebook create failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            detail="Lưu từ vào sổ tay chưa thành công. Bạn thử lại nhé!"
         )
 
 

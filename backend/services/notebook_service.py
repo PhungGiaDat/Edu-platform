@@ -9,6 +9,7 @@ import logging
 
 from repositories.notebook_repository import NotebookRepository
 from services.content_safety_service import assert_safe
+from sqlalchemy.exc import IntegrityError
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ class NotebookService:
         assert_safe(word, field="word")
         assert_safe(translation_vi, field="translation_vi")
         for optional, name in ((translation_en, "translation_en"), (context, "context"),
+                               (pronunciation, "pronunciation"), (part_of_speech, "part_of_speech"),
                                (definition_en, "definition_en"), (wiki_summary, "wiki_summary")):
             if optional:
                 assert_safe(optional, field=name)
@@ -76,18 +78,28 @@ class NotebookService:
         assert_safe(word, field="word")
         assert_safe(translation_vi, field="translation_vi")
         for optional, name in ((translation_en, "translation_en"), (context, "context"),
+                               (pronunciation, "pronunciation"), (part_of_speech, "part_of_speech"),
                                (definition_en, "definition_en"), (wiki_summary, "wiki_summary")):
             if optional:
                 assert_safe(optional, field=name)
         existing = await self.repository.get_by_word(user_id, word)
         if existing:
             return existing, False
-        entry = await self.repository.create(
-            user_id=user_id, word=word.strip(), translation_vi=translation_vi.strip(),
-            translation_en=translation_en, context=context, source=source,
-            topic=topic, difficulty=difficulty, pronunciation=pronunciation,
-            part_of_speech=part_of_speech, definition_en=definition_en,
-            wiki_summary=wiki_summary)
+        try:
+            entry = await self.repository.create(
+                user_id=user_id, word=word.strip(), translation_vi=translation_vi.strip(),
+                translation_en=translation_en, context=context, source=source,
+                topic=topic, difficulty=difficulty, pronunciation=pronunciation,
+                part_of_speech=part_of_speech, definition_en=definition_en,
+                wiki_summary=wiki_summary)
+        except IntegrityError:
+            # A concurrent save of the same (user_id, word) beat us to the
+            # insert. Refetch the winner and report it as NOT created; if it
+            # somehow vanished, surface the original error.
+            existing = await self.repository.get_by_word(user_id, word)
+            if existing:
+                return existing, False
+            raise
         return entry, entry is not None
 
     async def get_entry(self, entry_id: UUID, user_id: UUID) -> Optional[dict]:
@@ -127,6 +139,7 @@ class NotebookService:
         """Update entry fields"""
         # Safety gate on text fields
         for key in ('word', 'translation_vi', 'translation_en', 'context',
+                    'pronunciation', 'part_of_speech',
                     'definition_en', 'wiki_summary'):
             if key in fields and fields[key]:
                 assert_safe(str(fields[key]), field=key)

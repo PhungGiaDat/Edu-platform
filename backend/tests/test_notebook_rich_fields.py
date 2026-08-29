@@ -1,6 +1,7 @@
 # backend/tests/test_notebook_rich_fields.py
 import pytest
 from unittest.mock import AsyncMock
+from sqlalchemy.exc import IntegrityError
 from services.notebook_service import NotebookService
 from services.content_safety_service import ContentSafetyError
 from api.notebook import _format_entry
@@ -49,3 +50,32 @@ async def test_unsafe_word_rejected():
     svc = NotebookService(repo)
     with pytest.raises(ContentSafetyError):
         await svc.get_or_create_entry(user_id="u", word="p0rn", translation_vi="x", source="word_lookup")
+
+
+@pytest.mark.asyncio
+async def test_get_or_create_recovers_from_duplicate_race():
+    """Concurrent duplicate save: create() raises IntegrityError, refetch returns the winner."""
+    existing = {"id": "existing", "word": "elephant", "translation_vi": "con voi"}
+    repo = AsyncMock()
+    # First lookup misses, the refetch after the IntegrityError finds the winner.
+    repo.get_by_word = AsyncMock(side_effect=[None, existing])
+    dup = IntegrityError("INSERT ...", {}, Exception("duplicate key value violates unique constraint"))
+    repo.create = AsyncMock(side_effect=dup)
+    svc = NotebookService(repo)
+    entry, created = await svc.get_or_create_entry(
+        user_id="u", word="elephant", translation_vi="con voi", source="word_lookup")
+    assert created is False and entry["id"] == "existing"
+    assert repo.create.called and repo.get_by_word.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_get_or_create_rethrows_when_refetch_misses():
+    """If create() hits IntegrityError but no row can be refetched, re-raise."""
+    repo = AsyncMock()
+    repo.get_by_word = AsyncMock(side_effect=[None, None])
+    dup = IntegrityError("INSERT ...", {}, Exception("duplicate key value violates unique constraint"))
+    repo.create = AsyncMock(side_effect=dup)
+    svc = NotebookService(repo)
+    with pytest.raises(IntegrityError):
+        await svc.get_or_create_entry(
+            user_id="u", word="elephant", translation_vi="con voi", source="word_lookup")

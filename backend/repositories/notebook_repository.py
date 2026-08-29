@@ -6,6 +6,7 @@ from typing import Optional, List, Tuple
 from uuid import UUID
 from datetime import datetime
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 
@@ -51,23 +52,33 @@ class NotebookRepository:
                       ease_factor, interval_days
         """)
 
-        result = await self.db.execute(query, {
-            "user_id": str(user_id),
-            "word": word,
-            "translation_vi": translation_vi,
-            "translation_en": translation_en,
-            "context": context,
-            "source": source,
-            "topic": topic,
-            "difficulty": difficulty,
-            "pronunciation": pronunciation,
-            "part_of_speech": part_of_speech,
-            "definition_en": definition_en,
-            "wiki_summary": wiki_summary,
-        })
-        row = result.fetchone()
-        await self.db.commit()
-        return dict(row._mapping) if row else None
+        try:
+            result = await self.db.execute(query, {
+                "user_id": str(user_id),
+                "word": word,
+                "translation_vi": translation_vi,
+                "translation_en": translation_en,
+                "context": context,
+                "source": source,
+                "topic": topic,
+                "difficulty": difficulty,
+                "pronunciation": pronunciation,
+                "part_of_speech": part_of_speech,
+                "definition_en": definition_en,
+                "wiki_summary": wiki_summary,
+            })
+            row = result.fetchone()
+            await self.db.commit()
+            return dict(row._mapping) if row else None
+        except IntegrityError:
+            # A concurrent save of the same (user_id, word) won the race and
+            # the UNIQUE constraint rejected this insert. Roll back, refetch
+            # the winner and return it; if it is gone, re-raise.
+            await self.db.rollback()
+            existing = await self.get_by_word(user_id, word)
+            if existing is not None:
+                return existing
+            raise
 
     async def get_by_id(self, entry_id: UUID, user_id: UUID) -> Optional[dict]:
         """Get entry by ID, ensure user owns it"""
