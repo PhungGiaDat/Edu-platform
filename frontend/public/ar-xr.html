@@ -495,13 +495,22 @@
         xr8XcType: typeof window.XR8?.XrController,
       });
 
-      // Poll until XR8 and its submodules are fully loaded.
-      // The xrloaded event may not fire in self-hosted mode; polling is reliable.
+      // Load the image-targets chunk — required before XrController.configure() is usable
+      logToBuffer('info', 'Loading XR8 image-targets chunk...');
+      try {
+        await window.XR8.loadChunk('image-targets');
+        logToBuffer('info', 'XR8 image-targets chunk loaded');
+      } catch(chunkErr) {
+        logToBuffer('error', 'XR8.loadChunk failed', { error: String(chunkErr) });
+        throw chunkErr;
+      }
+
+      // Poll until XrController submodule is fully loaded.
       const SDK_TIMEOUT_MS = 15000;
       const POLL_INTERVAL_MS = 200;
       const deadline = Date.now() + SDK_TIMEOUT_MS;
 
-      logToBuffer('info', 'Waiting for XR8 SDK...');
+      logToBuffer('info', 'Waiting for XR8 XrController...');
 
       await new Promise((resolve, reject) => {
         const check = () => {
@@ -517,7 +526,7 @@
           }
           if (!window.XR8.XrController) {
             if (Date.now() > deadline) {
-              reject(new Error('XR8 loaded but XrController submodule missing (check data-preload-chunks).'));
+              reject(new Error('XR8 XrController still unavailable after chunk load + timeout.'));
             } else {
               setTimeout(check, POLL_INTERVAL_MS);
             }
