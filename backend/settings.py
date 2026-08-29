@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     # Explicit deployment gate: do not route legacy endpoints to the new store
     # until their response contracts have passed the migration smoke suite.
     POSTGRES_CORE_ENABLED: bool = True
+    DAILY_CHALLENGE_TIMEZONE: str = "Asia/Ho_Chi_Minh"
 
     # ========== Security ==========
     # Required. No default. Validator rejects placeholders and short values.

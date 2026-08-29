@@ -45,6 +45,16 @@ class PostgresUser:
 
 
 class PostgresUserRepository:
+    @staticmethod
+    async def grant_pet_on_connection(connection, user_id: str, pet_id: str) -> bool:
+        """Grant explicit pet ownership inside the caller's transaction."""
+        result = await connection.execute(
+            "INSERT INTO public.user_unlocked_pets(user_id,pet_id) VALUES($1,$2) ON CONFLICT DO NOTHING",
+            user_id,
+            pet_id,
+        )
+        return result.endswith("1")
+
     async def _with_unlocks(self, row) -> Optional[PostgresUser]:
         if row is None:
             return None

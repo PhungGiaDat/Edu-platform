@@ -33,6 +33,97 @@ class PostgresGamificationService:
             "badges_earned": [], "sticker_earned": None, "streak": current_streak,
         }
 
+    async def apply_xp_event(
+        self,
+        connection,
+        *,
+        user_id: str,
+        event_id: str,
+        action: str,
+        xp_amount: int,
+        source_type: Optional[str] = None,
+        source_id: Optional[str] = None,
+        attempt_id: Optional[str] = None,
+        session_id: Optional[str] = None,
+        learning_path_id: Optional[str] = None,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
+        """Apply one server-authorized XP amount on an existing transaction.
+
+        Callers must already have validated the semantic event and hold the
+        transaction that owns any surrounding domain mutation.  Public callers
+        continue to resolve an action through ``XP_REWARDS``; Daily Challenge
+        is the only current caller with a reward amount read from a server-side
+        reward definition.
+        """
+        if not event_id or not event_id.strip():
+            return {"success": False, "error": "INVALID_EVENT_ID"}
+        if not action or not action.strip():
+            return {"success": False, "error": "INVALID_ACTION"}
+        if not isinstance(xp_amount, int) or xp_amount < 0:
+            return {"success": False, "error": "INVALID_XP_AMOUNT"}
+
+        event_id = event_id.strip()
+        user_exists = await connection.fetchval("SELECT 1 FROM public.users WHERE id=$1", user_id)
+        if not user_exists:
+            return {"success": False, "error": "USER_NOT_FOUND"}
+
+        inserted = await connection.fetchrow(
+            """INSERT INTO public.gamification_events(user_id,event_id,action,source_type,source_id,attempt_id,session_id,learning_path_id,metadata)
+               VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb) ON CONFLICT(user_id,event_id) DO NOTHING RETURNING *""",
+            user_id, event_id, action, source_type, source_id, attempt_id, session_id, learning_path_id, json.dumps(metadata or {}),
+        )
+        if inserted is None:
+            existing = await connection.fetchrow(
+                "SELECT * FROM public.gamification_events WHERE user_id=$1 AND event_id=$2 FOR UPDATE", user_id, event_id
+            )
+            if existing is None:
+                return {"success": False, "error": "EVENT_RACE_UNRESOLVED"}
+            if not self._same_semantics(existing, action=action, source_type=source_type, source_id=source_id,
+                                        attempt_id=attempt_id, session_id=session_id, learning_path_id=learning_path_id):
+                return {"success": False, "error": "EVENT_SEMANTIC_CONFLICT"}
+            if existing["status"] == "applied":
+                if int(existing["xp_awarded"]) != xp_amount:
+                    return {"success": False, "error": "EVENT_SEMANTIC_CONFLICT"}
+                streak_row = await connection.fetchrow(
+                    "SELECT streak_days FROM public.user_gamification WHERE user_id=$1", user_id
+                )
+                return self._result(existing, replay=True, current_streak=int(streak_row["streak_days"]) if streak_row else 0)
+            # A transaction never publishes a partially applied event.
+            return {"success": False, "error": "CONCURRENT_PROCESSING"}
+
+        await connection.execute(
+            """INSERT INTO public.user_gamification(user_id) VALUES($1) ON CONFLICT(user_id) DO NOTHING""", user_id
+        )
+        aggregate = await connection.fetchrow(
+            "SELECT * FROM public.user_gamification WHERE user_id=$1 FOR UPDATE", user_id
+        )
+        total_before = int(aggregate["total_points"])
+        level = int(aggregate["level"])
+        threshold = int(aggregate["xp_to_next_level"])
+        remaining = total_before + xp_amount
+        level_up = False
+        while remaining >= threshold:
+            remaining -= threshold
+            level += 1
+            threshold = calculate_next_level_xp(level)
+            level_up = True
+        total_after = total_before + xp_amount
+        now = datetime.now(timezone.utc)
+        await connection.execute(
+            """UPDATE public.user_gamification SET total_points=$2,level=$3,xp_to_next_level=$4,
+               last_activity_date=$5,updated_at=$5 WHERE user_id=$1""",
+            user_id, total_after, level, threshold, now,
+        )
+        event = await connection.fetchrow(
+            """UPDATE public.gamification_events SET xp_awarded=$3,status='applied',total_xp_after=$4,
+               level_after=$5,xp_to_next_after=$6,applied_at=$7 WHERE user_id=$1 AND event_id=$2 RETURNING *""",
+            user_id, event_id, xp_amount, total_after, level, threshold, now,
+        )
+        result = self._result(event, replay=False, current_streak=int(aggregate["streak_days"]))
+        result["level_up"] = level_up
+        return result
+
     async def add_xp_with_event_id(self, user_id: str, event_id: str, action: str,
                                    source_type: Optional[str] = None, source_id: Optional[str] = None,
                                    attempt_id: Optional[str] = None, session_id: Optional[str] = None,
@@ -46,61 +137,37 @@ class PostgresGamificationService:
         pool = postgres_pool()
         async with pool.acquire() as connection:
             async with connection.transaction():
-                user_exists = await connection.fetchval("SELECT 1 FROM public.users WHERE id=$1", user_id)
-                if not user_exists:
-                    return {"success": False, "error": "USER_NOT_FOUND"}
-                inserted = await connection.fetchrow(
-                    """INSERT INTO public.gamification_events(user_id,event_id,action,source_type,source_id,attempt_id,session_id,learning_path_id,metadata)
-                       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb) ON CONFLICT(user_id,event_id) DO NOTHING RETURNING *""",
-                    user_id, event_id, action, source_type, source_id, attempt_id, session_id, learning_path_id, json.dumps(metadata or {}),
+                return await self.apply_xp_event(
+                    connection,
+                    user_id=user_id,
+                    event_id=event_id,
+                    action=action,
+                    xp_amount=int(XP_REWARDS[action]),
+                    source_type=source_type,
+                    source_id=source_id,
+                    attempt_id=attempt_id,
+                    session_id=session_id,
+                    learning_path_id=learning_path_id,
+                    metadata=metadata,
                 )
-                if inserted is None:
-                    existing = await connection.fetchrow(
-                        "SELECT * FROM public.gamification_events WHERE user_id=$1 AND event_id=$2 FOR UPDATE", user_id, event_id
-                    )
-                    if not self._same_semantics(existing, action=action, source_type=source_type, source_id=source_id,
-                                                attempt_id=attempt_id, session_id=session_id, learning_path_id=learning_path_id):
-                        return {"success": False, "error": "EVENT_SEMANTIC_CONFLICT"}
-                    if existing["status"] == "applied":
-                        streak_row = await connection.fetchrow(
-                            "SELECT streak_days FROM public.user_gamification WHERE user_id=$1", user_id
-                        )
-                        return self._result(existing, replay=True, current_streak=int(streak_row["streak_days"]) if streak_row else 0)
-                    # A transaction never publishes a partially applied event.
-                    return {"success": False, "error": "CONCURRENT_PROCESSING"}
 
-                await connection.execute(
-                    """INSERT INTO public.user_gamification(user_id) VALUES($1) ON CONFLICT(user_id) DO NOTHING""", user_id
-                )
-                aggregate = await connection.fetchrow(
-                    "SELECT * FROM public.user_gamification WHERE user_id=$1 FOR UPDATE", user_id
-                )
-                xp = int(XP_REWARDS[action])
-                total_before = int(aggregate["total_points"])
-                level = int(aggregate["level"])
-                threshold = int(aggregate["xp_to_next_level"])
-                remaining = total_before + xp
-                level_up = False
-                while remaining >= threshold:
-                    remaining -= threshold
-                    level += 1
-                    threshold = calculate_next_level_xp(level)
-                    level_up = True
-                total_after = total_before + xp
-                now = datetime.now(timezone.utc)
-                await connection.execute(
-                    """UPDATE public.user_gamification SET total_points=$2,level=$3,xp_to_next_level=$4,
-                       last_activity_date=$5,updated_at=$5 WHERE user_id=$1""",
-                    user_id, total_after, level, threshold, now,
-                )
-                event = await connection.fetchrow(
-                    """UPDATE public.gamification_events SET xp_awarded=$3,status='applied',total_xp_after=$4,
-                       level_after=$5,xp_to_next_after=$6,applied_at=$7 WHERE user_id=$1 AND event_id=$2 RETURNING *""",
-                    user_id, event_id, xp, total_after, level, threshold, now,
-                )
-                result = self._result(event, replay=False, current_streak=int(aggregate["streak_days"]))
-                result["level_up"] = level_up
-                return result
+    @staticmethod
+    async def grant_badge_on_connection(connection, user_id: str, badge_id: str) -> bool:
+        """Idempotently grant a badge without applying its legacy XP bonus."""
+        await connection.execute(
+            "INSERT INTO public.user_gamification(user_id) VALUES($1) ON CONFLICT(user_id) DO NOTHING",
+            user_id,
+        )
+        row = await connection.fetchrow(
+            """UPDATE public.user_gamification
+               SET badges=(CASE WHEN badges ? $2 THEN badges ELSE badges || jsonb_build_array($2) END),
+                   updated_at=now()
+               WHERE user_id=$1
+               RETURNING badges""",
+            user_id,
+            badge_id,
+        )
+        return row is not None
 
     async def add_xp(self, user_id: str, action: str, metadata: Optional[dict] = None) -> dict[str, Any]:
         return await self.add_xp_with_event_id(user_id, f"legacy:{uuid4().hex}", action, metadata=metadata)

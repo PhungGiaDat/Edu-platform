@@ -16,6 +16,8 @@ from datetime import datetime
 
 from models.gamification_model import XP_REWARDS
 from models.gamification_event import EventStatus
+from services.postgres_gamification_service import PostgresGamificationService
+from tests.test_daily_reward_service import FakeRewardConnection
 
 
 class TestAddXPWithEventId:
@@ -839,3 +841,63 @@ class TestFailureInjection:
         assert result_b["xp_awarded"] == 15
         # add_xp was called only once (by Request A)
         assert mock_repository.add_xp.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_postgres_daily_reward_xp_helper_replays_the_stored_event_snapshot():
+    """A server-defined Daily Challenge amount cannot mutate the aggregate twice."""
+    connection = FakeRewardConnection()
+    service = PostgresGamificationService()
+    event_id = "daily_challenge:daily:2026-08-30"
+
+    async with connection.transaction():
+        first = await service.apply_xp_event(
+            connection,
+            user_id="user-1",
+            event_id=event_id,
+            action="daily_challenge_claim",
+            xp_amount=50,
+            source_type="daily_challenge",
+            source_id="daily:2026-08-30",
+            metadata={"challenge_date": "2026-08-30"},
+        )
+    async with connection.transaction():
+        replay = await service.apply_xp_event(
+            connection,
+            user_id="user-1",
+            event_id=event_id,
+            action="daily_challenge_claim",
+            xp_amount=50,
+            source_type="daily_challenge",
+            source_id="daily:2026-08-30",
+            metadata={"challenge_date": "2026-08-30"},
+        )
+
+    assert first["xp_awarded"] == 50
+    assert replay["idempotent_replay"] is True
+    assert connection.aggregate["total_points"] == 50
+    assert connection.xp_apply_count == 1
+
+
+@pytest.mark.asyncio
+async def test_postgres_daily_reward_xp_helper_rejects_a_changed_amount_for_the_same_event():
+    connection = FakeRewardConnection()
+    service = PostgresGamificationService()
+    event_id = "daily_challenge:daily:2026-08-30"
+    kwargs = {
+        "user_id": "user-1",
+        "event_id": event_id,
+        "action": "daily_challenge_claim",
+        "source_type": "daily_challenge",
+        "source_id": "daily:2026-08-30",
+        "metadata": {"challenge_date": "2026-08-30"},
+    }
+
+    async with connection.transaction():
+        await service.apply_xp_event(connection, xp_amount=50, **kwargs)
+    async with connection.transaction():
+        replay = await service.apply_xp_event(connection, xp_amount=99, **kwargs)
+
+    assert replay == {"success": False, "error": "EVENT_SEMANTIC_CONFLICT"}
+    assert connection.aggregate["total_points"] == 50
+    assert connection.xp_apply_count == 1
