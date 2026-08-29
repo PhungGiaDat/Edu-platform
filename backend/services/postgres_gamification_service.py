@@ -123,10 +123,15 @@ class PostgresGamificationService:
         )]
         return value
 
-    async def get_leaderboard(self) -> list[dict[str, Any]]:
-        return [dict(row) for row in await postgres_pool().fetch(
-            "SELECT user_id,total_points,level,streak_days FROM public.user_gamification ORDER BY total_points DESC LIMIT 50"
-        )]
+    async def get_leaderboard(self, period: str = "all", limit: int = 50) -> list[dict[str, Any]]:
+        from repositories.gamification_repository import GamificationRepository
+
+        return await GamificationRepository().get_leaderboard(limit=limit, period=period)
+
+    async def get_user_rank(self, user_id: str, period: str = "all") -> Optional[dict[str, Any]]:
+        from repositories.gamification_repository import GamificationRepository
+
+        return await GamificationRepository().get_user_rank(user_id=user_id, period=period)
 
     async def award_badge(self, user_id: str, badge_id: str) -> dict[str, Any]:
         row = await postgres_pool().fetchrow(

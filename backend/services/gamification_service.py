@@ -491,9 +491,13 @@ class GamificationService:
         stats["pet"] = self._hydrate_pet_state(stats.get("pet"))
         return stats
 
-    async def get_leaderboard(self) -> List[Dict[str, Any]]:
-        """Get leaderboard"""
-        return await self.repo.get_leaderboard()
+    async def get_leaderboard(self, period: str = "all", limit: int = 50) -> List[Dict[str, Any]]:
+        """Get the leaderboard for all-time, weekly, or daily XP."""
+        return await self.repo.get_leaderboard(limit=limit, period=period)
+
+    async def get_user_rank(self, user_id: str, period: str = "all") -> Optional[Dict[str, Any]]:
+        """Get a learner's rank without loading the entire leaderboard."""
+        return await self.repo.get_user_rank(user_id=user_id, period=period)
     
     # ========== STREAK & DAILY GOAL ==========
 

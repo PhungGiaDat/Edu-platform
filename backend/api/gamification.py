@@ -1,8 +1,8 @@
 """
 Gamification API Router - Controller Layer
 """
-from fastapi import APIRouter, Depends, HTTPException
-from typing import List, Dict, Any, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import List, Dict, Any, Optional, Literal
 from pydantic import BaseModel, field_validator
 
 from services.gamification_service import GamificationService, get_gamification_service
@@ -14,12 +14,22 @@ from core.security import get_current_user
 # ========== Response Schemas ==========
 
 class LeaderboardEntry(BaseModel):
-    """Limited leaderboard entry — no internal columns exposed."""
+    """Public learner-facing leaderboard entry."""
     user_id: str
+    username: str
+    avatar_url: Optional[str] = None
     points: int
     level: int
     streak_days: int
     rank: int
+
+
+class LeaderboardRank(BaseModel):
+    """Current learner rank for a selected leaderboard period."""
+    user_id: str
+    rank: Optional[int] = None
+    points: int = 0
+    period: Literal["all", "weekly", "daily"]
 
 router = APIRouter()
 
@@ -75,20 +85,47 @@ class TrackLearningRequest(BaseModel):
 
 @router.get("/gamification/leaderboard", response_model=List[LeaderboardEntry])
 async def get_leaderboard(
+    period: Literal["all", "weekly", "daily"] = Query("all"),
+    limit: int = Query(50, ge=1, le=100),
     service: GamificationService = Depends(get_gamification_service),
 ):
-    """Get top users leaderboard."""
-    raw = await service.get_leaderboard()
+    """Get the top learners for a selected period."""
+    raw = await service.get_leaderboard(period=period, limit=limit)
     return [
         LeaderboardEntry(
             user_id=str(entry.get("user_id", "")),
-            points=int(entry.get("total_points", 0) or 0),
+            username=str(entry.get("username") or entry.get("full_name") or "Learner"),
+            avatar_url=entry.get("avatar_url"),
+            points=int(entry.get("total_points", entry.get("points", 0)) or 0),
             level=int(entry.get("level", 1) or 1),
             streak_days=int(entry.get("streak_days", 0) or 0),
             rank=idx + 1,
         )
         for idx, entry in enumerate(raw)
     ]
+
+
+@router.get("/gamification/leaderboard/rank/{user_id}", response_model=LeaderboardRank)
+async def get_user_rank(
+    user_id: str,
+    period: Literal["all", "weekly", "daily"] = Query("all"),
+    current_user: PostgresUser = Depends(get_current_user),
+    service: GamificationService = Depends(get_gamification_service),
+):
+    """Get the authenticated learner's rank, including ranks beyond the top 50."""
+    if str(current_user.id) != user_id:
+        raise HTTPException(status_code=403, detail="Cannot view another learner's rank")
+
+    entry = await service.get_user_rank(user_id=user_id, period=period)
+    if not entry:
+        return LeaderboardRank(user_id=user_id, period=period)
+
+    return LeaderboardRank(
+        user_id=user_id,
+        rank=int(entry["rank"]) if entry.get("rank") is not None else None,
+        points=int(entry.get("points", entry.get("total_points", 0)) or 0),
+        period=period,
+    )
 
 
 @router.get("/gamification/user/{user_id}", response_model=UserPointsSchema)

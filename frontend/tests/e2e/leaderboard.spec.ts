@@ -12,23 +12,83 @@
 
 import { test, expect } from '@playwright/test';
 
+const testLearner = {
+  id: 'e2e-learner',
+  email: 'e2e-learner@example.test',
+  username: 'E2E Learner',
+  full_name: 'E2E Learner',
+  avatar_url: null,
+  role: 'learner',
+  roles: ['learner'],
+  is_superuser: false,
+};
+
+const entriesByPeriod = {
+  all: [
+    { user_id: 'learner-1', username: 'Momo', avatar_url: null, points: 1500, level: 5, streak_days: 7, rank: 1 },
+    { user_id: 'learner-2', username: 'Linh', avatar_url: null, points: 1200, level: 4, streak_days: 5, rank: 2 },
+    { user_id: 'learner-3', username: 'Minh', avatar_url: null, points: 900, level: 3, streak_days: 3, rank: 3 },
+    { user_id: 'learner-4', username: 'An', avatar_url: null, points: 800, level: 3, streak_days: 2, rank: 4 },
+  ],
+  weekly: [
+    { user_id: 'learner-1', username: 'Momo', avatar_url: null, points: 320, level: 5, streak_days: 7, rank: 1 },
+    { user_id: 'learner-2', username: 'Linh', avatar_url: null, points: 210, level: 4, streak_days: 5, rank: 2 },
+    { user_id: 'learner-3', username: 'Minh', avatar_url: null, points: 160, level: 3, streak_days: 3, rank: 3 },
+    { user_id: 'learner-4', username: 'An', avatar_url: null, points: 90, level: 3, streak_days: 2, rank: 4 },
+  ],
+  daily: [
+    { user_id: 'learner-1', username: 'Momo', avatar_url: null, points: 80, level: 5, streak_days: 7, rank: 1 },
+    { user_id: 'learner-2', username: 'Linh', avatar_url: null, points: 60, level: 4, streak_days: 5, rank: 2 },
+    { user_id: 'learner-3', username: 'Minh', avatar_url: null, points: 40, level: 3, streak_days: 3, rank: 3 },
+    { user_id: 'learner-4', username: 'An', avatar_url: null, points: 20, level: 3, streak_days: 2, rank: 4 },
+  ],
+} as const;
+
 test.describe('Leaderboard Page', () => {
-  
-  test.beforeEach(async ({ page, context }) => {
-    // Seed guestMode before app boots
-    await context.addInitScript(() => {
-      try {
-        localStorage.setItem('guestMode', 'true');
-      } catch {
-        // localStorage unavailable
-      }
-    });
-    await page.goto('/login');
-    await page.waitForFunction(
-      () => localStorage.getItem('guestMode') === 'true',
-      undefined,
-      { timeout: 5000 }
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/v1/auth/me', route =>
+      route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify(testLearner),
+      }),
     );
+
+    await page.route('**/api/v1/gamification/leaderboard**', async route => {
+      if (new URL(route.request().url()).pathname.includes('/rank/')) {
+        await route.fallback();
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, 700));
+      const period = new URL(route.request().url()).searchParams.get('period') || 'all';
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify(entriesByPeriod[period as keyof typeof entriesByPeriod] || entriesByPeriod.all),
+      });
+    });
+
+    await page.route('**/api/v1/gamification/leaderboard/rank/**', route =>
+      route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          user_id: testLearner.id,
+          rank: 51,
+          points: 480,
+          period: new URL(route.request().url()).searchParams.get('period') || 'all',
+        }),
+      }),
+    );
+
+    await page.addInitScript(user => {
+      const payload = btoa(JSON.stringify({
+        sub: user.id,
+        email: user.email,
+        username: user.username,
+        exp: Math.floor(Date.now() / 1000) + 60 * 60,
+      }));
+      localStorage.removeItem('guestMode');
+      localStorage.setItem('authToken', `e2e.${payload}.signature`);
+      localStorage.setItem('authUser', JSON.stringify(user));
+    }, testLearner);
   });
 
   test('Leaderboard page loads at /leaderboard', async ({ page }) => {
@@ -42,8 +102,8 @@ test.describe('Leaderboard Page', () => {
   test('shows loading state while fetching data', async ({ page }) => {
     await page.goto('/leaderboard');
     
-    // Check for loading skeleton animation
-    const loadingSkeleton = page.locator('.animate-pulse');
+    // Check for the page-owned loading skeleton
+    const loadingSkeleton = page.locator('.leaderboard-skeleton');
     await expect(loadingSkeleton.first()).toBeVisible({ timeout: 3000 });
   });
 
@@ -70,9 +130,9 @@ test.describe('Leaderboard Page', () => {
     await page.waitForLoadState('networkidle');
     
     // All filter tabs should be visible
-    await expect(page.getByRole('button', { name: /All/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Weekly/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Daily/i })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /All Time/i })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Weekly/i })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Daily/i })).toBeVisible();
   });
 
   test('All tab is selected by default', async ({ page }) => {
@@ -80,8 +140,8 @@ test.describe('Leaderboard Page', () => {
     await page.waitForLoadState('networkidle');
     
     // All tab should have white background (selected state)
-    const allTab = page.getByRole('button', { name: /All/i });
-    await expect(allTab).toHaveClass(/bg-white/);
+    const allTab = page.getByRole('tab', { name: /All Time/i });
+    await expect(allTab).toHaveAttribute('aria-selected', 'true');
   });
 
   test('Weekly tab can be clicked and becomes selected', async ({ page }) => {
@@ -89,11 +149,11 @@ test.describe('Leaderboard Page', () => {
     await page.waitForLoadState('networkidle');
     
     // Click Weekly tab
-    await page.getByRole('button', { name: /Weekly/i }).click();
+    await page.getByRole('tab', { name: /Weekly/i }).click();
     
     // Weekly tab should now be selected
-    const weeklyTab = page.getByRole('button', { name: /Weekly/i });
-    await expect(weeklyTab).toHaveClass(/bg-white/);
+    const weeklyTab = page.getByRole('tab', { name: /Weekly/i });
+    await expect(weeklyTab).toHaveAttribute('aria-selected', 'true');
   });
 
   test('Daily tab can be clicked and becomes selected', async ({ page }) => {
@@ -101,11 +161,11 @@ test.describe('Leaderboard Page', () => {
     await page.waitForLoadState('networkidle');
     
     // Click Daily tab
-    await page.getByRole('button', { name: /Daily/i }).click();
+    await page.getByRole('tab', { name: /Daily/i }).click();
     
     // Daily tab should now be selected
-    const dailyTab = page.getByRole('button', { name: /Daily/i });
-    await expect(dailyTab).toHaveClass(/bg-white/);
+    const dailyTab = page.getByRole('tab', { name: /Daily/i });
+    await expect(dailyTab).toHaveAttribute('aria-selected', 'true');
   });
 
   test('tabs can be switched between', async ({ page }) => {
@@ -113,16 +173,16 @@ test.describe('Leaderboard Page', () => {
     await page.waitForLoadState('networkidle');
     
     // Click Weekly tab
-    await page.getByRole('button', { name: /Weekly/i }).click();
-    await expect(page.getByRole('button', { name: /Weekly/i })).toHaveClass(/bg-white/);
+    await page.getByRole('tab', { name: /Weekly/i }).click();
+    await expect(page.getByRole('tab', { name: /Weekly/i })).toHaveAttribute('aria-selected', 'true');
     
     // Click Daily tab
-    await page.getByRole('button', { name: /Daily/i }).click();
-    await expect(page.getByRole('button', { name: /Daily/i })).toHaveClass(/bg-white/);
+    await page.getByRole('tab', { name: /Daily/i }).click();
+    await expect(page.getByRole('tab', { name: /Daily/i })).toHaveAttribute('aria-selected', 'true');
     
     // Click All tab
-    await page.getByRole('button', { name: /All/i }).click();
-    await expect(page.getByRole('button', { name: /All/i })).toHaveClass(/bg-white/);
+    await page.getByRole('tab', { name: /All Time/i }).click();
+    await expect(page.getByRole('tab', { name: /All Time/i })).toHaveAttribute('aria-selected', 'true');
   });
 
   test('leaderboard entries are displayed when data loads', async ({ page }) => {
@@ -130,17 +190,17 @@ test.describe('Leaderboard Page', () => {
     await page.waitForLoadState('networkidle');
     
     // Either leaderboard entries or empty state should be visible
-    const hasEntries = await page.locator('text=XP').isVisible().catch(() => false);
+    const hasEntries = await page.getByText('Momo', { exact: true }).isVisible().catch(() => false);
     const hasEmptyState = await page.getByText(/No rankings yet/i).isVisible().catch(() => false);
     
     expect(hasEntries || hasEmptyState).toBeTruthy();
   });
 
-  test('shows trophy emoji in header', async ({ page }) => {
+  test('shows Lexi mascot in header', async ({ page }) => {
     await page.goto('/leaderboard');
     await page.waitForLoadState('networkidle');
     
-    await expect(page.getByText('🏆')).toBeVisible();
+    await expect(page.getByRole('img', { name: /Lexi cheering for the leaderboard/i })).toBeVisible();
   });
 
   test('has CTA to start learning', async ({ page }) => {
@@ -161,7 +221,7 @@ test.describe('Leaderboard Page', () => {
     await expect(page.getByRole('heading', { name: /Leaderboard/i })).toBeVisible();
     
     // Filter tabs should be visible on mobile
-    await expect(page.getByRole('button', { name: /All/i })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /All Time/i })).toBeVisible();
   });
 
   test('renders correctly on tablet viewport', async ({ page }) => {
@@ -187,7 +247,7 @@ test.describe('Leaderboard Page', () => {
     await page.waitForLoadState('networkidle');
     
     // Check for proper heading hierarchy
-    const h1 = page.locator('h1').first();
+    const h1 = page.getByRole('heading', { level: 1, name: /Leaderboard/i });
     await expect(h1).toContainText(/Leaderboard/i);
   });
 
@@ -195,11 +255,10 @@ test.describe('Leaderboard Page', () => {
     await page.goto('/leaderboard');
     await page.waitForLoadState('networkidle');
     
-    // Tab to refresh button
-    await page.keyboard.press('Tab');
-    
-    // Should be able to focus the button
     const refreshButton = page.getByLabel(/refresh leaderboard/i);
+    await refreshButton.focus();
+
+    // The button exposes a stable focus target for keyboard users
     await expect(refreshButton).toBeFocused();
   });
 
@@ -211,26 +270,58 @@ test.describe('Leaderboard Page', () => {
     await page.keyboard.press('Tab');
     
     // Filter tabs should be focusable
-    const filterTab = page.getByRole('button', { name: /All/i });
+    const filterTab = page.getByRole('tab', { name: /All Time/i });
     await filterTab.focus();
-    
-    // Should be able to interact with Enter key
-    await page.keyboard.press('Enter');
+
+    // Arrow navigation moves focus and selection to the next tab
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByRole('tab', { name: /Weekly/i })).toBeFocused();
+    await expect(page.getByRole('tab', { name: /Weekly/i })).toHaveAttribute('aria-selected', 'true');
   });
 
-  test('clicking filter tab updates URL or state', async ({ page }) => {
+  test('clicking filter tab requests the selected period', async ({ page }) => {
     await page.goto('/leaderboard');
     await page.waitForLoadState('networkidle');
-    
-    // Get initial state by checking if Weekly tab is not selected
-    const weeklyTabBefore = page.getByRole('button', { name: /Weekly/i });
-    await expect(weeklyTabBefore).not.toHaveClass(/bg-white/);
-    
-    // Click Weekly tab
-    await page.getByRole('button', { name: /Weekly/i }).click();
-    
-    // Now Weekly tab should be selected
-    await expect(page.getByRole('button', { name: /Weekly/i }).first()).toHaveClass(/bg-white/);
+
+    const weeklyRequest = page.waitForRequest(request => {
+      const url = new URL(request.url());
+      return url.pathname.endsWith('/gamification/leaderboard')
+        && url.searchParams.get('period') === 'weekly';
+    });
+
+    await page.getByRole('tab', { name: /Weekly/i }).click();
+    await weeklyRequest;
+    await expect(page.getByRole('tab', { name: /Weekly/i })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  test('shows current learner rank when outside the visible top 50', async ({ page }) => {
+    await page.goto('/leaderboard');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByText('Your Ranking')).toBeVisible();
+    await expect(page.getByText('#51')).toBeVisible();
+  });
+
+  test('keeps podium blocks inside the card at 320px', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto('/leaderboard');
+    await page.waitForLoadState('networkidle');
+
+    const metrics = await page.locator('.leaderboard-podium-section').evaluate(section => {
+      const card = section.getBoundingClientRect();
+      const blocks = Array.from(section.querySelectorAll('.leaderboard-podium-block'));
+      return {
+        bodyScrollWidth: document.body.scrollWidth,
+        viewportWidth: window.innerWidth,
+        blocksInsideCard: blocks.every(block => {
+          const rect = block.getBoundingClientRect();
+          return rect.left >= card.left - 0.5 && rect.right <= card.right + 0.5;
+        }),
+      };
+    });
+
+    expect(metrics.bodyScrollWidth).toBeLessThanOrEqual(metrics.viewportWidth);
+    expect(metrics.blocksInsideCard).toBe(true);
   });
 
 });

@@ -386,8 +386,11 @@ export const apiClient = {
   /**
    * Get leaderboard
    */
-  getLeaderboard: () =>
-    request('/api/v1/gamification/leaderboard', { method: 'GET' }),
+  getLeaderboard: (period: 'all' | 'weekly' | 'daily' = 'all', limit = 50) =>
+    request('/api/v1/gamification/leaderboard', {
+      method: 'GET',
+      params: { period, limit },
+    }),
 
   // ========== USER STATS ==========
   
@@ -1553,14 +1556,17 @@ export const apiClient = {
   /**
    * Get leaderboard entries
    */
-  getLeaderboardEntries: (params?: { limit?: number; period?: string; category?: string }) =>
-    request('/api/v1/gamification/leaderboard/entries', { method: 'GET', params }),
+  getLeaderboardEntries: (params?: { limit?: number; period?: 'all' | 'weekly' | 'daily'; category?: string }) =>
+    request('/api/v1/gamification/leaderboard', { method: 'GET', params }),
 
   /**
    * Get user rank
    */
-  getUserRank: (userId: string) =>
-    request(`/api/v1/gamification/leaderboard/rank/${userId}`, { method: 'GET' }),
+  getUserRank: (userId: string, period: 'all' | 'weekly' | 'daily' = 'all') =>
+    request(`/api/v1/gamification/leaderboard/rank/${userId}`, {
+      method: 'GET',
+      params: { period },
+    }),
 
   /**
    * Get badge details

@@ -3,6 +3,7 @@ import { test, expect, type Page } from '@playwright/test';
 const MOBILE_VIEWPORTS = [
   { width: 320, height: 568 },
   { width: 375, height: 812 },
+  { width: 393, height: 852 },
   { width: 428, height: 926 },
 ] as const;
 
@@ -44,8 +45,8 @@ test.describe('AIChatBuddy responsive layout', () => {
         };
       });
 
-      expect(metrics.buttonWidth).toBeGreaterThanOrEqual(64);
-      expect(metrics.buttonHeight).toBeGreaterThanOrEqual(64);
+      expect(metrics.buttonWidth).toBeGreaterThanOrEqual(viewport.width >= 390 ? 76 : 64);
+      expect(metrics.buttonHeight).toBeGreaterThanOrEqual(viewport.width >= 390 ? 76 : 64);
       expect(metrics.spriteWidth).toBeGreaterThan(30);
       expect(metrics.spriteHeight).toBeGreaterThan(30);
       expect(metrics.backgroundImage).not.toBe('none');

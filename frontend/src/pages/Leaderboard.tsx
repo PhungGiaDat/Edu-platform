@@ -4,12 +4,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { GamificationService, type LeaderboardEntry } from '../services/GamificationService';
+import { GamificationService, type LeaderboardEntry, type LeaderboardPeriod } from '../services/GamificationService';
 import { useAuth } from '../contexts/AuthContext';
 import { CodexPetSprite } from '@/features/pets/components/CodexPetSprite';
 import '../styles/claymorphic-utilities.css';
-
-type TimeFilter = 'all' | 'weekly' | 'daily';
 
 interface UserPosition {
     user_id: string;
@@ -258,10 +256,10 @@ const TopThreePodium: React.FC<{ entries: LeaderboardEntry[]; currentUserId?: st
 
                             {/* Podium block */}
                             <div
-                                className={`${podiumHeights[rankKey]} w-24 sm:w-28 rounded-t-3xl mt-3 flex flex-col items-center justify-end pb-4 ${colorSet.bg} border-t-4`}
+                                className={`leaderboard-podium-block ${podiumHeights[rankKey]} rounded-t-3xl mt-3 flex flex-col items-center justify-end pb-4 ${colorSet.bg} border-t-4`}
                                 style={{ borderColor: colorSet.border }}
                             >
-                                <div className={`text-lg font-black ${isThird ? 'text-white' : colorSet.text}`}>
+                                <div className={`leaderboard-podium-points font-black ${isThird ? 'text-white' : colorSet.text}`}>
                                     {entry.points.toLocaleString()} XP
                                 </div>
                             </div>
@@ -338,7 +336,7 @@ const LeaderboardRow: React.FC<{
                 </div>
                 {isCurrentUser && (
                     <div className="text-xs text-green-600 font-medium flex items-center gap-1">
-                        <span>⭐</span> Your rank: #{entry.rank || position}
+                        <SparkleIcon className="h-3.5 w-3.5" color="#16A34A" /> Your rank: #{entry.rank || position}
                     </div>
                 )}
             </div>
@@ -359,26 +357,46 @@ const LeaderboardRow: React.FC<{
 
 // Time Filter Tabs
 const TimeFilterTabs: React.FC<{
-    active: TimeFilter;
-    onChange: (filter: TimeFilter) => void;
+    active: LeaderboardPeriod;
+    onChange: (filter: LeaderboardPeriod) => void;
 }> = ({ active, onChange }) => {
-    const filters: { key: TimeFilter; label: string; icon: React.ReactNode }[] = [
+    const filters: { key: LeaderboardPeriod; label: string; icon: React.ReactNode }[] = [
         { key: 'all', label: 'All Time', icon: <TrophyIcon className="h-4 w-4" /> },
         { key: 'weekly', label: 'Weekly', icon: <CalendarIcon className="h-4 w-4" /> },
         { key: 'daily', label: 'Daily', icon: <BoltIcon className="h-4 w-4" /> },
     ];
 
+    const focusTab = (key: LeaderboardPeriod) => {
+        onChange(key);
+        requestAnimationFrame(() => document.getElementById(`tab-${key}`)?.focus());
+    };
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+        let nextIndex = index;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (index + 1) % filters.length;
+        if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (index - 1 + filters.length) % filters.length;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = filters.length - 1;
+
+        if (nextIndex !== index) {
+            event.preventDefault();
+            focusTab(filters[nextIndex].key);
+        }
+    };
+
     return (
         <div className="leaderboard-filters" role="tablist" aria-label="Filter leaderboard by time period">
-            {filters.map((filter) => (
+            {filters.map((filter, index) => (
                 <button
                     key={filter.key}
                     onClick={() => onChange(filter.key)}
+                    onKeyDown={(event) => handleKeyDown(event, index)}
                     className={`leaderboard-filter-btn ${active === filter.key ? 'leaderboard-filter-btn-active' : ''}`}
                     role="tab"
                     aria-selected={active === filter.key}
                     aria-controls="leaderboard-content"
                     id={`tab-${filter.key}`}
+                    tabIndex={active === filter.key ? 0 : -1}
                 >
                     <span aria-hidden="true">{filter.icon}</span>
                     <span>{filter.label}</span>
@@ -394,13 +412,14 @@ export const Leaderboard: React.FC = () => {
     const [userPosition, setUserPosition] = useState<UserPosition | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(false);
-    const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+    const [timeFilter, setTimeFilter] = useState<LeaderboardPeriod>('all');
 
-    const fetchLeaderboard = useCallback(async () => {
+    const fetchLeaderboard = useCallback(async (period: LeaderboardPeriod = timeFilter) => {
         setIsLoading(true);
         setError(false);
+        setUserPosition(null);
         try {
-            const data = await GamificationService.getLeaderboard();
+            const data = await GamificationService.getLeaderboard(period);
             setEntries(data);
 
             // Find current user's position if logged in
@@ -412,6 +431,19 @@ export const Leaderboard: React.FC = () => {
                         rank: myEntry.rank || data.indexOf(myEntry) + 1,
                         points: myEntry.points,
                     });
+                } else {
+                    try {
+                        const rank = await GamificationService.getUserRank(user.id, period);
+                        if (rank.rank !== null) {
+                            setUserPosition({
+                                user_id: rank.user_id,
+                                rank: rank.rank,
+                                points: rank.points,
+                            });
+                        }
+                    } catch (rankError) {
+                        console.warn('[Leaderboard] Failed to load current user rank:', rankError);
+                    }
                 }
             }
         } catch (err) {
@@ -420,7 +452,7 @@ export const Leaderboard: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [user?.id]);
+    }, [timeFilter, user?.id]);
 
     useEffect(() => {
         fetchLeaderboard();
@@ -435,6 +467,7 @@ export const Leaderboard: React.FC = () => {
     // Rest of the list
     const restEntries = entries.slice(3);
     const listEntries = topThree.length < 3 ? entries : restEntries;
+    const pointsLabel = timeFilter === 'all' ? 'Total XP' : timeFilter === 'weekly' ? 'Weekly XP' : 'Daily XP';
 
     return (
         <div className="min-h-screen pb-24 md:pb-8 md:pl-24 lg:pl-72">
@@ -484,7 +517,7 @@ export const Leaderboard: React.FC = () => {
                 <TimeFilterTabs active={timeFilter} onChange={setTimeFilter} />
             </div>
 
-            <div className="leaderboard-content">
+            <div id="leaderboard-content" className="leaderboard-content" aria-busy={isLoading}>
                 {/* User's rank card (if not in top 3) */}
                 {userPosition && !topThree.find((e) => e.user_id === user?.id) && (
                     <div className="leaderboard-user-card">
@@ -502,7 +535,7 @@ export const Leaderboard: React.FC = () => {
                                 <div className="leaderboard-user-xp">
                                     {userPosition.points.toLocaleString()}
                                 </div>
-                                <div className="text-xs text-slate-400">Total XP</div>
+                                <div className="text-xs text-slate-400">{pointsLabel}</div>
                             </div>
                         </div>
                     </div>

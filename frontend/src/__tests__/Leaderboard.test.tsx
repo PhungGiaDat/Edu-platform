@@ -22,6 +22,7 @@ import { GamificationService, type LeaderboardEntry } from '../services/Gamifica
 vi.mock('../services/GamificationService', () => ({
   GamificationService: {
     getLeaderboard: vi.fn(),
+    getUserRank: vi.fn(),
   },
 }));
 
@@ -48,6 +49,12 @@ describe('Leaderboard', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(GamificationService.getUserRank).mockResolvedValue({
+      user_id: 'user-1',
+      rank: null,
+      points: 0,
+      period: 'all',
+    });
   });
 
   afterEach(() => {
@@ -260,6 +267,35 @@ describe('Leaderboard', () => {
       await waitFor(() => {
         const weeklyTab = screen.getByRole('tab', { name: /Weekly/i });
         expect(weeklyTab).toHaveClass('leaderboard-filter-btn-active');
+      });
+    });
+
+    it('reloads leaderboard data for the selected period', async () => {
+      vi.mocked(GamificationService.getLeaderboard).mockResolvedValue(mockLeaderboardEntries);
+      const user = userEvent.setup();
+
+      render(<Leaderboard />, { wrapper: TestWrapper });
+
+      const weeklyTab = await screen.findByRole('tab', { name: /Weekly/i });
+      await user.click(weeklyTab);
+
+      await waitFor(() => {
+        expect(GamificationService.getLeaderboard).toHaveBeenLastCalledWith('weekly');
+      });
+    });
+
+    it('supports keyboard navigation between filter tabs', async () => {
+      vi.mocked(GamificationService.getLeaderboard).mockResolvedValue(mockLeaderboardEntries);
+      const user = userEvent.setup();
+
+      render(<Leaderboard />, { wrapper: TestWrapper });
+
+      const allTab = await screen.findByRole('tab', { name: /All Time/i });
+      allTab.focus();
+      await user.keyboard('{ArrowRight}');
+
+      await waitFor(() => {
+        expect(screen.getByRole('tab', { name: /Weekly/i })).toHaveAttribute('aria-selected', 'true');
       });
     });
 

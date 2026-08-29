@@ -70,18 +70,82 @@ class GamificationRepository:
             "minutes_today": 0,
         }
 
-    async def get_leaderboard(self, limit: int = 10) -> List[Dict[str, Any]]:
+    @staticmethod
+    def _validate_leaderboard_period(period: str) -> str:
+        if period not in {"all", "weekly", "daily"}:
+            raise ValueError(f"Unsupported leaderboard period: {period}")
+        return period
+
+    @classmethod
+    def _leaderboard_source(cls, period: str) -> str:
+        period = cls._validate_leaderboard_period(period)
+
+        if period == "all":
+            return """
+                SELECT
+                    ug.user_id,
+                    COALESCE(NULLIF(u.username, ''), NULLIF(u.full_name, ''), 'Learner') AS username,
+                    u.avatar_url,
+                    ug.total_points AS points,
+                    ug.total_points,
+                    ug.level,
+                    ug.streak_days
+                FROM public.user_gamification AS ug
+                JOIN public.users AS u ON u.id = ug.user_id
+            """
+
+        period_start = "date_trunc('week', CURRENT_TIMESTAMP)" if period == "weekly" else "date_trunc('day', CURRENT_TIMESTAMP)"
+        return f"""
+            SELECT
+                ug.user_id,
+                COALESCE(NULLIF(u.username, ''), NULLIF(u.full_name, ''), 'Learner') AS username,
+                u.avatar_url,
+                COALESCE(SUM(events.xp_awarded), 0)::int AS points,
+                COALESCE(SUM(events.xp_awarded), 0)::int AS total_points,
+                ug.level,
+                ug.streak_days
+            FROM public.user_gamification AS ug
+            JOIN public.users AS u ON u.id = ug.user_id
+            LEFT JOIN public.gamification_events AS events
+                ON events.user_id = ug.user_id
+                AND events.status = 'applied'
+                AND events.created_at >= {period_start}
+            GROUP BY ug.user_id, u.username, u.full_name, u.avatar_url, ug.level, ug.streak_days
+            HAVING COALESCE(SUM(events.xp_awarded), 0) > 0
+        """
+
+    async def get_leaderboard(self, limit: int = 50, period: str = "all") -> List[Dict[str, Any]]:
+        safe_limit = max(1, min(int(limit), 100))
+        source = self._leaderboard_source(period)
         rows = await postgres_pool().fetch(
-            "SELECT * FROM public.user_gamification ORDER BY total_points DESC LIMIT $1", limit
+            f"""
+            WITH leaderboard AS ({source})
+            SELECT user_id, username, avatar_url, points, total_points, level, streak_days
+            FROM leaderboard
+            ORDER BY points DESC, user_id ASC
+            LIMIT $1
+            """,
+            safe_limit,
         )
-        results = []
-        for row in rows:
-            r = dict(row)
-            badges = r.get("badges")
-            r["badges"] = json.loads(badges) if isinstance(badges, str) else badges
-            r["pet_state"] = self._deserialize_pet(r.get("pet_state"))
-            results.append(r)
-        return results
+        return [dict(row) for row in rows]
+
+    async def get_user_rank(self, user_id: str, period: str = "all") -> Optional[Dict[str, Any]]:
+        source = self._leaderboard_source(period)
+        row = await postgres_pool().fetchrow(
+            f"""
+            WITH leaderboard AS ({source}), ranked AS (
+                SELECT
+                    user_id, username, avatar_url, points, total_points, level, streak_days,
+                    ROW_NUMBER() OVER (ORDER BY points DESC, user_id ASC) AS rank
+                FROM leaderboard
+            )
+            SELECT user_id, username, avatar_url, points, total_points, level, streak_days, rank
+            FROM ranked
+            WHERE user_id = $1
+            """,
+            user_id,
+        )
+        return dict(row) if row else None
 
     # ---------- write ----------
 

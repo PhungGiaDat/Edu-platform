@@ -1098,6 +1098,10 @@ a:focus-visible {
   z-index: 2;
 }
 
+.leaderboard-header-content > .flex {
+  min-width: 0;
+}
+
 .leaderboard-mascot-container {
   width: 68px;
   height: 68px;
@@ -1199,9 +1203,11 @@ a:focus-visible {
 
 /* Content Area */
 .leaderboard-content {
+  width: 100%;
   padding: 20px;
-  max-width: 600px;
-  margin: 0 auto;
+  max-width: min(720px, 100%);
+  margin-inline: auto;
+  box-sizing: border-box;
 }
 
 /* User Rank Card */
@@ -1282,14 +1288,21 @@ a:focus-visible {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 12px;
-  padding: 0 8px;
+  gap: clamp(4px, 2vw, 12px);
+  padding-inline: clamp(0px, 1vw, 8px);
+  width: 100%;
+  max-width: 420px;
+  margin-inline: auto;
+  box-sizing: border-box;
 }
 
 .leaderboard-podium-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
   transition: transform 0.3s ease;
 }
 
@@ -1298,11 +1311,23 @@ a:focus-visible {
 }
 
 .leaderboard-podium-item-current {
-  transform: scale(1.05);
+  transform: translateY(-4px);
 }
 
 .leaderboard-podium-item-current:hover {
-  transform: scale(1.09);
+  transform: translateY(-6px);
+}
+
+.leaderboard-podium-block {
+  width: 100%;
+  max-width: 112px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.leaderboard-podium-points {
+  font-size: clamp(0.75rem, 0.55rem + 1.2vw, 1.125rem);
+  white-space: nowrap;
 }
 
 .leaderboard-crown-container {
@@ -1386,8 +1411,11 @@ a:focus-visible {
 .leaderboard-podium-labels {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: clamp(4px, 2vw, 12px);
   margin-top: 12px;
+  width: 100%;
+  max-width: 420px;
+  margin-inline: auto;
 }
 
 .leaderboard-podium-label {
@@ -1439,6 +1467,7 @@ a:focus-visible {
 .leaderboard-row {
   display: flex;
   align-items: center;
+  min-width: 0;
   gap: 12px;
   padding: 12px 16px;
   background: #fff;
@@ -2237,7 +2266,7 @@ a.sr-only:focus {
 /* Support 200% text zoom without horizontal scroll */
 @media (min-width: 769px) {
   .leaderboard-content {
-    max-width: 100%;
+    max-width: min(720px, 100%);
     overflow-x: visible;
   }
 }
