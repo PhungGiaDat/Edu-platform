@@ -630,7 +630,6 @@
         xr8Ready: typeof window.XR8 === 'function',
         xr8RunReady: typeof window.XR8?.run === 'function',
       });
-      const canvasEl = document.getElementById('camerafeed');
       if (!canvasEl) {
         throw new Error('Canvas #camerafeed not found');
       }
