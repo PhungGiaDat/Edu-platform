@@ -44,7 +44,7 @@ export function SentenceTranslateCard({ onWordSelect }: SentenceTranslateCardPro
       setResult(data);
     } catch (err) {
       console.error('[SentenceTranslateCard] Translation failed:', err);
-      setError('Không dịch được câu này. Con thử lại nhé!');
+      setError('Không dịch được câu này. Bạn thử lại nhé!');
     } finally {
       setTranslating(false);
     }

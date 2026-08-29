@@ -167,6 +167,7 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
           {/* Search */}
           <Input
             type="search"
+            aria-label="Tìm kiếm từ đã lưu"
             placeholder="Tìm kiếm từ..."
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
