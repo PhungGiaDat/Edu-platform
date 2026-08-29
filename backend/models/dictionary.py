@@ -35,3 +35,20 @@ class TranslateResponse(BaseModel):
     word_breakdown: Optional[List[WordBreakdown]] = None
     related_words: Optional[List[RelatedWord]] = None
     sources: Optional[List[str]] = None  # Qdrant sources used
+
+
+class LookupRequest(BaseModel):
+    """Request to look up a single English word"""
+    word: str = Field(..., min_length=1, max_length=100)
+
+
+class LookupResponse(BaseModel):
+    """Rich single-word definition (Tra từ)"""
+    word: str
+    pronunciation: Optional[str] = None
+    part_of_speech: Optional[str] = None
+    definition_en: Optional[str] = None
+    translation_vi: str
+    example_sentence: Optional[str] = None
+    wiki_summary: Optional[str] = None
+    sources: Optional[List[str]] = None
