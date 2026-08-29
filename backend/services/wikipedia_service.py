@@ -2,6 +2,7 @@
 """Live Wikipedia summaries with a write-through Qdrant cache."""
 import html
 import re
+import urllib.parse
 from dataclasses import dataclass
 from typing import Optional
 import httpx, logging
@@ -60,10 +61,11 @@ class WikipediaService:
 
     async def fetch_summary(self, word: str) -> Optional[WikiSummary]:
         title = word.strip().replace(" ", "_")
+        encoded_title = urllib.parse.quote(title, safe="")
         for base in self.BASES:
             try:
                 async with self._default_client() as client:
-                    resp = await client.get(f"{base}/{title}")
+                    resp = await client.get(f"{base}/{encoded_title}")
             except Exception as exc:
                 logger.warning(f"[Wiki] fetch failed for {word!r} on {base}: {exc}")
                 continue
@@ -74,7 +76,11 @@ class WikipediaService:
                 return None
             if resp.status_code != 200:
                 continue
-            data = resp.json()
+            try:
+                data = resp.json()
+            except ValueError:
+                logger.warning(f"[Wiki] malformed JSON from {base} for {word!r}")
+                continue
             extract = (data.get("extract") or "").strip()
             if not extract or data.get("type") != "standard":
                 continue  # disambiguation/other — next source, then Task 3b fallback
@@ -91,7 +97,8 @@ class WikipediaService:
         strip all HTML -> join into one blob capped at WIKTIONARY_TEXT_MAX_CHARS.
         """
         title = term.strip().replace(" ", "_")
-        url = f"https://en.wiktionary.org/api/rest_v1/page/definition/{title}"
+        encoded_title = urllib.parse.quote(title, safe="")
+        url = f"https://en.wiktionary.org/api/rest_v1/page/definition/{encoded_title}"
         try:
             async with self._default_client() as client:
                 resp = await client.get(url)
@@ -100,7 +107,11 @@ class WikipediaService:
             return None
         if resp.status_code != 200:
             return None
-        data = resp.json()
+        try:
+            data = resp.json()
+        except ValueError:
+            logger.warning(f"[Wiki] malformed JSON from Wiktionary for {term!r}")
+            return None
         groups = [g for g in data.get("en", []) if g.get("language") == "English"]
         senses: list[str] = []
         for group in groups:
@@ -123,7 +134,7 @@ class WikipediaService:
         qdrant = await self._get_qdrant()
         cached = await qdrant.get_wiki_doc(word)
         if cached and cached.get("safety_label") == "clean" and cached.get("text"):
-            return {"summary": cached["text"], "title": f"wiki:{word.lower()}",
+            return {"summary": cached["text"], "title": cached.get("title") or f"wiki:{word.lower()}",
                     "url": cached.get("source_url"), "cached": True,
                     "source_type": cached.get("source_type") or "wikipedia_summary"}
         summary = await self.fetch_summary(word)
@@ -132,6 +143,7 @@ class WikipediaService:
             label = "clean" if check_text(text).ok else "review"
             await qdrant.upsert_wiki_documents(
                 [{"word": word, "text": text, "safety_label": label,
+                  "title": summary.title,
                   "source_url": summary.url, "source_type": "wikipedia_summary"}])
             if label != "clean":
                 return {"summary": None, "title": None, "url": None, "cached": False,
@@ -144,9 +156,11 @@ class WikipediaService:
             return {"summary": None, "title": None, "url": None, "cached": False,
                     "source_type": "wikipedia_summary"}
         label = "clean" if check_text(definitions).ok else "review"
-        source_url = f"https://en.wiktionary.org/wiki/{word.strip().replace(' ', '_')}"
+        source_url = "https://en.wiktionary.org/wiki/" + urllib.parse.quote(
+            word.strip().replace(" ", "_"), safe="")
         await qdrant.upsert_wiki_documents(
             [{"word": word, "text": definitions, "safety_label": label,
+              "title": word.strip().title() or word.strip(),
               "source_url": source_url, "source_type": "wiktionary_definitions"}])
         if label != "clean":
             return {"summary": None, "title": None, "url": None, "cached": False,

@@ -222,6 +222,7 @@ class QdrantRAGService:
                 "content_hash": hashlib.sha256(text.encode()).hexdigest(),
                 "embedding_model": settings.QDRANT_EMBEDDING_MODEL,
                 "source_url": doc.get("source_url"),
+                "title": doc.get("title"),
                 "dataset_version": "wiki-2026-08-30",
             }
             points.append(models.PointStruct(

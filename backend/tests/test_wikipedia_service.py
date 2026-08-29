@@ -30,6 +30,22 @@ async def test_fetch_summary_returns_none_on_404():
     assert await svc.fetch_summary("zzqqx") is None
 
 @pytest.mark.asyncio
+async def test_fetch_summary_treats_malformed_json_as_miss():
+    """ISSUE-010: malformed JSON body must degrade to a miss, not raise."""
+    svc = WikipediaService()
+    svc._client_factory = lambda: _transport(lambda req: httpx.Response(200, content=b"not-json"))
+    assert await svc.fetch_summary("zzqqx") is None
+
+@pytest.mark.asyncio
+async def test_fetch_definitions_treats_malformed_json_as_none():
+    """ISSUE-010: malformed Wiktionary JSON returns None, not raise."""
+    svc = WikipediaService()
+    svc._client_factory = lambda: httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda req: httpx.Response(200, content=b"not-json")),
+        base_url="https://en.wiktionary.org")
+    assert await svc.fetch_definitions("zzqqx") is None
+
+@pytest.mark.asyncio
 async def test_lookup_serves_from_qdrant_cache(monkeypatch):
     fake = FakeQdrant(cached={"text": "Cached fact.", "safety_label": "clean"})
     svc = WikipediaService(qdrant=fake)
@@ -43,6 +59,28 @@ async def test_lookup_fetches_and_caches_clean_content(monkeypatch):
     monkeypatch.setattr(svc, "fetch_summary", lambda w: _async(WikiSummary("Elephant", "Big animal.", "http://x")))
     out = await svc.lookup_with_cache("elephant")
     assert out["summary"] == "Big animal." and fake.upserted[0]["safety_label"] == "clean"
+    # Title is now stored in the Qdrant payload and returned on cache hits.
+    assert fake.upserted[0]["title"] == "Elephant"
+    assert out["title"] == "Elephant"
+
+@pytest.mark.asyncio
+async def test_lookup_uses_stored_title_on_cache_hit(monkeypatch):
+    """Cache hit with a stored title returns the real title, not wiki:word."""
+    fake = FakeQdrant(cached={"text": "Cached fact.", "safety_label": "clean",
+                               "title": "Elephant (real)"})
+    svc = WikipediaService(qdrant=fake)
+    out = await svc.lookup_with_cache("elephant")
+    assert out["summary"] == "Cached fact." and out["cached"] is True
+    assert out["title"] == "Elephant (real)"
+
+@pytest.mark.asyncio
+async def test_lookup_uses_fallback_title_when_cache_missing_title(monkeypatch):
+    """Old cached points without a 'title' field fall back to wiki:word."""
+    fake = FakeQdrant(cached={"text": "Cached fact.", "safety_label": "clean"})
+    svc = WikipediaService(qdrant=fake)
+    out = await svc.lookup_with_cache("elephant")
+    assert out["title"] == "wiki:elephant"
+    assert out["cached"] is True
 
 @pytest.mark.asyncio
 async def test_lookup_flags_unsafe_wiki_text(monkeypatch):

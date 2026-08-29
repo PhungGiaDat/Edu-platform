@@ -1,7 +1,9 @@
 # backend/tests/test_dictionary_service.py
 import json, pytest
+from pydantic import ValidationError
 from services.dictionary_service import DictionaryService
 from services.content_safety_service import ContentSafetyError
+from models.dictionary import LookupRequest
 
 LOOKUP_JSON = json.dumps({
     "word": "elephant", "pronunciation": "/ˈel.ə.fənt/", "part_of_speech": "noun",
@@ -40,6 +42,14 @@ async def test_lookup_blocked_word_raises_safety_error(monkeypatch):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("bad", ["../../Special:Export", "a/b", "https://evil", "..\\..\\x", "word:colon"])
+async def test_lookup_rejects_invalid_chars_before_network(monkeypatch, bad):
+    svc = _svc(monkeypatch, LOOKUP_JSON)
+    with pytest.raises(ContentSafetyError):
+        await svc.lookup(bad)
+
+
+@pytest.mark.asyncio
 async def test_lookup_wraps_word_in_user_fence(monkeypatch):
     svc = _svc(monkeypatch, LOOKUP_JSON)
     captured = {}
@@ -60,3 +70,17 @@ async def test_translate_keeps_legacy_response_shape(monkeypatch):
 async def test_translate_context_survives_rag_outage(monkeypatch):
     out = await _svc(monkeypatch, TRANSLATE_JSON, context=[]).translate("Hello")
     assert out["translation"]["vi"]
+
+
+# ── LookupRequest model charset gate (ISSUE-004) ────────────────────────────
+
+@pytest.mark.parametrize("good", ["elephant", "don't", "ice cream", "well-known", "café"])
+def test_lookup_request_accepts_valid_words(good):
+    m = LookupRequest(word=good)
+    assert m.word == good
+
+@pytest.mark.parametrize("bad", ["../../Special:Export", "a/b", "https://evil",
+                                 "path:colon", "..\\backslash", "5 tokens a b c d"])
+def test_lookup_request_rejects_invalid_words(bad):
+    with pytest.raises(ValidationError):
+        LookupRequest(word=bad)

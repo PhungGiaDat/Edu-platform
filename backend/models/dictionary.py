@@ -2,7 +2,8 @@
 """
 Pydantic models for AI Dictionary (Tra từ)
 """
-from pydantic import BaseModel, Field
+import re
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 
 
@@ -40,6 +41,25 @@ class TranslateResponse(BaseModel):
 class LookupRequest(BaseModel):
     """Request to look up a single English word"""
     word: str = Field(..., min_length=1, max_length=100)
+
+    @field_validator("word")
+    @classmethod
+    def validate_word_chars(cls, v: str) -> str:
+        """Reject path-traversal, URLs, symbols, and non-word chars.
+
+        Allow: letters, digits, spaces, apostrophes, hyphens, acute accents.
+        Reject: / \\ . : and other symbols that could be used for SSRF or
+        path injection.  At most 4 whitespace-separated tokens.
+        """
+        if re.search(r"[^\w\s'’-]", v):
+            raise ValueError(
+                "Word contains invalid characters"
+            )
+        if not re.match(r"^[\w'’-]+(?:\s+[\w'’-]+){0,3}$", v, re.UNICODE):
+            raise ValueError(
+                "Word must be 1-4 tokens of letters, digits, apostrophes, or hyphens"
+            )
+        return v
 
 
 class LookupResponse(BaseModel):

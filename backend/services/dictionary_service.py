@@ -12,6 +12,18 @@ from services.llm_clients import ModelRouter
 
 logger = logging.getLogger(__name__)
 
+# Lookup word charset gate: letters/digits, apostrophes, hyphens, acute
+# accents and (unicode) word chars only, at most 4 whitespace-separated
+# tokens. Rejects path-traversal (`../`), URLs (`:`, `/`, `.`) and symbols.
+_LOOKUP_WORD_FORBIDDEN = re.compile(r"[^\w\s'’-]", re.UNICODE)
+_LOOKUP_WORD_SHAPE = re.compile(r"^[\w'’-]+(?:\s+[\w'’-]+){0,3}$", re.UNICODE)
+
+
+def _valid_lookup_word(word: str) -> bool:
+    if _LOOKUP_WORD_FORBIDDEN.search(word):
+        return False
+    return _LOOKUP_WORD_SHAPE.match(word) is not None
+
 
 class DictionaryService:
     LOOKUP_RULES = """You are a friendly English dictionary for children (ages 5-8).
@@ -71,6 +83,8 @@ JSON schema:
 
     async def lookup(self, word: str) -> dict:
         clean = sanitize_user_text(word)
+        if not _valid_lookup_word(clean):
+            raise ContentSafetyError("Word contains invalid characters")
         assert_safe(clean, field="word")
         context = await self._gather_context(clean)
         context_text = "\n".join(f"- {str(c.get('text', ''))[:400]}" for c in context) or "(none found)"
