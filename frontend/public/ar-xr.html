@@ -629,8 +629,18 @@
         xr8Ready: typeof window.XR8 === 'function',
         xr8RunReady: typeof window.XR8?.run === 'function',
       });
+      const canvasEl = document.getElementById('camerafeed');
+      if (!canvasEl) {
+        throw new Error('Canvas #camerafeed not found');
+      }
+      logToBuffer('info', 'Calling XR8.run', {
+        canvasId: canvasEl.id,
+        canvasWidth: canvasEl.width,
+        canvasHeight: canvasEl.height,
+        boundingRect: JSON.stringify(canvasEl.getBoundingClientRect()),
+      });
       try {
-        window.XR8.run();
+        window.XR8.run({ canvas: canvasEl });
       } catch(runErr) {
         logToBuffer('error', 'XR8.run threw', {
           message: String(runErr),
