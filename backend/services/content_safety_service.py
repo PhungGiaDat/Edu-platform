@@ -5,14 +5,21 @@ from dataclasses import dataclass
 from typing import Optional
 
 # Seed blocklist. Strong EN terms stored masked (f*ck) — _normalize strips
-# mask chars, so masked entries match the plain words. VI entries are
-# ASCII-folded (diacritics removed by _normalize).
+# mask chars, so a masked entry normalizes to the stripped spelling ("fck")
+# and would MISS the plain word ("fuck"). Every masked EN term therefore has a
+# plain form alongside it. VI entries are ASCII-folded (diacritics removed by
+# _normalize).
 _BLOCKED_TERMS = frozenset({
-    # EN — masked strong terms + plain mild/unsafe-topic terms
+    # EN — masked strong terms (match masked/punctuated input after stripping)
     "f*ck", "f*ck*n", "sh*t", "b*tch", "d*ck", "c*ck", "a**ole", "bast*rd",
     "wh*re", "sl*t", "p*rn", "s*x", "s*xy", "n*de", "n*ked", "x*x",
     "d*mn", "cr*p", "bl*dy", "h*te", "st*pid", "id*ot",
-    "suicide", "cocaine", "heroin", "weapon", "n*zi",
+    # EN — plain forms of every masked term above (catch the actual words)
+    "fuck", "fucking", "shit", "bitch", "dick", "cock", "asshole", "bastard",
+    "whore", "slut", "sex", "sexy", "nude", "naked", "damn", "crap", "bloody",
+    "hate", "stupid", "idiot",
+    # EN — unsafe-topic terms (plain) + plain "nazi" alongside masked "n*zi"
+    "suicide", "cocaine", "heroin", "weapon", "n*zi", "nazi",
     # EN — plain stored term: masked "p*rn" normalizes to "prn", which would
     # miss the plain word and the leetspeak form ("p0rn" -> "porn"). Keep the
     # plain form alongside so plain/leet/punctuated input is caught.
@@ -55,13 +62,30 @@ def _normalize(text: str) -> str:
 _NORMALIZED_TERMS = [_normalize(t) for t in _BLOCKED_TERMS]
 
 
+def _word_regex(term: str) -> re.Pattern:
+    """Whole-word regex for a single-word term.
+
+    Letters are joined with ``\\s*`` so a space-separated bypass ("f u c k")
+    is caught, while the ``(?<![a-z0-9])...(?![a-z0-9])`` lookarounds keep the
+    match whole-word — "classroom"/"bass" stay safe from "ass", "auditorium"
+    stays safe from "dit", "diction" stays safe from "dit", etc.
+    """
+    return re.compile(
+        rf"(?<![a-z0-9]){r'\s*'.join(re.escape(c) for c in term)}(?![a-z0-9])"
+    )
+
+
+# Precompile a whole-word (space-tolerant) regex for every single-word term.
+_WORD_PATTERNS = {t: _word_regex(t) for t in _NORMALIZED_TERMS if " " not in t}
+
+
 def check_text(text: str) -> SafetyVerdict:
     normalized = _normalize(text)
     for term in _NORMALIZED_TERMS:
         if " " in term:
             hit = term in normalized
         else:
-            hit = re.search(rf"\b{re.escape(term)}\b", normalized) is not None
+            hit = _WORD_PATTERNS[term].search(normalized) is not None
         if hit:
             return SafetyVerdict(ok=False, reason="blocked_term", matched=term)
     return SafetyVerdict(ok=True, reason=None, matched=None)
