@@ -3,8 +3,10 @@
 Notebook API Router - Sổ tay endpoints
 """
 from fastapi import Depends, HTTPException, status, Query, Response
+from sqlalchemy.ext.asyncio import AsyncSession
 from core.base_router import create_router
 from core.security import get_current_user
+from database.orm_session import get_db_session
 from services.notebook_service import NotebookService
 from services.content_safety_service import ContentSafetyError
 from repositories.notebook_repository import NotebookRepository
@@ -30,11 +32,11 @@ router = create_router(
 )
 
 
-async def get_notebook_repository():
-    """Get notebook repository"""
-    from database import get_db_session
-    async with get_db_session() as db:
-        yield NotebookRepository(db)
+async def get_notebook_repository(
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Get notebook repository bound to a request-scoped ORM session"""
+    yield NotebookRepository(db)
 
 
 async def get_notebook_service(

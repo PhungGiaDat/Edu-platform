@@ -27,6 +27,7 @@ from fastapi.responses import JSONResponse
 # Import settings and database
 from settings import settings
 from database.connection import connect_to_database, close_database_connection
+from database.orm_session import close_orm, connect_orm
 
 # Import Redis services
 from services.redis_service import redis_service
@@ -109,7 +110,16 @@ async def lifespan(app: FastAPI):
             logger.info("⚠️ Redis unavailable - using in-memory fallback")
     except Exception as e:
         logger.warning(f"⚠️ Redis initialization failed: {e}, using fallback")
-    
+
+    # Initialize the PostgreSQL ORM session factory (notebook / vocabulary
+    # domains). Non-fatal at boot: affected endpoints degrade per-request.
+    try:
+        await connect_orm()
+        logger.info("✅ PostgreSQL ORM session factory initialized")
+    except Exception as e:
+        logger.error(f"❌ PostgreSQL ORM initialization failed: {e}")
+        sentry_monitoring_service.capture_exception(e)
+
     logger.info("✅ Application started successfully")
     
     yield  # Application runs here
@@ -120,7 +130,10 @@ async def lifespan(app: FastAPI):
     # Close Redis connection
     await redis_service.disconnect()
     logger.info("✅ Redis connection closed")
-    
+
+    await close_orm()
+    logger.info("✅ PostgreSQL ORM disposed")
+
     await close_database_connection()
     logger.info("✅ Application shut down successfully")
 

@@ -3,7 +3,9 @@
 Vocabulary Topics API Router
 """
 from fastapi import Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 from core.base_router import create_router
+from database.orm_session import get_db_session
 from repositories.vocabulary_topic_repository import VocabularyTopicRepository
 from models.vocabulary_topic import (
     VocabularyTopicResponse,
@@ -20,11 +22,11 @@ router = create_router(
 )
 
 
-async def get_topic_repository():
-    """Get topic repository"""
-    from database import get_db_session
-    async with get_db_session() as db:
-        yield VocabularyTopicRepository(db)
+async def get_topic_repository(
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Get topic repository bound to a request-scoped ORM session"""
+    yield VocabularyTopicRepository(db)
 
 
 @router.get("", response_model=VocabularyTopicListResponse)
