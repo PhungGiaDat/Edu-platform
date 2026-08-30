@@ -161,6 +161,10 @@ class CircuitBreaker:
 def _is_retryable(exc: Exception) -> bool:
     """Return True if the exception warrants a retry."""
     msg = str(exc).lower()
+    # Permanent failures: retrying the same model is pointless — fail over now.
+    permanent_markers = ("model_not_found", "no available channel", "error code: 401", "error code: 403")
+    if any(marker in msg for marker in permanent_markers):
+        return False
     return any(
         kw in msg
         for kw in ("429", "resource_exhausted", "quota", "rate", "503", "502", "504", "timeout")
@@ -269,11 +273,12 @@ class ModelRouter:
 
     def _cascade_entries(self) -> Iterator[tuple[str, ChatOpenAI, str]]:
         """
-        Yield (provider, llm, model_name) in cascade order, skipping providers
-        the health registry marked unhealthy inside the recheck window:
-          1. TokenRouter primary model
-          2. TokenRouter fallback models (deduped)
-          3. B.AI generation model (when BAI_API_KEY is configured)
+        Yield (provider, llm, model_name) ordered for sticky fast failover:
+          1. The preferred provider (last one that succeeded) if ready
+          2. Other ready providers (configured order)
+          3. Unhealthy providers LAST — still yielded as a last resort, so a
+             total "All models exhausted" outage cannot happen while any
+             provider is configured.
         """
         from services import llm_health
 
@@ -292,13 +297,17 @@ class ModelRouter:
                     ("bai", get_bai_llm(bai_model), f"bai/{bai_model}")
                 )
 
-        for provider, llm, model_name in entries:
-            if not llm_health.is_cascade_ready(provider):
-                logger.warning(
-                    f"[ModelRouter/{self.role}] skipping provider={provider} "
-                    "(unhealthy inside recheck window)"
-                )
-                continue
+        preferred = llm_health.preferred_provider()
+
+        def _rank(entry: tuple[str, ChatOpenAI, str]) -> tuple[int, int]:
+            provider, _llm, _name = entry
+            if provider == preferred:
+                return (0, 0)
+            if llm_health.is_cascade_ready(provider):
+                return (1, 0)
+            return (2, 0)  # last resort — still tried, just ordered last
+
+        for provider, llm, model_name in sorted(entries, key=_rank):
             yield provider, llm, model_name
 
     def llm_cascade(self) -> Iterator[tuple[ChatOpenAI, str]]:
@@ -336,7 +345,7 @@ class ModelRouter:
                 llm_health.record(provider, True, (time.monotonic() - started) * 1000)
                 return result, model_name
             except Exception as exc:  # noqa: PERF203
-                llm_health.record(provider, False)
+                llm_health.record(provider, False, kind=llm_health.classify_error(exc))
                 logger.warning(
                     f"[ModelRouter/{self.role}] model={model_name} failed "
                     f"after retries: {exc!r}. Trying next..."

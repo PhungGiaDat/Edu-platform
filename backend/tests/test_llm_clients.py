@@ -285,27 +285,38 @@ def test_cascade_includes_bai_as_last_resort(monkeypatch):
     assert names[-1] == "bai/glm-5.3-flash"
 
 
-def test_cascade_skips_freshly_unhealthy_provider(monkeypatch):
+def test_cascade_orders_unhealthy_provider_last_but_keeps_it(monkeypatch):
     _with_bai(monkeypatch)
-    llm_health.record("tokenrouter", False, latency_ms=5)  # fresh failure
+    llm_health.record("tokenrouter", False, kind="permanent")  # dead models
     router = ModelRouter(role="generator")
     names = [name for _llm, name in router.llm_cascade()]
-    assert names == ["bai/glm-5.3-flash"]
+    # ready provider first (fast UX)…
+    assert names[0] == "bai/glm-5.3-flash"
+    # …but the unhealthy provider is still the last-resort tail, never skipped
+    assert router.primary_model in names
 
 
 @pytest.mark.asyncio
 async def test_call_with_fallback_records_outcomes(monkeypatch):
     _with_bai(monkeypatch)
     router = ModelRouter(role="generator")
+    calls: list[str] = []
 
-    async def always_fail(llm, prompt):
-        raise ValueError("provider down")
+    async def permanent_fail(llm, prompt):
+        # non-retryable: a dead model must fail over after ONE attempt
+        calls.append("x")
+        raise RuntimeError(
+            "Error code: 503 - {'error': {'code': 'model_not_found', "
+            "'message': 'No available channel'}}"
+        )
 
     try:
         with pytest.raises(RuntimeError):
-            await router.call_with_fallback(always_fail, "p")
+            await router.call_with_fallback(permanent_fail, "p")
+        # permanent failure → unhealthy immediately; and retried ZERO times per model
         assert llm_health.get_status("tokenrouter") == "unhealthy"
         assert llm_health.get_status("bai") == "unhealthy"
+        assert len(calls) == 4  # one attempt per cascade entry: primary + 2 fallbacks + bai
     finally:
         llm_health._registry.clear()
 
@@ -313,7 +324,7 @@ async def test_call_with_fallback_records_outcomes(monkeypatch):
 @pytest.mark.asyncio
 async def test_call_with_fallback_marks_survivor_healthy(monkeypatch):
     _with_bai(monkeypatch)
-    llm_health.record("tokenrouter", False, latency_ms=5)  # tokenrouter skipped
+    llm_health.record("tokenrouter", False, kind="permanent")  # dead models
     router = ModelRouter(role="generator")
 
     async def ok_fn(llm, prompt):
@@ -323,3 +334,4 @@ async def test_call_with_fallback_marks_survivor_healthy(monkeypatch):
     assert result == "answer"
     assert model_name == "bai/glm-5.3-flash"
     assert llm_health.get_status("bai") == "healthy"
+    assert llm_health.preferred_provider() == "bai"
