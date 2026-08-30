@@ -21,6 +21,7 @@ export function Button({
   className = '',
   children,
   disabled,
+  style,
   ...props
 }: ButtonProps) {
   const getStyles = () => {
@@ -59,7 +60,9 @@ export function Button({
     lg: 'px-6 py-3 text-lg',
   };
 
-  const style = getStyles();
+  // Variant styles are defaults; caller style overrides per-property so a
+  // partial override never wipes contrast-critical properties like color.
+  const mergedStyle = { ...getStyles(), ...style };
 
   return (
     <button
@@ -74,7 +77,7 @@ export function Button({
         ${sizes[size]}
         ${className}
       `}
-      style={style}
+      style={mergedStyle}
       {...props}
     >
       {loading ? (

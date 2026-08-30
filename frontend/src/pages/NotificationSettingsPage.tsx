@@ -323,6 +323,7 @@ export function NotificationSettingsPage() {
           style={{
             backgroundColor: colors.neonTeal,
             boxShadow: shadows.clay,
+            color: colors.deepSlate,
           }}
         >
           {saving ? (
