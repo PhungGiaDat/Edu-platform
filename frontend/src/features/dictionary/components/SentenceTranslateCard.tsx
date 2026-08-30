@@ -56,7 +56,7 @@ export function SentenceTranslateCard({ onWordSelect }: SentenceTranslateCardPro
   return (
     <div className="space-y-4">
       {/* Input */}
-      <ClayCard className="p-4" hover={false}>
+      <ClayCard className="p-4 pr-14 min-[420px]:pr-4" hover={false}>
         <div className="space-y-4">
           <div>
             <label htmlFor="sentence-input" className="block text-sm font-medium mb-2" style={{ color: brandColors.foreground }}>

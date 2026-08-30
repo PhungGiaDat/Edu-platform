@@ -88,7 +88,7 @@ export function DictionaryPage() {
   }, [result, user]);
 
   return (
-    <div className="dict-page min-h-screen pb-24">
+    <div className="dict-page min-h-screen pb-44">
       {/* Header */}
       <div className="px-4 pt-8 pb-4">
         <div className="max-w-2xl mx-auto flex items-start justify-between gap-3">

@@ -41,7 +41,7 @@ export function DefinitionCard({ result, saveState, onSave }: DefinitionCardProp
   const source = sourceLabel(result.sources);
 
   return (
-    <ClayCard className="p-5" hover={false} style={{ backgroundColor: '#FFFFFF' }}>
+    <ClayCard className="p-5 pr-14 min-[420px]:pr-5" hover={false} style={{ backgroundColor: '#FFFFFF' }}>
       {/* ClayCard does not forward ARIA props, so the labelled region lives on an inner wrapper. */}
       <div role="region" aria-label={`Định nghĩa của ${result.word}`}>
         <div className="flex items-start justify-between gap-3">
