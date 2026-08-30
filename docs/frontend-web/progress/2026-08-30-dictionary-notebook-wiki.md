@@ -159,6 +159,34 @@ provider, with a quick ping at startup/before calls to protect UX.
   Lexi mobile FAB`). The FAB component itself is left to that session;
   this fix targets the content side, sized to their clamp-based FAB.
 
+## RAG bot de-Mongo round (2026-08-30): Postgres-only Lexi pipeline
+
+Production logs showed the Lexi RAG bot failing on MongoDB (never initialized
+on the server) and a missing `chat_logs` Postgres table. The platform is
+Postgres-only per policy, so the RAG path was migrated:
+
+- **Answer cache**: Mongo `rag_cache` collection → `cache_service`
+  (Redis-backed with in-memory fallback on the server), TTL 24h preserved.
+- **Recent history**: Mongo `chat_logs` collection (with a latent
+  missing-await crash, `'coroutine' object has no attribute 'sort'`) →
+  existing `PostgresChatLogRepository.get_session_history`, AI-sender
+  filtered, last-N joined for the Validator dedup check.
+- **Progress summary**: Mongo `learning_progress` collection → raw SQL on
+  the existing Postgres `learning_progress` table (verified columns:
+  flashcard_qr_id/mastery_level/times_viewed/last_reviewed_at).
+- **Migration `20260830_03_chat_logs.sql`**: `public.chat_logs` table +
+  session/time index — applied and smoke-verified on Supabase `edu_platform`
+  (insert/select/delete round-trip OK).
+- `agentic_rag_service` no longer references `get_database`/collections; the
+  broken Mongo fallback branches (and their coroutine crash) are gone.
+- Tests: `test_agentic_rag_postgres.py` (7) — cache round-trip, graceful
+  degradation, AI-filtered history, Postgres progress SQL. Combined
+  agentic suites: 14 passed.
+
+Remaining from the production-log review (not yet fixed): Qdrant returned 0
+documents for "con mèo" (corpus/threshold tuning), and the dead TokenRouter
+`-free` models should be dropped from `MODEL_*` env on the server.
+
 ## Scope guard
 
 Full frontend suite failures and the two backend collection errors pre-date
