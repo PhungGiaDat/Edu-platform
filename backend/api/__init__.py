@@ -25,6 +25,7 @@ from .profile import router as profile_router
 from .notebook import router as notebook_router
 from .dictionary import router as dictionary_router
 from .vocabulary_topics import router as vocabulary_topics_router
+from .ai import router as ai_router
 from .telegram import router as telegram_router
 
 __all__ = [
@@ -50,6 +51,7 @@ __all__ = [
     "notebook_router",
     "dictionary_router",
     "vocabulary_topics_router",
+    "ai_router",
     "telegram_router",
 ]
 

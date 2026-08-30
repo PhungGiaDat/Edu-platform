@@ -52,6 +52,7 @@ from api import (
     notebook_router,
     dictionary_router,
     vocabulary_topics_router,
+    ai_router,
     telegram_router,
 )
 from api.pronunciation_enhanced import router as pronunciation_enhanced_router
@@ -372,6 +373,13 @@ app.include_router(
     vocabulary_topics_router,
     prefix=settings.API_V1_PREFIX,
     tags=["Vocabulary Topics"]
+)
+
+# AI router (quiz generation, pronunciation AI, LLM health)
+app.include_router(
+    ai_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["AI"]
 )
 
 app.include_router(
