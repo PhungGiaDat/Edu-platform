@@ -53,9 +53,9 @@ QR_DETECTED
 │  video element      │     │  SLAM tracking      │
 │  jsQR loop          │     │  Three.js rendering │
 │                     │     │                     │
-│  QR found → stop()  │     │  postMessage events │
+│  QR found → stop() │     │  postMessage events │
 │  stream.track.stop()│     │  XR_CAMERA_HAS_VIDEO│
-│                     │     │  TARGET_FOUND       │
+│                     │     │  TARGET_FOUND        │
 └─────────────────────┘     └─────────────────────┘
 ```
 
@@ -76,11 +76,11 @@ PREPARING
             ▼
 XR_BOOTING
     │
-    │ XR_CAMERA_HAS_VIDEO
+    | XR_CAMERA_HAS_VIDEO
     ▼
 VIEWING
     │
-    │ error
+    | error
     ▼
 ERROR
 ```
@@ -249,10 +249,10 @@ Unchanged. `useTelegramSync` continues to read `parentTraceLogs` and `arDebugBuf
 
 New trace events to add:
 ```
-QR_DETECTED      → QR found, scanner stopping
-SCANNER_STOPPED  → stream.getTracks().stop() called
+QR_DETECTED       → QR found, scanner stopping
+SCANNER_STOPPED   → stream.getTracks().stop() called
 TARGET_READY      → API response received
-XR_BOOTING       → iframe mounted
+XR_BOOTING        → iframe mounted
 VIEWER_IFRAME_LOADED → iframe onLoad
 XR_CAMERA_HAS_VIDEO → XR is live
 ```
