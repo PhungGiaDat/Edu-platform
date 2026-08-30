@@ -70,9 +70,8 @@ def _word_regex(term: str) -> re.Pattern:
     match whole-word — "classroom"/"bass" stay safe from "ass", "auditorium"
     stays safe from "dit", "diction" stays safe from "dit", etc.
     """
-    return re.compile(
-        rf"(?<![a-z0-9]){r'\s*'.join(re.escape(c) for c in term)}(?![a-z0-9])"
-    )
+    spaced_term = r"\s*".join(re.escape(c) for c in term)
+    return re.compile(rf"(?<![a-z0-9]){spaced_term}(?![a-z0-9])")
 
 
 # Precompile a whole-word (space-tolerant) regex for every single-word term.
