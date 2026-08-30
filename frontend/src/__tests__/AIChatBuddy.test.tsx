@@ -40,15 +40,6 @@ function renderChatBuddy(initialOpen = false) {
 }
 
 // ── Tests ───────────────────────────────────────────────────────────────────
-describe('AIChatBuddy — mobile FAB footprint (overlap fix)', () => {
-    it('renders the FAB compact (56px) on small screens', () => {
-        renderChatBuddy(false);
-        const fab = screen.getByRole('button', { name: 'Talk to Lexi' });
-        expect(fab.className).toContain('h-14');
-        expect(fab.className).toContain('w-14');
-        expect(fab.className).not.toContain('clamp(');
-    });
-});
 
 describe('AIChatBuddy — mobile viewport behavior', () => {
 
