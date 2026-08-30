@@ -139,6 +139,26 @@ provider, with a quick ping at startup/before calls to protect UX.
   (4) — combined suite 30 passed; backend focused total now **112**.
 - `BAI_API_KEY` added to local `.env` (never committed).
 
+## UX fix round 2 (2026-08-30): Button merge + FAB clearance
+
+- **ISSUE-007 closed** (`b2ef43e`): `Button` now merges variant styles as
+  defaults with caller `style` overrides per-property (previously caller
+  style replaced the variant object, wiping contrast-critical `color`).
+  Audit found only 2 `style`-passing callers; `NotificationSettingsPage`
+  neonTeal CTA gained explicit `color: colors.deepSlate` (white on
+  `#14B8A6` was ~2.5:1). Tests: `Button.test.tsx` (3).
+- **FAB overlap** (`1c2197d`, `e9bb9b8`): dictionary result cards
+  (DefinitionCard, SentenceTranslateCard) get mobile right-clearance
+  (`pr-[5.5rem]` under 420px) so text never runs under the floating Lexi
+  FAB; `DictionaryPage` bottom padding raised to `pb-44` so the save CTA
+  clears the FAB zone at max scroll.
+- ⚠️ Concurrent-session hazard: another session reset the branch
+  (`reset --hard origin/10-days-quick-run` in reflog), orphaning `327ef1c`
+  (recovered via cherry-pick as `b2ef43e`) and overwriting
+  `AIChatBuddy.tsx` with their own FAB work (`0bb187d fix(chat): reveal
+  Lexi mobile FAB`). The FAB component itself is left to that session;
+  this fix targets the content side, sized to their clamp-based FAB.
+
 ## Scope guard
 
 Full frontend suite failures and the two backend collection errors pre-date
