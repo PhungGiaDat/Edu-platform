@@ -3,6 +3,8 @@
 @import "tailwindcss";
 @import "./styles/duolingo-design-tokens.css";
 @import "./styles/claymorphic-utilities.css";
+@import "./styles/leaderboard.css";
+@import "./styles/daily-challenge.css";
 
 /* ========== Global Reset to prevent black gaps ========== */
 html,

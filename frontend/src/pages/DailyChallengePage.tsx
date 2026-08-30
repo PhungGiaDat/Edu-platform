@@ -1,29 +1,80 @@
 // src/pages/DailyChallengePage.tsx
 // Standalone Daily Challenge page - route: /daily-challenge
-// Duolingo-inspired design with streak counter, progress ring, XP animations
+// Kid-friendly claymorphism challenge flow with progress and reward states
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { apiClient, type ProfileResponse } from '../services/apiClient';
 import '../styles/claymorphic-utilities.css';
 
-// ─── Design Tokens ────────────────────────────────────────────────
-const DUO = {
-  green: '#58CC02',
-  greenDark: '#46A302',
-  yellow: '#FFC800',
-  orange: '#FF9600',
-  blue: '#1CB0F6',
-  red: '#FF4B4B',
-  purple: '#CE82FF',
-  text: '#3C3C3C',
-  textLight: '#777777',
-  headerBg: 'linear-gradient(135deg, #58CC02 0%, #46A302 100%)',
-} as const;
+type IconProps = { className?: string };
 
-// ─── Progress Ring Component ──────────────────────────────────────
+const TargetIcon: React.FC<IconProps> = ({ className }) => (
+  <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="8.5" />
+    <circle cx="12" cy="12" r="4.5" />
+    <circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none" />
+    <path d="M12 1.5v2M12 20.5v2M1.5 12h2M20.5 12h2" />
+  </svg>
+);
+
+const GiftIcon: React.FC<IconProps> = ({ className }) => (
+  <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3.5" y="9" width="17" height="11.5" rx="2.5" />
+    <path d="M12 9v11.5M3.5 13h17M5.5 9V6.75a2.25 2.25 0 0 1 4.5 0V9M18.5 9V6.75a2.25 2.25 0 0 0-4.5 0V9" />
+    <path d="M12 6.75C11.4 4.2 7.25 3.9 7.25 6.2 7.25 8.1 10.2 8.6 12 8.75c1.8-.15 4.75-.65 4.75-2.55 0-2.3-4.15-2-4.75.55Z" />
+  </svg>
+);
+
+const TrophyIcon: React.FC<IconProps> = ({ className }) => (
+  <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M7 3.5h10v4.75a5 5 0 0 1-10 0V3.5Z" />
+    <path d="M7 5H4.75v2.25A3.25 3.25 0 0 0 8 10.5M17 5h2.25v2.25A3.25 3.25 0 0 1 16 10.5M12 13.25v4M8.5 20.5h7M10 17.25h4" />
+  </svg>
+);
+
+const FlameIcon: React.FC<IconProps> = ({ className }) => (
+  <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12.3 21c-4.05 0-7.1-2.65-7.1-6.45 0-2.95 1.65-5.3 4.15-7.95.25 2.2 1.25 3.35 2.35 4.15.1-3.9 1.55-6.55 3.9-8.75.15 3.25 3.2 5.45 3.2 9.5 0 5.55-2.8 9.5-6.5 9.5Z" />
+    <path d="M12.25 20.25c-1.9 0-3.25-1.35-3.25-3.2 0-1.35.7-2.45 1.8-3.65.15 1.05.65 1.7 1.35 2.15.05-1.55.55-2.55 1.35-3.45.15 1.55 1.6 2.35 1.6 4.25 0 2.2-1.05 3.9-2.85 3.9Z" />
+  </svg>
+);
+
+const SparkleIcon: React.FC<IconProps> = ({ className }) => (
+  <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="m12 1.5 1.85 6.65L20.5 10l-6.65 1.85L12 18.5l-1.85-6.65L3.5 10l6.65-1.85L12 1.5Z" />
+  </svg>
+);
+
+const CheckIcon: React.FC<IconProps> = ({ className }) => (
+  <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <path d="m8 12 2.6 2.6L16.5 9" />
+  </svg>
+);
+
+const BookIcon: React.FC<IconProps> = ({ className }) => (
+  <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v17H7.5A2.5 2.5 0 0 0 5 21.5V4.5Z" />
+    <path d="M5 4.5v17M8.5 6.5h7M8.5 10h8" />
+  </svg>
+);
+
+const ArrowIcon: React.FC<IconProps> = ({ className }) => (
+  <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 12h13M13 6l6 6-6 6" />
+  </svg>
+);
+
+const AlertIcon: React.FC<IconProps> = ({ className }) => (
+  <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m12 3 9 16H3L12 3Z" />
+    <path d="M12 9v4M12 17h.01" />
+  </svg>
+);
+
 interface ProgressRingProps {
-  progress: number; // 0-100
+  progress: number;
   size?: number;
   strokeWidth?: number;
   isComplete?: boolean;
@@ -41,7 +92,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
 
   return (
     <div
-      className="duo-progress-ring"
+      className={`daily-challenge-progress-ring ${isComplete ? 'daily-challenge-progress-ring--complete' : ''}`}
       style={{ width: size, height: size }}
       role="progressbar"
       aria-valuenow={progress}
@@ -51,13 +102,13 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
     >
       <svg viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
         <circle
-          className="duo-progress-ring-track"
+          className="daily-challenge-progress-ring-track"
           cx={size / 2}
           cy={size / 2}
           r={radius}
         />
         <circle
-          className={`duo-progress-ring-fill ${isComplete ? 'duo-progress-ring-fill--complete' : ''}`}
+          className="daily-challenge-progress-ring-fill"
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -65,9 +116,9 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
           strokeDashoffset={offset}
         />
       </svg>
-      <div className="duo-progress-ring-center">
-        <div className="duo-progress-ring-percent">{progress}%</div>
-        <div className="duo-progress-ring-label">
+      <div className="daily-challenge-progress-ring-center">
+        <div className="daily-challenge-progress-ring-percent">{progress}%</div>
+        <div className="daily-challenge-progress-ring-label">
           {isComplete ? 'Done!' : 'Progress'}
         </div>
       </div>
@@ -75,165 +126,152 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
   );
 };
 
-// ─── Animated XP Counter ──────────────────────────────────────────
 interface XPCounterProps {
   xp: number;
   prefix?: string;
 }
 
 const XPCounter: React.FC<XPCounterProps> = ({ xp, prefix = '+' }) => {
-  const [displayXp, setDisplayXp] = useState(0);
+  const [displayXp, setDisplayXp] = useState(xp);
   const [isAnimating, setIsAnimating] = useState(false);
   const prevXp = useRef(xp);
 
   useEffect(() => {
-    if (xp !== prevXp.current) {
-      setIsAnimating(true);
-      const start = prevXp.current;
-      const end = xp;
-      const duration = 600;
-      const startTime = performance.now();
+    if (xp === prevXp.current) return;
 
-      const animate = (currentTime: number) => {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        setDisplayXp(Math.round(start + (end - start) * eased));
+    setIsAnimating(true);
+    const start = prevXp.current;
+    const end = xp;
+    const duration = 600;
+    const startTime = performance.now();
+    let frameId = 0;
 
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          setIsAnimating(false);
-        }
-      };
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayXp(Math.round(start + (end - start) * eased));
 
-      requestAnimationFrame(animate);
-      prevXp.current = xp;
-    }
+      if (progress < 1) {
+        frameId = requestAnimationFrame(animate);
+      } else {
+        setIsAnimating(false);
+      }
+    };
+
+    frameId = requestAnimationFrame(animate);
+    prevXp.current = xp;
+
+    return () => cancelAnimationFrame(frameId);
   }, [xp]);
 
   return (
     <div
-      className={`duo-xp-badge ${isAnimating ? 'duo-xp-animated' : ''}`}
+      className={`daily-challenge-xp-badge ${isAnimating ? 'daily-challenge-xp-badge--animated' : ''}`}
       role="status"
       aria-live="polite"
       aria-label={`${xp} experience points available`}
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-      </svg>
-      <span>
-        <span className="duo-xp-plus" aria-hidden="true">{prefix}</span>
-        <span>{displayXp} XP</span>
-      </span>
+      <span className="daily-challenge-xp-icon" aria-hidden="true">{prefix}</span>
+      <span>{displayXp} XP</span>
     </div>
   );
 };
 
-// ─── Streak Badge ─────────────────────────────────────────────────
 interface StreakBadgeProps {
   streak: number;
 }
 
 const StreakBadge: React.FC<StreakBadgeProps> = ({ streak }) => (
-  <div className="duo-streak-badge">
-    <svg className="duo-streak-fire" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 23c-4.97 0-9-3.58-9-8 0-3.18 2.09-6.17 4.5-8.5l.5-.5.5.5c2.41 2.33 4.5 5.32 4.5 8.5 0 1.5-.5 2.5-1.5 2.5S8 17 8 17s0 2 2 2c1 0 2-.5 2-1.5 0 1 0 1.5 1 1.5h.5c.55 0 1 .45 1 1s-.45 1-1 1h-.5c.5 0 1 .5 1 1s-.45 1-1 1h-.5c.55 0 1 .45 1 1 0 1.55-1.57 3-4 3zm-2-8c-1.5 2-3 4-3 5.5 0 2.21 1.79 4 4 4s4-1.79 4-4c0-1.5-1.5-3.5-3-5.5l-1 .5-.5-.5c-.5.5-1 1-1 1.5 0-1.5-1-2.5-2-2.5-1 0-2 1-2 2.5 0-.5-.5-1-1-1.5l-.5.5-1-.5z" />
-    </svg>
+  <div className="daily-challenge-streak">
+    <FlameIcon className="daily-challenge-streak-icon" />
     <span>{streak} day streak</span>
   </div>
 );
 
-// ─── Reward Card ──────────────────────────────────────────────────
 interface RewardCardProps {
   reward: string;
   isComplete: boolean;
 }
 
 const RewardCard: React.FC<RewardCardProps> = ({ reward, isComplete }) => (
-  <div className={`duo-reward-card ${isComplete ? 'duo-reward-card--complete' : ''}`}>
-    <div className="flex items-center gap-3 mb-3">
-      <span className="text-3xl">{isComplete ? '🎉' : '🎁'}</span>
+  <section className={`daily-challenge-reward-card ${isComplete ? 'daily-challenge-reward-card--complete' : ''}`} aria-labelledby="daily-challenge-reward-title">
+    <div className="daily-challenge-card-heading">
+      <span className="daily-challenge-reward-icon" aria-hidden="true">
+        {isComplete ? <TrophyIcon /> : <GiftIcon />}
+      </span>
       <div>
-        <div className="text-xs font-extrabold uppercase tracking-wide" style={{ color: isComplete ? DUO.green : '#B8860B' }}>
+        <div className="daily-challenge-card-label" id="daily-challenge-reward-title">
           {isComplete ? 'Claimed!' : 'Reward'}
         </div>
-        <div className="font-black" style={{ color: DUO.text }}>
-          {reward}
-        </div>
+        <div className="daily-challenge-reward-name">{reward}</div>
       </div>
     </div>
-    <p className="text-sm" style={{ color: DUO.textLight }}>
+    <p className="daily-challenge-card-copy">
       {isComplete
-        ? 'Amazing! You claimed your reward!'
+        ? 'Amazing work. Your reward is ready to celebrate.'
         : 'Finish today\'s challenge to earn this reward.'}
     </p>
-  </div>
+  </section>
 );
 
-// ─── Celebration Overlay ──────────────────────────────────────────
-const CelebrationOverlay: React.FC = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-    {[...Array(8)].map((_, i) => (
-      <div
-        key={i}
-        className="duo-confetti"
-        style={{
-          left: `${10 + i * 12}%`,
-          background: [DUO.yellow, DUO.green, DUO.blue, DUO.purple, DUO.orange][i % 5],
-          animationDelay: `${i * 0.2}s`,
-        }}
-      />
-    ))}
-  </div>
-);
+const CelebrationOverlay: React.FC = () => {
+  const confettiTones = ['coral', 'teal', 'violet', 'sky', 'pink'];
 
-// ─── Loading Skeleton ─────────────────────────────────────────────
+  return (
+    <div className="daily-challenge-celebration" aria-hidden="true">
+      {Array.from({ length: 8 }, (_, index) => (
+        <span
+          key={index}
+          className={`daily-challenge-confetti daily-challenge-confetti--${confettiTones[index % confettiTones.length]}`}
+          style={{
+            left: `${10 + index * 12}%`,
+            animationDelay: `${index * 0.2}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 const LoadingSkeleton: React.FC = () => (
-  <div className="space-y-4 animate-pulse" role="status" aria-label="Loading challenge">
-    <div className="h-56 bg-gray-200 rounded-b-3xl" />
-    <div className="h-48 bg-gray-200 rounded-3xl mx-4" />
-    <div className="h-32 bg-gray-200 rounded-3xl mx-4" />
+  <div className="daily-challenge-skeleton animate-pulse" role="status" aria-label="Loading challenge">
+    <div className="daily-challenge-skeleton-header" />
+    <div className="daily-challenge-skeleton-card" />
+    <div className="daily-challenge-skeleton-card daily-challenge-skeleton-card--short" />
   </div>
 );
 
-// ─── Error State ─────────────────────────────────────────────────
 const ErrorState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
-  <div className="flex min-h-screen items-center justify-center p-4 pb-24 md:pb-8 md:pl-24 lg:pl-72" role="alert" aria-live="assertive">
-    <div className="max-w-sm w-full text-center">
-      <div className="text-7xl mb-6" aria-hidden="true">😢</div>
-      <h2 className="text-2xl font-black mb-2" style={{ color: DUO.text }}>
-        Could not load challenge
-      </h2>
-      <p className="mb-6" style={{ color: DUO.textLight }}>
-        Something went wrong. Please try again.
-      </p>
-      <button onClick={onRetry} className="duo-btn duo-btn--primary max-w-xs">
+  <main className="daily-challenge-page daily-challenge-state" role="alert" aria-live="assertive">
+    <div className="daily-challenge-state-inner">
+      <div className="daily-challenge-state-icon daily-challenge-state-icon--error" aria-hidden="true">
+        <AlertIcon />
+      </div>
+      <h1 className="daily-challenge-state-title">Could not load challenge</h1>
+      <p className="daily-challenge-state-copy">Something went wrong. Please try again.</p>
+      <button type="button" onClick={onRetry} className="daily-challenge-state-button">
         Try again
       </button>
     </div>
-  </div>
+  </main>
 );
 
-// ─── Empty State ─────────────────────────────────────────────────
 const EmptyState: React.FC = () => (
-  <div className="flex min-h-screen items-center justify-center p-4 pb-24 md:pb-8 md:pl-24 lg:pl-72" role="status" aria-live="polite">
-    <div className="max-w-sm w-full text-center">
-      <div className="text-7xl mb-6" aria-hidden="true">🎯</div>
-      <h2 className="text-2xl font-black mb-2" style={{ color: DUO.text }}>
-        No challenge today
-      </h2>
-      <p className="mb-6" style={{ color: DUO.textLight }}>
-        Check back soon for a new daily challenge!
-      </p>
-      <Link to="/courses" className="duo-btn duo-btn--primary inline-flex max-w-xs">
+  <main className="daily-challenge-page daily-challenge-state" role="status" aria-live="polite">
+    <div className="daily-challenge-state-inner">
+      <div className="daily-challenge-state-icon daily-challenge-state-icon--empty" aria-hidden="true">
+        <TargetIcon />
+      </div>
+      <h1 className="daily-challenge-state-title">No challenge today</h1>
+      <p className="daily-challenge-state-copy">Check back soon for a new daily challenge.</p>
+      <Link to="/courses" className="daily-challenge-state-button daily-challenge-state-button--link">
         Start learning
       </Link>
     </div>
-  </div>
+  </main>
 );
 
-// ─── Main Component ───────────────────────────────────────────────
 export const DailyChallengePage: React.FC = () => {
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -258,9 +296,9 @@ export const DailyChallengePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen" style={{ background: '#F8F9FA' }}>
+      <main className="daily-challenge-page daily-challenge-loading-shell" aria-label="Daily Challenge">
         <LoadingSkeleton />
-      </div>
+      </main>
     );
   }
 
@@ -283,178 +321,141 @@ export const DailyChallengePage: React.FC = () => {
   const xpReward = isComplete ? 50 : 10;
 
   return (
-    <main className="min-h-screen pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all" aria-label="Daily Challenge">
-      {/* Skip link for keyboard users */}
-      <a
-        href="#challenge-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-0 focus:left-0 focus:z-50 focus:bg-white focus:px-4 focus:py-3 focus:text-green-700 focus:font-bold focus:rounded-br-lg focus:shadow-lg"
-      >
+    <main className="daily-challenge-page" aria-label="Daily Challenge">
+      <a href="#challenge-content" className="daily-challenge-skip-link">
         Skip to challenge content
       </a>
 
-      {/* Duolingo-style Header with Green Gradient */}
-      <div id="challenge-content" className="duo-header px-4 pt-6 pb-10" style={{ background: DUO.headerBg }}>
-        {/* Top Row: Title and Streak */}
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex-1">
-            <h1 className="text-3xl font-black text-white mb-1">
-              Daily Challenge
-            </h1>
-            <p className="text-white/90 text-sm">
-              Complete the challenge to earn your reward!
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={fetchChallenge}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-2 border-white/40 bg-white/20 text-white shadow-lg backdrop-blur-sm transition hover:bg-white/30 focus:outline-none focus-visible:ring-4 focus-visible:ring-white/60"
-              aria-label="Refresh challenge"
-              title="Refresh challenge"
-            >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-                <path
-                  d="M20 11a8.1 8.1 0 0 0-14.7-3L3 10m0 0V4m0 6h6M4 13a8.1 8.1 0 0 0 14.7 3L21 14m0 0v6m0-6h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                />
-              </svg>
-            </button>
-            <StreakBadge streak={streak} />
-          </div>
-        </div>
+      <header id="challenge-content" className="daily-challenge-header">
+        <div className="daily-challenge-header-layout">
+          <div className="daily-challenge-header-copy">
+            <div className="daily-challenge-heading-row">
+              <div className="daily-challenge-title-block">
+                <h1 className="daily-challenge-title">
+                  <span className="daily-challenge-title-mark" aria-hidden="true">
+                    <TargetIcon />
+                  </span>
+                  <span>Daily Challenge</span>
+                </h1>
+                <p className="daily-challenge-subtitle">
+                  Complete a small challenge and keep your learning streak alive.
+                </p>
+              </div>
 
-        {/* XP Counter */}
-        <div className="flex justify-center mb-6">
-          <XPCounter xp={xpReward} />
-        </div>
+              <div className="daily-challenge-header-tools">
+                <button
+                  type="button"
+                  onClick={fetchChallenge}
+                  disabled={isLoading}
+                  className="daily-challenge-refresh"
+                  aria-label="Refresh challenge"
+                  title="Refresh challenge"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M20 11a8.1 8.1 0 0 0-14.7-3L3 10m0 0V4m0 6h6M4 13a8.1 8.1 0 0 0 14.7 3L21 14m0 0v6m0-6h-6" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                  </svg>
+                </button>
+                <StreakBadge streak={streak} />
+              </div>
+            </div>
 
-        {/* Challenge Card */}
-        <div className={`duo-challenge-card p-6 ${isComplete ? 'duo-challenge-card--complete' : ''}`}>
-          {/* Challenge Icon */}
-          <div
-            className="w-20 h-20 rounded-2xl mx-auto mb-4 flex items-center justify-center text-4xl"
-            style={{ background: isComplete ? `${DUO.green}20` : `${DUO.yellow}20` }}
-            aria-hidden="true"
-          >
-            {isComplete ? '🏆' : '🎯'}
+            <div className="daily-challenge-xp-row">
+              <XPCounter xp={xpReward} />
+            </div>
           </div>
 
-          {/* Challenge Title */}
-          <h2 className="text-xl font-black text-center mb-3" style={{ color: DUO.text }}>
-            {challenge.title || 'Today\'s Challenge'}
-          </h2>
-
-          {/* Completion Badge */}
-          {isComplete && (
-            <div className="flex justify-center">
-              <div className="duo-complete-badge">
-                <span>✨</span>
+          <article className={`daily-challenge-hero-card ${isComplete ? 'daily-challenge-hero-card--complete' : ''}`}>
+            <div className="daily-challenge-hero-icon" aria-hidden="true">
+              {isComplete ? <TrophyIcon /> : <TargetIcon />}
+            </div>
+            <div className="daily-challenge-hero-copy">
+              <p className="daily-challenge-hero-overline">Today's focus</p>
+              <h2>{challenge.title || 'Today\'s Challenge'}</h2>
+              <p>{isComplete ? 'You made it happen. Take a moment to celebrate.' : 'One focused step is all it takes to move forward.'}</p>
+            </div>
+            {isComplete && (
+              <div className="daily-challenge-complete-badge" role="status">
+                <CheckIcon />
                 <span>Challenge Complete!</span>
               </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Content Area */}
-      <div className="px-4 sm:px-6 pt-5 space-y-5 max-w-lg mx-auto">
-        {/* Progress Section with Ring */}
-        <div className="duo-challenge-card p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="font-black text-lg" style={{ color: DUO.text }}>
-              Your Progress
-            </h3>
-            <span className="font-black text-base" style={{ color: isComplete ? DUO.green : DUO.red }}>
-              {progress}/{target}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-6">
-            {/* Progress Ring */}
-            <ProgressRing
-              progress={percent}
-              size={110}
-              isComplete={isComplete}
-            />
-
-            {/* Progress Details */}
-            <div className="flex-1 space-y-3">
-              {/* Progress Bar */}
-              <div
-                className="h-4 rounded-full overflow-hidden"
-                style={{ background: '#E8E8E8' }}
-                role="progressbar"
-                aria-valuenow={percent}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={`${percent}% of challenge completed`}
-              >
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${percent}%`,
-                    background: isComplete
-                      ? `linear-gradient(90deg, ${DUO.green}, #4CAF50)`
-                      : `linear-gradient(90deg, ${DUO.red}, #FF6B6B)`,
-                  }}
-                />
-              </div>
-
-              {/* Motivational Text */}
-              <p className="duo-motivational">
-                {isComplete ? (
-                  <>
-                    Great job! <span className="duo-motivational--highlight">Ready to claim your reward!</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="duo-motivational--highlight">{target - progress} more to go</span>
-                  </>
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Reward Card */}
-        <div className="relative">
-          <RewardCard
-            reward={challenge.reward || 'Mystery reward'}
-            isComplete={isComplete}
-          />
-          {isComplete && <CelebrationOverlay />}
-        </div>
-
-        {/* Action Buttons */}
-        <nav className="pt-3 space-y-3" aria-label="Challenge actions">
-          <Link
-            to="/courses"
-            className="duo-btn duo-btn--primary duo-focus"
-            aria-label="Go to Courses"
-          >
-            Go to Courses
-          </Link>
-          <Link
-            to="/progress"
-            className="duo-btn duo-btn--secondary duo-focus"
-            aria-label="View Progress"
-          >
-            View Progress
-          </Link>
-        </nav>
-
-        {/* Motivational Footer */}
-        <div className="text-center pt-4 pb-2">
-          <p className="duo-motivational text-sm">
-            {streak > 0 ? (
-              <>🔥 Keep your {streak}-day streak going!</>
-            ) : (
-              <>💪 Start your streak today!</>
             )}
+          </article>
+        </div>
+      </header>
+
+      <div className="daily-challenge-content">
+        <div className="daily-challenge-grid">
+          <section className="daily-challenge-progress-card" aria-labelledby="daily-challenge-progress-title">
+            <div className="daily-challenge-card-topline">
+              <div>
+                <h2 id="daily-challenge-progress-title">Your Progress</h2>
+                <p>Every small step counts.</p>
+              </div>
+              <span className={`daily-challenge-progress-count ${isComplete ? 'daily-challenge-progress-count--complete' : ''}`}>
+                {progress}/{target}
+              </span>
+            </div>
+
+            <div className="daily-challenge-progress-layout">
+              <ProgressRing progress={percent} size={110} isComplete={isComplete} />
+
+              <div className="daily-challenge-progress-details">
+                <div
+                  className="daily-challenge-progress-track"
+                  role="progressbar"
+                  aria-valuenow={percent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`${percent}% of challenge completed`}
+                >
+                  <div
+                    className={`daily-challenge-progress-fill ${isComplete ? 'daily-challenge-progress-fill--complete' : ''}`}
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+
+                <p className="daily-challenge-motivational">
+                  {isComplete ? (
+                    <>
+                      Great job. <span>Ready to claim your reward.</span>
+                    </>
+                  ) : (
+                    <span>{target - progress} more to go</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <div className="daily-challenge-reward-wrap">
+            <RewardCard reward={challenge.reward || 'Mystery reward'} isComplete={isComplete} />
+            {isComplete && <CelebrationOverlay />}
+          </div>
+
+          <nav className="daily-challenge-actions" aria-label="Challenge actions">
+            <Link to="/courses" className="daily-challenge-action-card daily-challenge-action-card--primary" aria-label="Go to Courses">
+              <span className="daily-challenge-action-icon" aria-hidden="true"><BookIcon /></span>
+              <span className="daily-challenge-action-copy">
+                <strong>Go to Courses</strong>
+                <small>Keep your momentum going</small>
+              </span>
+              <ArrowIcon className="daily-challenge-action-arrow" />
+            </Link>
+            <Link to="/progress" className="daily-challenge-action-card daily-challenge-action-card--secondary" aria-label="View Progress">
+              <span className="daily-challenge-action-icon" aria-hidden="true"><SparkleIcon /></span>
+              <span className="daily-challenge-action-copy">
+                <strong>View Progress</strong>
+                <small>See how far you have come</small>
+              </span>
+              <ArrowIcon className="daily-challenge-action-arrow" />
+            </Link>
+          </nav>
+        </div>
+
+        <div className="daily-challenge-footer-note">
+          <FlameIcon className="daily-challenge-footer-icon" />
+          <p>
+            {streak > 0 ? `Keep your ${streak}-day streak going.` : 'Start your streak today.'}
           </p>
         </div>
       </div>

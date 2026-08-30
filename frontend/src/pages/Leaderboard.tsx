@@ -1,6 +1,6 @@
 // src/pages/Leaderboard.tsx
 // Standalone Leaderboard page for learner app - route: /leaderboard
-// Duolingo-inspired design with trophy header, enhanced podium, and celebration elements
+// Vibrant claymorphism design with a trophy header, podium, and celebration elements
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
@@ -15,28 +15,33 @@ interface UserPosition {
     points: number;
 }
 
+const formatPoints = (points: number) => points.toLocaleString('en-US');
+
 // Trophy SVG Component
 const TrophyIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg aria-hidden="true" className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 8H44V16C44 24.8366 36.8366 32 28 32H36C36 32 32 32 28 32H20C11.1634 32 4 24.8366 4 16V8H20Z" fill="#FFD93D" stroke="#E5B800" strokeWidth="2"/>
+        <path d="M20 8H44V16C44 24.8366 36.8366 32 28 32H36C36 32 32 32 28 32H20C11.1634 32 4 24.8366 4 16V8H20Z" fill="var(--leaderboard-accent-coral)" stroke="var(--leaderboard-accent-coral-dark)" strokeWidth="2"/>
         <path d="M20 8H44V16C44 24.8366 36.8366 32 28 32H36C36 32 32 32 28 32H20C11.1634 32 4 24.8366 4 16V8H20Z" fill="url(#trophy-gradient)" />
-        <path d="M8 8H16V12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12V8Z" fill="#FFD93D"/>
-        <path d="M48 8H56V12C56 14.2091 54.2091 16 52 16C49.7909 16 48 14.2091 48 12V8Z" fill="#FFD93D"/>
-        <path d="M22 32H42V36H22V32Z" fill="#E5B800"/>
-        <path d="M24 36H40V44H24V36Z" fill="#FFD93D"/>
-        <path d="M28 44H36V48H28V44Z" fill="#E5B800"/>
-        <path d="M26 48H38V52H26V48Z" fill="#FFD93D" stroke="#E5B800" strokeWidth="2"/>
+        <path d="M8 8H16V12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12V8Z" fill="var(--leaderboard-accent-coral)"/>
+        <path d="M48 8H56V12C56 14.2091 54.2091 16 52 16C49.7909 16 48 14.2091 48 12V8Z" fill="var(--leaderboard-accent-coral)"/>
+        <path d="M22 32H42V36H22V32Z" fill="var(--leaderboard-accent-coral-dark)"/>
+        <path d="M24 36H40V44H24V36Z" fill="var(--leaderboard-accent-coral)"/>
+        <path d="M28 44H36V48H28V44Z" fill="var(--leaderboard-accent-coral-dark)"/>
+        <path d="M26 48H38V52H26V48Z" fill="var(--leaderboard-accent-coral)" stroke="var(--leaderboard-accent-coral-dark)" strokeWidth="2"/>
         <defs>
             <linearGradient id="trophy-gradient" x1="4" y1="8" x2="44" y2="32" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#FFE066"/>
-                <stop offset="1" stopColor="#FFD93D"/>
+                <stop stopColor="var(--leaderboard-accent-coral-soft)"/>
+                <stop offset="1" stopColor="var(--leaderboard-accent-coral)"/>
             </linearGradient>
         </defs>
     </svg>
 );
 
 // Star/Sparkle SVG for celebrations
-const SparkleIcon: React.FC<{ className?: string; color?: string }> = ({ className, color = '#FFD93D' }) => (
+const SparkleIcon: React.FC<{ className?: string; color?: string }> = ({
+    className,
+    color = 'var(--leaderboard-accent-coral)',
+}) => (
     <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill={color} xmlns="http://www.w3.org/2000/svg">
         <path d="M12 0L14.59 8.41L23 11L14.59 13.59L12 22L9.41 13.59L1 11L9.41 8.41L12 0Z"/>
     </svg>
@@ -47,10 +52,22 @@ type PodiumRank = 1 | 2 | 3;
 const RankMedalIcon: React.FC<{ rank: PodiumRank; className?: string }> = ({ rank, className = '' }) => {
     const label = rank === 1 ? '1st place medal' : rank === 2 ? '2nd place medal' : '3rd place medal';
     const colors = rank === 1
-        ? { ribbon: '#F59E0B', fill: '#FDE68A', stroke: '#B45309' }
+        ? {
+            ribbon: 'var(--leaderboard-accent-teal-dark)',
+            fill: 'var(--leaderboard-accent-teal-soft)',
+            stroke: 'var(--leaderboard-accent-teal-dark)',
+        }
         : rank === 2
-            ? { ribbon: '#94A3B8', fill: '#E2E8F0', stroke: '#475569' }
-            : { ribbon: '#C2410C', fill: '#FED7AA', stroke: '#9A3412' };
+            ? {
+                ribbon: 'var(--leaderboard-accent-purple-dark)',
+                fill: 'var(--leaderboard-accent-purple-soft)',
+                stroke: 'var(--leaderboard-accent-purple-dark)',
+            }
+            : {
+                ribbon: 'var(--leaderboard-accent-coral-dark)',
+                fill: 'var(--leaderboard-accent-coral-soft)',
+                stroke: 'var(--leaderboard-accent-coral-dark)',
+            };
 
     return (
         <span
@@ -107,11 +124,11 @@ const AlertIcon: React.FC<{ className?: string }> = ({ className }) => (
 // Crown SVG for 1st place
 const CrownIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg aria-hidden="true" className={className} viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 28H44L40 8L32 16L24 4L16 16L8 8L4 28Z" fill="#FFD93D" stroke="#E5B800" strokeWidth="2"/>
-        <circle cx="12" cy="10" r="3" fill="#FFD93D"/>
-        <circle cx="24" cy="6" r="3" fill="#FFD93D"/>
-        <circle cx="36" cy="10" r="3" fill="#FFD93D"/>
-        <rect x="4" y="28" width="40" height="4" rx="2" fill="#E5B800"/>
+        <path d="M4 28H44L40 8L32 16L24 4L16 16L8 8L4 28Z" fill="var(--leaderboard-accent-purple)" stroke="var(--leaderboard-accent-purple-dark)" strokeWidth="2"/>
+        <circle cx="12" cy="10" r="3" fill="var(--leaderboard-accent-purple-soft)"/>
+        <circle cx="24" cy="6" r="3" fill="var(--leaderboard-accent-purple-soft)"/>
+        <circle cx="36" cy="10" r="3" fill="var(--leaderboard-accent-purple-soft)"/>
+        <rect x="4" y="28" width="40" height="4" rx="2" fill="var(--leaderboard-accent-purple-dark)"/>
     </svg>
 );
 
@@ -169,7 +186,7 @@ const ErrorState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
     </div>
 );
 
-// Enhanced Top 3 Podium with Duolingo styling (memoized for performance)
+// Top 3 podium with kid-friendly claymorphism styling (memoized for performance)
 const TopThreePodium: React.FC<{ entries: LeaderboardEntry[]; currentUserId?: string }> = React.memo(({
     entries,
     currentUserId,
@@ -183,11 +200,11 @@ const TopThreePodium: React.FC<{ entries: LeaderboardEntry[]; currentUserId?: st
         <div className="leaderboard-podium-wrapper">
             {/* Celebration sparkles */}
             <div className="leaderboard-sparkles">
-                <SparkleIcon className="sparkle sparkle-1" color="#FFE066" />
-                <SparkleIcon className="sparkle sparkle-2" color="#FFD93D" />
-                <SparkleIcon className="sparkle sparkle-3" color="#FFCA28" />
-                <SparkleIcon className="sparkle sparkle-4" color="#FFE066" />
-                <SparkleIcon className="sparkle sparkle-5" color="#FFD93D" />
+                <SparkleIcon className="sparkle sparkle-1" color="var(--leaderboard-accent-coral-soft)" />
+                <SparkleIcon className="sparkle sparkle-2" color="var(--leaderboard-accent-teal)" />
+                <SparkleIcon className="sparkle sparkle-3" color="var(--leaderboard-accent-purple-soft)" />
+                <SparkleIcon className="sparkle sparkle-4" color="var(--leaderboard-accent-sky-soft)" />
+                <SparkleIcon className="sparkle sparkle-5" color="var(--leaderboard-accent-coral)" />
             </div>
 
             <div className="leaderboard-podium">
@@ -196,19 +213,19 @@ const TopThreePodium: React.FC<{ entries: LeaderboardEntry[]; currentUserId?: st
                     const isCurrentUser = entry.user_id === currentUserId;
                     const isFirst = actualRank === 1;
                     const isSecond = actualRank === 2;
-                    const isThird = actualRank === 3;
 
-                    // Duolingo-style colors
-                    const colors = {
-                        first: { bg: 'bg-gradient-to-b from-[#FFE066] to-[#FFD93D]', border: '#E5B800', text: '#1A2744' },
-                        second: { bg: 'bg-gradient-to-b from-[#E8E8E8] to-[#C0C0C0]', border: '#A0A0A0', text: '#1A2744' },
-                        third: { bg: 'bg-gradient-to-b from-[#FFCC99] to-[#CD7F32]', border: '#B87333', text: '#FFFFFF' },
-                    };
-                    const colorSet = isFirst ? colors.first : isSecond ? colors.second : colors.third;
                     const rankKey = isFirst ? 'first' : isSecond ? 'second' : 'third';
 
-                    const avatarSizes = { first: 'w-20 h-20', second: 'w-16 h-16', third: 'w-14 h-14' };
-                    const podiumHeights = { first: 'h-36', second: 'h-28', third: 'h-20' };
+                    const avatarSizes = {
+                        first: 'leaderboard-podium-avatar leaderboard-podium-avatar-first',
+                        second: 'leaderboard-podium-avatar leaderboard-podium-avatar-second',
+                        third: 'leaderboard-podium-avatar leaderboard-podium-avatar-third',
+                    };
+                    const podiumClasses = {
+                        first: 'leaderboard-podium-block-first',
+                        second: 'leaderboard-podium-block-second',
+                        third: 'leaderboard-podium-block-third',
+                    };
 
                     return (
                         <div
@@ -226,17 +243,13 @@ const TopThreePodium: React.FC<{ entries: LeaderboardEntry[]; currentUserId?: st
                             {/* Avatar with rank-specific styling */}
                             <div className={`leaderboard-avatar-container ${isFirst ? 'leaderboard-avatar-first' : ''}`}>
                                 <div
-                                    className={`rounded-full overflow-hidden border-4 ${isFirst ? 'ring-4 ring-[#FFE066] ring-offset-2' : ''}`}
-                                    style={{
-                                        borderColor: isSecond ? '#C0C0C0' : isThird ? '#CD7F32' : '#FFD93D',
-                                        boxShadow: isFirst ? '0 0 20px rgba(255, 217, 61, 0.5)' : 'none'
-                                    }}
+                                    className={`leaderboard-avatar-frame leaderboard-avatar-frame-${rankKey}`}
                                 >
-                                    <div className={`${avatarSizes[rankKey]} bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center overflow-hidden`}>
+                                    <div className={avatarSizes[rankKey]}>
                                         {entry.avatar_url ? (
                                             <img src={entry.avatar_url} alt={entry.username} className="w-full h-full object-cover" />
                                         ) : (
-                                            <UserAvatarIcon className="h-9 w-9 text-slate-400" />
+                                            <UserAvatarIcon className="leaderboard-avatar-fallback-icon" />
                                         )}
                                     </div>
                                 </div>
@@ -250,17 +263,16 @@ const TopThreePodium: React.FC<{ entries: LeaderboardEntry[]; currentUserId?: st
                             </div>
 
                             {/* Username */}
-                            <div className={`font-black text-sm mt-2 truncate max-w-[80px] ${isCurrentUser ? 'text-yellow-600' : 'text-slate-700'}`}>
+                            <div className={`leaderboard-podium-name ${isCurrentUser ? 'leaderboard-podium-name-current' : ''}`}>
                                 {entry.username}
                             </div>
 
                             {/* Podium block */}
                             <div
-                                className={`leaderboard-podium-block ${podiumHeights[rankKey]} rounded-t-3xl mt-3 flex flex-col items-center justify-end pb-4 ${colorSet.bg} border-t-4`}
-                                style={{ borderColor: colorSet.border }}
+                                className={`leaderboard-podium-block ${podiumClasses[rankKey]}`}
                             >
-                                <div className={`leaderboard-podium-points font-black ${isThird ? 'text-white' : colorSet.text}`}>
-                                    {entry.points.toLocaleString()} XP
+                                <div className="leaderboard-podium-points">
+                                    {formatPoints(entry.points)} XP
                                 </div>
                             </div>
                         </div>
@@ -278,17 +290,17 @@ const TopThreePodium: React.FC<{ entries: LeaderboardEntry[]; currentUserId?: st
     );
 });
 
-// Enhanced Leaderboard Row (memoized for list performance)
+// Leaderboard row (memoized for list performance)
 const LeaderboardRow: React.FC<{
     entry: LeaderboardEntry;
     position: number;
     isCurrentUser: boolean;
 }> = React.memo(({ entry, position, isCurrentUser }) => {
-    // Duolingo-style rank badges
+    // Keep rank styling semantic so the palette can evolve independently.
     const getRankBadge = () => {
-        if (position === 1) return 'leaderboard-rank-gold';
-        if (position === 2) return 'leaderboard-rank-silver';
-        if (position === 3) return 'leaderboard-rank-bronze';
+        if (position === 1) return 'leaderboard-rank-first';
+        if (position === 2) return 'leaderboard-rank-second';
+        if (position === 3) return 'leaderboard-rank-third';
         return 'leaderboard-rank-default';
     };
 
@@ -306,21 +318,19 @@ const LeaderboardRow: React.FC<{
             </div>
 
             {/* Avatar */}
-            <div className="relative shrink-0">
-                <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 ${
-                    isCurrentUser ? 'border-green-400 ring-2 ring-green-200' : 'border-white shadow'
-                }`}>
+            <div className="leaderboard-row-avatar-wrap">
+                <div className={`leaderboard-row-avatar-frame ${isCurrentUser ? 'leaderboard-row-avatar-frame-current' : ''}`}>
                     {entry.avatar_url ? (
                         <img src={entry.avatar_url} alt={entry.username} className="w-full h-full object-cover" />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-100 to-blue-100">
-                            <UserAvatarIcon className="h-7 w-7 text-slate-400" />
+                        <div className="leaderboard-row-avatar-fallback">
+                            <UserAvatarIcon className="leaderboard-avatar-fallback-icon leaderboard-avatar-fallback-icon-small" />
                         </div>
                     )}
                 </div>
                 {/* "You" indicator */}
                 {isCurrentUser && (
-                    <span className="absolute -bottom-1 -right-1 bg-green-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">
+                    <span className="leaderboard-you-badge">
                         YOU
                     </span>
                 )}
@@ -328,28 +338,28 @@ const LeaderboardRow: React.FC<{
 
             {/* Name and info */}
             <div className="flex-1 min-w-0">
-                <div className={`font-bold text-sm sm:text-base truncate ${isCurrentUser ? 'text-green-700' : 'text-slate-700'}`}>
+                <div className={`leaderboard-row-name ${isCurrentUser ? 'leaderboard-row-name-current' : ''}`}>
                     {entry.username}
                     {isCurrentUser && (
-                        <span className="ml-1 text-xs font-medium text-green-600">(You)</span>
+                        <span className="leaderboard-row-you-label">(You)</span>
                     )}
                 </div>
                 {isCurrentUser && (
-                    <div className="text-xs text-green-600 font-medium flex items-center gap-1">
-                        <SparkleIcon className="h-3.5 w-3.5" color="#16A34A" /> Your rank: #{entry.rank || position}
+                    <div className="leaderboard-row-detail">
+                        <SparkleIcon className="leaderboard-row-detail-icon" color="var(--leaderboard-accent-teal-dark)" /> Your rank: #{entry.rank || position}
                     </div>
                 )}
             </div>
 
-            {/* XP display with Duolingo styling */}
+            {/* XP display */}
             <div className="shrink-0 text-right">
                 <div className="leaderboard-xp">
-                    <SparkleIcon className="leaderboard-xp-icon" color="#F59E0B" />
-                    <span className="font-black text-base sm:text-lg text-yellow-600">
-                        {entry.points.toLocaleString()}
+                    <SparkleIcon className="leaderboard-xp-icon" color="var(--leaderboard-accent-coral)" />
+                    <span className="leaderboard-xp-value">
+                        {formatPoints(entry.points)}
                     </span>
                 </div>
-                <div className="text-[10px] text-slate-400 font-medium">XP</div>
+                <div className="leaderboard-xp-label">XP</div>
             </div>
         </div>
     );
@@ -470,19 +480,19 @@ export const Leaderboard: React.FC = () => {
     const pointsLabel = timeFilter === 'all' ? 'Total XP' : timeFilter === 'weekly' ? 'Weekly XP' : 'Daily XP';
 
     return (
-        <div className="min-h-screen pb-24 md:pb-8 md:pl-24 lg:pl-72">
+        <div className="leaderboard-page min-h-screen">
             {/* Duolingo-inspired Trophy Header */}
             <div className="leaderboard-header">
                 {/* Decorative elements */}
                 <div className="leaderboard-header-decoration leaderboard-header-decoration-left" aria-hidden="true">
-                    <SparkleIcon className="w-6 h-6 animate-pulse" color="#FFE066" />
+                    <SparkleIcon className="w-6 h-6 animate-pulse" color="var(--leaderboard-accent-coral-soft)" />
                 </div>
                 <div className="leaderboard-header-decoration leaderboard-header-decoration-right" aria-hidden="true">
-                    <SparkleIcon className="w-4 h-4 animate-pulse" color="#FFE066" />
+                    <SparkleIcon className="w-4 h-4 animate-pulse" color="var(--leaderboard-accent-teal-soft)" />
                 </div>
 
                 <div className="leaderboard-header-content">
-                        <div className="flex items-center gap-4">
+                    <div className="leaderboard-heading">
                         {/* Lexi mascot */}
                         <div className="leaderboard-mascot-container">
                             <CodexPetSprite
@@ -526,16 +536,16 @@ export const Leaderboard: React.FC = () => {
                                 #{userPosition.rank}
                             </div>
                             <div className="flex-1">
-                                <div className="font-bold text-slate-700">Your Ranking</div>
-                                <div className="text-sm text-slate-500 flex items-center gap-1">
-                                    <SparkleIcon className="h-3.5 w-3.5" color="#F59E0B" /> Keep learning to climb!
+                                <div className="leaderboard-user-title">Your Ranking</div>
+                                <div className="leaderboard-user-detail">
+                                    <SparkleIcon className="leaderboard-user-detail-icon" color="var(--leaderboard-accent-coral)" /> Keep learning to climb!
                                 </div>
                             </div>
                             <div className="text-right">
                                 <div className="leaderboard-user-xp">
-                                    {userPosition.points.toLocaleString()}
+                                    {formatPoints(userPosition.points)}
                                 </div>
-                                <div className="text-xs text-slate-400">{pointsLabel}</div>
+                                <div className="leaderboard-user-xp-label">{pointsLabel}</div>
                             </div>
                         </div>
                     </div>
