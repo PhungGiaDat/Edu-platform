@@ -55,6 +55,10 @@ export const LearnAR8thWall: React.FC = () => {
   const scannerRef = useRef<HTMLIFrameElement>(null);
   // Viewer iframe ref
   const viewerRef = useRef<HTMLIFrameElement>(null);
+  // Captured at SCANNER_READY — the live contentWindow of the scanner iframe.
+  // We store this because scannerRef.current can become stale after React
+  // re-renders (React may recycle the iframe element while keeping the ref).
+  const scannerReadyWindowRef = useRef<Window | null>(null);
   // Retry timer for RELEASE_CAMERA postMessage (cleared on SCANNER_CAMERA_RELEASED)
   const releaseRetryRef = useRef<number | null>(null);
 
@@ -115,12 +119,22 @@ export const LearnAR8thWall: React.FC = () => {
   }, [syncTelegram]);
 
   // ========================================================================
-  // LISTEN: QR_DETECTED from scanner iframe
+  // MESSAGE HANDLER — single handler for all iframe messages
+  // CRITICAL: we capture scannerReadyWindowRef at the moment we receive ANY
+  // message from the scanner iframe. This is the window we're talking to.
+  // Using a stale contentWindow after React re-render is the root cause of
+  // the RELEASE_CAMERA deadlock.
   // ========================================================================
   useEffect(() => {
-    const handler = async (event: MessageEvent) => {
+    const handler = (event: MessageEvent) => {
       const data = event.data;
       if (!data || typeof data.type !== 'string') return;
+
+      // Capture the source window from ANY scanner message.
+      // This is the live contentWindow we must use for all postMessage calls.
+      if (event.source && event.source !== window) {
+        scannerReadyWindowRef.current = event.source as Window;
+      }
 
       // Log all incoming messages for debugging
       console.log('[LearnAR8thWall:message]', data.type, data);
@@ -131,18 +145,21 @@ export const LearnAR8thWall: React.FC = () => {
         return;
       }
 
-      // Orchestrator: wait for camera release before mounting viewer
+      // SCANNER_READY: scanner has initialized camera. Capture its window.
+      if (data.type === 'SCANNER_READY') {
+        if (event.source) scannerReadyWindowRef.current = event.source as Window;
+        trace('SCANNER_READY', `Scanner camera ready at ${data.width}x${data.height}`);
+        return;
+      }
+
+      // SCANNER_CAMERA_RELEASED: scanner has released camera. Mount viewer.
       if (data.type === 'SCANNER_CAMERA_RELEASED') {
         console.log('[LearnAR8thWall] Scanner camera released — mounting viewer');
         trace('SCANNER_CAMERA_RELEASED', 'Camera released, transitioning to XR_BOOTING');
-        // Clear any pending retry timer — release succeeded.
         if (releaseRetryRef.current) {
           clearTimeout(releaseRetryRef.current);
           releaseRetryRef.current = null;
         }
-        // Move to XR_BOOTING — this mounts the viewer iframe.
-        // The XR engine will boot inside it; we only go to VIEWING once
-        // we receive XR_CAMERA_HAS_VIDEO from the viewer.
         setPhase('XR_BOOTING');
         trace('XR_BOOTING', 'ar-xr.html iframe loading, XR engine initializing...');
         return;
@@ -151,13 +168,11 @@ export const LearnAR8thWall: React.FC = () => {
       if (data.type !== 'QR_DETECTED') return;
 
       // Scanner sends: { type: 'QR_DETECTED', qrId: 'cat001', timestamp: ... }
-      // Some senders nest it in payload — handle both shapes.
       const qrId = data.qrId || data.payload?.qrId;
       if (!qrId) return;
 
       console.log('[LearnAR8thWall] QR detected:', qrId);
 
-      // Prevent re-scanning the same card in this session
       if (foundCards.has(qrId)) {
         trace('QR_DUPLICATE', `Already scanned: ${qrId}`);
         return;
@@ -170,105 +185,83 @@ export const LearnAR8thWall: React.FC = () => {
 
       trace('QR_DETECTED_PARENT', `QR=${qrId} → PHASE=LOADING_TARGET`);
 
-      try {
-        // Fetch XR target data for this specific QR
-        const res = await fetch(`${API_BASE}/api/v1/flashcard/${qrId}/xr-urls`);
-        if (!res.ok) throw new Error(`API error: ${res.status}`);
+      // Use the captured live window from the event source, not scannerRef.
+      // scannerRef.current may be stale after setPhase re-render.
+      const liveWin = scannerReadyWindowRef.current;
+      trace('WINDOW_CAPTURED', JSON.stringify({
+        liveWinExists: !!liveWin,
+        capturedFrom: data.type,
+      }));
 
-        const raw = await res.json();
-        trace('API_RESPONSE', JSON.stringify(raw).substring(0, 200));
-
-        // Build XRTarget from API response
-        const target: XRTarget = {
-          qr_id: qrId,
-          word: raw.word || qrId.replace('001', ''),
-          // 8th Wall needs the compiled target JSON (from Supabase)
-          xr_target_json_url: raw.tracking_target?.xr_target_json_url || raw.xr_target_json_url,
-          xr_target_image_url: raw.tracking_target?.xr_target_image_url || raw.xr_target_image_url,
-          model_3d_url: raw.target?.model_3d_url || raw.model_3d_url,
-          texture_url: raw.target?.texture_url || raw.texture_url,
-          animations: raw.target?.animations || raw.animations,
-          default_animation: raw.target?.default_animation || raw.default_animation || 'IDLE',
-          combo_animation: raw.target?.combo_animation || raw.combo_animation,
-          position: raw.target?.position || '0 0 0',
-          rotation: raw.target?.rotation || '0 0 0',
-          scale: raw.target?.scale || '1 1 1',
-        };
-
-        trace('XR_TARGET_BUILT', JSON.stringify(target).substring(0, 300));
-
-        if (!target.xr_target_json_url && !target.xr_target_image_url) {
-          throw new Error(`No XR target URL for: ${qrId}`);
-        }
-
-        // Store target — do NOT transition phase yet.
-        // Scanner stays alive throughout LOADING_TARGET and RELEASING_CAMERA.
-        setCurrentTarget(target);
-        setFoundCards(prev => new Set([...prev, qrId]));
-
-        // Orchestrator step 2: transition to RELEASING_CAMERA
-        // Scanner iframe stays mounted so we can send RELEASE_CAMERA to it.
-        setPhase('RELEASING_CAMERA');
-        trace('RELEASING_CAMERA', 'Camera release in progress...');
-
-        // Orchestrator step 3: tell scanner to release camera BEFORE XR starts
-        // CRITICAL on iOS Safari — 8th Wall needs sole camera access.
-        // We try two lookup paths because the scannerRef can be stale after a
-        // React re-render or Strict Mode mount cycle:
-        //   1) scannerRef.current.contentWindow (the ref attached via JSX)
-        //   2) window.frames['scanner-iframe'] (the named iframe)
-        // Whichever resolves first wins; we log both for diagnostics.
-        const refWin = scannerRef.current?.contentWindow;
-        const namedWin = (() => {
-          try { return window.frames['scanner-iframe']; } catch { return null; }
-        })();
-        const scannerWindow = refWin || namedWin;
-
-        trace('CAMERA_RELEASE_SEND_ATTEMPT', JSON.stringify({
-          scannerRefExists: !!scannerRef.current,
-          refContentWindowExists: !!refWin,
-          namedFrameExists: !!namedWin,
-          sameRefAsNamed: refWin === namedWin,
-          refEqualsNamedFrame: scannerRef.current === (namedWin && (namedWin as any).frameElement),
-        }));
-
-        if (!scannerWindow) {
-          trace('CAMERA_RELEASE_SEND_FAILED', 'Both ref and named frame are null');
-          throw new Error('Cannot release camera: scanner iframe already unmounted');
-        }
-
-        scannerWindow.postMessage({ type: 'RELEASE_CAMERA' }, '*');
-        trace('CAMERA_RELEASE_REQUESTED', 'RELEASE_CAMERA actually posted');
-
-        // Retry safety net: iOS Safari may suspend idle iframes, dropping
-        // the first postMessage. Retry up to 3 times with 500ms backoff.
-        // Once SCANNER_CAMERA_RELEASED arrives, we clear the retry timer
-        // (handled in the message handler via releaseRetryRef).
-        if (releaseRetryRef.current) clearTimeout(releaseRetryRef.current);
-        let attempts = 0;
-        const sendReleaseWithRetry = () => {
-          attempts += 1;
-          const refW = scannerRef.current?.contentWindow;
-          const namedW = (() => {
-            try { return window.frames['scanner-iframe']; } catch { return null; }
-          })();
-          const w = refW || namedW;
-          if (!w) return; // scanner unmounted — release already succeeded
-          if (attempts > 3) {
-            trace('CAMERA_RELEASE_RETRY_EXHAUSTED', `${attempts - 1} retries failed`);
-            return;
-          }
-          w.postMessage({ type: 'RELEASE_CAMERA' }, '*');
-          trace('CAMERA_RELEASE_RETRY', `attempt ${attempts}/3 via ${refW ? 'ref' : 'namedFrame'}`);
-          releaseRetryRef.current = window.setTimeout(sendReleaseWithRetry, 500);
-        };
-        releaseRetryRef.current = window.setTimeout(sendReleaseWithRetry, 500);
-
-      } catch (err) {
-        trace('API_ERROR', String(err));
-        setScanError(err instanceof Error ? err.message : 'Failed to load XR target');
+      if (!liveWin) {
+        trace('WINDOW_CAPTURE_FAILED', 'No live window captured from scanner messages');
+        setScanError('Scanner window lost during re-render');
         setPhase('ERROR');
+        return;
       }
+
+      (async () => {
+        try {
+          const res = await fetch(`${API_BASE}/api/v1/flashcard/${qrId}/xr-urls`);
+          if (!res.ok) throw new Error(`API error: ${res.status}`);
+
+          const raw = await res.json();
+          trace('API_RESPONSE', JSON.stringify(raw).substring(0, 200));
+
+          const target: XRTarget = {
+            qr_id: qrId,
+            word: raw.word || qrId.replace('001', ''),
+            xr_target_json_url: raw.tracking_target?.xr_target_json_url || raw.xr_target_json_url,
+            xr_target_image_url: raw.tracking_target?.xr_target_image_url || raw.xr_target_image_url,
+            model_3d_url: raw.target?.model_3d_url || raw.model_3d_url,
+            texture_url: raw.target?.texture_url || raw.texture_url,
+            animations: raw.target?.animations || raw.animations,
+            default_animation: raw.target?.default_animation || raw.default_animation || 'IDLE',
+            combo_animation: raw.target?.combo_animation || raw.combo_animation,
+            position: raw.target?.position || '0 0 0',
+            rotation: raw.target?.rotation || '0 0 0',
+            scale: raw.target?.scale || '1 1 1',
+          };
+
+          trace('XR_TARGET_BUILT', JSON.stringify(target).substring(0, 300));
+
+          if (!target.xr_target_json_url && !target.xr_target_image_url) {
+            throw new Error(`No XR target URL for: ${qrId}`);
+          }
+
+          setCurrentTarget(target);
+          setFoundCards(prev => new Set([...prev, qrId]));
+
+          // Orchestrator step 2: send RELEASE_CAMERA via the captured live window
+          setPhase('RELEASING_CAMERA');
+          trace('RELEASING_CAMERA', 'Sending RELEASE_CAMERA via captured live window');
+
+          liveWin.postMessage({ type: 'RELEASE_CAMERA' }, '*');
+          trace('CAMERA_RELEASE_REQUESTED', 'RELEASE_CAMERA sent');
+
+          // Retry safety net
+          if (releaseRetryRef.current) clearTimeout(releaseRetryRef.current);
+          let attempts = 0;
+          const sendReleaseWithRetry = () => {
+            attempts += 1;
+            const win = scannerReadyWindowRef.current;
+            if (!win) return;
+            if (attempts > 3) {
+              trace('CAMERA_RELEASE_RETRY_EXHAUSTED', `${attempts - 1} retries failed`);
+              return;
+            }
+            win.postMessage({ type: 'RELEASE_CAMERA' }, '*');
+            trace('CAMERA_RELEASE_RETRY', `attempt ${attempts}/3`);
+            releaseRetryRef.current = window.setTimeout(sendReleaseWithRetry, 500);
+          };
+          releaseRetryRef.current = window.setTimeout(sendReleaseWithRetry, 500);
+
+        } catch (err) {
+          trace('API_ERROR', String(err));
+          setScanError(err instanceof Error ? err.message : 'Failed to load XR target');
+          setPhase('ERROR');
+        }
+      })();
     };
 
     window.addEventListener('message', handler);
