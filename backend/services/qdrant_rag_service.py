@@ -5,6 +5,7 @@ import hashlib
 import uuid
 from typing import Any, Optional, Sequence
 
+import re
 from qdrant_client import QdrantClient, models
 
 from settings import settings
@@ -14,6 +15,59 @@ from services.llm_clients import CircuitBreaker, CircuitOpenError
 
 class QdrantRAGUnavailable(RuntimeError):
     """Raised when Qdrant retrieval cannot safely be used."""
+
+
+ANIMAL_VI_EN: dict[str, str] = {
+    "mèo": "cat", "meo": "cat", "con mèo": "cat",
+    "chó": "dog", "cho": "dog", "con chó": "dog",
+    "voi": "elephant", "con voi": "elephant",
+    "chim": "bird", "con chim": "bird",
+    "cá": "fish", "ca": "fish", "con cá": "fish",
+    "gà": "chicken", "con gà": "chicken",
+    "vịt": "duck", "con vịt": "duck",
+    "ngựa": "horse", "con ngựa": "horse",
+    "bò": "cow", "con bò": "cow",
+    "heo": "pig", "lợn": "pig", "con heo": "pig",
+    "thỏ": "rabbit", "con thỏ": "rabbit",
+    "sư tử": "lion", "con sư tử": "lion",
+    "hổ": "tiger", "con hổ": "tiger",
+    "gấu": "bear", "con gấu": "bear",
+    "khỉ": "monkey", "con khỉ": "monkey",
+    "ếch": "frog", "con ếch": "frog",
+    "rắn": "snake", "con rắn": "snake",
+    "cá voi": "whale", "cá heo": "dolphin",
+    "vẹt": "parrot", "con vẹt": "parrot",
+    "sói": "wolf", "hươu": "deer", "tê giác": "rhino",
+    "cá sấu": "crocodile", "rùa": "turtle", "cua": "crab",
+    "ong": "bee", "bướm": "butterfly", "kiến": "ant",
+}
+
+
+def extract_english_terms(query: str) -> list[str]:
+    lowered = query.lower()
+    english_terms: list[str] = []
+    for vi_term, en_term in ANIMAL_VI_EN.items():
+        # Word-boundary match so "cats"/"class" never trigger "ca" (cá/fish)
+        pattern = rf"(?<!\w){re.escape(vi_term)}(?!\w)"
+        if re.search(pattern, lowered) and en_term not in english_terms:
+            english_terms.append(en_term)
+    return english_terms
+
+
+def expand_vietnamese_animal_query(query: str) -> str:
+    """
+    Append English animal names for Vietnamese terms found in the query.
+
+    all-MiniLM-L6-v2 is English-only: a Vietnamese question like "con mèo"
+    embeds far from the English corpus (~0.13 vs ~0.44 for "cat"), which
+    returned 0 documents for kid questions in their own language. The
+    lexicon covers the animal corpus; unknown terms embed unchanged.
+    Deterministic, zero-latency, no extra LLM call.
+    """
+    english_terms = extract_english_terms(query)
+    if not english_terms:
+        return query
+    return f"{query} {', '.join(english_terms)}"
 
 
 class QdrantRAGService:
@@ -67,6 +121,16 @@ class QdrantRAGService:
         if not query.strip():
             return []
 
+        expanded_query = expand_vietnamese_animal_query(query)
+        en_terms = extract_english_terms(query)
+        query_texts = [expanded_query]
+        if en_terms:
+            en_only = ", ".join(en_terms)
+            if en_only != expanded_query:
+                # Pure-English signal: short queries embed much closer to the
+                # English corpus than long bilingual sentences.
+                query_texts.append(en_only)
+
         query_filter = models.Filter(
             must=[
                 models.FieldCondition(
@@ -76,12 +140,15 @@ class QdrantRAGService:
             ]
         )
         try:
-            response = await self._breaker.acall(
-                asyncio.to_thread,
-                self._call_qdrant,
-                query,
-                query_filter,
-            )
+            all_points = []
+            for qtext in query_texts:
+                response = await self._breaker.acall(
+                    asyncio.to_thread,
+                    self._call_qdrant,
+                    qtext,
+                    query_filter,
+                )
+                all_points.extend(response.points)
         except CircuitOpenError:
             raise QdrantRAGUnavailable("Qdrant circuit breaker is open — skipping retrieval")
         except QdrantRAGUnavailable:
@@ -91,7 +158,7 @@ class QdrantRAGService:
 
         context: list[dict[str, Any]] = []
         seen_groups: set[str] = set()
-        for point in response.points:
+        for point in all_points:
             payload = dict(point.payload or {})
             if payload.get("safety_label") != "clean":
                 continue

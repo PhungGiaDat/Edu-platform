@@ -326,3 +326,35 @@ def test_verify_document_ids_sanitizes_client_errors(configured_settings):
 
     with pytest.raises(QdrantRAGUnavailable, match="^Qdrant verification failed$"):
         QdrantRAGService(client=client).verify_document_ids([document().point_id])
+
+
+# --- Vietnamese animal query expansion (cross-lingual retrieval fix) ------
+from services.qdrant_rag_service import (  # noqa: E402
+    expand_vietnamese_animal_query,
+    extract_english_terms,
+)
+
+
+def test_expand_appends_english_for_vietnamese_animal():
+    assert expand_vietnamese_animal_query("con mèo").endswith("cat")
+    assert expand_vietnamese_animal_query("chó").endswith("dog")
+    assert expand_vietnamese_animal_query("con voi").endswith("elephant")
+
+
+def test_expand_multi_term_sentence():
+    expanded = expand_vietnamese_animal_query("so sánh con mèo và con chó")
+    assert "cat" in expanded and "dog" in expanded
+    assert expanded.startswith("so sánh con mèo và con chó")
+
+
+def test_expand_english_query_unchanged():
+    assert expand_vietnamese_animal_query("tell me about cats") == "tell me about cats"
+
+
+def test_extract_english_terms_dedupes_and_orders():
+    terms = extract_english_terms("con mèo đuổi con chó và con mèo con")
+    assert terms.count("cat") == 1 and "dog" in terms
+
+
+def test_extract_unknown_terms_empty():
+    assert extract_english_terms("kể chuyện cổ tích") == []
