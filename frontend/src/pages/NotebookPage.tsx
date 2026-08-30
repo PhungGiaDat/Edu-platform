@@ -3,6 +3,7 @@
  * Web screen for viewing and managing saved vocabulary
  */
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { notebookApi, type NotebookListResponse, type DueCardsResponse } from '../services/notebookApi';
 import type { NotebookEntry, VocabularyTopic } from '../types/notebook';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,6 +32,8 @@ interface NotebookPageProps {
 
 export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const handlePractice = onNavigateToFlashcards ?? (() => navigate('/flashcards'));
   const [entries, setEntries] = useState<NotebookEntry[]>([]);
   const [topics, setTopics] = useState<VocabularyTopic[]>([]);
   const [loading, setLoading] = useState(true);
@@ -191,7 +194,7 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
                 backgroundColor: colors.warmWhite,
                 boxShadow: shadows.clay,
               }}
-              onClick={onNavigateToFlashcards}
+              onClick={handlePractice}
             >
               <div className="flex items-center gap-3">
                 <div
@@ -208,7 +211,7 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
                     {dueCards.count} từ cần xem lại ngay
                   </p>
                 </div>
-                <Button size="sm" variant="primary">
+                <Button size="sm" variant="primary" onClick={handlePractice}>
                   Luyện tập
                 </Button>
               </div>

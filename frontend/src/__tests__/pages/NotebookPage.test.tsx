@@ -6,7 +6,8 @@
  * default here.
  */
 import '@testing-library/jest-dom/vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NotebookPage } from '../../pages/NotebookPage';
@@ -24,10 +25,42 @@ const entry = {
   created_at: '2026-08-01T00:00:00Z',
 } as never;
 
-const renderPage = () => render(
-  <AuthContext.Provider value={mockAuth}><NotebookPage /></AuthContext.Provider>
+const renderPage = (withProbe = false) => render(
+  <MemoryRouter initialEntries={['/notebook']}>
+    <Routes>
+      <Route path='/notebook' element={<AuthContext.Provider value={mockAuth}><NotebookPage /></AuthContext.Provider>} />
+      {withProbe && <Route path='/flashcards' element={<div>flashcards-probe</div>} />}
+    </Routes>
+  </MemoryRouter>
 );
 
+describe('NotebookPage — practice navigation', () => {
+  const practiceEntry = {
+    id: 'p1', user_id: 'u1', word: 'sunflower', translation_vi: 'hoa huong duong',
+    source: 'word_lookup', review_count: 0, ease_factor: 2.5, interval_days: 0,
+    created_at: '2026-08-30T00:00:00Z',
+  } as never;
+
+  beforeEach(() => {
+    const fetchSpy = vi.fn().mockResolvedValue({ json: async () => ({ items: [] }) });
+    vi.stubGlobal('fetch', fetchSpy);
+    vi.mocked(notebookApi.list).mockResolvedValue({
+      items: [practiceEntry], total: 1, page: 1, per_page: 50, total_pages: 1,
+    });
+    vi.mocked(notebookApi.getDueCards).mockResolvedValue({ items: [], count: 2 });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('navigates to /flashcards from the due-cards banner button', async () => {
+    renderPage(true);
+    await screen.findByText('sunflower');
+    fireEvent.click(screen.getByRole('button', { name: /Luy/i }));
+    expect(screen.getByText('flashcards-probe')).toBeInTheDocument();
+  });
+});
 describe('NotebookPage — entry detail', () => {
   let fetchSpy: ReturnType<typeof vi.fn>;
 
@@ -39,7 +72,7 @@ describe('NotebookPage — entry detail', () => {
     vi.mocked(notebookApi.list).mockResolvedValue({
       items: [entry], total: 1, page: 1, per_page: 50, total_pages: 1,
     });
-    vi.mocked(notebookApi.getDueCards).mockResolvedValue({ items: [], count: 0 });
+    vi.mocked(notebookApi.getDueCards).mockResolvedValue({ items: [], count: 2 });
   });
 
   afterEach(() => {
