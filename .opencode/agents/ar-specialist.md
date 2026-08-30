@@ -1,7 +1,7 @@
 ---
 description: AR specialist for MindAR WebAR with multi-target tracking, event-driven React integration, and AR state machines
 mode: subagent
-model: github-copilot/gpt-5.2-codex
+model: bai/deepseek-v4-flash
 temperature: 0.3
 tools:
   read: true

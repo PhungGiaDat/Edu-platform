@@ -1,7 +1,7 @@
 ---
 description: Team orchestrator that coordinates SDLC agents and manages development workflow
 mode: primary
-model: github-copilot/gpt-5.2-codex
+model: bai/glm-5.3-flash
 temperature: 0.3
 tools:
   write: true

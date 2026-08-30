@@ -2,7 +2,7 @@
 name: documentation-writer
 description: Expert in technical documentation. Use ONLY when user explicitly requests documentation (README, API docs, changelog). DO NOT auto-invoke during normal development.
 mode: subagent
-model: github-copilot/GPT-5.4-mini
+model: bai/mimo-v2.5
 temperature: 0.3
 tools:
   write: true

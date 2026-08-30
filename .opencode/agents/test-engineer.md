@@ -1,7 +1,7 @@
 ---
 description: Research specialist for investigating technologies, debugging issues, and gathering information
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/deepseek-v4-flash
 temperature: 0.3
 tools:
   write: true

@@ -1,7 +1,7 @@
 ---
 description: Strategic planner for requirements gathering, architecture design, and project planning
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/glm-5.3-flash
 temperature: 0.3
 tools:
   write: true

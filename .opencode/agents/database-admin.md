@@ -1,7 +1,7 @@
 ---
 description: Use this agent when you need to work with database systems, including querying for data analysis, diagnosing performance bottlenecks, optimizing database structures, managing indexes, implementing backup and restore strategies, setting up replication, configuring monitoring, managing user permissions, or when you need comprehensive database health assessments and optimization recommendations.
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/deepseek-v4-flash
 temperature: 0.3
 tools:
   write: true

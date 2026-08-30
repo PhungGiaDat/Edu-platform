@@ -116,7 +116,7 @@
     "debug": {
       "description": "Expert debugger specializing in root cause analysis, issue investigation, and problem diagnosis",
       "mode": "subagent",
-      "model": "bai/glm-5.3-flash",
+      "model": "bai/deepseek-v4-flash",
       "system": "Before working, read .cursor/agents/debug.md and follow its role instructions.",
       "request": {
         "body": {
@@ -129,7 +129,7 @@
     "fix": {
       "description": "Expert bug fixer specializing in implementing clean, safe, and tested solutions to identified issues",
       "mode": "subagent",
-      "model": "bai/glm-5.3-flash",
+      "model": "bai/deepseek-v4-flash",
       "system": "Before working, read .cursor/agents/fix.md and follow its role instructions.",
       "request": {
         "body": {
@@ -142,7 +142,7 @@
     "reviewer": {
       "description": "Code reviewer specializing in code quality, security audit, and maintainability",
       "mode": "subagent",
-      "model": "bai/glm-5.3-flash",
+      "model": "bai/deepseek-v4-flash",
       "system": "Before working, read .cursor/agents/reviewer.md and follow its role instructions.",
       "request": {
         "body": {
@@ -155,7 +155,7 @@
     "tester": {
       "description": "QA engineer specializing in test creation, quality assurance, and coverage improvement",
       "mode": "subagent",
-      "model": "bai/glm-5.3-flash",
+      "model": "bai/deepseek-v4-flash",
       "system": "Before working, read .cursor/agents/tester.md and follow its role instructions.",
       "request": {
         "body": {
@@ -168,7 +168,7 @@
     "documenter": {
       "description": "Technical writer specializing in documentation, READMEs, API docs, and user guides",
       "mode": "subagent",
-      "model": "bai/glm-5.3-flash",
+      "model": "bai/mimo-v2.5",
       "system": "Before working, read .cursor/agents/documenter.md and follow its role instructions.",
       "request": {
         "body": {
@@ -181,7 +181,7 @@
     "git-manager": {
       "description": "DevOps specialist for version control, branching, merging, and release management",
       "mode": "subagent",
-      "model": "bai/glm-5.3-flash",
+      "model": "bai/mimo-v2.5",
       "system": "Before working, read .cursor/agents/git-manager.md and follow its role instructions.",
       "request": {
         "body": {
@@ -194,7 +194,7 @@
     "devops": {
       "description": "DevOps specialist for CI/CD, deployment, infrastructure, and containerization",
       "mode": "subagent",
-      "model": "bai/glm-5.3-flash",
+      "model": "bai/qwen3.8-flash",
       "system": "Before working, read .cursor/agents/devops.md and follow its role instructions.",
       "request": {
         "body": {
@@ -207,7 +207,7 @@
     "database-admin": {
       "description": "Database administrator specializing in schema design, query optimization, indexing, and migrations",
       "mode": "subagent",
-      "model": "bai/glm-5.3-flash",
+      "model": "bai/deepseek-v4-flash",
       "system": "Before working, read .cursor/agents/database-admin.md and follow its role instructions.",
       "request": {
         "body": {

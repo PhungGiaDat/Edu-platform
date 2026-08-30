@@ -1,7 +1,7 @@
 ---
 description: Performance optimization specialist for profiling, Core Web Vitals, and runtime efficiency
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/deepseek-v4-flash
 temperature: 0.3
 tools:
   read: true

@@ -1,7 +1,7 @@
 ---
 description: Git operations specialist for version control, branching strategies, and repository management
 mode: subagent
-model: GPT-5.4-mini
+model: bai/mimo-v2.5
 temperature: 0.1
 tools:
   write: false

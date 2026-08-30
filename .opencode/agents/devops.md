@@ -1,7 +1,7 @@
 ---
 description: DevOps specialist for CI/CD, deployment, infrastructure, and cloud operations
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/qwen3.8-flash
 temperature: 0.2
 tools:
   write: true

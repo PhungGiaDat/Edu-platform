@@ -1,7 +1,7 @@
 ---
 description: Game development across PC, Web, Mobile, and VR/AR with engine selection, gameplay systems, performance, and multiplayer patterns
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/qwen3.8-flash
 temperature: 0.3
 tools:
   read: true

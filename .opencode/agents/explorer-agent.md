@@ -1,7 +1,7 @@
 ---
 description: Codebase discovery and architectural analysis specialist for audits, refactors, and deep investigations
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/qwen3.8-flash
 temperature: 0.3
 tools:
   read: true

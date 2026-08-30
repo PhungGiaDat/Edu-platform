@@ -1,7 +1,7 @@
 ---
 description: Expert debugger specializing in root cause analysis, issue investigation, and problem diagnosis
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/deepseek-v4-flash
 temperature: 0.1
 tools:
   write: true

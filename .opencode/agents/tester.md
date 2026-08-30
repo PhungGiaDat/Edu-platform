@@ -1,7 +1,7 @@
 ---
 description: QA engineer specializing in test creation, test strategy, and quality assurance
 mode: subagent
-model: github-copilot/GPT-5.4-mini
+model: bai/deepseek-v4-flash
 temperature: 0.2
 tools:
   write: true

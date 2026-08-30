@@ -530,3 +530,6 @@ supabase/
 
 # Fix diffs
 fix-*.diff
+
+# macOS junk
+.DS_Store

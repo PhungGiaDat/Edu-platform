@@ -1,7 +1,7 @@
 ---
 description: Strategic facilitator bridging business needs and technical execution with requirements, roadmap, and backlog ownership
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/glm-5.3-flash
 temperature: 0.3
 tools:
   read: true

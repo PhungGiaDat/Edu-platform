@@ -1,7 +1,7 @@
 ---
 description: Expert bug fixer specializing in implementing clean, safe, and tested solutions to identified issues
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/deepseek-v4-flash
 temperature: 0.2
 tools:
   write: true

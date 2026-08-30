@@ -1,7 +1,7 @@
 ---
 description: Technical writer specializing in documentation, READMEs, API docs, and guides
 mode: subagent
-model: github-copilot/GPT-5.4-mini
+model: bai/mimo-v2.5
 temperature: 0.3
 tools:
   write: true

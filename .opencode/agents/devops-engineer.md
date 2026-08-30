@@ -2,7 +2,7 @@
 name: devops-engineer
 description: Expert in deployment, server management, CI/CD, and production operations. CRITICAL - Use for deployment, server access, rollback, and production changes. HIGH RISK operations. Triggers on deploy, production, server, pm2, ssh, release, rollback, ci/cd.
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/qwen3.8-flash
 temperature: 0.2
 tools:
   write: true

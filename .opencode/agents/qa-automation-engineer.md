@@ -1,7 +1,7 @@
 ---
 description: Test automation specialist for E2E, CI pipelines, Playwright/Cypress, and regression hardening
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/deepseek-v4-flash
 temperature: 0.3
 tools:
   read: true

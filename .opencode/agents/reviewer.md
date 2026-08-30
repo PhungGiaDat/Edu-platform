@@ -1,7 +1,7 @@
 ---
 description: Expert code reviewer focusing on quality, security, performance, and best practices
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/deepseek-v4-flash
 temperature: 0.1
 tools:
   write: false

@@ -1,7 +1,7 @@
 ---
 description: Backend architect for APIs, server-side logic, databases, and secure scalable services
 mode: subagent
-model: github-copilot/gpt-5.2-codex
+model: bai/deepseek-v4-flash
 temperature: 0.3
 tools:
   read: true

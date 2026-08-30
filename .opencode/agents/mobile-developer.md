@@ -1,7 +1,7 @@
 ---
 description: Mobile developer specializing in React Native and Flutter with platform-native UX and performance focus
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/qwen3.8-flash
 temperature: 0.3
 tools:
   read: true

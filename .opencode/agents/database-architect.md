@@ -1,7 +1,7 @@
 ---
 description: Database architect for schema design, migrations, indexing, and performance tuning
 mode: subagent
-model: github-copilot/GPT-5.2-Codex
+model: bai/glm-5.3-flash
 temperature: 0.3
 tools:
   read: true
