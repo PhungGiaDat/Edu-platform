@@ -120,6 +120,19 @@ async def lifespan(app: FastAPI):
         logger.error(f"❌ PostgreSQL ORM initialization failed: {e}")
         sentry_monitoring_service.capture_exception(e)
 
+    # Quick-ping every configured LLM provider key so the model cascade can
+    # skip dead keys immediately (UX: no wasted timeouts on first lookup).
+    try:
+        from services.llm_health import probe_all
+
+        results = await probe_all()
+        summary = ", ".join(
+            f"{r['provider']}={r['status']}({r['latency_ms']}ms)" for r in results
+        )
+        logger.info(f"✅ LLM health ping: {summary or 'no providers configured'}")
+    except Exception as e:
+        logger.warning(f"⚠️ LLM health ping failed: {e}")
+
     logger.info("✅ Application started successfully")
     
     yield  # Application runs here

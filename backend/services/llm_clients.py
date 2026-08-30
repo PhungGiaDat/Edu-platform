@@ -51,6 +51,25 @@ def get_tokenrouter_llm(
     )
 
 
+def get_bai_llm(
+    model: str,
+    temperature: float = 0.4,
+    timeout: Optional[float] = None,
+) -> ChatOpenAI:
+    """
+    Return a ChatOpenAI client routed through B.AI (OpenAI-compatible).
+    Used as the health-checked fallback provider when TokenRouter is down.
+    """
+    return ChatOpenAI(
+        model=model,
+        api_key=settings.BAI_API_KEY.get_secret_value() if settings.BAI_API_KEY else "",
+        base_url=settings.BAI_BASE_URL,
+        timeout=timeout or settings.AI_CONTENT_TIMEOUT_SECONDS,
+        max_retries=0,
+        temperature=temperature,
+    )
+
+
 # ──────────────────────────────────────────────
 # 2. Circuit Breaker
 # ──────────────────────────────────────────────
@@ -248,18 +267,47 @@ class ModelRouter:
         """Return the primary LLM. Use llm_cascade() when you want automatic fallback."""
         return get_tokenrouter_llm(self.primary_model)
 
-    def llm_cascade(self) -> Iterator[tuple[ChatOpenAI, str]]:
+    def _cascade_entries(self) -> Iterator[tuple[str, ChatOpenAI, str]]:
         """
-        Yield (llm, model_name) in cascade order:
-          1. Primary model
-          2. Each fallback model (deduped, skipping primary)
+        Yield (provider, llm, model_name) in cascade order, skipping providers
+        the health registry marked unhealthy inside the recheck window:
+          1. TokenRouter primary model
+          2. TokenRouter fallback models (deduped)
+          3. B.AI generation model (when BAI_API_KEY is configured)
         """
+        from services import llm_health
+
         seen: set[str] = {self.primary_model}
-        yield get_tokenrouter_llm(self.primary_model), self.primary_model
+        entries: list[tuple[str, ChatOpenAI, str]] = [
+            ("tokenrouter", get_tokenrouter_llm(self.primary_model), self.primary_model)
+        ]
         for model in self.fallback_models:
             if model not in seen:
                 seen.add(model)
-                yield get_tokenrouter_llm(model), model
+                entries.append(("tokenrouter", get_tokenrouter_llm(model), model))
+        if settings.BAI_API_KEY:
+            bai_model = settings.BAI_GENERATION_MODEL
+            if bai_model not in seen:
+                entries.append(
+                    ("bai", get_bai_llm(bai_model), f"bai/{bai_model}")
+                )
+
+        for provider, llm, model_name in entries:
+            if not llm_health.is_cascade_ready(provider):
+                logger.warning(
+                    f"[ModelRouter/{self.role}] skipping provider={provider} "
+                    "(unhealthy inside recheck window)"
+                )
+                continue
+            yield provider, llm, model_name
+
+    def llm_cascade(self) -> Iterator[tuple[ChatOpenAI, str]]:
+        """
+        Yield (llm, model_name) in health-aware cascade order.
+        See _cascade_entries() for the ordering and skipping rules.
+        """
+        for _provider, llm, model_name in self._cascade_entries():
+            yield llm, model_name
 
     def circuit_breaker(self) -> CircuitBreaker:
         return self._breaker
@@ -275,12 +323,20 @@ class ModelRouter:
 
         Returns (result, model_name) of the first successful call.
         Raises last exception if all models in the cascade fail.
+        Outcomes are recorded into the LLM health registry so later calls
+        skip dead providers without waiting for their timeout.
         """
+        from services import llm_health
+
         for llm, model_name in self.llm_cascade():
+            provider = "bai" if model_name.startswith("bai/") else "tokenrouter"
+            started = time.monotonic()
             try:
                 result = await acall_with_retry(fn, llm, *args, **kwargs)
+                llm_health.record(provider, True, (time.monotonic() - started) * 1000)
                 return result, model_name
             except Exception as exc:  # noqa: PERF203
+                llm_health.record(provider, False)
                 logger.warning(
                     f"[ModelRouter/{self.role}] model={model_name} failed "
                     f"after retries: {exc!r}. Trying next..."

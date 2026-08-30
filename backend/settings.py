@@ -111,6 +111,15 @@ class Settings(BaseSettings):
     LLM_CIRCUIT_BREAKER_FAIL_MAX: int = 5
     LLM_CIRCUIT_BREAKER_RESET_SECONDS: int = 60
 
+    # B.AI provider (OpenAI-compatible fallback for LLM generation)
+    BAI_API_KEY: Optional[SecretStr] = None
+    BAI_BASE_URL: str = "https://api.b.ai/v1"
+    BAI_GENERATION_MODEL: str = "glm-5.3-flash"
+
+    # LLM provider health pings (startup probe + cascade recheck window)
+    LLM_HEALTH_TIMEOUT_SECONDS: float = 4.0
+    LLM_HEALTH_RECHECK_SECONDS: float = 60.0
+
     # ========== Qdrant RAG (Optional) ==========
     QDRANT_URL: Optional[str] = None
     QDRANT_API_KEY: Optional[SecretStr] = None

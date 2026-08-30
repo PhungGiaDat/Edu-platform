@@ -2,7 +2,7 @@
 Unit tests for services/llm_clients.py
 
 Tests:
-  - CircuitBreaker state transitions (CLOSED → OPEN → HALF → CLOSED)
+  - CircuitBreaker state transitions (CLOSED â†’ OPEN â†’ HALF â†’ CLOSED)
   - ModelRouter cascade iteration (dedup, correct order)
   - ModelRouter.call_with_fallback success path
   - ModelRouter.call_with_fallback exhausts cascade
@@ -22,9 +22,9 @@ from services.llm_clients import (
 )
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # CircuitBreaker
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class TestCircuitBreaker:
     def test_closed_by_default(self):
@@ -38,7 +38,7 @@ class TestCircuitBreaker:
                 cb.call(lambda: None)
             except Exception:
                 pass
-        # cb.call above succeeded, not failed — need to throw
+        # cb.call above succeeded, not failed â€” need to throw
         cb2 = CircuitBreaker("test2", fail_max=3, reset_timeout=60)
         for _ in range(3):
             try:
@@ -97,9 +97,9 @@ class TestCircuitBreaker:
         assert cb.state == "closed"
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # ModelRouter
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class TestModelRouter:
     def test_primary_from_settings(self):
@@ -116,7 +116,7 @@ class TestModelRouter:
         assert "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free" in router.fallback_models
 
     def test_cascade_dedups_primary_from_fallbacks(self):
-        # primary is also in fallbacks list — should appear only once
+        # primary is also in fallbacks list â€” should appear only once
         router = ModelRouter("planner")
         models = [m for _, m in router.llm_cascade()]
         assert models.count("qwen/qwen3.8-max-free") == 1
@@ -136,7 +136,7 @@ class TestModelRouter:
         mock_llm = MagicMock()
         mock_fn = AsyncMock(return_value="success")
 
-        # llm_cascade is sync Iterator — use a regular generator
+        # llm_cascade is sync Iterator â€” use a regular generator
         def fake_cascade():
             yield mock_llm, "test/model"
 
@@ -172,9 +172,9 @@ class TestModelRouter:
         assert call_count == 3
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Retry
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class TestRetry:
     @pytest.mark.asyncio
@@ -222,9 +222,9 @@ class TestRetry:
         assert attempts == 3
 
 
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # get_tokenrouter_llm
-# ──────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class TestGetTokenRouterLLM:
     def test_sets_model_name(self):
@@ -256,3 +256,70 @@ class TestGetTokenRouterLLM:
 
             llm = get_tokenrouter_llm("test/model")
             assert llm.max_retries == 0
+
+
+# --- Health-aware cascade (B.AI fallback + skip dead providers) -----------
+from pydantic import SecretStr  # noqa: E402
+
+from services import llm_health  # noqa: E402
+from settings import settings  # noqa: E402
+
+
+def _with_bai(monkeypatch):
+    monkeypatch.setattr(settings, "BAI_API_KEY", SecretStr("test-bai-key"))
+    monkeypatch.setattr(settings, "BAI_GENERATION_MODEL", "glm-5.3-flash")
+
+
+@pytest.fixture(autouse=True)
+def _clean_llm_registry():
+    llm_health._registry.clear()
+    yield
+    llm_health._registry.clear()
+
+
+def test_cascade_includes_bai_as_last_resort(monkeypatch):
+    _with_bai(monkeypatch)
+    router = ModelRouter(role="generator")
+    names = [name for _llm, name in router.llm_cascade()]
+    assert names[0] == router.primary_model
+    assert names[-1] == "bai/glm-5.3-flash"
+
+
+def test_cascade_skips_freshly_unhealthy_provider(monkeypatch):
+    _with_bai(monkeypatch)
+    llm_health.record("tokenrouter", False, latency_ms=5)  # fresh failure
+    router = ModelRouter(role="generator")
+    names = [name for _llm, name in router.llm_cascade()]
+    assert names == ["bai/glm-5.3-flash"]
+
+
+@pytest.mark.asyncio
+async def test_call_with_fallback_records_outcomes(monkeypatch):
+    _with_bai(monkeypatch)
+    router = ModelRouter(role="generator")
+
+    async def always_fail(llm, prompt):
+        raise ValueError("provider down")
+
+    try:
+        with pytest.raises(RuntimeError):
+            await router.call_with_fallback(always_fail, "p")
+        assert llm_health.get_status("tokenrouter") == "unhealthy"
+        assert llm_health.get_status("bai") == "unhealthy"
+    finally:
+        llm_health._registry.clear()
+
+
+@pytest.mark.asyncio
+async def test_call_with_fallback_marks_survivor_healthy(monkeypatch):
+    _with_bai(monkeypatch)
+    llm_health.record("tokenrouter", False, latency_ms=5)  # tokenrouter skipped
+    router = ModelRouter(role="generator")
+
+    async def ok_fn(llm, prompt):
+        return "answer"
+
+    result, model_name = await router.call_with_fallback(ok_fn, "p")
+    assert result == "answer"
+    assert model_name == "bai/glm-5.3-flash"
+    assert llm_health.get_status("bai") == "healthy"
