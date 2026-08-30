@@ -27,7 +27,9 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from database.mongodb import get_database
+from sqlalchemy import text
+from services.cache_service import cache_service
+from repositories.postgres_chat_log_repository import PostgresChatLogRepository
 from database.postgres_connection import postgres_pool
 from settings import settings
 from services.llm_clients import (
@@ -52,9 +54,6 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────────
 INTER_AGENT_DELAY = 1.0          # seconds between LLM calls (free tier RPM safety)
 CACHE_TTL_HOURS = 24            # MongoDB rag_cache document lifetime
-CACHE_COLLECTION = "rag_cache"
-CHAT_LOG_COLLECTION = "chat_logs"
-LEARNING_PROGRESS_COLLECTION = "learning_progress"
 
 
 # ──────────────────────────────────────────────
@@ -159,38 +158,21 @@ class AgenticRAGService:
 
     async def _get_cache(self, key: str) -> Optional[Dict[str, Any]]:
         try:
-            db = get_database()
-            if db is None:
-                return None
-            doc = await db[CACHE_COLLECTION].find_one(
-                {"key": key, "expires_at": {"$gt": datetime.utcnow()}}
-            )
-            if doc:
+            cached = await cache_service.get(key)
+            if cached:
                 logger.info("[AgenticRAG] Cache hit")
-                return doc["payload"]
+                return cached
         except Exception as e:
             logger.warning(f"[AgenticRAG] Cache read error: {e}")
         return None
 
     async def _set_cache(self, key: str, payload: Dict[str, Any]) -> None:
         try:
-            db = get_database()
-            if db is None:
-                return
-            await db[CACHE_COLLECTION].update_one(
-                {"key": key},
-                {"$set": {
-                    "key": key,
-                    "payload": payload,
-                    "expires_at": datetime.utcnow() + timedelta(hours=CACHE_TTL_HOURS),
-                    "created_at": datetime.utcnow(),
-                }},
-                upsert=True
-            )
+            await cache_service.set(key, payload, ttl_seconds=CACHE_TTL_HOURS * 3600)
         except Exception as e:
             logger.warning(f"[AgenticRAG] Cache write error: {e}")
 
-    # ── Learning Progress ─────────────────────────────────────────────────────
+    # Learning Progress ─────────────────────────────────────────────────────
 
     async def _get_progress_summary(self, user_id: Optional[str]) -> str:
         """Fetch recent learning progress for the Planner agent."""
@@ -200,15 +182,17 @@ class AgenticRAGService:
             if self._progress_repo is not None:
                 docs = await self._progress_repo.get_all_for_user(user_id, limit=10)
             else:
-                db = get_database()
-                if db is None:
-                    return "Không thể truy cập dữ liệu tiến trình."
-                cursor = db[LEARNING_PROGRESS_COLLECTION].find(
-                    {"user_id": user_id},
-                    {"flashcard_qr_id": 1, "mastery_level": 1, "times_viewed": 1,
-                     "last_reviewed_at": 1, "_id": 0}
-                ).sort("last_reviewed_at", -1).limit(10)
-                docs = await cursor.to_list(length=10)
+                from database.orm_session import session_factory
+                async with session_factory()() as session:
+                    result = await session.execute(
+                        text(
+                            "SELECT flashcard_qr_id, mastery_level, times_viewed "
+                            "FROM learning_progress WHERE user_id = :user_id "
+                            "ORDER BY last_reviewed_at DESC NULLS LAST LIMIT 10"
+                        ),
+                        {"user_id": user_id},
+                    )
+                    docs = [dict(row) for row in result.mappings().all()]
             if not docs:
                 return "Người dùng chưa học flashcard nào."
             lines = []
@@ -235,14 +219,13 @@ class AgenticRAGService:
                     sort=[("timestamp", -1)],
                 )
             else:
-                db = get_database()
-                if db is None:
-                    return "Không có lịch sử."
-                cursor = db[CHAT_LOG_COLLECTION].find(
-                    {"session_id": session_id, "sender": "ai"},
-                    {"message": 1, "_id": 0}
-                ).sort("timestamp", -1).limit(limit)
-                docs = await cursor.to_list(length=limit)
+                rows = await PostgresChatLogRepository().get_session_history(
+                    session_id, limit=200
+                )
+                ai_messages = [
+                    row["message"] for row in rows if row.get("sender") == "ai"
+                ]
+                docs = [{"message": m} for m in ai_messages[-limit:]]
             if not docs:
                 return "Không có lịch sử."
             return "\n---\n".join(d.get("message", "") for d in docs)
