@@ -114,6 +114,31 @@ pass against the deployed environment remains open for graduation acceptance.
 5. Pre-existing backend collection errors: `tests/test_profile_service.py`,
    `tests/test_promote_cat_vertical_slice_assets.py` (import errors, out of scope).
 
+## LLM provider health + B.AI fallback (2026-08-30 increment)
+
+Product owner request: verify LLM lookup with a real key and add B.AI as a
+provider, with a quick ping at startup/before calls to protect UX.
+
+- `services/llm_health.py` (new): provider registry, `GET {base}/models`
+  ping (no token burn), `probe_all()` at startup, `record()` from real call
+  outcomes, `is_cascade_ready()` cooldown skip, masked `snapshot()`.
+- `llm_clients.py`: `get_bai_llm()` factory; cascade order =
+  TokenRouter primary → TokenRouter fallbacks → **B.AI `glm-5.3-flash`**;
+  providers marked unhealthy inside `LLM_HEALTH_RECHECK_SECONDS` (60s) are
+  skipped instantly instead of burning the caller's timeout.
+- `main.py` lifespan: startup ping (non-fatal). `GET /api/v1/ai/llm-health`
+  (auth) exposes masked statuses. Fixes: `ai_router` was never mounted in
+  `main.py` (pre-existing gap — quiz/pronunciation AI endpoints were dead).
+- Live evidence (local run with real keys): startup ping
+  `tokenrouter=healthy(844ms), bai=healthy(530ms)`; `GET /ai/llm-health` 200
+  (both providers healthy, keys masked `***24WW` / `***v6xm`);
+  `POST /dictionary/lookup {"word":"elephant"}` → **200**
+  (`vi=con voi`, wiki summary present — previously 503);
+  `{"word":"sunflower"}` → 200 (`vi=hoa hướng dương`).
+- Tests: `test_llm_health.py` (9) + cascade tests in `test_llm_clients.py`
+  (4) — combined suite 30 passed; backend focused total now **112**.
+- `BAI_API_KEY` added to local `.env` (never committed).
+
 ## Scope guard
 
 Full frontend suite failures and the two backend collection errors pre-date
