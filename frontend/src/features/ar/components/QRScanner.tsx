@@ -154,8 +154,8 @@ export const QRScanner: React.FC<QRScannerProps> = ({
 
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      ctx!.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx!.getImageData(0, 0, canvas.width, canvas.height);
       const code = window.jsQR?.(
         imageData.data,
         imageData.width,

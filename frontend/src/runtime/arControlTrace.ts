@@ -90,12 +90,12 @@ emit('DOCUMENT_BOOT', {
 });
 
 window.addEventListener('pageshow', (e) => {
-  emit('PAGE_SHOW', { persisted: (e as PageshowEvent).persisted });
+  emit('PAGE_SHOW', { persisted: (e as Event & { persisted?: boolean }).persisted });
 });
 
 window.addEventListener('pagehide', (e) => {
   emit('PAGE_HIDE', {
-    persisted: (e as PageHideEvent).persisted,
+    persisted: (e as Event & { persisted?: boolean }).persisted,
   });
 });
 
@@ -109,7 +109,7 @@ window.addEventListener('visibilitychange', () => {
 
 // ---- App shell events ----
 window.addEventListener('vite:preloadError', (e) => {
-  const payload = (e as CustomEvent<{ type?: string }>).detail?.type ?? '';
+  const payload = (e as unknown as CustomEvent<{ type?: string }>).detail?.type ?? '';
   emit('VITE_PRELOAD_ERROR', { payload });
   // If assetRecovery decides to reload, HARD_RELOAD_REQUESTED fires from there
 });
