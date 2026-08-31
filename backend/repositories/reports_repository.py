@@ -40,7 +40,7 @@ class ReportsRepository:
             "SELECT round(avg(score))::int as avg FROM public.quiz_attempts WHERE user_id=$1 AND score IS NOT NULL",
             user_id,
         )
-        return int(row["avg"]) if row else 0
+        return int(row["avg"] or 0) if row else 0
 
     # ── Session logs ──────────────────────────────────────────────────────────
 
@@ -90,8 +90,8 @@ class ReportsRepository:
             user_id,
         )
         return {
-            "total_attempts": int(row["total"]) if row else 0,
-            "avg_score": int(row["avg_score"]) if row else 0,
+            "total_attempts": int(row["total"] or 0) if row else 0,
+            "avg_score": int(row["avg_score"] or 0) if row else 0,
         }
 
 
