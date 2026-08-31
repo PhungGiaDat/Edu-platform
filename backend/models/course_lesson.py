@@ -4,7 +4,7 @@ CourseLesson Document - MongoDB Collection
 Enhanced lesson schema with video/image fields and AI evaluation support
 """
 from beanie import Document, Indexed
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
@@ -144,3 +144,46 @@ class CourseLesson(Document):
                 "xp_reward": 50
             }
         }
+
+
+class CourseLessonSchema(BaseModel):
+    """
+    Plain Pydantic DTO for CourseLesson API responses (Postgres-only).
+
+    Mirrors the serialized shape of the Beanie ``CourseLesson`` document but is a
+    pure BaseModel, so FastAPI response validation works without a live MongoDB
+    connection (Mongo is archive-only in Postgres core mode).
+
+    ``extra="ignore"`` lets repository rows carry Postgres-only columns
+    (``content``, ``video``, ``media``, ``learning_blocks``, ...) without
+    breaking response validation.
+    """
+    lesson_id: str
+    course_id: str
+    title: str
+    title_vi: str = ""
+    description: Optional[str] = None
+    order: int
+    lesson_type: LessonType = LessonType.MIXED
+    status: LessonStatus = LessonStatus.DRAFT
+    thumbnail: Optional[MediaAsset] = None
+    preview_video: Optional[MediaAsset] = None
+    full_video: Optional[MediaAsset] = None
+    vocabulary_items: List[VocabularyItem] = Field(default_factory=list)
+    duration_minutes: int = Field(default=5, ge=1, le=60)
+    xp_reward: int = Field(default=50, ge=0, le=500)
+    prerequisites: List[str] = Field(default_factory=list)
+    unlocks_lesson_ids: List[str] = Field(default_factory=list)
+    total_attempts: int = 0
+    completion_rate: float = 0.0
+    average_score: float = 0.0
+    ai_generated: bool = False
+    generation_prompt: Optional[str] = None
+    created_by: str = "system"
+    updated_by: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    published_at: Optional[datetime] = None
+    archived_at: Optional[datetime] = None
+
+    model_config = ConfigDict(extra="ignore", from_attributes=True)

@@ -150,7 +150,7 @@ async def get_combo_rules(
     rules = [
         {
             "tags": c.get("required_tags", []),
-            "name": c.get("combo_name", c.get("name", "")),
+            "name": c.get("combo_name") or c.get("description") or "",
             "combo_id": c.get("combo_id", ""),
             "animation_trigger": c.get("animation_trigger"),
         }

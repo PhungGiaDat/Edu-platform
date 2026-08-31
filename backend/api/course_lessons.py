@@ -18,7 +18,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from models.course_lesson import (
-    CourseLesson,
+    CourseLessonSchema,
     LessonStatus,
     LessonType,
     MediaAsset,
@@ -39,9 +39,9 @@ def _lesson_not_found(lesson_id: str) -> HTTPException:
 
 
 def _require_lesson(
-    lesson: Optional[CourseLesson],
+    lesson: Optional[CourseLessonSchema],
     lesson_id: str,
-) -> CourseLesson:
+) -> CourseLessonSchema:
     if lesson is None:
         raise _lesson_not_found(lesson_id)
     return lesson
@@ -49,7 +49,7 @@ def _require_lesson(
 
 # ─── CRUD Endpoints ────────────────────────────────────────────────────────────
 
-@router.get("", response_model=List[CourseLesson])
+@router.get("", response_model=List[CourseLessonSchema])
 async def list_lessons(
     course_id: Optional[str] = Query(None, description="Filter by course ID"),
     status: Optional[LessonStatus] = Query(None, description="Filter by status"),
@@ -87,7 +87,7 @@ async def list_lessons(
     )
 
 
-@router.post("", response_model=CourseLesson, status_code=201)
+@router.post("", response_model=CourseLessonSchema, status_code=201)
 async def create_lesson(
     course_id: str,
     lesson_id: str,
@@ -124,7 +124,7 @@ async def create_lesson(
     return lesson
 
 
-@router.get("/course/{course_id}", response_model=List[CourseLesson])
+@router.get("/course/{course_id}", response_model=List[CourseLessonSchema])
 async def get_course_lessons(
     course_id: str,
     status: Optional[LessonStatus] = Query(None),
@@ -143,7 +143,7 @@ async def get_course_lessons(
     )
 
 
-@router.get("/{lesson_id}", response_model=CourseLesson)
+@router.get("/{lesson_id}", response_model=CourseLessonSchema)
 async def get_lesson(
     lesson_id: str,
     repo: CourseLessonRepository = Depends(get_course_lesson_repository),
@@ -155,7 +155,7 @@ async def get_lesson(
     return _require_lesson(lesson, lesson_id)
 
 
-@router.put("/{lesson_id}", response_model=CourseLesson)
+@router.put("/{lesson_id}", response_model=CourseLessonSchema)
 async def update_lesson(
     lesson_id: str,
     title: Optional[str] = None,
@@ -210,7 +210,7 @@ async def delete_lesson(
 
 # ─── Status Management ────────────────────────────────────────────────────────
 
-@router.post("/{lesson_id}/publish", response_model=CourseLesson)
+@router.post("/{lesson_id}/publish", response_model=CourseLessonSchema)
 async def publish_lesson(
     lesson_id: str,
     repo: CourseLessonRepository = Depends(get_course_lesson_repository),
@@ -224,7 +224,7 @@ async def publish_lesson(
     return _require_lesson(published, lesson_id)
 
 
-@router.post("/{lesson_id}/archive", response_model=CourseLesson)
+@router.post("/{lesson_id}/archive", response_model=CourseLessonSchema)
 async def archive_lesson(
     lesson_id: str,
     repo: CourseLessonRepository = Depends(get_course_lesson_repository),
@@ -245,7 +245,7 @@ class AddVocabularyRequest(VocabularyItem):
     pass
 
 
-@router.post("/{lesson_id}/vocabulary", response_model=CourseLesson)
+@router.post("/{lesson_id}/vocabulary", response_model=CourseLessonSchema)
 async def add_vocabulary_item(
     lesson_id: str,
     payload: AddVocabularyRequest,

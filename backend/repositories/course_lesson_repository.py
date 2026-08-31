@@ -55,6 +55,8 @@ def _row(row) -> Dict[str, Any]:
                 pass
     if "lesson_order" in value:
         value["order"] = value.pop("lesson_order")
+    if value.get("vocabulary_items") is None:
+        value["vocabulary_items"] = []
     return value
 
 
