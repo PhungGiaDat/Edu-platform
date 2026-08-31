@@ -385,7 +385,7 @@ export const LearnAR8thWall: React.FC = () => {
 
       </div>
 
-      {/* Telegram Sync Button */}
+      {/* Telegram Sync Button: available throughout the AR lifecycle */}
       <button
         type="button"
         className={`telegram-sync-btn ${syncStatus}`}
