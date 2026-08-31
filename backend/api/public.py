@@ -7,9 +7,10 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import logging
 
-from database.postgres_connection import postgres_core_enabled
 from repositories.flashcard_repository import get_flashcard_repository
-from models.flashcard_editor import FlashcardEditor
+from repositories.postgres_flashcard_editor_repository import (
+    get_postgres_flashcard_editor_repository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,21 +57,21 @@ async def get_flashcard_by_qr(
                 detail=f"Flashcard not found for QR ID: {qr_id}"
             )
 
-        # Try to get canvas editor state
+        # Get canvas editor state (PostgreSQL flashcard_editor table)
         editor_state = None
-        if not postgres_core_enabled():
-            editor_state = await FlashcardEditor.find_one(
-                FlashcardEditor.flashcard_id == qr_id
-            )
+        try:
+            editor_state = await get_postgres_flashcard_editor_repository().get_by_flashcard_id(qr_id)
+        except Exception as e:
+            logger.warning(f"[Public] Editor state lookup failed for {qr_id}: {e}")
 
         editor_elements = None
         canvas_width = None
         canvas_height = None
         
         if editor_state:
-            editor_elements = editor_state.elements
-            canvas_width = editor_state.canvas_width
-            canvas_height = editor_state.canvas_height
+            editor_elements = editor_state.get("elements")
+            canvas_width = editor_state.get("canvas_width")
+            canvas_height = editor_state.get("canvas_height")
 
         return PublicFlashcardResponse(
             qr_id=flashcard["qr_id"],

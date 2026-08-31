@@ -78,10 +78,13 @@ async def list_lessons(
             lesson_type=lesson_type,
             limit=limit,
         )
-    # No filters: return published lessons paginated
-    cursor = repo.collection.find({}).skip(skip).limit(limit).sort("+order")
-    docs = await cursor.to_list(length=limit)
-    return [CourseLesson(**d) for d in docs]
+    # No filters: return all lessons paginated (Postgres)
+    return await repo.list_all(
+        status=status,
+        lesson_type=lesson_type,
+        skip=skip,
+        limit=limit,
+    )
 
 
 @router.post("", response_model=CourseLesson, status_code=201)
