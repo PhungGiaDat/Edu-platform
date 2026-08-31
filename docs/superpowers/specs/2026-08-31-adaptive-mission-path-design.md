@@ -1,6 +1,6 @@
 # Adaptive Mission Path — Course Experience Design
 
-**Status:** Draft for review
+**Status:** Approved
 **Date:** 2026-08-31
 **Primary surface:** `frontend/**` responsive mobile web
 **Scope:** Generic catalog, learning-path guidance, course detail, and lesson-content orchestration
