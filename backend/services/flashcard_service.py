@@ -35,9 +35,9 @@ class FlashcardService:
         """Get active flashcards for the learner gallery."""
         return await self.flashcard_repo.get_all_active(skip=skip, limit=limit)
     
-    async def get_by_category(self, category: str) -> List[Dict[str, Any]]:
+    async def get_by_category(self, category: str, skip: int = 0, limit: int = 50) -> List[Dict[str, Any]]:
         """Get flashcards by category"""
-        return await self.flashcard_repo.get_by_category(category)
+        return await self.flashcard_repo.get_by_category(category, skip=skip, limit=limit)
     
     async def search(self, query: str) -> List[Dict[str, Any]]:
         """Search flashcards by word"""
