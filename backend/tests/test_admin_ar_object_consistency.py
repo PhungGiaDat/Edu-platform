@@ -5,12 +5,15 @@ Two contract obligations are tested:
 1. ``AdminRepository.create_flashcard`` refuses to write anything when the
    referenced ``ar_tag`` does not already exist as a valid AR object.
 2. When the AR object exists and passes :func:`serialize_ar_object`, the
-   flashcard is inserted and the ``ar_objects_collection`` is never written
-   to. Auto-creation from a bare ``ar_tag`` is forbidden.
+   flashcard is inserted and the ``ar_objects`` table is never written to.
+   Auto-creation from a bare ``ar_tag`` is forbidden.
+
+De-Mongo Wave 5: the repository is Postgres-only, so ``postgres_pool()`` is
+mocked instead of ``mongo_connector``.
 """
 
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pydantic import ValidationError
@@ -21,7 +24,6 @@ from repositories.admin_repository import AdminRepository
 
 def _valid_catalog_document() -> dict:
     return {
-        "_id": "68ac0dbc7ddebe79bec86620",
         "ar_tag": "elephant_marker_01",
         "tracking_mode": "catalog",
         "description": "Elephant AR target",
@@ -40,10 +42,11 @@ def _valid_catalog_document() -> dict:
 
 
 def _invalid_ar_object() -> dict:
-    # Missing tracking_mode and the (mind_catalog_id, mind_target_index) pair,
-    # so ARObjectContract.model_validate will raise ValidationError.
+    # No tracking_mode → required-field ValidationError when validated raw.
+    # Also carries both nft_base_url and mind_catalog_id, so the synthesized
+    # "legacy" tracking_mode (no mind_target_index) fails the identity
+    # validator → ARObjectConfigurationError in the repository.
     return {
-        "_id": "68ac0dbc7ddebe79bec86699",
         "ar_tag": "missing_marker",
         "description": "Broken",
         "animation_type": "rotate",
@@ -53,45 +56,51 @@ def _invalid_ar_object() -> dict:
         "position": "0 0 0",
         "rotation": "0 0 0",
         "scale": "1 1 1",
+        "mind_catalog_id": "broken-catalog",
         "created_at": datetime(2026, 1, 1, tzinfo=timezone.utc),
     }
 
 
 @pytest.fixture
-def admin_repo():
-    """Build an AdminRepository whose every collection is a mock.
+def fake_pool():
+    """Return a mock pool with async methods."""
+    pool = Mock()
+    pool.fetchrow = AsyncMock()
+    pool.execute = AsyncMock()
+    pool.fetch = AsyncMock(return_value=[])
+    pool.fetchval = AsyncMock(return_value=0)
+    return pool
 
-    The constructor reaches into ``mongo_connector.get_collection``, which
-    requires a real Mongo client. We patch the connector to return mocks
-    during construction, then attach AsyncMocks for the collections we
-    exercise in the assertions below.
+
+@pytest.fixture
+def admin_repo(monkeypatch, fake_pool):
+    """Build an AdminRepository whose postgres_pool() returns a mock pool.
+
+    Uses ``monkeypatch`` so the patch stays active for the test duration.
     """
-    ar_objects_collection = MagicMock()
-    ar_objects_collection.find_one = AsyncMock()
-    ar_objects_collection.insert_one = AsyncMock()
-
-    flashcards_collection = MagicMock()
-    flashcards_collection.insert_one = AsyncMock()
-
-    decks_collection = MagicMock()
-    decks_collection.update_one = AsyncMock()
-
-    def _fake_get_collection(name: str):
-        return {
-            "ar_objects": ar_objects_collection,
-            "flashcards": flashcards_collection,
-            "flashcard_decks": decks_collection,
-        }.get(name, MagicMock())
-
-    with patch("repositories.admin_repository.mongo_connector.get_collection", _fake_get_collection):
-        repo = AdminRepository(teacher_id="teacher-1")
-
-    # Re-attach the mocks explicitly in case the constructor used different
-    # instances; this guarantees attribute access in assertions below.
-    repo.ar_objects_collection = ar_objects_collection
-    repo.flashcards_collection = flashcards_collection
-    repo.flashcard_decks_collection = decks_collection
+    monkeypatch.setattr(
+        "repositories.admin_repository.postgres_pool",
+        Mock(return_value=fake_pool),
+    )
+    repo = AdminRepository(teacher_id="teacher-1")
+    repo._pool = fake_pool
     return repo
+
+
+@pytest.fixture
+def script_ar_object(fake_pool):
+    """Helper to script the ar_objects lookup + flashcard insert rows."""
+
+    def _set(ar_object_row, qr_id="new-card"):
+        calls = []
+        if ar_object_row is None:
+            calls.append(None)  # ar_objects lookup → not configured
+        else:
+            calls.append(ar_object_row)  # ar_objects lookup → existing row
+        calls.append({"qr_id": qr_id})  # flashcards INSERT returning qr_id
+        fake_pool.fetchrow.side_effect = calls
+
+    return _set
 
 
 def test_ar_object_configuration_error_is_a_value_error():
@@ -102,8 +111,8 @@ def test_ar_object_configuration_error_is_a_value_error():
 
 
 @pytest.mark.asyncio
-async def test_flashcard_creation_rejects_missing_ar_object_before_insert(admin_repo):
-    admin_repo.ar_objects_collection.find_one.return_value = None
+async def test_flashcard_creation_rejects_missing_ar_object_before_insert(admin_repo, script_ar_object):
+    script_ar_object(None)
     with pytest.raises(ARObjectConfigurationError, match="AR_OBJECT_NOT_CONFIGURED"):
         await admin_repo.create_flashcard({
             "qr_id": "new-card",
@@ -111,13 +120,13 @@ async def test_flashcard_creation_rejects_missing_ar_object_before_insert(admin_
             "translation": {"vi": "Mới"},
             "ar_tag": "new_marker",
         })
-    admin_repo.flashcards_collection.insert_one.assert_not_awaited()
-    admin_repo.ar_objects_collection.insert_one.assert_not_awaited()
+    # The AR lookup ran (returning None → raise) and the INSERT never happened.
+    assert admin_repo._pool.fetchrow.await_count == 1
 
 
 @pytest.mark.asyncio
-async def test_flashcard_creation_rejects_invalid_ar_object_before_insert(admin_repo):
-    admin_repo.ar_objects_collection.find_one.return_value = _invalid_ar_object()
+async def test_flashcard_creation_rejects_invalid_ar_object_before_insert(admin_repo, script_ar_object):
+    script_ar_object(_invalid_ar_object())
     with pytest.raises(ARObjectConfigurationError, match="AR_OBJECT_SCHEMA_INVALID"):
         await admin_repo.create_flashcard({
             "qr_id": "bad-card",
@@ -125,38 +134,45 @@ async def test_flashcard_creation_rejects_invalid_ar_object_before_insert(admin_
             "translation": {"vi": "Xấu"},
             "ar_tag": "missing_marker",
         })
-    admin_repo.flashcards_collection.insert_one.assert_not_awaited()
-    admin_repo.ar_objects_collection.insert_one.assert_not_awaited()
+    # The invalid lookup is consumed; no INSERT was reached.
+    assert admin_repo._pool.fetchrow.await_count == 1
 
 
 @pytest.mark.asyncio
-async def test_flashcard_creation_accepts_existing_valid_ar_object(admin_repo):
-    admin_repo.ar_objects_collection.find_one.return_value = _valid_catalog_document()
-    await admin_repo.create_flashcard({
+async def test_flashcard_creation_accepts_existing_valid_ar_object(admin_repo, script_ar_object):
+    script_ar_object(_valid_catalog_document(), qr_id="ele123")
+    result = await admin_repo.create_flashcard({
         "qr_id": "ele123",
         "word": "Elephant",
         "translation": {"vi": "Voi"},
         "ar_tag": "elephant_marker_01",
     })
-    admin_repo.flashcards_collection.insert_one.assert_awaited_once()
-    admin_repo.ar_objects_collection.insert_one.assert_not_awaited()
+    assert result["_id"] == "ele123"
+    # Two fetchrow calls: AR lookup + flashcard INSERT.
+    assert admin_repo._pool.fetchrow.await_count == 2
+    # Never writes to the ar_objects table.
+    insert_sqls = [c.args[0] for c in admin_repo._pool.fetchrow.await_args_list]
+    assert all("INSERT INTO public.ar_objects" not in s for s in insert_sqls)
 
 
 @pytest.mark.asyncio
-async def test_flashcard_creation_without_ar_tag_is_unchanged(admin_repo):
+async def test_flashcard_creation_without_ar_tag_is_unchanged(admin_repo, script_ar_object):
     """Cards with no ``ar_tag`` and no ``qr_id`` are plain flashcards — no AR
     validation, no AR writes.
     """
-    admin_repo.ar_objects_collection.find_one.return_value = None
-    await admin_repo.create_flashcard({
+    fake_pool = admin_repo._pool
+    # Only one call: the INSERT (no AR lookup since qr_id is None → no ar_tag auto-gen).
+    fake_pool.fetchrow.side_effect = [{"qr_id": "plain-card"}]
+    result = await admin_repo.create_flashcard({
         "qr_id": None,
         "word": "Plain",
         "translation": {"vi": "Phẳng"},
-        "ar_tag": None,
     })
-    admin_repo.flashcards_collection.insert_one.assert_awaited_once()
-    admin_repo.ar_objects_collection.find_one.assert_not_awaited()
-    admin_repo.ar_objects_collection.insert_one.assert_not_awaited()
+    assert result["_id"] == "plain-card"
+    # Only the INSERT ran — no AR lookup.
+    assert fake_pool.fetchrow.await_count == 1
+    sql = fake_pool.fetchrow.await_args_list[0].args[0]
+    assert "INSERT INTO public.flashcards" in sql
 
 
 def test_ar_object_contract_rejects_unknown_ar_tag_payload():
