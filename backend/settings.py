@@ -32,8 +32,9 @@ class Settings(BaseSettings):
     """
 
     # ========== MongoDB Configuration ==========
-    MONGO_URL: str
-    MONGO_DB: str = "eduplatform"
+    # Legacy/transitional. Remove when all domains are Postgres-native.
+    MONGO_URL: Optional[str]
+    MONGO_DB: Optional[str] = "eduplatform"
 
     # PostgreSQL owns migrated mobile-core paths.  Optional only for isolated
     # unit tests that construct Settings without a database URL.
@@ -279,9 +280,11 @@ settings = Settings()
 
 # Print configuration on startup (sanitized)
 if __name__ != "__main__":
-    print(f"[CONFIG] Loaded settings: DB={settings.MONGO_DB}, Debug={settings.DEBUG}")
-    print(f"[CONFIG] Redis configured: {settings.is_redis_configured}")
-    print(f"[CONFIG] Static dir: {settings.STATIC_DIR}")
+    import sys
+
+    print(f"[CONFIG] Loaded settings: DB={settings.MONGO_DB}, Debug={settings.DEBUG}", file=sys.stderr)
+    print(f"[CONFIG] Redis configured: {settings.is_redis_configured}", file=sys.stderr)
+    print(f"[CONFIG] Static dir: {settings.STATIC_DIR}", file=sys.stderr)
 
     # Warn if TokenRouter API key is missing (chat endpoint will 503)
     if not settings.TOKENROUTER_API_KEY:

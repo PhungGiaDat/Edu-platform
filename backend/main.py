@@ -96,11 +96,10 @@ async def lifespan(app: FastAPI):
     
     try:
         await connect_to_database()
-        logger.info("✅ Database connected successfully")
+        logger.info("✅ MongoDB connected (legacy/transitional)")
     except Exception as e:
-        logger.error(f"❌ Database connection failed: {e}")
-        sentry_monitoring_service.capture_exception(e)
-        raise
+        logger.warning("⚠️ MongoDB unavailable (legacy): %s — Postgres is authoritative", e)
+        # Non-fatal: Postgres is the single source of truth
     
     # Connect to Redis (optional, falls back gracefully if unavailable)
     try:
@@ -429,7 +428,7 @@ async def detailed_health_check():
             database_engine = "postgresql"
         else:
             db_healthy = await db_manager.ping()
-            database_engine = "mongodb"
+            database_engine = "postgres"
         health_status["database"] = {
             "status": "connected" if db_healthy else "disconnected",
             "healthy": db_healthy,
