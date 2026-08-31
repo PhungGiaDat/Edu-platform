@@ -189,10 +189,12 @@ const ConditionalAIChatBuddy: React.FC = () => {
   const location = useLocation();
   const { isAuthenticated, isGuest } = useAuth();
 
-  // Hide on AR page (z-index conflict) and all public/unauthenticated routes
+  // Hide on AR page (z-index conflict, camera/session interference) and all public/unauthenticated routes
   const publicRoutes = ['/', '/login', '/register'];
   const isPublicRoute = publicRoutes.includes(location.pathname);
-  const isARPage = location.pathname === '/learn-ar';
+  const isARPage =
+    location.pathname === '/learn-ar' ||
+    location.pathname.startsWith('/learn-ar-xr');
 
   if (isARPage || isPublicRoute) return null;
   if (!isAuthenticated && !isGuest) return null;
@@ -260,6 +262,9 @@ const App = () => {
       document.removeEventListener('touchstart', unlockAudio);
     };
   }, []);
+
+  const location = useLocation();
+  const isARRoute = location.pathname.startsWith('/learn-ar-xr');
 
   return (
     <>
@@ -336,11 +341,11 @@ const App = () => {
       {/* Global AI Chat Buddy - Hidden on AR page to avoid z-index conflicts */}
       <ConditionalAIChatBuddy />
 
-      {/* Global Pet Unlock Celebration Modal */}
-      <GlobalPetUnlockNotifier />
+      {/* Global Pet Unlock Celebration Modal — hidden on AR routes */}
+      {!isARRoute && <GlobalPetUnlockNotifier />}
 
-      {/* Global Session Break Reminder */}
-      <GlobalSessionWatcher />
+      {/* Global Session Break Reminder — hidden on AR routes */}
+      {!isARRoute && <GlobalSessionWatcher />}
     </>
   );
 };

@@ -470,6 +470,27 @@
         } catch (_e) { /* ignore parse errors */ }
     });
 
+    // ---- AR Control Trace: listen to persistent ring buffer ----
+    window.addEventListener('ar:control-trace', function (event) {
+        var e = event.detail || {};
+        addLog('info', [
+            '[CONTROL:' + (e.bootId || '?') + ':' + (e.seq || '?') + ']',
+            e.label || '?',
+            e.details || {}
+        ]);
+    });
+
+    // Replay existing buffer entries (may have been captured before this script loaded)
+    if (Array.isArray(window.__AR_CONTROL_BUFFER__)) {
+        window.__AR_CONTROL_BUFFER__.slice(-50).forEach(function (e) {
+            addLog('info', [
+                '[CONTROL:' + (e.bootId || '?') + ':' + (e.seq || '?') + ']',
+                e.label || '?',
+                e.details || {}
+            ]);
+        });
+    }
+
     // Initial log
     console.log('🔧 Mobile Debug Panel Ready (pre-React buffer active)');
     console.log('📱 User Agent:', navigator.userAgent);

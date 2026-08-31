@@ -37,7 +37,79 @@
 
 <body>
   <div id="root"></div>
-  <!-- Install the debug buffer before React and either AR engine can start. -->
+  <!-- Pre-React persistent control trace — survives hard reload, immune to drop_console -->
+  <script>
+(function installARControlTrace() {
+  var params = new URLSearchParams(location.search);
+  if (params.get('debug') !== 'true' && params.get('artrace') !== 'true') return;
+
+  var STORAGE_KEY = '__ar_control_trace_v1__';
+  var MAX_BUFFER = 300;
+  var seq = 0;
+
+  function makeBootId() {
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+  }
+
+  function readBuffer() {
+    try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch (e) { return []; }
+  }
+
+  function persist(entries) {
+    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(-MAX_BUFFER))); }
+    catch (e) {}
+  }
+
+  function emit(label, details) {
+    details = details || {};
+    var entries = readBuffer();
+    var entry = {
+      bootId: window.__AR_BOOT_ID__ || 'unknown',
+      seq: ++seq,
+      time: new Date().toISOString(),
+      perf: Math.round(performance.now()),
+      label: label,
+      details: details,
+      path: location.pathname,
+      visibility: document.visibilityState
+    };
+    entries.push(entry);
+    if (entries.length > MAX_BUFFER) entries.shift();
+    persist(entries);
+    window.__AR_CONTROL_BUFFER__ = entries;
+    window.dispatchEvent(new CustomEvent('ar:control-trace', { detail: entry }));
+  }
+
+  window.__AR_BOOT_ID__ = makeBootId();
+  window.__AR_CONTROL_BUFFER__ = readBuffer();
+  window.ARControlTrace = emit;
+
+  var navEntry = performance.getEntriesByType('navigation')[0];
+  emit('DOCUMENT_BOOT', {
+    navigationType: navEntry && navEntry.type || 'unknown',
+    href: location.href,
+    referrer: document.referrer,
+    userAgent: navigator.userAgent
+  });
+
+  window.addEventListener('pageshow', function(e) { emit('PAGE_SHOW', { persisted: e.persisted }); });
+  window.addEventListener('pagehide', function(e) { emit('PAGE_HIDE', { persisted: e.persisted }); });
+  window.addEventListener('beforeunload', function() { emit('BEFORE_UNLOAD'); });
+  window.addEventListener('visibilitychange', function() { emit('VISIBILITY_CHANGE', { state: document.visibilityState }); });
+  window.addEventListener('vite:preloadError', function(e) { emit('VITE_PRELOAD_ERROR', { payload: String(e.payload || '') }); });
+  window.addEventListener('error', function(e) { emit('WINDOW_ERROR', { message: e.message, source: e.filename, line: e.lineno, column: e.colno }); }, true);
+  window.addEventListener('unhandledrejection', function(e) { emit('UNHANDLED_REJECTION', { reason: String(e.reason) }); });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      emit('SW_CONTROLLER_CHANGE', { controller: navigator.serviceWorker.controller ? navigator.serviceWorker.controller.scriptURL : null });
+    });
+    emit('SW_STATE_AT_BOOT', { controller: navigator.serviceWorker.controller ? navigator.serviceWorker.controller.scriptURL : null });
+  }
+})();
+  </script>
+  <!-- Mobile debug logger — console.* override, postMessage interception -->
   <script src="/static/ar-assets/js/mobile-debug.js"></script>
   <script type="module" src="/src/main.tsx"></script>
   <!-- Eruda mobile console - Activate with ?debug=true or ?eruda=true -->

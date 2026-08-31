@@ -76,7 +76,7 @@ export const LearnAR8thWall: React.FC = () => {
   // Parent-side trace logs for Telegram sync (React state, always accessible)
   const [parentTraceLogs, setParentTraceLogs] = useState<string[]>([]);
 
-  // Helper: push timestamped trace into parentTraceLogs state
+  // Helper: push timestamped trace into parentTraceLogs state AND persistent control buffer
   const trace = (label: string, detail: string) => {
     const ts = new Date().toISOString().substring(11, 23);
     const entry = `${ts} [${label}] ${detail}`;
@@ -84,6 +84,8 @@ export const LearnAR8thWall: React.FC = () => {
       const next = [...prev, entry];
       return next.length > 200 ? next.slice(-200) : next;
     });
+    // Dual sink: also write to persistent ARControlTrace ring buffer (survives reload, immune to drop_console)
+    window.ARControlTrace?.(`AR_${label}`, { detail, phase });
   };
 
   // Telegram Sync integration

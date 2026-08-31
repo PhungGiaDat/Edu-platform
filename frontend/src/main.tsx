@@ -1,33 +1,61 @@
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext'
-import { LocaleProvider } from './contexts/LocaleContext'
-import { SessionProvider } from './contexts/SessionContext'
-import App from './App'
-import './styles/global.css'
-import './index.css'
-import './services/axiosConfig'
-import { registerAssetRecovery } from './runtime/assetRecovery'
-import { sentryMonitoringService } from './services/sentryMonitoringService'
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { LocaleProvider } from './contexts/LocaleContext';
+import { SessionProvider } from './contexts/SessionContext';
+import App from './App';
+import './styles/global.css';
+import './index.css';
+import './services/axiosConfig';
+import { registerAssetRecovery } from './runtime/assetRecovery';
+import { sentryMonitoringService } from './services/sentryMonitoringService';
 
-registerAssetRecovery()
-sentryMonitoringService.initialize()
+declare global {
+  interface Window {
+    ARControlTrace?: (label: string, details?: Record<string, unknown>) => void;
+  }
+}
 
-function registerProgressiveWebApp() {
+function arTrace(label: string, details: Record<string, unknown> = {}): void {
+  window.ARControlTrace?.(label, details);
+}
+
+arTrace('MAIN_MODULE_ENTER');
+
+arTrace('ASSET_RECOVERY_REGISTER_BEGIN');
+registerAssetRecovery();
+arTrace('ASSET_RECOVERY_REGISTER_END');
+
+arTrace('SENTRY_INITIALIZE_BEGIN');
+sentryMonitoringService.initialize();
+arTrace('SENTRY_INITIALIZE_END');
+
+arTrace('PWA_REGISTER_BEGIN');
+function registerProgressiveWebApp(): void {
   if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
+
+  arTrace('SW_REGISTER_ATTEMPT', { scope: '/' });
 
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js', { scope: '/' })
-      .catch(() => {
-        // A service worker is an enhancement; registration failures must not
-        // prevent the learner app from rendering or working online.
+      .then((reg) => {
+        arTrace('SW_REGISTER_SUCCESS', {
+          scope: reg.scope,
+          active: reg.active?.scriptURL ?? null,
+          waiting: reg.waiting?.scriptURL ?? null,
+          installing: reg.installing?.scriptURL ?? null,
+        });
+      })
+      .catch((error) => {
+        arTrace('SW_REGISTER_ERROR', { error: String(error) });
       });
   }, { once: true });
 }
+registerProgressiveWebApp();
+arTrace('PWA_REGISTER_END');
 
-registerProgressiveWebApp()
-
+arTrace('REACT_CREATE_ROOT_BEGIN');
 createRoot(document.getElementById('root')!).render(
   <BrowserRouter>
     <AuthProvider>
@@ -37,5 +65,6 @@ createRoot(document.getElementById('root')!).render(
         </SessionProvider>
       </LocaleProvider>
     </AuthProvider>
-  </BrowserRouter>
+  </BrowserRouter>,
 );
+arTrace('REACT_CREATE_ROOT_END');
