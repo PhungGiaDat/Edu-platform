@@ -1,53 +1,31 @@
 # backend/repositories/session_log_repository.py
 """
-Session Log Repository - Data Access Layer for session_logs collection
+Session Log Repository - Data Access Layer for session_logs table
+
+De-Mongo Wave 4: PostgreSQL is the sole persistence path.  The Mongo fallback
+(BaseRepository / _SafeCollection / _SafeCursor) has been removed.
 
 Backend is log-only: records start/end times and duration.
 Enforcement (break reminders, locking) is handled by the frontend.
 """
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
+from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
-from bson import ObjectId
-from database.base_repo import BaseRepository
+from database.postgres_connection import postgres_pool
 import logging
-
-if TYPE_CHECKING:
-    from motor.motor_asyncio import AsyncIOMotorCollection
 
 logger = logging.getLogger(__name__)
 
 
-class _SafeCursor:
-    def sort(self, *args, **kwargs): return self
-    async def to_list(self, *args, **kwargs): return []
-
-
-class _SafeCollection:
-    async def find_one(self, *args, **kwargs): return None
-    async def aggregate(self, *args, **kwargs): return _SafeCursor()
-    async def insert_one(self, *args, **kwargs):
-        raise RuntimeError("MongoDB unavailable: session_logs not migrated to PostgreSQL")
-    async def update_one(self, *args, **kwargs):
-        raise RuntimeError("MongoDB unavailable: session_logs not migrated to PostgreSQL")
-
-
-class SessionLogRepository(BaseRepository):
+class SessionLogRepository:
     """
-    Repository for session_logs collection.
-    One document per session; a user may have many sessions.
+    Repository for session_logs table.
+    One row per session; a user may have many sessions.
     """
 
-    def __init__(self):
-        try:
-            super().__init__("session_logs")
-        except RuntimeError:
-            self._collection = None  # pragma: no cover — postgres_core_enabled=True
-
-    @property
-    def collection(self) -> "AsyncIOMotorCollection":
-        if self._collection is None:
-            return _SafeCollection()  # type: ignore[return-value]
-        return self._collection
+    @staticmethod
+    def _row(row) -> Optional[Dict[str, Any]]:
+        """Convert an asyncpg Record to a plain dict (None-safe)."""
+        return dict(row) if row else None
 
     # ------------------------------------------------------------------
     # WRITE
@@ -57,18 +35,16 @@ class SessionLogRepository(BaseRepository):
         self, user_id: str, active_topic: Optional[str] = None
     ) -> str:
         """
-        Open a new session log. Returns the new document _id as string.
+        Open a new session log. Returns the new row id as string.
         Called by the frontend when the learner enters the app/lesson.
         """
-        doc = {
-            "user_id": user_id,
-            "started_at": datetime.utcnow(),
-            "ended_at": None,
-            "duration_seconds": None,
-            "break_reminder_sent": False,
-            "active_topic": active_topic,
-        }
-        doc_id = await self.insert_one(doc)
+        row = await postgres_pool().fetchrow(
+            """INSERT INTO public.session_logs (user_id, active_topic)
+               VALUES ($1, $2)
+               RETURNING id""",
+            user_id, active_topic,
+        )
+        doc_id = str(row["id"])
         logger.info(f"[Session] Started: user={user_id} topic={active_topic} id={doc_id}")
         return doc_id
 
@@ -80,44 +56,37 @@ class SessionLogRepository(BaseRepository):
     ) -> Optional[Dict[str, Any]]:
         """
         Close an open session. Computes duration_seconds server-side.
-        Returns the updated document, or None if not found.
+        Returns the updated row, or None if not found.
         """
-        try:
-            oid = ObjectId(session_id)
-        except Exception:
-            logger.warning(f"[Session] Invalid session_id: {session_id}")
+        if not session_id:
+            logger.warning("[Session] Invalid session_id: empty")
             return None
 
-        query: Dict[str, Any] = {"_id": oid}
+        query = "id = $1::bigint"
+        values: List[Any] = [session_id]
         if user_id:
-            query["user_id"] = user_id
-
-        doc = await self.collection.find_one(query)
-        if not doc:
-            return None
+            query += " AND user_id = $2"
+            values.append(user_id)
 
         now = datetime.utcnow()
-        started_at: datetime = doc.get("started_at", now)
-        duration_seconds = int((now - started_at).total_seconds())
-
-        await self.collection.update_one(
-            query,
-            {
-                "$set": {
-                    "ended_at": now,
-                    "duration_seconds": duration_seconds,
-                    "break_reminder_sent": break_reminder_sent,
-                }
-            },
+        row = await postgres_pool().fetchrow(
+            f"""UPDATE public.session_logs
+                SET ended_at = $1,
+                    duration_seconds = EXTRACT(EPOCH FROM (now() - started_at))::int,
+                    break_reminder_sent = $2
+                WHERE {query}
+                RETURNING *""",
+            now, break_reminder_sent, *values,
         )
+        if not row:
+            return None
+
+        doc = dict(row)
         logger.info(
-            f"[Session] Ended: id={session_id} duration={duration_seconds}s "
+            f"[Session] Ended: id={session_id} duration={doc.get('duration_seconds')}s "
             f"break_reminder={break_reminder_sent}"
         )
-        updated = await self.collection.find_one({"_id": oid})
-        if updated and "_id" in updated:
-            updated["_id"] = str(updated["_id"])
-        return updated
+        return doc
 
     # ------------------------------------------------------------------
     # READ
@@ -128,80 +97,70 @@ class SessionLogRepository(BaseRepository):
     ) -> List[Dict[str, Any]]:
         """Get recent closed sessions for a user (for Progress Report)."""
         since = datetime.utcnow() - timedelta(days=days)
-        docs = await self.find_many(
-            filter={
-                "user_id": user_id,
-                "started_at": {"$gte": since},
-                "ended_at": {"$ne": None},
-            },
-            limit=limit,
-            sort=[("started_at", -1)],
+        rows = await postgres_pool().fetch(
+            """SELECT * FROM public.session_logs
+               WHERE user_id=$1 AND started_at >= $2 AND ended_at IS NOT NULL
+               ORDER BY started_at DESC
+               LIMIT $3""",
+            user_id, since, limit,
         )
-        for doc in docs:
-            if "_id" in doc:
-                doc["_id"] = str(doc["_id"])
-        return docs
+        return [dict(r) for r in rows]
 
     async def get_summary(self, user_id: str) -> Dict[str, Any]:
         """
         Aggregate session stats for the Progress Report:
         total_sessions, total_time_seconds, average, longest, most_studied_topic.
         """
-        pipeline = [
-            {"$match": {"user_id": user_id, "ended_at": {"$ne": None}}},
-            {
-                "$group": {
-                    "_id": None,
-                    "total_sessions": {"$sum": 1},
-                    "total_time_seconds": {"$sum": "$duration_seconds"},
-                    "average_session_seconds": {"$avg": "$duration_seconds"},
-                    "longest_session_seconds": {"$max": "$duration_seconds"},
-                }
-            },
-        ]
-        cursor = self.collection.aggregate(pipeline)
-        results = await cursor.to_list(length=1)
+        row = await postgres_pool().fetchrow(
+            """SELECT
+                   count(*)::int AS total_sessions,
+                   coalesce(sum(duration_seconds), 0)::int AS total_time_seconds,
+                   coalesce(avg(duration_seconds), 0)::float AS average_session_seconds,
+                   coalesce(max(duration_seconds), 0)::int AS longest_session_seconds
+               FROM public.session_logs
+               WHERE user_id=$1 AND ended_at IS NOT NULL""",
+            user_id,
+        )
 
-        # Most studied topic — separate aggregation
-        topic_pipeline = [
-            {"$match": {"user_id": user_id, "active_topic": {"$ne": None}}},
-            {"$group": {"_id": "$active_topic", "count": {"$sum": 1}}},
-            {"$sort": {"count": -1}},
-            {"$limit": 1},
-        ]
-        topic_cursor = self.collection.aggregate(topic_pipeline)
-        topic_results = await topic_cursor.to_list(length=1)
-        most_studied_topic = topic_results[0]["_id"] if topic_results else None
+        # Most studied topic — most frequent active_topic among closed sessions.
+        topic_row = await postgres_pool().fetchrow(
+            """SELECT active_topic FROM public.session_logs
+               WHERE user_id=$1 AND ended_at IS NOT NULL AND active_topic IS NOT NULL
+               GROUP BY active_topic
+               ORDER BY count(*) DESC
+               LIMIT 1""",
+            user_id,
+        )
 
-        if results:
-            r = results[0]
+        if not row:
             return {
                 "user_id": user_id,
-                "total_sessions": r["total_sessions"],
-                "total_time_seconds": r["total_time_seconds"] or 0,
-                "average_session_seconds": round(r["average_session_seconds"] or 0, 1),
-                "longest_session_seconds": r["longest_session_seconds"] or 0,
-                "most_studied_topic": most_studied_topic,
+                "total_sessions": 0,
+                "total_time_seconds": 0,
+                "average_session_seconds": 0.0,
+                "longest_session_seconds": 0,
+                "most_studied_topic": None,
             }
 
         return {
             "user_id": user_id,
-            "total_sessions": 0,
-            "total_time_seconds": 0,
-            "average_session_seconds": 0.0,
-            "longest_session_seconds": 0,
-            "most_studied_topic": None,
+            "total_sessions": row["total_sessions"],
+            "total_time_seconds": row["total_time_seconds"],
+            "average_session_seconds": round(row["average_session_seconds"], 1),
+            "longest_session_seconds": row["longest_session_seconds"],
+            "most_studied_topic": topic_row["active_topic"] if topic_row else None,
         }
 
     async def get_active_session(self, user_id: str) -> Optional[Dict[str, Any]]:
         """Return the most recent unclosed session for a user (if any)."""
-        doc = await self.collection.find_one(
-            {"user_id": user_id, "ended_at": None},
-            sort=[("started_at", -1)],
+        row = await postgres_pool().fetchrow(
+            """SELECT * FROM public.session_logs
+               WHERE user_id=$1 AND ended_at IS NULL
+               ORDER BY started_at DESC
+               LIMIT 1""",
+            user_id,
         )
-        if doc and "_id" in doc:
-            doc["_id"] = str(doc["_id"])
-        return doc
+        return self._row(row)
 
 
 def get_session_log_repository() -> SessionLogRepository:

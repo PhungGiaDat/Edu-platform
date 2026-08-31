@@ -1,71 +1,31 @@
 # backend/repositories/session_tracking_repository.py
 """
 Session Tracking Repository - Data Access Layer for active_sessions and session_activities
-"""
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
-from datetime import datetime, timedelta
-from database.base_repo import BaseRepository
-import logging
 
-if TYPE_CHECKING:
-    from motor.motor_asyncio import AsyncIOMotorCollection
+De-Mongo Wave 4: PostgreSQL is the sole persistence path.  The Mongo fallback
+(BaseRepository / _SafeCollection / _SafeCursor) has been removed; there is no
+runtime gate anymore.  The ``active_sessions`` and ``session_activities`` tables
+are created by database/postgres/migrations/20260901_01_session_tracking.sql.
+"""
+from typing import Optional, List, Dict, Any
+from datetime import datetime, timedelta
+from database.postgres_connection import postgres_pool
+import logging
+import json
 
 logger = logging.getLogger(__name__)
 
 
-class _SafeCursor:
-    def sort(self, *args, **kwargs): return self
-    def skip(self, *args, **kwargs): return self
-    def limit(self, *args, **kwargs): return self
-    async def to_list(self, *args, **kwargs): return []
-    async def count(self, *args, **kwargs): return 0
-
-
-class _SafeCollection:
-    async def find_one(self, *args, **kwargs): return None
-    async def find(self, *args, **kwargs): return _SafeCursor()
-    async def count_documents(self, *args, **kwargs): return 0
-    async def update_one(self, *args, **kwargs): return _SafeUpdateResult(0)
-    async def insert_one(self, *args, **kwargs):
-        raise RuntimeError("MongoDB unavailable: session_tracking not migrated to PostgreSQL")
-
-
-class _SafeUpdateResult:
-    def __init__(self, modified_count: int):
-        self.modified_count = modified_count
-        self.matched_count = modified_count
-        self.upserted_id = None
-
-
-class SessionTrackingRepository(BaseRepository):
+class SessionTrackingRepository:
     """
-    Repository for active_sessions collection.
+    Repository for active_sessions table.
     Handles session heartbeat, status tracking, and app locking.
     """
 
-    def __init__(self):
-        try:
-            super().__init__("active_sessions")
-        except RuntimeError:
-            self._collection = None  # pragma: no cover — postgres_core_enabled=True
-        self._activities_collection_name = "session_activities"
-        self._activities_collection: Optional["AsyncIOMotorCollection"] = None
-
-    @property
-    def collection(self) -> "AsyncIOMotorCollection":
-        if self._collection is None:
-            return _SafeCollection()  # type: ignore[return-value]
-        return self._collection
-
-    @property
-    def activities_collection(self) -> "AsyncIOMotorCollection":
-        if self._collection is None:
-            return _SafeCollection()  # pragma: no cover — postgres_core_enabled=True
-        if self._activities_collection is None:
-            from database.mongodb import get_collection
-            self._activities_collection = get_collection(self._activities_collection_name)
-        return self._activities_collection
-        return get_collection(self._activities_collection_name)
+    @staticmethod
+    def _row(row) -> Optional[Dict[str, Any]]:
+        """Convert an asyncpg Record to a plain dict (None-safe)."""
+        return dict(row) if row else None
 
     # ------------------------------------------------------------------
     # SESSION MANAGEMENT
@@ -76,45 +36,45 @@ class SessionTrackingRepository(BaseRepository):
         user_id: str,
         session_id: str
     ) -> str:
-        """Create or update an active session."""
+        """Create or update an active session.
+
+        Ends any other live session for the user, then upserts the target
+        session (ON CONFLICT on the primary key session_id).
+        """
         now = datetime.utcnow()
-        doc = {
-            "session_id": session_id,
-            "user_id": user_id,
-            "status": "active",
-            "started_at": now,
-            "last_heartbeat": now,
-            "last_activity_at": now,
-            "current_step_id": None,
-            "current_step_index": 0,
-            "progress_percent": 0,
-            "is_locked": False,
-            "locked_at": None,
-            "locked_until": None,
-            "locked_reason": None,
-            "idle_seconds": 0,
-        }
 
-        await self.collection.update_one(
-            {"user_id": user_id, "status": {"$ne": "ended"}},
-            {
-                "$set": {"status": "ended", "ended_at": now, "updated_at": now},
-            }
+        # End other live sessions for this user.
+        await postgres_pool().execute(
+            """UPDATE public.active_sessions
+               SET status='ended', ended_at=$2, updated_at=$2
+               WHERE user_id=$1 AND status <> 'ended'""",
+            user_id, now,
         )
 
-        result = await self.collection.update_one(
-            {"session_id": session_id},
-            {
-                "$set": doc,
-                "$setOnInsert": {"created_at": now}
-            },
-            upsert=True
+        # Upsert the target session.
+        row = await postgres_pool().fetchrow(
+            """INSERT INTO public.active_sessions
+                   (session_id, user_id, status, started_at, last_heartbeat,
+                    last_activity_at, current_step_id, current_step_index,
+                    progress_percent, is_locked, locked_at, locked_until,
+                    locked_reason, idle_seconds)
+               VALUES ($1, $2, 'active', $3, $3, $3, NULL, 0, 0, FALSE, NULL, NULL, NULL, 0)
+               ON CONFLICT (session_id) DO UPDATE SET
+                   user_id = EXCLUDED.user_id,
+                   status = 'active',
+                   last_heartbeat = $3,
+                   last_activity_at = $3,
+                   idle_seconds = 0,
+                   ended_at = NULL,
+                   updated_at = $3
+               RETURNING session_id""",
+            session_id, user_id, now,
         )
 
-        if result.upserted_id:
-            logger.info(f"[SessionTracking] Created new session: {session_id}")
+        if row:
+            logger.info(f"[SessionTracking] Created/updated session: {session_id}")
         else:
-            logger.debug(f"[SessionTracking] Updated session: {session_id}")
+            logger.debug(f"[SessionTracking] No-op session update: {session_id}")
 
         return session_id
 
@@ -143,50 +103,52 @@ class SessionTrackingRepository(BaseRepository):
         if progress_percent is not None:
             update_data["progress_percent"] = progress_percent
 
-        result = await self.collection.update_one(
-            {"session_id": session_id, "user_id": user_id},
-            {"$set": update_data}
+        set_clauses = []
+        values: List[Any] = []
+        for key, value in update_data.items():
+            set_clauses.append(f"{key} = ${len(values) + 2}")
+            values.append(value)
+
+        row = await postgres_pool().fetchrow(
+            f"""UPDATE public.active_sessions
+                SET {', '.join(set_clauses)}
+                WHERE session_id=$1 AND user_id=$2
+                RETURNING *""",
+            session_id, user_id, *values,
         )
 
-        if result.modified_count > 0:
-            doc = await self.collection.find_one({"session_id": session_id})
-            if doc and "_id" in doc:
-                doc["_id"] = str(doc["_id"])
-            return doc
-
-        return None
+        return self._row(row)
 
     async def get_active_session(self, user_id: str) -> Optional[Dict[str, Any]]:
         """Get the current active session for a user."""
-        doc = await self.collection.find_one({
-            "user_id": user_id,
-            "status": {"$in": ["active", "idle", "locked"]}
-        })
-        if doc and "_id" in doc:
-            doc["_id"] = str(doc["_id"])
-        return doc
+        row = await postgres_pool().fetchrow(
+            """SELECT * FROM public.active_sessions
+               WHERE user_id=$1 AND status IN ('active', 'idle', 'locked')
+               ORDER BY started_at DESC
+               LIMIT 1""",
+            user_id,
+        )
+        return self._row(row)
 
     async def get_session_by_id(self, session_id: str) -> Optional[Dict[str, Any]]:
         """Get a session by its ID."""
-        doc = await self.collection.find_one({"session_id": session_id})
-        if doc and "_id" in doc:
-            doc["_id"] = str(doc["_id"])
-        return doc
+        row = await postgres_pool().fetchrow(
+            "SELECT * FROM public.active_sessions WHERE session_id=$1",
+            session_id,
+        )
+        return self._row(row)
 
     async def end_session(self, session_id: str, user_id: str) -> bool:
         """End a session."""
         now = datetime.utcnow()
-        result = await self.collection.update_one(
-            {"session_id": session_id, "user_id": user_id},
-            {
-                "$set": {
-                    "status": "ended",
-                    "ended_at": now,
-                    "updated_at": now,
-                }
-            }
+        row = await postgres_pool().fetchrow(
+            """UPDATE public.active_sessions
+               SET status='ended', ended_at=$3, updated_at=$3
+               WHERE session_id=$1 AND user_id=$2
+               RETURNING session_id""",
+            session_id, user_id, now,
         )
-        return result.modified_count > 0
+        return row is not None
 
     # ------------------------------------------------------------------
     # APP LOCK
@@ -205,45 +167,32 @@ class SessionTrackingRepository(BaseRepository):
         if duration_minutes:
             locked_until = now + timedelta(minutes=duration_minutes)
 
-        update_data: Dict[str, Any] = {
-            "status": "locked",
-            "is_locked": True,
-            "locked_at": now,
-            "locked_until": locked_until,
-            "locked_reason": reason,
-            "updated_at": now,
-        }
-
-        result = await self.collection.update_one(
-            {"session_id": session_id, "user_id": user_id},
-            {"$set": update_data}
+        row = await postgres_pool().fetchrow(
+            """UPDATE public.active_sessions
+               SET status='locked', is_locked=TRUE, locked_at=$3, locked_until=$4,
+                   locked_reason=$5, updated_at=$3
+               WHERE session_id=$1 AND user_id=$2
+               RETURNING *""",
+            session_id, user_id, now, locked_until, reason,
         )
 
-        if result.modified_count > 0:
-            doc = await self.collection.find_one({"session_id": session_id})
-            if doc and "_id" in doc:
-                doc["_id"] = str(doc["_id"])
+        doc = self._row(row)
+        if doc:
             logger.info(f"[SessionTracking] App locked: session={session_id} reason={reason}")
-            return doc
-
-        return None
+        return doc
 
     async def unlock_app(self, session_id: str, user_id: str) -> bool:
         """Unlock the app for a session."""
-        result = await self.collection.update_one(
-            {"session_id": session_id, "user_id": user_id},
-            {
-                "$set": {
-                    "status": "active",
-                    "is_locked": False,
-                    "locked_at": None,
-                    "locked_until": None,
-                    "locked_reason": None,
-                    "updated_at": datetime.utcnow(),
-                }
-            }
+        now = datetime.utcnow()
+        row = await postgres_pool().fetchrow(
+            """UPDATE public.active_sessions
+               SET status='active', is_locked=FALSE, locked_at=NULL, locked_until=NULL,
+                   locked_reason=NULL, updated_at=$3
+               WHERE session_id=$1 AND user_id=$2
+               RETURNING session_id""",
+            session_id, user_id, now,
         )
-        return result.modified_count > 0
+        return row is not None
 
     # ------------------------------------------------------------------
     # IDLE DETECTION
@@ -251,39 +200,32 @@ class SessionTrackingRepository(BaseRepository):
 
     async def mark_idle(self, session_id: str, user_id: str) -> bool:
         """Mark a session as idle (no heartbeat received)."""
-        result = await self.collection.update_one(
-            {"session_id": session_id, "user_id": user_id, "status": "active"},
-            {
-                "$set": {
-                    "status": "idle",
-                    "updated_at": datetime.utcnow(),
-                }
-            }
+        now = datetime.utcnow()
+        row = await postgres_pool().fetchrow(
+            """UPDATE public.active_sessions
+               SET status='idle', updated_at=$3
+               WHERE session_id=$1 AND user_id=$2 AND status='active'
+               RETURNING session_id""",
+            session_id, user_id, now,
         )
-        return result.modified_count > 0
+        return row is not None
 
     async def cleanup_stale_sessions(self, idle_threshold_seconds: int = 300) -> int:
-        """Mark stale sessions as idle or ended."""
+        """Mark stale sessions as idle."""
         threshold = datetime.utcnow() - timedelta(seconds=idle_threshold_seconds)
 
-        result = await self.collection.update_many(
-            {
-                "status": "active",
-                "last_heartbeat": {"$lt": threshold},
-            },
-            {
-                "$set": {
-                    "status": "idle",
-                    "idle_seconds": int(idle_threshold_seconds),
-                    "updated_at": datetime.utcnow(),
-                }
-            }
+        rows = await postgres_pool().fetch(
+            """UPDATE public.active_sessions
+               SET status='idle', idle_seconds=$2, updated_at=$3
+               WHERE status='active' AND last_heartbeat < $1
+               RETURNING session_id""",
+            threshold, int(idle_threshold_seconds), datetime.utcnow(),
         )
 
-        if result.modified_count > 0:
-            logger.info(f"[SessionTracking] Marked {result.modified_count} sessions as idle")
-
-        return result.modified_count
+        count = len(rows)
+        if count:
+            logger.info(f"[SessionTracking] Marked {count} sessions as idle")
+        return count
 
     # ------------------------------------------------------------------
     # ACTIVITY LOGGING
@@ -297,15 +239,15 @@ class SessionTrackingRepository(BaseRepository):
         activity_data: Optional[Dict[str, Any]] = None
     ) -> str:
         """Log an activity event for analytics."""
-        doc = {
-            "session_id": session_id,
-            "user_id": user_id,
-            "activity_type": activity_type,
-            "activity_data": activity_data or {},
-            "timestamp": datetime.utcnow(),
-        }
-        result = await self.activities_collection.insert_one(doc)
-        return str(result.inserted_id)
+        row = await postgres_pool().fetchrow(
+            """INSERT INTO public.session_activities
+                   (session_id, user_id, activity_type, activity_data)
+               VALUES ($1, $2, $3, $4::jsonb)
+               RETURNING id""",
+            session_id, user_id, activity_type,
+            json.dumps(activity_data or {}, default=str),
+        )
+        return str(row["id"]) if row else ""
 
     async def get_session_activities(
         self,
@@ -313,10 +255,15 @@ class SessionTrackingRepository(BaseRepository):
         limit: int = 100
     ) -> List[Dict[str, Any]]:
         """Get activity log for a session."""
-        cursor = self.activities_collection.find(
-            {"session_id": session_id}
-        ).sort("timestamp", -1).limit(limit)
-        return await cursor.to_list(length=limit)
+        rows = await postgres_pool().fetch(
+            """SELECT id, session_id, user_id, activity_type, activity_data, timestamp
+               FROM public.session_activities
+               WHERE session_id=$1
+               ORDER BY timestamp DESC
+               LIMIT $2""",
+            session_id, limit,
+        )
+        return [dict(r) for r in rows]
 
     # ------------------------------------------------------------------
     # METRICS
@@ -327,49 +274,38 @@ class SessionTrackingRepository(BaseRepository):
         today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
         week_ago = today - timedelta(days=7)
 
-        # Total sessions and time
-        pipeline = [
-            {"$match": {"user_id": user_id, "status": "ended"}},
-            {
-                "$group": {
-                    "_id": None,
-                    "total_sessions": {"$sum": 1},
-                    "total_time_seconds": {"$sum": "$idle_seconds"},
-                }
-            }
-        ]
-        cursor = self.collection.aggregate(pipeline)
-        totals = await cursor.to_list(length=1)
+        # Total sessions and time (status='ended' rows)
+        total_row = await postgres_pool().fetchrow(
+            """SELECT
+                   count(*)::int AS total_sessions,
+                   coalesce(sum(EXTRACT(EPOCH FROM (ended_at - started_at)))::int, 0) AS total_time_seconds
+               FROM public.active_sessions
+               WHERE user_id=$1 AND status='ended'""",
+            user_id,
+        )
+        totals = dict(total_row) if total_row else {"total_sessions": 0, "total_time_seconds": 0}
 
         # Today's stats
-        today_pipeline = [
-            {"$match": {
-                "user_id": user_id,
-                "started_at": {"$gte": today},
-                "status": "ended"
-            }},
-            {"$group": {
-                "_id": None,
-                "sessions_today": {"$sum": 1},
-                "time_today": {"$sum": "$idle_seconds"},
-            }}
-        ]
-        today_cursor = self.collection.aggregate(today_pipeline)
-        today_stats = await today_cursor.to_list(length=1)
-
-        total = totals[0] if totals else {"total_sessions": 0, "total_time_seconds": 0}
-        today_data = today_stats[0] if today_stats else {"sessions_today": 0, "time_today": 0}
+        today_row = await postgres_pool().fetchrow(
+            """SELECT
+                   count(*)::int AS sessions_today,
+                   coalesce(sum(EXTRACT(EPOCH FROM (ended_at - started_at)))::int, 0) AS time_today
+               FROM public.active_sessions
+               WHERE user_id=$1 AND status='ended' AND started_at >= $2""",
+            user_id, today,
+        )
+        today_stats = dict(today_row) if today_row else {"sessions_today": 0, "time_today": 0}
 
         return {
             "user_id": user_id,
-            "total_sessions": total.get("total_sessions", 0),
-            "total_time_seconds": total.get("total_time_seconds", 0),
+            "total_sessions": totals.get("total_sessions", 0),
+            "total_time_seconds": totals.get("total_time_seconds", 0),
             "average_session_seconds": (
-                total.get("total_time_seconds", 0) / total.get("total_sessions", 1)
-                if total.get("total_sessions", 0) > 0 else 0
+                totals.get("total_time_seconds", 0) / totals.get("total_sessions", 1)
+                if totals.get("total_sessions", 0) > 0 else 0
             ),
-            "sessions_today": today_data.get("sessions_today", 0),
-            "time_today_seconds": today_data.get("time_today", 0),
+            "sessions_today": today_stats.get("sessions_today", 0),
+            "time_today_seconds": today_stats.get("time_today", 0),
         }
 
 
