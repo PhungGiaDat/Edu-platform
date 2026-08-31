@@ -126,7 +126,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({
     if (!canvasRef.current || !videoRef.current) return;
     const canvas = canvasRef.current;
     const video = videoRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     if (!ctx) return;
 
     function scan() {
