@@ -2,7 +2,6 @@
 from datetime import datetime
 from typing import List, Optional
 
-from beanie import Document, Indexed
 from pydantic import BaseModel, Field
 
 
@@ -33,22 +32,6 @@ class ProfileContentSettings(BaseModel):
     daily_challenge_target: int = Field(default=3, ge=1)
     daily_challenge_reward: str = "50 XP + Mystery Badge"
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-
-
-class ProfileContentDocument(Document):
-    """Editable copy for the profile; one ``default`` document is seeded lazily."""
-    key: Indexed(str, unique=True) = "default"
-    hero_subtitle: str
-    testimonials_heading: str
-    testimonials: List[ProfileTestimonial] = Field(default_factory=list)
-    cta: ProfileCta
-    daily_challenge_title: str = "Complete 3 Lessons"
-    daily_challenge_target: int = Field(default=3, ge=1)
-    daily_challenge_reward: str = "50 XP + Mystery Badge"
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-
-    class Settings:
-        name = "profile_content"
 
 
 class ProfileIdentity(BaseModel):

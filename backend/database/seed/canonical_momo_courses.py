@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from settings import settings
 from models.lesson_activity import LessonLearningBlocks
 
 
@@ -46,6 +47,8 @@ class VocabularyEntry:
     vocabulary_id: str
     word_en: str
     word_vi: str
+    source_image: dict[str, Any]
+    source_audio: dict[str, Any] | None
 
 
 @dataclass(frozen=True)
@@ -85,6 +88,8 @@ class CourseLessonSource:
     order: int
     title: str
     title_vi: str
+    description: str | None
+    duration_minutes: int
     learning_blocks: dict[str, Any]
 
 
@@ -92,8 +97,80 @@ class CourseLessonSource:
 class CourseSource:
     course_id: str
     title: str
+    title_vi: str
+    description: str | None
+    description_vi: str
+    thumbnail_url: str | None
+    subtitle_vi: str
+    theme: str
+    age_range: str
+    level: str
     category_key: str
+    category_label: str
+    category_icon: str
+    thumbnail: dict[str, Any] | None
+    catalog_preview: tuple[dict[str, Any], ...]
+    is_published: bool
     lessons: tuple[CourseLessonSource, ...]
+
+
+def build_storage_public_url(bucket: str, path: str) -> str:
+    project = (settings.SUPABASE_PROJECT_URL or "").rstrip("/")
+    if not project or not bucket or not path:
+        raise ValueError("Supabase project URL, bucket, and path are required")
+    return f"{project}/storage/v1/object/public/{bucket}/{path.lstrip('/')}"
+
+
+def semantic_flashcard_qr_id(word_en: str, word_vi: str) -> str:
+    english = slugify(word_en)
+    vietnamese = slugify(word_vi)
+    if not english or not vietnamese:
+        raise ValueError("Semantic flashcard qr_id requires non-empty English and Vietnamese words")
+    return f"momo:{english}:{vietnamese}"
+
+
+def _validate_supabase_ref(value: Any, *, required: bool, expected_type: str) -> dict[str, str] | None:
+    if value is None:
+        if required:
+            raise ValueError(f"Missing required {expected_type} reference")
+        return None
+    if not isinstance(value, dict):
+        raise ValueError(f"Invalid {expected_type} reference payload")
+    bucket = str(value.get("bucket") or "").strip()
+    path = str(value.get("path") or "").strip()
+    ref_type = str(value.get("type") or expected_type).strip()
+    if not bucket or not path:
+        raise ValueError(f"Invalid {expected_type} reference payload")
+    if ref_type and ref_type != expected_type:
+        raise ValueError(f"Invalid {expected_type} reference type")
+    return {"bucket": bucket, "path": path}
+
+
+def build_missing_flashcard_owner_payload(
+    *,
+    course_id: str,
+    lesson_id: str,
+    vocabulary_item: dict[str, Any],
+    category_key: str,
+) -> dict[str, Any]:
+    word_en = str(vocabulary_item.get("word_en") or "").strip()
+    word_vi = str(vocabulary_item.get("word_vi") or "").strip()
+    if not word_en or not word_vi:
+        raise ValueError(f"Missing required vocabulary words for {course_id}/{lesson_id}")
+    image_ref = _validate_supabase_ref(vocabulary_item.get("image"), required=True, expected_type="image")
+    audio_ref = _validate_supabase_ref(vocabulary_item.get("audio"), required=False, expected_type="audio")
+    return {
+        "qr_id": semantic_flashcard_qr_id(word_en, word_vi),
+        "word_en": word_en,
+        "word_vi": word_vi,
+        "word": word_en,
+        "translation": {"en": word_en.lower(), "vi": word_vi},
+        "category": category_key,
+        "image_url": build_storage_public_url(image_ref["bucket"], image_ref["path"]),
+        "audio_url": None if audio_ref is None else build_storage_public_url(audio_ref["bucket"], audio_ref["path"]),
+        "difficulty": "easy",
+        "is_active": True,
+    }
 
 
 class ManifestCatalog:
@@ -121,6 +198,8 @@ def build_course_index() -> dict[str, CourseSource]:
                 order=int(lesson["order"]),
                 title=str(lesson["title"]),
                 title_vi=str(lesson.get("title_vi", "")),
+                description=lesson.get("description"),
+                duration_minutes=int(lesson.get("duration_minutes") or 3),
                 learning_blocks={
                     key: lesson[key]
                     for key in ("vocabulary", "game", "activity", "readAloudStory", "pronunciation", "quiz")
@@ -132,7 +211,20 @@ def build_course_index() -> dict[str, CourseSource]:
         courses[str(raw["course_id"])] = CourseSource(
             course_id=str(raw["course_id"]),
             title=str(raw["title"]),
+            title_vi=str(raw.get("title_vi") or ""),
+            description=raw.get("description"),
+            description_vi=str(raw.get("description_vi") or ""),
+            thumbnail_url=raw.get("thumbnail_url"),
+            subtitle_vi=str(raw.get("subtitle_vi") or ""),
+            theme=str(raw.get("theme") or ""),
+            age_range=str(raw.get("age_range") or "5-8"),
+            level=str(raw.get("level") or "beginner"),
             category_key=str(raw.get("category_key", "")),
+            category_label=str(raw.get("category_label") or ""),
+            category_icon=str(raw.get("category_icon") or ""),
+            thumbnail=dict(raw["thumbnail"]) if isinstance(raw.get("thumbnail"), dict) else None,
+            catalog_preview=tuple(dict(item) for item in raw.get("catalogPreview", []) if isinstance(item, dict)),
+            is_published=bool(raw.get("is_published", True)),
             lessons=lessons,
         )
     return courses
@@ -181,6 +273,8 @@ def _build_vocabulary(lesson: CourseLessonSource) -> tuple[VocabularyEntry, ...]
             vocabulary_id=f"{lesson.lesson_id}:{slugify(str(item['word_en']))}",
             word_en=str(item["word_en"]),
             word_vi=str(item["word_vi"]),
+            source_image=dict(item.get("image") or {}),
+            source_audio=dict(item["audio"]) if isinstance(item.get("audio"), dict) else None,
         )
         for item in lesson.learning_blocks.get("vocabulary", [])
     )

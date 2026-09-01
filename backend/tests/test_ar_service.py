@@ -340,12 +340,7 @@ class TestComboEdgeCases:
 # ============================================================================
 
 class TestARCombinationModelFields:
-    """Test ARCombination model includes cross_category_allowed field."""
-
-    def test_model_has_cross_category_allowed_field(self):
-        """ARCombination model should have cross_category_allowed field."""
-        from models.ar_combination import ARCombination
-        assert "cross_category_allowed" in ARCombination.model_fields
+    """Test ArCombinationSchema includes cross_category_allowed field."""
 
     def test_schema_has_cross_category_allowed_field(self):
         """ArCombinationSchema should have cross_category_allowed field."""

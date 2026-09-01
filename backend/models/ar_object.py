@@ -1,89 +1,13 @@
 # models/ar_object.py
 """
-AR Object Models - Beanie Documents and Pydantic Schemas
+AR Object Models - PostgreSQL via repositories
 
-Architecture: Hybrid Database (Beanie for MongoDB)
-- Beanie Document for database operations
-- Pydantic schemas for API request/response
+All database operations go through ARObjectRepository (PostgreSQL).
+Pydantic schemas are used for API request/response validation.
 """
-from beanie import Document, Indexed
 from pydantic import BaseModel, Field, model_validator
-from typing import Optional, Any, List
+from typing import Optional, List
 from datetime import datetime
-
-
-# ========== Beanie Document (MongoDB) ==========
-class ARObject(Document):
-    """
-    AR Object Document - stored in MongoDB
-
-    Collection: ar_objects
-    Contains NFT marker data and 3D model references
-
-    Catalog identity fields
-    -----------------------
-    ``mind_catalog_id`` and ``mind_target_index`` together identify the slot
-    inside a versioned MindAR catalog (``.mind`` + ``.manifest.json`` pair).
-    The pair is mandatory on every document because the runtime renders AR
-    scenes by catalog slot, not by raw URL.  See Task 2 of the
-    Shared-Mind Persistent Viewer plan.
-    """
-
-    ar_tag: Indexed(str, unique=True)  # Unique AR marker/target identifier
-    description: str
-    animation_type: str = Field(default="none")  # none, rotate, bounce, etc.
-    glb_size: float = Field(default=1.0)
-
-    # DEPRECATED: legacy per-target MindAR URL.  Kept as an optional read-only
-    # field so existing admin responses remain backward-compatible, but
-    # new code must read ``mind_url`` from the catalog manifest, not from
-    # this document.  See catalog identity fields below for the runtime
-    # source of truth.
-    nft_base_url: Optional[str] = None
-
-    # Model URLs
-    model_3d_url: str  # URL to .glb/.gltf 3D model
-    texture_url: Optional[str] = None  # URL to separate texture (optional)
-    image_2d_url: str  # URL to 2D fallback image
-
-    # Transform properties
-    position: str = Field(default="0 0 0")  # x y z
-    rotation: str = Field(default="0 0 0")  # x y z (degrees)
-    scale: str = Field(default="1 1 1")  # x y z
-
-    # Catalog identity (versioned MindAR catalog slot)
-    mind_catalog_id: str  # Identifier of the compiled .mind catalog, e.g. "animals-v2"
-    mind_target_index: int  # Zero-based index of the slot inside that catalog
-
-    # Metadata
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: Optional[datetime] = None
-
-    class Settings:
-        name = "ar_objects"  # MongoDB collection name
-        indexes = [
-            "animation_type",
-            "mind_catalog_id",
-        ]
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "ar_tag": "apple_marker",
-                "description": "3D apple model for vocabulary learning",
-                "animation_type": "rotate",
-                "glb_size": 0.5,
-                "nft_base_url": "/static/assets/target/apple",
-                "model_3d_url": "/static/assets/models/apple.glb",
-                "texture_url": "/static/assets/textures/apple.png",
-                "image_2d_url": "/static/images/apple.png",
-                "position": "0 0.5 0",
-                "rotation": "0 0 0",
-                "scale": "0.5 0.5 0.5",
-                "mind_catalog_id": "animals-v2",
-                "mind_target_index": 0,
-            }
-        }
 
 
 # ========== Animations Mixin ==========

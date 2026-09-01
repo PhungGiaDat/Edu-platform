@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { AssetTile } from '@/features/courses/components/CourseLearningBlocks';
+import { CourseMissionPath } from '@/features/courses/components/CourseMissionPath';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
@@ -10,8 +11,6 @@ import {
   courseTheme,
   courseTitle,
   enrollmentCta,
-  lessonDescription,
-  lessonTitle,
   testimonials,
 } from '@/lib/courseLocale';
 import { courseService } from '@/services/CourseService';
@@ -128,6 +127,11 @@ export const CourseDetail: React.FC = () => {
     };
   }, [course, progress]);
 
+  const handleLessonOpen = (lessonId: string) => {
+    if (!course) return;
+    navigate(`/courses/${course.course_id}/lessons/${lessonId}`);
+  };
+
   if (isLoading) {
     return <div className="min-h-screen clay-bg-playful p-6 text-center text-xl font-black text-slate-700">{copy.loadingCourse}</div>;
   }
@@ -205,38 +209,12 @@ export const CourseDetail: React.FC = () => {
         <section className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
           <div>
             <h2 className="mb-4 text-3xl font-black text-slate-800">{copy.courseSections}</h2>
-            <div className="grid gap-4">
-              {course.lessons.map((lesson) => {
-                const isComplete = progress?.completed_lessons.includes(lesson.lesson_id) || false;
-                return (
-                  <Link
-                    key={lesson.lesson_id}
-                    to={`/courses/${course.course_id}/lessons/${lesson.lesson_id}`}
-                    className="rounded-[30px] border-4 border-white bg-white p-4 shadow-[0_8px_0_rgba(91,141,239,0.12)] transition-transform hover:-translate-y-1"
-                  >
-                    <div className="grid gap-4 sm:grid-cols-[72px_minmax(0,1fr)_auto] sm:items-center">
-                      <div className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl font-black ${isComplete ? 'bg-emerald-100 text-emerald-600' : 'bg-sky-100 text-sky-600'}`}>
-                        {lesson.order}
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="text-xl font-black text-slate-800">{lessonTitle(lesson, locale)}</h3>
-                        <p className="font-bold text-slate-500">{lessonDescription(lesson, locale)}</p>
-                        <div className="mt-2 flex flex-wrap gap-2 text-xs font-black">
-                          <span className="rounded-full bg-yellow-50 px-3 py-1 text-yellow-700">{lesson.duration_minutes} {copy.minute}</span>
-                          <span className="rounded-full bg-sky-50 px-3 py-1 text-sky-700">{lesson.vocabulary.length} {copy.words}</span>
-                          {lesson.pronunciation && <span className="rounded-full bg-violet-50 px-3 py-1 text-violet-700">{copy.say}</span>}
-                          {lesson.game && <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700">{copy.game}</span>}
-                          <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">{lesson.quiz.length} {copy.quiz}</span>
-                        </div>
-                      </div>
-                      <span className="clay-btn clay-btn-sm justify-center bg-[#B4E197] text-slate-800">
-                        {isComplete ? copy.review : copy.startLesson}
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+            <CourseMissionPath
+              lessons={course.lessons}
+              progress={progress}
+              locale={locale}
+              onLessonOpen={handleLessonOpen}
+            />
           </div>
 
           <aside className="space-y-5">

@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from models.user_mongo import UserResponse
+from models.user_schemas import UserResponse
 
 
 # The repository's services package eagerly imports speech/ML integrations in

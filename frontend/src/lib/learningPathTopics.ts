@@ -64,7 +64,7 @@ export const learningTopics: LearningTopic[] = [
     icon: 'AN',
     wordCount: 15,
     ageBand: '5-8',
-    relatedCourseKeys: ['nature'],
+    relatedCourseKeys: ['animals'],
     keywords: ['animal', 'animals', 'cat', 'dog', 'bird', 'fish', 'elephant', 'jungle'],
   },
   {

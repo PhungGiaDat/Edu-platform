@@ -62,6 +62,12 @@ class ARCombinationRepository:
         )
         return [await self._hydrate(row) for row in rows]
 
+    async def update_combo_mind_url(self, combo_id: str, combo_mind_url: str) -> bool:
+        result = await postgres_pool().execute(
+            "UPDATE public.ar_combinations SET combo_mind_url=$1 WHERE combo_id=$2", combo_mind_url, combo_id
+        )
+        return result == "UPDATE 1"
+
 
 def get_ar_combination_repository() -> ARCombinationRepository:
     return ARCombinationRepository()

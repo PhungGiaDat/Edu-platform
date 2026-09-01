@@ -20,7 +20,9 @@ from database.seed.apply_canonical_animals import validate_canonical_content
 
 def test_canonical_identity_and_scope_are_stable():
     assert COURSE_ID == "animals-adventure-en-5-7"
-    assert COURSE.category_key == "nature"
+    assert COURSE.category_key == "animals"
+    assert COURSE.category_label == "Animals"
+    assert COURSE.category_icon == "🐾"
     assert [item.lesson_id for item in LESSONS] == [
         "learn-the-cat", "learn-the-dog", "learn-the-bird", "learn-the-fish", "learn-the-rabbit"
     ]

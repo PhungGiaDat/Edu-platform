@@ -1,19 +1,18 @@
 # backend/models/__init__.py
 """
 Models Package - Pydantic Request/Response Schemas
+All database operations go through PostgreSQL repositories.
 """
 from .flashcard import FlashcardSchema
 from .ar_object import ArObjectSchema
 from .ar_combination import (
-    ARCombination,          # Beanie Document
-    ArCombinationSchema,    # Pydantic DTO
+    ArCombinationSchema,
     TransformSchema,
 )
 from .ar_experience import ARExperienceResponseSchema
 from .quiz import QuizQuestion, QuizSessionSchema
 from .game import MemoryPair, GameChallenge, GameSessionSchema
 from .pet import (
-    PetDocument,
     PetCreate,
     PetUpdate,
     PetResponse,
@@ -24,7 +23,6 @@ from .pet import (
     UnlockPetResponse,
 )
 from .feedback_template import (
-    FeedbackTemplateDocument,
     FeedbackTemplateCreate,
     FeedbackTemplateUpdate,
     FeedbackTemplateResponse,
@@ -36,7 +34,6 @@ from .feedback_template import (
     DEFAULT_ENCOURAGEMENTS,
 )
 from .admin_models import (
-    FlashcardDeckDocument,
     FlashcardDeckCreate,
     FlashcardDeckUpdate,
     FlashcardDeckResponse,
@@ -52,25 +49,23 @@ from .admin_models import (
     DashboardStats,
     PaginatedResponse,
 )
-# NEW: Optimized schema models
 from .course_lesson import (
-    CourseLesson,
     LessonStatus,
     LessonType,
     MediaAsset,
     VocabularyItem,
 )
+from .session_log import (
+    SessionStartRequest,
+    SessionEndRequest,
+    SessionLogResponse,
+    SessionSummary,
+)
 from .user_session import (
-    UserSession,
     SessionStatus,
     ActivityEntry,
 )
-from .cache_session import (
-    RedisCache,
-    CacheType,
-)
 from .pronunciation import (
-    PronunciationAttemptDocument,
     PronunciationAttemptCreate,
     PronunciationAttemptResponse,
     AttemptStatus,
@@ -87,8 +82,7 @@ __all__ = [
     # AR Object
     "ArObjectSchema",
     # AR Combination
-    "ARCombination",        # Beanie Document
-    "ArCombinationSchema",  # Pydantic DTO
+    "ArCombinationSchema",
     "TransformSchema",
     # AR Experience
     "ARExperienceResponseSchema",
@@ -100,7 +94,6 @@ __all__ = [
     "GameChallenge",
     "GameSessionSchema",
     # Pet
-    "PetDocument",
     "PetCreate",
     "PetUpdate",
     "PetResponse",
@@ -110,7 +103,6 @@ __all__ = [
     "SetActivePetRequest",
     "UnlockPetResponse",
     # Feedback Template
-    "FeedbackTemplateDocument",
     "FeedbackTemplateCreate",
     "FeedbackTemplateUpdate",
     "FeedbackTemplateResponse",
@@ -121,7 +113,6 @@ __all__ = [
     "SCORE_RANGES",
     "DEFAULT_ENCOURAGEMENTS",
     # Admin Models
-    "FlashcardDeckDocument",
     "FlashcardDeckCreate",
     "FlashcardDeckUpdate",
     "FlashcardDeckResponse",
@@ -136,22 +127,24 @@ __all__ = [
     "LearningGoalResponse",
     "DashboardStats",
     "PaginatedResponse",
-    # NEW: Optimized schema models
-    "CourseLesson",
+    # Course Lesson
     "LessonStatus",
     "LessonType",
     "MediaAsset",
     "VocabularyItem",
-    "UserSession",
+    # Session Log
+    "SessionStartRequest",
+    "SessionEndRequest",
+    "SessionLogResponse",
+    "SessionSummary",
+    # User Session
     "SessionStatus",
     "ActivityEntry",
-    "RedisCache",
-    "CacheType",
-    "PronunciationAttemptDocument",
+    # Pronunciation
     "PronunciationAttemptCreate",
     "PronunciationAttemptResponse",
     "AttemptStatus",
-    # User auth schemas
+    # User auth
     "UserCreate",
     "UserUpdate",
     "UserResponse",

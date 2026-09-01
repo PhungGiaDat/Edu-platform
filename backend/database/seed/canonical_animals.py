@@ -42,9 +42,9 @@ COURSE = CanonicalCourse(
     course_id=COURSE_ID,
     title="Animals Adventure",
     title_vi="Hành trình động vật",
-    category_key="nature",
-    category_label="Nature",
-    category_icon="🌿",
+    category_key="animals",
+    category_label="Animals",
+    category_icon="🐾",
     level="beginner",
 )
 

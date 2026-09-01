@@ -1,9 +1,10 @@
 # models/pet.py
 """
-MongoDB Pet Models using Beanie ODM
-Pet companion system for AR flashcard learning
+Pet Models - PostgreSQL via repositories
+
+Pet companion system for AR flashcard learning.
+All database operations go through pet repositories (PostgreSQL).
 """
-from beanie import Document, Indexed
 from pydantic import BaseModel, Field
 from typing import Optional, List, Literal
 from datetime import datetime
@@ -14,7 +15,7 @@ from datetime import datetime
 class UnlockCondition(BaseModel):
     """Unlock condition for a pet"""
     type: Literal["free", "xp", "streak", "achievement", "purchase"] = "free"
-    value: int = 0  # Threshold value (0 for free)
+    value: int = 0
 
 
 class PetPreferences(BaseModel):
@@ -24,47 +25,7 @@ class PetPreferences(BaseModel):
     position: Literal["bottom-right", "bottom-left", "top-right", "top-left"] = "bottom-right"
 
 
-# ========== Beanie Documents ==========
-
-class PetDocument(Document):
-    """
-    Pet companion document - stored in MongoDB
-    Collection: pets
-    """
-    pet_id: Indexed(str, unique=True)  # Unique identifier e.g., "kenney_character_a"
-    name: str  # English name
-    name_vi: str  # Vietnamese name
-    
-    # Asset URLs (hosted on Supabase)
-    model_url: str  # GLB model URL
-    texture_url: Optional[str] = None  # Separate texture URL
-    thumbnail_url: Optional[str] = None  # Preview image URL
-    
-    # Categorization
-    category: str = "character"  # character, animal, robot, etc.
-    pack_source: str = "kenney_blocky-characters"  # Asset pack source
-    rarity: Literal["common", "rare", "epic", "legendary"] = "common"
-    color: str = "#FF6B6B"  # Theme color for UI
-    
-    # Animations available
-    animations: List[str] = Field(default_factory=lambda: ["idle"])
-    
-    # Unlock requirements
-    unlock_condition: UnlockCondition = Field(default_factory=UnlockCondition)
-    
-    # Metadata
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: Optional[datetime] = None
-    is_active: bool = True  # Whether pet is available in catalog
-
-    class Settings:
-        name = "pets"
-
-    def __repr__(self) -> str:
-        return f"<PetDocument(pet_id={self.pet_id}, name={self.name}, rarity={self.rarity})>"
-
-
-# ========== API Schemas (Pydantic) ==========
+# ========== API Schemas ==========
 
 class PetCreate(BaseModel):
     """Schema for creating a new pet"""
@@ -111,7 +72,7 @@ class PetResponse(BaseModel):
     color: str
     animations: List[str]
     unlock_condition: UnlockCondition
-    
+
     # User-specific fields (populated at runtime)
     is_unlocked: bool = False
     is_active: bool = False
@@ -124,7 +85,7 @@ class PetResponse(BaseModel):
 class PetListResponse(BaseModel):
     """Schema for pet list API response"""
     pets: List[PetResponse]
-    stats: dict  # {total, unlocked, common, rare, epic, legendary}
+    stats: dict
 
 
 class SetActivePetRequest(BaseModel):

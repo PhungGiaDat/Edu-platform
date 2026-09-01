@@ -1,67 +1,13 @@
 # backend/models/session_log.py
 """
-Session Log Models - Beanie Document + API Schemas
+Session Log Models - PostgreSQL via repositories
 
-Logs each learning session (start → end). Backend is log-only —
-records duration data without enforcement. The frontend
-(useSessionTimer + BreakReminder) handles time limits and reminders.
-
+Logs each learning session (start → end). Backend is log-only.
 Data feeds the Progress Report (time spent per topic/day).
 """
-from beanie import Document, Indexed
-from pymongo import IndexModel
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
-
-
-# ========== Beanie Document (MongoDB) ==========
-
-class SessionLogDocument(Document):
-    """
-    Learning session log stored in MongoDB.
-    Collection: session_logs
-
-    Created when a session starts (POST /api/v1/sessions/start).
-    Updated when a session ends (PATCH /api/v1/sessions/{id}/end).
-    """
-    user_id: Indexed(str)
-
-    started_at: datetime = Field(default_factory=datetime.utcnow)
-    ended_at: Optional[datetime] = None
-
-    # Total seconds computed server-side when session ends.
-    # None if session is still active or ended abnormally.
-    duration_seconds: Optional[int] = None
-
-    # True if the BreakReminder component fired during this session.
-    # Set by the frontend when calling the end-session endpoint.
-    break_reminder_sent: bool = False
-
-    # Which topic/category was active during this session
-    # (used in progress reports to show "most studied topic")
-    active_topic: Optional[str] = None
-
-    # Learning metrics from lesson activities
-    words_learned: int = 0  # Count of new words mastered
-    games_played: int = 0  # Count of games completed
-    pronunciation_attempts: int = 0  # Count of pronunciation exercises
-
-    class Settings:
-        name = "session_logs"
-        indexes: list = [
-            # Foreign key lookups
-            [("user_id", 1)],
-            # Compound indexes for common queries
-            [("user_id", 1), ("started_at", -1)],  # User's sessions (most recent first)
-            [("active_topic", 1), ("started_at", -1)],  # Topic analytics (sparse)
-            # TTL index for data retention (30 days)
-            IndexModel(
-                [("started_at", 1)],
-                expireAfterSeconds=2592000,  # 30 days
-                name="session_logs_ttl",
-            ),
-        ]
 
 
 # ========== API Schemas ==========
@@ -93,7 +39,7 @@ class SessionLogResponse(BaseModel):
 
 
 class SessionSummary(BaseModel):
-    """Aggregated session stats for a user (used in Progress Report)."""
+    """Aggregated session stats for a user."""
     user_id: str
     total_sessions: int
     total_time_seconds: int

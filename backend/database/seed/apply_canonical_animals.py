@@ -42,7 +42,7 @@ from models.game_activity import MemoryMatchPayload
 from models.lesson_activity import LessonLearningBlocks
 
 
-State = Literal["CREATE", "UPDATE_CANONICAL_FIELD", "NO_CHANGE"]
+State = Literal["CREATE", "UPDATE_CANONICAL_FIELD", "NO_CHANGE", "LEGACY_FALLBACK"]
 VOCABULARY_WORDS = {vocabulary_id: word for vocabulary_id, word, _ in VOCABULARY}
 LESSON_IDS = tuple(lesson.lesson_id for lesson in LESSONS)
 QUESTION_KEYS = tuple(question.key for lesson in LESSONS for question in quiz_questions(lesson))
@@ -63,6 +63,7 @@ class EntityDiff:
             "CREATE": counts["CREATE"],
             "UPDATE_CANONICAL_FIELD": counts["UPDATE_CANONICAL_FIELD"],
             "NO_CHANGE": counts["NO_CHANGE"],
+            "LEGACY_FALLBACK": counts["LEGACY_FALLBACK"],
         }
 
 
@@ -76,6 +77,7 @@ class ReconciliationReport:
     conflicts: list[str] = field(default_factory=list)
     destructive_operations: int = 0
     flashcard_mapping: dict[str, str] = field(default_factory=dict)
+    mutated_lesson_ids: list[str] = field(default_factory=list)
 
     def as_dict(self) -> dict[str, Any]:
         value = asdict(self)
@@ -126,6 +128,177 @@ def _apply_values(row: Any, values: dict[str, Any]) -> None:
         setattr(row, key, value)
 
 
+def _is_empty_value(value: Any) -> bool:
+    return value is None or value == "" or value == [] or value == {}
+
+
+def _looks_like_lossy_text(value: Any) -> bool:
+    return isinstance(value, str) and ("?" in value or "\ufffd" in value)
+
+
+def _non_destructive_owned_merge(
+    *,
+    entity: str,
+    current: dict[str, Any],
+    canonical: dict[str, Any],
+) -> tuple[dict[str, Any], list[str]]:
+    merged = dict(current)
+    changed: list[str] = []
+    for field_name, canonical_value in canonical.items():
+        if _is_empty_value(canonical_value):
+            continue
+        current_value = merged.get(field_name)
+        if current_value == canonical_value:
+            continue
+        if _is_empty_value(current_value) or (
+            isinstance(canonical_value, str) and _looks_like_lossy_text(current_value)
+        ):
+            merged[field_name] = canonical_value
+            changed.append(field_name)
+            continue
+        raise CanonicalContentConflict(f"CONFLICT: {entity}.{field_name} has non-empty non-canonical value")
+    return merged, changed
+
+
+def _merge_course_metadata(current: dict[str, Any], canonical: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    legacy_taxonomy = {
+        "category_key": ("nature", "animals"),
+        "category_label": ("Nature", "Animals"),
+        "category_icon": ("🌿", "🐾"),
+    }
+    merged = dict(current)
+    changed: list[str] = []
+    for field_name, (legacy_value, canonical_value) in legacy_taxonomy.items():
+        if canonical.get(field_name) == canonical_value and merged.get(field_name) == legacy_value:
+            merged[field_name] = canonical_value
+            changed.append(field_name)
+    merged, remaining_changed = _non_destructive_owned_merge(
+        entity=f"course:{COURSE_ID}",
+        current=merged,
+        canonical=canonical,
+    )
+    return merged, changed + remaining_changed
+
+
+def _merge_learning_blocks(existing: dict[str, Any], canonical: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+    if not isinstance(existing, dict) or existing.get("schema_version") != 2:
+        raise CanonicalContentConflict("CONFLICT: legacy learning_blocks cannot be replaced")
+    existing_activities = existing.get("activities")
+    canonical_activities = canonical.get("activities")
+    if not isinstance(existing_activities, list) or not isinstance(canonical_activities, list):
+        raise CanonicalContentConflict("CONFLICT: existing canonical activities differ")
+    shape = lambda activities: [
+        (item.get("activity_id"), item.get("type"), item.get("order"), item.get("required"))
+        for item in activities
+    ]
+    if shape(existing_activities) != shape(canonical_activities):
+        raise CanonicalContentConflict("CONFLICT: existing canonical activities differ")
+    merged = json.loads(json.dumps(existing))
+    canonical_by_id = {item["activity_id"]: item for item in canonical_activities}
+    for activity in merged["activities"]:
+        canonical_activity = canonical_by_id[activity["activity_id"]]
+        config = activity.setdefault("config", {})
+        if activity["type"] == "quiz":
+            config["question_ids"] = list(canonical_activity["config"]["question_ids"])
+        elif activity["type"] == "mini_game":
+            config["mini_game_item_ids"] = list(canonical_activity["config"]["mini_game_item_ids"])
+    return merged, merged != existing
+
+
+def _option_rows_by_order(question_key: str, options: list[Any]) -> dict[int, Any]:
+    by_order: dict[int, Any] = {}
+    for option in options:
+        existing = by_order.get(option.option_order)
+        if existing is not None and existing.value != option.value:
+            raise CanonicalContentConflict(
+                f"Conflicting duplicate option order for {question_key}:{option.option_order}"
+            )
+        by_order[option.option_order] = option
+    return by_order
+
+
+async def _open_session_counts(session: AsyncSession) -> dict[str, int]:
+    rows = (
+        await session.execute(
+            text(
+                "SELECT lesson_id, count(*)::int AS open_session_count FROM lesson_sessions "
+                "WHERE lesson_id=ANY(CAST(:lesson_ids AS text[])) AND status <> 'completed' "
+                "GROUP BY lesson_id"
+            ),
+            {"lesson_ids": list(LESSON_IDS)},
+        )
+    ).mappings().all()
+    return {str(row["lesson_id"]): int(row["open_session_count"]) for row in rows}
+
+
+async def _validate_eligible_lesson_bindings(session: AsyncSession, lesson_ids: tuple[str, ...]) -> None:
+    rows = (
+        await session.execute(select(LessonORM).where(LessonORM.lesson_id.in_(lesson_ids)))
+    ).scalars().all()
+    question_ids: set[int] = set()
+    game_ids: set[int] = set()
+    for row in rows:
+        try:
+            blocks = LessonLearningBlocks.model_validate(row.learning_blocks)
+        except ValueError as exc:
+            raise CanonicalContentConflict(f"Invalid schema-v2 learning blocks for {row.lesson_id}") from exc
+        for activity in blocks.activities:
+            if activity.type == "quiz":
+                question_ids.update(int(value) for value in activity.config.question_ids)
+            elif activity.type == "mini_game":
+                game_ids.update(int(value) for value in activity.config.mini_game_item_ids)
+    if question_ids:
+        found = set(
+            (await session.execute(select(QuizQuestionORM.id).where(QuizQuestionORM.id.in_(question_ids)))).scalars().all()
+        )
+        if question_ids - found:
+            raise CanonicalContentConflict(f"Learning blocks reference missing quiz IDs: {sorted(question_ids - found)}")
+    if game_ids:
+        found = set(
+            (await session.execute(select(MiniGameItemORM.id).where(MiniGameItemORM.id.in_(game_ids)))).scalars().all()
+        )
+        if game_ids - found:
+            raise CanonicalContentConflict(f"Learning blocks reference missing mini-game IDs: {sorted(game_ids - found)}")
+
+
+def _resolve_flashcard_mapping(
+    rows: list[dict[str, Any]], vocabulary_words: dict[str, str] = VOCABULARY_WORDS
+) -> tuple[dict[str, str], list[str]]:
+    by_word: dict[str, list[dict[str, Any]]] = {}
+    by_qr_id: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        word = str(row.get("word") or "").strip().lower()
+        if word:
+            by_word.setdefault(word, []).append(row)
+        by_qr_id.setdefault(str(row["qr_id"]), []).append(row)
+    mapping: dict[str, str] = {}
+    conflicts: list[str] = []
+    for vocabulary_id, word in vocabulary_words.items():
+        qr_candidates = by_qr_id.get(vocabulary_id, [])
+        # Canonical QR identity is authoritative.  Legacy word values are not
+        # reliable enough to reject an otherwise exact LC5 identity match.
+        if len(qr_candidates) > 1:
+            conflicts.append(f"Ambiguous flashcard semantic identity for {vocabulary_id}")
+            mapping[vocabulary_id] = f"__missing__:{vocabulary_id}"
+            continue
+        if qr_candidates:
+            mapping[vocabulary_id] = str(qr_candidates[0]["qr_id"])
+            continue
+
+        candidates = by_word.get(word.lower(), [])
+        if len(candidates) > 1:
+            conflicts.append(f"Ambiguous flashcard semantic identity for {vocabulary_id}")
+            mapping[vocabulary_id] = f"__missing__:{vocabulary_id}"
+            continue
+        if candidates:
+            candidate = candidates[0]
+            mapping[vocabulary_id] = str(candidate["qr_id"])
+            continue
+        conflicts.append(f"Expected one existing flashcard for {vocabulary_id}/{word}; found 0")
+        mapping[vocabulary_id] = f"__missing__:{vocabulary_id}"
+    return mapping, conflicts
+
+
 async def _resolve_flashcards(session: AsyncSession) -> tuple[dict[str, str], list[str]]:
     """Map LC5 semantic vocabulary IDs onto existing legacy FK identities.
 
@@ -140,31 +313,36 @@ async def _resolve_flashcards(session: AsyncSession) -> tuple[dict[str, str], li
             text(
                 "SELECT qr_id, word FROM flashcards "
                 "WHERE lower(word) = ANY(CAST(:words AS text[])) "
+                "OR qr_id = ANY(CAST(:vocabulary_ids AS text[])) "
                 "ORDER BY qr_id"
             ),
-            {"words": list(words)},
+            {"words": list(words), "vocabulary_ids": list(VOCABULARY_WORDS)},
         )
     ).mappings().all()
-    by_word: dict[str, list[str]] = {}
-    for row in rows:
-        by_word.setdefault(str(row["word"]).lower(), []).append(str(row["qr_id"]))
-    mapping: dict[str, str] = {}
-    conflicts: list[str] = []
-    for vocabulary_id, word in VOCABULARY_WORDS.items():
-        candidates = by_word.get(word.lower(), [])
-        if len(candidates) != 1:
-            conflicts.append(
-                f"Expected one existing flashcard for {vocabulary_id}/{word}; found {len(candidates)}"
-            )
-            mapping[vocabulary_id] = f"__missing__:{vocabulary_id}"
-        else:
-            mapping[vocabulary_id] = candidates[0]
-    return mapping, conflicts
+    return _resolve_flashcard_mapping([dict(row) for row in rows])
+
+
+def _question_flashcard_qr_id(
+    flashcard_mapping: dict[str, str], question: Any, *, existing_qr_id: str | None = None
+) -> str:
+    """Quiz ownership follows the question vocabulary, including mixed-review lessons."""
+    expected_qr_id = flashcard_mapping[question.vocabulary_id]
+    if existing_qr_id is not None and existing_qr_id != expected_qr_id:
+        raise CanonicalContentConflict(
+            f"Quiz identity {question.key if hasattr(question, 'key') else question.vocabulary_id} "
+            f"belongs to flashcard {existing_qr_id}, expected {expected_qr_id}"
+        )
+    return expected_qr_id
 
 
 async def reconcile(session: AsyncSession, *, mutate: bool) -> ReconciliationReport:
     """Diff and optionally apply canonical content within the caller transaction."""
     report = ReconciliationReport()
+    open_session_counts = await _open_session_counts(session)
+    eligible_lessons = tuple(lesson for lesson in LESSONS if lesson.lesson_id not in open_session_counts)
+    for lesson in LESSONS:
+        if lesson.lesson_id in open_session_counts:
+            report.lessons.records[lesson.lesson_id] = "LEGACY_FALLBACK"
     flashcard_mapping, flashcard_conflicts = await _resolve_flashcards(session)
     if mutate and flashcard_conflicts:
         raise CanonicalContentConflict("; ".join(flashcard_conflicts))
@@ -180,10 +358,6 @@ async def reconcile(session: AsyncSession, *, mutate: bool) -> ReconciliationRep
         "category_icon": COURSE.category_icon,
         "level": COURSE.level,
         "is_published": True,
-        # Legacy empty objects are invalid for these optional typed API fields.
-        # The canonical cover remains owned by thumbnail_url (LC10).
-        "thumbnail": None,
-        "enrollment_cta": None,
     }
     if course is None:
         report.course.records[COURSE_ID] = "CREATE"
@@ -192,10 +366,14 @@ async def reconcile(session: AsyncSession, *, mutate: bool) -> ReconciliationRep
             session.add(course)
             await session.flush()
     else:
-        state: State = "UPDATE_CANONICAL_FIELD" if _changed(course, course_values) else "NO_CHANGE"
+        merged_course, changed_fields = _merge_course_metadata(
+            {key: getattr(course, key) for key in course_values},
+            course_values,
+        )
+        state: State = "UPDATE_CANONICAL_FIELD" if changed_fields else "NO_CHANGE"
         report.course.records[COURSE_ID] = state
         if mutate and state != "NO_CHANGE":
-            _apply_values(course, course_values)
+            _apply_values(course, merged_course)
 
     existing_lessons = (
         await session.execute(
@@ -206,8 +384,14 @@ async def reconcile(session: AsyncSession, *, mutate: bool) -> ReconciliationRep
     ).scalars().all()
     by_lesson_id = {row.lesson_id: row for row in existing_lessons}
     by_order = {row.lesson_order: row for row in existing_lessons if row.course_id == COURSE_ID}
-    for lesson in LESSONS:
+    reconciled_lessons = []
+    for lesson in eligible_lessons:
         row = by_lesson_id.get(lesson.lesson_id)
+        if row is not None and (
+            not isinstance(row.learning_blocks, dict) or row.learning_blocks.get("schema_version") != 2
+        ):
+            report.lessons.records[lesson.lesson_id] = "LEGACY_FALLBACK"
+            continue
         order_owner = by_order.get(lesson.order)
         if row is not None and row.course_id != COURSE_ID:
             raise CanonicalContentConflict(
@@ -217,6 +401,7 @@ async def reconcile(session: AsyncSession, *, mutate: bool) -> ReconciliationRep
             raise CanonicalContentConflict(
                 f"Canonical lesson order {lesson.order} is owned by {order_owner.lesson_id}"
             )
+        reconciled_lessons.append(lesson)
 
     existing_questions = (
         await session.execute(
@@ -232,12 +417,13 @@ async def reconcile(session: AsyncSession, *, mutate: bool) -> ReconciliationRep
         questions_by_key[row.question_id] = row
 
     question_ids_by_lesson: dict[str, list[int]] = {}
-    for lesson in LESSONS:
+    for lesson in reconciled_lessons:
         ids: list[int] = []
         for question in quiz_questions(lesson):
             row = questions_by_key.get(question.key)
+            expected_flashcard_qr_id = _question_flashcard_qr_id(flashcard_mapping, question)
             values = {
-                "flashcard_qr_id": flashcard_mapping[question.vocabulary_id],
+                "flashcard_qr_id": expected_flashcard_qr_id,
                 "question_id": question.key,
                 "question_text": question.prompt,
                 "question_type": "multiple_choice",
@@ -249,19 +435,17 @@ async def reconcile(session: AsyncSession, *, mutate: bool) -> ReconciliationRep
                     row = QuizQuestionORM(**values)
                     session.add(row)
                     await session.flush()
-            elif row.flashcard_qr_id != flashcard_mapping[question.vocabulary_id]:
-                raise CanonicalContentConflict(
-                    f"Quiz identity {question.key} belongs to flashcard {row.flashcard_qr_id}"
-                )
+            elif row.flashcard_qr_id != expected_flashcard_qr_id:
+                _question_flashcard_qr_id(flashcard_mapping, question, existing_qr_id=row.flashcard_qr_id)
             else:
-                state = "UPDATE_CANONICAL_FIELD" if _changed(row, values) else "NO_CHANGE"
-                if mutate and state != "NO_CHANGE":
-                    _apply_values(row, values)
+                if _changed(row, values):
+                    raise CanonicalContentConflict(f"Conflicting quiz payload for {question.key}")
+                state = "NO_CHANGE"
             report.quiz_questions.records[question.key] = state
 
             existing_options = (
                 {} if state == "CREATE"
-                else {item.option_order: item for item in row.options}
+                else _option_rows_by_order(question.key, list(row.options))
             )
             if any(order not in (1, 2) for order in existing_options):
                 raise CanonicalContentConflict(f"Quiz {question.key} has non-canonical option identities")
@@ -279,16 +463,16 @@ async def reconcile(session: AsyncSession, *, mutate: bool) -> ReconciliationRep
                             )
                         )
                 else:
-                    option_state = "UPDATE_CANONICAL_FIELD" if option.value != option_value else "NO_CHANGE"
-                    if mutate and option_state != "NO_CHANGE":
-                        option.value = option_value
+                    if option.value != option_value:
+                        raise CanonicalContentConflict(f"Conflicting quiz option for {question.key}:{option_order}")
+                    option_state = "NO_CHANGE"
                 report.quiz_options.records[option_key] = option_state
             if mutate:
                 ids.append(row.id)
         question_ids_by_lesson[lesson.lesson_id] = ids
 
     game_ids_by_lesson: dict[str, list[int]] = {}
-    for lesson in LESSONS:
+    for lesson in reconciled_lessons:
         key = mini_game_seed_key(lesson)
         payload = memory_match_payload(
             lesson.focus_vocabulary_id,
@@ -321,13 +505,13 @@ async def reconcile(session: AsyncSession, *, mutate: bool) -> ReconciliationRep
                 session.add(row)
                 await session.flush()
         else:
-            state = "UPDATE_CANONICAL_FIELD" if _changed(row, values) else "NO_CHANGE"
-            if mutate and state != "NO_CHANGE":
-                _apply_values(row, values)
+            if _changed(row, values):
+                raise CanonicalContentConflict(f"Conflicting mini-game payload for {key}")
+            state = "NO_CHANGE"
         report.mini_game_items.records[key] = state
         game_ids_by_lesson[lesson.lesson_id] = [row.id] if mutate else []
 
-    for lesson in LESSONS:
+    for lesson in reconciled_lessons:
         row = by_lesson_id.get(lesson.lesson_id)
         if mutate:
             blocks = lesson_blocks(
@@ -352,12 +536,11 @@ async def reconcile(session: AsyncSession, *, mutate: bool) -> ReconciliationRep
                 question_ids if len(question_ids) == len(quiz_questions(lesson)) else range(1, 6),
                 [game_rows[0].id] if len(game_rows) == 1 else [1],
             )
-        values = {
+        lesson_metadata = {
             "course_id": COURSE_ID,
             "title": lesson.title,
             "title_vi": lesson.title_vi,
             "lesson_order": lesson.order,
-            "learning_blocks": blocks,
         }
         dependencies_change = any(
             report.quiz_questions.records[q.key] != "NO_CHANGE" for q in quiz_questions(lesson)
@@ -365,20 +548,31 @@ async def reconcile(session: AsyncSession, *, mutate: bool) -> ReconciliationRep
         if row is None:
             state = "CREATE"
             if mutate:
-                row = LessonORM(lesson_id=lesson.lesson_id, **values)
+                row = LessonORM(lesson_id=lesson.lesson_id, learning_blocks=blocks, **lesson_metadata)
                 session.add(row)
+                report.mutated_lesson_ids.append(lesson.lesson_id)
         else:
-            state = "UPDATE_CANONICAL_FIELD" if dependencies_change or _changed(row, values) else "NO_CHANGE"
+            merged_metadata, changed_fields = _non_destructive_owned_merge(
+                entity=f"lesson:{lesson.lesson_id}",
+                current={key: getattr(row, key) for key in lesson_metadata},
+                canonical=lesson_metadata,
+            )
+            merged_blocks, blocks_changed = _merge_learning_blocks(row.learning_blocks, blocks)
+            state = "UPDATE_CANONICAL_FIELD" if dependencies_change or changed_fields or blocks_changed else "NO_CHANGE"
             if mutate and state != "NO_CHANGE":
-                _apply_values(row, values)
+                _apply_values(row, merged_metadata)
+                row.learning_blocks = merged_blocks
+                report.mutated_lesson_ids.append(lesson.lesson_id)
         report.lessons.records[lesson.lesson_id] = state
 
     if mutate:
         await session.flush()
+        await _validate_eligible_lesson_bindings(session, tuple(lesson.lesson_id for lesson in reconciled_lessons))
     return report
 
 
-async def readback(session: AsyncSession) -> dict[str, Any]:
+async def readback(session: AsyncSession, *, strict_lesson_ids: set[str] | None = None) -> dict[str, Any]:
+    strict_lesson_ids = strict_lesson_ids or set()
     course = await session.get(CourseORM, COURSE_ID)
     lessons = (
         await session.execute(
@@ -396,11 +590,13 @@ async def readback(session: AsyncSession) -> dict[str, Any]:
     referenced_games: set[int] = set()
     for row in lessons:
         raw_schema_v2 += int(isinstance(row.learning_blocks, dict) and row.learning_blocks.get("schema_version") == 2)
+        if row.lesson_id not in strict_lesson_ids:
+            continue
         try:
             blocks = LessonLearningBlocks.model_validate(row.learning_blocks)
-        except ValueError:
+        except ValueError as exc:
             invalid_schema_v2 += 1
-            continue
+            raise CanonicalContentConflict(f"Invalid post-apply schema-v2 learning blocks for {row.lesson_id}") from exc
         schema_v2 += int(blocks.schema_version == 2 and blocks.content_version == CONTENT_VERSION)
         activity_sequence += int([item.type for item in blocks.activities] == ["learn_vocabulary", "mini_game", "quiz"])
         for activity in blocks.activities:
@@ -441,7 +637,7 @@ async def _run(apply: bool) -> dict[str, Any]:
                 async with session.begin():
                     report = await reconcile(session, mutate=True)
             async with session_factory()() as fresh_session:
-                fresh = await readback(fresh_session)
+                fresh = await readback(fresh_session, strict_lesson_ids=set(report.mutated_lesson_ids))
         else:
             async with session_factory()() as session:
                 report = await reconcile(session, mutate=False)

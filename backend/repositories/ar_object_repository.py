@@ -120,6 +120,16 @@ class ARObjectRepository:
             )
         ]
 
+    async def get_all(self) -> List[Dict[str, Any]]:
+        rows = await postgres_pool().fetch("SELECT * FROM public.ar_objects ORDER BY ar_tag")
+        return [dict(row) for row in rows]
+
+    async def update_nft_base_url(self, ar_tag: str, nft_base_url: str) -> bool:
+        result = await postgres_pool().execute(
+            "UPDATE public.ar_objects SET nft_base_url=$1 WHERE ar_tag=$2", nft_base_url, ar_tag
+        )
+        return result == "UPDATE 1"
+
 
 def get_ar_object_repository() -> ARObjectRepository:
     return ARObjectRepository()

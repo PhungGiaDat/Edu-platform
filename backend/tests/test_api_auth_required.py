@@ -23,7 +23,7 @@ from fastapi.testclient import TestClient
 from httpx import AsyncClient, ASGITransport
 
 from core.security import get_current_user, create_access_token
-from models.user_mongo import UserDocument
+from models.user_schemas import UserResponse
 
 
 class TestAuthenticationRequired:
@@ -32,7 +32,7 @@ class TestAuthenticationRequired:
     @pytest.fixture
     def mock_user(self):
         """Create a mock user for testing."""
-        user = MagicMock(spec=UserDocument)
+        user = MagicMock()
         user.id = "test_user_123"
         user.email = "test@example.com"
         user.is_active = True
