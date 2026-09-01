@@ -1,0 +1,890 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>8th Wall AR - Claymorphic Flashcards</title>
+
+  <!-- Eruda Debug Console -->
+  <script>
+    var xrDebugParams = new URLSearchParams(location.search);
+    // Enable eruda when debug=true OR eruda=true OR localhost
+    if (xrDebugParams.get('eruda') === 'true' || xrDebugParams.get('debug') === 'true' || location.hostname === 'localhost') {
+      (function() {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/eruda@3';
+        s.onload = function() { eruda.init({
+          defaults: { displaySize: 30, transparency: 0.8 },
+          useShadowDom: true
+        }); };
+        document.head.appendChild(s);
+      })();
+    }
+  </script>
+
+  <!-- Console capture bridge — sends logs to parent AR_DEBUG channel.
+       Installed EARLY (before module script) so we capture errors even
+       if the module fails to load on Safari iOS. -->
+  <script>
+    (function installViewerDebugBridge() {
+      var params = new URLSearchParams(location.search);
+      if (params.get('debug') !== 'true' && location.hostname !== 'localhost') return;
+
+      // Fire a beacon immediately — proves the iframe JS context is alive
+      // even if everything below fails.
+      try {
+        window.parent.postMessage({
+          type: 'AR_DEBUG',
+          payload: {
+            label: 'VIEWER_JS_ALIVE',
+            details: {
+              ts: Date.now(),
+              href: location.href,
+              ua: navigator.userAgent.substring(0, 80),
+              moduleSupported: 'no-modules' in HTMLScriptElement.prototype,
+            },
+            source: 'ar-viewer-console',
+          },
+          timestamp: Date.now(),
+          origin: 'child'
+        }, '*');
+      } catch (_) {}
+
+      function sendDebug(label, details) {
+        try {
+          window.parent.postMessage({
+            type: 'AR_DEBUG',
+            payload: { label: label, details: details || {}, source: 'ar-viewer-console' },
+            timestamp: Date.now(),
+            origin: 'child'
+          }, '*');
+        } catch (_) {}
+      }
+
+      function serialise(args) {
+        return Array.prototype.slice.call(args).map(function(value) {
+          try {
+            if (value instanceof Error) return value.stack || value.message;
+            return typeof value === 'object' ? JSON.stringify(value) : String(value);
+          } catch (_) {
+            return String(value);
+          }
+        }).join(' ').slice(0, 4000);
+      }
+
+      ['error', 'warn', 'log', 'info'].forEach(function(level) {
+        var original = console[level].bind(console);
+        console[level] = function() {
+          try {
+            sendDebug('VIEWER_CONSOLE_' + level.toUpperCase(), {
+              level: level,
+              text: serialise(arguments),
+              engine: '8th-wall'
+            });
+          } catch (_) {}
+          return original.apply(console, arguments);
+        };
+      });
+
+      window.addEventListener('error', function(event) {
+        sendDebug('VIEWER_UNCAUGHT_ERROR', {
+          level: 'error',
+          text: String(event.message || event.error || 'Unknown viewer error'),
+          url: event.filename,
+          line: event.lineno,
+        });
+      }, true);
+
+      window.addEventListener('unhandledrejection', function(event) {
+        var reason = event.reason;
+        sendDebug('VIEWER_UNHANDLED_REJECTION', {
+          level: 'error',
+          text: reason instanceof Error ? (reason.stack || reason.message) : String(reason),
+        });
+      });
+
+      console.info('[ar-xr] Debug bridge installed');
+    })();
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: system-ui, sans-serif; }
+
+    #canvas-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
+    #camerafeed { display: block; width: 100%; height: 100%; }
+    #model-canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+
+    #overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.9); color: #fff;
+      z-index: 100; transition: opacity 0.3s ease;
+    }
+    #overlay.hidden { opacity: 0; pointer-events: none; }
+
+    .spinner {
+      width: 50px; height: 50px;
+      border: 4px solid rgba(255,255,255,0.15);
+      border-top-color: #4ecdc4;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #loading-text { font-size: 18px; margin-bottom: 8px; text-align: center; }
+    #hint-text { font-size: 14px; opacity: 0.6; text-align: center; }
+    #error-text { color: #FF6B6B; font-size: 14px; margin-top: 16px; text-align: center; max-width: 280px; }
+
+    #card-label {
+      position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.7); color: #fff;
+      padding: 8px 20px; border-radius: 20px;
+      font-size: 18px; font-weight: 600;
+      z-index: 50; pointer-events: none;
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+    #card-label.visible { opacity: 1; }
+
+    #debug-panel {
+      position: absolute; top: 10px; left: 10px;
+      background: rgba(0,0,0,0.75); color: #0f0;
+      padding: 8px 12px; border-radius: 8px; font-size: 11px;
+      font-family: monospace; z-index: 200;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <!-- 8th Wall self-hosted binary auto-discovers canvas with id="camerafeed" -->
+    <canvas id="camerafeed"></canvas>
+    <!-- Three.js renders the 3D model here — separate from 8th Wall camera canvas -->
+    <canvas id="model-canvas"></canvas>
+  </div>
+
+  <div id="overlay">
+    <div class="spinner"></div>
+    <div id="loading-text">Loading 8th Wall Engine...</div>
+    <div id="hint-text">Point camera at flashcard</div>
+    <div id="error-text"></div>
+  </div>
+
+  <div id="card-label"></div>
+
+  <div id="debug-panel">
+    <div id="debug-status">Initializing...</div>
+    <div id="debug-engine">Engine: 8th Wall (self-hosted)</div>
+  </div>
+
+  <!-- Self-hosted 8th Wall Engine (no AppKey needed) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js"
+    async
+    crossorigin="anonymous"
+    data-preload-chunks="slam"
+  ></script>
+
+  <!-- Three.js importmap -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    // ========== LOGGING BUFFER ==========
+    const MAX_LOG_BUFFER = 500;
+    const logBuffer = [];
+
+    function logToBuffer(level, message, details = null) {
+      const timestamp = new Date().toISOString().substring(11, 23);
+      const entry = { timestamp, level, message, details };
+      logBuffer.push(entry);
+      if (logBuffer.length > MAX_LOG_BUFFER) {
+        logBuffer.shift();
+      }
+
+      // Also log to console
+      const prefix = `[${timestamp}]`;
+      if (details) {
+        console.log(prefix, `[${level.toUpperCase()}]`, message, details);
+      } else {
+        console.log(prefix, `[${level.toUpperCase()}]`, message);
+      }
+    }
+
+    // Public API for MobileDebug integration
+    window.XRDebug = {
+      getLogs: () => {
+        return logBuffer.map(e => {
+          const details = e.details ? ` ${JSON.stringify(e.details)}` : '';
+          return `${e.timestamp} [${e.level.toUpperCase()}] ${e.message}${details}`;
+        }).join('\n');
+      },
+      logBuffer: logBuffer,
+    };
+
+    // ========== PARAMS FROM URL ==========
+    const params = new URLSearchParams(location.search);
+    const qrId           = params.get('qr_id') || '';
+    const modelUrl       = params.get('model_3d_url') || '';
+    const targetJsonUrl   = params.get('xr_target_json_url') || '';
+    const targetImageUrl  = params.get('xr_target_image_url') || '';
+    const word            = params.get('word') || qrId;
+    const isDebug         = location.hostname === 'localhost' || params.get('debug') === 'true';
+
+    // DOM
+    const overlay     = document.getElementById('overlay');
+    const loadingText  = document.getElementById('loading-text');
+    const hintText     = document.getElementById('hint-text');
+    const errorText    = document.getElementById('error-text');
+    const cardLabel    = document.getElementById('card-label');
+    const debugPanel   = document.getElementById('debug-panel');
+    const debugStatus  = document.getElementById('debug-status');
+    const canvas       = document.getElementById('camerafeed');
+
+    if (isDebug) debugPanel.style.display = 'block';
+
+    logToBuffer('info', 'ar-xr.html loaded', { qrId, isDebug });
+
+    // ========== POST MESSAGE ==========
+    function sendMessage(type, payload = {}) {
+      window.parent.postMessage({ type, payload, timestamp: Date.now() }, '*');
+    }
+
+    // ========== AR_DEBUG MESSAGE ==========
+    function sendARDebug(label, details = {}) {
+      const debugPayload = {
+        label,
+        details,
+        source: 'ar-xr',
+        phase: currentPhase,
+        engine: '8th-wall',
+        qrId: qrId,
+        word: word,
+      };
+      sendMessage('AR_DEBUG', debugPayload);
+      logToBuffer('debug', label, details);
+    }
+
+    // Phase tracking for AR_DEBUG messages
+    let currentPhase = 'initializing';
+
+    function setPhase(phase) {
+      currentPhase = phase;
+      sendARDebug('PHASE_CHANGE', { from: currentPhase, to: phase });
+    }
+
+    function showOverlay(text, hint = '') {
+      overlay.classList.remove('hidden');
+      loadingText.textContent = text;
+      hintText.textContent   = hint;
+      errorText.textContent  = '';
+    }
+
+    function hideOverlay() {
+      overlay.classList.add('hidden');
+    }
+
+    function showError(msg) {
+      errorText.textContent = msg;
+      logToBuffer('error', 'Error shown to user', { message: msg });
+    }
+
+    function updateDebug(text) {
+      debugStatus.textContent = text;
+    }
+
+    function showCardLabel(name) {
+      cardLabel.textContent = name;
+      cardLabel.classList.add('visible');
+      setTimeout(() => cardLabel.classList.remove('visible'), 3000);
+    }
+
+    // ========== THREE.JS SCENE ==========
+    let scene, camera, renderer, loadedModel = null, mixer = null;
+    let modelPos = [0, 0, -0.5];
+    let modelRot = [0, 0, 0];
+    let modelScale = 1;
+
+    function initThree() {
+      logToBuffer('info', 'Initializing Three.js');
+      scene = new THREE.Scene();
+
+      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
+      camera.position.set(0, 0, 0);
+
+      // Use separate model-canvas so it doesn't conflict with 8th Wall's canvas
+      renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('model-canvas'), alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping      = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.0;
+      renderer.xr.enabled = true;
+
+      // Lighting for claymorphic look
+      scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+      const key = new THREE.DirectionalLight(0xffffff, 1.5);
+      key.position.set(0, 3, 5);
+      scene.add(key);
+      const fill = new THREE.DirectionalLight(0xffffff, 0.4);
+      fill.position.set(-3, 0, -2);
+      scene.add(fill);
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      logToBuffer('info', 'Three.js scene ready');
+    }
+
+    // ========== MODEL LOADING ==========
+    let modelLoadState = 'pending';
+
+    function loadModel(url) {
+      modelLoadState = 'loading';
+      sendARDebug('MODEL_LOAD_START', { url });
+
+      return new Promise((resolve, reject) => {
+        const loader = new GLTFLoader();
+        loader.load(url,
+          (gltf) => {
+            const model = gltf.scene;
+            model.visible = false;
+
+            // Claymorphic material
+            model.traverse((child) => {
+              if (child.isMesh) {
+                child.castShadow    = true;
+                child.receiveShadow = true;
+              }
+            });
+
+            // Apply position/rotation/scale from URL params
+            const pos = params.get('position')?.split(' ').map(Number) || [0, 0, -0.5];
+            const rot = params.get('rotation')?.split(' ').map(Number) || [0, 0, 0];
+            const sc  = parseFloat(params.get('scale') || '1');
+            model.position.set(pos[0], pos[1], pos[2]);
+            model.rotation.set(rot[0], rot[1], rot[2]);
+            model.scale.setScalar(sc);
+
+            modelPos   = pos;
+            modelRot   = rot;
+            modelScale = sc;
+
+            scene.add(model);
+            loadedModel = model;
+            modelLoadState = 'loaded';
+
+            sendARDebug('MODEL_LOAD_COMPLETE', {
+              url,
+              animations: gltf.animations?.map(a => a.name) || [],
+              position: pos,
+              rotation: rot,
+              scale: sc,
+            });
+
+            // Animations
+            if (gltf.animations?.length > 0) {
+              mixer = new THREE.AnimationMixer(model);
+              const defaultClip = gltf.animations.find(a =>
+                a.name.toUpperCase().includes('IDLE')
+              ) || gltf.animations[0];
+              mixer.clipAction(defaultClip).play();
+              logToBuffer('info', 'Animations available', { animations: gltf.animations.map(a => a.name) });
+            }
+
+            resolve(model);
+          },
+          (progress) => {
+            if (progress.total) {
+              const percent = Math.round(progress.loaded / progress.total * 100);
+              updateDebug(`Model ${percent}%`);
+            }
+          },
+          (error) => {
+            modelLoadState = 'error';
+            sendARDebug('MODEL_LOAD_ERROR', { url, error: String(error) });
+            logToBuffer('error', 'Model load failed', { error: String(error) });
+            reject(error);
+          }
+        );
+      });
+    }
+
+    // ========== LOAD TARGET JSON FROM SUPABASE ==========
+    async function loadTargetData() {
+      sendARDebug('TARGET_LOAD_START');
+
+      // Prefer explicit target JSON URL, else build from base
+      let jsonUrl = targetJsonUrl;
+      if (!jsonUrl && targetImageUrl) {
+        // Build JSON URL from image URL path pattern:
+        // image_url: .../cat001_luminance.png
+        // json_url:  .../cat001.json
+        const match = targetImageUrl.match(/^(.+)_[^/]+\.png$/);
+        if (match) jsonUrl = match[1] + '.json';
+      }
+
+      if (!jsonUrl) {
+        throw new Error('No xr_target_json_url or xr_target_image_url provided');
+      }
+
+      showOverlay('Loading target data...', jsonUrl.split('/').pop());
+
+      const res = await fetch(jsonUrl);
+      if (!res.ok) throw new Error(`Failed to fetch target JSON: ${res.status}`);
+
+      const data = await res.json();
+
+      // Build absolute image URL from relative imagePath in JSON
+      const baseUrl = jsonUrl.substring(0, jsonUrl.lastIndexOf('/') + 1);
+      const relPath = data.imagePath || '';
+      const imageUrl = relPath.startsWith('http')
+        ? relPath
+        : baseUrl + relPath;
+
+      // physicalWidth in meters (default 8cm — standard flashcard width)
+      const physicalWidth = data.properties?.physicalWidth || 0.08;
+
+      sendARDebug('TARGET_LOAD_COMPLETE', {
+        name: data.name,
+        imageUrl,
+        physicalWidth,
+      });
+
+      return {
+        name: data.name || qrId,
+        image: imageUrl,
+        physicalWidth,
+      };
+    }
+
+    // ========== 8TH WALL ENGINE (SELF-HOSTED, NO APPKEY) ==========
+    let xrController = null;
+    const trackedTargets = new Set();
+
+    // Wait for XR8 to load using the official event pattern.
+    // The xrloaded event fires when the engine binary is ready but BEFORE
+    // SLAM chunks (camera, tracking) are loaded. We must wait for it
+    // before calling any XR8.* API.
+    function waitForXR8() {
+      return new Promise((resolve, reject) => {
+        if (window.XR8) {
+          resolve(window.XR8);
+          return;
+        }
+        const timeout = setTimeout(() => {
+          reject(new Error('XR8 load timeout (>10s)'));
+        }, 10000);
+        window.addEventListener('xrloaded', () => {
+          clearTimeout(timeout);
+          resolve(window.XR8);
+        }, { once: true });
+      });
+    }
+
+    async function initXR(targetData) {
+      sendARDebug('XR_INIT_START', { targetName: targetData.name });
+      showOverlay('Starting XR session...', '');
+
+      // Step 1: Wait for engine binary (xrloaded)
+      let XR8;
+      try {
+        XR8 = await waitForXR8();
+        logToBuffer('info', 'XR_ENGINE_READY', { xr8Keys: Object.keys(XR8).slice(0, 20) });
+        sendARDebug('XR_ENGINE_READY', { hasXrController: !!XR8.XrController });
+      } catch (err) {
+        logToBuffer('error', 'XR_ENGINE_LOAD_FAILED', { error: String(err) });
+        sendARDebug('XR_ENGINE_LOAD_FAILED', { error: String(err) });
+        throw err;
+      }
+
+      // Step 2: Load SLAM chunk (provides camera + tracking)
+      logToBuffer('info', 'Loading XR8 slam chunk...');
+      try {
+        await XR8.loadChunk('slam');
+        logToBuffer('info', 'XR_SLAM_LOADED', {});
+        sendARDebug('XR_SLAM_LOADED', {});
+      } catch (chunkErr) {
+        logToBuffer('error', 'XR_SLAM_LOAD_FAILED', { error: String(chunkErr) });
+        sendARDebug('XR_SLAM_LOAD_FAILED', { error: String(chunkErr) });
+        throw chunkErr;
+      }
+
+      // Step 3: Lifecycle pipeline — sends events to parent (ARContainer orchestrator)
+      const lifecycleModule = {
+        name: 'app-lifecycle',
+
+        onCameraStatusChange: ({ status }) => {
+          logToBuffer('info', 'XR_CAMERA_STATUS', { status });
+          sendARDebug('XR_CAMERA_STATUS', { status });
+
+          if (status === 'hasVideo') {
+            // This is the signal that camera feed is actually displaying
+            logToBuffer('info', 'XR_CAMERA_HAS_VIDEO', {});
+            sendARDebug('XR_CAMERA_HAS_VIDEO', {});
+            sendMessage('XR_STARTED', {
+              engine: '8th-wall-self-hosted',
+              qrId: qrId,
+              word: word,
+              hasModel: !!modelUrl,
+              hasModelLoaded: !!loadedModel,
+            });
+            hideOverlay();
+            setPhase('viewing');
+          }
+
+          if (status === 'failed') {
+            logToBuffer('error', 'XR_CAMERA_FAILED', { status });
+            sendARDebug('XR_CAMERA_FAILED', { status });
+            sendMessage('XR_ERROR', { message: 'XR camera failed', stage: 'camera' });
+          }
+        },
+
+        onAttach: ({ canvas, GLctx, stream, video, videoWidth, videoHeight, canvasWidth, canvasHeight, status }) => {
+          logToBuffer('info', 'XR_ONATTACH', {
+            status,
+            hasGLctx: !!GLctx,
+            hasStream: !!stream,
+            streamActive: stream?.active,
+            videoReadyState: video?.readyState,
+            videoWidth,
+            videoHeight,
+            canvasWidth,
+            canvasHeight,
+          });
+          sendARDebug('XR_ONATTACH', {
+            status,
+            hasGLctx: !!GLctx,
+            hasStream: !!stream,
+            streamActive: stream?.active,
+            videoReadyState: video?.readyState,
+            videoWidth,
+            videoHeight,
+            canvasWidth,
+            canvasHeight,
+          });
+        },
+      };
+
+      // Step 4: Camera pipeline — handles frame loop and target tracking
+      const cameraPipelineModule = {
+        name: 'camera-pipeline',
+        onStart: ({ canvas: c, gl }) => {
+          updateDebug('Camera active');
+          sendARDebug('CAMERA_START', {
+            canvasWidth: c?.width,
+            canvasHeight: c?.height,
+            glContext: gl ? 'active' : 'missing',
+          });
+        },
+        onUpdate: (frame) => {
+          if (mixer) mixer.update(0.016);
+          if (loadedModel && loadedModel.visible) {
+            loadedModel.position.y = (modelPos[1] || 0) + Math.sin(Date.now() * 0.001) * 0.005;
+          }
+        },
+      };
+
+      // Step 5: Custom render pipeline — draw Three.js scene
+      const renderModule = {
+        name: 'custom-render',
+        onStart: () => {
+          logToBuffer('info', 'Render module started');
+        },
+        onUpdate: () => {
+          if (renderer && scene && camera) {
+            renderer.render(scene, camera);
+          }
+        },
+      };
+
+      // Step 6: Register ALL pipeline modules (order matters per 8th Wall docs)
+      XR8.addCameraPipelineModule(lifecycleModule);
+      XR8.addCameraPipelineModule(XR8.GlTextureRenderer.pipelineModule());
+      XR8.addCameraPipelineModule(XR8.Threejs.pipelineModule());
+      XR8.addCameraPipelineModule(cameraPipelineModule);
+      XR8.addCameraPipelineModule(renderModule);
+
+      logToBuffer('info', 'XR_PIPELINE_READY', {});
+      sendARDebug('XR_PIPELINE_READY', {});
+
+      // Step 7: Configure image targets
+      XR8.XrController.configure({
+        imageTargetData: [{
+          image: targetData.image,
+          name: targetData.name,
+          physicalWidth: targetData.physicalWidth,
+        }],
+      });
+      logToBuffer('info', 'XR_TARGETS_CONFIGURED', {
+        image: targetData.image,
+        name: targetData.name,
+        physicalWidth: targetData.physicalWidth,
+      });
+      sendARDebug('XR_TARGETS_CONFIGURED', {
+        image: targetData.image,
+        name: targetData.name,
+        physicalWidth: targetData.physicalWidth,
+      });
+
+      // Step 8: Get canvas and resize to viewport
+      const canvasEl = document.getElementById('camerafeed');
+      if (!canvasEl) {
+        throw new Error('Canvas #camerafeed not found');
+      }
+      canvasEl.width  = window.innerWidth;
+      canvasEl.height = window.innerHeight;
+      logToBuffer('info', 'Canvas sized', { w: canvasEl.width, h: canvasEl.height });
+
+      // Step 9: Start XR session
+      logToBuffer('info', 'Calling XR8.run', {
+        canvasId: canvasEl.id,
+        canvasWidth: canvasEl.width,
+        canvasHeight: canvasEl.height,
+      });
+      sendARDebug('XR_RUN_CALLED', {
+        canvasId: canvasEl.id,
+        canvasWidth: canvasEl.width,
+        canvasHeight: canvasEl.height,
+      });
+
+      try {
+        XR8.run({ canvas: canvasEl });
+      } catch (runErr) {
+        logToBuffer('error', 'XR8.run threw', { message: String(runErr) });
+        sendARDebug('XR_RUN_ERROR', { message: String(runErr) });
+        sendMessage('XR_ERROR', { message: String(runErr), stage: 'run' });
+        throw runErr;
+      }
+
+      updateDebug('Tracking active');
+      sendARDebug('XR_SESSION_STARTED', {});
+
+      // Step 10: Watch for detected images — must not throw
+      try { watchTargets(); } catch (e) {
+        logToBuffer('warn', 'watchTargets error (non-fatal)', { error: String(e) });
+      }
+    } // initXR
+
+    // Poll tracked targets using frame data
+    let animationFrameId = null;
+    function watchTargets() {
+      function check() {
+        if (!window.XR8?.XrController) {
+          animationFrameId = requestAnimationFrame(check);
+          return;
+        }
+        try {
+          const fd = window.XR8.XrController.frameData;
+          const frameData = typeof fd === 'function' ? fd() : null;
+          if (frameData) {
+            const detected = frameData.detectedImages || [];
+            const targetName = qrId || word;
+            const found = detected.some(img => img.name === targetName);
+            if (found && !trackedTargets.has(targetName)) {
+              trackedTargets.add(targetName);
+              onTargetFound(targetName);
+            } else if (!found && trackedTargets.has(targetName)) {
+              trackedTargets.delete(targetName);
+              onTargetLost(targetName);
+            }
+          }
+        } catch(e) {
+          // frameData API may not exist in this SDK version — silently ignore
+        }
+        animationFrameId = requestAnimationFrame(check);
+      }
+      check();
+    }
+
+    function onTargetFound(name) {
+      logToBuffer('info', 'Target found', { name });
+      sendARDebug('TARGET_FOUND', { qrId: name, word: word });
+
+      sendMessage('TARGET_FOUND', { targetIndex: 0, qrId: name, word: word });
+      showCardLabel(word);
+      if (loadedModel) {
+        loadedModel.visible = true;
+        sendARDebug('MODEL_VISIBLE', { reason: 'target_found', qrId: name });
+      }
+    }
+
+    function onTargetLost(name) {
+      logToBuffer('info', 'Target lost', { name });
+      sendARDebug('TARGET_LOST', { qrId: name });
+
+      sendMessage('TARGET_LOST', { targetIndex: 0, qrId: name });
+      if (loadedModel) {
+        loadedModel.visible = false;
+        sendARDebug('MODEL_HIDDEN', { reason: 'target_lost', qrId: name });
+      }
+    }
+
+    // ========== COMBO DETECTION (from backend) ==========
+    let comboRules = [];
+
+    async function loadComboRules() {
+      try {
+        const deck = params.get('deck_id') || 'claymorphic-animals-001';
+        const res = await fetch(
+          `https://edu-platform-api-do20.onrender.com/api/v1/combinations/rules?flashcard_set=${encodeURIComponent(deck)}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          comboRules = data.rules || data || [];
+          logToBuffer('info', 'Combo rules loaded', { count: comboRules.length });
+        }
+      } catch (e) {
+        logToBuffer('warn', 'Combo rules unavailable', { error: String(e) });
+      }
+    }
+
+    // ========== MESSAGE LISTENER ==========
+    window.addEventListener('message', (event) => {
+      const { type, payload } = event.data || {};
+      if (!type) return;
+
+      // Handle REQUEST_IFRAME_LOGS for Telegram sync
+      if (type === 'REQUEST_IFRAME_LOGS') {
+        const requestId = payload?.requestId || 'unknown';
+        const logs = window.XRDebug?.getLogs() || 'No logs available';
+
+        window.parent.postMessage({
+          type: 'IFRAME_LOGS',
+          payload: {
+            requestId,
+            logs,
+            engine: '8th-wall',
+            qrId: qrId,
+            word: word,
+          },
+          timestamp: Date.now(),
+        }, '*');
+
+        logToBuffer('debug', 'Sent iframe logs', { requestId, logCount: logBuffer.length });
+        return;
+      }
+
+      // Handle DEBUG_TOGGLE
+      if (type === 'DEBUG_TOGGLE') {
+        debugPanel.style.display = payload?.enabled ? 'block' : 'none';
+        logToBuffer('debug', 'Debug panel toggled', { enabled: payload?.enabled });
+        return;
+      }
+
+      // Handle TELEGRAM_SYNC trigger
+      if (type === 'TRIGGER_TELEGRAM_SYNC') {
+        const parentLogs = payload?.parentLogs || '';
+        const manualOffset = payload?.manualOffset || { x: 0, y: 0 };
+
+        const fullLogs =
+          `=== PARENT LOGS ===\n${parentLogs}\n\n` +
+          `=== 8TH WALL IFRAME LOGS ===\n${window.XRDebug?.getLogs() || 'No logs'}\n\n` +
+          `=== STATE ===\n` +
+          `qrId: ${qrId}\n` +
+          `word: ${word}\n` +
+          `modelLoaded: ${!!loadedModel}\n` +
+          `modelVisible: ${loadedModel?.visible || false}\n` +
+          `trackedTargets: ${Array.from(trackedTargets).join(', ') || 'none'}\n` +
+          `modelLoadState: ${modelLoadState}\n` +
+          `currentPhase: ${currentPhase}\n`;
+
+        window.parent.postMessage({
+          type: 'TELEGRAM_SYNC_READY',
+          payload: {
+            logs: fullLogs,
+            manualOffset,
+            engine: '8th-wall',
+            flashcardCount: trackedTargets.size || 1,
+          },
+          timestamp: Date.now(),
+        }, '*');
+
+        logToBuffer('debug', 'Telegram sync prepared', {
+          logLines: logBuffer.length,
+          trackedTargets: trackedTargets.size,
+        });
+        return;
+      }
+
+      // Log other messages
+      logToBuffer('debug', 'Message received', { type, payload });
+    });
+
+    // ========== MAIN ==========
+    async function main() {
+      logToBuffer('info', 'Main started', {
+        qrId,
+        modelUrl,
+        targetJsonUrl,
+        targetImageUrl,
+        word,
+        isDebug,
+      });
+
+      sendARDebug('PAGE_LOAD');
+
+      try {
+        initThree();
+        updateDebug('Three.js ready');
+
+        // Load combo rules in background
+        loadComboRules();
+
+        // Load model and target data in parallel
+        const targetData = await loadTargetData();
+
+        setPhase('loading');
+        sendARDebug('LOADING_ASSETS', {
+          hasModel: !!modelUrl,
+          hasTarget: !!targetData,
+        });
+
+        const modelPromise = modelUrl ? loadModel(modelUrl) : Promise.resolve(null);
+
+        await initXR(targetData);
+
+        // Also wait for model
+        await modelPromise;
+
+        setPhase('viewing');
+        sendARDebug('INIT_COMPLETE', {
+          modelLoaded: !!loadedModel,
+          targetName: targetData.name,
+        });
+
+        logToBuffer('info', 'Initialization complete');
+
+      } catch (error) {
+        setPhase('error');
+        sendARDebug('INIT_ERROR', { error: String(error), stack: error?.stack });
+        logToBuffer('error', 'Initialization failed', { error: String(error) });
+        showError(String(error));
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', main);
+    } else {
+      main();
+    }
+  </script>
+</body>
+</html>
