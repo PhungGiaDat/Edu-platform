@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -203,6 +203,30 @@
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    // 8th Wall Threejs.pipelineModule() looks for window.THREE — ES import doesn't set global
+    window.THREE = THREE;
+
+    // ========== RUNTIME DIAGNOSTICS (Phase 0) ==========
+    const RuntimeDiagnostics = {
+      xrRunCount: 0,
+      sceneInitCount: 0,
+      modelLoadCount: 0,
+      xrSceneObtained: false,
+
+      assert(condition, label) {
+        if (!condition) {
+          const msg = `[RUNTIME_INVARIANT VIOLATED] ${label}`;
+          console.error(msg);
+          sendMessage('XR_ERROR', { message: msg, stage: 'invariant' });
+        }
+      },
+
+      assertTHREE() {
+        this.assert(window.THREE === THREE, 'window.THREE === THREE');
+        this.assert(window.THREE !== undefined, 'window.THREE !== undefined');
+      },
+    };
 
     // ========== LOGGING BUFFER ==========
     const MAX_LOG_BUFFER = 500;
@@ -653,11 +677,17 @@
       canvasEl.height = window.innerHeight;
       logToBuffer('info', 'Canvas sized', { w: canvasEl.width, h: canvasEl.height });
 
-      // Step 9: Start XR session
+      // Step 9: Start XR session — exactly once per page session
+      RuntimeDiagnostics.xrRunCount++;
+      RuntimeDiagnostics.assert(
+        RuntimeDiagnostics.xrRunCount === 1,
+        `XR8.run() called ${RuntimeDiagnostics.xrRunCount} times (expected 1)`
+      );
       logToBuffer('info', 'Calling XR8.run', {
         canvasId: canvasEl.id,
         canvasWidth: canvasEl.width,
         canvasHeight: canvasEl.height,
+        xrRunCount: RuntimeDiagnostics.xrRunCount,
       });
       sendARDebug('XR_RUN_CALLED', {
         canvasId: canvasEl.id,
