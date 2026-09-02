@@ -489,53 +489,78 @@
     let modelAttached = false;
     let lastAttachAttempt = 0;
 
-    function attemptModelAttach() {
+    function attemptModelAttach(targetName) {
       if (modelAttached) return;
       if (!loadedModel) return;
-      if (trackedTargets.size === 0) return;
+      if (!targetName) return;
+
+      const target = trackedTargets.get(targetName);
+      if (!target) return;
 
       // Throttle attach attempts
       const now = Date.now();
-      if (now - lastAttachAttempt < 1000) return;
+      if (now - lastAttachAttempt < 500) return;
       lastAttachAttempt = now;
 
-      const targetName = Array.from(trackedTargets)[0];
+      // Create anchor group if not yet created
+      if (!targetAnchor) {
+        targetAnchor = new THREE.Group();
+        scene.add(targetAnchor);
+      }
+
+      // Attach model to anchor if not already
+      if (loadedModel.parent !== targetAnchor) {
+        // Remove from wherever it is
+        if (loadedModel.parent) {
+          loadedModel.parent.remove(loadedModel);
+        }
+        targetAnchor.add(loadedModel);
+      }
 
       sendARDebug('MODEL_ATTACH_START', {
-        modelName: loadedModel.name || qrId,
-        targetName: targetName,
-        position: [loadedModel.position.x, loadedModel.position.y, loadedModel.position.z],
-        rotation: [loadedModel.rotation.x, loadedModel.rotation.y, loadedModel.rotation.z],
-        scale: loadedModel.scale.x,
-        parentVisible: true,
+        targetName,
+        targetPose: {
+          position: [target.position.x, target.position.y, target.position.z],
+          rotation: [target.rotation.x, target.rotation.y, target.rotation.z, target.rotation.w],
+          scale: target.scale,
+        },
+        modelLocalPosition: modelPos,
       });
 
+      // Apply 8th Wall pose to anchor
+      updateAnchorPose(target);
+
+      activeTargetName = targetName;
       loadedModel.visible = true;
       modelAttached = true;
 
-      sendARDebug('MODEL_ATTACHED', {
-        modelName: loadedModel.name || qrId,
-        targetName: targetName,
-        visible: true,
-        position: [loadedModel.position.x, loadedModel.position.y, loadedModel.position.z],
-        scale: loadedModel.scale.x,
+      const wp = new THREE.Vector3();
+      loadedModel.getWorldPosition(wp);
+      sendARDebug('TARGET_POSE_APPLIED', {
+        targetName,
+        targetPosition: [target.position.x, target.position.y, target.position.z],
+        targetQuaternion: [target.rotation.x, target.rotation.y, target.rotation.z, target.rotation.w],
+        targetScale: target.scale,
+        modelWorldPosition: [wp.x, wp.y, wp.z],
       });
 
-      sendARDebug('MODEL_VISIBILITY_CHECK', {
+      sendARDebug('MODEL_ATTACHED', {
+        targetName,
         visible: true,
-        parentVisible: true,
-        worldPosition: [loadedModel.position.x, loadedModel.position.y, loadedModel.position.z],
-        worldScale: [loadedModel.scale.x, loadedModel.scale.y, loadedModel.scale.z],
-        boundingBoxSize: [],
-        cameraPosition: [camera.position.x, camera.position.y, camera.position.z],
-        distanceToCamera: loadedModel.position.distanceTo(camera.position),
+        anchorPosition: [targetAnchor.position.x, targetAnchor.position.y, targetAnchor.position.z],
       });
 
       sendARDebug('MODEL_VISIBLE', {
-        reason: 'target_found_and_attached',
-        targetName: targetName,
-        qrId: qrId,
+        reason: 'anchor_attached',
+        targetName,
       });
+    }
+
+    function updateAnchorPose(target) {
+      if (!targetAnchor || !target) return;
+      targetAnchor.position.set(target.position.x, target.position.y, target.position.z);
+      targetAnchor.quaternion.set(target.rotation.x, target.rotation.y, target.rotation.z, target.rotation.w);
+      targetAnchor.scale.setScalar(target.scale);
     }
 
     // ========== LOAD TARGET JSON FROM SUPABASE ==========
@@ -624,8 +649,61 @@
 
     // ========== 8TH WALL ENGINE (SELF-HOSTED, NO APPKEY) ==========
     let xrController = null;
-    const trackedTargets = new Set();
+    const trackedTargets = new Map();   // name → {name, position, rotation, scale, lastSeenAt}
+    let activeTargetName = null;       // which target currently has the model attached
+    let targetAnchor = null;           // THREE.Group parented to scene; model is child of this
     const realityImageUpdated = { _lastLog: 0 };
+
+    // Step 1: Store target pose
+    function saveTargetPose(detail) {
+      if (!detail?.name) return;
+      trackedTargets.set(detail.name, {
+        name: detail.name,
+        position: {
+          x: detail.position?.x ?? 0,
+          y: detail.position?.y ?? 0,
+          z: detail.position?.z ?? 0,
+        },
+        rotation: {
+          x: detail.rotation?.x ?? 0,
+          y: detail.rotation?.y ?? 0,
+          z: detail.rotation?.z ?? 0,
+          w: detail.rotation?.w ?? 1,
+        },
+        scale: detail.scale ?? 1,
+        lastSeenAt: Date.now(),
+      });
+    }
+
+    // Step 6: Apply 8th Wall pose to targetAnchor (not directly to model)
+    function updateModelPose(detail) {
+      if (!loadedModel || !targetAnchor || !detail) return;
+      const p = detail.position;
+      const r = detail.rotation;
+      const s = detail.scale ?? 1;
+      if (!p || !r) return;
+
+      targetAnchor.position.set(p.x, p.y, p.z);
+      targetAnchor.quaternion.set(r.x, r.y, r.z, r.w);
+      targetAnchor.scale.setScalar(s);
+
+      // Log periodically
+      const now = Date.now();
+      if (!updateModelPose._lastLog || now - updateModelPose._lastLog > 2000) {
+        updateModelPose._lastLog = now;
+        const wp = new THREE.Vector3();
+        const ws = new THREE.Vector3();
+        loadedModel.getWorldPosition(wp);
+        loadedModel.getWorldScale(ws);
+        sendARDebug('ANCHOR_POSE_CHECK', {
+          targetPosition: [p.x, p.y, p.z],
+          anchorPosition: [targetAnchor.position.x, targetAnchor.position.y, targetAnchor.position.z],
+          modelWorldPosition: [wp.x, wp.y, wp.z],
+          targetScale: s,
+          anchorScale: targetAnchor.scale.x,
+        });
+      }
+    }
 
     // Wait for XR8 to load using the official event pattern.
     // The xrloaded event fires when the engine binary is ready but BEFORE
@@ -765,9 +843,8 @@
         onUpdate: (frame) => {
           renderCheckFrame++;
           if (mixer) mixer.update(0.016);
-          if (loadedModel && loadedModel.visible) {
-            loadedModel.position.y = (modelPos[1] || 0) + Math.sin(Date.now() * 0.001) * 0.005;
-          }
+          // NOTE: Y-bob removed — model transform now driven exclusively by
+          // targetAnchor pose applied from reality.imageupdated events.
           // Periodic render check — every ~60 frames (~1 second)
           if (renderCheckFrame % 60 === 0) {
             sendARDebug('SCENE_RENDER_CHECK', {
@@ -846,12 +923,18 @@
                 position: detail?.position,
                 rotation: detail?.rotation,
               });
-              if (detail?.name) onTargetFound(detail.name);
+              if (detail?.name) onTargetFound(detail);
             },
           },
           {
             event: 'reality.imageupdated',
             process: ({detail}) => {
+              if (!detail?.name) return;
+
+              // Always update pose state
+              saveTargetPose(detail);
+
+              // Log throttled
               const now = Date.now();
               if (!realityImageUpdated._lastLog) realityImageUpdated._lastLog = 0;
               if (now - realityImageUpdated._lastLog > 2000) {
@@ -862,6 +945,11 @@
                   rotation: detail?.rotation,
                   timestamp: now,
                 });
+              }
+
+              // Apply pose to anchor if model is attached to this target
+              if (loadedModel && modelAttached && activeTargetName === detail.name) {
+                updateModelPose(detail);
               }
             },
           },
@@ -968,24 +1056,27 @@
     // imageTargetEvents module + reality.* listeners registered above.
     // Removed: watchTargets() polling via frameData (not a public 8th Wall API).
 
-    function onTargetFound(name) {
-      // FIX: must register in trackedTargets before attemptModelAttach() gates on it
-      trackedTargets.add(name);
-      sendARDebug('TARGET_FOUND', { qrId: name, word: word });
-      sendMessage('TARGET_FOUND', { targetIndex: 0, qrId: name, word: word });
+    function onTargetFound(detail) {
+      // detail = {name, position, rotation, scale}
+      saveTargetPose(detail);
+      sendARDebug('TARGET_FOUND', { qrId: detail.name, word: word });
+      sendMessage('TARGET_FOUND', { targetIndex: 0, qrId: detail.name, word: word });
       showCardLabel(word);
-      attemptModelAttach();
+      attemptModelAttach(detail.name);
     }
 
     function onTargetLost(name) {
       trackedTargets.delete(name);
       sendARDebug('TARGET_LOST', { qrId: name });
-
       sendMessage('TARGET_LOST', { targetIndex: 0, qrId: name });
-      if (loadedModel) {
-        loadedModel.visible = false;
-        modelAttached = false;
-        sendARDebug('MODEL_HIDDEN', { reason: 'target_lost', qrId: name });
+
+      if (activeTargetName === name) {
+        activeTargetName = null;
+        if (loadedModel) {
+          loadedModel.visible = false;
+          modelAttached = false;
+          sendARDebug('MODEL_HIDDEN', { reason: 'target_lost', qrId: name });
+        }
       }
     }
 
