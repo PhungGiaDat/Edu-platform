@@ -2,7 +2,7 @@
  * NotebookPage - Sổ tay vocabulary notebook
  * Web screen for viewing and managing saved vocabulary
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notebookApi, type NotebookListResponse, type DueCardsResponse } from '../services/notebookApi';
 import { apiClient } from '../services/apiClient';
@@ -24,8 +24,39 @@ import {
   GridViewIcon,
   ListViewIcon,
 } from '@/features/dictionary/components/icons';
-import { colors, shadows, dangerColors } from '../design-tokens/claymorphic';
+import { colors, shadows, dangerColors, withOpacity } from '../design-tokens/claymorphic';
 import { VocabularyTopics } from '@/features/learning/components/VocabularyTopics';
+
+// Decorative floating-clay 3D band — lazy so the three-vendor chunk stays out
+// of the initial bundle. Error-safe: if WebGL is unavailable the Suspense
+// fallback (static gradient band) simply remains.
+const ClayFloat3D = lazy(() => import('@/shared/components/clay/ClayFloat3D'));
+
+/**
+ * Pastel card palette for entry cards — stable per-word assignment so each
+ * word always renders in its own colour (kids recognise "their" words).
+ * Ink stays deepSlate everywhere: all pastels measure ≥ 4.5:1 against it.
+ */
+const WORD_PASTELS = [
+  { bg: colors.mintGreen, tint: 0.32 },
+  { bg: colors.skyBlue, tint: 0.3 },
+  { bg: colors.sunshineYellow, tint: 0.3 },
+  { bg: colors.coralPink, tint: 0.28 },
+  { bg: colors.lavender, tint: 0.26 },
+] as const;
+
+function wordPastel(word: string) {
+  let hash = 0;
+  for (let i = 0; i < word.length; i++) hash = (hash * 31 + word.charCodeAt(i)) % 997;
+  return WORD_PASTELS[hash % WORD_PASTELS.length];
+}
+
+/** Difficulty chips — labelled clay chips instead of anonymous dots. */
+const DIFFICULTY_CHIP: Record<string, { bg: string; ink: string; label: string }> = {
+  easy: { bg: colors.mintGreenDark ?? '#7DC760', ink: '#14532D', label: 'Dễ' },
+  medium: { bg: colors.sunshineYellow, ink: '#713F12', label: 'Vừa' },
+  hard: { bg: colors.coralPink, ink: '#7F1D1D', label: 'Khó' },
+};
 
 interface NotebookPageProps {
   onNavigateToFlashcards?: () => void;
@@ -130,36 +161,32 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
     }
   };
 
-  // Get difficulty color
-  const getDifficultyColor = (difficulty?: string) => {
-    switch (difficulty) {
-      case 'easy': return colors.mintGreen;
-      case 'medium': return colors.sunshineYellow;
-      case 'hard': return colors.coralPink;
-      default: return colors.mediumGray;
-    }
-  };
-
   return (
     <div className="min-h-screen pb-24" style={{ backgroundColor: colors.backgroundBase }}>
-      {/* Header */}
+      {/* Header — vibrant clay gradient with floating 3D clay shapes */}
       <div
-        className="px-4 pt-8 pb-6"
+        className="px-4 pt-8 pb-6 rounded-b-[2.5rem]"
         style={{
-          background: `linear-gradient(135deg, ${colors.lavender}40, ${colors.skyBlue}40)`,
+          background: `linear-gradient(135deg, ${withOpacity(colors.lavender, 0.5)}, ${withOpacity(colors.skyBlue, 0.45)} 55%, ${withOpacity(colors.bubblePink, 0.35)})`,
+          boxShadow: shadows.clay,
         }}
       >
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: colors.deepSlate }}>
-                <NotebookIcon className="h-6 w-6" />
+          <div className="flex items-center justify-between mb-1">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-black flex items-center gap-2" style={{ color: colors.deepSlate }}>
+                <span
+                  className="inline-flex items-center justify-center h-10 w-10 rounded-2xl shrink-0"
+                  style={{ backgroundColor: colors.sunshineYellow, boxShadow: shadows.clayYellow }}
+                >
+                  <NotebookIcon className="h-6 w-6" />
+                </span>
                 Sổ tay từ vựng
               </h1>
-              <p className="text-sm" style={{ color: colors.mediumGray }}>
+              <p className="text-sm mt-2 font-semibold" style={{ color: colors.mediumGray }}>
                 {entries.length} từ đã lưu
                 {dueCards && dueCards.count > 0 && (
-                  <span className="ml-2 text-red-500 font-semibold">
+                  <span className="ml-2 font-bold" style={{ color: dangerColors.ink }}>
                     • {dueCards.count} cần ôn tập
                   </span>
                 )}
@@ -178,6 +205,21 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
             </div>
           </div>
 
+          {/* Floating clay 3D decorative band (lazy, reduced-motion aware) */}
+          <Suspense
+            fallback={
+              <div
+                className="mt-2 rounded-3xl h-16"
+                style={{
+                  background: `linear-gradient(90deg, ${withOpacity(colors.sunshineYellow, 0.5)}, ${withOpacity(colors.coralPink, 0.4)}, ${withOpacity(colors.mintGreen, 0.5)})`,
+                }}
+                aria-hidden="true"
+              />
+            }
+          >
+            <ClayFloat3D height={92} className="mt-1" />
+          </Suspense>
+
           {/* Search */}
           <Input
             type="search"
@@ -188,25 +230,22 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
             className="w-full"
           />
 
-          {/* Quick Stats */}
+          {/* Quick Stats — playful review reminder */}
           {dueCards && dueCards.count > 0 && (
-            <div
-              className="mt-4 p-4 rounded-2xl cursor-pointer"
-              style={{
-                backgroundColor: colors.warmWhite,
-                boxShadow: shadows.clay,
-              }}
+            <ClayCard
+              className="mt-4 p-4"
               onClick={handlePractice}
+              style={{ backgroundColor: colors.warmWhite }}
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: colors.neonTeal + '30', color: colors.deepSlate }}
+                  className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: withOpacity(colors.neonTeal, 0.35), color: colors.deepSlate, boxShadow: shadows.claySm }}
                 >
                   <BookIcon className="h-6 w-6" />
                 </div>
-                <div className="flex-1">
-                  <p className="font-bold" style={{ color: colors.deepSlate }}>
+                <div className="flex-1 min-w-0">
+                  <p className="font-black" style={{ color: colors.deepSlate }}>
                     Đến lúc ôn tập!
                   </p>
                   <p className="text-sm" style={{ color: colors.mediumGray }}>
@@ -217,7 +256,7 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
                   Luyện tập
                 </Button>
               </div>
-            </div>
+            </ClayCard>
           )}
         </div>
       </div>
@@ -230,24 +269,28 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
           onSelectTopic={setSelectedTopic}
         />
 
-        {/* Difficulty Filter */}
+        {/* Difficulty Filter — labelled clay chips */}
         <div className="flex gap-2 mt-3">
-          {[null, 'easy', 'medium', 'hard'].map((diff) => (
-            <Badge
-              key={diff || 'all'}
-              variant={selectedDifficulty === diff ? 'primary' : 'secondary'}
-              onClick={() => setSelectedDifficulty(diff)}
-              style={{
-                backgroundColor: diff
-                  ? selectedDifficulty === diff
-                    ? getDifficultyColor(diff) + '40'
-                    : colors.lightGray
-                  : undefined,
-              }}
-            >
-              {diff ? diff.charAt(0).toUpperCase() + diff.slice(1) : 'Tất cả'}
-            </Badge>
-          ))}
+          {[null, 'easy', 'medium', 'hard'].map((diff) => {
+            const selected = selectedDifficulty === diff;
+            const chip = diff ? DIFFICULTY_CHIP[diff] : undefined;
+            return (
+              <button
+                key={diff || 'all'}
+                type="button"
+                onClick={() => setSelectedDifficulty(diff)}
+                aria-pressed={selected}
+                className="rounded-full px-3.5 py-1.5 text-sm font-bold cursor-pointer transition-colors duration-200"
+                style={{
+                  backgroundColor: chip && selected ? chip.bg : withOpacity(colors.warmWhite, 0.85),
+                  color: chip && selected ? chip.ink : colors.mediumGray,
+                  boxShadow: selected ? shadows.claySm : 'none',
+                }}
+              >
+                {chip ? chip.label : 'Tất cả'}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -264,136 +307,161 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
           </div>
         ) : entries.length === 0 ? (
           <div className="text-center py-12">
-            <div className="flex justify-center mb-4" style={{ color: colors.mediumGray }}>
-              <NotebookIcon className="h-12 w-12" />
+            <div
+              className="mx-auto mb-4 flex items-center justify-center h-20 w-20 rounded-full"
+              style={{ backgroundColor: withOpacity(colors.sunshineYellow, 0.4), boxShadow: shadows.clay, color: colors.deepSlate }}
+            >
+              <NotebookIcon className="h-10 w-10" />
             </div>
-            <h3 className="text-lg font-bold mb-2" style={{ color: colors.deepSlate }}>
-              Chưa có từ nào
+            <h3 className="text-lg font-black mb-2" style={{ color: colors.deepSlate }}>
+              Sổ tay còn trống
             </h3>
-            <p className="text-sm" style={{ color: colors.mediumGray }}>
-              Lưu từ từ AI translation hoặc flashcard để xem ở đây
+            <p className="text-sm max-w-xs mx-auto" style={{ color: colors.mediumGray }}>
+              Tra một từ ở tab <strong>Tra từ</strong> rồi bấm “Lưu vào Sổ tay” để bắt đầu bộ sưu tập của bạn nhé!
             </p>
           </div>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pb-8">
-            {entries.map((entry) => (
-              <ClayCard
-                key={entry.id}
-                className="p-4 cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => setSelectedEntry(entry)}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <span style={{ color: colors.mediumGray }}>{getSourceIcon(entry.source)}</span>
-                  {entry.difficulty && (
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: getDifficultyColor(entry.difficulty) }}
-                    />
-                  )}
-                </div>
-
-                <h3 className="mb-1">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedEntry(entry);
-                    }}
-                    className="font-bold text-lg text-left break-words"
-                    style={{ color: colors.deepSlate }}
-                    aria-label={`Xem chi tiết ${entry.word}`}
-                  >
-                    {entry.word}
-                  </button>
-                </h3>
-                <p className="text-sm" style={{ color: colors.mediumGray }}>
-                  {entry.translation_vi}
-                </p>
-
-                {entry.topic && (
-                  <Badge variant="secondary" size="sm" className="mt-2">
-                    {entry.topic}
-                  </Badge>
-                )}
-
-                <div className="flex items-center justify-between mt-3 pt-2 border-t" style={{ borderColor: colors.lightGray }}>
-                  <span className="text-xs" style={{ color: colors.mediumGray }}>
-                    {entry.review_count} lần ôn
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(entry.id);
-                    }}
-                    className="text-xs px-2 py-1 rounded"
-                    style={{ backgroundColor: dangerColors.surface, color: dangerColors.ink }}
-                  >
-                    Xóa
-                  </button>
-                </div>
-              </ClayCard>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-3 pb-8">
-            {entries.map((entry) => (
-              <ClayCard
-                key={entry.id}
-                className="p-4 flex items-center gap-4"
-                onClick={() => setSelectedEntry(entry)}
-              >
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: colors.skyBlue + '20', color: colors.deepSlate }}
+            {entries.map((entry) => {
+              const pastel = wordPastel(entry.word);
+              const diffChip = entry.difficulty ? DIFFICULTY_CHIP[entry.difficulty] : undefined;
+              return (
+                <ClayCard
+                  key={entry.id}
+                  className="p-4"
+                  onClick={() => setSelectedEntry(entry)}
+                  style={{ backgroundColor: withOpacity(pastel.bg, pastel.tint) }}
                 >
-                  {getSourceIcon(entry.source)}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedEntry(entry);
-                        }}
-                        className="font-bold text-left truncate"
-                        style={{ color: colors.deepSlate }}
-                        aria-label={`Xem chi tiết ${entry.word}`}
+                  <div className="flex items-start justify-between mb-2">
+                    <span
+                      className="inline-flex items-center justify-center h-8 w-8 rounded-xl"
+                      style={{ backgroundColor: withOpacity(colors.warmWhite, 0.85), color: colors.deepSlate }}
+                      aria-hidden="true"
+                    >
+                      {getSourceIcon(entry.source)}
+                    </span>
+                    {diffChip && (
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[11px] font-bold"
+                        style={{ backgroundColor: diffChip.bg, color: diffChip.ink }}
                       >
-                        {entry.word}
-                      </button>
-                    </h3>
-                    {entry.difficulty && (
-                      <div
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: getDifficultyColor(entry.difficulty) }}
-                      />
+                        {diffChip.label}
+                      </span>
                     )}
                   </div>
-                  <p className="text-sm truncate" style={{ color: colors.mediumGray }}>
+
+                  <h3 className="mb-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEntry(entry);
+                      }}
+                      className="font-black text-lg text-left break-words leading-snug"
+                      style={{ color: colors.deepSlate }}
+                      aria-label={`Xem chi tiết ${entry.word}`}
+                    >
+                      {entry.word}
+                    </button>
+                  </h3>
+                  <p className="text-sm font-semibold" style={{ color: colors.mediumGray }}>
                     {entry.translation_vi}
                   </p>
-                </div>
 
-                <div className="flex items-center gap-2 shrink-0">
                   {entry.topic && (
-                    <Badge variant="secondary" size="sm">
+                    <Badge variant="secondary" size="sm" className="mt-2">
                       {entry.topic}
                     </Badge>
                   )}
-                  <span
-                    className="text-xs flex items-center gap-1"
-                    style={{ color: colors.mediumGray }}
-                    aria-label={`${entry.review_count} lần ôn`}
+
+                  <div className="flex items-center justify-between mt-3 pt-2 border-t" style={{ borderColor: withOpacity(colors.mediumGray, 0.18) }}>
+                    <span className="text-xs font-semibold flex items-center gap-1" style={{ color: colors.mediumGray }}>
+                      <CheckIcon className="h-3.5 w-3.5" />
+                      {entry.review_count} lần ôn
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(entry.id);
+                      }}
+                      className="text-xs px-2.5 py-1 rounded-full font-bold"
+                      style={{ backgroundColor: dangerColors.surface, color: dangerColors.ink }}
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </ClayCard>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="space-y-3 pb-8">
+            {entries.map((entry) => {
+              const pastel = wordPastel(entry.word);
+              const diffChip = entry.difficulty ? DIFFICULTY_CHIP[entry.difficulty] : undefined;
+              return (
+                <ClayCard
+                  key={entry.id}
+                  className="p-4 flex items-center gap-4"
+                  onClick={() => setSelectedEntry(entry)}
+                  style={{ backgroundColor: withOpacity(pastel.bg, pastel.tint * 0.75) }}
+                >
+                  <div
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: withOpacity(colors.warmWhite, 0.9), color: colors.deepSlate, boxShadow: shadows.claySm }}
+                    aria-hidden="true"
                   >
-                    {entry.review_count}
-                    <CheckIcon className="h-3.5 w-3.5" />
-                  </span>
-                </div>
-              </ClayCard>
-            ))}
+                    {getSourceIcon(entry.source)}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedEntry(entry);
+                          }}
+                          className="font-black text-left truncate"
+                          style={{ color: colors.deepSlate }}
+                          aria-label={`Xem chi tiết ${entry.word}`}
+                        >
+                          {entry.word}
+                        </button>
+                      </h3>
+                      {diffChip && (
+                        <span
+                          className="rounded-full px-2 py-0.5 text-[11px] font-bold shrink-0"
+                          style={{ backgroundColor: diffChip.bg, color: diffChip.ink }}
+                        >
+                          {diffChip.label}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-semibold truncate" style={{ color: colors.mediumGray }}>
+                      {entry.translation_vi}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {entry.topic && (
+                      <Badge variant="secondary" size="sm">
+                        {entry.topic}
+                      </Badge>
+                    )}
+                    <span
+                      className="text-xs flex items-center gap-1 font-semibold"
+                      style={{ color: colors.mediumGray }}
+                      aria-label={`${entry.review_count} lần ôn`}
+                    >
+                      {entry.review_count}
+                      <CheckIcon className="h-3.5 w-3.5" />
+                    </span>
+                  </div>
+                </ClayCard>
+              );
+            })}
           </div>
         )}
       </div>

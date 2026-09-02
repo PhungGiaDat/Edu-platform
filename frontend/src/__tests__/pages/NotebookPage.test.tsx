@@ -24,6 +24,11 @@ vi.mock('../../services/apiClient', () => ({
   },
 }));
 
+// jsdom has no WebGL — mock the decorative 3D band so tests stay deterministic.
+vi.mock('@/shared/components/clay/ClayFloat3D', () => ({
+  default: () => <div data-testid="clay-float-3d" />,
+}));
+
 const mockAuth = { user: { id: 'u1' }, isGuest: false } as never;
 const entry = {
   id: 'e1', user_id: 'u1', word: 'elephant', translation_vi: 'con voi',
