@@ -164,7 +164,8 @@
   <div id="canvas-container">
     <!-- 8th Wall self-hosted binary auto-discovers canvas with id="camerafeed" -->
     <canvas id="camerafeed"></canvas>
-    <!-- Three.js renders the 3D model here — separate from 8th Wall camera canvas -->
+    <!-- model-canvas: kept in DOM (legacy) — no longer used for rendering.
+         XR8.Threejs.pipelineModule() now owns all rendering. -->
     <canvas id="model-canvas"></canvas>
   </div>
 
@@ -338,43 +339,19 @@
     }
 
     // ========== THREE.JS SCENE ==========
-    let scene, camera, renderer, loadedModel = null, mixer = null;
+    // scene/camera/renderer come from XR8.Threejs.xrScene() — acquired in initXR
+    // Only declare here; assigned after XR8 bootstraps
+    let scene = null, camera = null, renderer = null;
+    let loadedModel = null, mixer = null;
     let modelPos = [0, 0, -0.5];
     let modelRot = [0, 0, 0];
     let modelScale = 1;
 
     function initThree() {
-      logToBuffer('info', 'Initializing Three.js');
-      scene = new THREE.Scene();
-
-      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
-      camera.position.set(0, 0, 0);
-
-      // Use separate model-canvas so it doesn't conflict with 8th Wall's canvas
-      renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('model-canvas'), alpha: true, antialias: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping      = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.0;
-      renderer.xr.enabled = true;
-
-      // Lighting for claymorphic look
-      scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-      const key = new THREE.DirectionalLight(0xffffff, 1.5);
-      key.position.set(0, 3, 5);
-      scene.add(key);
-      const fill = new THREE.DirectionalLight(0xffffff, 0.4);
-      fill.position.set(-3, 0, -2);
-      scene.add(fill);
-
-      window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-
-      logToBuffer('info', 'Three.js scene ready');
+      // NOTE: scene/camera/renderer are NOT created here.
+      // They are acquired from XR8.Threejs.xrScene() after XR bootstraps.
+      // Custom renderer removed — XR8.Threejs.pipelineModule() owns rendering.
+      logToBuffer('info', 'Three.js stubs ready — scene/camera/renderer acquired from XR8');
     }
 
     // ========== MODEL LOADING ==========
@@ -417,7 +394,15 @@
             modelRot   = rot;
             modelScale = sc;
 
-            scene.add(model);
+            // Model stays in memory. Parent to targetAnchor when available, else scene.
+            // Target anchor is created after XR scene is acquired (in initXR).
+            // If targetAnchor exists, parent there; otherwise scene.
+            if (targetAnchor) {
+              targetAnchor.add(model);
+            } else {
+              // fallback: parent to scene until anchor is ready
+              if (scene) scene.add(model);
+            }
             loadedModel = model;
             modelLoadState = 'loaded';
 
@@ -454,7 +439,7 @@
 
             // If target already found, attach now
             if (trackedTargets.size > 0) {
-              attemptModelAttach();
+              attemptModelAttach(Array.from(trackedTargets.keys())[0]);
             }
 
             resolve(model);
@@ -510,11 +495,7 @@
 
       // Attach model to anchor if not already
       if (loadedModel.parent !== targetAnchor) {
-        // Remove from wherever it is
-        if (loadedModel.parent) {
-          loadedModel.parent.remove(loadedModel);
-        }
-        targetAnchor.add(loadedModel);
+        reparentModelToAnchor();
       }
 
       sendARDebug('MODEL_ATTACH_START', {
@@ -528,7 +509,7 @@
       });
 
       // Apply 8th Wall pose to anchor
-      updateAnchorPose(target);
+      applyTargetPose(target);
 
       activeTargetName = targetName;
       loadedModel.visible = true;
@@ -556,11 +537,23 @@
       });
     }
 
-    function updateAnchorPose(target) {
+    function applyTargetPose(target) {
       if (!targetAnchor || !target) return;
       targetAnchor.position.set(target.position.x, target.position.y, target.position.z);
       targetAnchor.quaternion.set(target.rotation.x, target.rotation.y, target.rotation.z, target.rotation.w);
       targetAnchor.scale.setScalar(target.scale);
+    }
+
+    function reparentModelToAnchor() {
+      if (!loadedModel || !targetAnchor) return;
+      if (loadedModel.parent) {
+        loadedModel.parent.remove(loadedModel);
+      }
+      targetAnchor.add(loadedModel);
+      // Ensure local transform matches backend config
+      loadedModel.position.set(modelPos[0], modelPos[1], modelPos[2]);
+      loadedModel.rotation.set(modelRot[0], modelRot[1], modelRot[2]);
+      loadedModel.scale.setScalar(modelScale);
     }
 
     // ========== LOAD TARGET JSON FROM SUPABASE ==========
@@ -683,9 +676,11 @@
       const s = detail.scale ?? 1;
       if (!p || !r) return;
 
-      targetAnchor.position.set(p.x, p.y, p.z);
-      targetAnchor.quaternion.set(r.x, r.y, r.z, r.w);
-      targetAnchor.scale.setScalar(s);
+      applyTargetPose({
+        position: { x: p.x, y: p.y, z: p.z },
+        rotation: { x: r.x, y: r.y, z: r.z, w: r.w },
+        scale: s,
+      });
 
       // Log periodically
       const now = Date.now();
@@ -693,14 +688,19 @@
         updateModelPose._lastLog = now;
         const wp = new THREE.Vector3();
         const ws = new THREE.Vector3();
+        const cp = new THREE.Vector3();
         loadedModel.getWorldPosition(wp);
         loadedModel.getWorldScale(ws);
-        sendARDebug('ANCHOR_POSE_CHECK', {
+        if (camera) camera.getWorldPosition(cp);
+        sendARDebug('XR_ANCHOR_ALIGNMENT_CHECK', {
           targetPosition: [p.x, p.y, p.z],
-          anchorPosition: [targetAnchor.position.x, targetAnchor.position.y, targetAnchor.position.z],
+          anchorLocalPosition: [targetAnchor.position.x, targetAnchor.position.y, targetAnchor.position.z],
+          anchorWorldPosition: (() => { const v = new THREE.Vector3(); targetAnchor.getWorldPosition(v); return [v.x,v.y,v.z]; })(),
+          modelLocalPosition: [loadedModel.position.x, loadedModel.position.y, loadedModel.position.z],
           modelWorldPosition: [wp.x, wp.y, wp.z],
           targetScale: s,
           anchorScale: targetAnchor.scale.x,
+          cameraWorldPosition: camera ? [camera.position.x, camera.position.y, camera.position.z] : null,
         });
       }
     }
@@ -1050,6 +1050,72 @@
 
       updateDebug('Tracking active');
       sendARDebug('XR_SESSION_STARTED', {});
+
+      // Step 2: Acquire XR8's Three.js scene/camera/renderer
+      // This replaces all custom scene/camera/renderer from initThree()
+      try {
+        const xrScene = XR8.Threejs.xrScene();
+        scene   = xrScene.scene;
+        camera  = xrScene.camera;
+        renderer = xrScene.renderer;
+
+        const hasScene    = !!scene;
+        const hasCamera   = !!camera;
+        const hasRenderer = !!renderer;
+
+        logToBuffer('info', 'XR_THREE_SCENE_ACQUIRED', {
+          hasScene, hasCamera, hasRenderer,
+          sceneChildren: scene?.children?.length || 0,
+          cameraType: camera?.constructor.name || '',
+          rendererSize: renderer ? `${renderer.domElement.width}x${renderer.domElement.height}` : '',
+        });
+        sendARDebug('XR_THREE_SCENE_ACQUIRED', {
+          hasScene, hasCamera, hasRenderer,
+          sceneChildren: scene?.children?.length || 0,
+          cameraType: camera?.constructor.name || '',
+          rendererSize: renderer ? `${renderer.domElement.width}x${renderer.domElement.height}` : '',
+        });
+
+        if (!hasScene || !hasCamera || !hasRenderer) {
+          const msg = `XR8.Threejs.xrScene() returned incomplete: scene=${hasScene} camera=${hasCamera} renderer=${hasRenderer}`;
+          logToBuffer('error', 'XR_SCENE_INCOMPLETE', { scene: hasScene, camera: hasCamera, renderer: hasRenderer });
+          sendARDebug('XR_SCENE_INCOMPLETE', { scene: hasScene, camera: hasCamera, renderer: hasRenderer });
+          throw new Error(msg);
+        }
+
+        // Step 3: Verify render boundary
+        sendARDebug('XR_RENDER_BOUNDARY_CHECK', {
+          usingXR8Scene: true,
+          usingXR8Camera: true,
+          usingXR8Renderer: true,
+          customRendererActive: false,
+          customCameraActive: false,
+        });
+
+        // Step 4: Create targetAnchor inside XR8 scene
+        targetAnchor = new THREE.Group();
+        targetAnchor.name = `target-anchor:${qrId}`;
+        scene.add(targetAnchor);
+
+        logToBuffer('info', 'TARGET_ANCHOR_CREATED', {
+          anchorName: targetAnchor.name,
+          parentIsXRScene: true,
+          sceneChildren: scene.children.length,
+        });
+        sendARDebug('TARGET_ANCHOR_CREATED', {
+          anchorName: targetAnchor.name,
+          parentIsXRScene: true,
+        });
+
+        // If model already loaded before anchor was created, move it into anchor now
+        if (loadedModel) {
+          reparentModelToAnchor();
+        }
+
+      } catch (e) {
+        logToBuffer('error', 'XR_SCENE_ACQUIRE_ERROR', { message: String(e) });
+        sendARDebug('XR_SCENE_ACQUIRE_ERROR', { message: String(e) });
+      }
     } // initXR
 
     // Note: image target events now flow exclusively through
