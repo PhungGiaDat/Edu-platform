@@ -828,7 +828,84 @@
         },
       };
 
-      // Step 4: Camera pipeline — handles frame loop and target tracking
+      // Step 4: Acquire XR8 Three.js scene — MUST be in onAttach/onStart, not after XR8.run()
+      // XR8.Threejs.xrScene() returns null before Threejs.pipelineModule() fires onStart
+      let xrSceneAcquired = false;
+      const xrSceneAcquisitionModule = {
+        name: 'xr-scene-acquisition',
+
+        onStart: ({ canvas: c, gl }) => {
+          // Try acquiring scene here — may succeed if called after Threejs.pipelineModule onStart
+          tryAcquireXRAuthoring();
+        },
+
+        onUpdate: () => {
+          // Poll until successful — Threejs.pipelineModule may fire onStart after this
+          if (!xrSceneAcquired) tryAcquireXRAuthoring();
+        },
+      };
+
+      function tryAcquireXRAuthoring() {
+        if (xrSceneAcquired || !window.XR8) return;
+        try {
+          const xr = window.XR8.Threejs?.xrScene?.();
+          if (!xr || !xr.scene || !xr.camera || !xr.renderer) return;
+
+          scene    = xr.scene;
+          camera   = xr.camera;
+          renderer = xr.renderer;
+
+          const hasScene    = !!scene;
+          const hasCamera   = !!camera;
+          const hasRenderer = !!renderer;
+
+          logToBuffer('info', 'XR_THREE_SCENE_ACQUIRED', {
+            hasScene, hasCamera, hasRenderer,
+            sceneChildren: scene?.children?.length || 0,
+            cameraType: camera?.constructor.name || '',
+            rendererSize: renderer ? `${renderer.domElement.width}x${renderer.domElement.height}` : '',
+          });
+          sendARDebug('XR_THREE_SCENE_ACQUIRED', {
+            hasScene, hasCamera, hasRenderer,
+            sceneChildren: scene?.children?.length || 0,
+            cameraType: camera?.constructor.name || '',
+            rendererSize: renderer ? `${renderer.domElement.width}x${renderer.domElement.height}` : '',
+          });
+
+          sendARDebug('XR_RENDER_BOUNDARY_CHECK', {
+            usingXR8Scene: true,
+            usingXR8Camera: true,
+            usingXR8Renderer: true,
+            customRendererActive: false,
+            customCameraActive: false,
+          });
+
+          // Create anchor inside XR8 scene
+          targetAnchor = new THREE.Group();
+          targetAnchor.name = `target-anchor:${qrId}`;
+          scene.add(targetAnchor);
+          logToBuffer('info', 'TARGET_ANCHOR_CREATED', {
+            anchorName: targetAnchor.name,
+            parentIsXRScene: true,
+            sceneChildren: scene.children.length,
+          });
+          sendARDebug('TARGET_ANCHOR_CREATED', {
+            anchorName: targetAnchor.name,
+            parentIsXRScene: true,
+          });
+
+          // If model already loaded, parent to anchor
+          if (loadedModel) {
+            reparentModelToAnchor();
+          }
+
+          xrSceneAcquired = true;
+        } catch (e) {
+          // Not ready yet — onUpdate will retry
+        }
+      }
+
+      // Step 5: Camera pipeline — handles frame loop and target tracking
       let renderCheckFrame = 0;
       const cameraPipelineModule = {
         name: 'camera-pipeline',
@@ -868,18 +945,7 @@
         },
       };
 
-      // Step 5: Custom render pipeline — draw Three.js scene
-      const renderModule = {
-        name: 'custom-render',
-        onStart: () => {
-          logToBuffer('info', 'Render module started');
-        },
-        onUpdate: () => {
-          if (renderer && scene && camera) {
-            renderer.render(scene, camera);
-          }
-        },
-      };
+      // NOTE: custom-render removed — XR8.Threejs.pipelineModule() owns rendering
 
       // Step 6: Image target event module — registered BEFORE XrController.pipelineModule
       // so it can receive events that XrController dispatches.
@@ -965,15 +1031,18 @@
       };
 
       // Step 6b: Register ALL pipeline modules (order matters per 8th Wall docs)
+      // xrSceneAcquisitionModule registered AFTER Threejs so its onStart fires after
+      // Threejs.pipelineModule() creates scene/camera/renderer.
       // imageTargetEvents must be before XrController.pipelineModule() so
       // XrController can dispatch into the already-registered listener.
       XR8.addCameraPipelineModule(lifecycleModule);
       XR8.addCameraPipelineModule(XR8.GlTextureRenderer.pipelineModule());
       XR8.addCameraPipelineModule(XR8.Threejs.pipelineModule());
+      XR8.addCameraPipelineModule(xrSceneAcquisitionModule);
       XR8.addCameraPipelineModule(imageTargetEvents);
       XR8.addCameraPipelineModule(XR8.XrController.pipelineModule()); // dispatches reality.*
       XR8.addCameraPipelineModule(cameraPipelineModule);
-      XR8.addCameraPipelineModule(renderModule);
+      // NOTE: custom-render removed — XR8.Threejs.pipelineModule() owns rendering
 
       logToBuffer('info', 'XR_PIPELINE_READY', {});
       sendARDebug('XR_PIPELINE_READY', {});
@@ -1050,72 +1119,7 @@
 
       updateDebug('Tracking active');
       sendARDebug('XR_SESSION_STARTED', {});
-
-      // Step 2: Acquire XR8's Three.js scene/camera/renderer
-      // This replaces all custom scene/camera/renderer from initThree()
-      try {
-        const xrScene = XR8.Threejs.xrScene();
-        scene   = xrScene.scene;
-        camera  = xrScene.camera;
-        renderer = xrScene.renderer;
-
-        const hasScene    = !!scene;
-        const hasCamera   = !!camera;
-        const hasRenderer = !!renderer;
-
-        logToBuffer('info', 'XR_THREE_SCENE_ACQUIRED', {
-          hasScene, hasCamera, hasRenderer,
-          sceneChildren: scene?.children?.length || 0,
-          cameraType: camera?.constructor.name || '',
-          rendererSize: renderer ? `${renderer.domElement.width}x${renderer.domElement.height}` : '',
-        });
-        sendARDebug('XR_THREE_SCENE_ACQUIRED', {
-          hasScene, hasCamera, hasRenderer,
-          sceneChildren: scene?.children?.length || 0,
-          cameraType: camera?.constructor.name || '',
-          rendererSize: renderer ? `${renderer.domElement.width}x${renderer.domElement.height}` : '',
-        });
-
-        if (!hasScene || !hasCamera || !hasRenderer) {
-          const msg = `XR8.Threejs.xrScene() returned incomplete: scene=${hasScene} camera=${hasCamera} renderer=${hasRenderer}`;
-          logToBuffer('error', 'XR_SCENE_INCOMPLETE', { scene: hasScene, camera: hasCamera, renderer: hasRenderer });
-          sendARDebug('XR_SCENE_INCOMPLETE', { scene: hasScene, camera: hasCamera, renderer: hasRenderer });
-          throw new Error(msg);
-        }
-
-        // Step 3: Verify render boundary
-        sendARDebug('XR_RENDER_BOUNDARY_CHECK', {
-          usingXR8Scene: true,
-          usingXR8Camera: true,
-          usingXR8Renderer: true,
-          customRendererActive: false,
-          customCameraActive: false,
-        });
-
-        // Step 4: Create targetAnchor inside XR8 scene
-        targetAnchor = new THREE.Group();
-        targetAnchor.name = `target-anchor:${qrId}`;
-        scene.add(targetAnchor);
-
-        logToBuffer('info', 'TARGET_ANCHOR_CREATED', {
-          anchorName: targetAnchor.name,
-          parentIsXRScene: true,
-          sceneChildren: scene.children.length,
-        });
-        sendARDebug('TARGET_ANCHOR_CREATED', {
-          anchorName: targetAnchor.name,
-          parentIsXRScene: true,
-        });
-
-        // If model already loaded before anchor was created, move it into anchor now
-        if (loadedModel) {
-          reparentModelToAnchor();
-        }
-
-      } catch (e) {
-        logToBuffer('error', 'XR_SCENE_ACQUIRE_ERROR', { message: String(e) });
-        sendARDebug('XR_SCENE_ACQUIRE_ERROR', { message: String(e) });
-      }
+      // NOTE: scene acquisition moved to xrSceneAcquisitionModule onAttach/onStart
     } // initXR
 
     // Note: image target events now flow exclusively through
