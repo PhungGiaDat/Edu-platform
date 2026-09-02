@@ -9,6 +9,7 @@ Tests:
   - tenacity retry triggers on 429, succeeds on 3rd attempt
   - get_tokenrouter_llm sets correct params
 """
+
 import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -25,6 +26,7 @@ from services.llm_clients import (
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # CircuitBreaker
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
 
 class TestCircuitBreaker:
     def test_closed_by_default(self):
@@ -90,6 +92,7 @@ class TestCircuitBreaker:
         assert cb.state == "open"
         # Fake time to after reset window
         import time
+
         monkeypatch.setattr(time, "monotonic", lambda: cb._opened_at + 10)
         assert cb.state == "half"
         # Test call in half state succeeds and closes
@@ -100,6 +103,7 @@ class TestCircuitBreaker:
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # ModelRouter
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
 
 class TestModelRouter:
     def test_primary_from_settings(self):
@@ -113,7 +117,10 @@ class TestModelRouter:
     def test_fallbacks_parsed_from_settings(self):
         router = ModelRouter("generator")
         assert "deepseek/deepseek-v4-pro-0813-free" in router.fallback_models
-        assert "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free" in router.fallback_models
+        assert (
+            "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+            in router.fallback_models
+        )
 
     def test_cascade_dedups_primary_from_fallbacks(self):
         # primary is also in fallbacks list â€” should appear only once
@@ -176,6 +183,7 @@ class TestModelRouter:
 # Retry
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+
 class TestRetry:
     @pytest.mark.asyncio
     async def test_retries_on_429(self):
@@ -225,6 +233,7 @@ class TestRetry:
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # get_tokenrouter_llm
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
 
 class TestGetTokenRouterLLM:
     def test_sets_model_name(self):
@@ -285,6 +294,42 @@ def test_cascade_includes_bai_as_last_resort(monkeypatch):
     assert names[-1] == "bai/glm-5.3-flash"
 
 
+def test_cascade_skips_tokenrouter_when_key_missing(monkeypatch):
+    # Render regression: TOKENROUTER_API_KEY unset → constructing
+    # get_tokenrouter_llm() raises OpenAIError("Missing credentials") at
+    # construction, killing the whole cascade before B.AI is ever tried.
+    # The cascade must simply omit the unconfigured provider instead.
+    _with_bai(monkeypatch)
+    monkeypatch.setattr(settings, "TOKENROUTER_API_KEY", None)
+    router = ModelRouter(role="generator")
+    names = [name for _llm, name in router.llm_cascade()]
+    assert names == ["bai/glm-5.3-flash"]
+
+
+def test_cascade_skips_blank_string_key(monkeypatch):
+    # SecretStr("") is truthy as an object; a blank env value must be
+    # treated the same as a missing key or the cascade dies at build time.
+    _with_bai(monkeypatch)
+    monkeypatch.setattr(settings, "TOKENROUTER_API_KEY", SecretStr(""))
+    router = ModelRouter(role="generator")
+    names = [name for _llm, name in router.llm_cascade()]
+    assert names == ["bai/glm-5.3-flash"]
+
+
+def test_cascade_exhausts_cleanly_when_no_provider_configured(monkeypatch):
+    monkeypatch.setattr(settings, "TOKENROUTER_API_KEY", None)
+    monkeypatch.setattr(settings, "BAI_API_KEY", None)
+    router = ModelRouter(role="generator")
+
+    async def never_called(llm, prompt):  # pragma: no cover
+        raise AssertionError("no LLM should be constructed or called")
+
+    with pytest.raises(RuntimeError, match="All models exhausted"):
+        import asyncio
+
+        asyncio.run(router.call_with_fallback(never_called, "p"))
+
+
 def test_cascade_orders_unhealthy_provider_last_but_keeps_it(monkeypatch):
     _with_bai(monkeypatch)
     llm_health.record("tokenrouter", False, kind="permanent")  # dead models
@@ -316,7 +361,9 @@ async def test_call_with_fallback_records_outcomes(monkeypatch):
         # permanent failure → unhealthy immediately; and retried ZERO times per model
         assert llm_health.get_status("tokenrouter") == "unhealthy"
         assert llm_health.get_status("bai") == "unhealthy"
-        assert len(calls) == 4  # one attempt per cascade entry: primary + 2 fallbacks + bai
+        assert (
+            len(calls) == 4
+        )  # one attempt per cascade entry: primary + 2 fallbacks + bai
     finally:
         llm_health._registry.clear()
 

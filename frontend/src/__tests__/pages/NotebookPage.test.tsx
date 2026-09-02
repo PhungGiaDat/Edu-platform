@@ -16,6 +16,14 @@ import AuthContext from '../../contexts/AuthContext';
 
 vi.mock('../../services/notebookApi');
 
+// fetchTopics goes through apiClient (honours VITE_API_BASE + auth header);
+// mock it so the page loads offline-deterministically without global fetch.
+vi.mock('../../services/apiClient', () => ({
+  apiClient: {
+    get: vi.fn().mockResolvedValue({ items: [] }),
+  },
+}));
+
 const mockAuth = { user: { id: 'u1' }, isGuest: false } as never;
 const entry = {
   id: 'e1', user_id: 'u1', word: 'elephant', translation_vi: 'con voi',
@@ -42,8 +50,6 @@ describe('NotebookPage — practice navigation', () => {
   } as never;
 
   beforeEach(() => {
-    const fetchSpy = vi.fn().mockResolvedValue({ json: async () => ({ items: [] }) });
-    vi.stubGlobal('fetch', fetchSpy);
     vi.mocked(notebookApi.list).mockResolvedValue({
       items: [practiceEntry], total: 1, page: 1, per_page: 50, total_pages: 1,
     });
@@ -62,13 +68,8 @@ describe('NotebookPage — practice navigation', () => {
   });
 });
 describe('NotebookPage — entry detail', () => {
-  let fetchSpy: ReturnType<typeof vi.fn>;
-
   beforeEach(() => {
-    // The page loads topic chips straight from the API; keep it offline-deterministic.
-    fetchSpy = vi.fn().mockResolvedValue({ json: async () => ({ items: [] }) });
-    vi.stubGlobal('fetch', fetchSpy);
-
+    // Topics come via the mocked apiClient (see top of file).
     vi.mocked(notebookApi.list).mockResolvedValue({
       items: [entry], total: 1, page: 1, per_page: 50, total_pages: 1,
     });

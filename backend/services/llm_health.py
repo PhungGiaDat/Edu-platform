@@ -15,6 +15,7 @@ Design (v2):
     cascade as a last resort, so "All models exhausted" cannot happen while
     any configured provider exists.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -63,8 +64,10 @@ def classify_error(exc: BaseException) -> str:
 
 def configured_providers() -> list[dict]:
     """Ordered provider configs (first = preferred primary)."""
+    from services.llm_clients import _has_configured_key
+
     providers: list[dict] = []
-    if settings.TOKENROUTER_API_KEY:
+    if _has_configured_key(settings.TOKENROUTER_API_KEY):
         providers.append(
             {
                 "name": "tokenrouter",
@@ -73,7 +76,7 @@ def configured_providers() -> list[dict]:
                 "default_model": settings.MODEL_GENERATOR,
             }
         )
-    if settings.BAI_API_KEY:
+    if _has_configured_key(settings.BAI_API_KEY):
         providers.append(
             {
                 "name": "bai",
@@ -106,7 +109,10 @@ def record(
 
     health.consecutive_failures += 1
     health.last_error_kind = kind or "transient"
-    if kind == "permanent" or health.consecutive_failures >= _TRANSIENT_FAILURE_THRESHOLD:
+    if (
+        kind == "permanent"
+        or health.consecutive_failures >= _TRANSIENT_FAILURE_THRESHOLD
+    ):
         health.status = "unhealthy"
         if health.preferred:
             health.preferred = False
@@ -199,7 +205,11 @@ async def ping_provider_generation(
             )
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"[LLMHealth] generation ping failed for {base_url}: {exc!r}")
-        kind = "permanent" if _is_permanent_status(getattr(exc, "status_code", None)) else "transient"
+        kind = (
+            "permanent"
+            if _is_permanent_status(getattr(exc, "status_code", None))
+            else "transient"
+        )
         if isinstance(exc, httpx.TimeoutException):
             kind = "transient"
         return False, (time.monotonic() - started) * 1000, kind
@@ -215,7 +225,11 @@ async def ping_provider_generation(
     permanent = _is_permanent_status(resp.status_code) or any(
         marker in body for marker in _PERMANENT_MARKERS
     )
-    return False, (time.monotonic() - started) * 1000, "permanent" if permanent else "transient"
+    return (
+        False,
+        (time.monotonic() - started) * 1000,
+        "permanent" if permanent else "transient",
+    )
 
 
 def _is_permanent_status(status_code: Optional[int]) -> bool:

@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notebookApi, type NotebookListResponse, type DueCardsResponse } from '../services/notebookApi';
+import { apiClient } from '../services/apiClient';
 import type { NotebookEntry, VocabularyTopic } from '../types/notebook';
 import { useAuth } from '../contexts/AuthContext';
 import { ClayCard } from '@/shared/components/clay/ClayCard';
@@ -83,11 +84,12 @@ export function NotebookPage({ onNavigateToFlashcards }: NotebookPageProps) {
     }
   }, [user, debouncedSearch, selectedTopic, selectedDifficulty]);
 
-  // Fetch topics
+  // Fetch topics — via apiClient so the request honours VITE_API_BASE and
+  // carries the auth header (a bare relative fetch() 404s on any deploy
+  // where the frontend origin differs from the API origin).
   const fetchTopics = useCallback(async () => {
     try {
-      const response = await fetch('/api/v1/vocabulary/topics');
-      const data = await response.json();
+      const data = await apiClient.get('/api/v1/vocabulary/topics');
       setTopics(data.items || []);
     } catch (err) {
       console.error('[NotebookPage] Failed to fetch topics:', err);

@@ -9,6 +9,7 @@ Architecture:
 
 All LLM calls in agentic_rag_service.py go through here.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -31,6 +32,23 @@ logger = logging.getLogger(__name__)
 # 1. TokenRouter ChatOpenAI factory
 # ──────────────────────────────────────────────
 
+
+def _has_configured_key(key: Any) -> bool:
+    """
+    True only when a SecretStr key exists AND is non-blank.
+
+    A SecretStr("") is still truthy as an object, so a bare `if key:`
+    passes for blank env values — and constructing a ChatOpenAI with a
+    blank key raises OpenAIError("Missing credentials") at build time.
+    """
+    if key is None:
+        return False
+    try:
+        return bool(key.get_secret_value().strip())
+    except AttributeError:
+        return bool(key)
+
+
 def get_tokenrouter_llm(
     model: str,
     temperature: float = 0.4,
@@ -43,7 +61,9 @@ def get_tokenrouter_llm(
     """
     return ChatOpenAI(
         model=model,
-        api_key=settings.TOKENROUTER_API_KEY.get_secret_value() if settings.TOKENROUTER_API_KEY else "",
+        api_key=settings.TOKENROUTER_API_KEY.get_secret_value()
+        if settings.TOKENROUTER_API_KEY
+        else "",
         base_url=settings.TOKENROUTER_BASE_URL,
         timeout=timeout or settings.AI_CONTENT_TIMEOUT_SECONDS,
         max_retries=0,
@@ -73,6 +93,7 @@ def get_bai_llm(
 # ──────────────────────────────────────────────
 # 2. Circuit Breaker
 # ──────────────────────────────────────────────
+
 
 class CircuitOpenError(RuntimeError):
     """Raised when the circuit is open and no calls should be attempted."""
@@ -108,7 +129,9 @@ class CircuitBreaker:
         if self._state == "open":
             if time.monotonic() - self._opened_at >= self.reset_timeout:
                 self._state = "half"
-                logger.info(f"[CircuitBreaker] {self.name} → HALF (reset window elapsed)")
+                logger.info(
+                    f"[CircuitBreaker] {self.name} → HALF (reset window elapsed)"
+                )
                 return "half"
             return "open"
         return self._state
@@ -158,25 +181,38 @@ class CircuitBreaker:
 # 3. Centralized retry wrapper (replaces inline _call_llm_with_retry)
 # ──────────────────────────────────────────────
 
+
 def _is_retryable(exc: Exception) -> bool:
     """Return True if the exception warrants a retry."""
     msg = str(exc).lower()
     # Permanent failures: retrying the same model is pointless — fail over now.
-    permanent_markers = ("model_not_found", "no available channel", "error code: 401", "error code: 403")
+    permanent_markers = (
+        "model_not_found",
+        "no available channel",
+        "error code: 401",
+        "error code: 403",
+    )
     if any(marker in msg for marker in permanent_markers):
         return False
     return any(
         kw in msg
-        for kw in ("429", "resource_exhausted", "quota", "rate", "503", "502", "504", "timeout")
+        for kw in (
+            "429",
+            "resource_exhausted",
+            "quota",
+            "rate",
+            "503",
+            "502",
+            "504",
+            "timeout",
+        )
     )
 
 
 def _on_retry(state: RetryCallState) -> None:
     attempt = state.attempt_number
     wait = state.next_action.sleep if state.next_action else 0
-    logger.warning(
-        f"[LLMRetry] attempt {attempt} failed, retrying in ~{wait:.1f}s..."
-    )
+    logger.warning(f"[LLMRetry] attempt {attempt} failed, retrying in ~{wait:.1f}s...")
 
 
 _retry = tenacity.retry(
@@ -216,6 +252,7 @@ async def acall_with_retry(fn: Callable[..., Any], *args: Any, **kwargs: Any) ->
 # ──────────────────────────────────────────────
 # 4. Model Router — primary → fallback cascade
 # ──────────────────────────────────────────────
+
 
 class ModelRouter:
     """
@@ -279,23 +316,32 @@ class ModelRouter:
           3. Unhealthy providers LAST — still yielded as a last resort, so a
              total "All models exhausted" outage cannot happen while any
              provider is configured.
+        Providers without a configured API key are omitted entirely:
+        constructing a ChatOpenAI with an empty key raises OpenAIError
+        ("Missing credentials") before any network call, which used to kill
+        the whole cascade (503) even when the other provider was healthy.
         """
         from services import llm_health
 
-        seen: set[str] = {self.primary_model}
-        entries: list[tuple[str, ChatOpenAI, str]] = [
-            ("tokenrouter", get_tokenrouter_llm(self.primary_model), self.primary_model)
-        ]
-        for model in self.fallback_models:
-            if model not in seen:
-                seen.add(model)
-                entries.append(("tokenrouter", get_tokenrouter_llm(model), model))
-        if settings.BAI_API_KEY:
+        entries: list[tuple[str, ChatOpenAI, str]] = []
+        seen: set[str] = set()
+        if _has_configured_key(settings.TOKENROUTER_API_KEY):
+            seen.add(self.primary_model)
+            entries.append(
+                (
+                    "tokenrouter",
+                    get_tokenrouter_llm(self.primary_model),
+                    self.primary_model,
+                )
+            )
+            for model in self.fallback_models:
+                if model not in seen:
+                    seen.add(model)
+                    entries.append(("tokenrouter", get_tokenrouter_llm(model), model))
+        if _has_configured_key(settings.BAI_API_KEY):
             bai_model = settings.BAI_GENERATION_MODEL
             if bai_model not in seen:
-                entries.append(
-                    ("bai", get_bai_llm(bai_model), f"bai/{bai_model}")
-                )
+                entries.append(("bai", get_bai_llm(bai_model), f"bai/{bai_model}"))
 
         preferred = llm_health.preferred_provider()
 
