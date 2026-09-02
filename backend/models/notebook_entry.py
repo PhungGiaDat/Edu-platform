@@ -74,7 +74,7 @@ class TranslationDisplay(BaseModel):
 class NotebookEntryResponse(BaseModel):
     """Response model for notebook entry"""
     id: UUID
-    user_id: UUID
+    user_id: str
     word: str
     translation_vi: str
     translation_en: Optional[str] = None

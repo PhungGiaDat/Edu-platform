@@ -245,9 +245,13 @@ async def submit_review(
 
 def _format_entry(data: dict) -> dict:
     """Format database row to response model"""
+    uid = data['user_id']
+    # Normalize UUID (stored without dashes) to dashed form
+    if uid and len(uid) == 32 and '-' not in uid:
+        uid = f"{uid[0:8]}-{uid[8:12]}-{uid[12:16]}-{uid[16:20]}-{uid[20:32]}"
     return {
         "id": data['id'],
-        "user_id": data['user_id'],
+        "user_id": uid,
         "word": data['word'],
         "translation_vi": data['translation_vi'],
         "translation_en": data.get('translation_en'),

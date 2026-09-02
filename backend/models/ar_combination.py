@@ -6,6 +6,7 @@ All database operations go through ARCombinationRepository (PostgreSQL).
 Pydantic schemas are used for API request/response validation.
 """
 import json
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Any, List, Mapping, Optional
 
@@ -52,6 +53,10 @@ class ArCombinationSchema(BaseModel):
     active: bool = True
     flashcard_set: Optional[str] = None
     cross_category_allowed: bool = Field(default=False)
+    combo_name: Optional[str] = None
+    reward_points: int = 0
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(extra="forbid", from_attributes=True)
 

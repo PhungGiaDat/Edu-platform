@@ -325,7 +325,7 @@ class UserProgress(BaseModel):
     total_xp: int = 0
     rewards: List[Reward] = Field(default_factory=list)
     started_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
 
 
 LessonSessionStatus = Literal["started", "completed"]
