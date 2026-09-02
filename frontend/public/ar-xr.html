@@ -585,25 +585,39 @@
         raw: data,
       });
 
-      // Build absolute image URL from relative imagePath in JSON
-      const baseUrl = jsonUrl.substring(0, jsonUrl.lastIndexOf('/') + 1);
-      const relPath = data.imagePath || '';
-      const imageUrl = relPath.startsWith('http')
-        ? relPath
-        : baseUrl + relPath;
+      // FIX #1 + #3: imagePath must be the CORRECT absolute URL.
+      // Parent already provides the correct targetImageUrl via query param.
+      // JSON's imagePath resolves to double-folder ".../xr-targets/image-targets/..." — WRONG.
+      // Prefer targetImageUrl from URL params (authoritative), else resolve from JSON.
+      let resolvedImagePath;
+      if (targetImageUrl) {
+        resolvedImagePath = targetImageUrl;
+      } else {
+        // Fallback: resolve from JSON — only correct when JSON lives at correct level
+        const baseUrl = jsonUrl.substring(0, jsonUrl.lastIndexOf('/') + 1);
+        const relPath = data.imagePath || '';
+        resolvedImagePath = relPath.startsWith('http')
+          ? relPath
+          : baseUrl + relPath;
+      }
 
       // physicalWidth in meters (default 8cm — standard flashcard width)
       const physicalWidth = data.properties?.physicalWidth || 0.08;
 
       sendARDebug('TARGET_LOAD_COMPLETE', {
         name: data.name,
-        imageUrl,
+        imageUrl: resolvedImagePath,
         physicalWidth,
       });
 
+      // FIX #2: Return full descriptor — preserve type/properties/metadata.
+      // Engine needs complete imageTargetData, not just {name, image, physicalWidth}.
       return {
         name: data.name || qrId,
-        image: imageUrl,
+        imagePath: resolvedImagePath,  // absolute URL, correct path
+        type: data.type || 'PLANAR',
+        properties: data.properties || {},
+        metadata: data.metadata || {},
         physicalWidth,
       };
     }
@@ -611,6 +625,7 @@
     // ========== 8TH WALL ENGINE (SELF-HOSTED, NO APPKEY) ==========
     let xrController = null;
     const trackedTargets = new Set();
+    const realityImageUpdated = { _lastLog: 0 };
 
     // Wait for XR8 to load using the official event pattern.
     // The xrloaded event fires when the engine binary is ready but BEFORE
@@ -793,34 +808,110 @@
       XR8.addCameraPipelineModule(lifecycleModule);
       XR8.addCameraPipelineModule(XR8.GlTextureRenderer.pipelineModule());
       XR8.addCameraPipelineModule(XR8.Threejs.pipelineModule());
+
+      // Step 6b: FIX #2 — XrController.pipelineModule() dispatches reality.* image events.
+      // Must be registered AFTER Threejs pipelineModule so XR8 owns the scene.
+      XR8.addCameraPipelineModule(
+        XR8.XrController.pipelineModule({
+          listeners: [
+            {
+              event: 'reality.imageloading',
+              process: (e) => {
+                sendARDebug('IMAGE_LOADING', { name: e?.name });
+                logToBuffer('info', 'reality.imageloading', { name: e?.name });
+              },
+            },
+            {
+              event: 'reality.imagescanning',
+              process: (e) => {
+                sendARDebug('IMAGE_SCANNING', { name: e?.name });
+                logToBuffer('info', 'reality.imagescanning', { name: e?.name });
+              },
+            },
+            {
+              event: 'reality.imagefound',
+              process: (e) => {
+                sendARDebug('IMAGE_FOUND', {
+                  name: e?.name,
+                  position: e?.position || [0, 0, 0],
+                  rotation: e?.rotation || [0, 0, 0, 1],
+                  scale: e?.scale || 1,
+                  timestamp: Date.now(),
+                });
+                logToBuffer('info', 'reality.imagefound', {
+                  name: e?.name,
+                  position: e?.position,
+                  rotation: e?.rotation,
+                });
+                if (e?.name) onTargetFound(e.name);
+              },
+            },
+            {
+              event: 'reality.imageupdated',
+              process: (e) => {
+                // Throttle — only log every 2s
+                const now = Date.now();
+                if (!realityImageUpdated._lastLog) realityImageUpdated._lastLog = 0;
+                if (now - realityImageUpdated._lastLog > 2000) {
+                  realityImageUpdated._lastLog = now;
+                  sendARDebug('IMAGE_UPDATED', {
+                    name: e?.name,
+                    position: e?.position,
+                    rotation: e?.rotation,
+                    timestamp: now,
+                  });
+                }
+              },
+            },
+            {
+              event: 'reality.imagelost',
+              process: (e) => {
+                sendARDebug('IMAGE_LOST', { name: e?.name, timestamp: Date.now() });
+                logToBuffer('info', 'reality.imagelost', { name: e?.name });
+                if (e?.name) onTargetLost(e.name);
+              },
+            },
+          ],
+        })
+      );
+
       XR8.addCameraPipelineModule(cameraPipelineModule);
       XR8.addCameraPipelineModule(renderModule);
 
       logToBuffer('info', 'XR_PIPELINE_READY', {});
       sendARDebug('XR_PIPELINE_READY', {});
 
-      // Step 7: Configure image targets — trace exactly what's passed
+      // Step 7: Configure image targets — FIX #1+#3: use full descriptor with correct imagePath
       sendARDebug('XR_TARGETS_REGISTER', {
-        image: targetData.image,
+        imagePath: targetData.imagePath,
         name: targetData.name,
+        type: targetData.type,
+        properties: targetData.properties,
+        metadata: targetData.metadata,
         physicalWidth: targetData.physicalWidth,
-        imageIsHttp: targetData.image.startsWith('http'),
+        imageIsHttp: targetData.imagePath?.startsWith('http'),
       });
       XR8.XrController.configure({
         imageTargetData: [{
-          image: targetData.image,
           name: targetData.name,
-          physicalWidth: targetData.physicalWidth,
+          type: targetData.type || 'PLANAR',
+          imagePath: targetData.imagePath,
+          properties: targetData.properties || {},
+          metadata: targetData.metadata || {},
         }],
       });
       logToBuffer('info', 'XR_TARGETS_CONFIGURED', {
-        image: targetData.image,
+        imagePath: targetData.imagePath,
         name: targetData.name,
+        type: targetData.type,
+        properties: targetData.properties,
         physicalWidth: targetData.physicalWidth,
       });
       sendARDebug('XR_TARGETS_CONFIGURED', {
-        image: targetData.image,
+        imagePath: targetData.imagePath,
         name: targetData.name,
+        type: targetData.type,
+        properties: targetData.properties,
         physicalWidth: targetData.physicalWidth,
       });
 
