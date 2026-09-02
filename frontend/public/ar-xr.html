@@ -969,7 +969,8 @@
     // Removed: watchTargets() polling via frameData (not a public 8th Wall API).
 
     function onTargetFound(name) {
-      // reality.imagefound already sent IMAGE_FOUND — here we handle downstream effects only
+      // FIX: must register in trackedTargets before attemptModelAttach() gates on it
+      trackedTargets.add(name);
       sendARDebug('TARGET_FOUND', { qrId: name, word: word });
       sendMessage('TARGET_FOUND', { targetIndex: 0, qrId: name, word: word });
       showCardLabel(word);
@@ -977,7 +978,7 @@
     }
 
     function onTargetLost(name) {
-      // reality.imagelost already sent IMAGE_LOST — handle downstream only
+      trackedTargets.delete(name);
       sendARDebug('TARGET_LOST', { qrId: name });
 
       sendMessage('TARGET_LOST', { targetIndex: 0, qrId: name });
