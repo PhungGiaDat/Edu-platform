@@ -379,6 +379,7 @@
 
     // ========== MODEL LOADING ==========
     let modelLoadState = 'pending';
+    let modelLoadProgressShown = false;
 
     function loadModel(url) {
       modelLoadState = 'loading';
@@ -398,6 +399,11 @@
                 child.receiveShadow = true;
               }
             });
+
+            // Compute bounding box for debug
+            const box = new THREE.Box3().setFromObject(model);
+            const size = new THREE.Vector3();
+            box.getSize(size);
 
             // Apply position/rotation/scale from URL params
             const pos = params.get('position')?.split(' ').map(Number) || [0, 0, -0.5];
@@ -421,6 +427,12 @@
               position: pos,
               rotation: rot,
               scale: sc,
+              boundingBox: {
+                min: [box.min.x, box.min.y, box.min.z],
+                max: [box.max.x, box.max.y, box.max.z],
+                size: [size.x, size.y, size.z],
+              },
+              sceneChildren: scene.children.length,
             });
 
             // Animations
@@ -433,21 +445,96 @@
               logToBuffer('info', 'Animations available', { animations: gltf.animations.map(a => a.name) });
             }
 
+            // MODEL_ATTACH_START — model ready but not yet attached to any anchor
+            sendARDebug('MODEL_READY_NOT_ATTACHED', {
+              modelName: model.name || qrId,
+              hasTargetFound: trackedTargets.size > 0,
+              boundingBoxSize: [size.x, size.y, size.z],
+            });
+
+            // If target already found, attach now
+            if (trackedTargets.size > 0) {
+              attemptModelAttach();
+            }
+
             resolve(model);
           },
           (progress) => {
-            if (progress.total) {
+            if (progress.total && !modelLoadProgressShown) {
               const percent = Math.round(progress.loaded / progress.total * 100);
+              if (percent % 20 === 0) { // Log every 20%
+                sendARDebug('MODEL_LOAD_PROGRESS', { percent, loaded: progress.loaded, total: progress.total });
+                modelLoadProgressShown = true;
+                setTimeout(() => { modelLoadProgressShown = false; }, 2000);
+              }
               updateDebug(`Model ${percent}%`);
             }
           },
           (error) => {
             modelLoadState = 'error';
-            sendARDebug('MODEL_LOAD_ERROR', { url, error: String(error) });
-            logToBuffer('error', 'Model load failed', { error: String(error) });
+            sendARDebug('MODEL_LOAD_ERROR', {
+              url,
+              name: error?.name || 'UnknownError',
+              message: error?.message || String(error),
+              stack: error?.stack || '',
+            });
+            logToBuffer('error', 'Model load failed', { error: String(error), stack: error?.stack });
             reject(error);
           }
         );
+      });
+    }
+
+    // ========== MODEL ATTACHMENT (separate from target detection) ==========
+    let modelAttached = false;
+    let lastAttachAttempt = 0;
+
+    function attemptModelAttach() {
+      if (modelAttached) return;
+      if (!loadedModel) return;
+      if (trackedTargets.size === 0) return;
+
+      // Throttle attach attempts
+      const now = Date.now();
+      if (now - lastAttachAttempt < 1000) return;
+      lastAttachAttempt = now;
+
+      const targetName = Array.from(trackedTargets)[0];
+
+      sendARDebug('MODEL_ATTACH_START', {
+        modelName: loadedModel.name || qrId,
+        targetName: targetName,
+        position: [loadedModel.position.x, loadedModel.position.y, loadedModel.position.z],
+        rotation: [loadedModel.rotation.x, loadedModel.rotation.y, loadedModel.rotation.z],
+        scale: loadedModel.scale.x,
+        parentVisible: true,
+      });
+
+      loadedModel.visible = true;
+      modelAttached = true;
+
+      sendARDebug('MODEL_ATTACHED', {
+        modelName: loadedModel.name || qrId,
+        targetName: targetName,
+        visible: true,
+        position: [loadedModel.position.x, loadedModel.position.y, loadedModel.position.z],
+        scale: loadedModel.scale.x,
+      });
+
+      sendARDebug('MODEL_VISIBILITY_CHECK', {
+        visible: true,
+        parentVisible: true,
+        worldPosition: [loadedModel.position.x, loadedModel.position.y, loadedModel.position.z],
+        worldScale: [loadedModel.scale.x, loadedModel.scale.y, loadedModel.scale.z],
+        boundingBoxSize: [],
+        cameraPosition: [camera.position.x, camera.position.y, camera.position.z],
+        distanceToCamera: loadedModel.position.distanceTo(camera.position),
+      });
+
+      sendARDebug('MODEL_VISIBLE', {
+        reason: 'target_found_and_attached',
+        targetName: targetName,
+        qrId: qrId,
       });
     }
 
@@ -471,10 +558,32 @@
 
       showOverlay('Loading target data...', jsonUrl.split('/').pop());
 
+      sendARDebug('MANIFEST_RESOLVED', {
+        qrId: qrId,
+        manifestUrl: jsonUrl,
+        targetJsonUrl: jsonUrl,
+        targetImageUrl: targetImageUrl || null,
+      });
+
       const res = await fetch(jsonUrl);
-      if (!res.ok) throw new Error(`Failed to fetch target JSON: ${res.status}`);
+      if (!res.ok) {
+        sendARDebug('MANIFEST_RESOLVE_ERROR', { url: jsonUrl, status: res.status });
+        throw new Error(`Failed to fetch target JSON: ${res.status}`);
+      }
 
       const data = await res.json();
+
+      // Emit TARGET_JSON_PARSED with full raw structure
+      const rawKeys = Object.keys(data);
+      sendARDebug('TARGET_JSON_PARSED', {
+        name: data.name,
+        image: data.image || data.imagePath || '',
+        imagePath: data.imagePath || '',
+        properties: data.properties || {},
+        rawKeys,
+        metadata: data.metadata || {},
+        raw: data,
+      });
 
       // Build absolute image URL from relative imagePath in JSON
       const baseUrl = jsonUrl.substring(0, jsonUrl.lastIndexOf('/') + 1);
@@ -581,7 +690,26 @@
           }
         },
 
-        onAttach: ({ canvas, GLctx, stream, video, videoWidth, videoHeight, canvasWidth, canvasHeight, status }) => {
+        onAttach: ({ canvas, GLctx, stream, video, videoWidth, videoHeight, canvasWidth, canvasHeight, status, imageTargets }) => {
+          // imageTargets is the engine's internal target list — critical for debugging
+          const targetInfo = imageTargets || [];
+          logToBuffer('info', 'XR_ONATTACH_TARGETS', {
+            count: targetInfo.length,
+            targets: targetInfo.map(t => ({
+              name: t.name,
+              imagePath: t.image || t.imagePath || '',
+              metadata: t.metadata || {},
+            })),
+          });
+          sendARDebug('XR_ONATTACH_TARGETS', {
+            count: targetInfo.length,
+            targets: targetInfo.map(t => ({
+              name: t.name,
+              imagePath: t.image || t.imagePath || '',
+              metadata: t.metadata || {},
+            })),
+          });
+
           logToBuffer('info', 'XR_ONATTACH', {
             status,
             hasGLctx: !!GLctx,
@@ -608,6 +736,7 @@
       };
 
       // Step 4: Camera pipeline — handles frame loop and target tracking
+      let renderCheckFrame = 0;
       const cameraPipelineModule = {
         name: 'camera-pipeline',
         onStart: ({ canvas: c, gl }) => {
@@ -619,9 +748,30 @@
           });
         },
         onUpdate: (frame) => {
+          renderCheckFrame++;
           if (mixer) mixer.update(0.016);
           if (loadedModel && loadedModel.visible) {
             loadedModel.position.y = (modelPos[1] || 0) + Math.sin(Date.now() * 0.001) * 0.005;
+          }
+          // Periodic render check — every ~60 frames (~1 second)
+          if (renderCheckFrame % 60 === 0) {
+            sendARDebug('SCENE_RENDER_CHECK', {
+              frame: renderCheckFrame,
+              sceneChildren: scene?.children?.length || 0,
+              modelInScene: !!loadedModel,
+              modelVisible: loadedModel?.visible || false,
+              modelPosition: loadedModel ? [
+                loadedModel.position.x,
+                loadedModel.position.y,
+                loadedModel.position.z,
+              ] : null,
+              rendererSize: renderer ? `${renderer.domElement.width}x${renderer.domElement.height}` : null,
+              cameraPosition: camera ? [
+                camera.position.x,
+                camera.position.y,
+                camera.position.z,
+              ] : null,
+            });
           }
         },
       };
@@ -649,7 +799,13 @@
       logToBuffer('info', 'XR_PIPELINE_READY', {});
       sendARDebug('XR_PIPELINE_READY', {});
 
-      // Step 7: Configure image targets
+      // Step 7: Configure image targets — trace exactly what's passed
+      sendARDebug('XR_TARGETS_REGISTER', {
+        image: targetData.image,
+        name: targetData.name,
+        physicalWidth: targetData.physicalWidth,
+        imageIsHttp: targetData.image.startsWith('http'),
+      });
       XR8.XrController.configure({
         imageTargetData: [{
           image: targetData.image,
@@ -715,6 +871,9 @@
 
     // Poll tracked targets using frame data
     let animationFrameId = null;
+    let lastPoseLog = 0;
+    let lastPose = null;
+
     function watchTargets() {
       function check() {
         if (!window.XR8?.XrController) {
@@ -724,20 +883,82 @@
         try {
           const fd = window.XR8.XrController.frameData;
           const frameData = typeof fd === 'function' ? fd() : null;
-          if (frameData) {
-            const detected = frameData.detectedImages || [];
-            const targetName = qrId || word;
-            const found = detected.some(img => img.name === targetName);
-            if (found && !trackedTargets.has(targetName)) {
+
+          // Instrument frameData structure — log once per session
+          if (frameData && !watchTargets._frameDataLogged) {
+            watchTargets._frameDataLogged = true;
+            const keys = Object.keys(frameData).filter(k => k !== 'detectedImages');
+            sendARDebug('FRAME_DATA_STRUCTURE', {
+              keys,
+              hasDetectedImages: 'detectedImages' in frameData,
+              detectedImagesType: frameData.detectedImages ? Array.isArray(frameData.detectedImages) ? 'array' : typeof frameData.detectedImages : 'undefined',
+            });
+            logToBuffer('info', 'FRAME_DATA_STRUCTURE', { keys, hasDetectedImages: 'detectedImages' in frameData });
+          }
+
+          const detected = frameData?.detectedImages || [];
+          const targetName = qrId || word;
+
+          // Log detected images summary (throttled)
+          if (detected.length > 0 || trackedTargets.size > 0) {
+            const now = Date.now();
+            if (now - lastPoseLog > 500) {
+              lastPoseLog = now;
+              sendARDebug('IMAGE_TRACKING_STATUS', {
+                detectedCount: detected.length,
+                detectedNames: detected.map(d => d.name),
+                trackedNames: Array.from(trackedTargets),
+                targetName: targetName,
+              });
+            }
+          }
+
+          const found = detected.some(img => img.name === targetName);
+          if (found) {
+            const imgData = detected.find(img => img.name === targetName);
+            if (!trackedTargets.has(targetName)) {
               trackedTargets.add(targetName);
+              lastPose = imgData;
+              sendARDebug('IMAGE_FOUND', {
+                name: targetName,
+                position: imgData.position || [0, 0, 0],
+                rotation: imgData.rotation || [0, 0, 0, 1],
+                scale: imgData.scale || 1,
+                timestamp: Date.now(),
+              });
               onTargetFound(targetName);
-            } else if (!found && trackedTargets.has(targetName)) {
+            } else {
+              // IMAGE_UPDATED — throttle
+              const now = Date.now();
+              if (now - lastPoseLog > 500) {
+                lastPoseLog = now;
+                sendARDebug('IMAGE_UPDATED', {
+                  name: targetName,
+                  position: imgData.position || [0, 0, 0],
+                  rotation: imgData.rotation || [0, 0, 0, 1],
+                  scale: imgData.scale || 1,
+                  timestamp: now,
+                });
+              }
+            }
+          } else {
+            if (trackedTargets.has(targetName)) {
               trackedTargets.delete(targetName);
+              lastPose = null;
+              sendARDebug('IMAGE_LOST', { name: targetName, timestamp: Date.now() });
               onTargetLost(targetName);
             }
           }
         } catch(e) {
-          // frameData API may not exist in this SDK version — silently ignore
+          // frameData API may not exist in this SDK version — log once
+          if (!watchTargets._frameDataErrorLogged) {
+            watchTargets._frameDataErrorLogged = true;
+            sendARDebug('FRAME_DATA_ERROR', {
+              error: String(e),
+              hasXrController: !!window.XR8?.XrController,
+              hasFrameData: !!window.XR8?.XrController?.frameData,
+            });
+          }
         }
         animationFrameId = requestAnimationFrame(check);
       }
@@ -745,24 +966,31 @@
     }
 
     function onTargetFound(name) {
-      logToBuffer('info', 'Target found', { name });
+      logToBuffer('info', 'IMAGE_FOUND', { name, timestamp: Date.now() });
+      sendARDebug('IMAGE_FOUND', {
+        name: name,
+        position: [0, 0, 0],
+        rotation: [0, 0, 0, 1],
+        scale: 1,
+        timestamp: Date.now(),
+      });
       sendARDebug('TARGET_FOUND', { qrId: name, word: word });
 
       sendMessage('TARGET_FOUND', { targetIndex: 0, qrId: name, word: word });
       showCardLabel(word);
-      if (loadedModel) {
-        loadedModel.visible = true;
-        sendARDebug('MODEL_VISIBLE', { reason: 'target_found', qrId: name });
-      }
+
+      // Model attaches here — only if model is already loaded
+      attemptModelAttach();
     }
 
     function onTargetLost(name) {
-      logToBuffer('info', 'Target lost', { name });
+      logToBuffer('info', 'IMAGE_LOST', { name, timestamp: Date.now() });
       sendARDebug('TARGET_LOST', { qrId: name });
 
       sendMessage('TARGET_LOST', { targetIndex: 0, qrId: name });
       if (loadedModel) {
         loadedModel.visible = false;
+        modelAttached = false;
         sendARDebug('MODEL_HIDDEN', { reason: 'target_lost', qrId: name });
       }
     }
@@ -772,16 +1000,20 @@
 
     async function loadComboRules() {
       try {
+        sendARDebug('COMBO_RULE_LOAD_START');
         const deck = params.get('deck_id') || 'claymorphic-animals-001';
-        const res = await fetch(
-          `https://edu-platform-api-do20.onrender.com/api/v1/combinations/rules?flashcard_set=${encodeURIComponent(deck)}`
-        );
+        const url = `https://edu-platform-api-do20.onrender.com/api/v1/combinations/rules?flashcard_set=${encodeURIComponent(deck)}`;
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           comboRules = data.rules || data || [];
+          sendARDebug('COMBO_RULE_LOAD_COMPLETE', { url, count: comboRules.length });
           logToBuffer('info', 'Combo rules loaded', { count: comboRules.length });
+        } else {
+          sendARDebug('COMBO_RULE_LOAD_ERROR', { url, status: res.status, error: `HTTP ${res.status}` });
         }
       } catch (e) {
+        sendARDebug('COMBO_RULE_LOAD_ERROR', { error: String(e), stack: e?.stack || '' });
         logToBuffer('warn', 'Combo rules unavailable', { error: String(e) });
       }
     }

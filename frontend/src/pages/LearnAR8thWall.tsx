@@ -145,6 +145,15 @@ export const LearnAR8thWall: React.FC = () => {
     setPhase('PREPARING');
     setTargetReady(false);
     setCameraReleased(true); // QRScanner already stopped the camera
+    // Step 9: SCANNER_CAMERA_STOP — prove camera was actually stopped
+    navigator.mediaDevices?.getUserMedia({ video: true })?.then(mediaStream => {
+      const tracks = mediaStream.getVideoTracks();
+      trace('SCANNER_CAMERA_STOP', JSON.stringify({
+        trackCount: tracks.length,
+        tracks: tracks.map(t => ({ kind: t.kind, readyState: t.readyState, label: t.label })),
+      }));
+      tracks.forEach(t => t.stop());
+    }).catch(() => {});
     setCurrentTarget(null);
     setScanError(null);
 
