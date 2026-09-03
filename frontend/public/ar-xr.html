@@ -274,6 +274,41 @@
     const word            = params.get('word') || qrId;
     const isDebug         = location.hostname === 'localhost' || params.get('debug') === 'true';
 
+    // ========== MULTI-TARGET CONFIG PARSING (Milestone 1) ==========
+    // Parse xr_targets from URL param (set by LearnAR8thWall for multi-target tracking).
+    // Falls back to single-target from legacy params for backward compatibility.
+    function parseXRTargetConfigs() {
+      const raw = params.get('xr_targets');
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        } catch (error) {
+          sendARDebug('XR_TARGET_CONFIG_PARSE_ERROR', { error: String(error) });
+        }
+      }
+      // Backward-compatible single target from legacy params
+      return [{
+        qr_id: qrId,
+        word: word,
+        xr_target_json_url: targetJsonUrl,
+        xr_target_image_url: targetImageUrl,
+      }];
+    }
+
+    const xrTargetConfigs = parseXRTargetConfigs();
+    const targetConfigByName = new Map(xrTargetConfigs.map(c => [c.qr_id, c]));
+
+    sendARDebug('XR_MULTI_CONFIG', {
+      count: xrTargetConfigs.length,
+      targets: xrTargetConfigs.map(t => t.qr_id),
+    });
+
+    // Primary model target = the originally scanned QR ID
+    const primaryModelTargetName = qrId;
+
     // DOM
     const overlay     = document.getElementById('overlay');
     const loadingText  = document.getElementById('loading-text');
@@ -303,6 +338,7 @@
         engine: '8th-wall',
         qrId: qrId,
         word: word,
+        xrTargetsCount: xrTargetConfigs.length,
       };
       sendMessage('AR_DEBUG', debugPayload);
       logToBuffer('debug', label, details);
@@ -680,82 +716,73 @@
     }
 
     // ========== LOAD TARGET JSON FROM SUPABASE ==========
-    async function loadTargetData() {
-      sendARDebug('TARGET_LOAD_START');
+    // Loads and parses one XR target JSON. Accepts a target config to support multi-target.
+    async function loadTargetData(targetConfig) {
+      const targetQrId = targetConfig.qr_id;
+      const configJsonUrl = targetConfig.xr_target_json_url || '';
+      const configImageUrl = targetConfig.xr_target_image_url || '';
+
+      sendARDebug('TARGET_LOAD_START', { qrId: targetQrId });
 
       // Prefer explicit target JSON URL, else build from base
-      let jsonUrl = targetJsonUrl;
-      if (!jsonUrl && targetImageUrl) {
-        // Build JSON URL from image URL path pattern:
-        // image_url: .../cat001_luminance.png
-        // json_url:  .../cat001.json
-        const match = targetImageUrl.match(/^(.+)_[^/]+\.png$/);
+      let jsonUrl = configJsonUrl;
+      if (!jsonUrl && configImageUrl) {
+        const match = configImageUrl.match(/^(.+)_[^/]+\.png$/);
         if (match) jsonUrl = match[1] + '.json';
       }
 
       if (!jsonUrl) {
-        throw new Error('No xr_target_json_url or xr_target_image_url provided');
+        throw new Error(`No xr_target_json_url for ${targetQrId}`);
       }
 
       showOverlay('Loading target data...', jsonUrl.split('/').pop());
 
       sendARDebug('MANIFEST_RESOLVED', {
-        qrId: qrId,
+        qrId: targetQrId,
         manifestUrl: jsonUrl,
-        targetJsonUrl: jsonUrl,
-        targetImageUrl: targetImageUrl || null,
+        targetImageUrl: configImageUrl || null,
       });
 
       const res = await fetch(jsonUrl);
       if (!res.ok) {
-        sendARDebug('MANIFEST_RESOLVE_ERROR', { url: jsonUrl, status: res.status });
-        throw new Error(`Failed to fetch target JSON: ${res.status}`);
+        sendARDebug('MANIFEST_RESOLVE_ERROR', { url: jsonUrl, status: res.status, qrId: targetQrId });
+        throw new Error(`Failed to fetch target JSON: ${res.status} for ${targetQrId}`);
       }
 
       const data = await res.json();
 
-      // Emit TARGET_JSON_PARSED with full raw structure
       const rawKeys = Object.keys(data);
       sendARDebug('TARGET_JSON_PARSED', {
+        qrId: targetQrId,
         name: data.name,
-        image: data.image || data.imagePath || '',
         imagePath: data.imagePath || '',
-        properties: data.properties || {},
         rawKeys,
         metadata: data.metadata || {},
-        raw: data,
       });
 
-      // FIX #1 + #3: imagePath must be the CORRECT absolute URL.
-      // Parent already provides the correct targetImageUrl via query param.
-      // JSON's imagePath resolves to double-folder ".../xr-targets/image-targets/..." — WRONG.
-      // Prefer targetImageUrl from URL params (authoritative), else resolve from JSON.
+      // Resolve image path: prefer explicit image URL param, else derive from JSON
       let resolvedImagePath;
-      if (targetImageUrl) {
-        resolvedImagePath = targetImageUrl;
+      if (configImageUrl) {
+        resolvedImagePath = configImageUrl;
       } else {
-        // Fallback: resolve from JSON — only correct when JSON lives at correct level
         const baseUrl = jsonUrl.substring(0, jsonUrl.lastIndexOf('/') + 1);
         const relPath = data.imagePath || '';
-        resolvedImagePath = relPath.startsWith('http')
-          ? relPath
-          : baseUrl + relPath;
+        resolvedImagePath = relPath.startsWith('http') ? relPath : baseUrl + relPath;
       }
 
-      // physicalWidth in meters (default 8cm — standard flashcard width)
       const physicalWidth = data.properties?.physicalWidth || 0.08;
 
       sendARDebug('TARGET_LOAD_COMPLETE', {
+        qrId: targetQrId,
         name: data.name,
         imageUrl: resolvedImagePath,
         physicalWidth,
       });
 
-      // FIX #2: Return full descriptor — preserve type/properties/metadata.
-      // Engine needs complete imageTargetData, not just {name, image, physicalWidth}.
       return {
-        name: data.name || qrId,
-        imagePath: resolvedImagePath,  // absolute URL, correct path
+        qrId: targetQrId,
+        name: data.name || targetQrId,
+        imagePath: resolvedImagePath,
         type: data.type || 'PLANAR',
         properties: data.properties || {},
         metadata: data.metadata || {},
@@ -848,8 +875,9 @@
       });
     }
 
-    async function initXR(targetData) {
-      sendARDebug('XR_INIT_START', { targetName: targetData.name });
+    async function initXR(targetDataList) {
+      // targetDataList = array from loadTargetData() for all xrTargetConfigs
+      sendARDebug('XR_INIT_START', { targets: targetDataList.map(t => t.name) });
       showOverlay('Starting XR session...', '');
 
       // Step 1: Wait for engine binary (xrloaded)
@@ -1213,38 +1241,30 @@
       logToBuffer('info', 'XR_PIPELINE_READY', {});
       sendARDebug('XR_PIPELINE_READY', {});
 
-      // Step 7: Configure image targets — FIX #1+#3: use full descriptor with correct imagePath
+      // Step 7: Configure ALL image targets in one call
+      const imageTargetData = targetDataList.map(t => ({
+        name: t.name,
+        type: t.type || 'PLANAR',
+        imagePath: t.imagePath,
+        properties: t.properties || {},
+        metadata: t.metadata || {},
+      }));
+
       sendARDebug('XR_TARGETS_REGISTER', {
-        imagePath: targetData.imagePath,
-        name: targetData.name,
-        type: targetData.type,
-        properties: targetData.properties,
-        metadata: targetData.metadata,
-        physicalWidth: targetData.physicalWidth,
-        imageIsHttp: targetData.imagePath?.startsWith('http'),
+        count: imageTargetData.length,
+        targets: imageTargetData.map(t => t.name),
       });
-      XR8.XrController.configure({
-        imageTargetData: [{
-          name: targetData.name,
-          type: targetData.type || 'PLANAR',
-          imagePath: targetData.imagePath,
-          properties: targetData.properties || {},
-          metadata: targetData.metadata || {},
-        }],
-      });
-      logToBuffer('info', 'XR_TARGETS_CONFIGURED', {
-        imagePath: targetData.imagePath,
-        name: targetData.name,
-        type: targetData.type,
-        properties: targetData.properties,
-        physicalWidth: targetData.physicalWidth,
-      });
+
+      XR8.XrController.configure({ imageTargetData });
+
       sendARDebug('XR_TARGETS_CONFIGURED', {
-        imagePath: targetData.imagePath,
-        name: targetData.name,
-        type: targetData.type,
-        properties: targetData.properties,
-        physicalWidth: targetData.physicalWidth,
+        count: imageTargetData.length,
+        targets: imageTargetData.map(t => t.name),
+      });
+
+      logToBuffer('info', 'XR_TARGETS_CONFIGURED', {
+        count: imageTargetData.length,
+        targets: imageTargetData.map(t => t.name),
       });
 
       // Step 8: Get canvas and resize to viewport
@@ -1293,18 +1313,41 @@
     // Removed: watchTargets() polling via frameData (not a public 8th Wall API).
 
     function onTargetFound(detail) {
-      // detail = {name, position, rotation, scale}
       saveTargetPose(detail);
-      sendARDebug('TARGET_FOUND', { qrId: detail.name, word: word });
-      sendMessage('TARGET_FOUND', { targetIndex: 0, qrId: detail.name, word: word });
-      showCardLabel(word);
-      attemptModelAttach(detail.name);
+
+      const config = targetConfigByName.get(detail.name);
+      const targetWord = config?.word || detail.name;
+
+      sendARDebug('TARGET_FOUND', {
+        qrId: detail.name,
+        word: targetWord,
+        trackedCount: trackedTargets.size,
+        trackedTargets: Array.from(trackedTargets.keys()),
+      });
+
+      sendMessage('TARGET_FOUND', {
+        qrId: detail.name,
+        word: targetWord,
+        trackedCount: trackedTargets.size,
+      });
+
+      showCardLabel(targetWord);
+
+      // Milestone 1: model only attaches to the primary (scanned) target
+      if (detail.name === primaryModelTargetName) {
+        attemptModelAttach(detail.name);
+      }
+
+      sendARDebug('MULTI_TARGET_STATE', {
+        count: trackedTargets.size,
+        targets: Array.from(trackedTargets.keys()),
+      });
     }
 
     function onTargetLost(name) {
       trackedTargets.delete(name);
       sendARDebug('TARGET_LOST', { qrId: name });
-      sendMessage('TARGET_LOST', { targetIndex: 0, qrId: name });
+      sendMessage('TARGET_LOST', { qrId: name });
 
       if (activeTargetName === name) {
         activeTargetName = null;
@@ -1314,6 +1357,12 @@
           sendARDebug('MODEL_HIDDEN', { reason: 'target_lost', qrId: name });
         }
       }
+
+      sendARDebug('MULTI_TARGET_STATE', {
+        count: trackedTargets.size,
+        targets: Array.from(trackedTargets.keys()),
+        lost: name,
+      });
     }
 
     // ========== COMBO DETECTION (from backend) ==========
@@ -1432,21 +1481,30 @@
         // Load combo rules in background
         loadComboRules();
 
-        // Load model AND target JSON in parallel — model can download
-        // while XR8 boot/camera startup runs.
-        const modelPromise = getModel(modelUrl);
+        // Milestone 1: load ALL target JSONs in parallel
+        const targetsPromise = Promise.all(
+          xrTargetConfigs.map(config => loadTargetData(config))
+        );
 
-        // Target JSON + XR8 boot run simultaneously
-        const targetData = await loadTargetData();
+        // Load model in parallel with targets
+        const modelPromise = modelUrl ? getModel(modelUrl) : Promise.resolve(null);
+
+        // Wait for all targets
+        const targetDataList = await targetsPromise;
+
+        sendARDebug('MULTI_TARGET_DATA_READY', {
+          count: targetDataList.length,
+          targets: targetDataList.map(t => t.name),
+        });
 
         setPhase('loading');
         sendARDebug('LOADING_ASSETS', {
           hasModel: !!modelUrl,
-          hasTarget: !!targetData,
+          targetCount: targetDataList.length,
         });
 
-        // Init XR while model is still downloading
-        await initXR(targetData);
+        // Init XR (passes all targets to XR8.XrController.configure)
+        await initXR(targetDataList);
 
         // Wait for model (may already be done from parallel load)
         await modelPromise;
@@ -1454,7 +1512,7 @@
         setPhase('viewing');
         sendARDebug('INIT_COMPLETE', {
           modelLoaded: !!loadedModel,
-          targetName: targetData.name,
+          targetCount: targetDataList.length,
         });
 
         logToBuffer('info', 'Initialization complete');

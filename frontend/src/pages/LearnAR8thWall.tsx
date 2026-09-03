@@ -137,12 +137,15 @@ export const LearnAR8thWall: React.FC = () => {
   const [cameraReleased, setCameraReleased] = useState(false);
   const [targetReady, setTargetReady] = useState(false);
 
-  // Current scanned target
+  // Current scanned target (primary card / UI / primary model)
   const [currentTarget, setCurrentTarget] = useState<XRTarget | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
 
   // All scanned cards this session
   const [foundCards, setFoundCards] = useState<Set<string>>(new Set());
+
+  // All XR targets to track in this session (may include non-scanned co-targets)
+  const [xrTargets, setXrTargets] = useState<XRTarget[]>([]);
 
   // Buffer AR_DEBUG messages from viewer iframe for Telegram sync
   const arDebugBufferRef = useRef<string[]>([]);
@@ -204,6 +207,42 @@ export const LearnAR8thWall: React.FC = () => {
   }, [phase, targetReady, cameraReleased, currentTarget]);
 
   // ========================================================================
+  // TRACKING GROUP RESOLUTION (Milestone 1: multi-target test)
+  // For now, hardcoded test pairs. Replace with backend combo/lesson config later.
+  // ========================================================================
+  const TRACKING_GROUPS = [
+    ['cat001', 'fish001'],
+  ] as const;
+
+  function resolveTrackingGroup(qrId: string): string[] {
+    const group = TRACKING_GROUPS.find(g => g.includes(qrId));
+    return group ? [...group] : [qrId];
+  }
+
+  // ========================================================================
+  // fetchXRTarget — fetch XR metadata for one QR ID from backend
+  // ========================================================================
+  const fetchXRTarget = useCallback(async (targetQrId: string): Promise<XRTarget> => {
+    const res = await fetch(`${API_BASE}/api/v1/flashcard/${targetQrId}/xr-urls`);
+    if (!res.ok) throw new Error(`XR target ${targetQrId}: API ${res.status}`);
+    const raw = await res.json();
+    return {
+      qr_id: targetQrId,
+      word: raw.word || targetQrId.replace('001', ''),
+      xr_target_json_url: raw.tracking_target?.xr_target_json_url || raw.xr_target_json_url,
+      xr_target_image_url: raw.tracking_target?.xr_target_image_url || raw.xr_target_image_url,
+      model_3d_url: raw.target?.model_3d_url || raw.model_3d_url,
+      texture_url: raw.target?.texture_url || raw.texture_url,
+      animations: raw.target?.animations || raw.animations,
+      default_animation: raw.target?.default_animation || raw.default_animation || 'IDLE',
+      combo_animation: raw.target?.combo_animation || raw.combo_animation,
+      position: raw.target?.position || '0 0 0',
+      rotation: raw.target?.rotation || '0 0 0',
+      scale: raw.target?.scale || '1 1 1',
+    };
+  }, []);
+
+  // ========================================================================
   // handleQRDetected — called by QRScanner when QR is found.
   // QRScanner calls stopCamera() internally before this fires.
   // We record cameraReleased here since we know the camera was just stopped.
@@ -219,88 +258,72 @@ export const LearnAR8thWall: React.FC = () => {
     setPhase('PREPARING');
     setTargetReady(false);
     setCameraReleased(true); // QRScanner already stopped the camera
-    // Step 9: SCANNER_CAMERA_STOP — prove camera was actually stopped
-    navigator.mediaDevices?.getUserMedia({ video: true })?.then(mediaStream => {
-      const tracks = mediaStream.getVideoTracks();
-      trace('SCANNER_CAMERA_STOP', JSON.stringify({
-        trackCount: tracks.length,
-        tracks: tracks.map(t => ({ kind: t.kind, readyState: t.readyState, label: t.label })),
-      }));
-      tracks.forEach(t => t.stop());
-    }).catch(() => {});
     setCurrentTarget(null);
+    setXrTargets([]);
     setScanError(null);
 
     try {
-      const res = await fetch(`${API_BASE}/api/v1/flashcard/${qrId}/xr-urls`);
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const trackingIds = resolveTrackingGroup(qrId);
+      trace('MULTI_TARGET_RESOLVE', JSON.stringify(trackingIds));
 
-      const raw = await res.json();
-      trace('API_RESPONSE', JSON.stringify(raw).substring(0, 200));
+      // Fetch all targets in tracking group in parallel
+      const targets = await Promise.all(
+        trackingIds.map(id => fetchXRTarget(id))
+      );
 
-      const modelUrl = raw.target?.model_3d_url || raw.model_3d_url;
-      const targetJsonUrl = raw.tracking_target?.xr_target_json_url || raw.xr_target_json_url;
+      const primary = targets.find(t => t.qr_id === qrId) || targets[0];
+      if (!primary) throw new Error('No primary XR target resolved');
 
-      // PERFORMANCE: preload GLB immediately — model can download while XR iframe boots
-      if (modelUrl) {
-        const key = `ar-model-${modelUrl}`;
+      // Validate all have XR target data
+      for (const target of targets) {
+        if (!target.xr_target_json_url && !target.xr_target_image_url) {
+          throw new Error(`No XR target URL for ${target.qr_id}`);
+        }
+      }
+
+      // Preload tracking JSONs for all targets
+      for (const target of targets) {
+        if (!target.xr_target_json_url) continue;
+        const key = `ar-target-${target.xr_target_json_url}`;
+        if (document.querySelector(`[data-preload="${key}"]`)) continue;
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'fetch';
+        link.href = target.xr_target_json_url;
+        link.crossOrigin = 'anonymous';
+        link.dataset.preload = key;
+        document.head.appendChild(link);
+      }
+
+      // Preload primary model only (Milestone 1)
+      if (primary.model_3d_url) {
+        const url = primary.model_3d_url;
+        const key = `ar-model-${url}`;
         if (!document.querySelector(`[data-preload="${key}"]`)) {
           const link = document.createElement('link');
           link.rel = 'preload';
           link.as = 'fetch';
-          link.href = modelUrl;
+          link.href = url;
           link.crossOrigin = 'anonymous';
           link.dataset.preload = key;
-          link.dataset.arModel = modelUrl;
+          link.dataset.arModel = url;
           document.head.appendChild(link);
-          trace('MODEL_PRELOAD', modelUrl);
-        }
-      }
-      // Also preload target JSON
-      if (targetJsonUrl) {
-        const key = `ar-target-${targetJsonUrl}`;
-        if (!document.querySelector(`[data-preload="${key}"]`)) {
-          const link = document.createElement('link');
-          link.rel = 'preload';
-          link.as = 'fetch';
-          link.href = targetJsonUrl;
-          link.crossOrigin = 'anonymous';
-          link.dataset.preload = key;
-          link.dataset.arTarget = targetJsonUrl;
-          document.head.appendChild(link);
-          trace('TARGET_PRELOAD', targetJsonUrl);
+          trace('MODEL_PRELOAD', url);
         }
       }
 
-      const target: XRTarget = {
-        qr_id: qrId,
-        word: raw.word || qrId.replace('001', ''),
-        xr_target_json_url: targetJsonUrl,
-        xr_target_image_url: raw.tracking_target?.xr_target_image_url || raw.xr_target_image_url,
-        model_3d_url: modelUrl,
-        texture_url: raw.target?.texture_url || raw.texture_url,
-        animations: raw.target?.animations || raw.animations,
-        default_animation: raw.target?.default_animation || raw.default_animation || 'IDLE',
-        combo_animation: raw.target?.combo_animation || raw.combo_animation,
-        position: raw.target?.position || '0 0 0',
-        rotation: raw.target?.rotation || '0 0 0',
-        scale: raw.target?.scale || '1 1 1',
-      };
-
-      if (!target.xr_target_json_url && !target.xr_target_image_url) {
-        throw new Error(`No XR target URL for: ${qrId}`);
-      }
-
-      setCurrentTarget(target);
+      setCurrentTarget(primary);
+      setXrTargets(targets);
       setFoundCards(prev => new Set([...prev, qrId]));
       setTargetReady(true);
       trace('TARGET_READY', qrId);
+      trace('MULTI_TARGET_READY', JSON.stringify(targets.map(t => t.qr_id)));
     } catch (err) {
       trace('API_ERROR', String(err));
       setScanError(err instanceof Error ? err.message : 'Failed to load XR target');
       setPhase('ERROR');
     }
-  }, [foundCards]);
+  }, [foundCards, fetchXRTarget]);
 
   // ========================================================================
   // LISTEN: messages from viewer iframe (XR lifecycle events from ar-xr.html)
@@ -405,6 +428,16 @@ export const LearnAR8thWall: React.FC = () => {
     if (currentTarget.position)  params.set('position', currentTarget.position);
     if (currentTarget.rotation)  params.set('rotation', currentTarget.rotation);
     if (currentTarget.scale)     params.set('scale', currentTarget.scale);
+    // Milestone 1: pass all tracked targets (cat + fish) to viewer
+    if (xrTargets.length > 0) {
+      const trackingPayload = xrTargets.map(t => ({
+        qr_id: t.qr_id,
+        word: t.word,
+        xr_target_json_url: t.xr_target_json_url,
+        xr_target_image_url: t.xr_target_image_url,
+      }));
+      params.set('xr_targets', JSON.stringify(trackingPayload));
+    }
     params.set('debug', 'true');
     return `/ar-xr.html?${params.toString()}`;
   })();
