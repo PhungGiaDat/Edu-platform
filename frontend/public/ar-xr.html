@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>8th Wall AR - Claymorphic Flashcards</title>
 
+  <!-- Preconnect to asset hosts — warms DNS/TCP/TLS before resources load -->
+  <link rel="preconnect" href="https://rofprrtoeyirssfndxag.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
   <!-- Eruda Debug Console -->
   <script>
     var xrDebugParams = new URLSearchParams(location.search);
@@ -361,6 +365,8 @@
 
     function loadModel(url) {
       modelLoadState = 'loading';
+      const startMark = `model-load-${url}`;
+      performance.mark(startMark);
       sendARDebug('MODEL_LOAD_START', { url });
 
       return new Promise((resolve, reject) => {
@@ -427,6 +433,26 @@
               mixer.clipAction(defaultClip).play();
               logToBuffer('info', 'Animations available', { animations: gltf.animations.map(a => a.name) });
             }
+
+            // Network timing: use PerformanceObserver entry for this model URL
+            const timing = {};
+            try {
+              const entries = performance.getEntriesByName(url);
+              if (entries.length > 0) {
+                const last = entries[entries.length - 1];
+                timing.duration = Math.round(last.duration);
+                timing.transferSize = last.transferSize;
+                timing.encodedBodySize = last.encodedBodySize;
+                timing.decodedBodySize = last.decodedBodySize;
+              } else {
+                // Fallback: use mark/measure
+                const marks = performance.getEntriesByName(startMark);
+                if (marks.length > 0) {
+                  timing.durationFallback = Math.round(Date.now() - marks[0].startTime);
+                }
+              }
+            } catch (_) {}
+            sendARDebug('MODEL_NETWORK_TIMING', { url, ...timing });
 
             // MODEL_ATTACH_START — model ready but not yet attached to any anchor
             sendARDebug('MODEL_READY_NOT_ATTACHED', {
@@ -1347,17 +1373,18 @@
       logToBuffer('debug', 'Message received', { type, payload });
     });
 
+    // ========== MODEL PROMISE CACHE (avoids re-download on re-scan) ==========
+    const modelPromiseCache = new Map();
+    function getModel(url) {
+      if (!url) return Promise.resolve(null);
+      if (!modelPromiseCache.has(url)) {
+        modelPromiseCache.set(url, loadModel(url));
+      }
+      return modelPromiseCache.get(url);
+    }
+
     // ========== MAIN ==========
     async function main() {
-      logToBuffer('info', 'Main started', {
-        qrId,
-        modelUrl,
-        targetJsonUrl,
-        targetImageUrl,
-        word,
-        isDebug,
-      });
-
       sendARDebug('PAGE_LOAD');
 
       try {
@@ -1367,7 +1394,11 @@
         // Load combo rules in background
         loadComboRules();
 
-        // Load model and target data in parallel
+        // Load model AND target JSON in parallel — model can download
+        // while XR8 boot/camera startup runs.
+        const modelPromise = getModel(modelUrl);
+
+        // Target JSON + XR8 boot run simultaneously
         const targetData = await loadTargetData();
 
         setPhase('loading');
@@ -1376,11 +1407,10 @@
           hasTarget: !!targetData,
         });
 
-        const modelPromise = modelUrl ? loadModel(modelUrl) : Promise.resolve(null);
-
+        // Init XR while model is still downloading
         await initXR(targetData);
 
-        // Also wait for model
+        // Wait for model (may already be done from parallel load)
         await modelPromise;
 
         setPhase('viewing');

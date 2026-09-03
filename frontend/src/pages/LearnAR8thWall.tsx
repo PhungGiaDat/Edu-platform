@@ -56,6 +56,9 @@ export const LearnAR8thWall: React.FC = () => {
   // Viewer iframe ref
   const viewerRef = useRef<HTMLIFrameElement>(null);
 
+  // Iframe timing instrumentation
+  const iframeTimingRef = useRef<{ srcSet: number; onLoad: number; onError: number } | null>(null);
+
   // Phase state machine
   const [phase, setPhase] = useState<Phase>('SCANNING');
 
@@ -113,6 +116,16 @@ export const LearnAR8thWall: React.FC = () => {
   }, [syncTelegram]);
 
   // Debug: log phase changes
+  // Track when iframe src is set for timing delta
+  useEffect(() => {
+    if (!viewerSrc) return;
+    if (iframeTimingRef.current) {
+      iframeTimingRef.current.srcSet = Date.now();
+    } else {
+      iframeTimingRef.current = { srcSet: Date.now(), onLoad: 0, onError: 0 };
+    }
+  }, [viewerSrc]);
+
   useEffect(() => {
     console.log('[LearnAR8thWall] Phase changed to:', phase);
   }, [phase]);
@@ -164,12 +177,46 @@ export const LearnAR8thWall: React.FC = () => {
       const raw = await res.json();
       trace('API_RESPONSE', JSON.stringify(raw).substring(0, 200));
 
+      const modelUrl = raw.target?.model_3d_url || raw.model_3d_url;
+      const targetJsonUrl = raw.tracking_target?.xr_target_json_url || raw.xr_target_json_url;
+
+      // PERFORMANCE: preload GLB immediately — model can download while XR iframe boots
+      if (modelUrl) {
+        const key = `ar-model-${modelUrl}`;
+        if (!document.querySelector(`[data-preload="${key}"]`)) {
+          const link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'fetch';
+          link.href = modelUrl;
+          link.crossOrigin = 'anonymous';
+          link.dataset.preload = key;
+          link.dataset.arModel = modelUrl;
+          document.head.appendChild(link);
+          trace('MODEL_PRELOAD', modelUrl);
+        }
+      }
+      // Also preload target JSON
+      if (targetJsonUrl) {
+        const key = `ar-target-${targetJsonUrl}`;
+        if (!document.querySelector(`[data-preload="${key}"]`)) {
+          const link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'fetch';
+          link.href = targetJsonUrl;
+          link.crossOrigin = 'anonymous';
+          link.dataset.preload = key;
+          link.dataset.arTarget = targetJsonUrl;
+          document.head.appendChild(link);
+          trace('TARGET_PRELOAD', targetJsonUrl);
+        }
+      }
+
       const target: XRTarget = {
         qr_id: qrId,
         word: raw.word || qrId.replace('001', ''),
-        xr_target_json_url: raw.tracking_target?.xr_target_json_url || raw.xr_target_json_url,
+        xr_target_json_url: targetJsonUrl,
         xr_target_image_url: raw.tracking_target?.xr_target_image_url || raw.xr_target_image_url,
-        model_3d_url: raw.target?.model_3d_url || raw.model_3d_url,
+        model_3d_url: modelUrl,
         texture_url: raw.target?.texture_url || raw.texture_url,
         animations: raw.target?.animations || raw.animations,
         default_animation: raw.target?.default_animation || raw.default_animation || 'IDLE',
@@ -371,7 +418,18 @@ export const LearnAR8thWall: React.FC = () => {
             title="AR Viewer"
             allow="camera; xr-spatial-tracking; gyroscope; accelerometer"
             style={{ width: '100%', height: '100%', border: 'none' }}
-            onLoad={() => trace('VIEWER_IFRAME_LOADED', viewerSrc)}
+            onLoad={() => {
+              iframeTimingRef.current = {
+                ...(iframeTimingRef.current || {}),
+                onLoad: Date.now(),
+              } as { srcSet: number; onLoad: number; onError: number };
+              const t = iframeTimingRef.current;
+              const delta = t.onLoad - (t as any).srcSet;
+              trace('VIEWER_IFRAME_LOADED', `srcSet→load Δ${delta}ms`);
+            }}
+            onError={() => {
+              trace('VIEWER_IFRAME_ERROR', viewerSrc);
+            }}
           />
         )}
 
