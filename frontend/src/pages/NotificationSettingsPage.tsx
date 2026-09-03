@@ -1,138 +1,127 @@
 /**
- * NotificationSettingsPage - Thời điểm vàng Settings
- * Configure spaced repetition push notification schedules
+ * NotificationSettingsPage - "Thời điểm vàng" (parent-facing reminder settings)
+ *
+ * Rewritten 2026-09-03 for the Web Push pipeline (kid-friendly, 1 nudge/day):
+ * - State A: Safari tab / browser (not installed) → home-screen install guide
+ *   (iOS 16.4+ push ONLY works in the standalone PWA).
+ * - State B: installed, not subscribed → permission + subscribe (user gesture).
+ * - State C: subscribed → manage preferred hour / disable.
+ * Prefs persist server-side (notification_prefs) — no more localStorage TODO.
  */
 import { useState, useEffect } from 'react';
 import { ClayCard } from '@/shared/components/clay/ClayCard';
 import { Button } from '@/shared/components/ui/Button';
-import { Input } from '@/shared/components/ui/Input';
 import { Switch } from '@/shared/components/ui/Switch';
 import { Badge } from '@/shared/components/ui/Badge';
 import { LoadingSpinner } from '@/shared/components/ui/LoadingSpinner';
-import { colors, shadows } from '../design-tokens/claymorphic';
-import { useAuth } from '../contexts/AuthContext';
+import { colors, shadows, withOpacity } from '../design-tokens/claymorphic';
+import {
+  requestPermissionAndSubscribe,
+  unsubscribeFromPush,
+  isStandalonePwa,
+  notificationsSupported,
+  notificationPermission,
+} from '../services/notifications';
+import { apiClient } from '../services/apiClient';
 
-interface ScheduleWindow {
-  id: string;
-  time: string; // HH:mm
+interface Prefs {
+  user_id: string;
   enabled: boolean;
-}
-
-interface NotificationSettings {
-  enabled: boolean;
+  preferred_hour: number;
   timezone: string;
-  windows: ScheduleWindow[];
 }
+
+const HOUR_ICONS: Record<number, string> = {
+  7: '🌅', 8: '🌅', 9: '🌤️', 12: '☀️', 13: '☀️', 14: '🌤️',
+  17: '🌆', 18: '🌆', 19: '🌆', 20: '🌙', 21: '🌙',
+};
 
 export function NotificationSettingsPage() {
-  const { user: _user } = useAuth(); // TODO: use for personalized settings
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState<NotificationSettings>({
-    enabled: true,
+  const [status, setStatus] = useState<string | null>(null);
+  const [installed] = useState(() => isStandalonePwa());
+  const [supported] = useState(() => notificationsSupported());
+  const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>(() => notificationPermission());
+  const [prefs, setPrefs] = useState<Prefs>({
+    user_id: '',
+    enabled: false,
+    preferred_hour: 17,
     timezone: 'Asia/Ho_Chi_Minh',
-    windows: [
-      { id: '1', time: '08:00', enabled: true },
-      { id: '2', time: '12:00', enabled: true },
-      { id: '3', time: '18:00', enabled: true },
-      { id: '4', time: '21:00', enabled: true },
-    ],
   });
 
-  // Load settings from localStorage (or API later)
   useEffect(() => {
-    const saved = localStorage.getItem('notification_settings');
-    if (saved) {
+    const load = async () => {
       try {
-        setSettings(JSON.parse(saved));
-      } catch (e) {
-        console.error('[NotificationSettings] Parse failed:', e);
+        const data = await apiClient.get('/api/v1/notifications/prefs') as Prefs;
+        setPrefs(data);
+      } catch (err) {
+        console.error('[NotificationSettings] Load failed:', err);
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+    load();
   }, []);
 
-  // Save settings
-  const handleSave = async () => {
+  const handleEnablePush = async () => {
     setSaving(true);
+    setStatus(null);
     try {
-      localStorage.setItem('notification_settings', JSON.stringify(settings));
-
-      // Request notification permission if enabled
-      if (settings.enabled && 'Notification' in window) {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          scheduleNotifications();
-        }
+      const result = await requestPermissionAndSubscribe();
+      setPermission(notificationPermission());
+      if (result.success) {
+        const saved = await apiClient.put('/api/v1/notifications/prefs', {
+          enabled: true,
+          preferred_hour: prefs.preferred_hour,
+          timezone: prefs.timezone,
+        }) as Prefs;
+        setPrefs(saved);
+        setStatus('Đã bật nhắc nhở! Mimi sẽ mời con chơi mỗi ngày 🐶');
+      } else {
+        setStatus(reasonText(result.reason));
       }
-
-      alert('Đã lưu cài đặt!');
-    } catch (e) {
-      console.error('[NotificationSettings] Save failed:', e);
-      alert('Lưu thất bại');
+    } catch (err) {
+      console.error('[NotificationSettings] Enable failed:', err);
+      setStatus('Bật chưa thành công, thử lại nhé');
     } finally {
       setSaving(false);
     }
   };
 
-  // Schedule local notifications
-  const scheduleNotifications = () => {
-    if (!('Notification' in window) || Notification.permission !== 'granted') return;
-
-    // Clear existing notifications
-    // In production, use a notification library like notifee or expo-notifications
-
-    // Schedule notifications based on windows
-    settings.windows.forEach((window) => {
-      if (window.enabled) {
-        console.log(`[NotificationSettings] Scheduled for ${window.time}`);
-        // TODO: Use Web Notification API with showTrigger for scheduled notifications
-      }
-    });
+  const handleDisable = async () => {
+    setSaving(true);
+    setStatus(null);
+    try {
+      await unsubscribeFromPush();
+      const saved = await apiClient.put('/api/v1/notifications/prefs', {
+        enabled: false,
+        preferred_hour: prefs.preferred_hour,
+        timezone: prefs.timezone,
+      }) as Prefs;
+      setPrefs(saved);
+      setPermission(notificationPermission());
+      setStatus('Đã tắt nhắc nhở');
+    } catch (err) {
+      console.error('[NotificationSettings] Disable failed:', err);
+      setStatus('Tắt chưa thành công');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Toggle main switch
-  const toggleEnabled = () => {
-    setSettings((s) => ({ ...s, enabled: !s.enabled }));
-  };
-
-  // Toggle window
-  const toggleWindow = (id: string) => {
-    setSettings((s) => ({
-      ...s,
-      windows: s.windows.map((w) =>
-        w.id === id ? { ...w, enabled: !w.enabled } : w
-      ),
-    }));
-  };
-
-  // Update window time
-  const updateWindowTime = (id: string, time: string) => {
-    setSettings((s) => ({
-      ...s,
-      windows: s.windows.map((w) => (w.id === id ? { ...w, time } : w)),
-    }));
-  };
-
-  // Add new window
-  const addWindow = () => {
-    const newWindow: ScheduleWindow = {
-      id: Date.now().toString(),
-      time: '12:00',
-      enabled: true,
-    };
-    setSettings((s) => ({
-      ...s,
-      windows: [...s.windows, newWindow],
-    }));
-  };
-
-  // Remove window
-  const removeWindow = (id: string) => {
-    setSettings((s) => ({
-      ...s,
-      windows: s.windows.filter((w) => w.id !== id),
-    }));
+  const handleHourChange = async (hour: number) => {
+    setPrefs((p) => ({ ...p, preferred_hour: hour }));
+    try {
+      const saved = await apiClient.put('/api/v1/notifications/prefs', {
+        enabled: prefs.enabled,
+        preferred_hour: hour,
+        timezone: prefs.timezone,
+      }) as Prefs;
+      setPrefs(saved);
+    } catch (err) {
+      console.error('[NotificationSettings] Hour update failed:', err);
+    }
   };
 
   if (loading) {
@@ -143,203 +132,184 @@ export function NotificationSettingsPage() {
     );
   }
 
+  const subscribed = prefs.enabled && permission === 'granted';
+
   return (
     <div className="min-h-screen pb-24" style={{ backgroundColor: colors.backgroundBase }}>
       {/* Header */}
       <div
         className="px-4 pt-8 pb-6"
         style={{
-          background: `linear-gradient(135deg, ${colors.sunshineYellow}40, ${colors.coralPink}40)`,
+          background: `linear-gradient(135deg, ${withOpacity(colors.sunshineYellow, 0.4)}, ${withOpacity(colors.coralPink, 0.4)})`,
         }}
       >
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl font-bold mb-2" style={{ color: colors.deepSlate }}>
+          <h1 className="text-2xl font-black mb-2" style={{ color: colors.deepSlate }}>
             ⏰ Thời điểm vàng
           </h1>
-          <p className="text-sm" style={{ color: colors.mediumGray }}>
-            Nhắc nhở ôn tập từ vựng đúng lúc
+          <p className="text-sm font-semibold" style={{ color: colors.mediumGray }}>
+            Mỗi ngày Mimi chỉ mời con chơi đúng một lần thôi — không làm phiền!
           </p>
         </div>
       </div>
 
       <div className="px-4 py-6 max-w-2xl mx-auto space-y-6">
-        {/* Main Toggle */}
-        <ClayCard className="p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
-                style={{
-                  backgroundColor: settings.enabled ? colors.neonTeal + '30' : colors.lightGray,
-                }}
-              >
-                🔔
-              </div>
-              <div>
-                <h2 className="font-bold" style={{ color: colors.deepSlate }}>
-                  Bật thông báo
-                </h2>
-                <p className="text-sm" style={{ color: colors.mediumGray }}>
-                  Nhận nhắc nhở ôn tập từ vựng
-                </p>
-              </div>
-            </div>
-            <Switch
-              checked={settings.enabled}
-              onChange={toggleEnabled}
-              activeColor={colors.neonTeal}
-            />
-          </div>
-        </ClayCard>
-
-        {/* Schedule Windows */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold" style={{ color: colors.deepSlate }}>
-              🕐 Lịch nhắc nhở
+        {/* STATE A: not installed (iOS in-browser cannot push) */}
+        {supported && !installed && (
+          <ClayCard className="p-5">
+            <h2 className="font-black mb-3 flex items-center gap-2" style={{ color: colors.deepSlate }}>
+              📲 Cài EduAR lên Màn hình chính
             </h2>
-            <Badge variant="secondary" size="sm">
-              {settings.windows.filter((w) => w.enabled).length} active
-            </Badge>
-          </div>
+            <p className="text-sm mb-3" style={{ color: colors.mediumGray }}>
+              Trên iPhone, nhắc nhở chỉ hoạt động khi app được cài như một ứng dụng. Làm theo 2 bước nhé:
+            </p>
+            <ol className="space-y-2 text-sm" style={{ color: colors.deepSlate }}>
+              <li className="flex gap-2">
+                <Badge variant="primary" size="sm">1</Badge>
+                <span>
+                  Mở trang web bằng <strong>Safari (iOS)</strong> hoặc <strong>Chrome (Android)</strong>:{' '}
+                  <strong>https://learnvocab.pages.dev</strong>
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <Badge variant="primary" size="sm">2</Badge>
+                <span>
+                  Nhấn nút <strong>Chia sẻ</strong> → chọn <strong>“Thêm vào Màn hình chính”</strong>
+                </span>
+              </li>
+            </ol>
+            <p className="mt-3 text-xs" style={{ color: colors.mediumGray }}>
+              Sau đó mở EduAR từ biểu tượng trên Màn hình chính và quay lại đây để bật nhắc nhở 🌱
+            </p>
+          </ClayCard>
+        )}
 
-          {settings.windows.map((window) => (
-            <ClayCard key={window.id} className="p-4">
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
-                  style={{
-                    backgroundColor: window.enabled
-                      ? colors.skyBlue + '30'
-                      : colors.lightGray,
-                  }}
-                >
-                  {window.time === '08:00' ? '🌅' :
-                   window.time === '12:00' ? '☀️' :
-                   window.time === '18:00' ? '🌆' :
-                   window.time === '21:00' ? '🌙' : '⏰'}
-                </div>
+        {!supported && (
+          <ClayCard className="p-5">
+            <h2 className="font-black mb-2" style={{ color: colors.deepSlate }}>🔔 Thiết bị chưa hỗ trợ</h2>
+            <p className="text-sm" style={{ color: colors.mediumGray }}>
+              Trình duyệt này chưa hỗ trợ thông báo. Bạn thử Chrome hoặc Safari mới hơn nhé!
+            </p>
+          </ClayCard>
+        )}
 
-                <div className="flex-1">
-                  <Input
-                    type="time"
-                    value={window.time}
-                    onChange={(e) => updateWindowTime(window.id, e.target.value)}
-                    disabled={!settings.enabled}
-                    className="w-32"
-                  />
-                  <p className="text-xs mt-1" style={{ color: colors.mediumGray }}>
-                    {getTimeDescription(window.time)}
-                  </p>
-                </div>
-
-                <Switch
-                  checked={window.enabled}
-                  onChange={() => toggleWindow(window.id)}
-                  disabled={!settings.enabled}
-                  activeColor={colors.skyBlue}
-                />
-
-                {settings.windows.length > 1 && (
-                  <button
-                    onClick={() => removeWindow(window.id)}
-                    className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: colors.coralPink + '20' }}
+        {/* STATE B/C: main toggle + preferred hour */}
+        {supported && installed && (
+          <>
+            <ClayCard className="p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
+                    style={{
+                      backgroundColor: withOpacity(colors.neonTeal, 0.25),
+                      boxShadow: shadows.claySm,
+                    }}
                   >
-                    <span style={{ color: colors.coralPink }}>×</span>
-                  </button>
-                )}
+                    🔔
+                  </div>
+                  <div>
+                    <h2 className="font-black" style={{ color: colors.deepSlate }}>
+                      {subscribed ? 'Nhắc nhở đang bật' : 'Bật nhắc nhở'}
+                    </h2>
+                    <p className="text-sm" style={{ color: colors.mediumGray }}>
+                      {subscribed ? 'Mimi sẽ mời con vào vườn từ mỗi ngày 🌱' : 'Một lời mời chơi mỗi ngày từ Mimi'}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={subscribed}
+                  onChange={() => (subscribed ? handleDisable() : handleEnablePush())}
+                  activeColor={colors.neonTeal}
+                />
+              </div>
+
+              {!subscribed && (
+                <Button
+                  variant="primary"
+                  onClick={handleEnablePush}
+                  disabled={saving}
+                  className="w-full mt-4"
+                  style={{ backgroundColor: colors.neonTeal, color: colors.deepSlate }}
+                >
+                  {saving ? (
+                    <span className="flex items-center gap-2">
+                      <LoadingSpinner size="sm" /> Đang bật...
+                    </span>
+                  ) : (
+                    '🌱 Bật nhắc nhở cho con'
+                  )}
+                </Button>
+              )}
+            </ClayCard>
+
+            <ClayCard className="p-5">
+              <h2 className="font-black mb-3" style={{ color: colors.deepSlate }}>
+                🕐 Giờ Mimi sẽ mời con
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {[7, 12, 17, 19, 20].map((hour) => {
+                  const active = prefs.preferred_hour === hour;
+                  return (
+                    <button
+                      key={hour}
+                      type="button"
+                      onClick={() => handleHourChange(hour)}
+                      aria-pressed={active}
+                      className="rounded-2xl px-4 py-3 font-bold cursor-pointer transition-colors duration-200"
+                      style={{
+                        backgroundColor: active ? withOpacity(colors.skyBlue, 0.35) : withOpacity(colors.warmWhite, 0.9),
+                        color: colors.deepSlate,
+                        boxShadow: active ? shadows.claySm : 'none',
+                      }}
+                    >
+                      {HOUR_ICONS[hour] ?? '⏰'} {String(hour).padStart(2, '0')}:00
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs mt-3" style={{ color: colors.mediumGray }}>
+                Từ 20:30 đến 07:30 là giờ ngủ — Mimi không gửi thông báo trong khung này.
+              </p>
+            </ClayCard>
+
+            {/* Notification Preview — pet voice */}
+            <ClayCard className="p-4">
+              <h3 className="font-black mb-3" style={{ color: colors.deepSlate }}>
+                📱 Mời từ Mimi trông như thế này
+              </h3>
+              <div
+                className="rounded-2xl p-4"
+                style={{ backgroundColor: colors.warmWhite, border: `2px solid ${colors.skyBlue}` }}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+                    style={{ backgroundColor: colors.sunshineYellow, boxShadow: shadows.claySm }}
+                  >
+                    🌱
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-black" style={{ color: colors.deepSlate }}>
+                      Mimi có tin vui! 🌱
+                    </p>
+                    <p className="text-sm" style={{ color: colors.mediumGray }}>
+                      Vườn từ của con có 5 hạt cần tưới nè. Vào chơi cùng Mimi nhé?
+                    </p>
+                  </div>
+                </div>
               </div>
             </ClayCard>
-          ))}
+          </>
+        )}
 
-          <Button
-            variant="outline"
-            onClick={addWindow}
-            disabled={!settings.enabled || settings.windows.length >= 6}
-            className="w-full"
-          >
-            + Thêm giờ nhắc
-          </Button>
-        </div>
-
-        {/* SM-2 Interval Info */}
-        <ClayCard className="p-4" style={{ backgroundColor: colors.lavender + '20' }}>
-          <h3 className="font-bold mb-2 flex items-center gap-2" style={{ color: colors.deepSlate }}>
-            📊 Cách hoạt động
-          </h3>
-          <div className="space-y-2 text-sm" style={{ color: colors.mediumGray }}>
-            <p>• <strong>SM-2 Algorithm</strong>: Ôn tập theo khoảng cách tối ưu</p>
-            <p>• Lần đầu: ôn sau <strong>1 ngày</strong></p>
-            <p>• Lần 2: ôn sau <strong>6 ngày</strong></p>
-            <p>• Lần 3+: khoảng cách tăng dần theo độ khó</p>
-            <p className="pt-2 border-t" style={{ borderColor: colors.lightGray }}>
-              💡 <strong>Mẹo</strong>: 4 lần/ngày cho kết quả tốt nhất!
-            </p>
-          </div>
-        </ClayCard>
-
-        {/* Notification Preview */}
-        <ClayCard className="p-4">
-          <h3 className="font-bold mb-3" style={{ color: colors.deepSlate }}>
-            📱 Xem trước
-          </h3>
+        {status && (
           <div
-            className="rounded-2xl p-4"
-            style={{
-              backgroundColor: colors.warmWhite,
-              border: `2px solid ${colors.skyBlue}`,
-            }}
+            className="rounded-2xl px-4 py-3 text-sm font-semibold"
+            style={{ backgroundColor: withOpacity(colors.mintGreen, 0.3), color: colors.deepSlate }}
+            role="status"
           >
-            <div className="flex items-start gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-                style={{ backgroundColor: colors.sunshineYellow }}
-              >
-                📚
-              </div>
-              <div className="flex-1">
-                <p className="font-bold" style={{ color: colors.deepSlate }}>
-                  EduAR - Đến lúc ôn tập!
-                </p>
-                <p className="text-sm" style={{ color: colors.mediumGray }}>
-                  Bạn có <strong>5 từ</strong> cần xem lại ngay. Nhấn để luyện tập!
-                </p>
-                <div className="flex gap-2 mt-2">
-                  <Badge variant="primary" size="sm">📖 Luyện tập</Badge>
-                  <Badge variant="secondary" size="sm">⏰ Nhắc lại</Badge>
-                </div>
-              </div>
-            </div>
-          </div>
-        </ClayCard>
-
-        {/* Save Button */}
-        <Button
-          variant="primary"
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full py-4 text-lg"
-          style={{
-            backgroundColor: colors.neonTeal,
-            boxShadow: shadows.clay,
-            color: colors.deepSlate,
-          }}
-        >
-          {saving ? (
-            <span className="flex items-center gap-2">
-              <LoadingSpinner size="sm" /> Đang lưu...
-            </span>
-          ) : (
-            '✓ Lưu cài đặt'
-          )}
-        </Button>
-
-        {/* PWA Install Reminder */}
-        {!settings.enabled || (
-          <div className="text-center text-xs p-4" style={{ color: colors.mediumGray }}>
-            <p>💡 Để nhận thông báo, hãy cài đặt EduAR lên màn hình chính</p>
-            <p className="mt-1">Safari → Chia sẻ → Thêm vào Màn hình chính</p>
+            {status}
           </div>
         )}
       </div>
@@ -347,14 +317,19 @@ export function NotificationSettingsPage() {
   );
 }
 
-function getTimeDescription(time: string): string {
-  const [hours] = time.split(':').map(Number);
-  if (hours < 10) return 'Buổi sáng sớm';
-  if (hours < 12) return 'Buổi sáng';
-  if (hours < 14) return 'Buổi trưa';
-  if (hours < 18) return 'Buổi chiều';
-  if (hours < 21) return 'Buổi tối';
-  return 'Đêm khuya';
+function reasonText(reason?: string): string {
+  switch (reason) {
+    case 'needs-home-screen-install':
+      return 'iPhone cần cài EduAR lên Màn hình chính trước đã!';
+    case 'permission-denied':
+      return 'Quyền thông báo chưa được cho. Vào Cài đặt → EduAR để bật lại nhé';
+    case 'server-not-configured':
+      return 'Máy chủ chưa sẵn sàng gửi thông báo — thử lại sau nhé';
+    case 'unsupported':
+      return 'Thiết bị chưa hỗ trợ thông báo';
+    default:
+      return 'Bật chưa thành công, thử lại nhé';
+  }
 }
 
 export default NotificationSettingsPage;

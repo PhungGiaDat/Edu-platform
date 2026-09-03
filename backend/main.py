@@ -3,6 +3,7 @@
 Eduplatform AR API - Main Application
 Clean Architecture with FastAPI
 """
+
 import sys
 import logging
 from pathlib import Path
@@ -54,6 +55,7 @@ from api import (
     vocabulary_topics_router,
     ai_router,
     telegram_router,
+    notifications_router,
 )
 from api.pronunciation_enhanced import router as pronunciation_enhanced_router
 from api.lessons import router as lessons_router
@@ -71,7 +73,7 @@ from api.semantic_rules import router as semantic_rules_router
 # Configure logging
 logging.basicConfig(
     level=logging.INFO if not settings.DEBUG else logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 
 # Disable verbose pymongo logging
@@ -93,14 +95,16 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("🚀 Starting Eduplatform AR API...")
     logger.info(f"📝 Settings: DB={settings.MONGO_DB}, Debug={settings.DEBUG}")
-    
+
     try:
         await connect_to_database()
         logger.info("✅ MongoDB connected (legacy/transitional)")
     except Exception as e:
-        logger.warning("⚠️ MongoDB unavailable (legacy): %s — Postgres is authoritative", e)
+        logger.warning(
+            "⚠️ MongoDB unavailable (legacy): %s — Postgres is authoritative", e
+        )
         # Non-fatal: Postgres is the single source of truth
-    
+
     # Connect to Redis (optional, falls back gracefully if unavailable)
     try:
         redis_connected = await redis_service.connect()
@@ -134,12 +138,12 @@ async def lifespan(app: FastAPI):
         logger.warning(f"⚠️ LLM health ping failed: {e}")
 
     logger.info("✅ Application started successfully")
-    
+
     yield  # Application runs here
-    
+
     # Shutdown
     logger.info("🔄 Shutting down Eduplatform AR API...")
-    
+
     # Close Redis connection
     await redis_service.disconnect()
     logger.info("✅ Redis connection closed")
@@ -177,9 +181,21 @@ app.add_middleware(
 # ========== Static Files ==========
 # Mount static directories for AR assets, images, audio
 try:
-    app.mount("/assets", StaticFiles(directory=str(settings.STATIC_DIR / "assets")), name="assets")
-    app.mount("/images", StaticFiles(directory=str(settings.STATIC_DIR / "images")), name="images")
-    app.mount("/audio", StaticFiles(directory=str(settings.STATIC_DIR / "audio")), name="audio")
+    app.mount(
+        "/assets",
+        StaticFiles(directory=str(settings.STATIC_DIR / "assets")),
+        name="assets",
+    )
+    app.mount(
+        "/images",
+        StaticFiles(directory=str(settings.STATIC_DIR / "images")),
+        name="images",
+    )
+    app.mount(
+        "/audio",
+        StaticFiles(directory=str(settings.STATIC_DIR / "audio")),
+        name="audio",
+    )
     logger.info(f"📁 Static files mounted from: {settings.STATIC_DIR}")
 except RuntimeError as e:
     logger.warning(f"⚠️ Static directories not found: {e}")
@@ -187,204 +203,109 @@ except RuntimeError as e:
 
 # ========== API Routers ==========
 # Register all API routes under /api prefix
+app.include_router(flashcard_router, prefix=settings.API_V1_PREFIX, tags=["Flashcards"])
+
+app.include_router(quiz_router, prefix=settings.API_V1_PREFIX, tags=["Quiz"])
+
+app.include_router(game_router, prefix=settings.API_V1_PREFIX, tags=["Games"])
+
+app.include_router(course_router, prefix=settings.API_V1_PREFIX, tags=["Courses"])
+
+app.include_router(chat_router, prefix=settings.API_V1_PREFIX, tags=["Chat"])
+
 app.include_router(
-    flashcard_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Flashcards"]
+    auth_router, prefix=f"{settings.API_V1_PREFIX}/auth", tags=["Authentication"]
 )
 
 app.include_router(
-    quiz_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Quiz"]
+    gamification_router, prefix=settings.API_V1_PREFIX, tags=["Gamification"]
 )
 
-app.include_router(
-    game_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Games"]
-)
+app.include_router(user_router, prefix=settings.API_V1_PREFIX, tags=["User"])
 
-app.include_router(
-    course_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Courses"]
-)
-
-app.include_router(
-    chat_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Chat"]
-)
-
-app.include_router(
-    auth_router,
-    prefix=f"{settings.API_V1_PREFIX}/auth",
-    tags=["Authentication"]
-)
-
-app.include_router(
-    gamification_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Gamification"]
-)
-
-app.include_router(
-    user_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["User"]
-)
-
-app.include_router(
-    profile_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Profile"]
-)
+app.include_router(profile_router, prefix=settings.API_V1_PREFIX, tags=["Profile"])
 
 # WebSocket router (no prefix - keep legacy path)
-app.include_router(
-    websocket_router,
-    tags=["WebSocket"]
-)
+app.include_router(websocket_router, tags=["WebSocket"])
+
+app.include_router(reports_router, prefix=settings.API_V1_PREFIX, tags=["Reports"])
 
 app.include_router(
-    reports_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Reports"]
+    learning_path_router, prefix=settings.API_V1_PREFIX, tags=["Learning Path"]
 )
 
-app.include_router(
-    learning_path_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Learning Path"]
-)
+app.include_router(pet_router, prefix=settings.API_V1_PREFIX, tags=["Pets"])
+
+app.include_router(combos_router, prefix=settings.API_V1_PREFIX, tags=["Combos"])
 
 app.include_router(
-    pet_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Pets"]
-)
-
-app.include_router(
-    combos_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Combos"]
-)
-
-app.include_router(
-    pronunciation_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Pronunciation"]
+    pronunciation_router, prefix=settings.API_V1_PREFIX, tags=["Pronunciation"]
 )
 
 app.include_router(
     pronunciation_enhanced_router,
     prefix=settings.API_V1_PREFIX,
-    tags=["Pronunciation Enhanced"]
+    tags=["Pronunciation Enhanced"],
+)
+
+app.include_router(sessions_router, prefix=settings.API_V1_PREFIX, tags=["Sessions"])
+
+app.include_router(
+    session_lock_router, prefix=settings.API_V1_PREFIX, tags=["Session Lock"]
 )
 
 app.include_router(
-    sessions_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Sessions"]
+    course_lessons_router, prefix=settings.API_V1_PREFIX, tags=["Course Lessons"]
 )
 
-app.include_router(
-    session_lock_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Session Lock"]
-)
+app.include_router(lessons_router, prefix="/api", tags=["Lesson Media"])
+
+app.include_router(session_tracking_router, prefix="/api", tags=["Session Tracking"])
 
 app.include_router(
-    course_lessons_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Course Lessons"]
-)
-
-app.include_router(
-    lessons_router,
-    prefix="/api",
-    tags=["Lesson Media"]
-)
-
-app.include_router(
-    session_tracking_router,
-    prefix="/api",
-    tags=["Session Tracking"]
-)
-
-app.include_router(
-    admin_router,
-    prefix=f"{settings.API_V1_PREFIX}/admin",
-    tags=["Admin"]
+    admin_router, prefix=f"{settings.API_V1_PREFIX}/admin", tags=["Admin"]
 )
 
 # Debug router — logs AR_DEBUG from mobile web app to Vercel runtime logs
-app.include_router(
-    debug_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Debug"]
-)
+app.include_router(debug_router, prefix=settings.API_V1_PREFIX, tags=["Debug"])
 
 # Flashcard Editor router (admin-only)
 app.include_router(
     flashcard_editor_router,
     prefix=f"{settings.API_V1_PREFIX}/flashcard-editor",
-    tags=["Flashcard Editor"]
+    tags=["Flashcard Editor"],
 )
 
 # Public router (no auth required) - for QR code scanning
-app.include_router(
-    public_router,
-    tags=["Public"]
-)
+app.include_router(public_router, tags=["Public"])
 
 # AR Stability router
-app.include_router(
-    ar_stability_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["AR"]
-)
+app.include_router(ar_stability_router, prefix=settings.API_V1_PREFIX, tags=["AR"])
 
 # Semantic Rules router
-app.include_router(
-    semantic_rules_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["AR"]
-)
+app.include_router(semantic_rules_router, prefix=settings.API_V1_PREFIX, tags=["AR"])
 
 # Notebook router (Sổ tay)
-app.include_router(
-    notebook_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Notebook"]
-)
+app.include_router(notebook_router, prefix=settings.API_V1_PREFIX, tags=["Notebook"])
 
 # Dictionary router (Tra từ)
 app.include_router(
-    dictionary_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Dictionary"]
+    dictionary_router, prefix=settings.API_V1_PREFIX, tags=["Dictionary"]
 )
 
 # Vocabulary Topics router
 app.include_router(
-    vocabulary_topics_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Vocabulary Topics"]
+    vocabulary_topics_router, prefix=settings.API_V1_PREFIX, tags=["Vocabulary Topics"]
 )
 
 # AI router (quiz generation, pronunciation AI, LLM health)
-app.include_router(
-    ai_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["AI"]
-)
+app.include_router(ai_router, prefix=settings.API_V1_PREFIX, tags=["AI"])
 
+app.include_router(telegram_router, prefix=settings.API_V1_PREFIX, tags=["Telegram"])
+
+# Notifications router (kid-friendly Web Push reminders)
 app.include_router(
-    telegram_router,
-    prefix=settings.API_V1_PREFIX,
-    tags=["Telegram"]
+    notifications_router, prefix=settings.API_V1_PREFIX, tags=["Notifications"]
 )
 
 logger.info("✅ All routers registered")
@@ -397,11 +318,7 @@ async def health_check():
     Lightweight health check endpoint for monitoring and deployment.
     Avoid a MongoDB ping here because Render may call this every few seconds.
     """
-    return {
-        "status": "ok",
-        "app": settings.APP_NAME,
-        "debug": settings.DEBUG
-    }
+    return {"status": "ok", "app": settings.APP_NAME, "debug": settings.DEBUG}
 
 
 @app.get("/health/detailed", tags=["System"])
@@ -412,14 +329,14 @@ async def detailed_health_check():
     """
     from database.connection import db_manager
     from database.postgres_connection import postgres_core_enabled, postgres_pool
-    
+
     health_status = {
         "status": "ok",
         "app": settings.APP_NAME,
         "version": "2.0.0",
-        "debug": settings.DEBUG
+        "debug": settings.DEBUG,
     }
-    
+
     # Check database connectivity
     try:
         if postgres_core_enabled():
@@ -438,10 +355,10 @@ async def detailed_health_check():
         health_status["database"] = {
             "status": "error",
             "healthy": False,
-            "error": str(e)
+            "error": str(e),
         }
         health_status["status"] = "degraded"
-    
+
     # Check Redis connectivity
     try:
         redis_health = await redis_service.health_check()
@@ -449,18 +366,14 @@ async def detailed_health_check():
         if not redis_health.get("healthy"):
             health_status["status"] = "degraded"
     except Exception as e:
-        health_status["redis"] = {
-            "status": "error",
-            "healthy": False,
-            "error": str(e)
-        }
+        health_status["redis"] = {"status": "error", "healthy": False, "error": str(e)}
         health_status["status"] = "degraded"
-    
+
     # Check AI services
     health_status["ai_services"] = {
         "google_api_configured": bool(settings.GOOGLE_API_KEY)
     }
-    
+
     return health_status
 
 
@@ -470,7 +383,7 @@ async def root():
     return {
         "message": "Welcome to Eduplatform AR API",
         "docs": "/docs" if settings.DEBUG else "disabled",
-        "health": "/health"
+        "health": "/health",
     }
 
 
@@ -481,19 +394,18 @@ async def global_exception_handler(request, exc):
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     sentry_monitoring_service.capture_exception(exc)
     return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error occurred"}
+        status_code=500, content={"detail": "Internal server error occurred"}
     )
 
 
 # ========== Run Application ==========
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "main:app",
         host=settings.HOST,
         port=settings.PORT,
         reload=settings.DEBUG,
-        log_level="info"
+        log_level="info",
     )

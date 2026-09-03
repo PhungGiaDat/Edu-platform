@@ -8,9 +8,9 @@
 import { useEffect, useRef } from 'react';
 import { Badge } from '@/shared/components/ui/Badge';
 import { Button } from '@/shared/components/ui/Button';
-import { brandColors } from '@/design-tokens/claymorphic';
+import { brandColors, colors, shadows, withOpacity } from '@/design-tokens/claymorphic';
 import type { EntrySource, NotebookEntry } from '@/types/notebook';
-import { CloseIcon, GlobeIcon } from '@/features/dictionary/components/icons';
+import { CloseIcon, GlobeIcon, SparkleIcon } from '@/features/dictionary/components/icons';
 
 export interface NotebookEntryDetailProps {
   entry: NotebookEntry;
@@ -110,6 +110,27 @@ export function NotebookEntryDetail({ entry, onClose, onDelete }: NotebookEntryD
         <p className="mt-4 text-xl font-bold" style={{ color: brandColors.primary }}>
           {entry.translation_vi}
         </p>
+
+        {entry.explanation_vi && (
+          <div
+            className="mt-3 rounded-2xl px-4 py-3"
+            style={{
+              backgroundColor: withOpacity(colors.lavender, 0.22),
+              boxShadow: shadows.claySm,
+            }}
+          >
+            <p
+              className="text-xs font-bold flex items-center gap-1.5 uppercase tracking-wide"
+              style={{ color: '#6D28D9' }}
+            >
+              <SparkleIcon className="h-4 w-4" />
+              Giải thích dễ hiểu
+            </p>
+            <p className="mt-1 text-sm leading-relaxed" style={{ color: brandColors.foreground }}>
+              {entry.explanation_vi}
+            </p>
+          </div>
+        )}
 
         {entry.definition_en && (
           <p className="mt-2 text-sm" style={{ color: brandColors.foreground }}>{entry.definition_en}</p>

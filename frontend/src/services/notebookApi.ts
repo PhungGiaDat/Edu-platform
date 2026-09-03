@@ -25,6 +25,15 @@ export interface ReviewResult {
   new_interval_days: number;
   next_review_at: string;
   review_count: number;
+  // Kid progress (additive)
+  mastery_box: number;
+  box_up: boolean;
+  // Reward processing (backend-authoritative, idempotent via event_id)
+  xp_awarded?: number | null;
+  total_xp?: number | null;
+  level?: number | null;
+  level_up?: boolean | null;
+  sticker_earned?: { id: string; name: string; rarity: string } | null;
 }
 
 export const notebookApi = {
@@ -91,12 +100,13 @@ export const notebookApi = {
   },
 
   /**
-   * Submit a review result (SM-2 algorithm)
+   * Submit a review result (kid SM-2, no-fail box ladder).
+   * eventId: stable per-swipe id — same id on retry never double-awards XP.
    */
-  async submitReview(id: string, quality: number): Promise<ReviewResult> {
+  async submitReview(id: string, quality: number, eventId?: string): Promise<ReviewResult> {
     return request('/api/v1/notebook/review', {
       method: 'POST',
-      body: { entry_id: id, quality },
+      body: { entry_id: id, quality, event_id: eventId },
     }) as Promise<ReviewResult>;
   },
 };

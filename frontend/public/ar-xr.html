@@ -274,6 +274,12 @@
     const word            = params.get('word') || qrId;
     const isDebug         = location.hostname === 'localhost' || params.get('debug') === 'true';
 
+    // ========== BOOTSTRAP STATE (must exist before any sendARDebug call) ==========
+    // IMPORTANT: currentPhase and xrTargetConfigs MUST be initialized before
+    // sendARDebug() is called — otherwise Safari throws TDZ ReferenceError.
+    let currentPhase = 'initializing';
+    let xrTargetConfigs = [];
+
     // ========== MULTI-TARGET CONFIG PARSING (Milestone 1) ==========
     // Parse xr_targets from URL param (set by LearnAR8thWall for multi-target tracking).
     // Falls back to single-target from legacy params for backward compatibility.
@@ -286,7 +292,8 @@
             return parsed;
           }
         } catch (error) {
-          sendARDebug('XR_TARGET_CONFIG_PARSE_ERROR', { error: String(error) });
+          // EARLY BOOT: do not call sendARDebug yet — log to buffer instead
+          logToBuffer('error', 'XR_TARGET_CONFIG_PARSE_ERROR', { error: String(error) });
         }
       }
       // Backward-compatible single target from legacy params
@@ -298,16 +305,18 @@
       }];
     }
 
-    const xrTargetConfigs = parseXRTargetConfigs();
+    // Assign (not const) — xrTargetConfigs already declared above
+    xrTargetConfigs = parseXRTargetConfigs();
     const targetConfigByName = new Map(xrTargetConfigs.map(c => [c.qr_id, c]));
 
+    // Primary model target = the originally scanned QR ID
+    const primaryModelTargetName = qrId;
+
+    // Now safe to call sendARDebug — both currentPhase and xrTargetConfigs exist
     sendARDebug('XR_MULTI_CONFIG', {
       count: xrTargetConfigs.length,
       targets: xrTargetConfigs.map(t => t.qr_id),
     });
-
-    // Primary model target = the originally scanned QR ID
-    const primaryModelTargetName = qrId;
 
     // DOM
     const overlay     = document.getElementById('overlay');
@@ -345,11 +354,10 @@
     }
 
     // Phase tracking for AR_DEBUG messages
-    let currentPhase = 'initializing';
-
     function setPhase(phase) {
+      const previousPhase = currentPhase;
       currentPhase = phase;
-      sendARDebug('PHASE_CHANGE', { from: currentPhase, to: phase });
+      sendARDebug('PHASE_CHANGE', { from: previousPhase, to: phase });
     }
 
     function showOverlay(text, hint = '') {

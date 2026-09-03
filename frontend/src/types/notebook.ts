@@ -19,6 +19,8 @@ export interface NotebookEntry {
   part_of_speech?: string;
   definition_en?: string;
   wiki_summary?: string;
+  explanation_vi?: string;
+  mastery_box?: number; // kid Leitner box 1-5 (seed→bloom), only goes up
   created_at: string;
   last_reviewed_at?: string;
   review_count: number;
@@ -39,6 +41,7 @@ export interface CreateEntryRequest {
   part_of_speech?: string;
   definition_en?: string;
   wiki_summary?: string;
+  explanation_vi?: string;
 }
 
 export interface UpdateEntryRequest {
@@ -52,6 +55,7 @@ export interface UpdateEntryRequest {
   part_of_speech?: string;
   definition_en?: string;
   wiki_summary?: string;
+  explanation_vi?: string;
 }
 
 export interface ReviewSubmit {

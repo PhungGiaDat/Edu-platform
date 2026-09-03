@@ -3,6 +3,7 @@
 Centralized Configuration Management
 Supports both local (.env) and production (environment variables) deployments
 """
+
 from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
@@ -14,15 +15,17 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # Forbidden SECRET_KEY placeholder values — fail-closed at import time.
 # CVE-2026-47410 class risk: leaked public defaults must never reach production.
-_FORBIDDEN_SECRET_VALUES = frozenset({
-    "",
-    "dev-secret-key-change-in-production",
-    "dev-secret",
-    "change-in-production",
-    "changeme",
-    "test-secret",
-    "your-super-secret-key-change-this-in-production",
-})
+_FORBIDDEN_SECRET_VALUES = frozenset(
+    {
+        "",
+        "dev-secret-key-change-in-production",
+        "dev-secret",
+        "change-in-production",
+        "changeme",
+        "test-secret",
+        "your-super-secret-key-change-this-in-production",
+    }
+)
 
 
 class Settings(BaseSettings):
@@ -78,6 +81,19 @@ class Settings(BaseSettings):
     # Dicebear (or compatible) avatar service base URL.
     AVATAR_SERVICE_URL: str = "https://api.dicebear.com/7.x/avataaars/svg"
 
+    # ========== Web Push (kid-friendly reminders) ==========
+    # Generate once via scripts/generate_vapid_keys.py. The PRIVATE key never
+    # leaves the server; the public key is served to browsers for subscribe.
+    VAPID_PUBLIC_KEY: Optional[str] = None
+    VAPID_PRIVATE_KEY: Optional[SecretStr] = None
+    # Contact claim required by the Web Push protocol (mailto: or https: URL).
+    VAPID_CLAIM_SUB: str = "https://learnvocab.pages.dev"
+    # Secret header value guarding POST /notifications/internal/dispatch.
+    NOTIFICATION_DISPATCH_SECRET: Optional[SecretStr] = None
+    # Quiet hours (server timezone, 24h) — no pushes between these hours.
+    NOTIFICATION_QUIET_START: int = 20  # 20:30 enforced as start+0.5h window
+    NOTIFICATION_QUIET_END: int = 7  # allowed again from 07:30
+
     # Telegram debug sync. These values are server-only and must never be
     # exposed through the frontend bundle.
     TELEGRAM_BOT_TOKEN: Optional[SecretStr] = None
@@ -86,11 +102,11 @@ class Settings(BaseSettings):
     # ========== Frontend Origin (CORS — single prod origin) ==========
     # Required. The deployed Vercel frontend origin (no trailing slash).
     DEFAULT_FRONTEND_ORIGIN: str
-    
+
     # ========== Server ==========
     HOST: str = "0.0.0.0"
     PORT: int = 8000
-    
+
     # ========== AI Services (Optional) ==========
     OPENAI_API_KEY: Optional[str] = None
     GOOGLE_API_KEY: Optional[str] = None
@@ -134,7 +150,9 @@ class Settings(BaseSettings):
     # ========== Wikipedia Retrieval ==========
     WIKI_FETCH_TIMEOUT_SECONDS: float = 8.0
     WIKI_SUMMARY_MAX_CHARS: int = 1200
-    WIKI_USER_AGENT: str = "EduPlatform-Lexi/1.0 (educational dictionary; graduation project)"
+    WIKI_USER_AGENT: str = (
+        "EduPlatform-Lexi/1.0 (educational dictionary; graduation project)"
+    )
     # Wiktionary definition fallback (Task 3b)
     WIKTIONARY_MAX_SENSES: int = 3
     WIKTIONARY_TEXT_MAX_CHARS: int = 800
@@ -149,40 +167,37 @@ class Settings(BaseSettings):
     REDIS_SOCKET_TIMEOUT: int = 5
     REDIS_SOCKET_CONNECT_TIMEOUT: int = 5
     REDIS_SSL: bool = False
-    
+
     # ========== App Lock / Time Limit Settings ==========
     APP_LOCK_DEFAULT_TTL_MINUTES: int = 30
     APP_LOCK_WARNING_TTL_MINUTES: int = 25
     APP_LOCK_MAX_EXTENSION_MINUTES: int = 60
-    
+
     # ========== Rate Limiting Settings ==========
     RATE_LIMIT_AUTH_PER_MINUTE: int = 10
     RATE_LIMIT_API_PER_MINUTE: int = 60
     RATE_LIMIT_API_PER_HOUR: int = 1000
     RATE_LIMIT_BURST: int = 10
-    
+
     # ========== Session Settings ==========
     SESSION_TTL_HOURS: int = 24
     SESSION_REFRESH_THRESHOLD_MINUTES: int = 30
-    
+
     # ========== Cache Settings ==========
     REDIS_TTL: int = 300
     CACHE_PETS_TTL_SECONDS: int = 600
     CACHE_COURSE_TTL_SECONDS: int = 300
     CACHE_USER_STATS_TTL_SECONDS: int = 60
     CACHE_LEADERBOARD_TTL_SECONDS: int = 300
-    
+
     # ========== Supabase Redis Backup ==========
     SUPABASE_REDIS_BACKUP_ENABLED: bool = False
-    
+
     # ========== Pydantic Settings Config ==========
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-        case_sensitive=True
+        env_file=".env", env_file_encoding="utf-8", extra="ignore", case_sensitive=True
     )
-    
+
     @field_validator("SECRET_KEY", mode="before")
     @classmethod
     def _validate_secret_key(cls, v):
@@ -262,7 +277,9 @@ class Settings(BaseSettings):
             "https://edu-platform-dun.vercel.app",
         ]
         custom = [
-            o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip() and o.strip() != "*"
+            o.strip()
+            for o in self.ALLOWED_ORIGINS.split(",")
+            if o.strip() and o.strip() != "*"
         ]
         result = list(dict.fromkeys(always + custom))
         if self.DEBUG:
@@ -282,13 +299,17 @@ settings = Settings()
 if __name__ != "__main__":
     import sys
 
-    print(f"[CONFIG] Loaded settings: DB={settings.MONGO_DB}, Debug={settings.DEBUG}", file=sys.stderr)
+    print(
+        f"[CONFIG] Loaded settings: DB={settings.MONGO_DB}, Debug={settings.DEBUG}",
+        file=sys.stderr,
+    )
     print(f"[CONFIG] Redis configured: {settings.is_redis_configured}", file=sys.stderr)
     print(f"[CONFIG] Static dir: {settings.STATIC_DIR}", file=sys.stderr)
 
     # Warn if TokenRouter API key is missing (chat endpoint will 503)
     if not settings.TOKENROUTER_API_KEY:
         import logging
+
         logging.getLogger("settings").warning(
             "[CONFIG] TOKENROUTER_API_KEY is not set — /api/v1/chat/rag will return 503. "
             "Set TOKENROUTER_API_KEY in .env to enable Lexi Agentic RAG."

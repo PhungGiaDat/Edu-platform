@@ -3,6 +3,7 @@
 API Package - Thin Router/Controller Layer
 Exports all API routers for easy registration
 """
+
 from .flashcards import router as flashcard_router
 from .quiz import router as quiz_router
 from .game import router as game_router
@@ -27,6 +28,7 @@ from .dictionary import router as dictionary_router
 from .vocabulary_topics import router as vocabulary_topics_router
 from .ai import router as ai_router
 from .telegram import router as telegram_router
+from .notifications import router as notifications_router
 
 __all__ = [
     "flashcard_router",
@@ -53,5 +55,5 @@ __all__ = [
     "vocabulary_topics_router",
     "ai_router",
     "telegram_router",
+    "notifications_router",
 ]
-

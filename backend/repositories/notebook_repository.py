@@ -2,6 +2,7 @@
 """
 Repository for Notebook Entry CRUD operations
 """
+
 from typing import Optional, List, Tuple
 from uuid import UUID
 from datetime import datetime
@@ -33,40 +34,45 @@ class NotebookRepository:
         part_of_speech: Optional[str] = None,
         definition_en: Optional[str] = None,
         wiki_summary: Optional[str] = None,
+        explanation_vi: Optional[str] = None,
     ) -> dict:
         """Create a new notebook entry"""
         query = text("""
             INSERT INTO notebook_entries (
                 user_id, word, translation_vi, translation_en, context,
                 source, topic, difficulty, pronunciation, part_of_speech,
-                definition_en, wiki_summary
+                definition_en, wiki_summary, explanation_vi
             )
             VALUES (
                 :user_id, :word, :translation_vi, :translation_en, :context,
                 :source, :topic, :difficulty, :pronunciation, :part_of_speech,
-                :definition_en, :wiki_summary
+                :definition_en, :wiki_summary, :explanation_vi
             )
             RETURNING id, user_id, word, translation_vi, translation_en, context,
                       source, topic, difficulty, pronunciation, part_of_speech,
-                      definition_en, wiki_summary, created_at, review_count,
-                      ease_factor, interval_days
+                      definition_en, wiki_summary, explanation_vi, mastery_box, created_at,
+                      review_count, ease_factor, interval_days
         """)
 
         try:
-            result = await self.db.execute(query, {
-                "user_id": str(user_id),
-                "word": word,
-                "translation_vi": translation_vi,
-                "translation_en": translation_en,
-                "context": context,
-                "source": source,
-                "topic": topic,
-                "difficulty": difficulty,
-                "pronunciation": pronunciation,
-                "part_of_speech": part_of_speech,
-                "definition_en": definition_en,
-                "wiki_summary": wiki_summary,
-            })
+            result = await self.db.execute(
+                query,
+                {
+                    "user_id": str(user_id),
+                    "word": word,
+                    "translation_vi": translation_vi,
+                    "translation_en": translation_en,
+                    "context": context,
+                    "source": source,
+                    "topic": topic,
+                    "difficulty": difficulty,
+                    "pronunciation": pronunciation,
+                    "part_of_speech": part_of_speech,
+                    "definition_en": definition_en,
+                    "wiki_summary": wiki_summary,
+                    "explanation_vi": explanation_vi,
+                },
+            )
             row = result.fetchone()
             await self.db.commit()
             return dict(row._mapping) if row else None
@@ -85,15 +91,18 @@ class NotebookRepository:
         query = text("""
             SELECT id, user_id, word, translation_vi, translation_en, context,
                    source, topic, difficulty, pronunciation, part_of_speech,
-                   definition_en, wiki_summary, created_at, last_reviewed_at,
+                   definition_en, wiki_summary, explanation_vi, mastery_box, created_at, last_reviewed_at,
                    review_count, ease_factor, interval_days, next_review_at
             FROM notebook_entries
             WHERE id = :id AND user_id = :user_id
         """)
-        result = await self.db.execute(query, {
-            "id": str(entry_id),
-            "user_id": str(user_id),
-        })
+        result = await self.db.execute(
+            query,
+            {
+                "id": str(entry_id),
+                "user_id": str(user_id),
+            },
+        )
         row = result.fetchone()
         return dict(row._mapping) if row else None
 
@@ -102,12 +111,14 @@ class NotebookRepository:
         query = text("""
             SELECT id, user_id, word, translation_vi, translation_en, context,
                    source, topic, difficulty, pronunciation, part_of_speech,
-                   definition_en, wiki_summary, created_at, last_reviewed_at,
+                   definition_en, wiki_summary, explanation_vi, mastery_box, created_at, last_reviewed_at,
                    review_count, ease_factor, interval_days, next_review_at
             FROM notebook_entries
             WHERE user_id = :user_id AND LOWER(word) = LOWER(:word)
         """)
-        result = await self.db.execute(query, {"user_id": str(user_id), "word": word.strip()})
+        result = await self.db.execute(
+            query, {"user_id": str(user_id), "word": word.strip()}
+        )
         row = result.fetchone()
         return dict(row._mapping) if row else None
 
@@ -140,7 +151,9 @@ class NotebookRepository:
         where_clause = " AND ".join(conditions)
 
         # Count total
-        count_query = text(f"SELECT COUNT(*) FROM notebook_entries WHERE {where_clause}")
+        count_query = text(
+            f"SELECT COUNT(*) FROM notebook_entries WHERE {where_clause}"
+        )
         count_result = await self.db.execute(count_query, params)
         total = count_result.scalar()
 
@@ -152,7 +165,7 @@ class NotebookRepository:
         list_query = text(f"""
             SELECT id, user_id, word, translation_vi, translation_en, context,
                    source, topic, difficulty, pronunciation, part_of_speech,
-                   definition_en, wiki_summary, created_at, last_reviewed_at,
+                   definition_en, wiki_summary, explanation_vi, mastery_box, created_at, last_reviewed_at,
                    review_count, ease_factor, interval_days, next_review_at
             FROM notebook_entries
             WHERE {where_clause}
@@ -193,7 +206,7 @@ class NotebookRepository:
             WHERE id = :id AND user_id = :user_id
             RETURNING id, user_id, word, translation_vi, translation_en, context,
                       source, topic, difficulty, pronunciation, part_of_speech,
-                      definition_en, wiki_summary, created_at, last_reviewed_at,
+                      definition_en, wiki_summary, explanation_vi, mastery_box, created_at, last_reviewed_at,
                       review_count, ease_factor, interval_days, next_review_at
         """)
         result = await self.db.execute(query, params)
@@ -208,10 +221,13 @@ class NotebookRepository:
             WHERE id = :id AND user_id = :user_id
             RETURNING id
         """)
-        result = await self.db.execute(query, {
-            "id": str(entry_id),
-            "user_id": str(user_id),
-        })
+        result = await self.db.execute(
+            query,
+            {
+                "id": str(entry_id),
+                "user_id": str(user_id),
+            },
+        )
         row = result.fetchone()
         await self.db.commit()
         return row is not None
@@ -225,7 +241,7 @@ class NotebookRepository:
         query = text("""
             SELECT id, user_id, word, translation_vi, translation_en, context,
                    source, topic, difficulty, pronunciation, part_of_speech,
-                   definition_en, wiki_summary, created_at, last_reviewed_at,
+                   definition_en, wiki_summary, explanation_vi, mastery_box, created_at, last_reviewed_at,
                    review_count, ease_factor, interval_days, next_review_at
             FROM notebook_entries
             WHERE user_id = :user_id
@@ -235,10 +251,13 @@ class NotebookRepository:
               next_review_at ASC
             LIMIT :limit
         """)
-        result = await self.db.execute(query, {
-            "user_id": str(user_id),
-            "limit": limit,
-        })
+        result = await self.db.execute(
+            query,
+            {
+                "user_id": str(user_id),
+                "limit": limit,
+            },
+        )
         rows = result.fetchall()
         return [dict(row._mapping) for row in rows]
 
@@ -248,14 +267,30 @@ class NotebookRepository:
         user_id: UUID,
         quality: int,
     ) -> Optional[dict]:
-        """Submit review and update SM-2 values"""
+        """Submit review and update kid SM-2 (no-fail box ladder).
+
+        The SQL function enforces ownership via p_user_id — a mismatched
+        user raises NOTEBOOK_ENTRY_NOT_FOUND, surfaced here as None.
+        """
         query = text("""
-            SELECT update_sm2_review(:entry_id, :quality) AS result
+            SELECT update_sm2_review(:entry_id, :user_id, :quality) AS result
         """)
-        result = await self.db.execute(query, {
-            "entry_id": str(entry_id),
-            "quality": quality,
-        })
+        try:
+            result = await self.db.execute(
+                query,
+                {
+                    "entry_id": str(entry_id),
+                    "user_id": str(user_id),
+                    "quality": quality,
+                },
+            )
+            await self.db.commit()
+        except Exception as exc:
+            message = str(exc).split("\n")[0]
+            if "NOTEBOOK_ENTRY_NOT_FOUND" in message:
+                return None
+            raise
+
         row = result.fetchone()
 
         if not row:

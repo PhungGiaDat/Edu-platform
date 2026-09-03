@@ -2,6 +2,7 @@
 """
 Notebook Service - Business logic for Sổ tay
 """
+
 from typing import Optional, List, Tuple
 from uuid import UUID
 from datetime import datetime
@@ -34,15 +35,22 @@ class NotebookService:
         part_of_speech: Optional[str] = None,
         definition_en: Optional[str] = None,
         wiki_summary: Optional[str] = None,
+        explanation_vi: Optional[str] = None,
     ) -> dict:
         """Create a new notebook entry"""
         logger.info(f"[NotebookService] Creating entry for user {user_id}: {word}")
 
         assert_safe(word, field="word")
         assert_safe(translation_vi, field="translation_vi")
-        for optional, name in ((translation_en, "translation_en"), (context, "context"),
-                               (pronunciation, "pronunciation"), (part_of_speech, "part_of_speech"),
-                               (definition_en, "definition_en"), (wiki_summary, "wiki_summary")):
+        for optional, name in (
+            (translation_en, "translation_en"),
+            (context, "context"),
+            (pronunciation, "pronunciation"),
+            (part_of_speech, "part_of_speech"),
+            (definition_en, "definition_en"),
+            (wiki_summary, "wiki_summary"),
+            (explanation_vi, "explanation_vi"),
+        ):
             if optional:
                 assert_safe(optional, field=name)
 
@@ -59,6 +67,7 @@ class NotebookService:
             part_of_speech=part_of_speech,
             definition_en=definition_en,
             wiki_summary=wiki_summary,
+            explanation_vi=explanation_vi,
         )
 
         if entry:
@@ -67,19 +76,33 @@ class NotebookService:
         return entry
 
     async def get_or_create_entry(
-        self, user_id: UUID, word: str, translation_vi: str,
-        translation_en: Optional[str] = None, context: Optional[str] = None,
-        source: str = "manual", topic: Optional[str] = None,
-        difficulty: Optional[str] = None, pronunciation: Optional[str] = None,
-        part_of_speech: Optional[str] = None, definition_en: Optional[str] = None,
+        self,
+        user_id: UUID,
+        word: str,
+        translation_vi: str,
+        translation_en: Optional[str] = None,
+        context: Optional[str] = None,
+        source: str = "manual",
+        topic: Optional[str] = None,
+        difficulty: Optional[str] = None,
+        pronunciation: Optional[str] = None,
+        part_of_speech: Optional[str] = None,
+        definition_en: Optional[str] = None,
         wiki_summary: Optional[str] = None,
+        explanation_vi: Optional[str] = None,
     ) -> Tuple[dict, bool]:
         """Idempotent save: returns (entry, created). Duplicate word -> existing."""
         assert_safe(word, field="word")
         assert_safe(translation_vi, field="translation_vi")
-        for optional, name in ((translation_en, "translation_en"), (context, "context"),
-                               (pronunciation, "pronunciation"), (part_of_speech, "part_of_speech"),
-                               (definition_en, "definition_en"), (wiki_summary, "wiki_summary")):
+        for optional, name in (
+            (translation_en, "translation_en"),
+            (context, "context"),
+            (pronunciation, "pronunciation"),
+            (part_of_speech, "part_of_speech"),
+            (definition_en, "definition_en"),
+            (wiki_summary, "wiki_summary"),
+            (explanation_vi, "explanation_vi"),
+        ):
             if optional:
                 assert_safe(optional, field=name)
         existing = await self.repository.get_by_word(user_id, word)
@@ -87,11 +110,20 @@ class NotebookService:
             return existing, False
         try:
             entry = await self.repository.create(
-                user_id=user_id, word=word.strip(), translation_vi=translation_vi.strip(),
-                translation_en=translation_en, context=context, source=source,
-                topic=topic, difficulty=difficulty, pronunciation=pronunciation,
-                part_of_speech=part_of_speech, definition_en=definition_en,
-                wiki_summary=wiki_summary)
+                user_id=user_id,
+                word=word.strip(),
+                translation_vi=translation_vi.strip(),
+                translation_en=translation_en,
+                context=context,
+                source=source,
+                topic=topic,
+                difficulty=difficulty,
+                pronunciation=pronunciation,
+                part_of_speech=part_of_speech,
+                definition_en=definition_en,
+                wiki_summary=wiki_summary,
+                explanation_vi=explanation_vi,
+            )
         except IntegrityError:
             # A concurrent save of the same (user_id, word) beat us to the
             # insert. Refetch the winner and report it as NOT created; if it
@@ -138,14 +170,21 @@ class NotebookService:
     ) -> Optional[dict]:
         """Update entry fields"""
         # Safety gate on text fields
-        for key in ('word', 'translation_vi', 'translation_en', 'context',
-                    'pronunciation', 'part_of_speech',
-                    'definition_en', 'wiki_summary'):
+        for key in (
+            "word",
+            "translation_vi",
+            "translation_en",
+            "context",
+            "pronunciation",
+            "part_of_speech",
+            "definition_en",
+            "wiki_summary",
+        ):
             if key in fields and fields[key]:
                 assert_safe(str(fields[key]), field=key)
 
         # Strip string fields
-        for key in ['word', 'translation_vi', 'translation_en', 'context']:
+        for key in ["word", "translation_vi", "translation_en", "context"]:
             if key in fields and fields[key]:
                 fields[key] = fields[key].strip()
 
@@ -164,17 +203,15 @@ class NotebookService:
         entry_id: UUID,
         user_id: UUID,
         quality: int,
+        event_id: Optional[str] = None,
     ) -> Optional[dict]:
         """
-        Submit a review and update SM-2 values.
+        Submit a review and update the kid SM-2 (no-fail box ladder).
 
-        Quality ratings:
-        - 0: Complete blackout
-        - 1: Incorrect, but remembered upon seeing answer
-        - 2: Incorrect, but answer seemed easy to recall
-        - 3: Correct with serious difficulty
-        - 4: Correct with some hesitation
-        - 5: Perfect response
+        Kid semantics (ages 5-8):
+        - quality >= 3 ("know")  → mastery_box +1 (max 5), EF +0.05 (cap 2.2)
+        - quality < 3  ("relearn") → box UNCHANGED, EF unchanged, due tomorrow
+        There is no punishment path — boxes only ever go up.
         """
         logger.info(f"[NotebookService] Review: entry={entry_id}, quality={quality}")
 
@@ -182,7 +219,8 @@ class NotebookService:
 
         if entry:
             logger.info(
-                f"[NotebookService] Updated: ease_factor={entry['ease_factor']}, "
+                f"[NotebookService] Updated: box={entry.get('mastery_box')}, "
+                f"ease_factor={entry['ease_factor']}, "
                 f"interval={entry['interval_days']} days"
             )
 

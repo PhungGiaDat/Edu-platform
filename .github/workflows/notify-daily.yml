@@ -1,0 +1,34 @@
+name: Daily Kid Reminder Dispatch
+
+# Kid-friendly Web Push reminders — ONE invitation per day per child.
+# 10:00 UTC = 17:00 Asia/Ho_Chi_Minh (default preferred_hour).
+# Quiet hours (20:30-07:30) are enforced server-side by the dispatch endpoint.
+
+on:
+  schedule:
+    - cron: '0 10 * * *'
+  workflow_dispatch: {} # manual test trigger
+
+concurrency:
+  group: kid-reminder-dispatch
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    name: Send reminder pushes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call backend dispatch endpoint
+        run: |
+          HTTP_CODE=$(curl -s -o /tmp/dispatch.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Dispatch-Secret: ${{ secrets.NOTIFICATION_DISPATCH_SECRET }}" \
+            -d '{"dry_run": false}' \
+            "${{ secrets.BACKEND_BASE_URL }}/api/v1/notifications/internal/dispatch")
+          echo "HTTP ${HTTP_CODE}"
+          cat /tmp/dispatch.json || true
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::warning::Dispatch returned HTTP ${HTTP_CODE}"
+            exit 0  # non-fatal: a missed day is acceptable, never spam retries
+          fi

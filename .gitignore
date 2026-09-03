@@ -490,6 +490,13 @@ FodyWeavers.xsd
 .codex/npm-cache/
 .git-rewrite/
 
+# Project-local VieNeu review runtime and temporary media only.
+tools/vieneu-runtime/
+scratch/momo-tts-models/
+scratch/momo-vieneu-tmp/
+scratch/momo-vieneu-pip-cache/
+scratch/momo-content-staging/
+
 # 3D Models (hosted on Supabase, URLs in MongoDB)
 3DModels/
 
@@ -533,3 +540,7 @@ fix-*.diff
 
 # macOS junk
 .DS_Store
+
+# VAPID private keys (Web Push) — never commit
+**/vapid_private.pem
+*_vapid_tmp*
