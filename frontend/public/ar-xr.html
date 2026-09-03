@@ -395,17 +395,14 @@
             modelRot   = rot;
             modelScale = sc;
 
-            // Model stays in memory. Parent to targetAnchor when available, else scene.
-            // Target anchor is created after XR scene is acquired (in initXR).
-            // If targetAnchor exists, parent there; otherwise scene.
-            if (targetAnchor) {
-              targetAnchor.add(model);
-            } else {
-              // fallback: parent to scene until anchor is ready
-              if (scene) scene.add(model);
-            }
+            // Model stays in memory. Always go through reparentModelToAnchor()
+            // which handles: GLB pivot normalization + modelOffsetGroup parenting.
+            // Do NOT add directly to targetAnchor — bypasses normalization.
             loadedModel = model;
             modelLoadState = 'loaded';
+
+            // Always normalize pivot and parent correctly — even if anchor not ready yet
+            reparentModelToAnchor();
 
             sendARDebug('MODEL_LOAD_COMPLETE', {
               url,
@@ -495,7 +492,9 @@
       }
 
       // Attach model to anchor if not already
-      if (loadedModel.parent !== targetAnchor) {
+      // Must check against modelOffsetGroup (or targetAnchor if offset not yet created)
+      const expectedParent = modelOffsetGroup || targetAnchor;
+      if (loadedModel.parent !== expectedParent) {
         reparentModelToAnchor();
       }
 
@@ -569,10 +568,11 @@
 
       // FIX B: Normalize GLB pivot to bottom-center of bounding box
       // This makes model origin sit at the bottom-center of the geometry,
-      // so anchor origin = card surface = model bottom-center
+      // so anchor origin = card surface = model bottom-center.
+      // ONLY pivot correction goes on GLB — NO database config here.
       loadedModel.position.set(-center.x, -box.min.y, -center.z);
-      loadedModel.rotation.set(modelRot[0], modelRot[1], modelRot[2]);
-      loadedModel.scale.setScalar(modelScale);
+      loadedModel.rotation.set(0, 0, 0);
+      loadedModel.scale.setScalar(1);
 
       // FIX A: Log material info to confirm PBR lighting response
       const materialInfo = [];
@@ -610,9 +610,17 @@
       }
       parent.add(loadedModel);
 
+      // Apply DB config to modelOffsetGroup (NOT to GLB)
+      if (modelOffsetGroup) {
+        modelOffsetGroup.position.set(modelPos[0], modelPos[1], modelPos[2]);
+        modelOffsetGroup.rotation.set(modelRot[0], modelRot[1], modelRot[2]);
+        modelOffsetGroup.scale.setScalar(modelScale);
+      }
+
       sendARDebug('MODEL_REPARENTED', {
         parentName: parent.name,
-        localPosition: [loadedModel.position.x, loadedModel.position.y, loadedModel.position.z],
+        glbLocalPosition: [loadedModel.position.x, loadedModel.position.y, loadedModel.position.z],
+        offsetGroupPosition: modelOffsetGroup ? [modelOffsetGroup.position.x, modelOffsetGroup.position.y, modelOffsetGroup.position.z] : null,
         worldPosition: (() => { const v = new THREE.Vector3(); loadedModel.getWorldPosition(v); return [v.x,v.y,v.z]; })(),
       });
     }
