@@ -218,6 +218,7 @@
         lastAttachAttempt: 0,
         modelState: 'idle', // idle | loading | loaded | error
         modelLoadStart: 0,
+        pivotNormalized: false, // normalize pivot only once per model
       });
     }
 
@@ -450,22 +451,26 @@
       const model = instance?.model;
       if (!model || !instance.anchor) return;
 
-      const box = new THREE.Box3().setFromObject(model);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
+      // Normalize pivot only once — re-running Box3 on an already-transformed model
+      // produces different values on each found/lost cycle
+      if (!instance.pivotNormalized) {
+        const box = new THREE.Box3().setFromObject(model);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
 
-      // Bottom-center pivot normalization — unchanged algorithm
-      model.position.set(-center.x, -box.min.y, -center.z);
-      model.rotation.set(0, 0, 0);
-      model.scale.setScalar(1);
+        model.position.set(-center.x, -box.min.y, -center.z);
+        model.rotation.set(0, 0, 0);
+        model.scale.setScalar(1);
 
-      sendARDebug('MODEL_PIVOT_NORMALIZE', {
-        targetName: instance.config.qr_id,
-        bboxCenter: [center.x, center.y, center.z],
-        pivotCorrection: { x: -center.x, y: -box.min.y, z: -center.z },
-      });
+        instance.pivotNormalized = true;
+        sendARDebug('MODEL_PIVOT_NORMALIZE', {
+          targetName: instance.config.qr_id,
+          bboxCenter: [center.x, center.y, center.z],
+          pivotCorrection: { x: -center.x, y: -box.min.y, z: -center.z },
+        });
+      }
 
-      // Apply per-target config to offset group
+      // Apply per-target config to offset group (safe to re-apply — offset is deterministic config)
       const cfg = instance.config;
       if (instance.offsetGroup) {
         const pos = parseVector(cfg?.position, [0, 0, 0]);
@@ -476,9 +481,11 @@
         instance.offsetGroup.scale.setScalar(sc);
       }
 
-      // Reparent
-      if (model.parent) model.parent.remove(model);
-      (instance.offsetGroup || instance.anchor).add(model);
+      // Reparent if not already under correct parent
+      if (model.parent !== (instance.offsetGroup || instance.anchor)) {
+        model.parent?.remove(model);
+        (instance.offsetGroup || instance.anchor).add(model);
+      }
 
       sendARDebug('MODEL_REPARENTED', {
         targetName: instance.config.qr_id,
@@ -756,12 +763,19 @@
           { event: 'reality.imageupdated', process: ({detail}) => {
             if (!detail?.name) return;
             saveTargetPose(detail);
+
+            // Every tracked target updates its own anchor pose — no single-primary restriction
+            const instance = targetInstances.get(detail.name);
+            const pose = trackedTargets.get(detail.name);
+            if (instance && instance.anchor && pose) {
+              applyTargetPose(instance, pose);
+            }
+
             const now = Date.now();
             if (!realityImageUpdated._lastLog || now - realityImageUpdated._lastLog > 2000) {
               realityImageUpdated._lastLog = now;
               sendARDebug('IMAGE_UPDATED', { name: detail?.name });
             }
-            if (loadedModel && modelAttached && activeTargetName === detail.name) updateModelPose(detail);
           }},
           { event: 'reality.imagelost', process: ({detail}) => { sendARDebug('IMAGE_LOST', { name: detail?.name }); if (detail?.name) onTargetLost(detail.name); } },
         ],
@@ -778,10 +792,11 @@
 
       sendARDebug('XR_PIPELINE_READY', {});
 
-      // Configure ALL image targets
+      // Configure ALL image targets — disableWorldTracking reduces processing for
+      // image-target-only experiences (no surface/plane SLAM needed)
       const imageTargetData = targetDataList.map(t => ({ name: t.name, type: t.type || 'PLANAR', imagePath: t.imagePath, properties: t.properties || {}, metadata: t.metadata || {} }));
       sendARDebug('XR_TARGETS_REGISTER', { count: imageTargetData.length, targets: imageTargetData.map(t => t.name) });
-      XR8.XrController.configure({ imageTargetData });
+      XR8.XrController.configure({ disableWorldTracking: true, imageTargetData });
       sendARDebug('XR_TARGETS_CONFIGURED', { count: imageTargetData.length });
 
       const canvasEl = document.getElementById('camerafeed');
