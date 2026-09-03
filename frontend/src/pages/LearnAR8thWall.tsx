@@ -116,16 +116,6 @@ export const LearnAR8thWall: React.FC = () => {
   }, [syncTelegram]);
 
   // Debug: log phase changes
-  // Track when iframe src is set for timing delta
-  useEffect(() => {
-    if (!viewerSrc) return;
-    if (iframeTimingRef.current) {
-      iframeTimingRef.current.srcSet = Date.now();
-    } else {
-      iframeTimingRef.current = { srcSet: Date.now(), onLoad: 0, onError: 0 };
-    }
-  }, [viewerSrc]);
-
   useEffect(() => {
     console.log('[LearnAR8thWall] Phase changed to:', phase);
   }, [phase]);
@@ -347,6 +337,13 @@ export const LearnAR8thWall: React.FC = () => {
     params.set('debug', 'true');
     return `/ar-xr.html?${params.toString()}`;
   })();
+
+  // Track when viewerSrc is set — timing instrumentation after viewerSrc is initialized
+  useEffect(() => {
+    if (!viewerSrc) return;
+    iframeTimingRef.current = { srcSet: Date.now(), onLoad: 0, onError: 0 };
+    trace('VIEWER_SRC_SET', viewerSrc);
+  }, [viewerSrc]);
 
   // ========================================================================
   // RENDER
