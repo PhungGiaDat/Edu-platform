@@ -346,6 +346,7 @@
     let modelPos = [0, 0, -0.5];
     let modelRot = [0, 0, 0];
     let modelScale = 1;
+    let modelOffsetGroup = null; // backend offset group, child of targetAnchor
 
     function initThree() {
       // NOTE: scene/camera/renderer are NOT created here.
@@ -546,14 +547,74 @@
 
     function reparentModelToAnchor() {
       if (!loadedModel || !targetAnchor) return;
+
+      // Compute GLB bounding box for pivot normalization
+      const box = new THREE.Box3().setFromObject(loadedModel);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+
+      sendARDebug('MODEL_PIVOT_NORMALIZE', {
+        bboxMin: [box.min.x, box.min.y, box.min.z],
+        bboxMax: [box.max.x, box.max.y, box.max.z],
+        bboxCenter: [center.x, center.y, center.z],
+        bboxSize: [size.x, size.y, size.z],
+        pivotCorrection: {
+          x: -center.x,
+          y: -box.min.y,  // bottom-center: align bottom of model to anchor origin
+          z: -center.z,
+        },
+      });
+
+      // FIX B: Normalize GLB pivot to bottom-center of bounding box
+      // This makes model origin sit at the bottom-center of the geometry,
+      // so anchor origin = card surface = model bottom-center
+      loadedModel.position.set(-center.x, -box.min.y, -center.z);
+      loadedModel.rotation.set(modelRot[0], modelRot[1], modelRot[2]);
+      loadedModel.scale.setScalar(modelScale);
+
+      // FIX A: Log material info to confirm PBR lighting response
+      const materialInfo = [];
+      loadedModel.traverse((child) => {
+        if (!child.isMesh) return;
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach((m) => {
+          if (!m) return;
+          materialInfo.push({
+            mesh: child.name || child.uuid,
+            type: m.type || '',
+            hasMap: !!m.map,
+            hasNormalMap: !!m.normalMap,
+            hasEmissiveMap: !!m.emissiveMap,
+            metalness: m.metalness,
+            roughness: m.roughness,
+            color: m.color ? m.color.getHexString() : null,
+          });
+          sendARDebug('MODEL_MATERIAL_CHECK', {
+            mesh: child.name || child.uuid,
+            type: m.type || '',
+            hasMap: !!m.map,
+            hasNormalMap: !!m.normalMap,
+            metalness: m.metalness,
+            roughness: m.roughness,
+          });
+        });
+      });
+      logToBuffer('info', 'MODEL_MATERIALS_LOGGED', { meshCount: materialInfo.length });
+
+      // Reparent to modelOffsetGroup if available, otherwise directly to targetAnchor
+      const parent = modelOffsetGroup || targetAnchor;
       if (loadedModel.parent) {
         loadedModel.parent.remove(loadedModel);
       }
-      targetAnchor.add(loadedModel);
-      // Ensure local transform matches backend config
-      loadedModel.position.set(modelPos[0], modelPos[1], modelPos[2]);
-      loadedModel.rotation.set(modelRot[0], modelRot[1], modelRot[2]);
-      loadedModel.scale.setScalar(modelScale);
+      parent.add(loadedModel);
+
+      sendARDebug('MODEL_REPARENTED', {
+        parentName: parent.name,
+        localPosition: [loadedModel.position.x, loadedModel.position.y, loadedModel.position.z],
+        worldPosition: (() => { const v = new THREE.Vector3(); loadedModel.getWorldPosition(v); return [v.x,v.y,v.z]; })(),
+      });
     }
 
     // ========== LOAD TARGET JSON FROM SUPABASE ==========
@@ -884,6 +945,39 @@
           targetAnchor = new THREE.Group();
           targetAnchor.name = `target-anchor:${qrId}`;
           scene.add(targetAnchor);
+
+          // FIX 2: Add lighting to XR scene
+          // Without lights, MeshStandardMaterial renders as black silhouette
+          const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
+          hemi.name = 'hemi-light';
+          scene.add(hemi);
+          const key = new THREE.DirectionalLight(0xffffff, 2.5);
+          key.name = 'key-light';
+          key.position.set(1, 2, 2);
+          scene.add(key);
+          const fill = new THREE.DirectionalLight(0xffffff, 0.8);
+          fill.name = 'fill-light';
+          fill.position.set(-2, 0, -1);
+          scene.add(fill);
+
+          logToBuffer('info', 'SCENE_LIGHTS_ADDED', {
+            sceneChildren: scene.children.length,
+            lightCount: scene.children.filter(c => c.isLight).length,
+          });
+          sendARDebug('SCENE_LIGHTS_ADDED', {
+            sceneChildren: scene.children.length,
+            lightCount: scene.children.filter(c => c.isLight).length,
+          });
+
+          // Create modelOffsetGroup as child of anchor
+          // Separates tracking pose (targetAnchor) from backend config (modelOffsetGroup)
+          modelOffsetGroup = new THREE.Group();
+          modelOffsetGroup.name = `model-offset:${qrId}`;
+          targetAnchor.add(modelOffsetGroup);
+          sendARDebug('MODEL_OFFSET_GROUP_CREATED', {
+            groupName: modelOffsetGroup.name,
+          });
+
           logToBuffer('info', 'TARGET_ANCHOR_CREATED', {
             anchorName: targetAnchor.name,
             parentIsXRScene: true,
@@ -894,7 +988,7 @@
             parentIsXRScene: true,
           });
 
-          // If model already loaded, parent to anchor
+          // If model already loaded, parent to modelOffsetGroup
           if (loadedModel) {
             reparentModelToAnchor();
           }
