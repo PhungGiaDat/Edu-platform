@@ -80,6 +80,50 @@ export const LearnAR8thWall: React.FC = () => {
     ensureLink('prefetch', '/ar-xr.html');
   }, []);
 
+  // ========== LESSON MODEL PRELOAD (runs once on mount) ==========
+  // Preload primary AR model as soon as page opens — before QR scan.
+  useEffect(() => {
+    const warmARModel = (url: string, priority: 'current' | 'next') => {
+      if (!url) return;
+      const id = `ar-model-warm:${url}`;
+      if (document.querySelector(`link[data-ar-model-warm="${id.replace(/"/g, '\\"')}"]`)) return;
+      const link = document.createElement('link');
+      link.rel = priority === 'current' ? 'preload' : 'prefetch';
+      link.as = 'fetch';
+      link.href = url;
+      link.crossOrigin = 'anonymous';
+      link.dataset.arModelWarm = id;
+      document.head.appendChild(link);
+    };
+
+    let cancelled = false;
+
+    const preloadLesson = async () => {
+      try {
+        const deckId = deckIdRef.current || 'claymorphic-animals-001';
+        const res = await fetch(`${API_BASE}/api/v1/decks/${deckId}/ar-preload`);
+        if (!res.ok || cancelled) return;
+        const manifest = await res.json();
+        const primaryUrl = manifest.primary?.model_3d_url;
+        if (primaryUrl) {
+          warmARModel(primaryUrl, 'current');
+          trace('LESSON_MODEL_PRELOAD', manifest.primary.qr_id || 'primary');
+        }
+        const nextUrl = manifest.next?.[0]?.model_3d_url;
+        if (nextUrl) warmARModel(nextUrl, 'next');
+      } catch {
+        // Optimization only — AR still works without manifest endpoint
+        const FALLBACK_MODEL =
+          'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/3dmodel/ragdollcat_mobile_v1.glb';
+        warmARModel(FALLBACK_MODEL, 'current');
+        trace('LESSON_MODEL_PRELOAD', 'fallback');
+      }
+    };
+
+    preloadLesson();
+    return () => { cancelled = true; };
+  }, []);
+
   // Viewer iframe ref
   const viewerRef = useRef<HTMLIFrameElement>(null);
 
