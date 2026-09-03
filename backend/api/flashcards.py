@@ -196,6 +196,43 @@ async def get_xr_targets_by_deck(
     }
 
 
+@router.get("/ar-preload/deck/{deck_id}")
+async def get_ar_preload_manifest(
+    deck_id: str,
+    ar_service: ARService = Depends(get_ar_service)
+):
+    """
+    Lightweight manifest endpoint for frontend AR model preloading.
+
+    Returns the same data as get_xr_targets_by_deck but with a primary/next split
+    designed for preload prioritization. Reuses existing ARService method.
+
+    Response shape:
+        {
+            "deck_id": <str>,
+            "primary": <first target dict>,   # entry card for preload HIGH
+            "next":   <remaining targets>,   # candidate for prefetch LOW
+            "targets": <all targets>
+        }
+    """
+    logger.info(f"[API] GET /flashcard/ar-preload/deck/{deck_id}")
+
+    targets = await ar_service.get_xr_targets_for_deck(deck_id)
+
+    if not targets:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No AR targets found for deck: {deck_id}",
+        )
+
+    return {
+        "deck_id": deck_id,
+        "primary": targets[0],
+        "next": targets[1:],
+        "targets": targets,
+    }
+
+
 @router.get("/{qr_id}/xr-urls")
 async def get_ar_experience_with_xr_urls(
     qr_id: str,

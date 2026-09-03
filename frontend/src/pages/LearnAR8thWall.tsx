@@ -101,22 +101,35 @@ export const LearnAR8thWall: React.FC = () => {
     const preloadLesson = async () => {
       try {
         const deckId = deckIdRef.current || 'claymorphic-animals-001';
-        const res = await fetch(`${API_BASE}/api/v1/decks/${deckId}/ar-preload`);
-        if (!res.ok || cancelled) return;
+        // Fixed URL: /flashcard/ar-preload/deck/{deck_id} (not /decks/{deckId}/ar-preload)
+        const res = await fetch(`${API_BASE}/api/v1/flashcard/ar-preload/deck/${deckId}`);
+        if (cancelled) return;
+
+        // non-2xx also triggers fallback — don't silently skip preload
+        if (!res.ok) {
+          const FALLBACK_MODEL =
+            'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/3dmodel/ragdollcat_mobile_v1.glb';
+          warmARModel(FALLBACK_MODEL, 'current');
+          trace('LESSON_MODEL_PRELOAD', 'fallback');
+          return;
+        }
+
         const manifest = await res.json();
         const primaryUrl = manifest.primary?.model_3d_url;
         if (primaryUrl) {
           warmARModel(primaryUrl, 'current');
           trace('LESSON_MODEL_PRELOAD', manifest.primary.qr_id || 'primary');
         }
-        const nextUrl = manifest.next?.[0]?.model_3d_url;
-        if (nextUrl) warmARModel(nextUrl, 'next');
+        // DON'T preload secondary models yet — protect entry-card bandwidth.
+        // Fish (34 MB) must not compete with CAT (20 MB) on page open.
+        // Secondary models are prefetched after CAT visible instead.
       } catch {
-        // Optimization only — AR still works without manifest endpoint
-        const FALLBACK_MODEL =
-          'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/3dmodel/ragdollcat_mobile_v1.glb';
-        warmARModel(FALLBACK_MODEL, 'current');
-        trace('LESSON_MODEL_PRELOAD', 'fallback');
+        if (!cancelled) {
+          const FALLBACK_MODEL =
+            'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/3dmodel/ragdollcat_mobile_v1.glb';
+          warmARModel(FALLBACK_MODEL, 'current');
+          trace('LESSON_MODEL_PRELOAD', 'fallback');
+        }
       }
     };
 
@@ -295,21 +308,20 @@ export const LearnAR8thWall: React.FC = () => {
         document.head.appendChild(link);
       }
 
-      // Preload primary model only (Milestone 1)
+      // Preload primary model — always inject <link>, don't skip on stale DOM check.
+      // If request is still in-flight from preloadLesson, browser deduplicates.
+      // If cache was evicted, we re-preload rather than silently miss.
       if (primary.model_3d_url) {
         const url = primary.model_3d_url;
-        const key = `ar-model-${url}`;
-        if (!document.querySelector(`[data-preload="${key}"]`)) {
-          const link = document.createElement('link');
-          link.rel = 'preload';
-          link.as = 'fetch';
-          link.href = url;
-          link.crossOrigin = 'anonymous';
-          link.dataset.preload = key;
-          link.dataset.arModel = url;
-          document.head.appendChild(link);
-          trace('MODEL_PRELOAD', url);
-        }
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'fetch';
+        link.href = url;
+        link.crossOrigin = 'anonymous';
+        link.dataset.arModel = url;
+        link.dataset.preloadAttempt = String(Date.now());
+        document.head.appendChild(link);
+        trace('MODEL_PRELOAD', url);
       }
 
       setCurrentTarget(primary);

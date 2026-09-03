@@ -883,7 +883,7 @@
     async function loadComboRules() {
       try {
         const deck = params.get('deck_id') || 'claymorphic-animals-001';
-        const url = `https://edu-platform-api-do20.onrender.com/api/v1/combinations/rules?flashcard_set=${encodeURIComponent(deck)}`;
+        const url = `https://edu-platform-api-do20.onrender.com/api/v1/combos/rules?flashcard_set=${encodeURIComponent(deck)}`;
         const res = await fetch(url);
         if (res.ok) { comboRules = (await res.json()).rules || []; sendARDebug('COMBO_RULE_LOAD_COMPLETE', { count: comboRules.length }); }
         else sendARDebug('COMBO_RULE_LOAD_ERROR', { status: res.status });
