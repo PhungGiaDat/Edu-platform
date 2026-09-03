@@ -347,6 +347,7 @@
     // Only declare here; assigned after XR8 bootstraps
     let scene = null, camera = null, renderer = null;
     let loadedModel = null, mixer = null;
+    let modelWaitingForXRScene = false;
     let modelPos = [0, 0, -0.5];
     let modelRot = [0, 0, 0];
     let modelScale = 1;
@@ -402,14 +403,25 @@
             modelRot   = rot;
             modelScale = sc;
 
-            // Model stays in memory. Always go through reparentModelToAnchor()
-            // which handles: GLB pivot normalization + modelOffsetGroup parenting.
-            // Do NOT add directly to targetAnchor — bypasses normalization.
+            // Model stays in memory. Only finalize hierarchy when XR scene is ready.
+            // If XR scene already acquired, attach immediately.
+            // If not yet (warm cache path), defer until tryAcquireXRAuthoring() fires.
             loadedModel = model;
             modelLoadState = 'loaded';
 
-            // Always normalize pivot and parent correctly — even if anchor not ready yet
-            reparentModelToAnchor();
+            if (scene && targetAnchor && modelOffsetGroup) {
+              // Cold path: XR scene already ready
+              reparentModelToAnchor();
+              modelWaitingForXRScene = false;
+            } else {
+              // Warm path: model loaded before XR scene — deferred in tryAcquireXRAuthoring()
+              modelWaitingForXRScene = true;
+              sendARDebug('MODEL_WAITING_FOR_XR_SCENE', {
+                hasScene: !!scene,
+                hasTargetAnchor: !!targetAnchor,
+                hasModelOffsetGroup: !!modelOffsetGroup,
+              });
+            }
 
             sendARDebug('MODEL_LOAD_COMPLETE', {
               url,
@@ -422,7 +434,9 @@
                 max: [box.max.x, box.max.y, box.max.z],
                 size: [size.x, size.y, size.z],
               },
-              sceneChildren: scene.children.length,
+              sceneChildren: scene?.children?.length || 0,
+              xrSceneReady: !!scene,
+              waitingForXRScene: modelWaitingForXRScene,
             });
 
             // Animations
@@ -521,14 +535,18 @@
       if (now - lastAttachAttempt < 500) return;
       lastAttachAttempt = now;
 
-      // Create anchor group if not yet created
-      if (!targetAnchor) {
-        targetAnchor = new THREE.Group();
-        scene.add(targetAnchor);
+      // Anchor hierarchy is created ONLY by XR scene lifecycle, not here.
+      // If XR scene not ready yet, defer.
+      if (!scene || !targetAnchor || !modelOffsetGroup) {
+        sendARDebug('MODEL_ATTACH_DEFERRED', {
+          hasScene: !!scene,
+          hasTargetAnchor: !!targetAnchor,
+          hasModelOffsetGroup: !!modelOffsetGroup,
+        });
+        return;
       }
 
       // Attach model to anchor if not already
-      // Must check against modelOffsetGroup (or targetAnchor if offset not yet created)
       const expectedParent = modelOffsetGroup || targetAnchor;
       if (loadedModel.parent !== expectedParent) {
         reparentModelToAnchor();
@@ -1035,6 +1053,16 @@
           // If model already loaded, parent to modelOffsetGroup
           if (loadedModel) {
             reparentModelToAnchor();
+            modelWaitingForXRScene = false;
+            sendARDebug('MODEL_XR_SCENE_READY', {
+              modelName: loadedModel.name || qrId,
+              parentName: loadedModel.parent?.name || null,
+            });
+
+            // Edge case: target was detected before model hierarchy was ready
+            if (trackedTargets.size > 0 && !modelAttached) {
+              attemptModelAttach(Array.from(trackedTargets.keys())[0]);
+            }
           }
 
           xrSceneAcquired = true;
