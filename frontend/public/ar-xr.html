@@ -1,52 +1,36 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>8th Wall AR - Claymorphic Flashcards</title>
 
-  <!-- Preconnect to asset hosts — warms DNS/TCP/TLS before resources load -->
   <link rel="preconnect" href="https://rofprrtoeyirssfndxag.supabase.co" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
-  <!-- Eruda Debug Console -->
   <script>
     var xrDebugParams = new URLSearchParams(location.search);
-    // Enable eruda when debug=true OR eruda=true OR localhost
     if (xrDebugParams.get('eruda') === 'true' || xrDebugParams.get('debug') === 'true' || location.hostname === 'localhost') {
       (function() {
         var s = document.createElement('script');
         s.src = 'https://cdn.jsdelivr.net/npm/eruda@3';
-        s.onload = function() { eruda.init({
-          defaults: { displaySize: 30, transparency: 0.8 },
-          useShadowDom: true
-        }); };
+        s.onload = function() { eruda.init({ defaults: { displaySize: 30, transparency: 0.8 }, useShadowDom: true }); };
         document.head.appendChild(s);
       })();
     }
   </script>
 
-  <!-- Console capture bridge — sends logs to parent AR_DEBUG channel.
-       Installed EARLY (before module script) so we capture errors even
-       if the module fails to load on Safari iOS. -->
   <script>
     (function installViewerDebugBridge() {
       var params = new URLSearchParams(location.search);
       if (params.get('debug') !== 'true' && location.hostname !== 'localhost') return;
 
-      // Fire a beacon immediately — proves the iframe JS context is alive
-      // even if everything below fails.
       try {
         window.parent.postMessage({
           type: 'AR_DEBUG',
           payload: {
             label: 'VIEWER_JS_ALIVE',
-            details: {
-              ts: Date.now(),
-              href: location.href,
-              ua: navigator.userAgent.substring(0, 80),
-              moduleSupported: 'no-modules' in HTMLScriptElement.prototype,
-            },
+            details: { ts: Date.now(), href: location.href, ua: navigator.userAgent.substring(0, 80) },
             source: 'ar-viewer-console',
           },
           timestamp: Date.now(),
@@ -70,41 +54,25 @@
           try {
             if (value instanceof Error) return value.stack || value.message;
             return typeof value === 'object' ? JSON.stringify(value) : String(value);
-          } catch (_) {
-            return String(value);
-          }
+          } catch (_) { return String(value); }
         }).join(' ').slice(0, 4000);
       }
 
       ['error', 'warn', 'log', 'info'].forEach(function(level) {
         var original = console[level].bind(console);
         console[level] = function() {
-          try {
-            sendDebug('VIEWER_CONSOLE_' + level.toUpperCase(), {
-              level: level,
-              text: serialise(arguments),
-              engine: '8th-wall'
-            });
-          } catch (_) {}
+          try { sendDebug('VIEWER_CONSOLE_' + level.toUpperCase(), { level: level, text: serialise(arguments), engine: '8th-wall' }); } catch (_) {}
           return original.apply(console, arguments);
         };
       });
 
       window.addEventListener('error', function(event) {
-        sendDebug('VIEWER_UNCAUGHT_ERROR', {
-          level: 'error',
-          text: String(event.message || event.error || 'Unknown viewer error'),
-          url: event.filename,
-          line: event.lineno,
-        });
+        sendDebug('VIEWER_UNCAUGHT_ERROR', { level: 'error', text: String(event.message || event.error || 'Unknown'), url: event.filename, line: event.lineno });
       }, true);
 
       window.addEventListener('unhandledrejection', function(event) {
         var reason = event.reason;
-        sendDebug('VIEWER_UNHANDLED_REJECTION', {
-          level: 'error',
-          text: reason instanceof Error ? (reason.stack || reason.message) : String(reason),
-        });
+        sendDebug('VIEWER_UNHANDLED_REJECTION', { level: 'error', text: reason instanceof Error ? (reason.stack || reason.message) : String(reason) });
       });
 
       console.info('[ar-xr] Debug bridge installed');
@@ -114,111 +82,52 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: system-ui, sans-serif; }
-
     #canvas-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
     #camerafeed { display: block; width: 100%; height: 100%; }
-    #model-canvas {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-    }
-
-    #overlay {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: rgba(0,0,0,0.9); color: #fff;
-      z-index: 100; transition: opacity 0.3s ease;
-    }
+    #model-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    #overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); color: #fff; z-index: 100; transition: opacity 0.3s ease; }
     #overlay.hidden { opacity: 0; pointer-events: none; }
-
-    .spinner {
-      width: 50px; height: 50px;
-      border: 4px solid rgba(255,255,255,0.15);
-      border-top-color: #4ecdc4;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 20px;
-    }
+    .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.15); border-top-color: #4ecdc4; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
     #loading-text { font-size: 18px; margin-bottom: 8px; text-align: center; }
     #hint-text { font-size: 14px; opacity: 0.6; text-align: center; }
     #error-text { color: #FF6B6B; font-size: 14px; margin-top: 16px; text-align: center; max-width: 280px; }
-
-    #card-label {
-      position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.7); color: #fff;
-      padding: 8px 20px; border-radius: 20px;
-      font-size: 18px; font-weight: 600;
-      z-index: 50; pointer-events: none;
-      opacity: 0; transition: opacity 0.3s ease;
-    }
+    #card-label { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: 600; z-index: 50; pointer-events: none; opacity: 0; transition: opacity 0.3s ease; }
     #card-label.visible { opacity: 1; }
-
-    #debug-panel {
-      position: absolute; top: 10px; left: 10px;
-      background: rgba(0,0,0,0.75); color: #0f0;
-      padding: 8px 12px; border-radius: 8px; font-size: 11px;
-      font-family: monospace; z-index: 200;
-      display: none;
-    }
+    #debug-panel { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.75); color: #0f0; padding: 8px 12px; border-radius: 8px; font-size: 11px; font-family: monospace; z-index: 200; display: none; }
   </style>
 </head>
 <body>
   <div id="canvas-container">
-    <!-- 8th Wall self-hosted binary auto-discovers canvas with id="camerafeed" -->
     <canvas id="camerafeed"></canvas>
-    <!-- model-canvas: kept in DOM (legacy) — no longer used for rendering.
-         XR8.Threejs.pipelineModule() now owns all rendering. -->
     <canvas id="model-canvas"></canvas>
   </div>
-
   <div id="overlay">
     <div class="spinner"></div>
     <div id="loading-text">Loading 8th Wall Engine...</div>
     <div id="hint-text">Point camera at flashcard</div>
     <div id="error-text"></div>
   </div>
-
   <div id="card-label"></div>
-
   <div id="debug-panel">
     <div id="debug-status">Initializing...</div>
     <div id="debug-engine">Engine: 8th Wall (self-hosted)</div>
   </div>
 
-  <!-- Self-hosted 8th Wall Engine (no AppKey needed) -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js"
-    async
-    crossorigin="anonymous"
-    data-preload-chunks="slam"
-  ></script>
+  <script src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js" async crossorigin="anonymous"></script>
 
-  <!-- Three.js importmap -->
   <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/"
-      }
-    }
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/" } }
   </script>
 
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-
-    // 8th Wall Threejs.pipelineModule() looks for window.THREE — ES import doesn't set global
     window.THREE = THREE;
 
-    // ========== RUNTIME DIAGNOSTICS (Phase 0) ==========
+    // ========== RUNTIME DIAGNOSTICS ==========
     const RuntimeDiagnostics = {
       xrRunCount: 0,
-      sceneInitCount: 0,
-      modelLoadCount: 0,
-      xrSceneObtained: false,
-
       assert(condition, label) {
         if (!condition) {
           const msg = `[RUNTIME_INVARIANT VIOLATED] ${label}`;
@@ -226,110 +135,109 @@
           sendMessage('XR_ERROR', { message: msg, stage: 'invariant' });
         }
       },
-
-      assertTHREE() {
-        this.assert(window.THREE === THREE, 'window.THREE === THREE');
-        this.assert(window.THREE !== undefined, 'window.THREE !== undefined');
-      },
     };
 
     // ========== LOGGING BUFFER ==========
     const MAX_LOG_BUFFER = 500;
     const logBuffer = [];
-
     function logToBuffer(level, message, details = null) {
       const timestamp = new Date().toISOString().substring(11, 23);
       const entry = { timestamp, level, message, details };
       logBuffer.push(entry);
-      if (logBuffer.length > MAX_LOG_BUFFER) {
-        logBuffer.shift();
-      }
-
-      // Also log to console
+      if (logBuffer.length > MAX_LOG_BUFFER) logBuffer.shift();
       const prefix = `[${timestamp}]`;
-      if (details) {
-        console.log(prefix, `[${level.toUpperCase()}]`, message, details);
-      } else {
-        console.log(prefix, `[${level.toUpperCase()}]`, message);
-      }
+      if (details) console.log(prefix, `[${level.toUpperCase()}]`, message, details);
+      else console.log(prefix, `[${level.toUpperCase()}]`, message);
     }
 
-    // Public API for MobileDebug integration
-    window.XRDebug = {
-      getLogs: () => {
-        return logBuffer.map(e => {
-          const details = e.details ? ` ${JSON.stringify(e.details)}` : '';
-          return `${e.timestamp} [${e.level.toUpperCase()}] ${e.message}${details}`;
-        }).join('\n');
-      },
-      logBuffer: logBuffer,
-    };
+    window.XRDebug = { getLogs: () => logBuffer.map(e => { const details = e.details ? ` ${JSON.stringify(e.details)}` : ''; return `${e.timestamp} [${e.level.toUpperCase()}] ${e.message}${details}`; }).join('\n'), logBuffer };
 
     // ========== PARAMS FROM URL ==========
     const params = new URLSearchParams(location.search);
     const qrId           = params.get('qr_id') || '';
     const modelUrl       = params.get('model_3d_url') || '';
-    const targetJsonUrl   = params.get('xr_target_json_url') || '';
-    const targetImageUrl  = params.get('xr_target_image_url') || '';
-    const word            = params.get('word') || qrId;
-    const isDebug         = location.hostname === 'localhost' || params.get('debug') === 'true';
+    const targetJsonUrl  = params.get('xr_target_json_url') || '';
+    const targetImageUrl = params.get('xr_target_image_url') || '';
+    const word           = params.get('word') || qrId;
+    const isDebug        = location.hostname === 'localhost' || params.get('debug') === 'true';
 
     // ========== BOOTSTRAP STATE (must exist before any sendARDebug call) ==========
-    // IMPORTANT: currentPhase and xrTargetConfigs MUST be initialized before
-    // sendARDebug() is called — otherwise Safari throws TDZ ReferenceError.
     let currentPhase = 'initializing';
     let xrTargetConfigs = [];
 
-    // ========== MULTI-TARGET CONFIG PARSING (Milestone 1) ==========
-    // Parse xr_targets from URL param (set by LearnAR8thWall for multi-target tracking).
-    // Falls back to single-target from legacy params for backward compatibility.
+    // ========== PER-TARGET INSTANCE STATE ==========
+    // One entry per tracked QR code. scene/camera/renderer stay singletons (ONE XR scene).
+    const targetInstances = new Map();
+    // Primary target's singleton refs — used for the entry (scanned) target's model rendering
+    let loadedModel = null, mixer = null;
+    let targetAnchor = null, modelOffsetGroup = null;
+    let modelWaitingForXRScene = false;
+    let activeTargetName = null;
+
+    // Scene singletons — ONE XR scene, shared by all targets
+    let scene = null, camera = null, renderer = null;
+
+    // ========== MULTI-TARGET CONFIG PARSING ==========
     function parseXRTargetConfigs() {
       const raw = params.get('xr_targets');
       if (raw) {
         try {
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
-          }
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
         } catch (error) {
-          // EARLY BOOT: do not call sendARDebug yet — log to buffer instead
           logToBuffer('error', 'XR_TARGET_CONFIG_PARSE_ERROR', { error: String(error) });
         }
       }
-      // Backward-compatible single target from legacy params
       return [{
         qr_id: qrId,
         word: word,
         xr_target_json_url: targetJsonUrl,
         xr_target_image_url: targetImageUrl,
+        model_3d_url: modelUrl,
+        animations: null,
+        default_animation: null,
+        combo_animation: null,
+        position: null,
+        rotation: null,
+        scale: null,
       }];
     }
 
-    // Assign (not const) — xrTargetConfigs already declared above
     xrTargetConfigs = parseXRTargetConfigs();
-    const targetConfigByName = new Map(xrTargetConfigs.map(c => [c.qr_id, c]));
 
-    // Primary model target = the originally scanned QR ID
+    // Populate targetInstances Map for all tracked targets
+    for (const config of xrTargetConfigs) {
+      targetInstances.set(config.qr_id, {
+        config,
+        anchor: null,
+        offsetGroup: null,
+        model: null,
+        mixer: null,
+        tracked: false,
+        pose: null,
+        lastAttachAttempt: 0,
+        modelState: 'idle', // idle | loading | loaded | error
+        modelLoadStart: 0,
+      });
+    }
+
+    const targetConfigByName = new Map(xrTargetConfigs.map(c => [c.qr_id, c]));
     const primaryModelTargetName = qrId;
 
-    // Now safe to call sendARDebug — both currentPhase and xrTargetConfigs exist
     sendARDebug('XR_MULTI_CONFIG', {
       count: xrTargetConfigs.length,
       targets: xrTargetConfigs.map(t => t.qr_id),
     });
 
-    // DOM
-    const overlay     = document.getElementById('overlay');
-    const loadingText  = document.getElementById('loading-text');
-    const hintText     = document.getElementById('hint-text');
-    const errorText    = document.getElementById('error-text');
-    const cardLabel    = document.getElementById('card-label');
-    const debugPanel   = document.getElementById('debug-panel');
-    const debugStatus  = document.getElementById('debug-status');
-    const canvas       = document.getElementById('camerafeed');
-
+    // ========== DOM ==========
+    const overlay    = document.getElementById('overlay');
+    const loadingText = document.getElementById('loading-text');
+    const hintText    = document.getElementById('hint-text');
+    const errorText   = document.getElementById('error-text');
+    const cardLabel   = document.getElementById('card-label');
+    const debugPanel  = document.getElementById('debug-panel');
+    const debugStatus = document.getElementById('debug-status');
     if (isDebug) debugPanel.style.display = 'block';
-
     logToBuffer('info', 'ar-xr.html loaded', { qrId, isDebug });
 
     // ========== POST MESSAGE ==========
@@ -340,20 +248,14 @@
     // ========== AR_DEBUG MESSAGE ==========
     function sendARDebug(label, details = {}) {
       const debugPayload = {
-        label,
-        details,
-        source: 'ar-xr',
-        phase: currentPhase,
-        engine: '8th-wall',
-        qrId: qrId,
-        word: word,
-        xrTargetsCount: xrTargetConfigs.length,
+        label, details, source: 'ar-xr',
+        phase: currentPhase, engine: '8th-wall',
+        qrId, word, xrTargetsCount: xrTargetConfigs.length,
       };
       sendMessage('AR_DEBUG', debugPayload);
       logToBuffer('debug', label, details);
     }
 
-    // Phase tracking for AR_DEBUG messages
     function setPhase(phase) {
       const previousPhase = currentPhase;
       currentPhase = phase;
@@ -363,57 +265,44 @@
     function showOverlay(text, hint = '') {
       overlay.classList.remove('hidden');
       loadingText.textContent = text;
-      hintText.textContent   = hint;
-      errorText.textContent  = '';
+      hintText.textContent = hint;
+      errorText.textContent = '';
     }
-
-    function hideOverlay() {
-      overlay.classList.add('hidden');
-    }
-
-    function showError(msg) {
-      errorText.textContent = msg;
-      logToBuffer('error', 'Error shown to user', { message: msg });
-    }
-
-    function updateDebug(text) {
-      debugStatus.textContent = text;
-    }
-
+    function hideOverlay() { overlay.classList.add('hidden'); }
+    function showError(msg) { errorText.textContent = msg; logToBuffer('error', 'Error shown to user', { message: msg }); }
+    function updateDebug(text) { debugStatus.textContent = text; }
     function showCardLabel(name) {
       cardLabel.textContent = name;
       cardLabel.classList.add('visible');
       setTimeout(() => cardLabel.classList.remove('visible'), 3000);
     }
 
-    // ========== THREE.JS SCENE ==========
-    // scene/camera/renderer come from XR8.Threejs.xrScene() — acquired in initXR
-    // Only declare here; assigned after XR8 bootstraps
-    let scene = null, camera = null, renderer = null;
-    let loadedModel = null, mixer = null;
-    let modelWaitingForXRScene = false;
-    let modelPos = [0, 0, -0.5];
-    let modelRot = [0, 0, 0];
-    let modelScale = 1;
-    let modelOffsetGroup = null; // backend offset group, child of targetAnchor
+    // ========== UTILITIES ==========
+    function parseVector(str, fallback) {
+      if (!str) return fallback;
+      const parts = str.split(' ').map(Number);
+      return [parts[0] ?? fallback[0], parts[1] ?? fallback[1], parts[2] ?? fallback[2]];
+    }
+    function parseScale(str) {
+      if (!str) return 1;
+      const n = parseFloat(str.trim());
+      return isNaN(n) ? 1 : n;
+    }
 
+    // ========== THREE.JS STUB ==========
     function initThree() {
-      // NOTE: scene/camera/renderer are NOT created here.
-      // They are acquired from XR8.Threejs.xrScene() after XR bootstraps.
-      // Custom renderer removed — XR8.Threejs.pipelineModule() owns rendering.
       logToBuffer('info', 'Three.js stubs ready — scene/camera/renderer acquired from XR8');
     }
 
     // ========== MODEL LOADING ==========
     let modelLoadState = 'pending';
     let modelLoadProgressShown = false;
+    const modelPromiseCache = new Map();
 
-    function loadModel(url) {
-      modelLoadState = 'loading';
-      const startMark = `model-load-${url}`;
-      performance.mark(startMark);
-      sendARDebug('MODEL_LOAD_START', { url });
+    function loadModel(url, targetName) {
       const loadStartMs = performance.now();
+      sendARDebug('MODEL_LOAD_START', { url, targetName });
+      modelLoadState = 'loading';
 
       return new Promise((resolve, reject) => {
         const loader = new GLTFLoader();
@@ -421,117 +310,91 @@
           (gltf) => {
             const model = gltf.scene;
             model.visible = false;
+            model.name = targetName;
 
             // Claymorphic material
             model.traverse((child) => {
-              if (child.isMesh) {
-                child.castShadow    = true;
-                child.receiveShadow = true;
-              }
+              if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
             });
 
-            // Compute bounding box for debug
             const box = new THREE.Box3().setFromObject(model);
             const size = new THREE.Vector3();
             box.getSize(size);
 
-            // Apply position/rotation/scale from URL params
-            const pos = params.get('position')?.split(' ').map(Number) || [0, 0, -0.5];
-            const rot = params.get('rotation')?.split(' ').map(Number) || [0, 0, 0];
-            const sc  = parseFloat(params.get('scale') || '1');
+            // Get per-target config (defaults from URL params for primary)
+            const instance = targetInstances.get(targetName);
+            const cfg = instance?.config || {};
+            const pos = parseVector(cfg.position, [0, 0, -0.5]);
+            const rot = parseVector(cfg.rotation, [0, 0, 0]);
+            const sc  = parseScale(cfg.scale || params.get('scale') || '1');
+
             model.position.set(pos[0], pos[1], pos[2]);
             model.rotation.set(rot[0], rot[1], rot[2]);
             model.scale.setScalar(sc);
 
-            modelPos   = pos;
-            modelRot   = rot;
-            modelScale = sc;
+            // Attach model to the instance AND (for primary) to singleton globals
+            if (instance) {
+              instance.model = model;
+              instance.modelState = 'loaded';
+            }
+            if (targetName === primaryModelTargetName) {
+              loadedModel = model;
+            }
 
-            // Model stays in memory. Only finalize hierarchy when XR scene is ready.
-            // If XR scene already acquired, attach immediately.
-            // If not yet (warm cache path), defer until tryAcquireXRAuthoring() fires.
-            loadedModel = model;
             modelLoadState = 'loaded';
 
-            if (scene && targetAnchor && modelOffsetGroup) {
-              // Cold path: XR scene already ready
-              reparentModelToAnchor();
-              modelWaitingForXRScene = false;
-            } else {
-              // Warm path: model loaded before XR scene — deferred in tryAcquireXRAuthoring()
-              modelWaitingForXRScene = true;
-              sendARDebug('MODEL_WAITING_FOR_XR_SCENE', {
-                hasScene: !!scene,
-                hasTargetAnchor: !!targetAnchor,
-                hasModelOffsetGroup: !!modelOffsetGroup,
-              });
+            // Animations
+            let instanceMixer = null;
+            if (gltf.animations?.length > 0) {
+              instanceMixer = new THREE.AnimationMixer(model);
+              const defaultClip = gltf.animations.find(a => a.name.toUpperCase().includes('IDLE')) || gltf.animations[0];
+              instanceMixer.clipAction(defaultClip).play();
+              if (instance) instance.mixer = instanceMixer;
+              if (targetName === primaryModelTargetName) mixer = instanceMixer;
+              logToBuffer('info', 'Animations available', { targetName, animations: gltf.animations.map(a => a.name) });
             }
 
             sendARDebug('MODEL_LOAD_COMPLETE', {
-              url,
+              url, targetName,
               animations: gltf.animations?.map(a => a.name) || [],
-              position: pos,
-              rotation: rot,
-              scale: sc,
-              boundingBox: {
-                min: [box.min.x, box.min.y, box.min.z],
-                max: [box.max.x, box.max.y, box.max.z],
-                size: [size.x, size.y, size.z],
-              },
+              position: pos, rotation: rot, scale: sc,
+              boundingBox: { min: [box.min.x, box.min.y, box.min.z], max: [box.max.x, box.max.y, box.max.z], size: [size.x, size.y, size.z] },
               sceneChildren: scene?.children?.length || 0,
               xrSceneReady: !!scene,
-              waitingForXRScene: modelWaitingForXRScene,
+              isPrimary: targetName === primaryModelTargetName,
             });
 
-            // Animations
-            if (gltf.animations?.length > 0) {
-              mixer = new THREE.AnimationMixer(model);
-              const defaultClip = gltf.animations.find(a =>
-                a.name.toUpperCase().includes('IDLE')
-              ) || gltf.animations[0];
-              mixer.clipAction(defaultClip).play();
-              logToBuffer('info', 'Animations available', { animations: gltf.animations.map(a => a.name) });
-            }
-
-            // Network timing: separate download vs parse using performance.now()
+            // Network timing
             const totalMs = Math.round(performance.now() - loadStartMs);
-            let downloadMs = null;
-            let parseMs = null;
             try {
               const entries = performance.getEntriesByName(url);
               if (entries.length > 0) {
                 const last = entries[entries.length - 1];
-                downloadMs = Math.round(last.duration);
-                parseMs = totalMs - downloadMs;
-                sendARDebug('MODEL_NETWORK_TIMING', {
-                  url,
-                  totalMs,
-                  downloadMs,
-                  parseMs,
-                  transferSize: last.transferSize,
-                  encodedBodySize: last.encodedBodySize,
-                });
-              } else {
-                sendARDebug('MODEL_NETWORK_TIMING', {
-                  url,
-                  totalMs,
-                  fallback: true,
-                });
+                sendARDebug('MODEL_NETWORK_TIMING', { url, targetName, totalMs, downloadMs: Math.round(last.duration), parseMs: totalMs - Math.round(last.duration), transferSize: last.transferSize });
               }
             } catch (_) {
-              sendARDebug('MODEL_NETWORK_TIMING', { url, totalMs });
+              sendARDebug('MODEL_NETWORK_TIMING', { url, targetName, totalMs });
             }
 
-            // MODEL_ATTACH_START — model ready but not yet attached to any anchor
-            sendARDebug('MODEL_READY_NOT_ATTACHED', {
-              modelName: model.name || qrId,
-              hasTargetFound: trackedTargets.size > 0,
-              boundingBoxSize: [size.x, size.y, size.z],
-            });
+            // For primary target: handle XR scene readiness
+            if (targetName === primaryModelTargetName) {
+              if (scene && targetAnchor && modelOffsetGroup) {
+                reparentModelToAnchor(instance);
+                modelWaitingForXRScene = false;
+              } else {
+                modelWaitingForXRScene = true;
+                sendARDebug('MODEL_WAITING_FOR_XR_SCENE', { hasScene: !!scene, hasTargetAnchor: !!targetAnchor, hasModelOffsetGroup: !!modelOffsetGroup });
+              }
 
-            // If target already found, attach now
-            if (trackedTargets.size > 0) {
-              attemptModelAttach(Array.from(trackedTargets.keys())[0]);
+              sendARDebug('MODEL_READY_NOT_ATTACHED', {
+                modelName: model.name || targetName,
+                hasTargetFound: trackedTargets.size > 0,
+                boundingBoxSize: [size.x, size.y, size.z],
+              });
+
+              if (trackedTargets.size > 0) {
+                attemptModelAttach(Array.from(trackedTargets.keys())[0]);
+              }
             }
 
             resolve(model);
@@ -539,8 +402,8 @@
           (progress) => {
             if (progress.total && !modelLoadProgressShown) {
               const percent = Math.round(progress.loaded / progress.total * 100);
-              if (percent % 20 === 0) { // Log every 20%
-                sendARDebug('MODEL_LOAD_PROGRESS', { percent, loaded: progress.loaded, total: progress.total });
+              if (percent % 20 === 0) {
+                sendARDebug('MODEL_LOAD_PROGRESS', { targetName, url, percent, loaded: progress.loaded, total: progress.total });
                 modelLoadProgressShown = true;
                 setTimeout(() => { modelLoadProgressShown = false; }, 2000);
               }
@@ -549,65 +412,119 @@
           },
           (error) => {
             modelLoadState = 'error';
-            sendARDebug('MODEL_LOAD_ERROR', {
-              url,
-              name: error?.name || 'UnknownError',
-              message: error?.message || String(error),
-              stack: error?.stack || '',
-            });
-            logToBuffer('error', 'Model load failed', { error: String(error), stack: error?.stack });
+            if (instance) instance.modelState = 'error';
+            sendARDebug('MODEL_LOAD_ERROR', { url, targetName, name: error?.name || 'UnknownError', message: error?.message || String(error) });
+            logToBuffer('error', 'Model load failed', { targetName, error: String(error) });
             reject(error);
           }
         );
       });
     }
 
-    // ========== MODEL ATTACHMENT (separate from target detection) ==========
+    function ensureTargetModelLoaded(targetName) {
+      const instance = targetInstances.get(targetName);
+      if (!instance) return Promise.resolve(null);
+      if (instance.model || instance.modelState === 'loaded') return Promise.resolve(instance.model);
+      if (instance.modelState === 'loading') return new Promise(resolve => {
+        const check = setInterval(() => {
+          if (instance.modelState === 'loaded') { clearInterval(check); resolve(instance.model); }
+          if (instance.modelState === 'error')  { clearInterval(check); resolve(null); }
+        }, 50);
+      });
+
+      const modelCfgUrl = instance.config?.model_3d_url;
+      if (!modelCfgUrl) return Promise.resolve(null);
+
+      instance.modelState = 'loading';
+      instance.modelLoadStart = performance.now();
+      sendARDebug('TARGET_MODEL_LOAD_START', { targetName, url: modelCfgUrl });
+
+      if (!modelPromiseCache.has(modelCfgUrl)) {
+        modelPromiseCache.set(modelCfgUrl, loadModel(modelCfgUrl, targetName));
+      }
+      return modelPromiseCache.get(modelCfgUrl);
+    }
+
+    // ========== MODEL REPARENTING (instance-aware) ==========
+    function reparentModelToAnchor(instance) {
+      const model = instance?.model;
+      if (!model || !instance.anchor) return;
+
+      const box = new THREE.Box3().setFromObject(model);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+
+      // Bottom-center pivot normalization — unchanged algorithm
+      model.position.set(-center.x, -box.min.y, -center.z);
+      model.rotation.set(0, 0, 0);
+      model.scale.setScalar(1);
+
+      sendARDebug('MODEL_PIVOT_NORMALIZE', {
+        targetName: instance.config.qr_id,
+        bboxCenter: [center.x, center.y, center.z],
+        pivotCorrection: { x: -center.x, y: -box.min.y, z: -center.z },
+      });
+
+      // Apply per-target config to offset group
+      const cfg = instance.config;
+      if (instance.offsetGroup) {
+        const pos = parseVector(cfg?.position, [0, 0, 0]);
+        const rot = parseVector(cfg?.rotation, [0, 0, 0]);
+        const sc  = parseScale(cfg?.scale);
+        instance.offsetGroup.position.set(pos[0], pos[1], pos[2]);
+        instance.offsetGroup.rotation.set(rot[0], rot[1], rot[2]);
+        instance.offsetGroup.scale.setScalar(sc);
+      }
+
+      // Reparent
+      if (model.parent) model.parent.remove(model);
+      (instance.offsetGroup || instance.anchor).add(model);
+
+      sendARDebug('MODEL_REPARENTED', {
+        targetName: instance.config.qr_id,
+        parentName: (instance.offsetGroup || instance.anchor).name,
+        glbLocalPosition: [model.position.x, model.position.y, model.position.z],
+      });
+    }
+
+    // ========== POSE APPLICATION (instance-aware) ==========
+    function applyTargetPose(instance, pose) {
+      if (!instance?.anchor || !pose) return;
+      instance.anchor.position.set(pose.position.x, pose.position.y, pose.position.z);
+      instance.anchor.quaternion.set(pose.rotation.x, pose.rotation.y, pose.rotation.z, pose.rotation.w);
+      instance.anchor.scale.setScalar(pose.scale ?? 1);
+    }
+
+    // ========== MODEL ATTACHMENT (primary target only in Milestone 1) ==========
     let modelAttached = false;
     let lastAttachAttempt = 0;
 
     function attemptModelAttach(targetName) {
       if (modelAttached) return;
+      if (targetName !== primaryModelTargetName) return;
       if (!loadedModel) return;
-      if (!targetName) return;
 
       const target = trackedTargets.get(targetName);
       if (!target) return;
 
-      // Throttle attach attempts
       const now = Date.now();
       if (now - lastAttachAttempt < 500) return;
       lastAttachAttempt = now;
 
-      // Anchor hierarchy is created ONLY by XR scene lifecycle, not here.
-      // If XR scene not ready yet, defer.
-      if (!scene || !targetAnchor || !modelOffsetGroup) {
-        sendARDebug('MODEL_ATTACH_DEFERRED', {
-          hasScene: !!scene,
-          hasTargetAnchor: !!targetAnchor,
-          hasModelOffsetGroup: !!modelOffsetGroup,
-        });
+      const instance = targetInstances.get(targetName);
+      if (!instance) return;
+
+      if (!scene || !instance.anchor || !instance.offsetGroup) {
+        sendARDebug('MODEL_ATTACH_DEFERRED', { targetName, hasScene: !!scene, hasAnchor: !!instance.anchor, hasOffsetGroup: !!instance.offsetGroup });
         return;
       }
 
-      // Attach model to anchor if not already
-      const expectedParent = modelOffsetGroup || targetAnchor;
+      const expectedParent = instance.offsetGroup || instance.anchor;
       if (loadedModel.parent !== expectedParent) {
-        reparentModelToAnchor();
+        reparentModelToAnchor(instance);
       }
 
-      sendARDebug('MODEL_ATTACH_START', {
-        targetName,
-        targetPose: {
-          position: [target.position.x, target.position.y, target.position.z],
-          rotation: [target.rotation.x, target.rotation.y, target.rotation.z, target.rotation.w],
-          scale: target.scale,
-        },
-        modelLocalPosition: modelPos,
-      });
-
-      // Apply 8th Wall pose to anchor
-      applyTargetPose(target);
+      applyTargetPose(instance, target);
 
       activeTargetName = targetName;
       loadedModel.visible = true;
@@ -615,116 +532,39 @@
 
       const wp = new THREE.Vector3();
       loadedModel.getWorldPosition(wp);
-      sendARDebug('TARGET_POSE_APPLIED', {
-        targetName,
-        targetPosition: [target.position.x, target.position.y, target.position.z],
-        targetQuaternion: [target.rotation.x, target.rotation.y, target.rotation.z, target.rotation.w],
-        targetScale: target.scale,
-        modelWorldPosition: [wp.x, wp.y, wp.z],
-      });
-
       sendARDebug('MODEL_ATTACHED', {
         targetName,
         visible: true,
-        anchorPosition: [targetAnchor.position.x, targetAnchor.position.y, targetAnchor.position.z],
+        anchorPosition: [instance.anchor.position.x, instance.anchor.position.y, instance.anchor.position.z],
       });
-
-      sendARDebug('MODEL_VISIBLE', {
-        reason: 'anchor_attached',
-        targetName,
-      });
+      sendARDebug('MODEL_VISIBLE', { reason: 'anchor_attached', targetName });
     }
 
-    function applyTargetPose(target) {
-      if (!targetAnchor || !target) return;
-      targetAnchor.position.set(target.position.x, target.position.y, target.position.z);
-      targetAnchor.quaternion.set(target.rotation.x, target.rotation.y, target.rotation.z, target.rotation.w);
-      targetAnchor.scale.setScalar(target.scale);
-    }
+    // Periodic pose update for primary model
+    function updateModelPose(detail) {
+      if (!loadedModel || !modelAttached || activeTargetName !== detail.name) return;
+      const instance = targetInstances.get(detail.name);
+      if (!instance) return;
 
-    function reparentModelToAnchor() {
-      if (!loadedModel || !targetAnchor) return;
+      const p = detail.position, r = detail.rotation, s = detail.scale ?? 1;
+      if (!p || !r) return;
 
-      // Compute GLB bounding box for pivot normalization
-      const box = new THREE.Box3().setFromObject(loadedModel);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
-      const size = new THREE.Vector3();
-      box.getSize(size);
+      applyTargetPose(instance, { position: { x: p.x, y: p.y, z: p.z }, rotation: { x: r.x, y: r.y, z: r.z, w: r.w }, scale: s });
 
-      sendARDebug('MODEL_PIVOT_NORMALIZE', {
-        bboxMin: [box.min.x, box.min.y, box.min.z],
-        bboxMax: [box.max.x, box.max.y, box.max.z],
-        bboxCenter: [center.x, center.y, center.z],
-        bboxSize: [size.x, size.y, size.z],
-        pivotCorrection: {
-          x: -center.x,
-          y: -box.min.y,  // bottom-center: align bottom of model to anchor origin
-          z: -center.z,
-        },
-      });
-
-      // FIX B: Normalize GLB pivot to bottom-center of bounding box
-      // This makes model origin sit at the bottom-center of the geometry,
-      // so anchor origin = card surface = model bottom-center.
-      // ONLY pivot correction goes on GLB — NO database config here.
-      loadedModel.position.set(-center.x, -box.min.y, -center.z);
-      loadedModel.rotation.set(0, 0, 0);
-      loadedModel.scale.setScalar(1);
-
-      // FIX A: Log material info to confirm PBR lighting response
-      const materialInfo = [];
-      loadedModel.traverse((child) => {
-        if (!child.isMesh) return;
-        const mats = Array.isArray(child.material) ? child.material : [child.material];
-        mats.forEach((m) => {
-          if (!m) return;
-          materialInfo.push({
-            mesh: child.name || child.uuid,
-            type: m.type || '',
-            hasMap: !!m.map,
-            hasNormalMap: !!m.normalMap,
-            hasEmissiveMap: !!m.emissiveMap,
-            metalness: m.metalness,
-            roughness: m.roughness,
-            color: m.color ? m.color.getHexString() : null,
-          });
-          sendARDebug('MODEL_MATERIAL_CHECK', {
-            mesh: child.name || child.uuid,
-            type: m.type || '',
-            hasMap: !!m.map,
-            hasNormalMap: !!m.normalMap,
-            metalness: m.metalness,
-            roughness: m.roughness,
-          });
+      const now = Date.now();
+      if (!updateModelPose._lastLog || now - updateModelPose._lastLog > 2000) {
+        updateModelPose._lastLog = now;
+        const wp = new THREE.Vector3();
+        loadedModel.getWorldPosition(wp);
+        sendARDebug('XR_ANCHOR_ALIGNMENT_CHECK', {
+          targetName: detail.name,
+          anchorLocalPosition: [instance.anchor.position.x, instance.anchor.position.y, instance.anchor.position.z],
+          modelWorldPosition: [wp.x, wp.y, wp.z],
         });
-      });
-      logToBuffer('info', 'MODEL_MATERIALS_LOGGED', { meshCount: materialInfo.length });
-
-      // Reparent to modelOffsetGroup if available, otherwise directly to targetAnchor
-      const parent = modelOffsetGroup || targetAnchor;
-      if (loadedModel.parent) {
-        loadedModel.parent.remove(loadedModel);
       }
-      parent.add(loadedModel);
-
-      // Apply DB config to modelOffsetGroup (NOT to GLB)
-      if (modelOffsetGroup) {
-        modelOffsetGroup.position.set(modelPos[0], modelPos[1], modelPos[2]);
-        modelOffsetGroup.rotation.set(modelRot[0], modelRot[1], modelRot[2]);
-        modelOffsetGroup.scale.setScalar(modelScale);
-      }
-
-      sendARDebug('MODEL_REPARENTED', {
-        parentName: parent.name,
-        glbLocalPosition: [loadedModel.position.x, loadedModel.position.y, loadedModel.position.z],
-        offsetGroupPosition: modelOffsetGroup ? [modelOffsetGroup.position.x, modelOffsetGroup.position.y, modelOffsetGroup.position.z] : null,
-        worldPosition: (() => { const v = new THREE.Vector3(); loadedModel.getWorldPosition(v); return [v.x,v.y,v.z]; })(),
-      });
     }
 
     // ========== LOAD TARGET JSON FROM SUPABASE ==========
-    // Loads and parses one XR target JSON. Accepts a target config to support multi-target.
     async function loadTargetData(targetConfig) {
       const targetQrId = targetConfig.qr_id;
       const configJsonUrl = targetConfig.xr_target_json_url || '';
@@ -732,60 +572,26 @@
 
       sendARDebug('TARGET_LOAD_START', { qrId: targetQrId });
 
-      // Prefer explicit target JSON URL, else build from base
       let jsonUrl = configJsonUrl;
       if (!jsonUrl && configImageUrl) {
         const match = configImageUrl.match(/^(.+)_[^/]+\.png$/);
         if (match) jsonUrl = match[1] + '.json';
       }
-
-      if (!jsonUrl) {
-        throw new Error(`No xr_target_json_url for ${targetQrId}`);
-      }
+      if (!jsonUrl) throw new Error(`No xr_target_json_url for ${targetQrId}`);
 
       showOverlay('Loading target data...', jsonUrl.split('/').pop());
 
-      sendARDebug('MANIFEST_RESOLVED', {
-        qrId: targetQrId,
-        manifestUrl: jsonUrl,
-        targetImageUrl: configImageUrl || null,
-      });
-
       const res = await fetch(jsonUrl);
-      if (!res.ok) {
-        sendARDebug('MANIFEST_RESOLVE_ERROR', { url: jsonUrl, status: res.status, qrId: targetQrId });
-        throw new Error(`Failed to fetch target JSON: ${res.status} for ${targetQrId}`);
-      }
+      if (!res.ok) throw new Error(`Failed to fetch target JSON: ${res.status} for ${targetQrId}`);
 
       const data = await res.json();
+      sendARDebug('TARGET_JSON_PARSED', { qrId: targetQrId, name: data.name, rawKeys: Object.keys(data) });
 
-      const rawKeys = Object.keys(data);
-      sendARDebug('TARGET_JSON_PARSED', {
-        qrId: targetQrId,
-        name: data.name,
-        imagePath: data.imagePath || '',
-        rawKeys,
-        metadata: data.metadata || {},
-      });
-
-      // Resolve image path: prefer explicit image URL param, else derive from JSON
-      let resolvedImagePath;
-      if (configImageUrl) {
-        resolvedImagePath = configImageUrl;
-      } else {
-        const baseUrl = jsonUrl.substring(0, jsonUrl.lastIndexOf('/') + 1);
-        const relPath = data.imagePath || '';
-        resolvedImagePath = relPath.startsWith('http') ? relPath : baseUrl + relPath;
-      }
+      let resolvedImagePath = configImageUrl || (jsonUrl.substring(0, jsonUrl.lastIndexOf('/') + 1) + (data.imagePath || ''));
+      if (!resolvedImagePath.startsWith('http')) resolvedImagePath = jsonUrl.substring(0, jsonUrl.lastIndexOf('/') + 1) + (data.imagePath || '');
 
       const physicalWidth = data.properties?.physicalWidth || 0.08;
-
-      sendARDebug('TARGET_LOAD_COMPLETE', {
-        qrId: targetQrId,
-        name: data.name,
-        imageUrl: resolvedImagePath,
-        physicalWidth,
-      });
+      sendARDebug('TARGET_LOAD_COMPLETE', { qrId: targetQrId, name: data.name, imageUrl: resolvedImagePath, physicalWidth });
 
       return {
         qrId: targetQrId,
@@ -798,210 +604,72 @@
       };
     }
 
-    // ========== 8TH WALL ENGINE (SELF-HOSTED, NO APPKEY) ==========
+    // ========== 8TH WALL ENGINE ==========
     let xrController = null;
-    const trackedTargets = new Map();   // name → {name, position, rotation, scale, lastSeenAt}
-    let activeTargetName = null;       // which target currently has the model attached
-    let targetAnchor = null;           // THREE.Group parented to scene; model is child of this
+    const trackedTargets = new Map();
     const realityImageUpdated = { _lastLog: 0 };
 
-    // Step 1: Store target pose
     function saveTargetPose(detail) {
       if (!detail?.name) return;
       trackedTargets.set(detail.name, {
         name: detail.name,
-        position: {
-          x: detail.position?.x ?? 0,
-          y: detail.position?.y ?? 0,
-          z: detail.position?.z ?? 0,
-        },
-        rotation: {
-          x: detail.rotation?.x ?? 0,
-          y: detail.rotation?.y ?? 0,
-          z: detail.rotation?.z ?? 0,
-          w: detail.rotation?.w ?? 1,
-        },
+        position: { x: detail.position?.x ?? 0, y: detail.position?.y ?? 0, z: detail.position?.z ?? 0 },
+        rotation: { x: detail.rotation?.x ?? 0, y: detail.rotation?.y ?? 0, z: detail.rotation?.z ?? 0, w: detail.rotation?.w ?? 1 },
         scale: detail.scale ?? 1,
         lastSeenAt: Date.now(),
       });
     }
 
-    // Step 6: Apply 8th Wall pose to targetAnchor (not directly to model)
-    function updateModelPose(detail) {
-      if (!loadedModel || !targetAnchor || !detail) return;
-      const p = detail.position;
-      const r = detail.rotation;
-      const s = detail.scale ?? 1;
-      if (!p || !r) return;
-
-      applyTargetPose({
-        position: { x: p.x, y: p.y, z: p.z },
-        rotation: { x: r.x, y: r.y, z: r.z, w: r.w },
-        scale: s,
-      });
-
-      // Log periodically
-      const now = Date.now();
-      if (!updateModelPose._lastLog || now - updateModelPose._lastLog > 2000) {
-        updateModelPose._lastLog = now;
-        const wp = new THREE.Vector3();
-        const ws = new THREE.Vector3();
-        const cp = new THREE.Vector3();
-        loadedModel.getWorldPosition(wp);
-        loadedModel.getWorldScale(ws);
-        if (camera) camera.getWorldPosition(cp);
-        sendARDebug('XR_ANCHOR_ALIGNMENT_CHECK', {
-          targetPosition: [p.x, p.y, p.z],
-          anchorLocalPosition: [targetAnchor.position.x, targetAnchor.position.y, targetAnchor.position.z],
-          anchorWorldPosition: (() => { const v = new THREE.Vector3(); targetAnchor.getWorldPosition(v); return [v.x,v.y,v.z]; })(),
-          modelLocalPosition: [loadedModel.position.x, loadedModel.position.y, loadedModel.position.z],
-          modelWorldPosition: [wp.x, wp.y, wp.z],
-          targetScale: s,
-          anchorScale: targetAnchor.scale.x,
-          cameraWorldPosition: camera ? [camera.position.x, camera.position.y, camera.position.z] : null,
-        });
-      }
-    }
-
-    // Wait for XR8 to load using the official event pattern.
-    // The xrloaded event fires when the engine binary is ready but BEFORE
-    // SLAM chunks (camera, tracking) are loaded. We must wait for it
-    // before calling any XR8.* API.
     function waitForXR8() {
       return new Promise((resolve, reject) => {
-        if (window.XR8) {
-          resolve(window.XR8);
-          return;
-        }
-        const timeout = setTimeout(() => {
-          reject(new Error('XR8 load timeout (>10s)'));
-        }, 10000);
-        window.addEventListener('xrloaded', () => {
-          clearTimeout(timeout);
-          resolve(window.XR8);
-        }, { once: true });
+        if (window.XR8) { resolve(window.XR8); return; }
+        const timeout = setTimeout(() => reject(new Error('XR8 load timeout (>10s)')), 10000);
+        window.addEventListener('xrloaded', () => { clearTimeout(timeout); resolve(window.XR8); }, { once: true });
       });
     }
 
     async function initXR(targetDataList) {
-      // targetDataList = array from loadTargetData() for all xrTargetConfigs
       sendARDebug('XR_INIT_START', { targets: targetDataList.map(t => t.name) });
       showOverlay('Starting XR session...', '');
 
-      // Step 1: Wait for engine binary (xrloaded)
       let XR8;
       try {
         XR8 = await waitForXR8();
-        logToBuffer('info', 'XR_ENGINE_READY', { xr8Keys: Object.keys(XR8).slice(0, 20) });
+        logToBuffer('info', 'XR_ENGINE_READY', {});
         sendARDebug('XR_ENGINE_READY', { hasXrController: !!XR8.XrController });
       } catch (err) {
-        logToBuffer('error', 'XR_ENGINE_LOAD_FAILED', { error: String(err) });
         sendARDebug('XR_ENGINE_LOAD_FAILED', { error: String(err) });
         throw err;
       }
 
-      // Step 2: Load SLAM chunk (provides camera + tracking)
-      logToBuffer('info', 'Loading XR8 slam chunk...');
-      try {
-        await XR8.loadChunk('slam');
-        logToBuffer('info', 'XR_SLAM_LOADED', {});
-        sendARDebug('XR_SLAM_LOADED', {});
-      } catch (chunkErr) {
-        logToBuffer('error', 'XR_SLAM_LOAD_FAILED', { error: String(chunkErr) });
-        sendARDebug('XR_SLAM_LOAD_FAILED', { error: String(chunkErr) });
-        throw chunkErr;
-      }
+      try { await XR8.loadChunk('slam'); sendARDebug('XR_SLAM_LOADED', {}); }
+      catch (err) { sendARDebug('XR_SLAM_LOAD_FAILED', { error: String(err) }); throw err; }
 
-      // Step 3: Lifecycle pipeline — sends events to parent (ARContainer orchestrator)
+      // Lifecycle
       const lifecycleModule = {
         name: 'app-lifecycle',
-
         onCameraStatusChange: ({ status }) => {
-          logToBuffer('info', 'XR_CAMERA_STATUS', { status });
           sendARDebug('XR_CAMERA_STATUS', { status });
-
           if (status === 'hasVideo') {
-            // This is the signal that camera feed is actually displaying
-            logToBuffer('info', 'XR_CAMERA_HAS_VIDEO', {});
             sendARDebug('XR_CAMERA_HAS_VIDEO', {});
-            sendMessage('XR_STARTED', {
-              engine: '8th-wall-self-hosted',
-              qrId: qrId,
-              word: word,
-              hasModel: !!modelUrl,
-              hasModelLoaded: !!loadedModel,
-            });
+            sendMessage('XR_STARTED', { engine: '8th-wall-self-hosted', qrId, word, hasModel: !!modelUrl, hasModelLoaded: !!loadedModel });
             hideOverlay();
             setPhase('viewing');
           }
-
-          if (status === 'failed') {
-            logToBuffer('error', 'XR_CAMERA_FAILED', { status });
-            sendARDebug('XR_CAMERA_FAILED', { status });
-            sendMessage('XR_ERROR', { message: 'XR camera failed', stage: 'camera' });
-          }
+          if (status === 'failed') sendARDebug('XR_CAMERA_FAILED', { status });
         },
-
-        onAttach: ({ canvas, GLctx, stream, video, videoWidth, videoHeight, canvasWidth, canvasHeight, status, imageTargets }) => {
-          // imageTargets is the engine's internal target list — critical for debugging
+        onAttach: ({ imageTargets }) => {
           const targetInfo = imageTargets || [];
-          logToBuffer('info', 'XR_ONATTACH_TARGETS', {
-            count: targetInfo.length,
-            targets: targetInfo.map(t => ({
-              name: t.name,
-              imagePath: t.image || t.imagePath || '',
-              metadata: t.metadata || {},
-            })),
-          });
-          sendARDebug('XR_ONATTACH_TARGETS', {
-            count: targetInfo.length,
-            targets: targetInfo.map(t => ({
-              name: t.name,
-              imagePath: t.image || t.imagePath || '',
-              metadata: t.metadata || {},
-            })),
-          });
-
-          logToBuffer('info', 'XR_ONATTACH', {
-            status,
-            hasGLctx: !!GLctx,
-            hasStream: !!stream,
-            streamActive: stream?.active,
-            videoReadyState: video?.readyState,
-            videoWidth,
-            videoHeight,
-            canvasWidth,
-            canvasHeight,
-          });
-          sendARDebug('XR_ONATTACH', {
-            status,
-            hasGLctx: !!GLctx,
-            hasStream: !!stream,
-            streamActive: stream?.active,
-            videoReadyState: video?.readyState,
-            videoWidth,
-            videoHeight,
-            canvasWidth,
-            canvasHeight,
-          });
+          sendARDebug('XR_ONATTACH_TARGETS', { count: targetInfo.length, targets: targetInfo.map(t => ({ name: t.name, imagePath: t.image || t.imagePath || '' })) });
         },
       };
 
-      // Step 4: Acquire XR8 Three.js scene — MUST be in onAttach/onStart, not after XR8.run()
-      // XR8.Threejs.xrScene() returns null before Threejs.pipelineModule() fires onStart
+      // Scene acquisition
       let xrSceneAcquired = false;
       const xrSceneAcquisitionModule = {
         name: 'xr-scene-acquisition',
-
-        onStart: ({ canvas: c, gl }) => {
-          // Try acquiring scene here — may succeed if called after Threejs.pipelineModule onStart
-          tryAcquireXRAuthoring();
-        },
-
-        onUpdate: () => {
-          // Poll until successful — Threejs.pipelineModule may fire onStart after this
-          if (!xrSceneAcquired) tryAcquireXRAuthoring();
-        },
+        onStart: () => { tryAcquireXRAuthoring(); },
+        onUpdate: () => { if (!xrSceneAcquired) tryAcquireXRAuthoring(); },
       };
 
       function tryAcquireXRAuthoring() {
@@ -1009,319 +677,130 @@
         try {
           const xr = window.XR8.Threejs?.xrScene?.();
           if (!xr || !xr.scene || !xr.camera || !xr.renderer) return;
+          scene = xr.scene; camera = xr.camera; renderer = xr.renderer;
 
-          scene    = xr.scene;
-          camera   = xr.camera;
-          renderer = xr.renderer;
+          sendARDebug('XR_THREE_SCENE_ACQUIRED', { sceneChildren: scene.children.length, cameraType: camera.constructor.name });
 
-          const hasScene    = !!scene;
-          const hasCamera   = !!camera;
-          const hasRenderer = !!renderer;
+          // Create anchors for ALL target instances
+          for (const [name, inst] of targetInstances) {
+            inst.anchor = new THREE.Group();
+            inst.anchor.name = `target-anchor:${name}`;
+            inst.offsetGroup = new THREE.Group();
+            inst.offsetGroup.name = `model-offset:${name}`;
+            inst.anchor.add(inst.offsetGroup);
+            scene.add(inst.anchor);
+            sendARDebug('TARGET_ANCHOR_CREATED', { targetName: name, anchorName: inst.anchor.name });
+          }
 
-          logToBuffer('info', 'XR_THREE_SCENE_ACQUIRED', {
-            hasScene, hasCamera, hasRenderer,
-            sceneChildren: scene?.children?.length || 0,
-            cameraType: camera?.constructor.name || '',
-            rendererSize: renderer ? `${renderer.domElement.width}x${renderer.domElement.height}` : '',
-          });
-          sendARDebug('XR_THREE_SCENE_ACQUIRED', {
-            hasScene, hasCamera, hasRenderer,
-            sceneChildren: scene?.children?.length || 0,
-            cameraType: camera?.constructor.name || '',
-            rendererSize: renderer ? `${renderer.domElement.width}x${renderer.domElement.height}` : '',
-          });
+          // Reference primary target's anchor/mixer for backward compat
+          const primaryInst = targetInstances.get(primaryModelTargetName);
+          if (primaryInst) {
+            targetAnchor = primaryInst.anchor;
+            modelOffsetGroup = primaryInst.offsetGroup;
+          }
 
-          sendARDebug('XR_RENDER_BOUNDARY_CHECK', {
-            usingXR8Scene: true,
-            usingXR8Camera: true,
-            usingXR8Renderer: true,
-            customRendererActive: false,
-            customCameraActive: false,
-          });
-
-          // Create anchor inside XR8 scene
-          targetAnchor = new THREE.Group();
-          targetAnchor.name = `target-anchor:${qrId}`;
-          scene.add(targetAnchor);
-
-          // FIX 2: Add lighting to XR scene
-          // Without lights, MeshStandardMaterial renders as black silhouette
+          // Lighting (once, shared scene)
           const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
           hemi.name = 'hemi-light';
           scene.add(hemi);
           const key = new THREE.DirectionalLight(0xffffff, 2.5);
-          key.name = 'key-light';
-          key.position.set(1, 2, 2);
-          scene.add(key);
+          key.name = 'key-light'; key.position.set(1, 2, 2); scene.add(key);
           const fill = new THREE.DirectionalLight(0xffffff, 0.8);
-          fill.name = 'fill-light';
-          fill.position.set(-2, 0, -1);
-          scene.add(fill);
+          fill.name = 'fill-light'; fill.position.set(-2, 0, -1); scene.add(fill);
+          sendARDebug('SCENE_LIGHTS_ADDED', { sceneChildren: scene.children.length, lightCount: scene.children.filter(c => c.isLight).length });
 
-          logToBuffer('info', 'SCENE_LIGHTS_ADDED', {
-            sceneChildren: scene.children.length,
-            lightCount: scene.children.filter(c => c.isLight).length,
-          });
-          sendARDebug('SCENE_LIGHTS_ADDED', {
-            sceneChildren: scene.children.length,
-            lightCount: scene.children.filter(c => c.isLight).length,
-          });
-
-          // Create modelOffsetGroup as child of anchor
-          // Separates tracking pose (targetAnchor) from backend config (modelOffsetGroup)
-          modelOffsetGroup = new THREE.Group();
-          modelOffsetGroup.name = `model-offset:${qrId}`;
-          targetAnchor.add(modelOffsetGroup);
-          sendARDebug('MODEL_OFFSET_GROUP_CREATED', {
-            groupName: modelOffsetGroup.name,
-          });
-
-          logToBuffer('info', 'TARGET_ANCHOR_CREATED', {
-            anchorName: targetAnchor.name,
-            parentIsXRScene: true,
-            sceneChildren: scene.children.length,
-          });
-          sendARDebug('TARGET_ANCHOR_CREATED', {
-            anchorName: targetAnchor.name,
-            parentIsXRScene: true,
-          });
-
-          // If model already loaded, parent to modelOffsetGroup
-          if (loadedModel) {
-            reparentModelToAnchor();
+          // If primary model already loaded, parent it
+          if (loadedModel && primaryInst) {
+            reparentModelToAnchor(primaryInst);
             modelWaitingForXRScene = false;
-            sendARDebug('MODEL_XR_SCENE_READY', {
-              modelName: loadedModel.name || qrId,
-              parentName: loadedModel.parent?.name || null,
-            });
-
-            // Edge case: target was detected before model hierarchy was ready
+            sendARDebug('MODEL_XR_SCENE_READY', { targetName: primaryModelTargetName });
             if (trackedTargets.size > 0 && !modelAttached) {
               attemptModelAttach(Array.from(trackedTargets.keys())[0]);
             }
           }
 
           xrSceneAcquired = true;
-        } catch (e) {
-          // Not ready yet — onUpdate will retry
-        }
+        } catch (e) {}
       }
 
-      // Step 5: Camera pipeline — handles frame loop and target tracking
+      // Camera pipeline
       let renderCheckFrame = 0;
       const cameraPipelineModule = {
         name: 'camera-pipeline',
-        onStart: ({ canvas: c, gl }) => {
-          updateDebug('Camera active');
-          sendARDebug('CAMERA_START', {
-            canvasWidth: c?.width,
-            canvasHeight: c?.height,
-            glContext: gl ? 'active' : 'missing',
-          });
-        },
-        onUpdate: (frame) => {
+        onStart: ({ canvas: c }) => { updateDebug('Camera active'); sendARDebug('CAMERA_START', { canvasWidth: c?.width, canvasHeight: c?.height }); },
+        onUpdate: () => {
           renderCheckFrame++;
-          if (mixer) mixer.update(0.016);
-          // NOTE: Y-bob removed — model transform now driven exclusively by
-          // targetAnchor pose applied from reality.imageupdated events.
-          // Periodic render check — every ~60 frames (~1 second)
+          // Update all active mixers
+          for (const [name, inst] of targetInstances) {
+            if (inst.mixer) inst.mixer.update(0.016);
+          }
           if (renderCheckFrame % 60 === 0) {
+            const primaryInst = targetInstances.get(primaryModelTargetName);
             sendARDebug('SCENE_RENDER_CHECK', {
               frame: renderCheckFrame,
               sceneChildren: scene?.children?.length || 0,
-              modelInScene: !!loadedModel,
-              modelVisible: loadedModel?.visible || false,
-              modelPosition: loadedModel ? [
-                loadedModel.position.x,
-                loadedModel.position.y,
-                loadedModel.position.z,
-              ] : null,
-              rendererSize: renderer ? `${renderer.domElement.width}x${renderer.domElement.height}` : null,
-              cameraPosition: camera ? [
-                camera.position.x,
-                camera.position.y,
-                camera.position.z,
-              ] : null,
+              primaryModelVisible: loadedModel?.visible || false,
+              targetInstanceCount: targetInstances.size,
             });
           }
         },
       };
 
-      // NOTE: custom-render removed — XR8.Threejs.pipelineModule() owns rendering
-
-      // Step 6: Image target event module — registered BEFORE XrController.pipelineModule
-      // so it can receive events that XrController dispatches.
-      // FIX: listeners go in a SEPARATE module, not inside XrController.pipelineModule().
-      // Callback receives {detail} per 8th Wall API, not raw event.
+      // Image target events
       const imageTargetEvents = {
         name: 'image-target-events',
-
         listeners: [
-          {
-            event: 'reality.imageloading',
-            process: ({detail}) => {
-              sendARDebug('IMAGE_LOADING', {
-                name: detail?.name,
-                targets: detail?.ImageTargets,
-              });
-              logToBuffer('info', 'reality.imageloading', { name: detail?.name });
-            },
-          },
-          {
-            event: 'reality.imagescanning',
-            process: ({detail}) => {
-              sendARDebug('IMAGE_SCANNING', {
-                name: detail?.name,
-              });
-              logToBuffer('info', 'reality.imagescanning', { name: detail?.name });
-            },
-          },
-          {
-            event: 'reality.imagefound',
-            process: ({detail}) => {
-              sendARDebug('IMAGE_FOUND', {
-                name: detail?.name,
-                position: detail?.position,
-                rotation: detail?.rotation,
-                scale: detail?.scale,
-                timestamp: Date.now(),
-              });
-              logToBuffer('info', 'reality.imagefound', {
-                name: detail?.name,
-                position: detail?.position,
-                rotation: detail?.rotation,
-              });
-              if (detail?.name) onTargetFound(detail);
-            },
-          },
-          {
-            event: 'reality.imageupdated',
-            process: ({detail}) => {
-              if (!detail?.name) return;
-
-              // Always update pose state
-              saveTargetPose(detail);
-
-              // Log throttled
-              const now = Date.now();
-              if (!realityImageUpdated._lastLog) realityImageUpdated._lastLog = 0;
-              if (now - realityImageUpdated._lastLog > 2000) {
-                realityImageUpdated._lastLog = now;
-                sendARDebug('IMAGE_UPDATED', {
-                  name: detail?.name,
-                  position: detail?.position,
-                  rotation: detail?.rotation,
-                  timestamp: now,
-                });
-              }
-
-              // Apply pose to anchor if model is attached to this target
-              if (loadedModel && modelAttached && activeTargetName === detail.name) {
-                updateModelPose(detail);
-              }
-            },
-          },
-          {
-            event: 'reality.imagelost',
-            process: ({detail}) => {
-              sendARDebug('IMAGE_LOST', { name: detail?.name, timestamp: Date.now() });
-              logToBuffer('info', 'reality.imagelost', { name: detail?.name });
-              if (detail?.name) onTargetLost(detail.name);
-            },
-          },
+          { event: 'reality.imageloading', process: ({detail}) => { sendARDebug('IMAGE_LOADING', { name: detail?.name }); } },
+          { event: 'reality.imagescanning', process: ({detail}) => { sendARDebug('IMAGE_SCANNING', { name: detail?.name }); } },
+          { event: 'reality.imagefound', process: ({detail}) => { sendARDebug('IMAGE_FOUND', { name: detail?.name, position: detail?.position }); if (detail?.name) onTargetFound(detail); } },
+          { event: 'reality.imageupdated', process: ({detail}) => {
+            if (!detail?.name) return;
+            saveTargetPose(detail);
+            const now = Date.now();
+            if (!realityImageUpdated._lastLog || now - realityImageUpdated._lastLog > 2000) {
+              realityImageUpdated._lastLog = now;
+              sendARDebug('IMAGE_UPDATED', { name: detail?.name });
+            }
+            if (loadedModel && modelAttached && activeTargetName === detail.name) updateModelPose(detail);
+          }},
+          { event: 'reality.imagelost', process: ({detail}) => { sendARDebug('IMAGE_LOST', { name: detail?.name }); if (detail?.name) onTargetLost(detail.name); } },
         ],
       };
 
-      // Step 6b: Register ALL pipeline modules (order matters per 8th Wall docs)
-      // xrSceneAcquisitionModule registered AFTER Threejs so its onStart fires after
-      // Threejs.pipelineModule() creates scene/camera/renderer.
-      // imageTargetEvents must be before XrController.pipelineModule() so
-      // XrController can dispatch into the already-registered listener.
+      // Register pipeline modules
       XR8.addCameraPipelineModule(lifecycleModule);
       XR8.addCameraPipelineModule(XR8.GlTextureRenderer.pipelineModule());
       XR8.addCameraPipelineModule(XR8.Threejs.pipelineModule());
       XR8.addCameraPipelineModule(xrSceneAcquisitionModule);
       XR8.addCameraPipelineModule(imageTargetEvents);
-      XR8.addCameraPipelineModule(XR8.XrController.pipelineModule()); // dispatches reality.*
+      XR8.addCameraPipelineModule(XR8.XrController.pipelineModule());
       XR8.addCameraPipelineModule(cameraPipelineModule);
-      // NOTE: custom-render removed — XR8.Threejs.pipelineModule() owns rendering
 
-      logToBuffer('info', 'XR_PIPELINE_READY', {});
       sendARDebug('XR_PIPELINE_READY', {});
 
-      // Step 7: Configure ALL image targets in one call
-      const imageTargetData = targetDataList.map(t => ({
-        name: t.name,
-        type: t.type || 'PLANAR',
-        imagePath: t.imagePath,
-        properties: t.properties || {},
-        metadata: t.metadata || {},
-      }));
-
-      sendARDebug('XR_TARGETS_REGISTER', {
-        count: imageTargetData.length,
-        targets: imageTargetData.map(t => t.name),
-      });
-
+      // Configure ALL image targets
+      const imageTargetData = targetDataList.map(t => ({ name: t.name, type: t.type || 'PLANAR', imagePath: t.imagePath, properties: t.properties || {}, metadata: t.metadata || {} }));
+      sendARDebug('XR_TARGETS_REGISTER', { count: imageTargetData.length, targets: imageTargetData.map(t => t.name) });
       XR8.XrController.configure({ imageTargetData });
+      sendARDebug('XR_TARGETS_CONFIGURED', { count: imageTargetData.length });
 
-      sendARDebug('XR_TARGETS_CONFIGURED', {
-        count: imageTargetData.length,
-        targets: imageTargetData.map(t => t.name),
-      });
-
-      logToBuffer('info', 'XR_TARGETS_CONFIGURED', {
-        count: imageTargetData.length,
-        targets: imageTargetData.map(t => t.name),
-      });
-
-      // Step 8: Get canvas and resize to viewport
       const canvasEl = document.getElementById('camerafeed');
-      if (!canvasEl) {
-        throw new Error('Canvas #camerafeed not found');
-      }
-      canvasEl.width  = window.innerWidth;
-      canvasEl.height = window.innerHeight;
-      logToBuffer('info', 'Canvas sized', { w: canvasEl.width, h: canvasEl.height });
+      if (!canvasEl) throw new Error('Canvas #camerafeed not found');
+      canvasEl.width = window.innerWidth; canvasEl.height = window.innerHeight;
 
-      // Step 9: Start XR session — exactly once per page session
       RuntimeDiagnostics.xrRunCount++;
-      RuntimeDiagnostics.assert(
-        RuntimeDiagnostics.xrRunCount === 1,
-        `XR8.run() called ${RuntimeDiagnostics.xrRunCount} times (expected 1)`
-      );
-      logToBuffer('info', 'Calling XR8.run', {
-        canvasId: canvasEl.id,
-        canvasWidth: canvasEl.width,
-        canvasHeight: canvasEl.height,
-        xrRunCount: RuntimeDiagnostics.xrRunCount,
-      });
-      sendARDebug('XR_RUN_CALLED', {
-        canvasId: canvasEl.id,
-        canvasWidth: canvasEl.width,
-        canvasHeight: canvasEl.height,
-      });
-
-      try {
-        XR8.run({ canvas: canvasEl });
-      } catch (runErr) {
-        logToBuffer('error', 'XR8.run threw', { message: String(runErr) });
-        sendARDebug('XR_RUN_ERROR', { message: String(runErr) });
-        sendMessage('XR_ERROR', { message: String(runErr), stage: 'run' });
-        throw runErr;
-      }
-
-      updateDebug('Tracking active');
+      RuntimeDiagnostics.assert(RuntimeDiagnostics.xrRunCount === 1, `XR8.run() called ${RuntimeDiagnostics.xrRunCount} times`);
+      sendARDebug('XR_RUN_CALLED', {});
+      try { XR8.run({ canvas: canvasEl }); }
+      catch (err) { sendARDebug('XR_RUN_ERROR', { message: String(err) }); throw err; }
       sendARDebug('XR_SESSION_STARTED', {});
-      // NOTE: scene acquisition moved to xrSceneAcquisitionModule onAttach/onStart
-    } // initXR
+    }
 
-    // Note: image target events now flow exclusively through
-    // imageTargetEvents module + reality.* listeners registered above.
-    // Removed: watchTargets() polling via frameData (not a public 8th Wall API).
-
+    // ========== TARGET FOUND / LOST ==========
     function onTargetFound(detail) {
       saveTargetPose(detail);
+      const instance = targetInstances.get(detail.name);
+      if (instance) instance.tracked = true;
 
       const config = targetConfigByName.get(detail.name);
       const targetWord = config?.word || detail.name;
@@ -1332,68 +811,68 @@
         trackedCount: trackedTargets.size,
         trackedTargets: Array.from(trackedTargets.keys()),
       });
-
-      sendMessage('TARGET_FOUND', {
-        qrId: detail.name,
-        word: targetWord,
-        trackedCount: trackedTargets.size,
-      });
-
+      sendMessage('TARGET_FOUND', { qrId: detail.name, word: targetWord, trackedCount: trackedTargets.size });
       showCardLabel(targetWord);
 
-      // Milestone 1: model only attaches to the primary (scanned) target
+      // Primary target: eager model attachment (CAT eager)
       if (detail.name === primaryModelTargetName) {
         attemptModelAttach(detail.name);
       }
 
-      sendARDebug('MULTI_TARGET_STATE', {
-        count: trackedTargets.size,
-        targets: Array.from(trackedTargets.keys()),
-      });
+      // Non-primary: lazy model load + make visible (FISH lazy)
+      if (detail.name !== primaryModelTargetName) {
+        ensureTargetModelLoaded(detail.name).then(model => {
+          if (!model) return;
+          const inst = targetInstances.get(detail.name);
+          if (!inst) return;
+          if (scene && inst.anchor && inst.offsetGroup) {
+            reparentModelToAnchor(inst);
+          }
+          if (trackedTargets.has(detail.name)) {
+            const pose = trackedTargets.get(detail.name);
+            if (pose) applyTargetPose(inst, pose);
+            model.visible = true;
+            sendARDebug('TARGET_MODEL_VISIBLE', { targetName: detail.name, reason: 'lazy_loaded_on_found' });
+          }
+        });
+      }
+
+      sendARDebug('MULTI_TARGET_STATE', { count: trackedTargets.size, targets: Array.from(trackedTargets.keys()) });
     }
 
     function onTargetLost(name) {
       trackedTargets.delete(name);
+      const instance = targetInstances.get(name);
+      if (instance) {
+        instance.tracked = false;
+        instance.pose = null;
+        if (instance.model) instance.model.visible = false;
+      }
       sendARDebug('TARGET_LOST', { qrId: name });
       sendMessage('TARGET_LOST', { qrId: name });
 
       if (activeTargetName === name) {
         activeTargetName = null;
+        modelAttached = false;
         if (loadedModel) {
           loadedModel.visible = false;
-          modelAttached = false;
           sendARDebug('MODEL_HIDDEN', { reason: 'target_lost', qrId: name });
         }
       }
 
-      sendARDebug('MULTI_TARGET_STATE', {
-        count: trackedTargets.size,
-        targets: Array.from(trackedTargets.keys()),
-        lost: name,
-      });
+      sendARDebug('MULTI_TARGET_STATE', { count: trackedTargets.size, targets: Array.from(trackedTargets.keys()), lost: name });
     }
 
-    // ========== COMBO DETECTION (from backend) ==========
+    // ========== COMBO DETECTION (background) ==========
     let comboRules = [];
-
     async function loadComboRules() {
       try {
-        sendARDebug('COMBO_RULE_LOAD_START');
         const deck = params.get('deck_id') || 'claymorphic-animals-001';
         const url = `https://edu-platform-api-do20.onrender.com/api/v1/combinations/rules?flashcard_set=${encodeURIComponent(deck)}`;
         const res = await fetch(url);
-        if (res.ok) {
-          const data = await res.json();
-          comboRules = data.rules || data || [];
-          sendARDebug('COMBO_RULE_LOAD_COMPLETE', { url, count: comboRules.length });
-          logToBuffer('info', 'Combo rules loaded', { count: comboRules.length });
-        } else {
-          sendARDebug('COMBO_RULE_LOAD_ERROR', { url, status: res.status, error: `HTTP ${res.status}` });
-        }
-      } catch (e) {
-        sendARDebug('COMBO_RULE_LOAD_ERROR', { error: String(e), stack: e?.stack || '' });
-        logToBuffer('warn', 'Combo rules unavailable', { error: String(e) });
-      }
+        if (res.ok) { comboRules = (await res.json()).rules || []; sendARDebug('COMBO_RULE_LOAD_COMPLETE', { count: comboRules.length }); }
+        else sendARDebug('COMBO_RULE_LOAD_ERROR', { status: res.status });
+      } catch (e) { sendARDebug('COMBO_RULE_LOAD_ERROR', { error: String(e) }); }
     }
 
     // ========== MESSAGE LISTENER ==========
@@ -1401,130 +880,42 @@
       const { type, payload } = event.data || {};
       if (!type) return;
 
-      // Handle REQUEST_IFRAME_LOGS for Telegram sync
       if (type === 'REQUEST_IFRAME_LOGS') {
-        const requestId = payload?.requestId || 'unknown';
-        const logs = window.XRDebug?.getLogs() || 'No logs available';
-
-        window.parent.postMessage({
-          type: 'IFRAME_LOGS',
-          payload: {
-            requestId,
-            logs,
-            engine: '8th-wall',
-            qrId: qrId,
-            word: word,
-          },
-          timestamp: Date.now(),
-        }, '*');
-
-        logToBuffer('debug', 'Sent iframe logs', { requestId, logCount: logBuffer.length });
+        window.parent.postMessage({ type: 'IFRAME_LOGS', payload: { requestId: payload?.requestId || 'unknown', logs: window.XRDebug?.getLogs() || '', engine: '8th-wall', qrId, word }, timestamp: Date.now() }, '*');
         return;
       }
-
-      // Handle DEBUG_TOGGLE
-      if (type === 'DEBUG_TOGGLE') {
-        debugPanel.style.display = payload?.enabled ? 'block' : 'none';
-        logToBuffer('debug', 'Debug panel toggled', { enabled: payload?.enabled });
-        return;
-      }
-
-      // Handle TELEGRAM_SYNC trigger
+      if (type === 'DEBUG_TOGGLE') { debugPanel.style.display = payload?.enabled ? 'block' : 'none'; return; }
       if (type === 'TRIGGER_TELEGRAM_SYNC') {
-        const parentLogs = payload?.parentLogs || '';
-        const manualOffset = payload?.manualOffset || { x: 0, y: 0 };
-
-        const fullLogs =
-          `=== PARENT LOGS ===\n${parentLogs}\n\n` +
-          `=== 8TH WALL IFRAME LOGS ===\n${window.XRDebug?.getLogs() || 'No logs'}\n\n` +
-          `=== STATE ===\n` +
-          `qrId: ${qrId}\n` +
-          `word: ${word}\n` +
-          `modelLoaded: ${!!loadedModel}\n` +
-          `modelVisible: ${loadedModel?.visible || false}\n` +
-          `trackedTargets: ${Array.from(trackedTargets).join(', ') || 'none'}\n` +
-          `modelLoadState: ${modelLoadState}\n` +
-          `currentPhase: ${currentPhase}\n`;
-
-        window.parent.postMessage({
-          type: 'TELEGRAM_SYNC_READY',
-          payload: {
-            logs: fullLogs,
-            manualOffset,
-            engine: '8th-wall',
-            flashcardCount: trackedTargets.size || 1,
-          },
-          timestamp: Date.now(),
-        }, '*');
-
-        logToBuffer('debug', 'Telegram sync prepared', {
-          logLines: logBuffer.length,
-          trackedTargets: trackedTargets.size,
-        });
+        const fullLogs = `=== STATE ===\nqrId: ${qrId}\nword: ${word}\nprimaryModelLoaded: ${!!loadedModel}\nprimaryModelVisible: ${loadedModel?.visible || false}\ntrackedTargets: ${Array.from(trackedTargets.keys()).join(', ') || 'none'}\nmodelLoadState: ${modelLoadState}\ncurrentPhase: ${currentPhase}`;
+        window.parent.postMessage({ type: 'TELEGRAM_SYNC_READY', payload: { logs: fullLogs, manualOffset: payload?.manualOffset, engine: '8th-wall', flashcardCount: trackedTargets.size || 1 }, timestamp: Date.now() }, '*');
         return;
       }
-
-      // Log other messages
-      logToBuffer('debug', 'Message received', { type, payload });
+      logToBuffer('debug', 'Message received', { type });
     });
-
-    // ========== MODEL PROMISE CACHE (avoids re-download on re-scan) ==========
-    const modelPromiseCache = new Map();
-    function getModel(url) {
-      if (!url) return Promise.resolve(null);
-      if (!modelPromiseCache.has(url)) {
-        modelPromiseCache.set(url, loadModel(url));
-      }
-      return modelPromiseCache.get(url);
-    }
 
     // ========== MAIN ==========
     async function main() {
       sendARDebug('PAGE_LOAD');
-
       try {
         initThree();
         updateDebug('Three.js ready');
-
-        // Load combo rules in background
         loadComboRules();
 
-        // Milestone 1: load ALL target JSONs in parallel
-        const targetsPromise = Promise.all(
-          xrTargetConfigs.map(config => loadTargetData(config))
-        );
+        const targetsPromise = Promise.all(xrTargetConfigs.map(cfg => loadTargetData(cfg)));
+        const modelPromise = modelUrl ? ensureTargetModelLoaded(primaryModelTargetName) : Promise.resolve(null);
 
-        // Load model in parallel with targets
-        const modelPromise = modelUrl ? getModel(modelUrl) : Promise.resolve(null);
-
-        // Wait for all targets
         const targetDataList = await targetsPromise;
-
-        sendARDebug('MULTI_TARGET_DATA_READY', {
-          count: targetDataList.length,
-          targets: targetDataList.map(t => t.name),
-        });
+        sendARDebug('MULTI_TARGET_DATA_READY', { count: targetDataList.length, targets: targetDataList.map(t => t.name) });
 
         setPhase('loading');
-        sendARDebug('LOADING_ASSETS', {
-          hasModel: !!modelUrl,
-          targetCount: targetDataList.length,
-        });
+        sendARDebug('LOADING_ASSETS', { hasModel: !!modelUrl, targetCount: targetDataList.length });
 
-        // Init XR (passes all targets to XR8.XrController.configure)
         await initXR(targetDataList);
-
-        // Wait for model (may already be done from parallel load)
         await modelPromise;
 
         setPhase('viewing');
-        sendARDebug('INIT_COMPLETE', {
-          modelLoaded: !!loadedModel,
-          targetCount: targetDataList.length,
-        });
-
+        sendARDebug('INIT_COMPLETE', { modelLoaded: !!loadedModel, targetCount: targetDataList.length });
         logToBuffer('info', 'Initialization complete');
-
       } catch (error) {
         setPhase('error');
         sendARDebug('INIT_ERROR', { error: String(error), stack: error?.stack });
@@ -1533,11 +924,8 @@
       }
     }
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', main);
-    } else {
-      main();
-    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', main);
+    else main();
   </script>
 </body>
 </html>

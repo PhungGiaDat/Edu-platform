@@ -435,6 +435,13 @@ export const LearnAR8thWall: React.FC = () => {
         word: t.word,
         xr_target_json_url: t.xr_target_json_url,
         xr_target_image_url: t.xr_target_image_url,
+        model_3d_url: t.model_3d_url,
+        animations: t.animations,
+        default_animation: t.default_animation,
+        combo_animation: t.combo_animation,
+        position: t.position,
+        rotation: t.rotation,
+        scale: t.scale,
       }));
       params.set('xr_targets', JSON.stringify(trackingPayload));
     }
