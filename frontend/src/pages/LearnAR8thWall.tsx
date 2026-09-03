@@ -53,6 +53,33 @@ export const LearnAR8thWall: React.FC = () => {
 
   const deckIdRef = useRef(deckId || 'claymorphic-animals-001');
 
+  // ========== AR RUNTIME PREWARM (runs once on mount) ==========
+  useEffect(() => {
+    const ensureLink = (rel: string, href: string, as?: string) => {
+      if (document.querySelector(`link[href="${href}"]`)) return;
+      const link = document.createElement('link');
+      link.rel = rel;
+      link.href = href;
+      link.crossOrigin = 'anonymous';
+      if (as) link.as = as;
+      document.head.appendChild(link);
+    };
+
+    // Connection warmup
+    ensureLink('preconnect', 'https://cdn.jsdelivr.net');
+    ensureLink('preconnect', 'https://rofprrtoeyirssfndxag.supabase.co');
+
+    // 8th Wall engine — heaviest dependency
+    ensureLink('preload', 'https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js', 'script');
+
+    // Three.js module + GLTFLoader
+    ensureLink('modulepreload', 'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js');
+    ensureLink('modulepreload', 'https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/loaders/GLTFLoader.js');
+
+    // Viewer HTML
+    ensureLink('prefetch', '/ar-xr.html');
+  }, []);
+
   // Viewer iframe ref
   const viewerRef = useRef<HTMLIFrameElement>(null);
 

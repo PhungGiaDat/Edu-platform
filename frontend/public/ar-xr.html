@@ -368,6 +368,7 @@
       const startMark = `model-load-${url}`;
       performance.mark(startMark);
       sendARDebug('MODEL_LOAD_START', { url });
+      const loadStartMs = performance.now();
 
       return new Promise((resolve, reject) => {
         const loader = new GLTFLoader();
@@ -434,25 +435,34 @@
               logToBuffer('info', 'Animations available', { animations: gltf.animations.map(a => a.name) });
             }
 
-            // Network timing: use PerformanceObserver entry for this model URL
-            const timing = {};
+            // Network timing: separate download vs parse using performance.now()
+            const totalMs = Math.round(performance.now() - loadStartMs);
+            let downloadMs = null;
+            let parseMs = null;
             try {
               const entries = performance.getEntriesByName(url);
               if (entries.length > 0) {
                 const last = entries[entries.length - 1];
-                timing.duration = Math.round(last.duration);
-                timing.transferSize = last.transferSize;
-                timing.encodedBodySize = last.encodedBodySize;
-                timing.decodedBodySize = last.decodedBodySize;
+                downloadMs = Math.round(last.duration);
+                parseMs = totalMs - downloadMs;
+                sendARDebug('MODEL_NETWORK_TIMING', {
+                  url,
+                  totalMs,
+                  downloadMs,
+                  parseMs,
+                  transferSize: last.transferSize,
+                  encodedBodySize: last.encodedBodySize,
+                });
               } else {
-                // Fallback: use mark/measure
-                const marks = performance.getEntriesByName(startMark);
-                if (marks.length > 0) {
-                  timing.durationFallback = Math.round(Date.now() - marks[0].startTime);
-                }
+                sendARDebug('MODEL_NETWORK_TIMING', {
+                  url,
+                  totalMs,
+                  fallback: true,
+                });
               }
-            } catch (_) {}
-            sendARDebug('MODEL_NETWORK_TIMING', { url, ...timing });
+            } catch (_) {
+              sendARDebug('MODEL_NETWORK_TIMING', { url, totalMs });
+            }
 
             // MODEL_ATTACH_START — model ready but not yet attached to any anchor
             sendARDebug('MODEL_READY_NOT_ATTACHED', {
