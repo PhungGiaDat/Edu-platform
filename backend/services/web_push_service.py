@@ -19,12 +19,12 @@ logger = logging.getLogger(__name__)
 
 TEMPLATES = [
     {
-        "title": "Mimi có tin vui! 🌱",
-        "body": "Vườn từ của con có {n} hạt cần tưới nè. Vào chơi cùng Mimi nhé?",
+        "title": "Lexi có tin vui! 🌱",
+        "body": "Vườn từ của con có {n} hạt cần tưới nè. Vào chơi cùng Lexi nhé?",
     },
     {
         "title": "Hoa đang đợi con kìa! 🌸",
-        "body": "{n} bông hoa trong vườn từ chưa được tưới hôm nay. Cùng Mimi ghé qua nhé?",
+        "body": "{n} bông hoa trong vườn từ chưa được tưới hôm nay. Cùng Lexi ghé qua nhé?",
     },
     {
         "title": "Lexi muốn học chung với con! 🐶",

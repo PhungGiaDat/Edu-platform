@@ -27,6 +27,7 @@ import { DailyChallengePage } from "./pages/DailyChallengePage";
 import { NotebookPage } from "./pages/NotebookPage";
 import { NotificationSettingsPage } from "./pages/NotificationSettingsPage";
 import { DictionaryPage } from "./pages/DictionaryPage";
+import { InstallGuidePage } from "./pages/InstallGuidePage";
 import { Layout } from "./app/components/Layout";
 import { AIChatBuddy } from "./features/chat/components/AIChatBuddy";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -279,6 +280,9 @@ const App = () => {
 
         {/* Public QR Code Route */}
         <Route path="/f/:qrId" element={<FlashcardView />} />
+
+        {/* Public PWA install guide ("Vườn Giờ Vàng") — standalone, no Layout/auth */}
+        <Route path="/install" element={<InstallGuidePage />} />
 
         {/* Protected Routes (Wrapped in Layout) */}
         <Route path="/flashcards" element={<RequireUserAuth><Layout><FlashcardPage /></Layout></RequireUserAuth>} />

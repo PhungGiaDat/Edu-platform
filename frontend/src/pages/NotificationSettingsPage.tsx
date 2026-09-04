@@ -23,6 +23,7 @@ import {
   notificationPermission,
 } from '../services/notifications';
 import { apiClient } from '../services/apiClient';
+import { Link } from 'react-router-dom';
 
 interface Prefs {
   user_id: string;
@@ -77,7 +78,7 @@ export function NotificationSettingsPage() {
           timezone: prefs.timezone,
         }) as Prefs;
         setPrefs(saved);
-        setStatus('Đã bật nhắc nhở! Mimi sẽ mời con chơi mỗi ngày 🐶');
+        setStatus('Đã bật nhắc nhở! Lexi sẽ mời con chơi mỗi ngày 🐶');
       } else {
         setStatus(reasonText(result.reason));
       }
@@ -148,7 +149,7 @@ export function NotificationSettingsPage() {
             ⏰ Thời điểm vàng
           </h1>
           <p className="text-sm font-semibold" style={{ color: colors.mediumGray }}>
-            Mỗi ngày Mimi chỉ mời con chơi đúng một lần thôi — không làm phiền!
+            Mỗi ngày Lexi chỉ mời con chơi đúng một lần thôi — không làm phiền!
           </p>
         </div>
       </div>
@@ -178,6 +179,20 @@ export function NotificationSettingsPage() {
                 </span>
               </li>
             </ol>
+            <Link
+              to="/install"
+              className="w-full mt-4 flex items-center justify-center gap-2 font-black"
+              style={{
+                borderRadius: 24,
+                padding: '14px 22px',
+                background: withOpacity(colors.sunshineYellow, 0.9),
+                boxShadow: shadows.clayYellow,
+                color: colors.deepSlate,
+              }}
+            >
+              <span className="msr" style={{ fontSize: 20 }}>install_mobile</span>
+              Mở hướng dẫn cài đặt
+            </Link>
             <p className="mt-3 text-xs" style={{ color: colors.mediumGray }}>
               Sau đó mở EduAR từ biểu tượng trên Màn hình chính và quay lại đây để bật nhắc nhở 🌱
             </p>
@@ -213,7 +228,7 @@ export function NotificationSettingsPage() {
                       {subscribed ? 'Nhắc nhở đang bật' : 'Bật nhắc nhở'}
                     </h2>
                     <p className="text-sm" style={{ color: colors.mediumGray }}>
-                      {subscribed ? 'Mimi sẽ mời con vào vườn từ mỗi ngày 🌱' : 'Một lời mời chơi mỗi ngày từ Mimi'}
+                      {subscribed ? 'Lexi sẽ mời con vào vườn từ mỗi ngày 🌱' : 'Một lời mời chơi mỗi ngày từ Lexi'}
                     </p>
                   </div>
                 </div>
@@ -245,7 +260,7 @@ export function NotificationSettingsPage() {
 
             <ClayCard className="p-5">
               <h2 className="font-black mb-3" style={{ color: colors.deepSlate }}>
-                🕐 Giờ Mimi sẽ mời con
+                🕐 Giờ Lexi sẽ mời con
               </h2>
               <div className="flex flex-wrap gap-2">
                 {[7, 12, 17, 19, 20].map((hour) => {
@@ -269,14 +284,14 @@ export function NotificationSettingsPage() {
                 })}
               </div>
               <p className="text-xs mt-3" style={{ color: colors.mediumGray }}>
-                Từ 20:30 đến 07:30 là giờ ngủ — Mimi không gửi thông báo trong khung này.
+                Từ 20:30 đến 07:30 là giờ ngủ — Lexi không gửi thông báo trong khung này.
               </p>
             </ClayCard>
 
             {/* Notification Preview — pet voice */}
             <ClayCard className="p-4">
               <h3 className="font-black mb-3" style={{ color: colors.deepSlate }}>
-                📱 Mời từ Mimi trông như thế này
+                📱 Mời từ Lexi trông như thế này
               </h3>
               <div
                 className="rounded-2xl p-4"
@@ -291,10 +306,10 @@ export function NotificationSettingsPage() {
                   </div>
                   <div className="flex-1">
                     <p className="font-black" style={{ color: colors.deepSlate }}>
-                      Mimi có tin vui! 🌱
+                      Lexi có tin vui! 🌱
                     </p>
                     <p className="text-sm" style={{ color: colors.mediumGray }}>
-                      Vườn từ của con có 5 hạt cần tưới nè. Vào chơi cùng Mimi nhé?
+                      Vườn từ của con có 5 hạt cần tưới nè. Vào chơi cùng Lexi nhé?
                     </p>
                   </div>
                 </div>
