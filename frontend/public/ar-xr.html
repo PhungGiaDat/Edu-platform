@@ -177,6 +177,42 @@
     // Scene singletons — ONE XR scene, shared by all targets
     let scene = null, camera = null, renderer = null;
 
+    // ========== INTERACTION STATE MACHINE ==========
+    // Phases: SEARCH_PRIMARY → PRIMARY_LOCKED → WAIT_SECONDARY → PROXIMITY_PENDING
+    //        → COMBO_ARMED → COMBO_PLAYING → COMBO_CONSUMED → (rearm on far) → WAIT_SECONDARY
+    const InteractionPhase = {
+      SEARCH_PRIMARY: 'SEARCH_PRIMARY',
+      PRIMARY_LOCKED: 'PRIMARY_LOCKED',
+      WAIT_SECONDARY: 'WAIT_SECONDARY',
+      PROXIMITY_PENDING: 'PROXIMITY_PENDING',
+      COMBO_ARMED: 'COMBO_ARMED',
+      COMBO_PLAYING: 'COMBO_PLAYING',
+      COMBO_CONSUMED: 'COMBO_CONSUMED',
+    };
+
+    const INTERACTION_CONFIG = {
+      primaryLockMs: 400,
+      proximityStableMs: 350,
+      lostGraceMs: 300,
+      distance: {
+        enter: 0.12,
+        exit: 0.16,
+        smoothingAlpha: 0.25,
+      },
+      proximitySampleHz: 4,
+    };
+
+    const interactionState = {
+      phase: InteractionPhase.SEARCH_PRIMARY,
+      primarySeenAt: null,
+      primaryLockedAt: null,
+      proximityEnteredAt: null,
+      filteredDistance: null,
+      comboPlaying: false,
+      comboConsumed: false,
+      lastProximityLog: 0,
+    };
+
     // ========== MULTI-TARGET CONFIG PARSING ==========
     function parseXRTargetConfigs() {
       const raw = params.get('xr_targets');
@@ -213,12 +249,19 @@
         offsetGroup: null,
         model: null,
         mixer: null,
+        animations: [],
         tracked: false,
         pose: null,
         lastAttachAttempt: 0,
         modelState: 'idle', // idle | loading | loaded | error
         modelLoadStart: 0,
         pivotNormalized: false, // normalize pivot only once per model
+        // Interaction fields
+        foundAt: null,
+        stable: false,
+        lastSeenAt: 0,
+        lostAt: null,
+        visibleByInteraction: true,
       });
     }
 
@@ -350,7 +393,10 @@
               instanceMixer = new THREE.AnimationMixer(model);
               const defaultClip = gltf.animations.find(a => a.name.toUpperCase().includes('IDLE')) || gltf.animations[0];
               instanceMixer.clipAction(defaultClip).play();
-              if (instance) instance.mixer = instanceMixer;
+              if (instance) {
+                instance.mixer = instanceMixer;
+                instance.animations = gltf.animations;
+              }
               if (targetName === primaryModelTargetName) mixer = instanceMixer;
               logToBuffer('info', 'Animations available', { targetName, animations: gltf.animations.map(a => a.name) });
             }
@@ -510,7 +556,7 @@
       if (modelAttached) return;
       if (targetName !== primaryModelTargetName) return;
       if (!loadedModel) return;
-
+      // Skip if already attached at the expected parent with visible=true.
       const target = trackedTargets.get(targetName);
       if (!target) return;
 
@@ -527,6 +573,16 @@
       }
 
       const expectedParent = instance.offsetGroup || instance.anchor;
+      if (
+        loadedModel.parent === expectedParent &&
+        loadedModel.visible &&
+        activeTargetName === targetName
+      ) {
+        // Already attached — refresh pose but skip reparent.
+        applyTargetPose(instance, target);
+        return;
+      }
+
       if (loadedModel.parent !== expectedParent) {
         reparentModelToAnchor(instance);
       }
@@ -732,6 +788,7 @@
 
       // Camera pipeline
       let renderCheckFrame = 0;
+      let lastInteractionEvalMs = 0;
       const cameraPipelineModule = {
         name: 'camera-pipeline',
         onStart: ({ canvas: c }) => { updateDebug('Camera active'); sendARDebug('CAMERA_START', { canvasWidth: c?.width, canvasHeight: c?.height }); },
@@ -741,6 +798,11 @@
           for (const [name, inst] of targetInstances) {
             if (inst.mixer) inst.mixer.update(0.016);
           }
+          const now = performance.now();
+          if (now - lastInteractionEvalMs >= 100) {
+            lastInteractionEvalMs = now;
+            evaluateInteraction(now);
+          }
           if (renderCheckFrame % 60 === 0) {
             const primaryInst = targetInstances.get(primaryModelTargetName);
             sendARDebug('SCENE_RENDER_CHECK', {
@@ -748,6 +810,7 @@
               sceneChildren: scene?.children?.length || 0,
               primaryModelVisible: loadedModel?.visible || false,
               targetInstanceCount: targetInstances.size,
+              interactionPhase: interactionState.phase,
             });
           }
         },
@@ -811,11 +874,258 @@
       sendARDebug('XR_SESSION_STARTED', {});
     }
 
+    // ========== INTERACTION HELPERS ==========
+    function setInteractionPhase(nextPhase, extras = {}) {
+      if (interactionState.phase === nextPhase) return;
+      const previous = interactionState.phase;
+      interactionState.phase = nextPhase;
+      sendARDebug('INTERACTION_PHASE', { from: previous, to: nextPhase, ...extras });
+    }
+
+    function getAnchorWorldPosition(instance) {
+      // Use target anchor pose (not model transform) — pose is what represents
+      // the actual flashcard position in world space, free of pivot/scale/offset.
+      const pose = trackedTargets.get(instance.config.qr_id);
+      if (!pose) return null;
+      return { x: pose.position.x, y: pose.position.y, z: pose.position.z };
+    }
+
+    function computeAnchorDistance() {
+      const catInst = targetInstances.get(primaryModelTargetName);
+      const otherIds = Array.from(targetInstances.keys()).filter(k => k !== primaryModelTargetName);
+      if (otherIds.length === 0) return null;
+      // Use first secondary target for proximity (fish001 in current lesson).
+      const fishInst = targetInstances.get(otherIds[0]);
+      const a = getAnchorWorldPosition(catInst);
+      const b = getAnchorWorldPosition(fishInst);
+      if (!a || !b) return null;
+      const dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z;
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    function updateFilteredDistance(raw) {
+      if (raw == null) {
+        interactionState.filteredDistance = null;
+        return null;
+      }
+      const a = INTERACTION_CONFIG.distance.smoothingAlpha;
+      interactionState.filteredDistance =
+        interactionState.filteredDistance == null
+          ? raw
+          : interactionState.filteredDistance * (1 - a) + raw * a;
+      return interactionState.filteredDistance;
+    }
+
+    function playComboAnimation(instance) {
+      if (!instance?.mixer) return false;
+      const requestedName = instance.config?.combo_animation || 'CAT_EAT';
+      const clip = instance.animations?.find(c => c.name === requestedName)
+        || instance.animations?.find(c => c.name.toUpperCase().includes('EAT'))
+        || instance.animations?.find(c => c.name.toUpperCase().includes('COMBO'));
+      if (!clip) {
+        sendARDebug('COMBO_ANIMATION_MISSING', {
+          targetName: instance.config.qr_id,
+          requested: requestedName,
+          available: instance.animations?.map(c => c.name) || [],
+        });
+        return false;
+      }
+      const mixer = instance.mixer;
+      const idleName = instance.config?.default_animation || null;
+      const idleClip = idleName && instance.animations.find(c => c.name === idleName);
+      // Fade out idle if currently playing
+      if (idleClip) {
+        const idleAction = mixer.clipAction(idleClip);
+        idleAction.fadeOut(0.15);
+      }
+      const action = mixer.clipAction(clip);
+      action.reset();
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+      action.fadeIn(0.15);
+      action.play();
+      sendARDebug('COMBO_ANIMATION_START', {
+        targetName: instance.config.qr_id,
+        clip: clip.name,
+        durationMs: Math.round((clip.duration || 0) * 1000),
+      });
+      const onFinish = (e) => {
+        if (e.action !== action) return;
+        mixer.removeEventListener('finished', onFinish);
+        // Restore idle
+        if (idleClip) {
+          mixer.clipAction(idleClip).reset().fadeIn(0.15).play();
+        }
+        sendARDebug('COMBO_ANIMATION_FINISHED', { targetName: instance.config.qr_id });
+        interactionState.comboPlaying = false;
+        interactionState.comboConsumed = true;
+        setInteractionPhase(InteractionPhase.COMBO_CONSUMED);
+      };
+      mixer.addEventListener('finished', onFinish);
+      return true;
+    }
+
+    function consumeSecondaryTarget() {
+      // Hide secondary target's model without unloading GLB cache.
+      // Re-show when distance exceeds EXIT.
+      for (const [name, inst] of targetInstances) {
+        if (name === primaryModelTargetName) continue;
+        inst.visibleByInteraction = false;
+        if (inst.model) inst.model.visible = false;
+      }
+    }
+
+    function evaluateInteraction(now) {
+      const cfg = INTERACTION_CONFIG;
+      const catInst = targetInstances.get(primaryModelTargetName);
+      const otherIds = Array.from(targetInstances.keys()).filter(k => k !== primaryModelTargetName);
+      const fishInst = otherIds.length ? targetInstances.get(otherIds[0]) : null;
+
+      // Effective tracked flags include lost-grace
+      const catLostGrace = catInst?.lostAt != null && (now - catInst.lostAt) < cfg.lostGraceMs;
+      const catEffectivelyTracked = !!(catInst?.tracked || catLostGrace);
+
+      const fishLostGrace = fishInst?.lostAt != null && fishInst && (now - fishInst.lostAt) < cfg.lostGraceMs;
+      const fishEffectivelyTracked = !!(fishInst?.tracked || fishLostGrace);
+
+      // ---- Primary lock state ----
+      if (catInst?.tracked && catInst.foundAt == null) catInst.foundAt = now;
+      if (!catInst?.tracked && (catInst?.lostAt == null || (now - catInst.lostAt) >= cfg.lostGraceMs)) {
+        // Cat fully lost — reset lock
+        if (interactionState.phase !== InteractionPhase.SEARCH_PRIMARY) {
+          sendARDebug('PRIMARY_UNLOCKED', { reason: 'cat_lost' });
+          interactionState.primarySeenAt = null;
+          interactionState.primaryLockedAt = null;
+          interactionState.proximityEnteredAt = null;
+          interactionState.filteredDistance = null;
+          interactionState.comboPlaying = false;
+          interactionState.comboConsumed = false;
+          setInteractionPhase(InteractionPhase.SEARCH_PRIMARY);
+        }
+      }
+
+      if (catEffectivelyTracked) {
+        if (interactionState.phase === InteractionPhase.SEARCH_PRIMARY && catInst.foundAt != null) {
+          const stableMs = now - catInst.foundAt;
+          if (stableMs >= cfg.primaryLockMs) {
+            interactionState.primaryLockedAt = now;
+            sendARDebug('PRIMARY_LOCKED', { targetName: primaryModelTargetName, stableMs });
+            setInteractionPhase(InteractionPhase.PRIMARY_LOCKED, { stableMs });
+            setInteractionPhase(InteractionPhase.WAIT_SECONDARY);
+          }
+        }
+      } else if (catInst?.foundAt != null && (now - catInst.foundAt) < cfg.primaryLockMs) {
+        // Cat lost before lock — clear foundAt
+        catInst.foundAt = null;
+      }
+
+      // ---- Proximity / combo ----
+      const phase = interactionState.phase;
+      if (
+        phase === InteractionPhase.PRIMARY_LOCKED ||
+        phase === InteractionPhase.WAIT_SECONDARY ||
+        phase === InteractionPhase.PROXIMITY_PENDING ||
+        phase === InteractionPhase.COMBO_ARMED ||
+        phase === InteractionPhase.COMBO_PLAYING ||
+        phase === InteractionPhase.COMBO_CONSUMED
+      ) {
+        if (fishEffectivelyTracked && phase === InteractionPhase.WAIT_SECONDARY) {
+          setInteractionPhase(InteractionPhase.PROXIMITY_PENDING);
+        }
+        // If fish leaves, drop back to WAIT_SECONDARY (unless combo is playing).
+        if (!fishEffectivelyTracked && phase === InteractionPhase.PROXIMITY_PENDING) {
+          interactionState.proximityEnteredAt = null;
+          updateFilteredDistance(null);
+          setInteractionPhase(InteractionPhase.WAIT_SECONDARY);
+        }
+
+        const raw = computeAnchorDistance();
+        const filtered = updateFilteredDistance(raw);
+
+        // Throttled proximity log
+        const sampleInterval = 1000 / INTERACTION_CONFIG.proximitySampleHz;
+        if (
+          raw != null &&
+          (now - interactionState.lastProximityLog) >= sampleInterval
+        ) {
+          interactionState.lastProximityLog = now;
+          sendARDebug('PROXIMITY_SAMPLE', {
+            rawDistance: Number(raw.toFixed(4)),
+            filteredDistance: filtered != null ? Number(filtered.toFixed(4)) : null,
+            enterDistance: cfg.distance.enter,
+            exitDistance: cfg.distance.exit,
+            catTracked: catEffectivelyTracked,
+            fishTracked: fishEffectivelyTracked,
+          });
+        }
+
+        if (filtered != null && catEffectivelyTracked && fishEffectivelyTracked && !interactionState.comboPlaying) {
+          if (filtered <= cfg.distance.enter) {
+            if (interactionState.proximityEnteredAt == null) {
+              interactionState.proximityEnteredAt = now;
+              sendARDebug('PROXIMITY_ENTER', { filteredDistance: Number(filtered.toFixed(4)) });
+            }
+            const stableFor = now - interactionState.proximityEnteredAt;
+            if (
+              phase === InteractionPhase.PROXIMITY_PENDING &&
+              stableFor >= cfg.proximityStableMs &&
+              !interactionState.comboConsumed
+            ) {
+              sendARDebug('PROXIMITY_STABLE', { stableMs: stableFor, distance: Number(filtered.toFixed(4)) });
+              sendARDebug('COMBO_ARMED', { targetName: primaryModelTargetName });
+              setInteractionPhase(InteractionPhase.COMBO_ARMED);
+              // Trigger immediately on arm
+              interactionState.comboPlaying = true;
+              setInteractionPhase(InteractionPhase.COMBO_PLAYING);
+              const started = playComboAnimation(catInst);
+              if (started) {
+                consumeSecondaryTarget();
+                sendARDebug('COMBO_TRIGGER', { targetName: primaryModelTargetName });
+              } else {
+                interactionState.comboPlaying = false;
+              }
+            }
+          } else {
+            // Outside enter band — reset pending timer
+            if (interactionState.proximityEnteredAt != null) {
+              sendARDebug('PROXIMITY_EXIT', { filteredDistance: Number(filtered.toFixed(4)) });
+              interactionState.proximityEnteredAt = null;
+              if (phase === InteractionPhase.PROXIMITY_PENDING) {
+                // Stay in PROXIMITY_PENDING; user can bring closer again
+              }
+            }
+          }
+
+          // Rearm when cards separate beyond EXIT
+          if (
+            interactionState.comboConsumed &&
+            filtered >= cfg.distance.exit &&
+            phase === InteractionPhase.COMBO_CONSUMED
+          ) {
+            sendARDebug('COMBO_REARMED', { distance: Number(filtered.toFixed(4)) });
+            interactionState.comboConsumed = false;
+            interactionState.proximityEnteredAt = null;
+            // Restore visibility of secondary
+            for (const [name, inst] of targetInstances) {
+              if (name === primaryModelTargetName) continue;
+              inst.visibleByInteraction = true;
+              if (inst.model && inst.tracked) inst.model.visible = true;
+            }
+            setInteractionPhase(InteractionPhase.WAIT_SECONDARY);
+          }
+        }
+      }
+    }
+
     // ========== TARGET FOUND / LOST ==========
     function onTargetFound(detail) {
       saveTargetPose(detail);
       const instance = targetInstances.get(detail.name);
-      if (instance) instance.tracked = true;
+      if (instance) {
+        instance.tracked = true;
+        instance.lostAt = null;
+        if (instance.foundAt == null) instance.foundAt = performance.now();
+      }
 
       const config = targetConfigByName.get(detail.name);
       const targetWord = config?.word || detail.name;
@@ -842,8 +1152,9 @@
           if (scene && inst.anchor && inst.offsetGroup) {
             reparentModelToAnchor(inst);
           }
-          // Only show if target is still tracked — guard against lost-during-preload.
-          if (inst.tracked && trackedTargets.has(detail.name)) {
+          // Only show if target is still tracked AND interaction allows visibility.
+          // Guard against lost-during-preload AND combo-consume state.
+          if (inst.tracked && trackedTargets.has(detail.name) && inst.visibleByInteraction) {
             const pose = trackedTargets.get(detail.name);
             if (pose) applyTargetPose(inst, pose);
             inst.model.visible = true;
@@ -861,6 +1172,7 @@
       if (instance) {
         instance.tracked = false;
         instance.pose = null;
+        instance.lostAt = performance.now();
         if (instance.model) instance.model.visible = false;
       }
       sendARDebug('TARGET_LOST', { qrId: name });
