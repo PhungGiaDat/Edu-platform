@@ -259,6 +259,7 @@ const fullNavItems: Array<{
     { path: '/flashcards', iconKey: 'flashcards', labelKey: 'navFlashcards', shortLabelKey: 'navFlashcardsShort' },
     { path: '/dictionary', iconKey: 'dictionary', labelKey: 'navDictionary', shortLabelKey: 'navDictionaryShort', showInMobileBar: false },
     { path: '/notebook', iconKey: 'notebook', labelKey: 'navNotebook', shortLabelKey: 'navNotebookShort', showInMobileBar: false },
+    { path: '/notifications', iconKey: 'challenge', labelKey: 'navReminderSettings', shortLabelKey: 'navReminderShort', showInMobileBar: false },
     { path: '/daily-challenge', iconKey: 'challenge', labelKey: 'navDailyChallenge', shortLabelKey: 'navChallengeShort' },
     { path: '/profile', iconKey: 'profile', labelKey: 'navProfile', shortLabelKey: 'navProfile' },
 ];

@@ -25,6 +25,7 @@ import PetsPage from "./pages/PetsPage";
 import StickersPage from "./pages/StickersPage";
 import { DailyChallengePage } from "./pages/DailyChallengePage";
 import { NotebookPage } from "./pages/NotebookPage";
+import { NotificationSettingsPage } from "./pages/NotificationSettingsPage";
 import { DictionaryPage } from "./pages/DictionaryPage";
 import { Layout } from "./app/components/Layout";
 import { AIChatBuddy } from "./features/chat/components/AIChatBuddy";
@@ -316,6 +317,9 @@ const App = () => {
         {/* Notebook (SRS) + Dictionary — backend contracts READY (PG-backed) */}
         <Route path="/notebook" element={<RequireUserAuth><Layout><NotebookPage /></Layout></RequireUserAuth>} />
         <Route path="/dictionary" element={<RequireUserAuth><Layout><DictionaryPage /></Layout></RequireUserAuth>} />
+
+        {/* Kid reminder settings ("Thời điểm vàng") — parent-facing Web Push config */}
+        <Route path="/notifications" element={<RequireUserAuth><Layout><NotificationSettingsPage /></Layout></RequireUserAuth>} />
 
         {/* Admin Routes - Require Teacher/Admin Role with Error Boundary */}
         <Route path="/admin" element={<RequireTeacherRole><AdminErrorBoundary><AdminDashboard /></AdminErrorBoundary></RequireTeacherRole>} />
