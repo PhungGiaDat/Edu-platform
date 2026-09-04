@@ -700,24 +700,24 @@ class GamificationService:
     
     STICKER_CATALOG = {
         # Common stickers
-        "star_gold": {"name": "Gold Star", "rarity": "common", "imageUrl": "/assets/stickers/star_gold.png"},
-        "trophy_bronze": {"name": "Bronze Trophy", "rarity": "common", "imageUrl": "/assets/stickers/trophy_bronze.png"},
-        "animal_elephant": {"name": "Elephant", "rarity": "common", "imageUrl": "/assets/stickers/elephant.png"},
-        "heart_pink": {"name": "Pink Heart", "rarity": "common", "imageUrl": "/assets/stickers/heart_pink.png"},
-        "book_blue": {"name": "Blue Book", "rarity": "common", "imageUrl": "/assets/stickers/book_blue.png"},
+        "star_gold": {"name": "Gold Star", "rarity": "common", "imageUrl": "/assets/stickers/star_gold.svg"},
+        "trophy_bronze": {"name": "Bronze Trophy", "rarity": "common", "imageUrl": "/assets/stickers/trophy_bronze.svg"},
+        "animal_elephant": {"name": "Elephant", "rarity": "common", "imageUrl": "/assets/stickers/elephant.svg"},
+        "heart_pink": {"name": "Pink Heart", "rarity": "common", "imageUrl": "/assets/stickers/heart_pink.svg"},
+        "book_blue": {"name": "Blue Book", "rarity": "common", "imageUrl": "/assets/stickers/book_blue.svg"},
         # Rare stickers
-        "star_rainbow": {"name": "Rainbow Star", "rarity": "rare", "imageUrl": "/assets/stickers/star_rainbow.png"},
-        "animal_lion": {"name": "Lion", "rarity": "rare", "imageUrl": "/assets/stickers/lion.png"},
-        "rocket": {"name": "Rocket", "rarity": "rare", "imageUrl": "/assets/stickers/rocket.png"},
-        "medal_silver": {"name": "Silver Medal", "rarity": "rare", "imageUrl": "/assets/stickers/medal_silver.png"},
+        "star_rainbow": {"name": "Rainbow Star", "rarity": "rare", "imageUrl": "/assets/stickers/star_rainbow.svg"},
+        "animal_lion": {"name": "Lion", "rarity": "rare", "imageUrl": "/assets/stickers/lion.svg"},
+        "rocket": {"name": "Rocket", "rarity": "rare", "imageUrl": "/assets/stickers/rocket.svg"},
+        "medal_silver": {"name": "Silver Medal", "rarity": "rare", "imageUrl": "/assets/stickers/medal_silver.svg"},
         # Epic stickers
-        "trophy_gold": {"name": "Gold Trophy", "rarity": "epic", "imageUrl": "/assets/stickers/trophy_gold.png"},
-        "diamond": {"name": "Diamond", "rarity": "epic", "imageUrl": "/assets/stickers/diamond.png"},
-        "unicorn": {"name": "Unicorn", "rarity": "epic", "imageUrl": "/assets/stickers/unicorn.png"},
+        "trophy_gold": {"name": "Gold Trophy", "rarity": "epic", "imageUrl": "/assets/stickers/trophy_gold.svg"},
+        "diamond": {"name": "Diamond", "rarity": "epic", "imageUrl": "/assets/stickers/diamond.svg"},
+        "unicorn": {"name": "Unicorn", "rarity": "epic", "imageUrl": "/assets/stickers/unicorn.svg"},
         # Legendary stickers
-        "crown": {"name": "Crown", "rarity": "legendary", "imageUrl": "/assets/stickers/crown.png"},
-        "dragon": {"name": "Dragon", "rarity": "legendary", "imageUrl": "/assets/stickers/dragon.png"},
-        "phoenix": {"name": "Phoenix", "rarity": "legendary", "imageUrl": "/assets/stickers/phoenix.png"},
+        "crown": {"name": "Crown", "rarity": "legendary", "imageUrl": "/assets/stickers/crown.svg"},
+        "dragon": {"name": "Dragon", "rarity": "legendary", "imageUrl": "/assets/stickers/dragon.svg"},
+        "phoenix": {"name": "Phoenix", "rarity": "legendary", "imageUrl": "/assets/stickers/phoenix.svg"},
     }
     
     # Sticker award rules - maps actions/milestones to sticker rewards

@@ -1,578 +1,242 @@
 /**
- * MemoryPairsGame - Memory card matching game
- * Flip cards to find matching image-word pairs
+ * MemoryPairsGame — "Tìm cặp hình ↔ từ" (topic-based, real vocab)
+ *
+ * Rebuild 2026-09-05 per approved design:
+ * - 4×4 grid (8 pairs) of IMAGE tiles ↔ WORD tiles — spec: "Tìm hình ảnh
+ *   và từ tương ứng". Adaptive 3×4 when fewer words are available.
+ * - Vocab from GET /api/v1/games/vocab?topic=... (notebook first, seed fill).
+ * - Card flip via CSS 3D perspective (transform-only, cheap on mobile).
+ * - Tapping an image tile speaks the word (passive reinforcement).
+ * - Completion → idempotent XP via /gamification/xp-event (1/game/day).
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ClayCard } from '@/shared/components/clay/ClayCard';
-import { Button } from '@/shared/components/ui/Button';
-import { colors, shadows } from '@/design-tokens/claymorphic';
+import { colors, shadows, withOpacity } from '@/design-tokens/claymorphic';
+import { CodexPetSprite } from '@/features/pets/components';
+import {
+  fetchGameVocab,
+  awardGameComplete,
+  normalizeGameTopic,
+  GAME_TOPICS,
+  type GameVocabItem,
+  type GameTopic,
+} from '@/services/gamesVocabService';
+import { useAuth } from '@/contexts/AuthContext';
+import { ClayBurst3D } from '@/shared/components/ClayBurst3D';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+const DISPLAY_FONT = "'Nunito', sans-serif";
 
-interface Card {
+interface Pair extends GameVocabItem {
   id: string;
-  pairId: string;
-  emoji: string;
-  word: string;
-  isFlipped: boolean;
-  isMatched: boolean;
 }
 
-type GameState = 'READY' | 'PLAYING' | 'SUCCESS';
+interface Tile {
+  key: string;
+  pairId: string;
+  kind: 'image' | 'word';
+}
 
-// ─── Demo Data ────────────────────────────────────────────────────────────────
+type Phase = 'LOADING' | 'PLAYING' | 'SUCCESS' | 'EMPTY';
 
-const DEMO_ITEMS = [
-  { pairId: 'pair-1', emoji: '🍎', word: 'Apple' },
-  { pairId: 'pair-2', emoji: '📚', word: 'Book' },
-  { pairId: 'pair-3', emoji: '☀️', word: 'Sun' },
-  { pairId: 'pair-4', emoji: '🌳', word: 'Tree' },
-];
-
-// ─── Icons ───────────────────────────────────────────────────────────────────
-
-const BackIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="19" y1="12" x2="5" y2="12" />
-    <polyline points="12 19 5 12 12 5" />
-  </svg>
+const Msr: React.FC<{ icon: string; size?: number; color?: string; style?: React.CSSProperties }> = ({
+  icon, size = 20, color, style,
+}) => (
+  <span aria-hidden="true" className="msr" style={{ fontSize: size, color, ...style }}>{icon}</span>
 );
 
-const CheckIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-);
-
-// ─── Styles ─────────────────────────────────────────────────────────────────
-
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
-
-  .memory-game {
-    font-family: 'Nunito', system-ui, sans-serif;
-    min-height: 100vh;
-    background: ${colors.backgroundBase};
-    color: ${colors.deepSlate};
-  }
-
-  .mg-header {
-    padding: 20px 20px 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .mg-back-btn {
-    width: 44px;
-    height: 44px;
-    background: #fff;
-    border: none;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: ${shadows.claySm};
-    color: ${colors.skyBlue};
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    flex-shrink: 0;
-  }
-
-  .mg-back-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: ${shadows.clay};
-  }
-
-  .mg-back-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 rgba(0,0,0,0.12);
-  }
-
-  .mg-title {
-    font-size: 22px;
-    font-weight: 900;
-    margin: 0;
-    color: ${colors.deepSlate};
-    flex: 1;
-  }
-
-  .mg-progress-row {
-    display: flex;
-    gap: 8px;
-  }
-
-  .mg-progress-badge {
-    padding: 4px 12px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #fff;
-  }
-
-  .mg-content {
-    padding: 16px 20px 40px;
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  .mg-ready-content {
-    padding: 24px 20px;
-  }
-
-  .mg-title-center {
-    font-size: 28px;
-    font-weight: 900;
-    text-align: center;
-    margin: 0 0 16px;
-    color: ${colors.deepSlate};
-  }
-
-  .mg-instructions {
-    font-size: 16px;
-    font-weight: 600;
-    color: ${colors.mediumGray};
-    margin: 0 0 12px;
-    line-height: 1.5;
-    text-align: center;
-  }
-
-  .mg-instructions-detail {
-    font-size: 14px;
-    color: ${colors.mediumGray};
-    margin: 0 0 20px;
-    line-height: 1.6;
-    text-align: left;
-    padding-left: 20px;
-  }
-
-  .mg-hint-card {
-    margin-bottom: 16px;
-  }
-
-  .mg-hint-text {
-    font-size: 14px;
-    font-weight: 700;
-    color: ${colors.skyBlue};
-    text-align: center;
-  }
-
-  .mg-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-
-  @media (max-width: 400px) {
-    .mg-grid {
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-  }
-
-  .mg-card {
-    aspect-ratio: 1;
-    border-radius: 14px;
-    border: 3px solid #93C5FD;
-    background: ${colors.skyBlue};
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    position: relative;
-    box-shadow: ${shadows.claySm};
-    user-select: none;
-  }
-
-  .mg-card:hover:not(.mg-card-matched):not(:disabled) {
-    transform: scale(1.05);
-    box-shadow: ${shadows.clay};
-  }
-
-  .mg-card:active:not(.mg-card-matched):not(:disabled) {
-    transform: scale(0.95);
-  }
-
-  .mg-card-flipped {
-    background: #fff;
-    border-color: ${colors.skyBlue};
-  }
-
-  .mg-card-matched {
-    background: #F0FDF4;
-    border-color: ${colors.mintGreen};
-    opacity: 0.8;
-    cursor: default;
-  }
-
-  .mg-card-disabled {
-    cursor: default;
-  }
-
-  .mg-card-back {
-    font-size: 32px;
-  }
-
-  .mg-card-emoji {
-    font-size: 36px;
-  }
-
-  .mg-card-word {
-    font-size: 11px;
-    font-weight: 700;
-    color: ${colors.deepSlate};
-    text-align: center;
-    margin-top: 4px;
-  }
-
-  .mg-match-badge {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: ${colors.mintGreen};
-    border-radius: 12px;
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid #fff;
-    color: #fff;
-  }
-
-  .mg-success-card {
-    padding: 32px;
-    text-align: center;
-  }
-
-  .mg-success-emoji {
-    font-size: 64px;
-    margin-bottom: 12px;
-  }
-
-  .mg-success-title {
-    font-size: 28px;
-    font-weight: 900;
-    color: ${colors.deepSlate};
-    margin: 0 0 8px;
-  }
-
-  .mg-success-message {
-    font-size: 16px;
-    color: ${colors.mediumGray};
-    margin: 0 0 20px;
-  }
-
-  .mg-stats-row {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    margin-bottom: 24px;
-  }
-
-  .mg-stat-badge {
-    text-align: center;
-    background: ${colors.skyBlue};
-    padding: 12px 20px;
-    border-radius: 16px;
-    box-shadow: ${shadows.claySm};
-  }
-
-  .mg-stat-value {
-    font-size: 28px;
-    font-weight: 900;
-    color: #fff;
-  }
-
-  .mg-stat-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #fff;
-    margin-top: 4px;
-  }
-
-  .mg-action-btn {
-    width: 100%;
-    margin-top: 10px;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .mg-card, .mg-back-btn {
-      transition: none;
-    }
-    .mg-card:hover {
-      transform: none;
-    }
-  }
-`;
-
-// ─── Component ───────────────────────────────────────────────────────────────
+function buildTiles(pairs: Pair[]): Tile[] {
+  const tiles: Tile[] = [];
+  pairs.forEach((p) => {
+    tiles.push({ key: `img-${p.id}`, pairId: p.id, kind: 'image' });
+    tiles.push({ key: `w-${p.id}`, pairId: p.id, kind: 'word' });
+  });
+  return tiles.sort(() => Math.random() - 0.5);
+}
 
 export const MemoryPairsGame: React.FC = () => {
-  const [gameState, setGameState] = useState<GameState>('READY');
-  const [cards, setCards] = useState<Card[]>([]);
-  const [flippedCards, setFlippedCards] = useState<Card[]>([]);
-  const [matchedCount, setMatchedCount] = useState(0);
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const topic: GameTopic | null = useMemo(() => normalizeGameTopic(params.get('topic')), [params]);
+
+  const [phase, setPhase] = useState<Phase>('LOADING');
+  const [pairs, setPairs] = useState<Pair[]>([]);
+  const [tiles, setTiles] = useState<Tile[]>([]);
+  const [flipped, setFlipped] = useState<Tile[]>([]);
+  const [matchedIds, setMatchedIds] = useState<Set<string>>(new Set());
   const [moves, setMoves] = useState(0);
-  const [canFlip, setCanFlip] = useState(true);
+  const [xpAwarded, setXpAwarded] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const initializeCards = useCallback(() => {
-    const pairs = DEMO_ITEMS.flatMap((item, index) => [
-      { id: `${index}-a`, pairId: item.pairId, emoji: item.emoji, word: item.word, isFlipped: false, isMatched: false },
-      { id: `${index}-b`, pairId: item.pairId, emoji: item.emoji, word: item.word, isFlipped: false, isMatched: false },
-    ]);
+  const topicLabel = GAME_TOPICS.find((t) => t.slug === topic)?.label ?? '';
 
-    // Shuffle
-    for (let i = pairs.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+  useEffect(() => {
+    if (!topic) { setPhase('EMPTY'); return; }
+    let alive = true;
+    setPhase('LOADING');
+    fetchGameVocab(topic, 8)
+      .then((data) => {
+        if (!alive) return;
+        const ps = (data.items ?? []).map((it, i) => ({ ...it, id: `${it.word}-${i}` })).slice(0, 8);
+        if (ps.length < 3) { setPhase('EMPTY'); return; }
+        setPairs(ps);
+        setTiles(buildTiles(ps));
+        setPhase('PLAYING');
+      })
+      .catch(() => alive && setError('Không tải được từ vựng — kiểm tra mạng rồi thử lại nhé.'));
+    return () => { alive = false; };
+  }, [topic]);
+
+  const complete = pairs.length > 0 && matchedIds.size === pairs.length;
+
+  const awardXp = useCallback(async () => {
+    if (!user?.id) return;
+    const res = await awardGameComplete(user.id, 'memory_pairs');
+    setXpAwarded(res.xp_awarded);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (complete) void awardXp();
+  }, [complete, awardXp]);
+
+  const pairById = useMemo(() => new Map(pairs.map((p) => [p.id, p])), [pairs]);
+
+  const flip = (tile: Tile) => {
+    if (matchedIds.has(tile.pairId) || flipped.some((f) => f.key === tile.key) || flipped.length >= 2) return;
+    const next = [...flipped, tile];
+    setFlipped(next);
+    if (tile.kind === 'image') {
+      const p = pairById.get(tile.pairId);
+      if (p) {
+        try {
+          const u = new SpeechSynthesisUtterance(p.word);
+          u.lang = 'en-US'; u.rate = 0.85;
+          speechSynthesis.cancel(); speechSynthesis.speak(u);
+        } catch { /* silent */ }
+      }
     }
-
-    setCards(pairs);
-  }, []);
-
-  const handleStart = () => {
-    setGameState('PLAYING');
-    initializeCards();
-    setFlippedCards([]);
-    setMatchedCount(0);
-    setMoves(0);
-    setCanFlip(true);
-  };
-
-  const handleCardPress = (card: Card) => {
-    if (!canFlip || card.isFlipped || card.isMatched || flippedCards.length >= 2) {
-      return;
-    }
-
-    // Flip card
-    const updatedCards = cards.map(c =>
-      c.id === card.id ? { ...c, isFlipped: true } : c
-    );
-    setCards(updatedCards);
-
-    const newFlipped = [...flippedCards, card];
-    setFlippedCards(newFlipped);
-
-    // Check for match when 2 cards flipped
-    if (newFlipped.length === 2) {
-      setMoves(prev => prev + 1);
-      setCanFlip(false);
-
-      const [first, second] = newFlipped;
-
-      if (first.pairId === second.pairId) {
-        // Match found!
-        const incremented = matchedCount + 1;
-        setTimeout(() => {
-          setCards(prev =>
-            prev.map(c =>
-              c.pairId === first.pairId ? { ...c, isMatched: true } : c
-            )
-          );
-          setMatchedCount(incremented);
-          setFlippedCards([]);
-          setCanFlip(true);
-
-          if (incremented === DEMO_ITEMS.length) {
-            setTimeout(() => setGameState('SUCCESS'), 600);
-          }
-        }, 600);
+    if (next.length === 2) {
+      setMoves((m) => m + 1);
+      if (next[0].pairId === next[1].pairId) {
+        setMatchedIds((s) => new Set(s).add(next[0].pairId));
+        setFlipped([]);
       } else {
-        // No match - flip back
-        setTimeout(() => {
-          setCards(prev =>
-            prev.map(c =>
-              c.id === first.id || c.id === second.id
-                ? { ...c, isFlipped: false }
-                : c
-            )
-          );
-          setFlippedCards([]);
-          setCanFlip(true);
-        }, 1000);
+        setTimeout(() => setFlipped([]), 800);
       }
     }
   };
 
-  const handlePlayAgain = () => {
-    setGameState('READY');
+  const restart = () => {
+    setPairs((ps) => { setTiles(buildTiles(ps)); return ps; });
+    setMatchedIds(new Set()); setFlipped([]); setMoves(0); setXpAwarded(null);
   };
 
-  // READY State
-  if (gameState === 'READY') {
+  if (error) {
     return (
-      <div className="memory-game">
-        <style>{styles}</style>
-
-        <div className="mg-content">
-          <div className="mg-ready-content">
-            <ClayCard style={{ padding: '24px', marginBottom: '16px' }}>
-              <h1 className="mg-title-center">Memory Pairs</h1>
-              <p className="mg-instructions">
-                Flip cards to find matching image-word pairs!
-              </p>
-              <ul className="mg-instructions-detail">
-                <li>{DEMO_ITEMS.length * 2} cards to match</li>
-                <li>Tap to flip cards</li>
-                <li>Match all pairs to win!</li>
-              </ul>
-              <Button
-                variant="primary"
-                size="lg"
-                className="w-full"
-                onClick={handleStart}
-              >
-                Start Game
-              </Button>
-            </ClayCard>
-
-            <Button
-              variant="secondary"
-              size="lg"
-              className="w-full"
-              onClick={() => window.history.back()}
-            >
-              Back to Games
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // SUCCESS State
-  if (gameState === 'SUCCESS') {
-    return (
-      <div className="memory-game">
-        <style>{styles}</style>
-
-        <div className="mg-content">
-          <div className="mg-ready-content">
-            <ClayCard style={{ padding: '32px', textAlign: 'center' }}>
-              <div className="mg-success-emoji">🎉</div>
-              <h2 className="mg-success-title">Perfect Memory!</h2>
-              <p className="mg-success-message">
-                You matched all {DEMO_ITEMS.length} pairs!
-              </p>
-              <div className="mg-stats-row">
-                <div className="mg-stat-badge">
-                  <div className="mg-stat-value">{matchedCount}</div>
-                  <div className="mg-stat-label">Pairs</div>
-                </div>
-                <div className="mg-stat-badge" style={{ background: colors.mintGreen }}>
-                  <div className="mg-stat-value">{moves}</div>
-                  <div className="mg-stat-label">Moves</div>
-                </div>
-              </div>
-
-              <Button
-                variant="primary"
-                size="lg"
-                className="mg-action-btn"
-                onClick={() => {
-                  handlePlayAgain();
-                  handleStart();
-                }}
-              >
-                Play Again
-              </Button>
-              <Button
-                variant="secondary"
-                size="lg"
-                className="mg-action-btn"
-                onClick={() => window.history.back()}
-              >
-                Back to Games
-              </Button>
-            </ClayCard>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // PLAYING State
-  return (
-    <div className="memory-game">
-      <style>{styles}</style>
-
-      {/* Header */}
-      <header className="mg-header">
-        <button
-          type="button"
-          className="mg-back-btn"
-          onClick={() => window.history.back()}
-          aria-label="Go back"
-        >
-          <BackIcon />
-        </button>
-        <h1 className="mg-title">Memory Pairs</h1>
-        <div className="mg-progress-row">
-          <span
-            className="mg-progress-badge"
-            style={{ background: colors.mintGreen }}
-          >
-            ✓ {matchedCount}/{DEMO_ITEMS.length}
-          </span>
-          <span
-            className="mg-progress-badge"
-            style={{ background: colors.skyBlue }}
-          >
-            {moves} moves
-          </span>
-        </div>
-      </header>
-
-      {/* Content */}
-      <div className="mg-content">
-        {/* Hint */}
-        <ClayCard className="mg-hint-card" style={{ padding: '12px 16px' }}>
-          <p className="mg-hint-text">
-            Tap cards to flip and find matching pairs!
-          </p>
+      <div className="mp-shell">
+        <ClayCard style={{ padding: 28, textAlign: 'center', maxWidth: 420 }}>
+          <p style={{ fontSize: 15, fontWeight: 700 }}>{error}</p>
+          <button className="mp-btn" style={{ marginTop: 14 }} onClick={() => window.location.reload()}>Thử lại</button>
         </ClayCard>
-
-        {/* Card Grid */}
-        <div className="mg-grid">
-          {cards.map(card => (
-            <button
-              key={card.id}
-              type="button"
-              className={`mg-card ${card.isFlipped ? 'mg-card-flipped' : ''} ${card.isMatched ? 'mg-card-matched' : ''} ${!canFlip && !card.isFlipped && !card.isMatched ? 'mg-card-disabled' : ''}`}
-              onClick={() => handleCardPress(card)}
-              disabled={!canFlip || card.isFlipped || card.isMatched}
-              aria-label={card.isFlipped || card.isMatched ? `${card.word}` : 'Hidden card'}
-            >
-              {card.isFlipped || card.isMatched ? (
-                <>
-                  <span className="mg-card-emoji">{card.emoji}</span>
-                  <span className="mg-card-word">{card.word}</span>
-                </>
-              ) : (
-                <span className="mg-card-back">?</span>
-              )}
-              {card.isMatched && (
-                <span className="mg-match-badge">
-                  <CheckIcon />
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        <Button
-          variant="secondary"
-          size="lg"
-          className="w-full"
-          onClick={() => window.history.back()}
-        >
-          Exit Game
-        </Button>
       </div>
+    );
+  }
+  if (phase === 'EMPTY') {
+    return (
+      <div className="mp-shell">
+        <ClayCard style={{ padding: 28, textAlign: 'center', maxWidth: 420 }}>
+          <h2 style={{ fontFamily: DISPLAY_FONT, fontWeight: 900 }}>Chủ đề đang cập nhật</h2>
+          <p style={{ fontSize: 14, color: colors.mediumGray }}>Lexi đang thêm từ cho chủ đề này, quay lại sau nhé!</p>
+          <button className="mp-btn" style={{ marginTop: 14 }} onClick={() => navigate('/games')}>Về Khu chơi</button>
+        </ClayCard>
+      </div>
+    );
+  }
+
+  if (phase === 'SUCCESS' || complete) {
+    return (
+      <div className="mp-shell mp-success">
+        <ClayBurst3D show />
+        <ClayCard style={{ padding: 32, textAlign: 'center', maxWidth: 440 }}>
+          <CodexPetSprite animationState="jumping" label="Lexi nhảy mừng" size={130} />
+          <h2 style={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: 24, margin: '8px 0 4px' }}>Bé nhớ siêu lắm!</h2>
+          <p style={{ fontSize: 15, color: colors.mediumGray }}>Ghép đủ {pairs.length} cặp trong {moves} lượt</p>
+          <div className="mp-xp-chip">
+            <Msr icon="bolt" size={18} color={colors.sunshineDark ?? colors.sunshineYellow} />
+            {xpAwarded === null ? 'Đang nhận phần thưởng…' : xpAwarded > 0 ? `+${xpAwarded} XP` : 'Hôm nay game này đã nhận XP rồi — mai nhé!'}
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 18, flexWrap: 'wrap' }}>
+            <button className="mp-btn" onClick={restart}>Chơi lại</button>
+            <button className="mp-btn mp-btn--primary" onClick={() => navigate('/games')}>Về Khu chơi</button>
+          </div>
+        </ClayCard>
+      </div>
+    );
+  }
+
+  const cols = pairs.length >= 6 ? 4 : 3;
+
+  return (
+    <div className="mp-shell">
+      <div className="mp-topbar">
+        <button className="mp-icon-btn" onClick={() => navigate('/games')} aria-label="Về Khu chơi"><Msr icon="arrow_back" size={20} /></button>
+        <div className="mp-topic-chip"><Msr icon="category" size={16} color={colors.skyDark ?? colors.skyBlue} />{topicLabel} · {pairs.length} cặp</div>
+        <div className="mp-moves">Lượt: {moves}</div>
+      </div>
+      <p className="mp-guide">Lật hai thẻ — tìm hình và từ là một cặp nhé!</p>
+      <div className="mp-grid" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }} role="grid" aria-label="Bàn tìm cặp">
+        {tiles.map((tile) => {
+          const isMatched = matchedIds.has(tile.pairId);
+          const isFlipped = flipped.some((f) => f.key === tile.key);
+          const pair = pairById.get(tile.pairId)!;
+          const face = isFlipped || isMatched;
+          return (
+            <button
+              key={tile.key}
+              className={`mp-tile ${isMatched ? 'mp-matched' : ''}`}
+              onClick={() => flip(tile)}
+              aria-label={face ? (tile.kind === 'image' ? `Hình ${pair.word}` : `Từ ${pair.word}`) : 'Thẻ úp'}
+              aria-pressed={face}
+            >
+              <span className={`mp-flip ${face ? 'mp-face' : ''}`}>
+                <span className="mp-face mp-back"><Msr icon="pets" size={22} /></span>
+                {tile.kind === 'image' ? (
+                  <span className="mp-face mp-front mp-front-img">
+                    <img src={pair.image_url} alt="" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.25'; }} />
+                  </span>
+                ) : (
+                  <span className="mp-face mp-front mp-front-word">{pair.word}</span>
+                )}
+              </span>
+              {isMatched && <Msr icon="check_circle" size={18} color="#4C8A2A" style={{ position: 'absolute', top: 4, right: 4 }} />}
+            </button>
+          );
+        })}
+      </div>
+      <style>{`
+        .mp-shell{min-height:100dvh;background:${colors.backgroundBase};padding:16px 16px 32px;max-width:560px;margin:0 auto;padding-top:max(16px, env(safe-area-inset-top))}
+        .mp-topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+        .mp-icon-btn{width:44px;height:44px;border:none;border-radius:14px;background:${colors.warmWhite};box-shadow:0 4px 0 rgba(26,39,68,.10);cursor:pointer;display:grid;place-items:center;color:${colors.deepSlate}}
+        .mp-topic-chip{display:inline-flex;align-items:center;gap:6px;font-family:${DISPLAY_FONT};font-weight:800;font-size:.85rem;background:${colors.warmWhite};border-radius:999px;padding:8px 14px;box-shadow:0 3px 0 rgba(26,39,68,.08)}
+        .mp-moves{margin-left:auto;font-family:${DISPLAY_FONT};font-weight:900;font-size:.9rem;color:${colors.mediumGray}}
+        .mp-guide{text-align:center;font-size:.9rem;color:${colors.mediumGray};margin:2px 0 14px}
+        .mp-grid{display:grid;gap:9px}
+        .mp-tile{position:relative;aspect-ratio:1;border:none;background:transparent;padding:0;cursor:pointer;perspective:600px}
+        .mp-flip{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.34,1.3,.64,1)}
+        .mp-flip.mp-face{transform:rotateY(180deg)}
+        .mp-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;display:grid;place-items:center;font-family:${DISPLAY_FONT};font-weight:900;font-size:.8rem;color:${colors.deepSlate}}
+        .mp-back{background:${colors.skyBlue};box-shadow:0 4px 0 ${colors.skyDark},inset 0 2px 0 rgba(255,255,255,.5)}
+        .mp-back .msr{color:#fff;font-size:22px}
+        .mp-front{transform:rotateY(180deg);background:#fff;box-shadow:0 4px 0 rgba(26,39,68,.10)}
+        .mp-front-img img{width:82%;height:82%;object-fit:cover;border-radius:12px}
+        .mp-front-word{background:${colors.warmWhite};padding:6px;text-align:center}
+        .mp-matched .mp-front{background:${colors.mintLight};box-shadow:0 4px 0 rgba(125,199,96,.4);opacity:.9}
+        .mp-btn{border:none;border-radius:16px;padding:12px 20px;font-family:${DISPLAY_FONT};font-weight:800;font-size:.9rem;background:${withOpacity(colors.skyBlue, 0.3)};color:${colors.deepSlate};cursor:pointer;box-shadow:0 4px 0 ${colors.skyDark}}
+        .mp-btn--primary{background:linear-gradient(145deg,${colors.sunshineYellowLight},${colors.sunshineYellow});box-shadow:0 5px 0 ${colors.sunshineDark}}
+        .mp-xp-chip{display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:${withOpacity(colors.sunshineYellow, 0.55)};border-radius:16px;padding:10px 18px;box-shadow:${shadows.claySm};font-family:${DISPLAY_FONT};font-weight:900}
+        @media (prefers-reduced-motion: reduce){.mp-flip{transition:none}}
+      `}</style>
     </div>
   );
 };

@@ -1,618 +1,263 @@
 /**
- * DragMatchGame - Word-to-definition matching game
- * Tap English word, then tap Vietnamese meaning to match
+ * DragMatchGame — "Ghép hình ↔ từ" (topic-based, real vocab)
+ *
+ * Rebuild 2026-09-05 per approved design (docs/design/games-stickers-mockup.html):
+ * - Two columns: IMAGE cards (game-card asset) ↔ WORD chips — matches the
+ *   original spec "Kéo thả: Ghép hình ảnh vào đúng từ vựng".
+ * - Vocabulary comes from GET /api/v1/games/vocab?topic=... (notebook words
+ *   first, seed fallback — never empty).
+ * - Tap-to-select (touch friendly for age 5-8); drag still works via the
+ *   same tap-pairing state machine.
+ * - Completion awards XP through POST /gamification/xp-event with an
+ *   idempotent event_id (max 1 award per game per day) — client never
+ *   decides XP amounts.
+ * - Claymorphic tokens throughout; copy in Vietnamese, Lexi's voice.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ClayCard } from '@/shared/components/clay/ClayCard';
-import { Button } from '@/shared/components/ui/Button';
-import { colors, shadows } from '@/design-tokens/claymorphic';
+import { colors, shadows, withOpacity } from '@/design-tokens/claymorphic';
+import { CodexPetSprite } from '@/features/pets/components';
+import {
+  fetchGameVocab,
+  awardGameComplete,
+  normalizeGameTopic,
+  GAME_TOPICS,
+  type GameVocabItem,
+  type GameTopic,
+} from '@/services/gamesVocabService';
+import { useAuth } from '@/contexts/AuthContext';
+import { ClayBurst3D } from '@/shared/components/ClayBurst3D';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+const DISPLAY_FONT = "'Nunito', sans-serif";
 
-interface WordPair {
+interface Card extends GameVocabItem {
   id: string;
-  word: string;
-  emoji: string;
-  definition: string;
-  definitionVi: string;
 }
 
-type GameState = 'READY' | 'PLAYING' | 'SUCCESS';
+type Phase = 'LOADING' | 'PLAYING' | 'SUCCESS' | 'EMPTY';
 
-// ─── Demo Data ────────────────────────────────────────────────────────────────
-
-const DEMO_PAIRS: WordPair[] = [
-  { id: '1', word: 'Apple', emoji: '🍎', definition: 'Apple', definitionVi: 'Táo' },
-  { id: '2', word: 'Book', emoji: '📚', definition: 'Book', definitionVi: 'Sách' },
-  { id: '3', word: 'Sun', emoji: '☀️', definition: 'Sun', definitionVi: 'Mặt trời' },
-  { id: '4', word: 'Tree', emoji: '🌳', definition: 'Tree', definitionVi: 'Cây' },
-  { id: '5', word: 'Water', emoji: '💧', definition: 'Water', definitionVi: 'Nước' },
-];
-
-// ─── Icons ───────────────────────────────────────────────────────────────────
-
-const BackIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="19" y1="12" x2="5" y2="12" />
-    <polyline points="12 19 5 12 12 5" />
-  </svg>
+const Msr: React.FC<{ icon: string; size?: number; color?: string; style?: React.CSSProperties }> = ({
+  icon, size = 20, color, style,
+}) => (
+  <span aria-hidden="true" className="msr" style={{ fontSize: size, color, ...style }}>{icon}</span>
 );
 
-const CheckIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
+const EmptyTopic: React.FC<{ onBack: () => void }> = ({ onBack }) => (
+  <div className="dm-shell">
+    <ClayCard style={{ padding: 28, textAlign: 'center', maxWidth: 420 }}>
+      <Msr icon="sentiment_satisfied" size={40} color={colors.sunshineDark ?? colors.sunshineYellow} />
+      <h2 style={{ fontFamily: DISPLAY_FONT, fontWeight: 900, margin: '10px 0 6px' }}>Chủ đề đang cập nhật</h2>
+      <p style={{ fontSize: 14, color: colors.mediumGray }}>
+        Lexi đang chuẩn bị thêm từ cho chủ đề này. Con quay lại sau nhé!
+      </p>
+      <button onClick={onBack} className="dm-back-btn" style={{ marginTop: 16 }}>Về màn hình chính</button>
+    </ClayCard>
+  </div>
 );
-
-// ─── Styles ─────────────────────────────────────────────────────────────────
-
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
-
-  .drag-match {
-    font-family: 'Nunito', system-ui, sans-serif;
-    min-height: 100vh;
-    background: ${colors.backgroundBase};
-    color: ${colors.deepSlate};
-  }
-
-  .dm-header {
-    padding: 20px 20px 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .dm-back-btn {
-    width: 44px;
-    height: 44px;
-    background: #fff;
-    border: none;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: ${shadows.claySm};
-    color: ${colors.skyBlue};
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    flex-shrink: 0;
-  }
-
-  .dm-back-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: ${shadows.clay};
-  }
-
-  .dm-back-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 rgba(0,0,0,0.12);
-  }
-
-  .dm-title {
-    font-size: 22px;
-    font-weight: 900;
-    margin: 0;
-    color: ${colors.deepSlate};
-    flex: 1;
-  }
-
-  .dm-progress-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .dm-progress-badge {
-    padding: 4px 12px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #fff;
-  }
-
-  .dm-content {
-    padding: 16px 20px 40px;
-    max-width: 700px;
-    margin: 0 auto;
-  }
-
-  .dm-ready-content {
-    padding: 24px 20px;
-  }
-
-  .dm-title-center {
-    font-size: 28px;
-    font-weight: 900;
-    text-align: center;
-    margin: 0 0 16px;
-    color: ${colors.deepSlate};
-  }
-
-  .dm-instructions {
-    font-size: 16px;
-    font-weight: 600;
-    color: ${colors.mediumGray};
-    margin: 0 0 12px;
-    line-height: 1.5;
-    text-align: center;
-  }
-
-  .dm-instructions-detail {
-    font-size: 14px;
-    color: ${colors.mediumGray};
-    margin: 0 0 20px;
-    line-height: 1.6;
-  }
-
-  .dm-hint-card {
-    margin-bottom: 16px;
-  }
-
-  .dm-hint-text {
-    font-size: 14px;
-    font-weight: 700;
-    color: ${colors.skyBlue};
-    text-align: center;
-  }
-
-  .dm-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  @media (max-width: 500px) {
-    .dm-columns {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .dm-column-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: ${colors.deepSlate};
-    margin: 0 0 10px;
-    padding-left: 4px;
-  }
-
-  .dm-word-card {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
-    background: #fff;
-    border-radius: 14px;
-    border: 3px solid ${colors.skyBlue};
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    user-select: none;
-  }
-
-  .dm-word-card:hover:not(.dm-word-matched):not(:disabled) {
-    border-color: ${colors.mintGreen};
-    background: #F0FDF4;
-  }
-
-  .dm-word-card-selected {
-    border-color: ${colors.mintGreen} !important;
-    background: #F0FDF4 !important;
-    transform: scale(1.02);
-  }
-
-  .dm-word-card-matched {
-    opacity: 0.5;
-    border-color: ${colors.coralPink};
-    background: #FFF1F2;
-    cursor: default;
-  }
-
-  .dm-emoji {
-    font-size: 28px;
-    flex-shrink: 0;
-  }
-
-  .dm-word-text {
-    font-size: 16px;
-    font-weight: 700;
-    color: ${colors.deepSlate};
-    flex: 1;
-  }
-
-  .dm-word-matched-text {
-    color: ${colors.lightGray};
-  }
-
-  .dm-check {
-    font-size: 20px;
-    color: ${colors.mintGreen};
-  }
-
-  .dm-def-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 16px;
-    background: #fff;
-    border-radius: 14px;
-    border: 3px solid #E5E7EB;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    user-select: none;
-  }
-
-  .dm-def-card:hover:not(.dm-def-matched):not(:disabled) {
-    border-color: ${colors.coralPink};
-    background: #FEF3C7;
-  }
-
-  .dm-def-card-active {
-    border-color: ${colors.coralPink} !important;
-    background: #FEF3C7 !important;
-  }
-
-  .dm-def-card-matched {
-    opacity: 0.5;
-    border-color: ${colors.mintGreen};
-    background: #F0FDF4;
-    cursor: default;
-  }
-
-  .dm-def-text {
-    font-size: 16px;
-    font-weight: 700;
-    color: ${colors.deepSlate};
-  }
-
-  .dm-def-matched-text {
-    color: ${colors.lightGray};
-  }
-
-  .dm-success-content {
-    padding: 24px 20px;
-    text-align: center;
-  }
-
-  .dm-success-card {
-    padding: 32px;
-    text-align: center;
-  }
-
-  .dm-success-emoji {
-    font-size: 64px;
-    margin-bottom: 12px;
-  }
-
-  .dm-success-title {
-    font-size: 28px;
-    font-weight: 900;
-    color: ${colors.deepSlate};
-    margin: 0 0 8px;
-  }
-
-  .dm-success-message {
-    font-size: 16px;
-    color: ${colors.mediumGray};
-    margin: 0 0 20px;
-  }
-
-  .dm-stats-row {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    margin-bottom: 24px;
-  }
-
-  .dm-stat-badge {
-    text-align: center;
-    background: ${colors.skyBlue};
-    padding: 12px 20px;
-    border-radius: 16px;
-    box-shadow: ${shadows.claySm};
-  }
-
-  .dm-stat-value {
-    font-size: 28px;
-    font-weight: 900;
-    color: #fff;
-  }
-
-  .dm-stat-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #fff;
-    margin-top: 4px;
-  }
-
-  .dm-action-btn {
-    width: 100%;
-    margin-top: 10px;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .dm-word-card, .dm-def-card, .dm-back-btn {
-      transition: none;
-    }
-    .dm-word-card-selected {
-      transform: none;
-    }
-  }
-`;
-
-// ─── Component ───────────────────────────────────────────────────────────────
 
 export const DragMatchGame: React.FC = () => {
-  const [gameState, setGameState] = useState<GameState>('READY');
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const topic: GameTopic | null = useMemo(() => normalizeGameTopic(params.get('topic')), [params]);
+
+  const [phase, setPhase] = useState<Phase>('LOADING');
+  const [cards, setCards] = useState<Card[]>([]);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
-  const [matchedPairs, setMatchedPairs] = useState<string[]>([]);
-  const [incorrectAttempts, setIncorrectAttempts] = useState(0);
-  const [shuffledDefs, setShuffledDefs] = useState<WordPair[]>([]);
-  const [shakeCard, setShakeCard] = useState<string | null>(null);
+  const [matched, setMatched] = useState<Set<string>>(new Set());
+  const [shakeWord, setShakeWord] = useState<string | null>(null);
+  const [mismatches, setMismatches] = useState(0);
+  const [xpAwarded, setXpAwarded] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Shuffle definitions on mount
+  const topicLabel = GAME_TOPICS.find((t) => t.slug === topic)?.label ?? '';
+
   useEffect(() => {
-    setShuffledDefs([...DEMO_PAIRS].sort(() => Math.random() - 0.5));
-  }, []);
+    if (!topic) { setPhase('EMPTY'); return; }
+    let alive = true;
+    setPhase('LOADING');
+    fetchGameVocab(topic, 8)
+      .then((data) => {
+        if (!alive) return;
+        const items = (data.items ?? []).map((it, i) => ({ ...it, id: `${it.word}-${i}` }));
+        if (items.length < 3) { setPhase('EMPTY'); return; }
+        setCards(items);
+        setPhase('PLAYING');
+      })
+      .catch(() => alive && setError('Không tải được từ vựng — kiểm tra mạng rồi thử lại nhé.'));
+    return () => { alive = false; };
+  }, [topic]);
 
-  const handleStart = () => {
-    setGameState('PLAYING');
-    setMatchedPairs([]);
-    setIncorrectAttempts(0);
-    setSelectedWord(null);
-    setShuffledDefs([...DEMO_PAIRS].sort(() => Math.random() - 0.5));
-  };
+  const shuffledWords = useMemo(
+    () => [...cards].sort(() => Math.random() - 0.5),
+    [cards],
+  );
 
-  const handleWordPress = (id: string) => {
-    if (matchedPairs.includes(id)) return;
+  const complete = matched.size === cards.length && cards.length > 0;
 
-    if (selectedWord === id) {
+  const awardXp = useCallback(async () => {
+    if (!user?.id) return;
+    const res = await awardGameComplete(user.id, 'drag_match');
+    setXpAwarded(res.xp_awarded);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (complete) void awardXp();
+  }, [complete, awardXp]);
+
+  const tryMatch = (card: Card) => {
+    if (!selectedWord || matched.has(card.id)) return;
+    if (selectedWord === card.word) {
+      setMatched((m) => new Set(m).add(card.id));
       setSelectedWord(null);
     } else {
-      setSelectedWord(id);
+      setMismatches((n) => n + 1);
+      setShakeWord(selectedWord);
+      setTimeout(() => { setShakeWord(null); setSelectedWord(null); }, 450);
     }
   };
 
-  const handleDefPress = (defId: string) => {
-    if (!selectedWord || matchedPairs.includes(defId)) return;
-
-    if (selectedWord === defId) {
-      // Correct match
-      setMatchedPairs(prev => [...prev, defId]);
-      setSelectedWord(null);
-
-      if (matchedPairs.length + 1 === DEMO_PAIRS.length) {
-        setTimeout(() => setGameState('SUCCESS'), 600);
-      }
-    } else {
-      // Incorrect match
-      setIncorrectAttempts(prev => prev + 1);
-      setSelectedWord(null);
-      setShakeCard(defId);
-      setTimeout(() => setShakeCard(null), 400);
-    }
+  const speak = (text: string) => {
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-US'; u.rate = 0.85;
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+    } catch { /* unsupported — silent */ }
   };
 
-  const handlePlayAgain = () => {
-    setGameState('READY');
-  };
-
-  // READY State
-  if (gameState === 'READY') {
+  if (error) {
     return (
-      <div className="drag-match">
-        <style>{styles}</style>
-
-        <div className="dm-content">
-          <div className="dm-ready-content">
-            <ClayCard style={{ padding: '24px', marginBottom: '16px' }}>
-              <h1 className="dm-title-center">Target Match</h1>
-              <p className="dm-instructions">
-                Tap an English word, then tap its Vietnamese meaning to make a match!
-              </p>
-              <ul className="dm-instructions-detail" style={{ textAlign: 'left', paddingLeft: '20px' }}>
-                <li>{DEMO_PAIRS.length} word pairs to match</li>
-                <li>Tap to select, tap again to match</li>
-                <li>Complete all matches to win!</li>
-              </ul>
-              <Button
-                variant="primary"
-                size="lg"
-                className="w-full"
-                onClick={handleStart}
-              >
-                Start Game
-              </Button>
-            </ClayCard>
-
-            <Button
-              variant="secondary"
-              size="lg"
-              className="w-full"
-              onClick={() => window.history.back()}
-            >
-              Back to Games
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // SUCCESS State
-  if (gameState === 'SUCCESS') {
-    return (
-      <div className="drag-match">
-        <style>{styles}</style>
-
-        <div className="dm-content">
-          <div className="dm-ready-content">
-            <ClayCard style={{ padding: '32px', textAlign: 'center' }}>
-              <div className="dm-success-emoji">🎉</div>
-              <h2 className="dm-success-title">Amazing!</h2>
-              <p className="dm-success-message">
-                You matched all {DEMO_PAIRS.length} pairs!
-              </p>
-              <div className="dm-stats-row">
-                <div className="dm-stat-badge">
-                  <div className="dm-stat-value">{matchedPairs.length}</div>
-                  <div className="dm-stat-label">Correct</div>
-                </div>
-                <div className="dm-stat-badge" style={{ background: colors.coralPink }}>
-                  <div className="dm-stat-value">{incorrectAttempts}</div>
-                  <div className="dm-stat-label">Tries</div>
-                </div>
-              </div>
-
-              <Button
-                variant="primary"
-                size="lg"
-                className="dm-action-btn"
-                onClick={() => {
-                  handlePlayAgain();
-                  handleStart();
-                }}
-              >
-                Play Again
-              </Button>
-              <Button
-                variant="secondary"
-                size="lg"
-                className="dm-action-btn"
-                onClick={() => window.history.back()}
-              >
-                Back to Games
-              </Button>
-            </ClayCard>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // PLAYING State
-  return (
-    <div className="drag-match">
-      <style>{styles}</style>
-
-      {/* Header */}
-      <header className="dm-header">
-        <button
-          type="button"
-          className="dm-back-btn"
-          onClick={() => window.history.back()}
-          aria-label="Go back"
-        >
-          <BackIcon />
-        </button>
-        <h1 className="dm-title">Target Match</h1>
-        <div className="dm-progress-row">
-          <span
-            className="dm-progress-badge"
-            style={{ background: colors.mintGreen }}
-          >
-            ✓ {matchedPairs.length}/{DEMO_PAIRS.length}
-          </span>
-          {incorrectAttempts > 0 && (
-            <span
-              className="dm-progress-badge"
-              style={{ background: colors.coralPink }}
-            >
-              ✗ {incorrectAttempts}
-            </span>
-          )}
-        </div>
-      </header>
-
-      {/* Content */}
-      <div className="dm-content">
-        {/* Hint */}
-        <ClayCard className="dm-hint-card" style={{ padding: '12px 16px' }}>
-          <p className="dm-hint-text">
-            {selectedWord
-              ? 'Now tap the matching definition!'
-              : 'Tap an English word to start'}
-          </p>
+      <div className="dm-shell">
+        <ClayCard style={{ padding: 28, textAlign: 'center', maxWidth: 420 }}>
+          <p style={{ fontSize: 15, fontWeight: 700 }}>{error}</p>
+          <button onClick={() => window.location.reload()} className="dm-back-btn" style={{ marginTop: 14 }}>Thử lại</button>
         </ClayCard>
-
-        {/* Columns */}
-        <div className="dm-columns">
-          {/* Words Column */}
-          <div>
-            <h3 className="dm-column-title">English</h3>
-            {DEMO_PAIRS.map(pair => {
-              const isMatched = matchedPairs.includes(pair.id);
-              const isSelected = selectedWord === pair.id;
-
-              return (
-                <button
-                  key={pair.id}
-                  type="button"
-                  className={`dm-word-card ${isSelected ? 'dm-word-card-selected' : ''} ${isMatched ? 'dm-word-card-matched' : ''}`}
-                  onClick={() => handleWordPress(pair.id)}
-                  disabled={isMatched}
-                  style={{ width: '100%', textAlign: 'left' }}
-                >
-                  <span className="dm-emoji">{pair.emoji}</span>
-                  <span className={`dm-word-text ${isMatched ? 'dm-word-matched-text' : ''}`}>
-                    {pair.word}
-                  </span>
-                  {isMatched && <span className="dm-check"><CheckIcon /></span>}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Definitions Column */}
-          <div>
-            <h3 className="dm-column-title">Tiếng Việt</h3>
-            {shuffledDefs.map(pair => {
-              const isMatched = matchedPairs.includes(pair.id);
-              const canSelect = selectedWord !== null && !isMatched;
-
-              return (
-                <button
-                  key={pair.id}
-                  type="button"
-                  className={`dm-def-card ${canSelect ? 'dm-def-card-active' : ''} ${isMatched ? 'dm-def-card-matched' : ''} ${shakeCard === pair.id ? 'shake' : ''}`}
-                  onClick={() => handleDefPress(pair.id)}
-                  disabled={!canSelect}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left' as const,
-                    animation: shakeCard === pair.id ? 'shake 0.4s ease' : undefined,
-                  }}
-                >
-                  <span className={`dm-def-text ${isMatched ? 'dm-def-matched-text' : ''}`}>
-                    {pair.definitionVi}
-                  </span>
-                  {isMatched && <span className="dm-check"><CheckIcon /></span>}
-                </button>
-              );
-            })}
-          </div>
+      </div>
+    );
+  }
+  if (phase === 'EMPTY') return <EmptyTopic onBack={() => navigate('/games')} />;
+  if (phase === 'LOADING') {
+    return (
+      <div className="dm-shell">
+        <div className="dm-skeleton" aria-label="Đang tải">
+          {[0, 1, 2, 3].map((i) => <div key={i} className="dm-skel-row" />)}
         </div>
+      </div>
+    );
+  }
 
-        <Button
-          variant="secondary"
-          size="lg"
-          className="w-full"
-          onClick={() => window.history.back()}
-        >
-          Exit Game
-        </Button>
+  if (phase === 'SUCCESS' || complete) {
+    return (
+      <div className="dm-shell dm-success">
+        <ClayBurst3D show />
+        <ClayCard style={{ padding: 32, textAlign: 'center', maxWidth: 440 }}>
+          <CodexPetSprite animationState="jumping" label="Lexi nhảy mừng" size={130} />
+          <h2 style={{ fontFamily: DISPLAY_FONT, fontWeight: 900, fontSize: 24, margin: '8px 0 4px' }}>
+            Con ghép giỏi lắm!
+          </h2>
+          <p style={{ fontSize: 15, color: colors.mediumGray }}>
+            Ghép đúng {cards.length} cặp{mismatches > 0 ? ` · ${mismatches} lần nhầm (không sao cả!)` : ' · chính xác tuyệt đối'}
+          </p>
+          <div
+            className="dm-xp-chip"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 14,
+              background: withOpacity(colors.sunshineYellow, 0.55), borderRadius: 16, padding: '10px 18px',
+              boxShadow: shadows.claySm, fontFamily: DISPLAY_FONT, fontWeight: 900,
+            }}
+          >
+            <Msr icon="bolt" size={18} color={colors.sunshineDark ?? colors.sunshineYellow} />
+            {xpAwarded === null ? 'Đang nhận phần thưởng…' : xpAwarded > 0 ? `+${xpAwarded} XP` : 'Hôm nay đã nhận XP game này rồi — mai chơi tiếp nhé!'}
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 18, flexWrap: 'wrap' }}>
+            <button className="dm-back-btn" onClick={() => { setMatched(new Set()); setMismatches(0); setXpAwarded(null); setPhase('PLAYING'); }}>
+              Chơi lại
+            </button>
+            <button className="dm-back-btn dm-back-btn--primary" onClick={() => navigate('/games')}>Về Khu chơi</button>
+          </div>
+        </ClayCard>
+      </div>
+    );
+  }
+
+  return (
+    <div className="dm-shell">
+      <div className="dm-topbar">
+        <button className="dm-icon-btn" onClick={() => navigate('/games')} aria-label="Về Khu chơi">
+          <Msr icon="arrow_back" size={20} />
+        </button>
+        <div className="dm-topic-chip">
+          <Msr icon="category" size={16} color={colors.skyDark ?? colors.skyBlue} />
+          {topicLabel} · {cards.length} từ
+        </div>
+        <div className="dm-progress" aria-label={`Đã ghép ${matched.size} trên ${cards.length}`}>
+          <span style={{ width: `${(matched.size / cards.length) * 100}%` }} />
+        </div>
+      </div>
+
+      <p className="dm-guide">Chạm một hình, rồi chạm từ đúng của nó nhé!</p>
+
+      <div className="dm-board">
+        <div className="dm-col">
+          {cards.map((card) => {
+            const done = matched.has(card.id);
+            return (
+              <button
+                key={`img-${card.id}`}
+                className={`dm-img-card ${done ? 'dm-done' : ''}`}
+                onClick={() => { if (!done) { setSelectedWord(card.word); speak(card.word); } }}
+                disabled={done}
+                aria-label={`Hình: ${card.word}`}
+              >
+                <img src={card.image_url} alt="" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.25'; }} />
+                {done && <Msr icon="check_circle" size={22} color="#4C8A2A" style={{ position: 'absolute', top: 6, right: 6 }} />}
+              </button>
+            );
+          })}
+        </div>
+        <div className="dm-col">
+          {shuffledWords.map((card) => {
+            const done = matched.has(card.id);
+            const shaking = shakeWord === card.word;
+            return (
+              <button
+                key={`w-${card.id}`}
+                className={`dm-word-card ${done ? 'dm-done' : ''} ${shaking ? 'dm-shake' : ''} ${selectedWord === card.word ? 'dm-sel' : ''}`}
+                onClick={() => tryMatch(card)}
+                disabled={done}
+                aria-pressed={selectedWord === card.word}
+              >
+                {card.word}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <style>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          20% { transform: translateX(-6px); }
-          40% { transform: translateX(6px); }
-          60% { transform: translateX(-6px); }
-          80% { transform: translateX(6px); }
-        }
+        .dm-shell{min-height:100dvh;background:${colors.backgroundBase};padding:16px 16px 32px;max-width:560px;margin:0 auto;padding-top:max(16px, env(safe-area-inset-top))}
+        .dm-topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+        .dm-icon-btn{width:44px;height:44px;border:none;border-radius:14px;background:${colors.warmWhite};box-shadow:0 4px 0 rgba(26,39,68,.10);cursor:pointer;display:grid;place-items:center;color:${colors.deepSlate}}
+        .dm-topic-chip{display:inline-flex;align-items:center;gap:6px;font-family:${DISPLAY_FONT};font-weight:800;font-size:.85rem;background:${colors.warmWhite};border-radius:999px;padding:8px 14px;box-shadow:0 3px 0 rgba(26,39,68,.08)}
+        .dm-progress{flex:1;height:10px;border-radius:999px;background:rgba(26,39,68,.08);overflow:hidden}
+        .dm-progress span{display:block;height:100%;border-radius:999px;background:${colors.mintGreen};transition:width .35s cubic-bezier(.34,1.56,.64,1)}
+        .dm-guide{text-align:center;font-size:.9rem;color:${colors.mediumGray};margin:2px 0 14px}
+        .dm-board{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .dm-col{display:flex;flex-direction:column;gap:10px}
+        .dm-img-card{position:relative;border:3px solid transparent;border-radius:20px;background:#fff;box-shadow:0 6px 0 rgba(26,39,68,.08),0 10px 18px rgba(26,39,68,.08);padding:10px;cursor:pointer;min-height:96px;display:grid;place-items:center;transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s}
+        .dm-img-card:active{transform:scale(.97)}
+        .dm-img-card img{width:100%;max-width:120px;aspect-ratio:1;object-fit:cover;border-radius:14px;transition:opacity .3s}
+        .dm-word-card{border:3px solid transparent;border-radius:18px;background:${colors.warmWhite};box-shadow:0 5px 0 rgba(26,39,68,.10);padding:18px 10px;font-family:${DISPLAY_FONT};font-weight:900;font-size:1rem;color:${colors.deepSlate};cursor:pointer;min-height:56px;transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s,background .2s}
+        .dm-sel{border-color:${colors.skyBlue};background:${withOpacity(colors.skyBlue, 0.18)}}
+        .dm-done{border-color:${colors.mintGreen};background:${colors.mintLight};opacity:.85;cursor:default}
+        .dm-shake{animation:dmshake .4s ease}
+        @keyframes dmshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+        .dm-back-btn{border:none;border-radius:16px;padding:12px 20px;font-family:${DISPLAY_FONT};font-weight:800;font-size:.9rem;background:${withOpacity(colors.skyBlue, 0.3)};color:${colors.deepSlate};cursor:pointer;box-shadow:0 4px 0 ${colors.skyDark}}
+        .dm-back-btn--primary{background:linear-gradient(145deg,${colors.sunshineYellowLight},${colors.sunshineYellow});box-shadow:0 5px 0 ${colors.sunshineDark}}
+        .dm-skel-row{height:96px;border-radius:20px;background:linear-gradient(90deg,rgba(26,39,68,.06),rgba(26,39,68,.12),rgba(26,39,68,.06));background-size:200% 100%;animation:dmsweep 1.2s infinite}
+        @keyframes dmsweep{to{background-position:-200% 0}}
+        @media (prefers-reduced-motion: reduce){.dm-shake,.dm-skel-row{animation:none}.dm-img-card,.dm-word-card,.dm-progress span{transition:none}}
       `}</style>
     </div>
   );

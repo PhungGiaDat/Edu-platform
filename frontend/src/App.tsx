@@ -19,6 +19,7 @@ import { GamesPage } from "./pages/GamesPage";
 import DragMatchGame from "./pages/games/DragMatchGame";
 import MemoryPairsGame from "./pages/games/MemoryPairsGame";
 import ColorLearnGame from "./pages/games/ColorLearnGame";
+import ColorAnimalGame from "./pages/games/ColorAnimalGame";
 import { LearningPathSetup } from "./pages/LearningPathSetup";
 import { LearningPath3D } from "./pages/LearningPath3D";
 import PetsPage from "./pages/PetsPage";
@@ -317,6 +318,7 @@ const App = () => {
         <Route path="/games/drag-match" element={<RequireUserAuth><Layout><DragMatchGame /></Layout></RequireUserAuth>} />
         <Route path="/games/memory-pairs" element={<RequireUserAuth><Layout><MemoryPairsGame /></Layout></RequireUserAuth>} />
         <Route path="/games/color-learn" element={<RequireUserAuth><Layout><ColorLearnGame /></Layout></RequireUserAuth>} />
+        <Route path="/games/color-animal" element={<RequireUserAuth><Layout><ColorAnimalGame /></Layout></RequireUserAuth>} />
 
         {/* Notebook (SRS) + Dictionary — backend contracts READY (PG-backed) */}
         <Route path="/notebook" element={<RequireUserAuth><Layout><NotebookPage /></Layout></RequireUserAuth>} />
