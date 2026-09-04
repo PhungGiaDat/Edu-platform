@@ -829,13 +829,12 @@
       sendMessage('TARGET_FOUND', { qrId: detail.name, word: targetWord, trackedCount: trackedTargets.size });
       showCardLabel(targetWord);
 
-      // Primary target: eager model attachment (CAT eager)
+      // Primary target: legacy singleton attach path (preserves CAT_IDLE mixer, etc.)
       if (detail.name === primaryModelTargetName) {
         attemptModelAttach(detail.name);
-      }
-
-      // Non-primary: lazy model load + make visible (FISH lazy)
-      if (detail.name !== primaryModelTargetName) {
+      } else {
+        // Non-primary: reuse the already-preloaded promise (concurrent preload started in main()).
+        // Never call GLTFLoader.load again — ensureTargetModelLoaded is a no-op if a promise exists.
         ensureTargetModelLoaded(detail.name).then(model => {
           if (!model) return;
           const inst = targetInstances.get(detail.name);
@@ -843,11 +842,12 @@
           if (scene && inst.anchor && inst.offsetGroup) {
             reparentModelToAnchor(inst);
           }
-          if (trackedTargets.has(detail.name)) {
+          // Only show if target is still tracked — guard against lost-during-preload.
+          if (inst.tracked && trackedTargets.has(detail.name)) {
             const pose = trackedTargets.get(detail.name);
             if (pose) applyTargetPose(inst, pose);
-            model.visible = true;
-            sendARDebug('TARGET_MODEL_VISIBLE', { targetName: detail.name, reason: 'lazy_loaded_on_found' });
+            inst.model.visible = true;
+            sendARDebug('TARGET_MODEL_ATTACH', { targetName: detail.name, source: inst.modelState === 'loaded' ? 'preloaded' : 'pending-preload' });
           }
         });
       }
@@ -908,6 +908,39 @@
       logToBuffer('debug', 'Message received', { type });
     });
 
+    // ========== CONCURRENT MODEL PRELOAD (all xr_targets) ==========
+    // Start GLB downloads for every resolved target as soon as target data is parsed.
+    // Does NOT await — XR init proceeds in parallel. Reuses promise per URL via modelPromiseCache.
+    function preloadAllTargetModels() {
+      const preloadable = xrTargetConfigs.filter(c => c.model_3d_url);
+      if (preloadable.length === 0) return Promise.resolve();
+
+      sendARDebug('MODEL_PRELOAD_BATCH_START', {
+        targets: preloadable.map(c => c.qr_id),
+      });
+
+      const batchStart = performance.now();
+      const promises = preloadable.map(cfg =>
+        ensureTargetModelLoaded(cfg.qr_id)
+          .then(model => {
+            const ms = Math.round(performance.now() - batchStart);
+            sendARDebug('TARGET_MODEL_PRELOAD_READY', { targetName: cfg.qr_id, ok: !!model, durationMs: ms });
+            return model;
+          })
+          .catch(err => {
+            sendARDebug('TARGET_MODEL_PRELOAD_ERROR', { targetName: cfg.qr_id, error: String(err) });
+            return null;
+          })
+      );
+
+      return Promise.allSettled(promises).then(results => {
+        sendARDebug('MODEL_PRELOAD_BATCH_READY', {
+          count: results.length,
+          succeeded: results.filter(r => r.status === 'fulfilled' && r.value).length,
+        });
+      });
+    }
+
     // ========== MAIN ==========
     async function main() {
       sendARDebug('PAGE_LOAD');
@@ -917,7 +950,10 @@
         loadComboRules();
 
         const targetsPromise = Promise.all(xrTargetConfigs.map(cfg => loadTargetData(cfg)));
-        const modelPromise = modelUrl ? ensureTargetModelLoaded(primaryModelTargetName) : Promise.resolve(null);
+
+        // Kick off concurrent model preload as soon as configs exist — no await.
+        // ensureTargetModelLoaded is per-URL idempotent via modelPromiseCache.
+        const modelsPromise = preloadAllTargetModels();
 
         const targetDataList = await targetsPromise;
         sendARDebug('MULTI_TARGET_DATA_READY', { count: targetDataList.length, targets: targetDataList.map(t => t.name) });
@@ -925,12 +961,15 @@
         setPhase('loading');
         sendARDebug('LOADING_ASSETS', { hasModel: !!modelUrl, targetCount: targetDataList.length });
 
+        // XR init must NOT wait for model downloads.
         await initXR(targetDataList);
-        await modelPromise;
 
         setPhase('viewing');
         sendARDebug('INIT_COMPLETE', { modelLoaded: !!loadedModel, targetCount: targetDataList.length });
         logToBuffer('info', 'Initialization complete');
+
+        // Surface preload outcome after XR is up (don't block readiness).
+        modelsPromise.then(() => sendARDebug('PRELOAD_OUTCOME_RESOLVED', {}));
       } catch (error) {
         setPhase('error');
         sendARDebug('INIT_ERROR', { error: String(error), stack: error?.stack });
