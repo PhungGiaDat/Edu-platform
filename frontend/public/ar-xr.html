@@ -908,37 +908,20 @@
       logToBuffer('debug', 'Message received', { type });
     });
 
-    // ========== CONCURRENT MODEL PRELOAD (all xr_targets) ==========
-    // Start GLB downloads for every resolved target as soon as target data is parsed.
-    // Does NOT await — XR init proceeds in parallel. Reuses promise per URL via modelPromiseCache.
-    function preloadAllTargetModels() {
-      const preloadable = xrTargetConfigs.filter(c => c.model_3d_url);
-      if (preloadable.length === 0) return Promise.resolve();
+    // ========== STAGED MODEL PRELOAD ==========
+    // Phase 1: load primary model immediately (cat — user expects this first).
+    // Phase 2: after primary completes, begin secondary preloads (fish) in background.
+    // Never initiate new downloads from IMAGE_FOUND — reuse existing promises.
 
-      sendARDebug('MODEL_PRELOAD_BATCH_START', {
-        targets: preloadable.map(c => c.qr_id),
-      });
-
-      const batchStart = performance.now();
-      const promises = preloadable.map(cfg =>
-        ensureTargetModelLoaded(cfg.qr_id)
-          .then(model => {
-            const ms = Math.round(performance.now() - batchStart);
-            sendARDebug('TARGET_MODEL_PRELOAD_READY', { targetName: cfg.qr_id, ok: !!model, durationMs: ms });
-            return model;
-          })
-          .catch(err => {
-            sendARDebug('TARGET_MODEL_PRELOAD_ERROR', { targetName: cfg.qr_id, error: String(err) });
-            return null;
-          })
+    function preloadSecondaryTargets() {
+      const secondary = xrTargetConfigs.filter(
+        cfg => cfg.qr_id !== primaryModelTargetName && cfg.model_3d_url
       );
-
-      return Promise.allSettled(promises).then(results => {
-        sendARDebug('MODEL_PRELOAD_BATCH_READY', {
-          count: results.length,
-          succeeded: results.filter(r => r.status === 'fulfilled' && r.value).length,
-        });
+      if (secondary.length === 0) return;
+      sendARDebug('SECONDARY_PRELOAD_BATCH_START', {
+        targets: secondary.map(c => c.qr_id),
       });
+      secondary.forEach(cfg => ensureTargetModelLoaded(cfg.qr_id));
     }
 
     // ========== MAIN ==========
@@ -951,9 +934,14 @@
 
         const targetsPromise = Promise.all(xrTargetConfigs.map(cfg => loadTargetData(cfg)));
 
-        // Kick off concurrent model preload as soon as configs exist — no await.
-        // ensureTargetModelLoaded is per-URL idempotent via modelPromiseCache.
-        const modelsPromise = preloadAllTargetModels();
+        // Phase 1: preload primary model immediately — no await.
+        sendARDebug('MODEL_PRIMARY_PRELOAD_START', { targetName: primaryModelTargetName });
+        const primaryModelPromise = ensureTargetModelLoaded(primaryModelTargetName);
+        primaryModelPromise.then(() => {
+          sendARDebug('PRIMARY_MODEL_READY', { targetName: primaryModelTargetName });
+          // Phase 2: kick off secondary preloads after primary is ready.
+          preloadSecondaryTargets();
+        });
 
         const targetDataList = await targetsPromise;
         sendARDebug('MULTI_TARGET_DATA_READY', { count: targetDataList.length, targets: targetDataList.map(t => t.name) });
@@ -967,9 +955,6 @@
         setPhase('viewing');
         sendARDebug('INIT_COMPLETE', { modelLoaded: !!loadedModel, targetCount: targetDataList.length });
         logToBuffer('info', 'Initialization complete');
-
-        // Surface preload outcome after XR is up (don't block readiness).
-        modelsPromise.then(() => sendARDebug('PRELOAD_OUTCOME_RESOLVED', {}));
       } catch (error) {
         setPhase('error');
         sendARDebug('INIT_ERROR', { error: String(error), stack: error?.stack });

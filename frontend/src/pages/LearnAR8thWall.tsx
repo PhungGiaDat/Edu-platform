@@ -329,6 +329,35 @@ export const LearnAR8thWall: React.FC = () => {
         trace('MODEL_PRELOAD', url);
       }
 
+      // Preconnect to model CDN for primary + any secondary targets.
+      // This reduces DNS+TLS handshake time before the staged preload fires.
+      const cdnOrigin = 'https://rofprrtoeyirssfndxag.supabase.co';
+      if (!document.querySelector(`link[rel="preconnect"][href="${cdnOrigin}"]`)) {
+        const preconn = document.createElement('link');
+        preconn.rel = 'preconnect';
+        preconn.href = cdnOrigin;
+        preconn.crossOrigin = 'anonymous';
+        document.head.appendChild(preconn);
+      }
+
+      // Stage fish preload: inject <link> for any secondary targets.
+      // The actual GLTFLoader download fires inside ar-xr.html after cat MODEL_LOAD_COMPLETE.
+      // Injecting the link here gives the browser a head-start on DNS/TLS for fish.
+      for (const target of targets) {
+        if (target.qr_id === qrId) continue; // skip primary
+        if (!target.model_3d_url) continue;
+        const fishUrl = target.model_3d_url;
+        if (document.querySelector(`link[data-fish-preload="${fishUrl}"]`)) continue;
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.as = 'fetch';
+        link.href = fishUrl;
+        link.crossOrigin = 'anonymous';
+        link.dataset.fishPreload = fishUrl;
+        document.head.appendChild(link);
+        trace('FISH_PREFETCH', `${target.qr_id}:${fishUrl}`);
+      }
+
       setCurrentTarget(primary);
       setXrTargets(targets);
       setFoundCards(prev => new Set([...prev, qrId]));
@@ -536,6 +565,8 @@ export const LearnAR8thWall: React.FC = () => {
         )}
 
         {/* XR_BOOTING | VIEWING: 8th Wall XR viewer */}
+        {/* XR_READY is signaled by XR_CAMERA_HAS_VIDEO from iframe, NOT iframe.onload.
+            iframe.onload fires when GLBs finish downloading (~30-40s) — far too late. */}
         {(phase === 'XR_BOOTING' || phase === 'VIEWING') && viewerSrc && (
           <iframe
             ref={viewerRef}
