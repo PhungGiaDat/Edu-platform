@@ -33,6 +33,7 @@
     "@zxing/library": "^0.20.0",
     "axios": "^1.10.0",
     "konva": "^9.3.22",
+    "motion": "^13.2.0",
     "nanoid": "^6.0.0",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",

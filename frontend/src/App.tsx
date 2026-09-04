@@ -53,6 +53,9 @@ import AdminErrorBoundary from "./features/admin/components/AdminErrorBoundary";
 import { CourseCreatePage, CourseEditPage } from "./pages/admin/CourseEditor";
 import { DeckNewPage, DeckEditPage, CardNewPage, CardEditPage } from "./pages/admin/FlashcardEditor";
 import FlashcardView from "./pages/public/FlashcardView";
+import { PronunciationCoursesPage } from "./features/pronunciation-course/pages/PronunciationCoursesPage";
+import { PronunciationCourseDetailPage } from "./features/pronunciation-course/pages/PronunciationCourseDetailPage";
+import { PronunciationProgressPage } from "./features/pronunciation-course/pages/PronunciationProgressPage";
 
 // ========== Global Pet Unlock Notifier ==========
 // Listens to PET_CAN_UNLOCK (XP gate met) and PET_UNLOCKED (after actual unlock)
@@ -323,6 +326,11 @@ const App = () => {
         {/* Notebook (SRS) + Dictionary — backend contracts READY (PG-backed) */}
         <Route path="/notebook" element={<RequireUserAuth><Layout><NotebookPage /></Layout></RequireUserAuth>} />
         <Route path="/dictionary" element={<RequireUserAuth><Layout><DictionaryPage /></Layout></RequireUserAuth>} />
+
+        {/* Pronunciation Courses */}
+        <Route path="/pronunciation-course" element={<RequireUserAuth><Layout><PronunciationCoursesPage /></Layout></RequireUserAuth>} />
+        <Route path="/pronunciation-course/:topicId" element={<RequireUserAuth><Layout><PronunciationCourseDetailPage /></Layout></RequireUserAuth>} />
+        <Route path="/pronunciation-course/progress" element={<RequireUserAuth><Layout><PronunciationProgressPage /></Layout></RequireUserAuth>} />
 
         {/* Kid reminder settings ("Thời điểm vàng") — parent-facing Web Push config */}
         <Route path="/notifications" element={<RequireUserAuth><Layout><NotificationSettingsPage /></Layout></RequireUserAuth>} />
