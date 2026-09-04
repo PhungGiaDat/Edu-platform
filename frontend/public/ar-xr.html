@@ -200,21 +200,25 @@
       proximityStableMs: 300,
       lostGraceMs: 300,
       distance: {
-        enter: 0.67,
-        exit: 0.78,
+        enter: 0.72,
+        exit: 0.80,
         smoothingAlpha: 0.25,
       },
       proximitySampleHz: 4,
+      consumeAtRatio: 0.65,
     };
 
     const interactionState = {
       phase: InteractionPhase.SEARCH_PRIMARY,
-      primarySeenAt: null,
       primaryLockedAt: null,
       proximityEnteredAt: null,
       filteredDistance: null,
       comboPlaying: false,
       comboConsumed: false,
+      comboRunId: 0,       // incremented on each combo start; stale callbacks ignore themselves
+      latchedCatPose: null, // anchor pose snapshot at combo trigger
+      latchedFishPose: null,
+      consumeTimeoutId: null, // scheduled fish-hide timer
       lastProximityLog: 0,
     };
 
@@ -922,7 +926,7 @@
       return interactionState.filteredDistance;
     }
 
-    function playComboAnimation(instance) {
+    function playComboAnimation(instance, runId) {
       if (!instance?.mixer) return false;
       const requestedName = instance.config?.combo_animation || 'CAT_EAT';
       const clip = instance.animations?.find(c => c.name === requestedName)
@@ -958,11 +962,25 @@
       const onFinish = (e) => {
         if (e.action !== action) return;
         mixer.removeEventListener('finished', onFinish);
+
+        // Stale callback guard: ignore if runId has changed or phase moved away from COMBO_PLAYING
+        if (
+          runId !== interactionState.comboRunId ||
+          interactionState.phase !== InteractionPhase.COMBO_PLAYING
+        ) {
+          sendARDebug('COMBO_FINISH_IGNORED_STALE', {
+            runId,
+            currentRunId: interactionState.comboRunId,
+            phase: interactionState.phase,
+          });
+          return;
+        }
+
         // Restore idle
         if (idleClip) {
           mixer.clipAction(idleClip).reset().fadeIn(0.15).play();
         }
-        sendARDebug('COMBO_ANIMATION_FINISHED', { targetName: instance.config.qr_id });
+        sendARDebug('COMBO_ANIMATION_FINISHED', { targetName: instance.config.qr_id, runId });
         interactionState.comboPlaying = false;
         interactionState.comboConsumed = true;
         setInteractionPhase(InteractionPhase.COMBO_CONSUMED);
@@ -981,91 +999,200 @@
       }
     }
 
+    function scheduleSecondaryConsume(runId, clipDurationMs) {
+      // Clear any pending consume timer
+      if (interactionState.consumeTimeoutId != null) {
+        clearTimeout(interactionState.consumeTimeoutId);
+        interactionState.consumeTimeoutId = null;
+      }
+      const delayMs = Math.round(clipDurationMs * INTERACTION_CONFIG.consumeAtRatio);
+      sendARDebug('SECONDARY_CONSUME_SCHEDULED', { runId, delayMs, ratio: INTERACTION_CONFIG.consumeAtRatio });
+      const timeoutId = setTimeout(() => {
+        interactionState.consumeTimeoutId = null;
+        // Guard: only consume if this run is still current
+        if (runId !== interactionState.comboRunId) {
+          sendARDebug('SECONDARY_CONSUME_IGNORED_STALE', { runId, currentRunId: interactionState.comboRunId });
+          return;
+        }
+        if (interactionState.phase !== InteractionPhase.COMBO_PLAYING) return;
+        for (const [name, inst] of targetInstances) {
+          if (name === primaryModelTargetName) continue;
+          inst.visibleByInteraction = false;
+          if (inst.model) inst.model.visible = false;
+        }
+        sendARDebug('SECONDARY_CONSUMED', { runId, targetName: name });
+      }, delayMs);
+      interactionState.consumeTimeoutId = timeoutId;
+    }
+
+    function resetInteractionSession(reason, options = {}) {
+      const prevPhase = interactionState.phase;
+      const prevRunId = interactionState.comboRunId;
+
+      // Advance runId so any pending async work becomes stale
+      interactionState.comboRunId++;
+
+      // Cancel pending consume timer
+      if (interactionState.consumeTimeoutId != null) {
+        clearTimeout(interactionState.consumeTimeoutId);
+        interactionState.consumeTimeoutId = null;
+      }
+
+      interactionState.comboPlaying = false;
+      interactionState.comboConsumed = false;
+      interactionState.proximityEnteredAt = null;
+      interactionState.filteredDistance = null;
+      interactionState.latchedCatPose = null;
+      interactionState.latchedFishPose = null;
+
+      // Restore secondary visibility and reset flags
+      for (const [name, inst] of targetInstances) {
+        if (name === primaryModelTargetName) continue;
+        inst.visibleByInteraction = true;
+        inst.interactionReady = false;
+        if (inst.model) {
+          // Only show if target is currently tracked; otherwise stay hidden until re-found
+          inst.model.visible = !!inst.tracked;
+        }
+      }
+
+      sendARDebug('INTERACTION_SESSION_RESET', {
+        reason,
+        previousPhase: prevPhase,
+        previousRunId: prevRunId,
+        newRunId: interactionState.comboRunId,
+      });
+
+      setInteractionPhase(InteractionPhase.SEARCH_PRIMARY, { reason });
+    }
+
     function evaluateInteraction(now) {
       const cfg = INTERACTION_CONFIG;
       const catInst = targetInstances.get(primaryModelTargetName);
       const otherIds = Array.from(targetInstances.keys()).filter(k => k !== primaryModelTargetName);
       const fishInst = otherIds.length ? targetInstances.get(otherIds[0]) : null;
 
-      // Effective tracked flags include lost-grace
+      // Grace-period tracked: true if currently tracked OR lost within grace window
       const catLostGrace = catInst?.lostAt != null && (now - catInst.lostAt) < cfg.lostGraceMs;
       const catEffectivelyTracked = !!(catInst?.tracked || catLostGrace);
 
-      const fishLostGrace = fishInst?.lostAt != null && fishInst && (now - fishInst.lostAt) < cfg.lostGraceMs;
+      const fishLostGrace = fishInst?.lostAt != null && (now - fishInst.lostAt) < cfg.lostGraceMs;
       const fishEffectivelyTracked = !!(fishInst?.tracked || fishLostGrace);
 
+      // Confirmed-lost: tracked=false AND grace fully expired
+      const catGraceExpired = !!(catInst && !catInst.tracked && catInst.lostAt != null && (now - catInst.lostAt) >= cfg.lostGraceMs);
+      const fishGraceExpired = !!(fishInst && !fishInst.tracked && fishInst.lostAt != null && (now - fishInst.lostAt) >= cfg.lostGraceMs);
+
+      // ---- Visual grace: hide model only after grace expires, unless combo is latched ----
+      if (catGraceExpired && interactionState.phase !== InteractionPhase.COMBO_PLAYING) {
+        if (loadedModel && loadedModel.visible) {
+          loadedModel.visible = false;
+          sendARDebug('MODEL_HIDDEN_GRACE', { targetName: primaryModelTargetName, reason: 'grace_expired' });
+        }
+      }
+
       // ---- Primary lock state ----
-      if (catInst?.tracked && catInst.foundAt == null) catInst.foundAt = now;
-      if (!catInst?.tracked && (catInst?.lostAt == null || (now - catInst.lostAt) >= cfg.lostGraceMs)) {
-        // Cat fully lost — reset lock
-        if (interactionState.phase !== InteractionPhase.SEARCH_PRIMARY) {
-          sendARDebug('PRIMARY_UNLOCKED', { reason: 'cat_lost' });
-          interactionState.primarySeenAt = null;
-          interactionState.primaryLockedAt = null;
-          interactionState.proximityEnteredAt = null;
-          interactionState.filteredDistance = null;
-          interactionState.comboPlaying = false;
-          interactionState.comboConsumed = false;
-          setInteractionPhase(InteractionPhase.SEARCH_PRIMARY);
-        }
+      // Only stamp foundAt on the first tracking contact of a fresh cycle
+      if (!catInst?.tracked && catInst && catInst.tracked) {
+        // transition: not tracked → now tracked
+      }
+      if (catInst?.tracked && catInst.foundAt == null) {
+        catInst.foundAt = now;
       }
 
-      if (catEffectivelyTracked) {
-        if (interactionState.phase === InteractionPhase.SEARCH_PRIMARY && catInst.foundAt != null) {
-          const stableMs = now - catInst.foundAt;
-          if (stableMs >= cfg.primaryLockMs) {
-            interactionState.primaryLockedAt = now;
-            sendARDebug('PRIMARY_LOCKED', { targetName: primaryModelTargetName, stableMs });
-            setInteractionPhase(InteractionPhase.PRIMARY_LOCKED, { stableMs });
-            setInteractionPhase(InteractionPhase.WAIT_SECONDARY);
+      // Confirmed cat loss (grace expired) → full reset
+      if (catGraceExpired && interactionState.phase !== InteractionPhase.SEARCH_PRIMARY) {
+        sendARDebug('PRIMARY_UNLOCKED', {
+          reason: 'cat_lost_grace',
+          lostForMs: catInst ? now - catInst.lostAt : null,
+        });
+        resetInteractionSession('cat_lost_grace');
+        return;
+      }
+
+      // Lock cat when continuously tracked for primaryLockMs
+      if (catInst?.tracked && interactionState.phase === InteractionPhase.SEARCH_PRIMARY) {
+        if (catInst.foundAt == null) catInst.foundAt = now;
+        const stableMs = now - catInst.foundAt;
+        if (stableMs >= cfg.primaryLockMs) {
+          if (stableMs > 3000) {
+            sendARDebug('PRIMARY_STABLE_TIME_SUSPICIOUS', { stableMs, targetName: primaryModelTargetName });
           }
+          interactionState.primaryLockedAt = now;
+          sendARDebug('PRIMARY_LOCKED', { targetName: primaryModelTargetName, stableMs });
+          setInteractionPhase(InteractionPhase.PRIMARY_LOCKED, { stableMs });
+          setInteractionPhase(InteractionPhase.WAIT_SECONDARY);
         }
-      } else if (catInst?.foundAt != null && (now - catInst.foundAt) < cfg.primaryLockMs) {
-        // Cat lost before lock — clear foundAt
-        catInst.foundAt = null;
       }
 
-      // ---- Proximity / combo ----
+      // Clear foundAt if cat was lost before ever locking
+      if (!catInst?.tracked && catInst?.foundAt != null && catInst?.lostAt != null) {
+        if ((now - catInst.foundAt) < cfg.primaryLockMs) {
+          catInst.foundAt = null;
+        }
+      }
+
       const phase = interactionState.phase;
+
+      // ---- COMBO_PLAYING: latch phase — animation drives itself; target loss does NOT reset ----
+      if (phase === InteractionPhase.COMBO_PLAYING) {
+        // Keep distance filter warm for rearm logic
+        const raw = computeAnchorDistance();
+        updateFilteredDistance(raw);
+        return;
+      }
+
+      // ---- Proximity / combo phases ----
       if (
         phase === InteractionPhase.PRIMARY_LOCKED ||
         phase === InteractionPhase.WAIT_SECONDARY ||
         phase === InteractionPhase.WAIT_SECONDARY_MODEL ||
         phase === InteractionPhase.PROXIMITY_PENDING ||
         phase === InteractionPhase.COMBO_ARMED ||
-        phase === InteractionPhase.COMBO_PLAYING ||
         phase === InteractionPhase.COMBO_CONSUMED
       ) {
-        // Secondary is interaction-ready when: tracked + GLB loaded + attached + visible.
-        // This prevents combo from firing before the fish model is actually visible.
+        // Secondary asset readiness: GLB loaded + model object exists.
+        // NOT dependent on model.visible (output state).
+        const secondaryAssetReady = !!(
+          fishInst?.modelState === 'loaded' &&
+          fishInst?.model
+        );
+        const secondaryTracked = fishEffectivelyTracked;
         const secondaryInteractionReady = !!(
-          fishInst &&
-          fishInst.tracked &&
-          fishInst.interactionReady &&
-          fishInst.modelState === 'loaded' &&
-          fishInst.model &&
-          fishInst.model.visible
+          secondaryAssetReady &&
+          secondaryTracked &&
+          !interactionState.comboConsumed
         );
 
-        // Fish found → check if model is ready
+        // Periodic diagnostic
+        if (fishInst) {
+          sendARDebug('SECONDARY_READINESS', {
+            targetName: fishInst.config?.qr_id,
+            modelState: fishInst.modelState,
+            hasModel: !!fishInst.model,
+            tracked: !!fishInst.tracked,
+            modelVisible: !!fishInst.model?.visible,
+            visibleByInteraction: fishInst.visibleByInteraction,
+            assetReady: secondaryAssetReady,
+            interactionReady: secondaryInteractionReady,
+          });
+        }
+
+        // Fish found → decide if we can go straight to proximity
         if (fishEffectivelyTracked && phase === InteractionPhase.WAIT_SECONDARY) {
-          if (secondaryInteractionReady) {
-            // Model is already visible — go straight to proximity
+          if (secondaryAssetReady) {
             setInteractionPhase(InteractionPhase.PROXIMITY_PENDING);
           } else {
-            // Model still loading — wait
             setInteractionPhase(InteractionPhase.WAIT_SECONDARY_MODEL);
             sendARDebug('COMBO_WAITING_FOR_SECONDARY_MODEL', {
               targetName: fishInst?.config?.qr_id,
               modelState: fishInst?.modelState,
               hasModel: !!fishInst?.model,
-              visible: !!fishInst?.model?.visible,
-              interactionReady: !!fishInst?.interactionReady,
             });
           }
         }
 
-        // If fish leaves, drop back to WAIT_SECONDARY
+        // Fish leaves → drop back to WAIT_SECONDARY
         if (!fishEffectivelyTracked) {
           if (
             phase === InteractionPhase.PROXIMITY_PENDING ||
@@ -1077,11 +1204,8 @@
           }
         }
 
-        // ---- Secondary model became ready mid-session → reset proximity timer ----
-        if (
-          secondaryInteractionReady &&
-          phase === InteractionPhase.WAIT_SECONDARY_MODEL
-        ) {
+        // Fish asset became ready mid-session → reset proximity timer
+        if (secondaryAssetReady && phase === InteractionPhase.WAIT_SECONDARY_MODEL) {
           interactionState.proximityEnteredAt = null;
           interactionState.filteredDistance = null;
           sendARDebug('SECONDARY_INTERACTION_READY', {
@@ -1096,10 +1220,7 @@
 
         // Throttled proximity log
         const sampleInterval = 1000 / INTERACTION_CONFIG.proximitySampleHz;
-        if (
-          raw != null &&
-          (now - interactionState.lastProximityLog) >= sampleInterval
-        ) {
+        if (raw != null && (now - interactionState.lastProximityLog) >= sampleInterval) {
           interactionState.lastProximityLog = now;
           sendARDebug('PROXIMITY_SAMPLE', {
             rawDistance: Number(raw.toFixed(4)),
@@ -1112,7 +1233,7 @@
           });
         }
 
-        // Only advance combo when fish is actually visible
+        // ---- Proximity enter / stable / combo arm ----
         if (filtered != null && catEffectivelyTracked && fishEffectivelyTracked && !interactionState.comboPlaying) {
           if (filtered <= cfg.distance.enter) {
             if (interactionState.proximityEnteredAt == null) {
@@ -1128,13 +1249,36 @@
             ) {
               sendARDebug('PROXIMITY_STABLE', { stableMs: stableFor, distance: Number(filtered.toFixed(4)) });
               sendARDebug('COMBO_ARMED', { targetName: primaryModelTargetName });
+
+              // Latch current anchor poses — these survive transient target loss during combo
+              const catPose = trackedTargets.get(primaryModelTargetName);
+              interactionState.latchedCatPose = catPose ? { ...catPose } : null;
+              const fishPose = trackedTargets.get(fishInst?.config?.qr_id);
+              interactionState.latchedFishPose = fishPose ? { ...fishPose } : null;
+
+              interactionState.comboRunId++;
+              const runId = interactionState.comboRunId;
+
               setInteractionPhase(InteractionPhase.COMBO_ARMED);
               interactionState.comboPlaying = true;
               setInteractionPhase(InteractionPhase.COMBO_PLAYING);
-              const started = playComboAnimation(catInst);
+              sendARDebug('COMBO_TRACKING_LATCHED', {
+                runId,
+                catTracked: catEffectivelyTracked,
+                fishTracked: fishEffectivelyTracked,
+                distance: Number(filtered.toFixed(4)),
+                catPose: interactionState.latchedCatPose?.position,
+                fishPose: interactionState.latchedFishPose?.position,
+              });
+              const started = playComboAnimation(catInst, runId);
               if (started) {
-                consumeSecondaryTarget();
-                sendARDebug('COMBO_TRIGGER', { targetName: primaryModelTargetName });
+                // Schedule fish consume at 65% of animation duration (not immediate)
+                const clip = (catInst?.animations || []).find(c => c.name === (catInst?.config?.combo_animation || 'CAT_EAT'))
+                  || (catInst?.animations || [])[0];
+                if (clip) {
+                  scheduleSecondaryConsume(runId, clip.duration * 1000);
+                }
+                sendARDebug('COMBO_TRIGGER', { targetName: primaryModelTargetName, runId });
               } else {
                 interactionState.comboPlaying = false;
               }
@@ -1226,25 +1370,31 @@
     }
 
     function onTargetLost(name) {
-      trackedTargets.delete(name);
       const instance = targetInstances.get(name);
+
+      // Track loss immediately
+      trackedTargets.delete(name);
       if (instance) {
         instance.tracked = false;
         instance.pose = null;
         instance.lostAt = performance.now();
-        instance.interactionReady = false;
-        if (instance.model) instance.model.visible = false;
+        // DO NOT hide model immediately — visual grace handled in evaluateInteraction
+        // after lostGraceMs expires.  This preserves cat visibility during
+        // brief occlusion and during COMBO_PLAYING.
       }
-      sendARDebug('TARGET_LOST', { qrId: name });
+
+      sendARDebug('TARGET_LOST_PENDING', {
+        qrId: name,
+        graceMs: INTERACTION_CONFIG.lostGraceMs,
+        isPrimary: name === primaryModelTargetName,
+      });
       sendMessage('TARGET_LOST', { qrId: name });
 
+      // For primary target, also clear modelAttached so reattach works on reacquire
       if (activeTargetName === name) {
         activeTargetName = null;
         modelAttached = false;
-        if (loadedModel) {
-          loadedModel.visible = false;
-          sendARDebug('MODEL_HIDDEN', { reason: 'target_lost', qrId: name });
-        }
+        // Do NOT hide model here — evaluateInteraction handles it after grace
       }
 
       sendARDebug('MULTI_TARGET_STATE', { count: trackedTargets.size, targets: Array.from(trackedTargets.keys()), lost: name });
