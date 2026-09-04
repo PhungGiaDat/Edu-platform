@@ -178,12 +178,17 @@
     let scene = null, camera = null, renderer = null;
 
     // ========== INTERACTION STATE MACHINE ==========
-    // Phases: SEARCH_PRIMARY → PRIMARY_LOCKED → WAIT_SECONDARY → PROXIMITY_PENDING
-    //        → COMBO_ARMED → COMBO_PLAYING → COMBO_CONSUMED → (rearm on far) → WAIT_SECONDARY
+    // Phases:
+    // SEARCH_PRIMARY → PRIMARY_LOCKED → WAIT_SECONDARY
+    // → WAIT_SECONDARY_MODEL (fish found but model not yet visible)
+    // → PROXIMITY_PENDING → PROXIMITY_ENTER
+    // → COMBO_ARMED → COMBO_PLAYING → COMBO_CONSUMED
+    // → (rearm on far) → WAIT_SECONDARY
     const InteractionPhase = {
       SEARCH_PRIMARY: 'SEARCH_PRIMARY',
       PRIMARY_LOCKED: 'PRIMARY_LOCKED',
       WAIT_SECONDARY: 'WAIT_SECONDARY',
+      WAIT_SECONDARY_MODEL: 'WAIT_SECONDARY_MODEL',
       PROXIMITY_PENDING: 'PROXIMITY_PENDING',
       COMBO_ARMED: 'COMBO_ARMED',
       COMBO_PLAYING: 'COMBO_PLAYING',
@@ -261,6 +266,7 @@
         stable: false,
         lastSeenAt: 0,
         lostAt: null,
+        interactionReady: false,
         visibleByInteraction: true,
       });
     }
@@ -1024,19 +1030,65 @@
       if (
         phase === InteractionPhase.PRIMARY_LOCKED ||
         phase === InteractionPhase.WAIT_SECONDARY ||
+        phase === InteractionPhase.WAIT_SECONDARY_MODEL ||
         phase === InteractionPhase.PROXIMITY_PENDING ||
         phase === InteractionPhase.COMBO_ARMED ||
         phase === InteractionPhase.COMBO_PLAYING ||
         phase === InteractionPhase.COMBO_CONSUMED
       ) {
+        // Secondary is interaction-ready when: tracked + GLB loaded + attached + visible.
+        // This prevents combo from firing before the fish model is actually visible.
+        const secondaryInteractionReady = !!(
+          fishInst &&
+          fishInst.tracked &&
+          fishInst.interactionReady &&
+          fishInst.modelState === 'loaded' &&
+          fishInst.model &&
+          fishInst.model.visible
+        );
+
+        // Fish found → check if model is ready
         if (fishEffectivelyTracked && phase === InteractionPhase.WAIT_SECONDARY) {
-          setInteractionPhase(InteractionPhase.PROXIMITY_PENDING);
+          if (secondaryInteractionReady) {
+            // Model is already visible — go straight to proximity
+            setInteractionPhase(InteractionPhase.PROXIMITY_PENDING);
+          } else {
+            // Model still loading — wait
+            setInteractionPhase(InteractionPhase.WAIT_SECONDARY_MODEL);
+            sendARDebug('COMBO_WAITING_FOR_SECONDARY_MODEL', {
+              targetName: fishInst?.config?.qr_id,
+              modelState: fishInst?.modelState,
+              hasModel: !!fishInst?.model,
+              visible: !!fishInst?.model?.visible,
+              interactionReady: !!fishInst?.interactionReady,
+            });
+          }
         }
-        // If fish leaves, drop back to WAIT_SECONDARY (unless combo is playing).
-        if (!fishEffectivelyTracked && phase === InteractionPhase.PROXIMITY_PENDING) {
+
+        // If fish leaves, drop back to WAIT_SECONDARY
+        if (!fishEffectivelyTracked) {
+          if (
+            phase === InteractionPhase.PROXIMITY_PENDING ||
+            phase === InteractionPhase.WAIT_SECONDARY_MODEL
+          ) {
+            interactionState.proximityEnteredAt = null;
+            updateFilteredDistance(null);
+            setInteractionPhase(InteractionPhase.WAIT_SECONDARY);
+          }
+        }
+
+        // ---- Secondary model became ready mid-session → reset proximity timer ----
+        if (
+          secondaryInteractionReady &&
+          phase === InteractionPhase.WAIT_SECONDARY_MODEL
+        ) {
           interactionState.proximityEnteredAt = null;
-          updateFilteredDistance(null);
-          setInteractionPhase(InteractionPhase.WAIT_SECONDARY);
+          interactionState.filteredDistance = null;
+          sendARDebug('SECONDARY_INTERACTION_READY', {
+            targetName: fishInst.config.qr_id,
+            modelState: fishInst.modelState,
+          });
+          setInteractionPhase(InteractionPhase.PROXIMITY_PENDING);
         }
 
         const raw = computeAnchorDistance();
@@ -1056,9 +1108,11 @@
             exitDistance: cfg.distance.exit,
             catTracked: catEffectivelyTracked,
             fishTracked: fishEffectivelyTracked,
+            secondaryInteractionReady,
           });
         }
 
+        // Only advance combo when fish is actually visible
         if (filtered != null && catEffectivelyTracked && fishEffectivelyTracked && !interactionState.comboPlaying) {
           if (filtered <= cfg.distance.enter) {
             if (interactionState.proximityEnteredAt == null) {
@@ -1068,13 +1122,13 @@
             const stableFor = now - interactionState.proximityEnteredAt;
             if (
               phase === InteractionPhase.PROXIMITY_PENDING &&
+              secondaryInteractionReady &&
               stableFor >= cfg.proximityStableMs &&
               !interactionState.comboConsumed
             ) {
               sendARDebug('PROXIMITY_STABLE', { stableMs: stableFor, distance: Number(filtered.toFixed(4)) });
               sendARDebug('COMBO_ARMED', { targetName: primaryModelTargetName });
               setInteractionPhase(InteractionPhase.COMBO_ARMED);
-              // Trigger immediately on arm
               interactionState.comboPlaying = true;
               setInteractionPhase(InteractionPhase.COMBO_PLAYING);
               const started = playComboAnimation(catInst);
@@ -1086,13 +1140,9 @@
               }
             }
           } else {
-            // Outside enter band — reset pending timer
             if (interactionState.proximityEnteredAt != null) {
               sendARDebug('PROXIMITY_EXIT', { filteredDistance: Number(filtered.toFixed(4)) });
               interactionState.proximityEnteredAt = null;
-              if (phase === InteractionPhase.PROXIMITY_PENDING) {
-                // Stay in PROXIMITY_PENDING; user can bring closer again
-              }
             }
           }
 
@@ -1105,7 +1155,6 @@
             sendARDebug('COMBO_REARMED', { distance: Number(filtered.toFixed(4)) });
             interactionState.comboConsumed = false;
             interactionState.proximityEnteredAt = null;
-            // Restore visibility of secondary
             for (const [name, inst] of targetInstances) {
               if (name === primaryModelTargetName) continue;
               inst.visibleByInteraction = true;
@@ -1125,6 +1174,10 @@
         instance.tracked = true;
         instance.lostAt = null;
         if (instance.foundAt == null) instance.foundAt = performance.now();
+        // If model was already loaded before this FOUND event, mark ready immediately.
+        if (detail.name !== primaryModelTargetName && instance.modelState === 'loaded' && instance.model) {
+          instance.interactionReady = true;
+        }
       }
 
       const config = targetConfigByName.get(detail.name);
@@ -1158,7 +1211,13 @@
             const pose = trackedTargets.get(detail.name);
             if (pose) applyTargetPose(inst, pose);
             inst.model.visible = true;
-            sendARDebug('TARGET_MODEL_ATTACH', { targetName: detail.name, source: inst.modelState === 'loaded' ? 'preloaded' : 'pending-preload' });
+            // Mark interaction-ready so combo can fire only after model is visible.
+            inst.interactionReady = true;
+            sendARDebug('TARGET_MODEL_ATTACH', {
+              targetName: detail.name,
+              source: inst.modelState === 'loaded' ? 'preloaded' : 'pending-preload',
+              interactionReady: true,
+            });
           }
         });
       }
@@ -1173,6 +1232,7 @@
         instance.tracked = false;
         instance.pose = null;
         instance.lostAt = performance.now();
+        instance.interactionReady = false;
         if (instance.model) instance.model.visible = false;
       }
       sendARDebug('TARGET_LOST', { qrId: name });
