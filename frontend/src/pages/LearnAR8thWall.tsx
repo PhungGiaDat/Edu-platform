@@ -82,17 +82,26 @@ export const LearnAR8thWall: React.FC = () => {
 
   // ========== LESSON MODEL PRELOAD (runs once on mount) ==========
   // Preload primary AR model as soon as page opens — before QR scan.
+  const FALLBACK_CAT_URL =
+    'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/3dmodel/ragdollcat_mobile_v1.glb';
+
   useEffect(() => {
     const warmARModel = (url: string, priority: 'current' | 'next') => {
       if (!url) return;
-      const id = `ar-model-warm:${url}`;
-      if (document.querySelector(`link[data-ar-model-warm="${id.replace(/"/g, '\\"')}"]`)) return;
+      // Remove stale preload link(s) for this URL before injecting fresh one.
+      // SPA navigation leaves <link> nodes in document.head even after component
+      // unmount. querySelector check alone silently skips re-preload on remount,
+      // losing the pre-QR head-start. Always re-inject so the browser can reuse
+      // the in-flight cache entry or re-prefetch.
+      document
+        .querySelectorAll(`link[data-ar-model-warm][href="${url}"]`)
+        .forEach(node => node.remove());
       const link = document.createElement('link');
       link.rel = priority === 'current' ? 'preload' : 'prefetch';
       link.as = 'fetch';
       link.href = url;
       link.crossOrigin = 'anonymous';
-      link.dataset.arModelWarm = id;
+      link.dataset.arModelWarm = `${priority}:${Date.now()}`;
       document.head.appendChild(link);
     };
 
@@ -107,27 +116,23 @@ export const LearnAR8thWall: React.FC = () => {
 
         // non-2xx also triggers fallback — don't silently skip preload
         if (!res.ok) {
-          const FALLBACK_MODEL =
-            'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/3dmodel/ragdollcat_mobile_v1.glb';
-          warmARModel(FALLBACK_MODEL, 'current');
+          warmARModel(FALLBACK_CAT_URL, 'current');
           trace('LESSON_MODEL_PRELOAD', 'fallback');
           return;
         }
 
         const manifest = await res.json();
-        const primaryUrl = manifest.primary?.model_3d_url;
-        if (primaryUrl) {
-          warmARModel(primaryUrl, 'current');
-          trace('LESSON_MODEL_PRELOAD', manifest.primary.qr_id || 'primary');
-        }
-        // DON'T preload secondary models yet — protect entry-card bandwidth.
-        // Fish (34 MB) must not compete with CAT (20 MB) on page open.
-        // Secondary models are prefetched after CAT visible instead.
+        // If API returns 200 but primary has no model URL, fall back to hardcoded CAT
+        const primaryUrl = manifest.primary?.model_3d_url || FALLBACK_CAT_URL;
+        warmARModel(primaryUrl, 'current');
+        trace('LESSON_MODEL_PRELOAD', manifest.primary?.qr_id || 'fallback');
+
+        // DON'T preload secondary models on page open.
+        // Fish (34 MB) must not fight CAT (20 MB) for bandwidth.
+        // Secondary model loading remains lazy on IMAGE_FOUND for now.
       } catch {
         if (!cancelled) {
-          const FALLBACK_MODEL =
-            'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/3dmodel/ragdollcat_mobile_v1.glb';
-          warmARModel(FALLBACK_MODEL, 'current');
+          warmARModel(FALLBACK_CAT_URL, 'current');
           trace('LESSON_MODEL_PRELOAD', 'fallback');
         }
       }
