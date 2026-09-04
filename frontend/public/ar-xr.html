@@ -182,7 +182,7 @@
     // SEARCH_PRIMARY → PRIMARY_LOCKED → WAIT_SECONDARY
     // → WAIT_SECONDARY_MODEL (fish found but model not yet visible)
     // → PROXIMITY_PENDING → PROXIMITY_ENTER
-    // → COMBO_ARMED → COMBO_PLAYING → COMBO_CONSUMED
+    // → COMBO_ARMED → COMBO_TURNING → COMBO_PLAYING → COMBO_CONSUMED
     // → (rearm on far) → WAIT_SECONDARY
     const InteractionPhase = {
       SEARCH_PRIMARY: 'SEARCH_PRIMARY',
@@ -191,6 +191,7 @@
       WAIT_SECONDARY_MODEL: 'WAIT_SECONDARY_MODEL',
       PROXIMITY_PENDING: 'PROXIMITY_PENDING',
       COMBO_ARMED: 'COMBO_ARMED',
+      COMBO_TURNING: 'COMBO_TURNING',
       COMBO_PLAYING: 'COMBO_PLAYING',
       COMBO_CONSUMED: 'COMBO_CONSUMED',
     };
@@ -208,6 +209,14 @@
       consumeAtRatio: 0.65,
     };
 
+    // Procedural combo visual config
+    const COMBO_VISUAL_CONFIG = {
+      bodyTurnMs: 400,
+      maxBodyYawDeg: 55,
+      returnTurnMs: 400,
+      forwardYawOffsetDeg: 0,
+    };
+
     const interactionState = {
       phase: InteractionPhase.SEARCH_PRIMARY,
       primaryLockedAt: null,
@@ -215,10 +224,18 @@
       filteredDistance: null,
       comboPlaying: false,
       comboConsumed: false,
-      comboRunId: 0,       // incremented on each combo start; stale callbacks ignore themselves
-      latchedCatPose: null, // anchor pose snapshot at combo trigger
-      latchedFishPose: null,
-      consumeTimeoutId: null, // scheduled fish-hide timer
+      comboRunId: 0,
+      // Latched state captured at COMBO_ARMED
+      comboLatch: null,          // { runId, catPose, fishPose, secondaryTargetName, catOriginalYaw }
+      // Procedural turn state
+      catTurn: null,            // { runId, fromYaw, toYaw, startedAt, durationMs }
+      // Post-combo return state
+      catReturn: null,          // { runId, fromYaw, toYaw, startedAt, durationMs }
+      // Visual grace: targets pending hidden due to grace expiry
+      pendingGraceHides: new Map(), // targetName → graceStartTime
+      // Debug: last logged SECONDARY_READINESS to avoid spam
+      lastSecondaryReadiness: null,
+      consumeTimeoutId: null,
       lastProximityLog: 0,
     };
 
@@ -837,11 +854,16 @@
             if (!detail?.name) return;
             saveTargetPose(detail);
 
-            // Every tracked target updates its own anchor pose — no single-primary restriction
             const instance = targetInstances.get(detail.name);
             const pose = trackedTargets.get(detail.name);
             if (instance && instance.anchor && pose) {
-              applyTargetPose(instance, pose);
+              // Do NOT overwrite primary anchor while combo is latched —
+              // the latched pose is frozen so CAT stays visually stable.
+              const latchActive = interactionState.comboLatch != null
+                && interactionState.comboLatch.runId === interactionState.comboRunId;
+              if (!latchActive || detail.name !== primaryModelTargetName) {
+                applyTargetPose(instance, pose);
+              }
             }
 
             const now = Date.now();
@@ -1015,12 +1037,16 @@
           return;
         }
         if (interactionState.phase !== InteractionPhase.COMBO_PLAYING) return;
-        for (const [name, inst] of targetInstances) {
-          if (name === primaryModelTargetName) continue;
-          inst.visibleByInteraction = false;
-          if (inst.model) inst.model.visible = false;
+        const latch = interactionState.comboLatch;
+        const secondaryName = latch?.secondaryTargetName;
+        if (secondaryName) {
+          const inst = targetInstances.get(secondaryName);
+          if (inst) {
+            inst.visibleByInteraction = false;
+            if (inst.model) inst.model.visible = false;
+          }
+          sendARDebug('SECONDARY_CONSUMED', { runId, targetName: secondaryName });
         }
-        sendARDebug('SECONDARY_CONSUMED', { runId, targetName: name });
       }, delayMs);
       interactionState.consumeTimeoutId = timeoutId;
     }
@@ -1042,8 +1068,10 @@
       interactionState.comboConsumed = false;
       interactionState.proximityEnteredAt = null;
       interactionState.filteredDistance = null;
-      interactionState.latchedCatPose = null;
-      interactionState.latchedFishPose = null;
+      interactionState.comboLatch = null;
+      interactionState.catTurn = null;
+      interactionState.catReturn = null;
+      interactionState.pendingGraceHides.clear();
 
       // Restore secondary visibility and reset flags
       for (const [name, inst] of targetInstances) {
@@ -1066,6 +1094,175 @@
       setInteractionPhase(InteractionPhase.SEARCH_PRIMARY, { reason });
     }
 
+    // Get or create the interaction-root group for the primary model.
+    // This sits between model-offset and the GLB, allowing procedural transforms
+    // (body rotation) that do not disturb anchor tracking or DB position/rotation/scale.
+    function getInteractionRoot(instance) {
+      if (!instance?.model) return null;
+      const model = instance.model;
+      // Find if interaction-root already exists (child of offsetGroup, parent of GLB)
+      const offsetGroup = instance.offsetGroup;
+      if (!offsetGroup) return null;
+      for (const child of offsetGroup.children) {
+        if (child.name === 'interaction-root:' + instance.config.qr_id) return child;
+      }
+      // Create it
+      const root = new THREE.Group();
+      root.name = 'interaction-root:' + instance.config.qr_id;
+      // Reparent GLB under interaction-root
+      offsetGroup.add(root);
+      root.add(model);
+      sendARDebug('INTERACTION_ROOT_CREATED', { targetName: instance.config.qr_id });
+      return root;
+    }
+
+    // Calculate yaw angle (radians) required to rotate from 'from' Vector3 to 'to' Vector3,
+    // in the XZ plane (horizontal), using +Z as forward.
+    function yawFromForward(fromPos, toPos) {
+      const dx = toPos.x - fromPos.x;
+      const dz = toPos.z - fromPos.z;
+      return Math.atan2(dx, dz);
+    }
+
+    // Smooth-step easing: smoothstep(t) = t*t*(3-2*t)
+    function smoothstep(t) {
+      const c = Math.max(0, Math.min(1, t));
+      return c * c * (3 - 2 * c);
+    }
+
+    // Tween the CAT body yaw each frame during COMBO_TURNING.
+    // Called inline from evaluateInteraction each frame.
+    function updateCatTurn(now) {
+      const turn = interactionState.catTurn;
+      if (!turn) return;
+
+      // Check stale
+      if (turn.runId !== interactionState.comboRunId) {
+        interactionState.catTurn = null;
+        return;
+      }
+
+      const elapsed = now - turn.startedAt;
+      const t = smoothstep(Math.min(elapsed / turn.durationMs, 1));
+      const currentYaw = turn.fromYaw + (turn.toYaw - turn.fromYaw) * t;
+
+      const instance = targetInstances.get(primaryModelTargetName);
+      const root = instance ? getInteractionRoot(instance) : null;
+      if (root) {
+        root.rotation.y = currentYaw;
+      }
+
+      if (elapsed >= turn.durationMs) {
+        // Turn complete — snap to final and clear
+        if (root) root.rotation.y = turn.toYaw;
+        interactionState.catTurn = null;
+        sendARDebug('CAT_TURN_COMPLETE', {
+          runId: turn.runId,
+          finalYawDeg: (turn.toYaw * 180 / Math.PI).toFixed(1),
+        });
+        // Now trigger CAT_EAT
+        triggerComboAnimation(instance, turn.runId);
+      }
+    }
+
+    // Tween CAT body yaw back to original after combo consumed.
+    function applyCatReturn(now) {
+      const ret = interactionState.catReturn;
+      if (!ret) return;
+
+      if (ret.runId !== interactionState.comboRunId) {
+        interactionState.catReturn = null;
+        return;
+      }
+
+      const elapsed = now - ret.startedAt;
+      const t = smoothstep(Math.min(elapsed / ret.durationMs, 1));
+      const currentYaw = ret.fromYaw + (ret.toYaw - ret.fromYaw) * t;
+
+      const instance = targetInstances.get(primaryModelTargetName);
+      const root = instance ? getInteractionRoot(instance) : null;
+      if (root) root.rotation.y = currentYaw;
+
+      if (elapsed >= ret.durationMs) {
+        if (root) root.rotation.y = ret.toYaw;
+        interactionState.catReturn = null;
+        sendARDebug('CAT_RETURN_COMPLETE', { runId: ret.runId });
+      }
+    }
+
+    // Trigger CAT_EAT animation using existing AnimationMixer + stale guard.
+    function triggerComboAnimation(instance, runId) {
+      if (!instance?.mixer) return;
+      const requestedName = instance.config?.combo_animation || 'CAT_EAT';
+      const clip = instance.animations?.find(c => c.name === requestedName)
+        || instance.animations?.find(c => c.name.toUpperCase().includes('EAT'))
+        || instance.animations?.find(c => c.name.toUpperCase().includes('COMBO'));
+      if (!clip) {
+        sendARDebug('COMBO_ANIMATION_MISSING', {
+          targetName: instance.config.qr_id,
+          requested: requestedName,
+          available: instance.animations?.map(c => c.name) || [],
+        });
+        return;
+      }
+      const mixer = instance.mixer;
+      const idleName = instance.config?.default_animation || null;
+      const idleClip = idleName && instance.animations.find(c => c.name === idleName);
+      if (idleClip) {
+        mixer.clipAction(idleClip).fadeOut(0.15);
+      }
+      const action = mixer.clipAction(clip);
+      action.reset();
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+      action.fadeIn(0.15);
+      action.play();
+      sendARDebug('COMBO_ANIMATION_START', {
+        targetName: instance.config.qr_id,
+        clip: clip.name,
+        durationMs: Math.round((clip.duration || 0) * 1000),
+      });
+      const onFinish = (e) => {
+        if (e.action !== action) return;
+        mixer.removeEventListener('finished', onFinish);
+        if (
+          runId !== interactionState.comboRunId ||
+          interactionState.phase !== InteractionPhase.COMBO_PLAYING
+        ) {
+          sendARDebug('COMBO_FINISH_IGNORED_STALE', {
+            runId,
+            currentRunId: interactionState.comboRunId,
+            phase: interactionState.phase,
+          });
+          return;
+        }
+        if (idleClip) {
+          mixer.clipAction(idleClip).reset().fadeIn(0.15).play();
+        }
+        sendARDebug('COMBO_ANIMATION_FINISHED', { targetName: instance.config.qr_id, runId });
+        interactionState.comboPlaying = false;
+        interactionState.comboConsumed = true;
+        setInteractionPhase(InteractionPhase.COMBO_CONSUMED);
+
+        // Begin return rotation
+        const instance2 = targetInstances.get(primaryModelTargetName);
+        const root2 = instance2 ? getInteractionRoot(instance2) : null;
+        const fromYaw = root2 ? root2.rotation.y : 0;
+        const toYaw = 0;
+        if (Math.abs(fromYaw - toYaw) > 0.01) {
+          sendARDebug('CAT_RETURN_START', { runId });
+          interactionState.catReturn = {
+            runId,
+            fromYaw,
+            toYaw,
+            startedAt: performance.now(),
+            durationMs: COMBO_VISUAL_CONFIG.returnTurnMs,
+          };
+        }
+      };
+      mixer.addEventListener('finished', onFinish);
+    }
+
     function evaluateInteraction(now) {
       const cfg = INTERACTION_CONFIG;
       const catInst = targetInstances.get(primaryModelTargetName);
@@ -1083,11 +1280,22 @@
       const catGraceExpired = !!(catInst && !catInst.tracked && catInst.lostAt != null && (now - catInst.lostAt) >= cfg.lostGraceMs);
       const fishGraceExpired = !!(fishInst && !fishInst.tracked && fishInst.lostAt != null && (now - fishInst.lostAt) >= cfg.lostGraceMs);
 
-      // ---- Visual grace: hide model only after grace expires, unless combo is latched ----
-      if (catGraceExpired && interactionState.phase !== InteractionPhase.COMBO_PLAYING) {
-        if (loadedModel && loadedModel.visible) {
-          loadedModel.visible = false;
-          sendARDebug('MODEL_HIDDEN_GRACE', { targetName: primaryModelTargetName, reason: 'grace_expired' });
+      // ---- Visual grace: process pending hides ----
+      // Skip during combo: cat must stay visible even if target is lost
+      const latchActive = interactionState.comboLatch != null && interactionState.comboLatch.runId === interactionState.comboRunId;
+      for (const [targetName, graceStart] of interactionState.pendingGraceHides) {
+        const elapsed = now - graceStart;
+        if (elapsed >= cfg.lostGraceMs) {
+          // Grace expired — confirm loss and hide unless combo is latched
+          interactionState.pendingGraceHides.delete(targetName);
+          sendARDebug('TARGET_LOST_CONFIRMED', { targetName, lostForMs: Math.round(elapsed) });
+          if (!latchActive || targetName !== primaryModelTargetName) {
+            const inst = targetInstances.get(targetName);
+            if (inst?.model && inst.model.visible) inst.model.visible = false;
+            if (targetName === primaryModelTargetName && loadedModel && loadedModel.visible) {
+              loadedModel.visible = false;
+            }
+          }
         }
       }
 
@@ -1134,9 +1342,17 @@
 
       const phase = interactionState.phase;
 
-      // ---- COMBO_PLAYING: latch phase — animation drives itself; target loss does NOT reset ----
+      // ---- COMBO_TURNING: tween cat body yaw each frame, then start CAT_EAT ----
+      if (phase === InteractionPhase.COMBO_TURNING) {
+        updateCatTurn(now);
+        const raw = computeAnchorDistance();
+        updateFilteredDistance(raw);
+        return;
+      }
+
+      // ---- COMBO_PLAYING: latch phase — animation drives itself; also tween return ----
       if (phase === InteractionPhase.COMBO_PLAYING) {
-        // Keep distance filter warm for rearm logic
+        applyCatReturn(now);
         const raw = computeAnchorDistance();
         updateFilteredDistance(raw);
         return;
@@ -1149,6 +1365,7 @@
         phase === InteractionPhase.WAIT_SECONDARY_MODEL ||
         phase === InteractionPhase.PROXIMITY_PENDING ||
         phase === InteractionPhase.COMBO_ARMED ||
+        phase === InteractionPhase.COMBO_TURNING ||
         phase === InteractionPhase.COMBO_CONSUMED
       ) {
         // Secondary asset readiness: GLB loaded + model object exists.
@@ -1164,18 +1381,22 @@
           !interactionState.comboConsumed
         );
 
-        // Periodic diagnostic
+        // Throttled diagnostic: only log when values actually change
         if (fishInst) {
-          sendARDebug('SECONDARY_READINESS', {
-            targetName: fishInst.config?.qr_id,
-            modelState: fishInst.modelState,
-            hasModel: !!fishInst.model,
-            tracked: !!fishInst.tracked,
-            modelVisible: !!fishInst.model?.visible,
-            visibleByInteraction: fishInst.visibleByInteraction,
-            assetReady: secondaryAssetReady,
-            interactionReady: secondaryInteractionReady,
-          });
+          const key = `${fishInst.modelState}|${!!fishInst.model}|${!!fishInst.tracked}|${!!fishInst.visibleByInteraction}`;
+          if (key !== interactionState.lastSecondaryReadiness) {
+            interactionState.lastSecondaryReadiness = key;
+            sendARDebug('SECONDARY_READINESS', {
+              targetName: fishInst.config?.qr_id,
+              modelState: fishInst.modelState,
+              hasModel: !!fishInst.model,
+              tracked: !!fishInst.tracked,
+              modelVisible: !!fishInst.model?.visible,
+              visibleByInteraction: fishInst.visibleByInteraction,
+              assetReady: secondaryAssetReady,
+              interactionReady: secondaryInteractionReady,
+            });
+          }
         }
 
         // Fish found → decide if we can go straight to proximity
@@ -1250,38 +1471,72 @@
               sendARDebug('PROXIMITY_STABLE', { stableMs: stableFor, distance: Number(filtered.toFixed(4)) });
               sendARDebug('COMBO_ARMED', { targetName: primaryModelTargetName });
 
-              // Latch current anchor poses — these survive transient target loss during combo
-              const catPose = trackedTargets.get(primaryModelTargetName);
-              interactionState.latchedCatPose = catPose ? { ...catPose } : null;
-              const fishPose = trackedTargets.get(fishInst?.config?.qr_id);
-              interactionState.latchedFishPose = fishPose ? { ...fishPose } : null;
-
+              // Capture comboRunId
               interactionState.comboRunId++;
               const runId = interactionState.comboRunId;
 
+              // Latch anchor poses
+              const catPose = trackedTargets.get(primaryModelTargetName);
+              const fishPose = trackedTargets.get(fishInst?.config?.qr_id);
+
+              // Capture secondary target name for delayed-consume
+              const secondaryName = fishInst?.config?.qr_id || null;
+
+              // Get current interaction-root yaw (original orientation before combo)
+              const instance = catInst;
+              const root = instance ? getInteractionRoot(instance) : null;
+              const catOriginalYaw = root ? root.rotation.y : 0;
+
+              interactionState.comboLatch = {
+                runId,
+                catPose: catPose ? { ...catPose } : null,
+                fishPose: fishPose ? { ...fishPose } : null,
+                secondaryTargetName: secondaryName,
+                catOriginalYaw,
+              };
+
               setInteractionPhase(InteractionPhase.COMBO_ARMED);
-              interactionState.comboPlaying = true;
-              setInteractionPhase(InteractionPhase.COMBO_PLAYING);
               sendARDebug('COMBO_TRACKING_LATCHED', {
                 runId,
-                catTracked: catEffectivelyTracked,
-                fishTracked: fishEffectivelyTracked,
-                distance: Number(filtered.toFixed(4)),
-                catPose: interactionState.latchedCatPose?.position,
-                fishPose: interactionState.latchedFishPose?.position,
+                primaryTargetName: primaryModelTargetName,
+                secondaryTargetName: secondaryName,
+                catPose: catPose?.position,
+                fishPose: fishPose?.position,
+                catOriginalYawDeg: (catOriginalYaw * 180 / Math.PI).toFixed(1),
               });
-              const started = playComboAnimation(catInst, runId);
-              if (started) {
-                // Schedule fish consume at 65% of animation duration (not immediate)
-                const clip = (catInst?.animations || []).find(c => c.name === (catInst?.config?.combo_animation || 'CAT_EAT'))
-                  || (catInst?.animations || [])[0];
-                if (clip) {
-                  scheduleSecondaryConsume(runId, clip.duration * 1000);
-                }
-                sendARDebug('COMBO_TRIGGER', { targetName: primaryModelTargetName, runId });
-              } else {
-                interactionState.comboPlaying = false;
+
+              // ---- Begin turn: calculate direction from latched poses ----
+              const catAnchor = instance?.anchor;
+              const fishAnchor = fishInst?.anchor;
+              let targetYaw = 0;
+              if (catAnchor && fishAnchor) {
+                const catWorld = new THREE.Vector3();
+                const fishWorld = new THREE.Vector3();
+                catAnchor.getWorldPosition(catWorld);
+                fishAnchor.getWorldPosition(fishWorld);
+                targetYaw = yawFromForward(catWorld, fishWorld) + (COMBO_VISUAL_CONFIG.forwardYawOffsetDeg * Math.PI / 180);
+
+                // Clamp to max body yaw
+                const maxRad = COMBO_VISUAL_CONFIG.maxBodyYawDeg * Math.PI / 180;
+                if (targetYaw > maxRad) targetYaw = maxRad;
+                if (targetYaw < -maxRad) targetYaw = -maxRad;
               }
+
+              setInteractionPhase(InteractionPhase.COMBO_TURNING);
+              sendARDebug('CAT_TURN_START', {
+                runId,
+                secondaryTargetName: secondaryName,
+                requestedYawDeg: ((targetYaw - catOriginalYaw) * 180 / Math.PI).toFixed(1),
+                clampedYawDeg: ((targetYaw) * 180 / Math.PI).toFixed(1),
+              });
+              interactionState.catTurn = {
+                runId,
+                fromYaw: catOriginalYaw,
+                toYaw: targetYaw,
+                startedAt: now,
+                durationMs: COMBO_VISUAL_CONFIG.bodyTurnMs,
+              };
+              interactionState.comboPlaying = true;
             }
           } else {
             if (interactionState.proximityEnteredAt != null) {
@@ -1314,6 +1569,11 @@
     function onTargetFound(detail) {
       saveTargetPose(detail);
       const instance = targetInstances.get(detail.name);
+      const wasPendingGrace = instance && interactionState.pendingGraceHides.has(detail.name);
+      const lostForMs = wasPendingGrace
+        ? performance.now() - interactionState.pendingGraceHides.get(detail.name)
+        : null;
+
       if (instance) {
         instance.tracked = true;
         instance.lostAt = null;
@@ -1322,6 +1582,15 @@
         if (detail.name !== primaryModelTargetName && instance.modelState === 'loaded' && instance.model) {
           instance.interactionReady = true;
         }
+      }
+
+      // Cancel any pending grace hide and keep model visible
+      if (wasPendingGrace) {
+        interactionState.pendingGraceHides.delete(detail.name);
+        sendARDebug('TARGET_REACQUIRED_WITHIN_GRACE', {
+          targetName: detail.name,
+          lostForMs: Math.round(lostForMs),
+        });
       }
 
       const config = targetConfigByName.get(detail.name);
@@ -1371,17 +1640,21 @@
 
     function onTargetLost(name) {
       const instance = targetInstances.get(name);
+      const now = performance.now();
 
       // Track loss immediately
       trackedTargets.delete(name);
       if (instance) {
         instance.tracked = false;
         instance.pose = null;
-        instance.lostAt = performance.now();
+        instance.lostAt = now;
         // DO NOT hide model immediately — visual grace handled in evaluateInteraction
         // after lostGraceMs expires.  This preserves cat visibility during
         // brief occlusion and during COMBO_PLAYING.
       }
+
+      // Register pending grace hide
+      interactionState.pendingGraceHides.set(name, now);
 
       sendARDebug('TARGET_LOST_PENDING', {
         qrId: name,
