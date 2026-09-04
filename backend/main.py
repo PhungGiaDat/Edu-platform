@@ -53,11 +53,13 @@ from api import (
     notebook_router,
     dictionary_router,
     vocabulary_topics_router,
+    games_vocab_router,
     ai_router,
     telegram_router,
     notifications_router,
 )
 from api.pronunciation_enhanced import router as pronunciation_enhanced_router
+from api.pronunciation_course import router as pronunciation_course_router
 from api.lessons import router as lessons_router
 from api.course_lessons import router as course_lessons_router
 from api.session_tracking import router as session_tracking_router
@@ -209,6 +211,9 @@ app.include_router(quiz_router, prefix=settings.API_V1_PREFIX, tags=["Quiz"])
 
 app.include_router(game_router, prefix=settings.API_V1_PREFIX, tags=["Games"])
 
+# Games vocabulary endpoint (topic-based mini-games: DragMatch/MemoryPairs/ColorAnimal)
+app.include_router(games_vocab_router, prefix=settings.API_V1_PREFIX, tags=["Games Vocabulary"])
+
 app.include_router(course_router, prefix=settings.API_V1_PREFIX, tags=["Courses"])
 
 app.include_router(chat_router, prefix=settings.API_V1_PREFIX, tags=["Chat"])
@@ -246,6 +251,12 @@ app.include_router(
     pronunciation_enhanced_router,
     prefix=settings.API_V1_PREFIX,
     tags=["Pronunciation Enhanced"],
+)
+
+app.include_router(
+    pronunciation_course_router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["Pronunciation Courses"],
 )
 
 app.include_router(sessions_router, prefix=settings.API_V1_PREFIX, tags=["Sessions"])
