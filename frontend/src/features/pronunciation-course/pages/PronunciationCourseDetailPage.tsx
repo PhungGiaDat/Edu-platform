@@ -1,6 +1,7 @@
 // frontend/src/features/pronunciation-course/pages/PronunciationCourseDetailPage.tsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext';
 import { CourseDetail } from '../components/CourseDetail';
 import { RecordingButton } from '../components/RecordingButton';
 import { FeedbackDisplay } from '../components/FeedbackDisplay';
@@ -11,6 +12,7 @@ import type { PronunciationWord } from '../types';
 export function PronunciationCourseDetailPage() {
   const { topicId } = useParams<{ topicId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { course, loading } = usePronunciationCourseDetail(topicId || '');
   const { logAttempt } = useLogAttempt();
   const {
@@ -40,7 +42,7 @@ export function PronunciationCourseDetailPage() {
       evaluate(selectedWord).then((evalResult) => {
         if (evalResult) {
           logAttempt({
-            user_id: 'current-user', // TODO: get from auth
+            user_id: user?.id || 'guest',
             topic_id: topicId || '',
             word_id: selectedWord.word_id,
             score: evalResult.score,

@@ -155,8 +155,8 @@ export class PronunciationEngine {
     if (score >= 50 && score < 70 && audioBlob) {
       try {
         const hfResult = await pronunciationCourseApi.huggingfaceEvaluate(
-          audioBlob,
-          expectedWord.word
+          expectedWord.word,
+          score
         );
         evaluationMethod = 'huggingface';
         finalScore = hfResult.score;

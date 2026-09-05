@@ -8,8 +8,19 @@ import type {
   EvaluationResult,
 } from '../types';
 
+const TOKEN_KEY = 'authToken';
+
 const api = axios.create({
   baseURL: '/api/v1',
+});
+
+// Inject JWT token from localStorage into every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export const pronunciationCourseApi = {
@@ -48,17 +59,13 @@ export const pronunciationCourseApi = {
 
   /** Evaluate via HuggingFace (borderline cases) */
   async huggingfaceEvaluate(
-    audioData: Blob,
-    expectedWord: string
+    expectedWord: string,
+    browserScore?: number
   ): Promise<EvaluationResult> {
-    const formData = new FormData();
-    formData.append('audio', audioData);
-    formData.append('expected_word', expectedWord);
-
     const response = await api.post<EvaluationResult>(
       '/pronunciation-course/huggingface-evaluate',
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
+      null,
+      { params: { expected_word: expectedWord, browser_score: browserScore } }
     );
     return response.data;
   },
