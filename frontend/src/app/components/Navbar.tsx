@@ -37,6 +37,12 @@ const CameraIcon = () => (
   </svg>
 );
 
+const MicIcon = ({ active }: { active: boolean }) => (
+  <svg className={`w-6 h-6 ${active ? 'text-orange-500' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+  </svg>
+);
+
 const UserIcon = ({ active }: { active: boolean }) => (
   <svg className={`w-6 h-6 ${active ? 'text-orange-500' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
@@ -75,10 +81,11 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label, isActive, onClick })
 const NAV_LINKS: Array<{
   to: string;
   label: string;
-  icon: 'home' | 'book' | 'user';
+  icon: 'home' | 'book' | 'user' | 'mic';
   mobileIcon: string;
 }> = [
   { to: '/courses', label: 'Học tập', icon: 'home', mobileIcon: '🏠' },
+  { to: '/pronunciation-course', label: 'Phát âm', icon: 'mic', mobileIcon: '🎤' },
   { to: '/flashcards', label: 'Flashcards', icon: 'book', mobileIcon: '📚' },
   { to: '/profile', label: 'Hồ sơ', icon: 'user', mobileIcon: '👤' },
 ];
@@ -152,6 +159,8 @@ const Navbar: React.FC = () => {
                       <HomeIcon active={isActive(link.to)} />
                     ) : link.icon === 'book' ? (
                       <BookIcon active={isActive(link.to)} />
+                    ) : link.icon === 'mic' ? (
+                      <MicIcon active={isActive(link.to)} />
                     ) : (
                       <UserIcon active={isActive(link.to)} />
                     )
@@ -269,6 +278,13 @@ const Navbar: React.FC = () => {
                 icon="🏠"
                 label="Học tập"
                 isActive={isActive('/courses')}
+                onClick={closeMobileMenu}
+              />
+              <MobileNavItem
+                to="/pronunciation-course"
+                icon="🎤"
+                label="Phát âm"
+                isActive={isActive('/pronunciation-course')}
                 onClick={closeMobileMenu}
               />
               <MobileNavItem

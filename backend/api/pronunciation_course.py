@@ -304,9 +304,28 @@ async def get_course(
 
 @router.post("/{topic_id}/attempt")
 async def log_attempt(topic_id: str, attempt: PronunciationAttemptLog, request: Request):
-    """Log a pronunciation attempt."""
+    """Log a pronunciation attempt and award XP."""
     auth_uid = await _get_optional_user(request)
     uid = auth_uid or attempt.user_id
+
+    # Award XP if user authenticated
+    xp_result = None
+    if uid:
+        try:
+            from backend.services.postgres_gamification_service import PostgresGamificationService
+            action = "pronunciation_correct" if attempt.stars >= 2 else "pronunciation_attempt"
+            xp_result = await PostgresGamificationService().add_xp_with_event_id(
+                user_id=uid,
+                event_id=f"pron-{uid}-{topic_id}-{attempt.word_id}-{datetime.utcnow().timestamp()}",
+                action=action,
+                source_type="pronunciation_course",
+                source_id=topic_id,
+                metadata={"word_id": attempt.word_id, "score": attempt.score, "stars": attempt.stars},
+            )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Could not award XP: {e}")
+
     try:
         coll = _coll("pronunciation_attempts")
         doc = {
@@ -327,6 +346,10 @@ async def log_attempt(topic_id: str, attempt: PronunciationAttemptLog, request: 
             await coll.create_index([("user_id", 1), ("topic_id", 1), ("word_id", 1)])
         except Exception:
             pass
-        return {"success": True, "stars": attempt.stars, "attempt_id": str(doc.get("_id", ""))}
+        response = {"success": True, "stars": attempt.stars, "attempt_id": str(doc.get("_id", ""))}
+        if xp_result:
+            response["xp_awarded"] = xp_result.get("xp_awarded", 0)
+            response["level_up"] = xp_result.get("level_up", False)
+        return response
     except RuntimeError:
         return {"success": True, "stars": attempt.stars, "attempt_id": "mock"}

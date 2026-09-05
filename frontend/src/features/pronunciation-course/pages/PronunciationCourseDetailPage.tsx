@@ -28,6 +28,7 @@ export function PronunciationCourseDetailPage() {
 
   const [selectedWord, setSelectedWord] = useState<PronunciationWord | null>(null);
   const [wordProgress, setWordProgress] = useState<Record<string, number>>({});
+  const [lastXp, setLastXp] = useState<{ xp: number; levelUp: boolean } | null>(null);
 
   const handleWordSelect = (wordId: string) => {
     const word = course?.words.find((w) => w.word_id === wordId);
@@ -39,9 +40,9 @@ export function PronunciationCourseDetailPage() {
 
   useEffect(() => {
     if (recordingState === 'processing' && selectedWord && transcription) {
-      evaluate(selectedWord).then((evalResult) => {
+      evaluate(selectedWord).then(async (evalResult) => {
         if (evalResult) {
-          logAttempt({
+          const attemptResult = await logAttempt({
             user_id: user?.id || 'guest',
             topic_id: topicId || '',
             word_id: selectedWord.word_id,
@@ -49,6 +50,7 @@ export function PronunciationCourseDetailPage() {
             stars: evalResult.stars,
             transcription: evalResult.transcription,
           });
+          setLastXp({ xp: attemptResult.xpAwarded || 0, levelUp: !!attemptResult.levelUp });
           setWordProgress((prev) => ({
             ...prev,
             [selectedWord.word_id]: Math.max(
@@ -125,7 +127,7 @@ export function PronunciationCourseDetailPage() {
                 <p className="text-red-500 text-sm">{error}</p>
               )}
 
-              {result && <FeedbackDisplay result={result} />}
+              {result && <FeedbackDisplay result={result} xpAwarded={lastXp?.xp} levelUp={lastXp?.levelUp} />}
 
               {result && (
                 <button
