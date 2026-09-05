@@ -217,6 +217,23 @@
       forwardYawOffsetDeg: 0,
     };
 
+    // Boot gate config
+    const BOOT_CONFIG = {
+      secondaryWarmupPercent: 40,
+      maxSecondaryWarmupMs: 8000,
+    };
+
+    // Boot gate state
+    let bootState = {
+      catReady: false,
+      catReadyAt: null,       // performance.now() when CAT finished loading
+      secondaryWarmupTimedOut: false,
+      secondaryWarmupStarted: false,
+      arRevealed: false,
+      fishLastProgress: 0,
+      lastProgressLogPercent: 0,  // throttle to 20/40/60/80/100
+    };
+
     const interactionState = {
       phase: InteractionPhase.SEARCH_PRIMARY,
       primaryLockedAt: null,
@@ -340,6 +357,64 @@
       errorText.textContent = '';
     }
     function hideOverlay() { overlay.classList.add('hidden'); }
+
+    // ========== BOOT GATE ==========
+    // Controls when the AR experience is revealed to the user.
+    // XR camera/engine runs in the background — this only gates visual experience.
+    function maybeRevealAR({ trigger } = {}) {
+      if (bootState.arRevealed) return;
+
+      // Always start the warmup timer as soon as CAT is ready
+      if (bootState.catReady && !bootState.secondaryWarmupStarted) {
+        bootState.secondaryWarmupStarted = true;
+        bootState.warmupStartTime = performance.now();
+        sendARDebug('BOOT_WARMUP_START', {
+          catReady: true,
+          maxWaitMs: BOOT_CONFIG.maxSecondaryWarmupMs,
+        });
+      }
+
+      // Evaluate reveal conditions
+      const fishReady = bootState.fishLastProgress >= BOOT_CONFIG.secondaryWarmupPercent;
+      const timedOut = bootState.secondaryWarmupStarted
+        && (performance.now() - bootState.warmupStartTime) >= BOOT_CONFIG.maxSecondaryWarmupMs;
+
+      if (fishReady || timedOut) {
+        bootState.arRevealed = true;
+        bootState.secondaryWarmupTimedOut = timedOut;
+        const elapsedMs = bootState.catReadyAt
+          ? Math.round(performance.now() - bootState.catReadyAt)
+          : null;
+        sendARDebug('BOOT_GATE_OPEN', {
+          trigger,
+          catReady: bootState.catReady,
+          fishProgress: bootState.fishLastProgress,
+          fishReady,
+          timedOut,
+          elapsedMs,
+        });
+        hideOverlay();
+        setPhase('viewing');
+      }
+    }
+
+    // Update overlay text based on boot state
+    function updateOverlayForBoot(catProgress) {
+      if (bootState.arRevealed) return;
+      if (!bootState.catReady) {
+        const text = catProgress != null ? `Loading cat... (${catProgress}%)` : 'Loading cat...';
+        showOverlay(text, '');
+      } else {
+        const elapsed = bootState.warmupStartTime
+          ? Math.round((performance.now() - bootState.warmupStartTime) / 1000)
+          : 0;
+        const progress = bootState.fishLastProgress;
+        const waiting = bootState.secondaryWarmupTimedOut
+          ? 'Starting...'
+          : `Interaction assets ${progress}% (${elapsed}s)`;
+        showOverlay('Loading AR experience...', waiting);
+      }
+    }
     function showError(msg) { errorText.textContent = msg; logToBuffer('error', 'Error shown to user', { message: msg }); }
     function updateDebug(text) { debugStatus.textContent = text; }
     function showCardLabel(name) {
@@ -438,6 +513,16 @@
               isPrimary: targetName === primaryModelTargetName,
             });
 
+            // ---- Boot gate: track CAT readiness ----
+            if (targetName === primaryModelTargetName && !bootState.catReady) {
+              bootState.catReady = true;
+              bootState.catReadyAt = performance.now();
+              const durationMs = Math.round(performance.now() - loadStartMs);
+              sendARDebug('BOOT_CAT_READY', { targetName: primaryModelTargetName, durationMs });
+              updateOverlayForBoot(null); // update overlay text now that CAT is ready
+              maybeRevealAR({ trigger: 'catReady' });
+            }
+
             // Network timing
             const totalMs = Math.round(performance.now() - loadStartMs);
             try {
@@ -482,6 +567,25 @@
                 setTimeout(() => { modelLoadProgressShown = false; }, 2000);
               }
               updateDebug(`Model ${percent}%`);
+
+              // Track fish warmup for boot gate (non-primary targets only)
+              if (targetName !== primaryModelTargetName) {
+                bootState.fishLastProgress = percent;
+                // Throttle to meaningful steps
+                const steps = [20, 40, 60, 80, 100];
+                const nearestStep = steps.reduce((prev, curr) =>
+                  Math.abs(curr - percent) < Math.abs(prev - percent) ? curr : prev
+                );
+                if (nearestStep > bootState.lastProgressLogPercent && nearestStep <= percent) {
+                  bootState.lastProgressLogPercent = nearestStep;
+                  sendARDebug('BOOT_SECONDARY_PROGRESS', { targetName, percent: nearestStep });
+                }
+                // Check if fish just crossed the threshold
+                if (percent >= BOOT_CONFIG.secondaryWarmupPercent) {
+                  maybeRevealAR({ trigger: 'secondaryWarmupReady' });
+                }
+                updateOverlayForBoot(null); // refresh overlay text with new fish progress
+              }
             }
           },
           (error) => {
@@ -743,8 +847,9 @@
           if (status === 'hasVideo') {
             sendARDebug('XR_CAMERA_HAS_VIDEO', {});
             sendMessage('XR_STARTED', { engine: '8th-wall-self-hosted', qrId, word, hasModel: !!modelUrl, hasModelLoaded: !!loadedModel });
-            hideOverlay();
-            setPhase('viewing');
+            // Don't reveal AR yet — boot gate controls when the experience becomes visible.
+            // Camera is live behind the loading overlay.
+            maybeRevealAR({ trigger: 'cameraReady' });
           }
           if (status === 'failed') sendARDebug('XR_CAMERA_FAILED', { status });
         },
@@ -1160,7 +1265,9 @@
           runId: turn.runId,
           finalYawDeg: (turn.toYaw * 180 / Math.PI).toFixed(1),
         });
-        // Now trigger CAT_EAT
+        // Set COMBO_PLAYING BEFORE triggering CAT_EAT — otherwise the animation
+        // finish callback sees phase===COMBO_TURNING and treats the finish as stale.
+        setInteractionPhase(InteractionPhase.COMBO_PLAYING);
         triggerComboAnimation(instance, turn.runId);
       }
     }
@@ -1281,6 +1388,8 @@
       const fishGraceExpired = !!(fishInst && !fishInst.tracked && fishInst.lostAt != null && (now - fishInst.lostAt) >= cfg.lostGraceMs);
 
       // ---- Visual grace: process pending hides ----
+      // Tick the boot gate watchdog — fires reveal if warmup timer expired
+      maybeRevealAR({ trigger: 'watchdog' });
       // Skip during combo: cat must stay visible even if target is lost
       const latchActive = interactionState.comboLatch != null && interactionState.comboLatch.runId === interactionState.comboRunId;
       for (const [targetName, graceStart] of interactionState.pendingGraceHides) {
@@ -1350,7 +1459,7 @@
         return;
       }
 
-      // ---- COMBO_PLAYING: latch phase — animation drives itself; also tween return ----
+      // ---- COMBO_PLAYING: CAT_EAT animating; tween return if active ----
       if (phase === InteractionPhase.COMBO_PLAYING) {
         applyCatReturn(now);
         const raw = computeAnchorDistance();
