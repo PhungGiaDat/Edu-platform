@@ -5,6 +5,35 @@
 
 ---
 
+## 0. Autonomous Session Summary (2026-09-06)
+
+### Commits on `10-days-quick-run`
+
+| Commit | Description |
+|---|---|
+| `9faab31` | fix(ux): LexiOverlay font + SVG sparkles, VirtualPet uses CodexPetSprite |
+| `500cf7b` | docs: add comprehensive REPO_AUDIT_REPORT + fix CourseList test heading |
+| `06bdf92` | feat(ux): LessonPlayer skeleton + empty states + ColoringGame claymorphic |
+| `bf0bce7` | refactor(css): course-mission-path CSS uses custom properties from claymorphic tokens |
+| `ddb5558` | feat(refactor): extract LessonPlayer step components into separate files |
+
+### All Tasks Completed
+
+| # | Task | Status |
+|---|---|---|
+| 1 | DragMatchGame claymorphic | ✅ Already done |
+| 2 | ColoringGame claymorphic | ✅ Fixed (canvas game overlay) |
+| 3 | VirtualPet → CodexPetSprite | ✅ Done |
+| 4 | LessonPlayer step extraction | ✅ 12 files created |
+| 5 | LessonPlayer loading skeletons | ✅ `LessonPlayerSkeleton` component |
+| 6 | LexiTransitionOverlay font + icons | ✅ Baloo 2 + inline SVG sparkles |
+| 7 | RewardPopup deduplication | ✅ Already single definition |
+| 8 | Empty state handling | ✅ `LessonStepEmptyState` for all 9 steps |
+| 9 | Tests pass | ✅ 379/388 (9 pre-existing failures unrelated) |
+| 10 | Deploy | ✅ CI/CD via git push |
+
+---
+
 ## 1. Architecture Overview
 
 ### Frontend Stack
@@ -283,6 +312,47 @@ Failed: 9 (2.3%) — all pre-existing infrastructure/integration failures
 | `features/shared/lexi-transition/LexiTransitionOverlay.tsx` | Font: Nunito → Baloo 2; sparkles: `auto_awesome` text → inline SVG star |
 | `features/gamification/components/VirtualPet.tsx` | Emoji pets → `CodexPetSprite` |
 | `__tests__/pages/CourseList.test.tsx` | Heading text: "Your Learning Paths" → "Your Topics" |
+| `pages/components/steps/*.tsx` | 12 new files: 9 step components + shared + types + index |
+| `shared/components/feedback/Skeleton.tsx` | NEW: Claymorphic `LessonPlayerSkeleton` component |
+| `shared/components/feedback/EmptyState.tsx` | NEW: `LessonStepEmptyState` per step type |
+| `pages/LessonPlayer.tsx` | Integrated skeleton + empty states + step component imports |
+| `features/games/components/game/ColoringGame.tsx` | Claymorphic header, progress, canvas frame, palette |
+| `styles/course-mission-path.css` | Refactored to use CSS custom properties from claymorphic tokens |
+
+---
+
+## 13. Shared Component Library Additions (2026-09-06)
+
+| Component | File | Purpose |
+|---|---|---|
+| `LessonPlayerSkeleton` | `feedback/Skeleton.tsx` | Claymorphic loading placeholder matching LessonPlayer layout |
+| `LessonStepEmptyState` | `feedback/EmptyState.tsx` | Per-step empty states with CodexPetSprite |
+
+---
+
+## 14. LessonPlayer Step Component Architecture
+
+```
+pages/components/steps/
+├── types.ts         — Typed props for all 9 steps + StepCopy interface
+├── StepShared.tsx   — StatusPill, ActionButton, PracticeFeedback, statusTone
+├── StepIntro.tsx    — Intro media + completion button
+├── StepWatch.tsx   — Video player + mark watched
+├── StepStory.tsx    — Scene viewer with navigation
+├── StepGame.tsx    — Picture matching game
+├── StepWords.tsx    — Vocabulary + pronunciation practice
+├── StepRead.tsx     — Read aloud with page-by-page
+├── StepSay.tsx      — Pronunciation drill
+├── StepQuiz.tsx     — Quiz questions with image choices
+├── StepFinish.tsx   — Reward/finish step
+└── index.ts         — Barrel export
+```
+
+Each step component:
+- Accepts typed props matching the data it needs
+- Includes all necessary imports inline
+- Keeps claymorphic styling inline
+- Exports as both named and default export
 
 ---
 
