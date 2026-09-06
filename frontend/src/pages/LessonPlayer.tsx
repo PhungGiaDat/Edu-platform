@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { LessonPlayerSkeleton } from '@/shared/components/feedback/Skeleton';
+import { LessonStepEmptyState } from '@/shared/components/feedback/EmptyState';
 import { AssetTile, ImageQuiz, RewardPopup } from '@/features/courses/components/CourseLearningBlocks';
 import { LessonMedia } from '@/features/courses/components/LessonMedia';
 import { LessonVideoPlayer } from '@/features/courses/components/LessonVideoPlayer';
@@ -1158,19 +1160,19 @@ export const LessonPlayer: React.FC = () => {
   ) : null;
 
   const stepContentMap: Record<string, React.ReactNode> = {
-    intro: introContent,
-    watch: watchContent,
-    story: storyContent,
-    game: gameContent,
-    words: wordsContent,
-    read: readContent,
-    say: sayContent,
-    quiz: quizContent,
-    finish: finishContent,
+    intro: introContent || <LessonStepEmptyState stepLabel={copy.intro} stepLabelEn="Intro" type="general" />,
+    watch: watchContent || <LessonStepEmptyState stepLabel={copy.watch} stepLabelEn="Watch" type="video" />,
+    story: storyContent || <LessonStepEmptyState stepLabel={copy.story} stepLabelEn="Story" type="video" />,
+    game: gameContent || <LessonStepEmptyState stepLabel={copy.game} stepLabelEn="Game" type="game" />,
+    words: wordsContent || <LessonStepEmptyState stepLabel={copy.words} stepLabelEn="Vocabulary" type="vocabulary" />,
+    read: readContent || <LessonStepEmptyState stepLabel={copy.read} stepLabelEn="Read" type="reading" />,
+    say: sayContent || <LessonStepEmptyState stepLabel={copy.say} stepLabelEn="Pronunciation" type="pronunciation" />,
+    quiz: quizContent || <LessonStepEmptyState stepLabel={copy.quiz} stepLabelEn="Quiz" type="general" />,
+    finish: finishContent || <LessonStepEmptyState stepLabel={copy.finish} stepLabelEn="Finish" type="general" />,
   };
 
   if (isLoading) {
-    return <div className="min-h-screen clay-bg-playful p-6 text-center text-xl font-black text-slate-700">{copy.loadingLesson}</div>;
+    return <LessonPlayerSkeleton />;
   }
 
   if (!lesson || error) {

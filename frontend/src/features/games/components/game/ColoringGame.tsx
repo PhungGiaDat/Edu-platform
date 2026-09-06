@@ -1,9 +1,12 @@
-// src/components/game/ColoringGame.tsx
-// Kid-friendly coloring game with audio feedback
-
+/**
+ * ColoringGame — canvas-based coloring with claymorphic UI.
+ * Used in game overlays. Claymorphic treatment added 2026-09-06.
+ */
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import type { GameChallenge } from '@/types';
 import { AudioService } from '@/services/AudioService';
+
+const DISPLAY_FONT = "'Baloo 2', 'Quicksand', system-ui, sans-serif";
 
 interface Props {
     challenge: GameChallenge;
@@ -147,31 +150,47 @@ export const ColoringGame: React.FC<Props> = ({ challenge, onAnswer, showHint })
 
     return (
         <div className="space-y-3">
+            {/* Claymorphic header */}
             <div
-                className="text-center p-2 rounded-xl"
-                style={{ background: 'linear-gradient(135deg, #0ea5e9, #22c55e)' }}
+                className="text-center p-3 rounded-[20px] border-4 border-white"
+                style={{
+                    background: 'linear-gradient(145deg, #6EB9FF, #3b82f6)',
+                    boxShadow: '0 4px 0 rgba(59,130,246,0.18), 0 6px 16px rgba(59,130,246,0.10), inset 0 1px 0 rgba(255,255,255,0.4)',
+                }}
             >
-                <p className="text-sm font-bold text-white">{challenge.question}</p>
+                <p className="text-sm font-black text-white">{challenge.question}</p>
             </div>
 
+            {/* Claymorphic progress bar */}
             <div className="flex justify-between items-center px-2">
-                <span className="text-sm font-bold text-sky-700">🎨 {coloredPercentage}%</span>
+                <span
+                    className="text-sm font-black text-slate-700"
+                    style={{ fontFamily: "'Baloo 2', system-ui, sans-serif" }}
+                >
+                    {coloredPercentage}% colored
+                </span>
                 <button
                     onClick={handleClear}
-                    className="px-3 py-1 text-xs font-bold text-white rounded-full"
-                    style={{ background: '#f97316' }}
+                    className="px-4 py-2 text-xs font-black text-white rounded-[16px] border-4 border-white"
+                    style={{
+                        background: '#f97316',
+                        boxShadow: '0 4px 0 #c2410c',
+                        fontFamily: "'Baloo 2', system-ui, sans-serif",
+                    }}
                 >
-                    🧹 Clear
+                    Clear
                 </button>
             </div>
 
+            {/* Claymorphic canvas frame */}
             <div
-                className="relative mx-auto rounded-2xl overflow-hidden shadow-lg"
+                className="relative mx-auto rounded-[24px] overflow-hidden"
                 style={{
                     width: 'min(300px, 90vw)',
                     height: 'min(300px, 90vw)',
-                    border: '4px solid #0ea5e9',
-                    touchAction: 'none'
+                    border: '4px solid #fff',
+                    boxShadow: '0 8px 0 rgba(148,163,184,0.14), 0 12px 24px rgba(26,39,68,0.10)',
+                    touchAction: 'none',
                 }}
             >
                 <canvas
@@ -188,19 +207,22 @@ export const ColoringGame: React.FC<Props> = ({ challenge, onAnswer, showHint })
                 />
             </div>
 
-            <div className="flex flex-wrap justify-center gap-2">
+            {/* Claymorphic color palette */}
+            <div className="flex flex-wrap justify-center gap-3">
                 {COLORS.map((color) => (
                     <button
                         key={color.hex}
                         onClick={() => handleColorSelect(color)}
                         className="rounded-full transition-transform"
                         style={{
-                            width: 40,
-                            height: 40,
+                            width: 48,
+                            height: 48,
                             background: color.hex,
-                            border: selectedColor.hex === color.hex ? '4px solid #1f2937' : '2px solid #fff',
+                            border: selectedColor.hex === color.hex ? '4px solid #fff' : '4px solid rgba(255,255,255,0.6)',
                             transform: selectedColor.hex === color.hex ? 'scale(1.2)' : 'scale(1)',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                            boxShadow: selectedColor.hex === color.hex
+                                ? `0 6px 0 rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.12)`
+                                : '0 4px 0 rgba(0,0,0,0.12)',
                         }}
                     />
                 ))}
@@ -208,10 +230,14 @@ export const ColoringGame: React.FC<Props> = ({ challenge, onAnswer, showHint })
 
             {showHint && challenge.hint && (
                 <div
-                    className="p-2 rounded-xl text-center"
-                    style={{ background: '#fef08a', border: '2px solid #eab308' }}
+                    className="p-3 rounded-[20px] text-center border-4 border-white"
+                    style={{
+                        background: '#FEF9C3',
+                        boxShadow: '0 4px 0 rgba(234,179,8,0.18)',
+                        fontFamily: "'Baloo 2', system-ui, sans-serif",
+                    }}
                 >
-                    <p className="text-xs font-bold text-amber-800">💡 {challenge.hint}</p>
+                    <p className="text-xs font-black text-amber-700">{challenge.hint}</p>
                 </div>
             )}
         </div>
