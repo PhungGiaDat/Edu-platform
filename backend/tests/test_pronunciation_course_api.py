@@ -1,19 +1,15 @@
-"""Tests for pronunciation_course API endpoints with PostgreSQL repository."""
+"""Tests for pronunciation_course API endpoints — mocks repository classes directly."""
 import pytest
 from unittest.mock import AsyncMock, patch
 
 from httpx import AsyncClient, ASGITransport
 
 
-# ── Mock repositories ─────────────────────────────────────────────────────────
+# ── Mock data ─────────────────────────────────────────────────────────────────
 
 _mock_topic = {
-    "topic_id": "animals",
-    "name": "Animals",
-    "name_vi": "Động vật",
-    "icon": "🐾",
-    "color": "sky-blue",
-    "display_order": 1,
+    "topic_id": "animals", "name": "Animals", "name_vi": "Động vật",
+    "icon": "🐾", "color": "sky-blue", "display_order": 1,
 }
 _mock_words = [
     {"word_id": "cat", "topic_id": "animals", "word": "cat",
@@ -22,6 +18,8 @@ _mock_words = [
      "phonetic": "/dɔːɡ/", "difficulty": "easy", "audio_url": None, "display_order": 2},
 ]
 
+
+# ── Mock repository classes ────────────────────────────────────────────────────
 
 class MockCourseRepo:
     async def list_active_topics(self):
@@ -35,26 +33,25 @@ class MockCourseRepo:
 
 
 class MockAttemptRepo:
+    _progress = {"cat": 2, "dog": 3}  # best stars per word
+
     async def get_topic_progress(self, uid, topic_id, word_ids):
-        return {"cat": 2, "dog": 3} if uid == "test-user-123" else {}
+        if uid == "test-user-123":
+            return self._progress
+        return {}
 
     async def log_attempt(self, **kw):
         return {
             "attempt_id": "attempt-abc123",
-            "user_id": kw["user_id"],
-            "topic_id": kw["topic_id"],
-            "word_id": kw["word_id"],
-            "score": kw["score"],
-            "stars": kw["stars"],
-            "transcription": kw.get("transcription", ""),
+            "user_id": kw["user_id"], "topic_id": kw["topic_id"],
+            "word_id": kw["word_id"], "score": kw["score"],
+            "stars": kw["stars"], "transcription": kw.get("transcription", ""),
             "evaluation_method": kw.get("evaluation_method", "browser"),
         }
 
     async def get_words_per_topic(self, uid):
-        return [
-            {"topic_id": "animals", "topic_name": "Động vật",
-             "words_learned": 2, "topic_stars": 5, "total_words": 8},
-        ]
+        return [{"topic_id": "animals", "topic_name": "Động vật",
+                 "words_learned": 2, "topic_stars": 5, "total_words": 8}]
 
     async def get_favorite_topic(self, uid):
         return {"topic_id": "animals", "topic_name": "Động vật", "words_learned": 2}
@@ -74,23 +71,19 @@ class MockRecordingRepo:
     async def get_consented_recordings(self, limit=100, skip_reviewed=True):
         return []
 
-    async def mark_reviewed(self, recording_id, quality_rating):
-        pass
-
 
 @pytest.fixture(autouse=True)
-def mock_repositories():
-    """Patch repository getters at the source module, not the consumer module."""
+def mock_repos():
     with patch(
-        "backend.repositories.pronunciation_course_repository"
+        "repositories.pronunciation_course_repository"
         ".get_pronunciation_course_repository",
         return_value=MockCourseRepo(),
     ), patch(
-        "backend.repositories.pronunciation_course_repository"
+        "repositories.pronunciation_course_repository"
         ".get_pronunciation_attempt_repository",
         return_value=MockAttemptRepo(),
     ), patch(
-        "backend.repositories.pronunciation_course_repository"
+        "repositories.pronunciation_course_repository"
         ".get_pronunciation_recording_repository",
         return_value=MockRecordingRepo(),
     ):
@@ -108,7 +101,7 @@ def fake_token():
     )
 
 
-# ── Tests ───────────────────────────────────────────────────────────────────
+# ── Tests ─────────────────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
 async def test_list_courses():
@@ -152,10 +145,18 @@ async def test_get_course():
 @pytest.mark.asyncio
 async def test_get_course_not_found():
     from backend.main import app
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        r = await client.get("/api/v1/pronunciation-course/nonexistent")
-        assert r.status_code == 404
+    # Override repo
+    repo = MockCourseRepo()
+    repo.get_topic = AsyncMock(return_value=None)
+    with patch(
+        "repositories.pronunciation_course_repository"
+        ".get_pronunciation_course_repository",
+        return_value=repo,
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            r = await client.get("/api/v1/pronunciation-course/nonexistent")
+            assert r.status_code == 404
 
 
 @pytest.mark.asyncio
@@ -193,8 +194,7 @@ async def test_log_attempt(fake_token):
                 "user_id": "test-user-123",
                 "topic_id": "animals",
                 "word_id": "cat",
-                "score": 85,
-                "stars": 2,
+                "score": 85, "stars": 2,
                 "transcription": "cat",
                 "evaluation_method": "browser",
             },
@@ -217,14 +217,13 @@ async def test_store_recording():
             params={
                 "word_id": "cat",
                 "topic_id": "animals",
-                "audio_url": "https://storage.example.com/recording.webm",
+                "audio_url": "https://storage.example.com/rec.webm",
                 "is_consent_granted": True,
             },
         )
         assert r.status_code == 200
-        data = r.json()
-        assert data["success"] is True
-        assert data["recording_id"] == "recording-xyz789"
+        assert r.json()["success"] is True
+        assert r.json()["recording_id"] == "recording-xyz789"
 
 
 @pytest.mark.asyncio
