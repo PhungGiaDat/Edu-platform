@@ -3,11 +3,23 @@
 Pronunciation Evaluation via HuggingFace wav2vec2
 
 Hybrid evaluation: browser fuzzy match first → borderline → HuggingFace API.
+
+For fine-tuning:
+    1. Export data: python database/seed/export_pronunciation_dataset.py
+    2. Fine-tune on Colab: docs/models/fine_tune_pronunciation_colab.ipynb
+    3. Push to HF Hub: HF_PRONUNCIATION_MODEL=your-username/vi-child-en-pronunciation
+    4. Set HF_TOKEN in .env
 """
 from dataclasses import dataclass
 from typing import Optional
 import os
-import httpx
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Fine-tuned model: set HF_PRONUNCIATION_MODEL env var after fine-tuning
+FINETUNED_MODEL = os.getenv("HF_PRONUNCIATION_MODEL")
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 
 @dataclass
@@ -17,6 +29,7 @@ class HuggingFaceEvaluationResult:
     feedback: str
     transcription: Optional[str] = None
     phoneme_analysis: Optional[dict] = None
+    evaluation_method: str = "huggingface"  # "huggingface" | "levenshtein"
 
 
 FEEDBACK_TEMPLATES = {
@@ -30,48 +43,67 @@ class HuggingFaceEvaluationService:
     """
     Evaluate pronunciation using HuggingFace Inference API.
 
-    Production: uses a fine-tuned wav2vec2 model for Vietnamese children's speech.
-    Fallback: Levenshtein similarity when API unavailable.
+    Priority:
+    1. Fine-tuned model (HF_PRONUNCIATION_MODEL) — most accurate
+    2. Base wav2vec2 via Inference API — fallback if no fine-tuned model
+    3. Levenshtein similarity — fallback if no HF_TOKEN
     """
 
-    MODEL_NAME = os.getenv("HF_PRONUNCIATION_MODEL", "facebook/wav2vec2-base")
-    HF_TOKEN = os.getenv("HF_TOKEN")
-    INFERENCE_ENDPOINT = os.getenv(
-        "HF_INFERENCE_ENDPOINT",
-        "https://api-inference.huggingface.co/models/",
-    )
+    HF_INFERENCE_ENDPOINT = "https://api-inference.huggingface.co/models/"
+    HF_HEADERS = {"Authorization": f"Bearer {HF_TOKEN}"} if HF_TOKEN else {}
 
     @classmethod
-    def _call_hf_api(cls, audio_bytes: bytes, expected_word: str) -> dict:
-        """Call HuggingFace Inference API with audio."""
-        headers = {}
-        if cls.HF_TOKEN:
-            headers["Authorization"] = f"Bearer {cls.HF_TOKEN}"
+    def _get_model_name(cls, audio_data: bytes, expected_word: str) -> str:
+        """Return the model to use: fine-tuned if available, otherwise base."""
+        if FINETUNED_MODEL:
+            return FINETUNED_MODEL
+        # Default to facebook/wav2vec2-base for demo
+        return "facebook/wav2vec2-base"
 
-        # Step 1: Speech-to-text
-        stt_url = f"{cls.INFERENCE_ENDPOINT}{cls.MODEL_NAME}"
-        with httpx.Client(timeout=30.0) as client:
-            stt_response = client.post(
-                stt_url,
-                headers=headers,
-                files={"file": ("audio.webm", audio_bytes, "audio/webm")},
-            )
+    @classmethod
+    def _call_hf_api(cls, model: str, audio_data: bytes, expected_word: str) -> dict:
+        """
+        Call HuggingFace Inference API for speech-to-text.
 
-        if stt_response.status_code != 200:
-            raise RuntimeError(f"HuggingFace API error: {stt_response.status_code}")
+        Falls back to Levenshtein scoring if API call fails.
+        """
+        import httpx
 
-        result = stt_response.json()
-        transcription = result.get("text", "").strip()
+        if not HF_TOKEN:
+            raise RuntimeError("HF_TOKEN not configured — using Levenshtein fallback")
 
-        # Step 2: Score against expected word
-        score = cls._levenshtein_score(transcription.lower(), expected_word.lower())
-        stars = 3 if score >= 85 else 2 if score >= 70 else 1
+        endpoint = f"{cls.HF_INFERENCE_ENDPOINT}{model}"
+        headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+
+        with httpx.Client(timeout=60.0) as client:
+            # Audio must be sent as raw bytes for ASR models
+            files = {"file": ("audio.webm", audio_data, "audio/webm")}
+            resp = client.post(endpoint, files=files, headers=headers)
+
+        if resp.status_code == 503:
+            # Model loading — try once more after delay
+            import time
+            time.sleep(5)
+            with httpx.Client(timeout=60.0) as client:
+                resp = client.post(endpoint, files=files, headers=headers)
+
+        if resp.status_code != 200:
+            raise RuntimeError(f"HuggingFace API error: {resp.status_code} — {resp.text[:200]}")
+
+        result = resp.json()
+
+        # wav2vec2 returns {"text": "transcribed text"}
+        transcription = result.get("text", "").strip().lower()
+        score = cls._levenshtein_score(transcription, expected_word.lower())
 
         return {
             "transcription": transcription,
             "score": score,
-            "stars": stars,
-            "feedback": cls._get_feedback(stars),
+            "stars": 3 if score >= 85 else 2 if score >= 70 else 1,
+            "feedback": cls._get_feedback(
+                3 if score >= 85 else 2 if score >= 70 else 1
+            ),
+            "model": model,
         }
 
     @staticmethod
@@ -102,18 +134,20 @@ class HuggingFaceEvaluationService:
         distance = cls._levenshtein_distance(transcription, expected)
         score = round(((max_len - distance) / max_len) * 100)
 
-        # Kid bonus: plural forms, small variations
+        # Kid bonus: common child speech variations
         if (
             transcription == expected + "s"
             or transcription == expected + "es"
             or transcription == expected.rstrip("s")
+            or transcription == expected.replace("th", "t")
+            or transcription == expected.replace("r", "l")
         ):
             score = min(100, score + 15)
 
         return score
 
-    @classmethod
-    def _get_feedback(cls, stars: int) -> str:
+    @staticmethod
+    def _get_feedback(stars: int) -> str:
         import random
         messages = FEEDBACK_TEMPLATES.get(stars, FEEDBACK_TEMPLATES[1])
         return random.choice(messages)
@@ -126,33 +160,46 @@ class HuggingFaceEvaluationService:
         browser_score: Optional[float] = None,
     ) -> HuggingFaceEvaluationResult:
         """
-        Main evaluation method.
+        Main evaluation entry point.
 
-        Uses HuggingFace API when available. Falls back to Levenshtein if API
-        fails or no HF_TOKEN is configured.
+        Pipeline:
+        1. If browser_score >= 85 → instant 3 stars, no API call
+        2. If browser_score >= 70 → 2 stars, no API call
+        3. If borderline (50-69) → call HuggingFace Inference API
+        4. If no HF_TOKEN → pure Levenshtein fallback
         """
-        # If browser already gave a high score, skip HF call
-        if browser_score is not None and browser_score >= 70:
-            stars = 3 if browser_score >= 85 else 2
-            return HuggingFaceEvaluationResult(
-                score=browser_score,
-                stars=stars,
-                feedback=cls._get_feedback(stars),
-            )
+        # High confidence from browser — skip server call
+        if browser_score is not None:
+            if browser_score >= 85:
+                return HuggingFaceEvaluationResult(
+                    score=browser_score,
+                    stars=3,
+                    feedback=cls._get_feedback(3),
+                    evaluation_method="levenshtein",
+                )
+            if browser_score >= 70:
+                return HuggingFaceEvaluationResult(
+                    score=browser_score,
+                    stars=2,
+                    feedback=cls._get_feedback(2),
+                    evaluation_method="levenshtein",
+                )
 
-        # Try HuggingFace API
-        if cls.HF_TOKEN:
+        # Low score from browser → call HuggingFace for borderline cases
+        model = cls._get_model_name(audio_data, expected_word)
+
+        if HF_TOKEN and audio_data:
             try:
-                result = cls._call_hf_api(audio_data, expected_word)
+                result = cls._call_hf_api(model, audio_data, expected_word)
                 return HuggingFaceEvaluationResult(
                     score=result["score"],
                     stars=result["stars"],
                     feedback=result["feedback"],
                     transcription=result.get("transcription"),
+                    evaluation_method="huggingface",
                 )
             except Exception as e:
-                import logging
-                logging.getLogger(__name__).warning(f"HuggingFace API failed: {e}")
+                logger.warning(f"HuggingFace API failed: {e} — falling back to Levenshtein")
 
         # Fallback: Levenshtein only
         score = browser_score if browser_score is not None else 75.0
@@ -161,4 +208,5 @@ class HuggingFaceEvaluationService:
             score=score,
             stars=stars,
             feedback=cls._get_feedback(stars),
+            evaluation_method="levenshtein",
         )
