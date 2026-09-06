@@ -1,10 +1,35 @@
+/**
+ * course-mission-path.css — CSS custom properties aligned with claymorphic.ts
+ * Updated 2026-09-06 to use CSS variables for consistency.
+ */
+:root {
+  --cmp-node-size: 3.4rem;
+  --cmp-card-radius: 1.45rem;
+  --cmp-card-padding: 0.75rem;
+  --cmp-card-border: 3px solid #fff;
+  --cmp-card-shadow: 0 6px 0 rgba(91, 141, 239, 0.12);
+  --cmp-card-shadow-hover: 0 8px 0 rgba(91, 141, 239, 0.14);
+  --cmp-card-shadow-active: 0 4px 0 rgba(91, 141, 239, 0.10);
+  --cmp-card-radius-lg: 2rem;
+  --cmp-track-color: #86c5f6;
+  --cmp-sky-blue: #6eb9ff;
+  --cmp-sky-dark: #3b8ef9;
+  --cmp-bg-top: #eaf5ff;
+  --cmp-bg-bottom: #f7fbff;
+  --cmp-mint-light: #eef9e7;
+  --cmp-mint-dark: rgba(125, 199, 96, 0.8);
+  --cmp-coral-light: #ffe7e3;
+  --cmp-yellow-light: #fff1d7;
+  --cmp-yellow-dark: rgba(229, 184, 0, 0.8);
+}
+
 .course-mission-path {
   min-width: 0;
   border: 4px solid #fff;
-  border-radius: 2rem;
+  border-radius: var(--cmp-card-radius-lg);
   padding: clamp(1rem, 4vw, 1.5rem);
-  background: linear-gradient(180deg, #eaf5ff 0%, #f7fbff 100%);
-  box-shadow: 0 10px 0 rgb(91 141 239 / 0.12);
+  background: linear-gradient(180deg, var(--cmp-bg-top) 0%, var(--cmp-bg-bottom) 100%);
+  box-shadow: 0 10px 0 rgba(91, 141, 239, 0.12);
 }
 
 .course-mission-path__heading {
@@ -50,26 +75,34 @@
   left: 1.7rem;
   width: 0.35rem;
   border-radius: 999px;
-  background: repeating-linear-gradient(to bottom, #86c5f6 0 0.65rem, transparent 0.65rem 1rem);
+  background: repeating-linear-gradient(to bottom, var(--cmp-track-color) 0 0.65rem, transparent 0.65rem 1rem);
   content: '';
 }
 
 .course-mission-path__item { position: relative; }
+
+.course-mission-path__active-lexi {
+  position: absolute;
+  top: -1.75rem;
+  right: 0.8rem;
+  z-index: 2;
+  pointer-events: none;
+}
 
 .course-mission-path__mission {
   display: grid;
   width: 100%;
   min-width: 0;
   min-height: 5.75rem;
-  grid-template-columns: 3.4rem minmax(0, 1fr);
+  grid-template-columns: var(--cmp-node-size) minmax(0, 1fr);
   align-items: center;
   gap: 0.85rem;
-  border: 3px solid #fff;
-  border-radius: 1.45rem;
-  padding: 0.75rem;
+  border: var(--cmp-card-border);
+  border-radius: var(--cmp-card-radius);
+  padding: var(--cmp-card-padding);
   color: #1a2744;
   background: #fff;
-  box-shadow: 0 6px 0 rgb(91 141 239 / 0.12);
+  box-shadow: var(--cmp-card-shadow);
   text-align: left;
 }
 
@@ -80,7 +113,7 @@ button.course-mission-path__mission {
 
 button.course-mission-path__mission:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 0 rgb(91 141 239 / 0.14);
+  box-shadow: var(--cmp-card-shadow-hover);
 }
 
 button.course-mission-path__mission:focus-visible {
@@ -90,10 +123,10 @@ button.course-mission-path__mission:focus-visible {
 
 .course-mission-path__node {
   display: grid;
-  width: 3.4rem;
-  height: 3.4rem;
+  width: var(--cmp-node-size);
+  height: var(--cmp-node-size);
   place-items: center;
-  border: 3px solid #fff;
+  border: var(--cmp-card-border);
   border-radius: 1.2rem;
   color: #1a2744;
   background: #b4e197;
@@ -137,9 +170,9 @@ button.course-mission-path__mission:focus-visible {
   text-align: center;
 }
 
-.course-mission-path__item--current .course-mission-path__mission { background: #fff8d8; }
+.course-mission-path__item--current .course-mission-path__mission { background: var(--cmp-yellow-light); }
 .course-mission-path__item--current .course-mission-path__node { background: #ffd93d; box-shadow: 0 4px 0 #e5b800; }
-.course-mission-path__item--completed .course-mission-path__node { background: #b4e197; }
+.course-mission-path__item--completed .course-mission-path__node { background: var(--cmp-sky-blue); box-shadow: 0 4px 0 var(--cmp-sky-dark); }
 .course-mission-path__item--locked .course-mission-path__mission { color: #71809a; background: #eef3f9; box-shadow: none; }
 .course-mission-path__item--locked .course-mission-path__node { color: #71809a; background: #dce5f0; box-shadow: 0 4px 0 #c6d1df; }
 .course-mission-path__item--locked .course-mission-path__name { color: #5c7090; }
@@ -147,6 +180,9 @@ button.course-mission-path__mission:focus-visible {
 @media (min-width: 42rem) {
   .course-mission-path__mission { grid-template-columns: 3.4rem minmax(0, 1fr) auto; }
   .course-mission-path__action { grid-column: 3; min-width: 8rem; }
+  .course-mission-path__item:nth-child(even) { margin-left: 2.25rem; }
+  .course-mission-path__item:nth-child(odd) { margin-right: 2.25rem; }
+  .course-mission-path__active-lexi { right: 1.25rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
