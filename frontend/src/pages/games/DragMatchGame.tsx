@@ -13,7 +13,7 @@
  *   decides XP amounts.
  * - Claymorphic tokens throughout; copy in Vietnamese, Lexi's voice.
  */
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ClayCard } from '@/shared/components/clay/ClayCard';
 import { colors, shadows, withOpacity } from '@/design-tokens/claymorphic';
@@ -73,6 +73,13 @@ export const DragMatchGame: React.FC = () => {
   const [xpAwarded, setXpAwarded] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // ── Pointer-drag state (ghost card follows the finger) ──
+  const [draggingCard, setDraggingCard] = useState<string | null>(null);
+  const [dragOverWord, setDragOverWord] = useState<string | null>(null);
+  const dragRef = useRef<{ id: string; startX: number; startY: number; lastX: number; lastY: number; moved: boolean } | null>(null);
+  const ghostRef = useRef<HTMLDivElement | null>(null);
+  const DRAG_THRESHOLD = 8; // px — below this a pointer gesture is a tap
+
   const topicLabel = GAME_TOPICS.find((t) => t.slug === topic)?.label ?? '';
   const themeBg = topicBackgroundUrl(topic);
 
@@ -108,6 +115,79 @@ export const DragMatchGame: React.FC = () => {
   useEffect(() => {
     if (complete) void awardXp();
   }, [complete, awardXp]);
+
+  // ── Drag lifecycle: move ghost, highlight hovered word, resolve drop ──
+  useEffect(() => {
+    if (!draggingCard) return;
+
+    const onMove = (e: PointerEvent) => {
+      const d = dragRef.current;
+      if (!d) return;
+      d.lastX = e.clientX;
+      d.lastY = e.clientY;
+      if (Math.hypot(e.clientX - d.startX, e.clientY - d.startY) > DRAG_THRESHOLD) d.moved = true;
+      if (ghostRef.current) {
+        ghostRef.current.style.transform = `translate(${e.clientX - 58}px, ${e.clientY - 70}px) rotate(4deg) scale(1.06)`;
+      }
+      const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+      const wordEl = el?.closest?.('[data-word]') as HTMLElement | null;
+      const w = wordEl?.getAttribute('data-word') ?? null;
+      setDragOverWord((prev) => (prev === w ? prev : w));
+    };
+
+    const onUp = (e: PointerEvent) => {
+      const d = dragRef.current;
+      const card = cards.find((c) => c.id === draggingCard);
+      const wasTap = !d?.moved;
+      dragRef.current = null;
+      setDraggingCard(null);
+      setDragOverWord(null);
+
+      if (!card) return;
+      if (wasTap) {
+        // Tap flow unchanged: select image + pronounce
+        setSelectedWord(card.word);
+        speakWord(card);
+        return;
+      }
+      const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+      const wordEl = el?.closest?.('[data-word]') as HTMLElement | null;
+      const droppedWord = wordEl?.getAttribute('data-word') ?? null;
+      if (!droppedWord) return; // dropped nowhere — ghost vanishes
+      if (matched.has(card.id)) return;
+      if (droppedWord === card.word) {
+        setMatched((m) => new Set(m).add(card.id));
+        setSelectedWord(null);
+        speakWord(card);
+      } else {
+        setMismatches((n) => n + 1);
+        setShakeWord(droppedWord);
+        window.setTimeout(() => setShakeWord(null), 450);
+      }
+    };
+
+    const onCancel = () => {
+      dragRef.current = null;
+      setDraggingCard(null);
+      setDragOverWord(null);
+    };
+
+    window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+    };
+  }, [draggingCard, cards, matched]);
+
+  // Place the ghost at the finger immediately on drag start (before first move)
+  useLayoutEffect(() => {
+    if (draggingCard && ghostRef.current && dragRef.current) {
+      ghostRef.current.style.transform = `translate(${dragRef.current.lastX - 58}px, ${dragRef.current.lastY - 70}px) rotate(4deg) scale(1.06)`;
+    }
+  }, [draggingCard]);
 
   const tryMatch = (card: Card) => {
     if (!selectedWord || matched.has(card.id)) return;
@@ -201,7 +281,7 @@ export const DragMatchGame: React.FC = () => {
         </div>
       </div>
 
-      <p className="dm-guide">Chạm một hình, rồi chạm từ đúng của nó nhé!</p>
+      <p className="dm-guide">Kéo hình đến từ đúng — hoặc chạm hình rồi chạm từ nhé!</p>
 
       <div className="dm-board">
         <div className="dm-col">
@@ -210,12 +290,17 @@ export const DragMatchGame: React.FC = () => {
             return (
               <button
                 key={`img-${card.id}`}
-                className={`dm-img-card ${done ? 'dm-done' : ''}`}
-                onClick={() => { if (!done) { setSelectedWord(card.word); speakWord(card); } }}
+                className={`dm-img-card ${done ? 'dm-done' : ''} ${draggingCard === card.id ? 'dm-lifting' : ''}`}
+                onPointerDown={(e) => {
+                  if (done || e.button !== 0) return;
+                  e.preventDefault();
+                  dragRef.current = { id: card.id, startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY, moved: false };
+                  setDraggingCard(card.id);
+                }}
                 disabled={done}
                 aria-label={`Hình: ${card.word}`}
               >
-                <img src={card.image_url} alt="" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.25'; }} />
+                <img src={card.image_url} alt="" loading="lazy" draggable={false} onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.25'; }} />
                 {done && <Msr icon="check_circle" size={22} color="#4C8A2A" style={{ position: 'absolute', top: 6, right: 6 }} />}
               </button>
             );
@@ -228,7 +313,8 @@ export const DragMatchGame: React.FC = () => {
             return (
               <button
                 key={`w-${card.id}`}
-                className={`dm-word-card ${done ? 'dm-done' : ''} ${shaking ? 'dm-shake' : ''} ${selectedWord === card.word ? 'dm-sel' : ''}`}
+                data-word={card.word}
+                className={`dm-word-card ${done ? 'dm-done' : ''} ${shaking ? 'dm-shake' : ''} ${selectedWord === card.word ? 'dm-sel' : ''} ${dragOverWord === card.word && !done ? 'dm-drop-target' : ''}`}
                 onClick={() => tryMatch(card)}
                 disabled={done}
                 aria-pressed={selectedWord === card.word}
@@ -240,6 +326,26 @@ export const DragMatchGame: React.FC = () => {
         </div>
       </div>
 
+      {/* Drag ghost — fixed overlay following the finger */}
+      {draggingCard && (() => {
+        const card = cards.find((c) => c.id === draggingCard);
+        if (!card) return null;
+        return (
+          <div
+            ref={ghostRef}
+            aria-hidden="true"
+            style={{
+              position: 'fixed', top: 0, left: 0, width: 116, height: 116, zIndex: 70,
+              pointerEvents: 'none', borderRadius: 20, background: '#fff',
+              boxShadow: '0 10px 0 rgba(26,39,68,.12), 0 18px 34px rgba(26,39,68,.18)',
+              padding: 8, willChange: 'transform',
+            }}
+          >
+            <img src={card.image_url} alt="" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 14 }} />
+          </div>
+        );
+      })()}
+
       <style>{`
         .dm-shell{min-height:100dvh;background:${colors.backgroundBase};padding:16px 16px 32px;max-width:560px;margin:0 auto;padding-top:max(16px, env(safe-area-inset-top));touch-action:manipulation;-webkit-user-select:none;user-select:none}
         .dm-topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -250,10 +356,12 @@ export const DragMatchGame: React.FC = () => {
         .dm-guide{text-align:center;font-size:.9rem;color:${colors.mediumGray};margin:2px 0 14px}
         .dm-board{display:grid;grid-template-columns:1fr 1fr;gap:12px}
         .dm-col{display:flex;flex-direction:column;gap:10px}
-        .dm-img-card{position:relative;border:3px solid transparent;border-radius:20px;background:#fff;box-shadow:0 6px 0 rgba(26,39,68,.08),0 10px 18px rgba(26,39,68,.08);padding:10px;cursor:pointer;min-height:96px;display:grid;place-items:center;transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s}
+        .dm-img-card{position:relative;border:3px solid transparent;border-radius:20px;background:#fff;box-shadow:0 6px 0 rgba(26,39,68,.08),0 10px 18px rgba(26,39,68,.08);padding:10px;cursor:pointer;min-height:96px;display:grid;place-items:center;transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s;touch-action:none;-webkit-user-select:none;user-select:none}
         .dm-img-card:active{transform:scale(.97)}
         .dm-img-card img{width:100%;max-width:120px;aspect-ratio:1;object-fit:cover;border-radius:14px;transition:opacity .3s}
         .dm-word-card{border:3px solid transparent;border-radius:18px;background:${colors.warmWhite};box-shadow:0 5px 0 rgba(26,39,68,.10);padding:18px 10px;font-family:${DISPLAY_FONT};font-weight:900;font-size:1rem;color:${colors.deepSlate};cursor:pointer;min-height:56px;transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s,background .2s}
+        .dm-lifting{opacity:.35}
+        .dm-drop-target{border-color:${colors.mintGreen};background:${withOpacity(colors.mintGreen, 0.25)};transform:scale(1.04)}
         .dm-sel{border-color:${colors.skyBlue};background:${withOpacity(colors.skyBlue, 0.18)}}
         .dm-done{border-color:${colors.mintGreen};background:${colors.mintLight};opacity:.85;cursor:default}
         .dm-shake{animation:dmshake .4s ease}
