@@ -137,12 +137,25 @@ function StickerCard({
       {/* Sparkle effect for higher rarities */}
       {sticker.rarity !== 'common' && <SparkleEffect color={config.sparkleColor} />}
 
-      {/* Sticker image/emoji */}
+      {/* Sticker image — real asset from catalog; emoji fallback if missing */}
       <div className="relative z-10 flex h-20 items-center justify-center">
-        {isCollected ? (
-          <div className="text-6xl">{getStickerEmoji(stickerId)}</div>
+        {sticker.image_url && isCollected ? (
+          <img
+            src={sticker.image_url}
+            alt={sticker.name}
+            loading="lazy"
+            className={`h-16 w-16 object-contain ${isCollected ? '' : 'opacity-50 grayscale'}`}
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (!img.dataset.emojiFallback) {
+                img.style.display = 'none';
+                img.parentElement
+                  ?.insertAdjacentHTML('beforeend', `<div class="text-5xl">${getStickerEmoji(stickerId)}</div>`);
+              }
+            }}
+          />
         ) : (
-          <div className="text-4xl opacity-50 grayscale">{getStickerEmoji(stickerId)}</div>
+          <div className={`text-5xl ${isCollected ? '' : 'opacity-50 grayscale'}`}>{getStickerEmoji(stickerId)}</div>
         )}
       </div>
 

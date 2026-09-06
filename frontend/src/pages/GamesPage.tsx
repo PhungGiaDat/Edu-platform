@@ -114,7 +114,7 @@ export const GamesPage: React.FC = () => {
                   onClick={() => navigate(`/games?topic=${t.slug}`)}
                   aria-label={`Chủ đề ${t.label}`}
                   style={bg ? {
-                    backgroundImage: `linear-gradient(rgba(255,251,240,.62),rgba(255,251,240,.78)), url(${bg})`,
+                    backgroundImage: `linear-gradient(rgba(255,251,240,.82),rgba(255,251,240,.94)), url(${bg})`,
                     backgroundSize: 'cover', backgroundPosition: 'center',
                   } : undefined}
                 >

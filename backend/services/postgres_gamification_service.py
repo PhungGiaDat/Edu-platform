@@ -363,7 +363,11 @@ class PostgresGamificationService:
         return (await self.get_user_stats(user_id)).get("stickers", [])
 
     def get_sticker_catalog(self) -> dict[str, Any]:
-        return {}
+        # Parity with the Mongo service: the full 15-sticker claymorphic catalog
+        # (image urls now point at committed /assets/stickers/*.svg files).
+        from services.gamification_service import GamificationService
+
+        return GamificationService.STICKER_CATALOG
 
     async def collect_sticker(self, user_id: str, sticker_id: str) -> dict[str, Any]:
         await postgres_pool().execute(

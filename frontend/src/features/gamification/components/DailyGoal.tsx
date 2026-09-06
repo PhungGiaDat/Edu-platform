@@ -29,14 +29,30 @@ export const DailyGoal: React.FC<DailyGoalProps> = ({
         if (!userId) return;
         try {
             const result = await apiClient.getLearningProgress(userId);
-            setData(result as DailyGoalData);
-
-            // Check if just completed
-            if (result.is_complete && showCelebration && !showComplete) {
-                setShowComplete(true);
-                onGoalComplete?.();
-                // Auto-hide celebration after 3 seconds
-                setTimeout(() => setShowComplete(false), 3000);
+            const raw = result as Record<string, unknown>;
+            // Backend returns { preferences, today_progress, goals } — normalize
+            // to the DailyGoalData shape; missing pieces fall back to mock.
+            const normalized = {
+                date: new Date().toISOString().split('T')[0],
+                progress: (raw.today_progress ?? raw.progress) as DailyGoalData['progress'],
+                goals: raw.goals as DailyGoalData['goals'],
+                is_complete: Boolean(
+                    (raw as { is_complete?: boolean }).is_complete ||
+                    ((raw.goals as DailyGoalData['goals'] | undefined)?.time?.remaining === 0 &&
+                     (raw.goals as DailyGoalData['goals'] | undefined)?.words?.remaining === 0),
+                ),
+            };
+            if (normalized.progress && normalized.goals) {
+                setData(normalized);
+                // Check if just completed
+                if (normalized.is_complete && showCelebration && !showComplete) {
+                    setShowComplete(true);
+                    onGoalComplete?.();
+                    // Auto-hide celebration after 3 seconds
+                    setTimeout(() => setShowComplete(false), 3000);
+                }
+            } else {
+                setData(getMockData());
             }
         } catch (e) {
             console.error('[DailyGoal] Failed to fetch:', e);
