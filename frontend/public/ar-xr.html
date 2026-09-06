@@ -234,6 +234,21 @@
       lastProgressLogPercent: 0,  // throttle to 20/40/60/80/100
     };
 
+    // CAT tap / meow state (independent of combo)
+    const catTapState = {
+      playing: false,
+      runId: 0,
+      action: null,
+    };
+
+    // CAT meow audio (preloaded when CAT becomes ready)
+    const CAT_AUDIO_CONFIG = {
+      // Audio asset from existing project: Supabase AR_models/assets/animal/
+      meowUrl: 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/animal/cat_meow.mp3',
+    };
+    let catMeowAudio = null;
+    let catMeowAudioLoaded = false;
+
     const interactionState = {
       phase: InteractionPhase.SEARCH_PRIMARY,
       primaryLockedAt: null,
@@ -357,6 +372,183 @@
       errorText.textContent = '';
     }
     function hideOverlay() { overlay.classList.add('hidden'); }
+
+    // ========== CAT TAP / MEOW ==========
+    // Three.js Raycaster (reusable, not allocated per tap)
+    const raycaster = new THREE.Raycaster();
+    const pointerNdc = new THREE.Vector2();
+
+    // Check if CAT_MEOW is allowed right now.
+    // Blocks: combo phases, CAT_EAT active, no model, invisible, no clip.
+    function canTriggerCatMeow() {
+      const catInst = targetInstances.get(primaryModelTargetName);
+      if (!catInst) return false;
+      if (!catInst.model) return false;
+      if (!catInst.mixer) return false;
+      if (!catInst.model.visible) return false;
+      // Must be effectively tracked (grace-ok)
+      if (!catInst.tracked) return false;
+      // Must have CAT_MEOW clip
+      const clip = catInst.animations?.find(c => c.name === 'CAT_MEOW');
+      if (!clip) return false;
+      // Must not already be playing
+      if (catTapState.playing) return false;
+      // Block during combo-critical phases
+      const phase = interactionState.phase;
+      if (
+        phase === InteractionPhase.COMBO_ARMED ||
+        phase === InteractionPhase.COMBO_TURNING ||
+        phase === InteractionPhase.COMBO_PLAYING
+      ) return false;
+      return true;
+    }
+
+    // Preload meow audio when CAT becomes ready.
+    function preloadCatMeowAudio() {
+      if (!CAT_AUDIO_CONFIG.meowUrl || catMeowAudioLoaded) return;
+      try {
+        catMeowAudio = new Audio(CAT_AUDIO_CONFIG.meowUrl);
+        catMeowAudio.preload = 'auto';
+        catMeowAudioLoaded = true;
+        sendARDebug('CAT_MEOW_AUDIO_PRELOADED', { url: CAT_AUDIO_CONFIG.meowUrl });
+      } catch (e) {
+        sendARDebug('CAT_MEOW_AUDIO_PRELOAD_ERROR', { error: String(e) });
+      }
+    }
+
+    // Play CAT_MEOW one-shot animation + audio.
+    function playCatMeow(hitDistance) {
+      const catInst = targetInstances.get(primaryModelTargetName);
+      if (!catInst || !catInst.mixer) return;
+
+      const meowClip =
+        catInst.animations?.find(c => c.name === 'CAT_MEOW') ||
+        catInst.animations?.find(c => c.name.toUpperCase().includes('MEOW'));
+      if (!meowClip) {
+        sendARDebug('CAT_MEOW_CLIP_MISSING', {});
+        return;
+      }
+
+      const idleClip =
+        catInst.animations?.find(c => c.name === (catInst.config?.default_animation || 'CAT_IDLE')) ||
+        catInst.animations?.find(c => c.name === 'CAT_IDLE');
+
+      catTapState.runId++;
+      const runId = catTapState.runId;
+      const action = catInst.mixer.clipAction(meowClip);
+      catTapState.playing = true;
+      catTapState.action = action;
+
+      sendARDebug('CAT_MEOW_START', {
+        targetName: primaryModelTargetName,
+        clip: meowClip.name,
+        runId,
+        durationMs: Math.round((meowClip.duration || 0) * 1000),
+      });
+
+      // Fade out idle
+      if (idleClip) {
+        const idleAction = catInst.mixer.clipAction(idleClip);
+        idleAction.fadeOut(0.12);
+      }
+
+      // Play meow
+      action.reset();
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+      action.fadeIn(0.12);
+      action.play();
+
+      // Start meow audio (fire-and-forget; animation is primary)
+      if (catMeowAudio) {
+        try {
+          catMeowAudio.currentTime = 0;
+          const playPromise = catMeowAudio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(err => {
+              sendARDebug('CAT_MEOW_AUDIO_PLAY_ERROR', { error: String(err) });
+            });
+          }
+          sendARDebug('CAT_MEOW_AUDIO_START', {});
+        } catch (e) {
+          sendARDebug('CAT_MEOW_AUDIO_PLAY_ERROR', { error: String(e) });
+        }
+      } else {
+        sendARDebug('CAT_MEOW_AUDIO_MISSING', {});
+      }
+
+      // Register finished callback
+      const onFinished = (event) => {
+        if (event.action !== action) return;
+        catInst.mixer.removeEventListener('finished', onFinished);
+        if (runId !== catTapState.runId) {
+          sendARDebug('CAT_MEOW_FINISH_IGNORED_STALE', { runId, currentRunId: catTapState.runId });
+          return;
+        }
+        catTapState.playing = false;
+        catTapState.action = null;
+        sendARDebug('CAT_MEOW_FINISHED', { runId });
+        // Return to idle
+        if (idleClip) {
+          const idleAction = catInst.mixer.clipAction(idleClip);
+          idleAction.reset();
+          idleAction.fadeIn(0.12);
+          idleAction.play();
+        }
+      };
+      catInst.mixer.addEventListener('finished', onFinished);
+    }
+
+    // Cancel CAT_MEOW so COMBO can take priority.
+    function cancelCatMeowForCombo() {
+      if (!catTapState.playing || !catTapState.action) return;
+      const runId = catTapState.runId;
+      catTapState.runId++; // invalidate old callbacks
+      catTapState.playing = false;
+      catTapState.action = null;
+      sendARDebug('CAT_MEOW_CANCELLED_FOR_COMBO', { cancelledRunId: runId });
+    }
+
+    // Pointer event handler — raycasts against CAT only.
+    function onPointerDown(event) {
+      // Ignore UI interactions
+      if (event.target.closest?.('#overlay, #debug-panel, button, input')) return;
+      // Guard: renderer must be acquired before we can raycast
+      if (!renderer?.domElement) return;
+
+      // Only check CAT when AR is visible and CAT exists
+      const catInst = targetInstances.get(primaryModelTargetName);
+      if (!catInst?.model) return;
+
+      // Compute NDC pointer
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointerNdc.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointerNdc.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointerNdc, camera);
+
+      // Only check CAT model
+      const hits = raycaster.intersectObject(catInst.model, true);
+      if (hits.length === 0) {
+        sendARDebug('CAT_TAP_MISS', { x: event.clientX, y: event.clientY });
+        return;
+      }
+
+      const hitDistance = hits[0].distance;
+      sendARDebug('CAT_TAP', { targetName: primaryModelTargetName, hitDistance });
+
+      if (!canTriggerCatMeow()) {
+        const phase = interactionState.phase;
+        const reason = catTapState.playing
+          ? 'already_playing'
+          : phase === InteractionPhase.COMBO_ARMED || phase === InteractionPhase.COMBO_TURNING || phase === InteractionPhase.COMBO_PLAYING
+            ? 'combo_busy'
+            : 'not_ready';
+        sendARDebug('CAT_MEOW_TAP_IGNORED', { reason, phase });
+        return;
+      }
+
+      playCatMeow(hitDistance);
+    }
 
     // ========== BOOT GATE ==========
     // Controls when the AR experience is revealed to the user.
@@ -521,6 +713,7 @@
               sendARDebug('BOOT_CAT_READY', { targetName: primaryModelTargetName, durationMs });
               updateOverlayForBoot(null); // update overlay text now that CAT is ready
               maybeRevealAR({ trigger: 'catReady' });
+              preloadCatMeowAudio(); // preload meow audio now that CAT GLB is ready
             }
 
             // Network timing
@@ -1580,6 +1773,9 @@
               sendARDebug('PROXIMITY_STABLE', { stableMs: stableFor, distance: Number(filtered.toFixed(4)) });
               sendARDebug('COMBO_ARMED', { targetName: primaryModelTargetName });
 
+              // Cancel any active CAT_MEOW — combo has priority
+              cancelCatMeowForCombo();
+
               // Capture comboRunId
               interactionState.comboRunId++;
               const runId = interactionState.comboRunId;
@@ -1858,6 +2054,10 @@
 
         setPhase('viewing');
         sendARDebug('INIT_COMPLETE', { modelLoaded: !!loadedModel, targetCount: targetDataList.length });
+
+        // Attach CAT tap handler — use pointer events (works for both touch and mouse)
+        window.addEventListener('pointerdown', onPointerDown, { passive: true });
+        sendARDebug('CAT_TAP_HANDLER_REGISTERED', {});
         logToBuffer('info', 'Initialization complete');
       } catch (error) {
         setPhase('error');
