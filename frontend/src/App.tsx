@@ -20,6 +20,7 @@ import DragMatchGame from "./pages/games/DragMatchGame";
 import MemoryPairsGame from "./pages/games/MemoryPairsGame";
 import ColorLearnGame from "./pages/games/ColorLearnGame";
 import ColorAnimalGame from "./pages/games/ColorAnimalGame";
+import { LexiTransitionOverlay } from "./features/shared/lexi-transition/LexiTransitionOverlay";
 import { LearningPathSetup } from "./pages/LearningPathSetup";
 import { LearningPath3D } from "./pages/LearningPath3D";
 import PetsPage from "./pages/PetsPage";
@@ -364,6 +365,10 @@ const App = () => {
 
       {/* Global Session Break Reminder — hidden on AR routes */}
       {!isARRoute && <GlobalSessionWatcher />}
+
+      {/* Lexi route-transition overlay (Duolingo-style) — suppressed on AR routes,
+          auth pages, and same-path query changes via internal rules */}
+      {!isARRoute && <LexiTransitionOverlay />}
     </>
   );
 };
