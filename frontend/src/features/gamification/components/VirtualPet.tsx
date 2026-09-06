@@ -1,161 +1,204 @@
-// src/components/Gamification/VirtualPet.tsx - Kid-friendly virtual pet companion
-
+/**
+ * VirtualPet — Kid-friendly companion component.
+ *
+ * Uses CodexPetSprite for mascot rendering (consistent with Lexi throughout
+ * the app) rather than emoji, which violate the no-emoji rule.
+ *
+ * Compact mode renders a pill button (for AR overlays); full mode renders
+ * a claymorphic card with happiness bar and action buttons.
+ */
 import React from 'react';
+import { CodexPetSprite } from '@/features/pets/components/CodexPetSprite';
+import { colors } from '@/design-tokens/claymorphic';
+
+type PetType = 'bunny' | 'cat' | 'dog' | 'panda';
 
 interface VirtualPetProps {
-    petType?: 'bunny' | 'cat' | 'dog' | 'panda';
-    thumbnailUrl?: string;
-    happiness?: number; // 0-100
-    name?: string;
-    onFeed?: () => void;
-    onPlay?: () => void;
-    compact?: boolean;
+  petType?: PetType;
+  thumbnailUrl?: string;
+  happiness?: number; // 0–100
+  name?: string;
+  onFeed?: () => void;
+  onPlay?: () => void;
+  compact?: boolean;
 }
 
-const PET_EMOJIS = {
-    bunny: { happy: '🐰', sad: '🐇', sleeping: '😴' },
-    cat: { happy: '😺', sad: '🐱', sleeping: '😸' },
-    dog: { happy: '🐶', sad: '🐕', sleeping: '🐾' },
-    panda: { happy: '🐼', sad: '🐻', sleeping: '💤' },
+const DISPLAY_FONT = "'Nunito', 'Baloo 2', system-ui, sans-serif";
+
+// Compact pill — for AR overlays / compact spaces
+const CompactPet: React.FC<VirtualPetProps> = ({
+  petType = 'bunny',
+  thumbnailUrl,
+  happiness = 80,
+  name = 'Buddy',
+}) => {
+  const mood = happiness > 70 ? 'happy' : happiness > 40 ? 'sad' : 'sleeping';
+  const label = mood === 'happy' ? `${name} dang vui` : mood === 'sad' ? `${name} can an` : `${name} dang ngu`;
+
+  return (
+    <div
+      className="flex items-center gap-2 px-3 py-2 rounded-2xl"
+      style={{
+        background: 'linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%)',
+        border: '3px solid #fff',
+        boxShadow: `0 4px 0 #0891b2, 0 6px 16px rgba(6,182,212,0.2)`,
+        WebkitTapHighlightColor: 'transparent',
+      }}
+    >
+      <CodexPetSprite
+        animationState={mood === 'happy' ? 'waving' : mood === 'sad' ? 'idle' : 'idle'}
+        label={label}
+        size={40}
+      />
+      <div className="flex flex-col items-start">
+        <span className="text-white font-black text-xs">{name}</span>
+        <div
+          className="h-1.5 rounded-full overflow-hidden"
+          style={{ width: 40, background: 'rgba(255,255,255,0.3)' }}
+        >
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${happiness}%`,
+              background: happiness > 70 ? '#4ade80' : happiness > 40 ? '#fbbf24' : '#f87171',
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
 };
 
-export const VirtualPet: React.FC<VirtualPetProps> = ({
-    petType = 'bunny',
-    thumbnailUrl,
-    happiness = 80,
-    name = 'Buddy',
-    onFeed,
-    onPlay,
-    compact = false
+// Full card — claymorphic companion display
+const FullPet: React.FC<VirtualPetProps> = ({
+  petType = 'bunny',
+  thumbnailUrl,
+  happiness = 80,
+  name = 'Buddy',
+  onFeed,
+  onPlay,
 }) => {
-    const pet = PET_EMOJIS[petType];
-    const mood = happiness > 70 ? 'happy' : happiness > 40 ? 'sad' : 'sleeping';
-    const petEmoji = pet[mood];
+  const mood = happiness > 70 ? 'happy' : happiness > 40 ? 'sad' : 'sleeping';
+  const label =
+    mood === 'happy'
+      ? `${name} dang vui`
+      : mood === 'sad'
+        ? `${name} can an`
+        : `${name} dang ngu`;
 
-    // Compact version for AR overlay
-    if (compact) {
-        return (
-            <button
-                onClick={onFeed}
-                className="flex items-center gap-2 px-3 py-2 rounded-2xl shadow-lg"
-                style={{
-                    background: 'linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%)',
-                    border: '3px solid #fff',
-                    WebkitTapHighlightColor: 'transparent'
-                }}
-            >
-                {thumbnailUrl ? (
-                    <img src={thumbnailUrl} alt={name} className="w-8 h-8 object-contain drop-shadow" />
-                ) : (
-                    <span style={{ fontSize: '28px' }}>{petEmoji}</span>
-                )}
-                <div className="flex flex-col items-start">
-                    <span className="text-white font-bold text-xs">{name}</span>
-                    <div
-                        className="h-1.5 rounded-full"
-                        style={{
-                            width: '40px',
-                            background: 'rgba(255,255,255,0.3)'
-                        }}
-                    >
-                        <div
-                            className="h-full rounded-full"
-                            style={{
-                                width: `${happiness}%`,
-                                background: happiness > 70 ? '#4ade80' : happiness > 40 ? '#fbbf24' : '#f87171'
-                            }}
-                        />
-                    </div>
-                </div>
-            </button>
-        );
-    }
+  const animMap: Record<string, 'waving' | 'idle' | 'jumping' | 'waiting'> = {
+    happy: 'waving',
+    sad: 'idle',
+    sleeping: 'waiting',
+  };
 
-    // Full version for profile/gamification page
-    return (
+  const happinessColor =
+    happiness > 70 ? '#4ade80' : happiness > 40 ? '#fbbf24' : '#f87171';
+
+  const moodMessage =
+    mood === 'happy'
+      ? 'May lao dap len voi con!'
+      : mood === 'sad'
+        ? 'Cho an de vui hon nhe!'
+        : 'Zzz... can su chu y!';
+
+  return (
+    <div
+      className="rounded-3xl p-4"
+      style={{
+        background: 'linear-gradient(145deg, #67e8f9 0%, #22d3ee 50%, #06b6d4 100%)',
+        border: '4px solid #fff',
+        boxShadow: `0 10px 0 rgba(6,182,212,0.18), 0 14px 28px rgba(6,182,212,0.12), inset 0 1px 0 rgba(255,255,255,0.5)`,
+      }}
+    >
+      {/* Pet display */}
+      <div className="text-center mb-3">
         <div
-            className="rounded-3xl p-4 shadow-xl"
-            style={{
-                background: 'linear-gradient(135deg, #67e8f9 0%, #22d3ee 50%, #06b6d4 100%)',
-                border: '4px solid #fff'
-            }}
+          className="inline-block"
+          style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }}
         >
-            {/* Pet display */}
-            <div className="text-center mb-3">
-                <div
-                    className="inline-block animate-bounce"
-                    style={{
-                        fontSize: 'clamp(48px, 15vw, 80px)',
-                        filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))'
-                    }}
-                >
-                    {thumbnailUrl ? (
-                        <img src={thumbnailUrl} alt={name} className="w-24 h-24 object-contain mx-auto" />
-                    ) : (
-                        petEmoji
-                    )}
-                </div>
-                <p className="text-white font-black text-lg drop-shadow">{name}</p>
-            </div>
-
-            {/* Happiness bar */}
-            <div className="mb-3">
-                <div className="flex justify-between text-white text-xs font-bold mb-1">
-                    <span>Happiness</span>
-                    <span>{happiness}%</span>
-                </div>
-                <div
-                    className="h-3 rounded-full overflow-hidden"
-                    style={{ background: 'rgba(255,255,255,0.3)' }}
-                >
-                    <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                            width: `${happiness}%`,
-                            background: happiness > 70
-                                ? 'linear-gradient(90deg, #4ade80, #22c55e)'
-                                : happiness > 40
-                                    ? 'linear-gradient(90deg, #fbbf24, #f59e0b)'
-                                    : 'linear-gradient(90deg, #f87171, #ef4444)'
-                        }}
-                    />
-                </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex gap-2">
-                <button
-                    onClick={onFeed}
-                    className="flex-1 py-2 rounded-xl font-bold text-sm shadow"
-                    style={{
-                        background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
-                        border: '2px solid #d97706',
-                        color: '#fff'
-                    }}
-                >
-                    🍎 Feed
-                </button>
-                <button
-                    onClick={onPlay}
-                    className="flex-1 py-2 rounded-xl font-bold text-sm shadow"
-                    style={{
-                        background: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)',
-                        border: '2px solid #0284c7',
-                        color: '#fff'
-                    }}
-                >
-                    🎾 Play
-                </button>
-            </div>
-
-            {/* Mood message */}
-            <p className="text-center text-white/90 text-xs mt-2 font-semibold">
-                {mood === 'happy' && '💕 So happy to learn with you!'}
-                {mood === 'sad' && '😢 Feed me to feel better!'}
-                {mood === 'sleeping' && '💤 Zzz... needs attention!'}
-            </p>
+          <CodexPetSprite
+            animationState={animMap[mood]}
+            label={label}
+            size={100}
+          />
         </div>
-    );
+        <p
+          className="text-white font-black text-lg drop-shadow mt-2"
+          style={{ fontFamily: DISPLAY_FONT }}
+        >
+          {name}
+        </p>
+      </div>
+
+      {/* Happiness bar */}
+      <div className="mb-3">
+        <div className="flex justify-between text-white text-xs font-bold mb-1">
+          <span>Happiness</span>
+          <span>{happiness}%</span>
+        </div>
+        <div
+          className="h-3 rounded-full overflow-hidden"
+          style={{ background: 'rgba(255,255,255,0.3)' }}
+        >
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${happiness}%`,
+              background: happinessColor,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Action buttons — claymorphic style */}
+      <div className="flex gap-2">
+        <button
+          onClick={onFeed}
+          className="flex-1 py-2 rounded-xl font-black text-sm"
+          style={{
+            background: colors.sunshineYellow,
+            border: '3px solid #fff',
+            color: colors.deepSlate,
+            boxShadow: `0 5px 0 ${colors.sunshineYellowDark}, inset 0 1px 0 rgba(255,255,255,0.4)`,
+            fontFamily: DISPLAY_FONT,
+            cursor: 'pointer',
+          }}
+        >
+          Feed
+        </button>
+        <button
+          onClick={onPlay}
+          className="flex-1 py-2 rounded-xl font-black text-sm"
+          style={{
+            background: colors.skyBlue,
+            border: '3px solid #fff',
+            color: '#fff',
+            boxShadow: `0 5px 0 ${colors.skyBlueDark}, inset 0 1px 0 rgba(255,255,255,0.4)`,
+            fontFamily: DISPLAY_FONT,
+            cursor: 'pointer',
+          }}
+        >
+          Play
+        </button>
+      </div>
+
+      {/* Mood message */}
+      <p
+        className="text-center text-white/90 text-xs mt-2 font-semibold"
+        style={{ fontFamily: DISPLAY_FONT }}
+      >
+        {moodMessage}
+      </p>
+    </div>
+  );
+};
+
+export const VirtualPet: React.FC<VirtualPetProps> = (props) => {
+  if (props.compact) {
+    return <CompactPet {...props} />;
+  }
+  return <FullPet {...props} />;
 };
 
 export default VirtualPet;

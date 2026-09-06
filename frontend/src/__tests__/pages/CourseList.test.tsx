@@ -46,7 +46,7 @@ describe('CourseList', () => {
 
     expect(container.querySelector('.course-catalog__hero-stage')).toBeTruthy();
     expect(screen.getByLabelText('Course progress overview')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Your Learning Paths' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Your Topics' })).toBeTruthy();
     expect(screen.getByText('Momo Learns English at Home')).toBeTruthy();
   });
 });

@@ -149,25 +149,29 @@ export const LexiTransitionOverlay: React.FC = () => {
           background: 'radial-gradient(circle, rgba(180,225,151,.5) 0%, transparent 70%)', animation: 'lto-blob-a 9s ease-in-out infinite reverse',
         }} />
 
-        {/* Clay sparkles */}
+        {/* Clay sparkles — Phosphor Sparkle icon */}
         {[
           { top: '18%', right: '16%', size: 30, delay: '0s' },
           { top: '30%', left: '14%', size: 22, delay: '.5s' },
           { bottom: '24%', right: '24%', size: 26, delay: '1s' },
           { bottom: '32%', left: '22%', size: 18, delay: '1.4s' },
         ].map((s, i) => (
-          <span
+          <svg
             key={i}
             aria-hidden="true"
-            className="msr lto-spark"
+            className="lto-spark"
             style={{
-              position: 'absolute', fontSize: s.size, color: 'rgba(255,217,61,.9)',
+              position: 'absolute', width: s.size, height: s.size,
               top: s.top, left: s.left, right: s.right, bottom: s.bottom,
-              textShadow: '0 3px 0 rgba(229,184,0,.45)', animation: `lto-sparkle 1.6s ease-in-out ${s.delay} infinite`,
+              color: 'rgba(255,217,61,.9)',
+              animation: `lto-sparkle 1.6s ease-in-out ${s.delay} infinite`,
+              filter: 'drop-shadow(0 3px 0 rgba(229,184,0,.45))',
             }}
+            viewBox="0 0 24 24"
+            fill="currentColor"
           >
-            auto_awesome
-          </span>
+            <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+          </svg>
         ))}
 
         {/* Lexi + badge */}
@@ -181,7 +185,7 @@ export const LexiTransitionOverlay: React.FC = () => {
           />
           <span
             style={{
-              fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: 15,
+              fontFamily: "'Baloo 2', 'Quicksand', system-ui, sans-serif", fontWeight: 900, fontSize: 15,
               background: '#FFFBF0', color: '#1A2744', borderRadius: 999, padding: '7px 18px',
               boxShadow: '0 5px 0 rgba(26,39,68,.10), inset 0 2px 0 rgba(255,255,255,.85)',
             }}
@@ -193,7 +197,7 @@ export const LexiTransitionOverlay: React.FC = () => {
         {/* Message + dots */}
         <p
           style={{
-            position: 'relative', zIndex: 2, marginTop: 10, fontFamily: "'Nunito', sans-serif",
+            position: 'relative', zIndex: 2, marginTop: 10, fontFamily: "'Baloo 2', 'Quicksand', system-ui, sans-serif",
             fontWeight: 800, fontSize: 17, color: '#1A2744', textAlign: 'center', padding: '0 28px',
           }}
         >
