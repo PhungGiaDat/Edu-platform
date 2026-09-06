@@ -73,7 +73,7 @@ export function normalizeGameTopic(raw: string | null | undefined): GameTopic | 
 /** Claymorphic themed background per topic (assets: /assets/game-themes/). */
 export function topicBackgroundUrl(topic: GameTopic | null | undefined): string | null {
   if (!topic) return null;
-  return `/assets/game-themes/${topic}/bg.png`;
+  return `/assets/game-themes/${topic}/bg.jpg`;
 }
 
 export async function fetchGameVocab(topic: GameTopic, limit = 8): Promise<GameVocab> {
