@@ -16,7 +16,35 @@ export interface GameVocabItem {
   word: string;
   translation_vi: string;
   image_url: string;
+  audio_url?: string | null;
   source: 'notebook' | 'seed';
+}
+
+/** Play a word's real pronunciation (course asset) or fall back to TTS. */
+export function speakWord(item: { word: string; audio_url?: string | null }): void {
+  if (item.audio_url) {
+    try {
+      const a = new Audio(item.audio_url);
+      a.lang = 'en-US';
+      void a.play().catch(() => speakTts(item.word));
+      return;
+    } catch {
+      /* fall through to TTS */
+    }
+  }
+  speakTts(item.word);
+}
+
+function speakTts(text: string): void {
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    u.rate = 0.85;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  } catch {
+    /* unsupported — silent */
+  }
 }
 
 export interface GameVocab {

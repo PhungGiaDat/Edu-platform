@@ -22,6 +22,7 @@ import {
   fetchGameVocab,
   awardGameComplete,
   normalizeGameTopic,
+  speakWord,
   GAME_TOPICS,
   type GameVocabItem,
   type GameTopic,
@@ -118,14 +119,6 @@ export const DragMatchGame: React.FC = () => {
     }
   };
 
-  const speak = (text: string) => {
-    try {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'en-US'; u.rate = 0.85;
-      speechSynthesis.cancel(); speechSynthesis.speak(u);
-    } catch { /* unsupported — silent */ }
-  };
-
   if (error) {
     return (
       <div className="dm-shell">
@@ -206,7 +199,7 @@ export const DragMatchGame: React.FC = () => {
               <button
                 key={`img-${card.id}`}
                 className={`dm-img-card ${done ? 'dm-done' : ''}`}
-                onClick={() => { if (!done) { setSelectedWord(card.word); speak(card.word); } }}
+                onClick={() => { if (!done) { setSelectedWord(card.word); speakWord(card); } }}
                 disabled={done}
                 aria-label={`Hình: ${card.word}`}
               >

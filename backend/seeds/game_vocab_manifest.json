@@ -1,0 +1,310 @@
+{
+ "home": [
+  {
+   "word": "Mom",
+   "translation_vi": "mẹ",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/hello-family/audio/mom.wav"
+  },
+  {
+   "word": "Dad",
+   "translation_vi": "ba",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/hello-family/audio/dad.wav"
+  },
+  {
+   "word": "Baby",
+   "translation_vi": "em bé",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/hello-family/audio/baby.wav"
+  },
+  {
+   "word": "Bed",
+   "translation_vi": "giường",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/bed.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/my-room/audio/bed.wav"
+  },
+  {
+   "word": "Chair",
+   "translation_vi": "ghế",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/chair.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/my-room/audio/chair.wav"
+  },
+  {
+   "word": "Toy",
+   "translation_vi": "đồ chơi",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/toy.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/my-room/audio/toy.wav"
+  },
+  {
+   "word": "Apple",
+   "translation_vi": "quả táo",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/apple.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/snack-time/audio/apple.wav"
+  },
+  {
+   "word": "Milk",
+   "translation_vi": "sữa",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/milk.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/snack-time/audio/milk.wav"
+  },
+  {
+   "word": "Cookie",
+   "translation_vi": "bánh quy",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/cookie.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/snack-time/audio/cookie.wav"
+  },
+  {
+   "word": "Hand",
+   "translation_vi": "bàn tay",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/hand.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/clean-hands/audio/hand.wav"
+  },
+  {
+   "word": "Soap",
+   "translation_vi": "xà phòng",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/soap.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/clean-hands/audio/soap.wav"
+  },
+  {
+   "word": "Clean",
+   "translation_vi": "sạch",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/clean.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/clean-hands/audio/clean.wav"
+  },
+  {
+   "word": "Happy",
+   "translation_vi": "vui",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/happy.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/happy-feelings/audio/happy.wav"
+  },
+  {
+   "word": "Sad",
+   "translation_vi": "buồn",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/sad.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/happy-feelings/audio/sad.wav"
+  },
+  {
+   "word": "Smile",
+   "translation_vi": "mỉm cười",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/smile.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/happy-feelings/audio/smile.wav"
+  }
+ ],
+ "nature": [
+  {
+   "word": "Elephant",
+   "translation_vi": "con voi",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/meet-the-elephant/audio/elephant.wav"
+  },
+  {
+   "word": "Big",
+   "translation_vi": "to",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/meet-the-elephant/audio/big.wav"
+  },
+  {
+   "word": "Trunk",
+   "translation_vi": "cái vòi",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/meet-the-elephant/audio/trunk.wav"
+  },
+  {
+   "word": "Tree",
+   "translation_vi": "cây",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/tree.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/the-green-tree/audio/tree.wav"
+  },
+  {
+   "word": "Leaf",
+   "translation_vi": "chiếc lá",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/leaf.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/the-green-tree/audio/leaf.wav"
+  },
+  {
+   "word": "Green",
+   "translation_vi": "màu xanh lá",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/green.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/the-green-tree/audio/green.wav"
+  },
+  {
+   "word": "River",
+   "translation_vi": "dòng sông",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/river.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/splashing-river/audio/river.wav"
+  },
+  {
+   "word": "Water",
+   "translation_vi": "nước",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/water.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/splashing-river/audio/water.wav"
+  },
+  {
+   "word": "Blue",
+   "translation_vi": "màu xanh dương",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/blue.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/splashing-river/audio/blue.wav"
+  },
+  {
+   "word": "Bird",
+   "translation_vi": "con chim",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/bird.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/little-bird/audio/bird.wav"
+  },
+  {
+   "word": "Fly",
+   "translation_vi": "bay",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/fly.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/little-bird/audio/fly.wav"
+  },
+  {
+   "word": "Small",
+   "translation_vi": "nhỏ",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/small.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/little-bird/audio/small.wav"
+  },
+  {
+   "word": "Sun",
+   "translation_vi": "mặt trời",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/sun.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/sunny-sky/audio/sun.wav"
+  },
+  {
+   "word": "Sky",
+   "translation_vi": "bầu trời",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/sky.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/sunny-sky/audio/sky.wav"
+  },
+  {
+   "word": "Yellow",
+   "translation_vi": "màu vàng",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/yellow.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-nature-english-5-7/lessons/sunny-sky/audio/yellow.wav"
+  }
+ ],
+ "school_food": [
+  {
+   "word": "Book",
+   "translation_vi": "quyển sách",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/my-classroom/audio/book.wav"
+  },
+  {
+   "word": "Pencil",
+   "translation_vi": "bút chì",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/my-classroom/audio/pencil.wav"
+  },
+  {
+   "word": "Bag",
+   "translation_vi": "cặp sách",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/my-classroom/audio/bag.wav"
+  },
+  {
+   "word": "Red",
+   "translation_vi": "màu đỏ",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/color-hunt/vocabulary/red.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/color-hunt/audio/red.wav"
+  },
+  {
+   "word": "Blue",
+   "translation_vi": "màu xanh dương",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/color-hunt/vocabulary/blue.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/color-hunt/audio/blue.wav"
+  },
+  {
+   "word": "Yellow",
+   "translation_vi": "màu vàng",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/color-hunt/vocabulary/yellow.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/color-hunt/audio/yellow.wav"
+  },
+  {
+   "word": "One",
+   "translation_vi": "số một",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/number-play/vocabulary/one.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/number-play/audio/one.wav"
+  },
+  {
+   "word": "Two",
+   "translation_vi": "số hai",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/number-play/vocabulary/two.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/number-play/audio/two.wav"
+  },
+  {
+   "word": "Three",
+   "translation_vi": "số ba",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/number-play/vocabulary/three.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/number-play/audio/three.wav"
+  },
+  {
+   "word": "Rice",
+   "translation_vi": "cơm",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/lunch-box/vocabulary/rice.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/lunch-box/audio/rice.wav"
+  },
+  {
+   "word": "Egg",
+   "translation_vi": "trứng",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/lunch-box/vocabulary/egg.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/lunch-box/audio/egg.wav"
+  },
+  {
+   "word": "Juice",
+   "translation_vi": "nước ép",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/lunch-box/vocabulary/juice.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/lunch-box/audio/juice.wav"
+  },
+  {
+   "word": "Run",
+   "translation_vi": "chạy",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/action-time/vocabulary/run.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/action-time/audio/run.wav"
+  },
+  {
+   "word": "Jump",
+   "translation_vi": "nhảy",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/action-time/vocabulary/jump.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/action-time/audio/jump.wav"
+  },
+  {
+   "word": "Clap",
+   "translation_vi": "vỗ tay",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/action-time/vocabulary/clap.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/momo-school-food-english-5-7/lessons/action-time/audio/clap.wav"
+  }
+ ],
+ "animals": [
+  {
+   "word": "Cat",
+   "translation_vi": "con mèo",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/animals-adventure/mascots/cat.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/animals-adventure/audio/cat.mp3"
+  },
+  {
+   "word": "Dog",
+   "translation_vi": "con chó",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/animals-adventure/mascots/dog.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/animals-adventure/audio/dog.mp3"
+  },
+  {
+   "word": "Bird",
+   "translation_vi": "con chim",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/animals-adventure/mascots/bird.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/animals-adventure/audio/bird.mp3"
+  },
+  {
+   "word": "Fish",
+   "translation_vi": "con cá",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/animals-adventure/mascots/fish.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/animals-adventure/audio/fish.mp3"
+  },
+  {
+   "word": "Rabbit",
+   "translation_vi": "con thỏ",
+   "image_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/animals-adventure/mascots/rabbit.png",
+   "audio_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/courses/animals-adventure/audio/rabbit.mp3"
+  }
+ ]
+}

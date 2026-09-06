@@ -13,7 +13,9 @@ POST /gamification/xp-event pipeline (backend-authoritative).
 
 from __future__ import annotations
 
+import json
 import random
+from pathlib import Path
 from typing import Any, Dict, List
 
 from sqlalchemy import text
@@ -75,6 +77,28 @@ TOPIC_ALIASES = {
     "food": "school_food",
 }
 
+# ── Real-asset manifest (built by scripts/build_game_vocab_manifest.py) ──
+# Every entry carries a PUBLIC Supabase Storage image_url (and audio_url when
+# the course ships pronunciation) — real course assets, not placeholders.
+_MANIFEST_PATH = Path(__file__).resolve().parents[1] / "seeds" / "game_vocab_manifest.json"
+
+
+def _load_manifest_index() -> Dict[str, Dict[str, Any]]:
+    try:
+        raw = json.loads(_MANIFEST_PATH.read_text(encoding="utf-8"))
+    except Exception:  # missing file never blocks the games
+        return {}
+    index: Dict[str, Dict[str, Any]] = {}
+    for entries in raw.values():
+        for entry in entries:
+            w = str(entry.get("word") or "").strip().lower()
+            if w:
+                index[w] = entry
+    return index
+
+
+MANIFEST_INDEX = _load_manifest_index()
+
 
 def normalize_topic(topic: str | None) -> str | None:
     if not topic:
@@ -107,6 +131,16 @@ async def get_game_vocab(
     items: List[Dict[str, Any]] = []
     seen: set[str] = set()
 
+    def decorate(item: Dict[str, Any]) -> Dict[str, Any]:
+        """Attach real Supabase assets when the word exists in course manifest."""
+        entry = MANIFEST_INDEX.get(item["word"].strip().lower())
+        if entry:
+            item["image_url"] = entry.get("image_url") or item["image_url"]
+            item["audio_url"] = entry.get("audio_url")
+        else:
+            item["audio_url"] = None
+        return item
+
     # 1) Learner's notebook words for this topic
     rows = await db.execute(
         text(
@@ -122,7 +156,9 @@ async def get_game_vocab(
             continue
         seen.add(w.lower())
         items.append(
-            {"word": w, "translation_vi": r[1] or "", "image_url": image_url_for(w, topic), "source": "notebook"}
+            decorate(
+                {"word": w, "translation_vi": r[1] or "", "image_url": image_url_for(w, topic), "source": "notebook"}
+            )
         )
 
     # 2) Seed fallback (dedup, then fill to limit)
@@ -133,12 +169,14 @@ async def get_game_vocab(
             continue
         seen.add(seed["word"].lower())
         items.append(
-            {
-                "word": seed["word"],
-                "translation_vi": seed["translation_vi"],
-                "image_url": image_url_for(seed["word"], topic),
-                "source": "seed",
-            }
+            decorate(
+                {
+                    "word": seed["word"],
+                    "translation_vi": seed["translation_vi"],
+                    "image_url": image_url_for(seed["word"], topic),
+                    "source": "seed",
+                }
+            )
         )
 
     # 3) Final shuffle — notebook words stay in the pool, order is not predictable

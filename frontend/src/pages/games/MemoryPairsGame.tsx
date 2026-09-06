@@ -18,6 +18,7 @@ import {
   fetchGameVocab,
   awardGameComplete,
   normalizeGameTopic,
+  speakWord,
   GAME_TOPICS,
   type GameVocabItem,
   type GameTopic,
@@ -108,13 +109,7 @@ export const MemoryPairsGame: React.FC = () => {
     setFlipped(next);
     if (tile.kind === 'image') {
       const p = pairById.get(tile.pairId);
-      if (p) {
-        try {
-          const u = new SpeechSynthesisUtterance(p.word);
-          u.lang = 'en-US'; u.rate = 0.85;
-          speechSynthesis.cancel(); speechSynthesis.speak(u);
-        } catch { /* silent */ }
-      }
+      if (p) speakWord(p);
     }
     if (next.length === 2) {
       setMoves((m) => m + 1);

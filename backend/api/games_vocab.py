@@ -32,6 +32,7 @@ class GameVocabItem(BaseModel):
     word: str
     translation_vi: str
     image_url: str
+    audio_url: str | None = None
     source: str
 
 
