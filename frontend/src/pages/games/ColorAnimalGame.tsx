@@ -37,7 +37,7 @@ interface AnimalDef {
   word: string;
   nameVi: string;
   regions: string[];
-  svg: React.ReactNode;
+  svg: React.ReactElement;
 }
 
 const S = { fill: '#FFFFFF', stroke: STROKE, strokeWidth: 3.5 } as const;
@@ -425,7 +425,7 @@ export const ColorAnimalGame: React.FC = () => {
     <div className="ca-shell">
       <div className="ca-topbar">
         <button className="ca-icon-btn" onClick={() => setAnimal(null)} aria-label="Chọn con vật khác"><Msr icon="arrow_back" size={20} /></button>
-        <div className="ca-topic-chip"><Msr icon="brush" size={16} color={colors.coral} />{animal.word} · {animal.nameVi}</div>
+        <div className="ca-topic-chip"><Msr icon="brush" size={16} color={colors.coralLight} />{animal.word} · {animal.nameVi}</div>
         <div className="ca-moves">{doneCount}/{requiredRegions.length} vùng</div>
       </div>
 
