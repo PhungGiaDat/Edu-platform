@@ -12,9 +12,7 @@
  */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ClayCard } from '@/shared/components/clay/ClayCard';
 import { colors, shadows, withOpacity } from '@/design-tokens/claymorphic';
-import { CodexPetSprite } from '@/features/pets/components';
 import { awardGameComplete } from '@/services/gamesVocabService';
 import { normalizeGameTopic, topicBackgroundUrl } from '@/services/gamesVocabService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -340,8 +338,7 @@ export const ColorAnimalGame: React.FC = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const topic = params.get('topic'); // optional — coloring is topic-light, kept for URL consistency
-  const themeBg = topicBackgroundUrl(normalizeGameTopic(topic));
+  const themeBg = topicBackgroundUrl(normalizeGameTopic(params.get('topic')));
 
   const [animal, setAnimal] = useState<AnimalDef | null>(null);
   const [selColor, setSelColor] = useState<(typeof PALETTE)[number] | null>(null);
@@ -385,7 +382,7 @@ export const ColorAnimalGame: React.FC = () => {
     }
   }, [complete, animal, awardXp]);
 
-  const paint = (region: string) => {
+  const handleRegionClick = (region: string) => {
     if (!animal || !selColor) { setHint('Chạm một ô màu trước đã nhé!'); return; }
     setFilled((f) => ({ ...f, [region]: selColor.hex }));
   };
@@ -406,7 +403,7 @@ export const ColorAnimalGame: React.FC = () => {
         )}
         <div className="ca-topbar">
           <button className="ca-icon-btn" onClick={() => navigate('/games')} aria-label="Về Khu chơi"><Msr icon="arrow_back" size={20} /></button>
-          <div className="ca-topic-chip"><Msr icon="brush" size={16} color={colors.coral} />Tô màu con vật</div>
+          <div className="ca-topic-chip"><Msr icon="brush" size={16} color={colors.coralLight} />Tô màu con vật</div>
         </div>
         <p className="ca-guide">Chọn một con vật để tô màu cùng Lexi nhé!</p>
         <div className="ca-picker">
@@ -433,14 +430,28 @@ export const ColorAnimalGame: React.FC = () => {
       </div>
 
       <div className="ca-stage">
-        <svg viewBox="0 0 220 190" role="img" aria-label={`Tô màu ${animal.nameVi}`}>
-          {React.Children.map(animal.svg.props.children, (child) => {
+        <svg
+          viewBox="0 0 220 190"
+          role="img"
+          aria-label={`Tô màu ${animal.nameVi}`}
+          style={{ touchAction: 'none' }}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            const el = document.elementFromPoint(e.clientX, e.clientY) as SVGElement | null;
+            const region = el?.getAttribute?.('data-region');
+            if (region) handleRegionClick(region);
+          }}
+        >
+          {React.Children.map(animal.svg.props.children as React.ReactNode, (child) => {
             if (!React.isValidElement(child)) return child;
-            const region = (child.props as { 'data-region'?: string })['data-region'];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const childProps = child.props as any;
+            const region = childProps['data-region'];
             if (!region || !filled[region]) return child;
+            const stroke = region === 'trunk' || region === 'tail' ? filled[region] : childProps.stroke;
             return React.cloneElement(child as React.ReactElement<{ fill?: string; stroke?: string }>, {
               fill: filled[region],
-              stroke: region === 'trunk' || region === 'tail' ? filled[region] : (child.props as { stroke?: string }).stroke,
+              stroke,
             });
           })}
         </svg>
@@ -484,7 +495,7 @@ export const ColorAnimalGame: React.FC = () => {
 };
 
 const caStyles = `
-  .ca-shell{min-height:100dvh;background:${colors.backgroundBase};padding:16px 16px 32px;max-width:560px;margin:0 auto;padding-top:max(16px, env(safe-area-inset-top))}
+  .ca-shell{min-height:100dvh;background:${colors.backgroundBase};padding:16px 16px 32px;max-width:560px;margin:0 auto;padding-top:max(16px, env(safe-area-inset-top));touch-action:manipulation;-webkit-user-select:none;user-select:none}
   .ca-topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
   .ca-icon-btn{width:44px;height:44px;border:none;border-radius:14px;background:${colors.warmWhite};box-shadow:0 4px 0 rgba(26,39,68,.10);cursor:pointer;display:grid;place-items:center;color:${colors.deepSlate}}
   .ca-topic-chip{display:inline-flex;align-items:center;gap:6px;font-family:${DISPLAY_FONT};font-weight:800;font-size:.85rem;background:${colors.warmWhite};border-radius:999px;padding:8px 14px;box-shadow:0 3px 0 rgba(26,39,68,.08)}
@@ -499,7 +510,7 @@ const caStyles = `
   .ca-stage{background:#fff;border-radius:24px;box-shadow:${shadows.clayCard};padding:12px}
   .ca-stage svg{display:block;width:100%;height:auto}
   .cr{cursor:pointer;transition:fill .25s ease}
-  .ca-palette{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-top:12px}
+  .ca-palette{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px;max-width:360px;margin-left:auto;margin-right:auto;width:100%}
   .ca-pal{aspect-ratio:1;border-radius:14px;cursor:pointer;border:3px solid transparent;box-shadow:0 4px 0 rgba(26,39,68,.12),inset 0 2px 0 rgba(255,255,255,.5);transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s}
   .ca-pal:hover{transform:translateY(-2px)}
   .ca-pal.ca-sel{border-color:${colors.deepSlate};transform:translateY(-2px) scale(1.06)}
