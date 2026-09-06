@@ -8,7 +8,7 @@ No MongoDB.
 from fastapi import APIRouter, HTTPException, Query, Request
 from typing import Optional
 from datetime import datetime
-from backend.models.pronunciation_course_model import (
+from models.pronunciation_course_model import (
     PronunciationAttemptLog,
     PronunciationProgressResponse,
 )
@@ -41,7 +41,7 @@ async def _get_user_id(request: Request) -> Optional[str]:
 async def list_courses(request: Request, user_id: Optional[str] = Query(None)):
     """List all pronunciation topics with completion % for this user."""
     # Import inside handler so tests can patch at source
-    from backend.repositories.pronunciation_course_repository import (
+    from repositories.pronunciation_course_repository import (
         get_pronunciation_course_repository,
         get_pronunciation_attempt_repository,
     )
@@ -75,7 +75,7 @@ async def list_courses(request: Request, user_id: Optional[str] = Query(None)):
 @router.get("/progress", response_model=PronunciationProgressResponse)
 async def get_progress(request: Request, user_id: Optional[str] = Query(None)):
     """Get user's overall pronunciation progress. Requires auth."""
-    from backend.repositories.pronunciation_course_repository import (
+    from repositories.pronunciation_course_repository import (
         get_pronunciation_attempt_repository,
     )
     auth_uid = await _get_user_id(request) if not user_id else None
@@ -106,7 +106,7 @@ async def get_progress(request: Request, user_id: Optional[str] = Query(None)):
 @router.get("/{topic_id}")
 async def get_course(topic_id: str, request: Request, user_id: Optional[str] = Query(None)):
     """Get topic detail with words and per-word progress."""
-    from backend.repositories.pronunciation_course_repository import (
+    from repositories.pronunciation_course_repository import (
         get_pronunciation_course_repository,
         get_pronunciation_attempt_repository,
     )
@@ -146,7 +146,7 @@ async def get_course(topic_id: str, request: Request, user_id: Optional[str] = Q
 @router.post("/{topic_id}/attempt")
 async def log_attempt(topic_id: str, attempt: PronunciationAttemptLog, request: Request):
     """Log a pronunciation attempt and award XP."""
-    from backend.repositories.pronunciation_course_repository import (
+    from repositories.pronunciation_course_repository import (
         get_pronunciation_attempt_repository,
     )
     auth_uid = await _get_user_id(request)
@@ -166,7 +166,7 @@ async def log_attempt(topic_id: str, attempt: PronunciationAttemptLog, request: 
     xp_result = None
     if uid:
         try:
-            from backend.services.postgres_gamification_service import PostgresGamificationService
+            from services.postgres_gamification_service import PostgresGamificationService
             action = "pronunciation_correct" if attempt.stars >= 2 else "pronunciation_attempt"
             xp_result = await PostgresGamificationService().add_xp_with_event_id(
                 user_id=uid,
@@ -199,7 +199,7 @@ async def huggingface_evaluate(
     Currently returns Levenshtein-based fallback.
     Replace with real HF Inference API call when token + model ready.
     """
-    from backend.services.huggingface_evaluation_service import HuggingFaceEvaluationService
+    from services.huggingface_evaluation_service import HuggingFaceEvaluationService
     result = HuggingFaceEvaluationService.evaluate(
         audio_data=b"",
         expected_word=expected_word,
@@ -224,7 +224,7 @@ async def store_recording(
     request: Request = None,
 ):
     """Store an audio recording for fine-tuning dataset (consent required)."""
-    from backend.repositories.pronunciation_course_repository import (
+    from repositories.pronunciation_course_repository import (
         get_pronunciation_recording_repository,
     )
     auth_uid = await _get_user_id(request) if request else None
