@@ -10,7 +10,7 @@ import React, { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { colors, shadows, withOpacity } from '@/design-tokens/claymorphic';
 import { CodexPetSprite } from '@/features/pets/components';
-import { GAME_TOPICS, normalizeGameTopic } from '@/services/gamesVocabService';
+import { GAME_TOPICS, normalizeGameTopic, topicBackgroundUrl } from '@/services/gamesVocabService';
 import { Msr } from '@/shared/components/Msr';
 
 const DISPLAY_FONT = "'Nunito', sans-serif";
@@ -106,12 +106,17 @@ export const GamesPage: React.FC = () => {
           <div className="gsh-topic-grid">
             {GAME_TOPICS.map((t) => {
               const done = GAMES.filter((g) => (playedToday[g.slug] ?? []).includes(t.slug)).length;
+              const bg = topicBackgroundUrl(t.slug);
               return (
                 <button
                   key={t.slug}
                   className="gsh-topic"
                   onClick={() => navigate(`/games?topic=${t.slug}`)}
                   aria-label={`Chủ đề ${t.label}`}
+                  style={bg ? {
+                    backgroundImage: `linear-gradient(rgba(255,251,240,.62),rgba(255,251,240,.78)), url(${bg})`,
+                    backgroundSize: 'cover', backgroundPosition: 'center',
+                  } : undefined}
                 >
                   <span className="gsh-topic-thumb" style={{ background: TOPIC_TINT[t.slug] }}>{TOPIC_THUMB[t.slug]}</span>
                   <b>{t.labelEn}</b>

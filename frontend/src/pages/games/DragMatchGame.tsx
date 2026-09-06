@@ -23,6 +23,7 @@ import {
   awardGameComplete,
   normalizeGameTopic,
   speakWord,
+  topicBackgroundUrl,
   GAME_TOPICS,
   type GameVocabItem,
   type GameTopic,
@@ -73,6 +74,7 @@ export const DragMatchGame: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const topicLabel = GAME_TOPICS.find((t) => t.slug === topic)?.label ?? '';
+  const themeBg = topicBackgroundUrl(topic);
 
   useEffect(() => {
     if (!topic) { setPhase('EMPTY'); return; }
@@ -176,6 +178,16 @@ export const DragMatchGame: React.FC = () => {
 
   return (
     <div className="dm-shell">
+      {themeBg && (
+        <div
+          aria-hidden="true"
+          style={{
+            height: 118, margin: '-16px -16px 12px', borderRadius: '0 0 26px 26px',
+            backgroundImage: `linear-gradient(rgba(255,248,238,0.45),rgba(255,248,238,1)), url(${themeBg})`,
+            backgroundSize: 'cover', backgroundPosition: 'center',
+          }}
+        />
+      )}
       <div className="dm-topbar">
         <button className="dm-icon-btn" onClick={() => navigate('/games')} aria-label="Về Khu chơi">
           <Msr icon="arrow_back" size={20} />

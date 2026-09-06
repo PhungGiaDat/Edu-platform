@@ -98,8 +98,9 @@ async def test_real_assets_attached_when_manifest_has_word():
         assert "audio_url" in it
 
 
-def test_seed_covers_all_four_topics_with_eight_words():
+def test_seed_covers_all_four_topics_with_fourteen_words():
+    """Expansion pack 2026-09-06: 14 words per topic (8 base + 6 new)."""
     assert set(SEED_VOCAB.keys()) == {"animals", "home", "nature", "school_food"}
     for topic, words in SEED_VOCAB.items():
-        assert len(words) == 8, f"{topic} must have exactly 8 seed words"
+        assert len(words) == 14, f"{topic} must have exactly 14 seed words"
         assert all(w["word"] and w["translation_vi"] for w in words)
