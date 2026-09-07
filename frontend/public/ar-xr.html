@@ -533,13 +533,15 @@
       if (catMeowAudio) {
         try {
           catMeowAudio.currentTime = 0;
+          sendARDebug('CAT_MEOW_AUDIO_REQUESTED', { url: CAT_AUDIO_CONFIG.meowUrl });
           const playPromise = catMeowAudio.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(err => {
+          if (playPromise && typeof playPromise.then === 'function') {
+            playPromise.then(() => {
+              sendARDebug('CAT_MEOW_AUDIO_PLAYING', { url: CAT_AUDIO_CONFIG.meowUrl });
+            }).catch(err => {
               sendARDebug('CAT_MEOW_AUDIO_PLAY_ERROR', { error: String(err) });
             });
           }
-          sendARDebug('CAT_MEOW_AUDIO_START', {});
         } catch (e) {
           sendARDebug('CAT_MEOW_AUDIO_PLAY_ERROR', { error: String(e) });
         }

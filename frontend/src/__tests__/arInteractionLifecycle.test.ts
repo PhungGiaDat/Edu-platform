@@ -163,4 +163,21 @@ describe('AR interaction lifecycle contracts', () => {
       cameraSource.indexOf("maybeRevealAR({ trigger: 'cameraReady' })"),
     )
   })
+
+  it('reports CAT audio request and browser-confirmed outcomes without claiming play at invocation', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const meowStart = source.indexOf('function playCatMeow')
+    const meowEnd = source.indexOf('\n    // Cancel CAT_MEOW', meowStart)
+    const meowSource = source.slice(meowStart, meowEnd)
+    const requested = meowSource.indexOf("sendARDebug('CAT_MEOW_AUDIO_REQUESTED'")
+    const playInvocation = meowSource.indexOf('catMeowAudio.play()')
+    const playing = meowSource.indexOf("sendARDebug('CAT_MEOW_AUDIO_PLAYING'")
+    const playError = meowSource.indexOf("sendARDebug('CAT_MEOW_AUDIO_PLAY_ERROR'")
+
+    expect(requested).toBeGreaterThanOrEqual(0)
+    expect(requested).toBeLessThan(playInvocation)
+    expect(playing).toBeGreaterThan(playInvocation)
+    expect(playError).toBeGreaterThan(playInvocation)
+    expect(meowSource).not.toContain('CAT_MEOW_AUDIO_START')
+  })
 })
