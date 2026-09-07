@@ -139,9 +139,9 @@ function StickerCard({
 
       {/* Sticker image — real asset from catalog; emoji fallback if missing */}
       <div className="relative z-10 flex h-20 items-center justify-center">
-        {sticker.image_url && isCollected ? (
+        {sticker.imageUrl && isCollected ? (
           <img
-            src={sticker.image_url}
+            src={sticker.imageUrl}
             alt={sticker.name}
             loading="lazy"
             className={`h-16 w-16 object-contain ${isCollected ? '' : 'opacity-50 grayscale'}`}

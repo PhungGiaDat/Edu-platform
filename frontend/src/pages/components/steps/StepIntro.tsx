@@ -3,15 +3,15 @@
 
 import React from 'react';
 import { LessonMedia } from '@/features/courses/components/LessonMedia';
-import type { Lesson } from '@/types/course';
+import type { Lesson, LessonMedia as LessonMediaType, LessonSessionStepState } from '@/types/course';
 import { cleanText, lessonDescription } from '@/lib/courseLocale';
-import { ActionButton, PracticeFeedback, StatusPill, statusTone } from './StepShared';
-import type { LessonMedia as LessonMediaType, LessonSessionStepState } from './types';
+import { ActionButton, StatusPill, statusTone } from './StepShared';
+import type { Locale } from './types';
 
 export interface StepIntroProps {
   lesson: Lesson;
   currentSessionStep?: LessonSessionStepState;
-  locale: string;
+  locale: Locale;
   onIntroComplete: () => Promise<void>;
   onIntroSkip: () => Promise<void>;
   busyKey: string | null;
@@ -19,7 +19,15 @@ export interface StepIntroProps {
 }
 
 // Copy translations
-const COPY = {
+const COPY: Record<Locale, {
+  intro: string;
+  completed: string;
+  active: string;
+  introTitle: string;
+  descriptionFallback: string;
+  stepSaved: string;
+  introComplete: string;
+}> = {
   en: {
     intro: 'Intro',
     completed: 'Completed',
@@ -49,7 +57,7 @@ export const StepIntro: React.FC<StepIntroProps> = ({
   busyKey,
   lessonMedia,
 }) => {
-  const copy = COPY[locale] || COPY.en;
+  const copy = COPY[locale];
 
   // Build media prop from lesson data
   const media = lessonMedia || {

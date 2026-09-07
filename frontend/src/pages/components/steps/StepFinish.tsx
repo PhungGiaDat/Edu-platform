@@ -3,17 +3,23 @@
 
 import React from 'react';
 import { AssetTile } from '@/features/courses/components/CourseLearningBlocks';
-import type { Lesson, LessonSessionStepState, QuizSubmitResult } from '@/types/course';
+import type { Lesson, QuizSubmitResult } from '@/types/course';
+import type { Locale } from './types';
 
 export interface StepFinishProps {
   lesson: Lesson;
-  currentSessionStep?: LessonSessionStepState;
-  locale: string;
+  locale: Locale;
   result?: QuizSubmitResult | null;
 }
 
 // Copy translations
-const COPY = {
+const COPY: Record<Locale, {
+  rewardTitle: string;
+  readyReward: string;
+  finishPrompt: string;
+  passed: string;
+  retry: string;
+}> = {
   en: {
     rewardTitle: 'Earn reward',
     readyReward: 'Ready for your reward?',
@@ -32,11 +38,11 @@ const COPY = {
 
 export const StepFinish: React.FC<StepFinishProps> = ({
   lesson,
-  currentSessionStep,
+  currentSessionStep: _currentSessionStep,
   locale,
   result,
 }) => {
-  const copy = COPY[locale] || COPY.en;
+  const copy = COPY[locale];
 
   return (
     <section className="rounded-[34px] border-4 border-white bg-[#FFF8D8] p-6 text-center shadow-[0_10px_0_rgba(229,184,0,0.16)]">

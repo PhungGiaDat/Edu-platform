@@ -27,8 +27,8 @@ const DISPLAY_FONT = "'Nunito', 'Baloo 2', system-ui, sans-serif";
 
 // Compact pill — for AR overlays / compact spaces
 const CompactPet: React.FC<VirtualPetProps> = ({
-  petType = 'bunny',
-  thumbnailUrl,
+  petType: _petType,
+  thumbnailUrl: _thumbnailUrl,
   happiness = 80,
   name = 'Buddy',
 }) => {
@@ -71,8 +71,8 @@ const CompactPet: React.FC<VirtualPetProps> = ({
 
 // Full card — claymorphic companion display
 const FullPet: React.FC<VirtualPetProps> = ({
-  petType = 'bunny',
-  thumbnailUrl,
+  petType: _petType,
+  thumbnailUrl: _thumbnailUrl,
   happiness = 80,
   name = 'Buddy',
   onFeed,

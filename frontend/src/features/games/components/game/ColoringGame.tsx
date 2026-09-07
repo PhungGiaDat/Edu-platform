@@ -6,8 +6,6 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import type { GameChallenge } from '@/types';
 import { AudioService } from '@/services/AudioService';
 
-const DISPLAY_FONT = "'Baloo 2', 'Quicksand', system-ui, sans-serif";
-
 interface Props {
     challenge: GameChallenge;
     onAnswer: (answer: string) => void;

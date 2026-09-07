@@ -8,13 +8,13 @@ import type {
   LessonSessionStepState,
   PronunciationTask,
 } from '@/types/course';
-import { ActionButton, PracticeFeedback, StatusPill, statusTone } from './StepShared';
-import type { PracticeSummary } from './StepShared';
+import { ActionButton, PracticeFeedback, StatusPill } from './StepShared';
+import type { Locale, PracticeSummary } from './types';
 
 export interface StepSayProps {
   lesson: Lesson;
   currentSessionStep?: LessonSessionStepState;
-  locale: string;
+  locale: Locale;
   pronunciation?: PronunciationTask | null;
   sayPractice: Record<string, PracticeSummary>;
   onSayPractice: (word: string) => Promise<void>;
@@ -23,7 +23,17 @@ export interface StepSayProps {
 }
 
 // Copy translations
-const COPY = {
+const COPY: Record<Locale, {
+  say: string;
+  speakingDone: string;
+  sayTitle: string;
+  sayPractice: string;
+  hearIt: string;
+  speakNow: string;
+  listening: string;
+  promptHeard: string;
+  passed: string;
+}> = {
   en: {
     say: 'Say',
     speakingDone: 'Speaking complete',
@@ -51,8 +61,7 @@ const COPY = {
 const normalizeKey = (value: string) => value.trim().toLowerCase();
 
 export const StepSay: React.FC<StepSayProps> = ({
-  lesson,
-  currentSessionStep,
+  currentSessionStep: _currentSessionStep,
   locale,
   pronunciation,
   sayPractice,
@@ -60,7 +69,7 @@ export const StepSay: React.FC<StepSayProps> = ({
   onPlayAudio,
   busyKey,
 }) => {
-  const copy = COPY[locale] || COPY.en;
+  const copy = COPY[locale];
 
   if (!pronunciation) {
     return null;

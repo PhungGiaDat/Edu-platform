@@ -10,13 +10,13 @@ import type {
   ReadAloudStory,
 } from '@/types/course';
 import { cleanText } from '@/lib/courseLocale';
-import { ActionButton, PracticeFeedback, StatusPill, statusTone } from './StepShared';
-import type { PracticeSummary } from './StepShared';
+import { ActionButton, PracticeFeedback, StatusPill } from './StepShared';
+import type { Locale, PracticeSummary } from './types';
 
 export interface StepReadProps {
   lesson: Lesson;
   currentSessionStep?: LessonSessionStepState;
-  locale: string;
+  locale: Locale;
   readAloudStory?: ReadAloudStory | null;
   readPractice: Record<string, PracticeSummary>;
   onReadPractice: (pageId: string, text: string, highlightedWords: string[]) => Promise<void>;
@@ -25,7 +25,15 @@ export interface StepReadProps {
 }
 
 // Copy translations
-const COPY = {
+const COPY: Record<Locale, {
+  read: string;
+  audioReady: string;
+  pageDone: string;
+  pagePractice: string;
+  hearIt: string;
+  readAloud: string;
+  listening: string;
+}> = {
   en: {
     read: 'Read',
     audioReady: 'Audio ready',
@@ -47,8 +55,8 @@ const COPY = {
 };
 
 export const StepRead: React.FC<StepReadProps> = ({
-  lesson,
-  currentSessionStep,
+  lesson: _lesson,
+  currentSessionStep: _currentSessionStep,
   locale,
   readAloudStory,
   readPractice,
@@ -56,7 +64,7 @@ export const StepRead: React.FC<StepReadProps> = ({
   onPlayAudio,
   busyKey,
 }) => {
-  const copy = COPY[locale] || COPY.en;
+  const copy = COPY[locale];
 
   if (!readAloudStory) {
     return null;

@@ -3,13 +3,14 @@
 
 import React from 'react';
 import { AssetTile } from '@/features/courses/components/CourseLearningBlocks';
-import type { AssetReference, Lesson, LessonSessionStepState, SectionGame } from '@/types/course';
+import type { AssetReference, LessonSessionStepState, SectionGame } from '@/types/course';
 import { ActionButton, StatusPill, statusTone } from './StepShared';
+import type { Locale } from './types';
 
 export interface StepGameProps {
   lesson: Lesson;
   currentSessionStep?: LessonSessionStepState;
-  locale: string;
+  locale: Locale;
   game?: SectionGame | null;
   gameFeedback?: { choiceId?: string; correct: boolean; message: string } | null;
   onGameChoice: (choiceId: string, label: string) => Promise<void>;
@@ -17,7 +18,15 @@ export interface StepGameProps {
 }
 
 // Copy translations
-const COPY = {
+const COPY: Record<Locale, {
+  game: string;
+  active: string;
+  retryNeeded: string;
+  gameTitle: string;
+  gamePrompt: string;
+  hearIt: string;
+  promptHeard: string;
+}> = {
   en: {
     game: 'Game',
     active: 'Active',
@@ -39,7 +48,6 @@ const COPY = {
 };
 
 export const StepGame: React.FC<StepGameProps> = ({
-  lesson,
   currentSessionStep,
   locale,
   game,
@@ -47,7 +55,7 @@ export const StepGame: React.FC<StepGameProps> = ({
   onGameChoice,
   onPlayAudio,
 }) => {
-  const copy = COPY[locale] || COPY.en;
+  const copy = COPY[locale];
 
   if (!game) {
     return null;

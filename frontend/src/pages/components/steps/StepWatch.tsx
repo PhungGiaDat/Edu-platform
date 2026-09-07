@@ -1,16 +1,72 @@
 // StepWatch - Watch/Video step component for LessonPlayer
 // Displays the main lesson video with player controls
 
-import React from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { LessonVideoPlayer } from '@/features/courses/components/LessonVideoPlayer';
-import type { Lesson, LessonSessionStepState } from '@/types/course';
+import type { AssetReference, Lesson, LessonSessionStepState } from '@/types/course';
 import { cleanText, lessonDescription, lessonTitle } from '@/lib/courseLocale';
+import { getAssetCandidateUrls } from '@/lib/courseAssets';
 import { ActionButton, StatusPill, statusTone } from './StepShared';
+import type { Locale } from './types';
+
+// Internal preview component (mirrors LessonPlayer inline version)
+const LessonMediaPreview: React.FC<{
+  title: string;
+  asset?: AssetReference | null;
+  thumbnail?: AssetReference | null;
+}> = ({ title, asset, thumbnail }) => {
+  const videoCandidates = useMemo(() => getAssetCandidateUrls(asset), [asset]);
+  const posterCandidates = useMemo(() => getAssetCandidateUrls(thumbnail), [thumbnail]);
+  const [candidateIndex, setCandidateIndex] = useState(0);
+
+  useEffect(() => {
+    setCandidateIndex(0);
+  }, [videoCandidates]);
+
+  const currentUrl = videoCandidates[candidateIndex] || posterCandidates[0] || null;
+  const posterUrl = posterCandidates[0];
+
+  if (!currentUrl) {
+    return (
+      <div className="flex aspect-video items-center justify-center rounded-[26px] bg-[#6EB9FF] px-4 text-center text-slate-900 shadow-[inset_0_2px_0_rgba(255,255,255,0.55)]">
+        <div>
+          <div className="text-6xl font-black">Play</div>
+          <p className="mt-3 text-2xl font-black">{title}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (/\.mp4($|\?)/i.test(currentUrl) || /\.webm($|\?)/i.test(currentUrl)) {
+    return (
+      <video
+        key={currentUrl}
+        className="aspect-video w-full rounded-[26px] object-cover"
+        controls
+        playsInline
+        preload="metadata"
+        poster={posterUrl}
+        onError={() => setCandidateIndex((current) => current + 1)}
+      >
+        <source src={currentUrl} />
+      </video>
+    );
+  }
+
+  return (
+    <img
+      src={currentUrl}
+      alt={title}
+      className="aspect-video w-full rounded-[26px] object-cover"
+      onError={() => setCandidateIndex((current) => current + 1)}
+    />
+  );
+};
 
 export interface StepWatchProps {
   lesson: Lesson;
   currentSessionStep?: LessonSessionStepState;
-  locale: string;
+  locale: Locale;
   videoUrl?: string | null;
   videoPoster?: string | null;
   onWatchComplete: () => Promise<void>;
@@ -18,7 +74,17 @@ export interface StepWatchProps {
 }
 
 // Copy translations
-const COPY = {
+const COPY: Record<Locale, {
+  watch: string;
+  completed: string;
+  active: string;
+  videoReady: string;
+  stepGuide: string;
+  descriptionFallback: string;
+  markWatched: string;
+  watchedDone: string;
+  stepSaved: string;
+}> = {
   en: {
     watch: 'Watch',
     completed: 'Completed',
@@ -52,7 +118,7 @@ export const StepWatch: React.FC<StepWatchProps> = ({
   onWatchComplete,
   busyKey,
 }) => {
-  const copy = COPY[locale] || COPY.en;
+  const copy = COPY[locale];
 
   // Use video lesson preview if no direct video URL
   const showVideoLesson = !videoUrl && lesson.videoLesson;
@@ -105,22 +171,6 @@ export const StepWatch: React.FC<StepWatchProps> = ({
         </div>
       </div>
     </section>
-  );
-};
-
-// Internal preview component for video lessons
-const LessonMediaPreview: React.FC<{
-  title: string;
-  asset?: unknown;
-  thumbnail?: unknown;
-}> = ({ title }) => {
-  return (
-    <div className="flex aspect-video items-center justify-center rounded-[26px] bg-[#6EB9FF] px-4 text-center text-slate-900 shadow-[inset_0_2px_0_rgba(255,255,255,0.55)]">
-      <div>
-        <div className="text-6xl font-black">Play</div>
-        <p className="mt-3 text-2xl font-black">{title}</p>
-      </div>
-    </div>
   );
 };
 

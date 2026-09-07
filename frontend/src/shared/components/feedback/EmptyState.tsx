@@ -4,10 +4,20 @@
  * (e.g., a lesson with no game, no pronunciation, no vocabulary).
  */
 import React from 'react';
-import { colors } from '@/design-tokens/claymorphic';
 import { CodexPetSprite } from '@/features/pets/components/CodexPetSprite';
 
 const DISPLAY_FONT = "'Baloo 2', 'Quicksand', system-ui, sans-serif";
+
+type EmptyStepType = 'game' | 'vocabulary' | 'pronunciation' | 'reading' | 'video' | 'general';
+
+const LABEL_MAP: Record<EmptyStepType, string> = {
+  game: 'Không có trò chơi',
+  vocabulary: 'Không có từ vựng',
+  pronunciation: 'Không có bài phát âm',
+  reading: 'Không có bài đọc',
+  video: 'Không có video',
+  general: 'Phần này đang cập nhật',
+};
 
 interface EmptyStateProps {
   /** Vietnamese label for the step type */
@@ -15,18 +25,11 @@ interface EmptyStateProps {
   /** English label for the step type */
   stepLabelEn?: string;
   /** Optional illustration type */
-  type?: 'game' | 'vocabulary' | 'pronunciation' | 'reading' | 'video' | 'general';
+  type?: EmptyStepType;
 }
 
-const EmptyStateIllustration: React.FC<{ type: EmptyStateProps['type'] }> = ({ type }) => {
-  const labelMap = {
-    game: 'Không có trò chơi',
-    vocabulary: 'Không có từ vựng',
-    pronunciation: 'Không có bài phát âm',
-    reading: 'Không có bài đọc',
-    video: 'Không có video',
-    general: 'Phần này đang cập nhật',
-  };
+const EmptyStateIllustration: React.FC<{ type: EmptyStepType }> = ({ type }) => {
+  const label = LABEL_MAP[type] ?? LABEL_MAP.general;
 
   return (
     <div
@@ -35,14 +38,14 @@ const EmptyStateIllustration: React.FC<{ type: EmptyStateProps['type'] }> = ({ t
     >
       <CodexPetSprite
         animationState="waiting"
-        label={labelMap[type]}
+        label={label}
         size={80}
       />
       <p
         className="mt-3 text-base font-black text-slate-500"
         style={{ fontFamily: DISPLAY_FONT }}
       >
-        {labelMap[type]}
+        {label}
       </p>
     </div>
   );

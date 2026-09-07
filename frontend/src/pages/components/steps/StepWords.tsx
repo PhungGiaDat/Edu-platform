@@ -7,13 +7,13 @@ import { LessonImageGallery } from '@/features/courses/components/LessonImageGal
 import type { AssetReference, Lesson, LessonSessionStepState, VocabularyItem } from '@/types/course';
 import { cleanText } from '@/lib/courseLocale';
 import { getAssetCandidateUrls } from '@/lib/courseAssets';
-import { ActionButton, PracticeFeedback, StatusPill, statusTone } from './StepShared';
-import type { PracticeSummary } from './StepShared';
+import { ActionButton, PracticeFeedback, StatusPill } from './StepShared';
+import type { Locale, PracticeSummary } from './types';
 
 export interface StepWordsProps {
   lesson: Lesson;
   currentSessionStep?: LessonSessionStepState;
-  locale: string;
+  locale: Locale;
   wordPractice: Record<string, PracticeSummary>;
   onWordPractice: (item: VocabularyItem) => Promise<void>;
   onPlayAudio: (text: string, asset?: AssetReference | null) => Promise<void>;
@@ -21,7 +21,15 @@ export interface StepWordsProps {
 }
 
 // Copy translations
-const COPY = {
+const COPY: Record<Locale, {
+  words: string;
+  audioReady: string;
+  wordDone: string;
+  wordPractice: string;
+  hearIt: string;
+  trySpeaking: string;
+  listening: string;
+}> = {
   en: {
     words: 'Words',
     audioReady: 'Audio ready',
@@ -46,14 +54,14 @@ const normalizeKey = (value: string) => value.trim().toLowerCase();
 
 export const StepWords: React.FC<StepWordsProps> = ({
   lesson,
-  currentSessionStep,
+  currentSessionStep: _currentSessionStep,
   locale,
   wordPractice,
   onWordPractice,
   onPlayAudio,
   busyKey,
 }) => {
-  const copy = COPY[locale] || COPY.en;
+  const copy = COPY[locale];
 
   // Build vocabulary images for gallery
   const vocabularyImages = lesson.vocabulary.map((item) => ({

@@ -7,16 +7,17 @@ import type {
   LessonSessionStepState,
   PronunciationTask,
   ReadAloudStory,
-  Reward,
   SectionGame,
   VocabularyItem,
 } from '@/types/course';
+
+export type Locale = 'en' | 'vi';
 
 // Common props shared across all step components
 export interface BaseStepProps {
   lesson: Lesson;
   currentSessionStep?: LessonSessionStepState;
-  locale: string;
+  locale: Locale;
 }
 
 // Intro step props

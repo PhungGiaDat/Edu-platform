@@ -3,20 +3,23 @@
 
 import React from 'react';
 import { ImageQuiz } from '@/features/courses/components/CourseLearningBlocks';
-import type { Lesson, LessonSessionStepState, QuizSubmitResult } from '@/types/course';
-import { StatusPill, statusTone } from './StepShared';
+import type { Lesson, QuizSubmitResult } from '@/types/course';
+import type { Locale } from './types';
 
 export interface StepQuizProps {
   lesson: Lesson;
-  currentSessionStep?: LessonSessionStepState;
-  locale: string;
+  locale: Locale;
   answers: Record<string, string>;
   result?: QuizSubmitResult | null;
   onAnswer: (questionId: string, optionId: string) => void;
 }
 
 // Copy translations
-const COPY = {
+const COPY: Record<Locale, {
+  quiz: string;
+  passed: string;
+  retry: string;
+}> = {
   en: {
     quiz: 'Quiz',
     passed: 'Great job! You passed the quiz.',
@@ -30,14 +33,12 @@ const COPY = {
 };
 
 export const StepQuiz: React.FC<StepQuizProps> = ({
-  lesson,
-  currentSessionStep,
   locale,
   answers,
   result,
   onAnswer,
 }) => {
-  const copy = COPY[locale] || COPY.en;
+  const copy = COPY[locale];
 
   return (
     <section className="space-y-4">

@@ -6,12 +6,13 @@ import { AssetTile } from '@/features/courses/components/CourseLearningBlocks';
 import { SceneViewer } from '@/features/courses/components/SceneViewer';
 import type { AssetReference, Lesson, LessonSessionStepState } from '@/types/course';
 import { cleanText } from '@/lib/courseLocale';
-import { ActionButton, StatusPill, statusTone } from './StepShared';
+import { ActionButton, StatusPill } from './StepShared';
+import type { Locale } from './types';
 
 export interface StepStoryProps {
   lesson: Lesson;
   currentSessionStep?: LessonSessionStepState;
-  locale: string;
+  locale: Locale;
   scenes: Array<{
     id: string;
     imageUrl: string;
@@ -29,7 +30,18 @@ export interface StepStoryProps {
 }
 
 // Copy translations
-const COPY = {
+const COPY: Record<Locale, {
+  story: string;
+  scenes: string;
+  duration: string;
+  storyTitle: string;
+  completed: string;
+  active: string;
+  playLine: string;
+  nextScene: string;
+  finishStory: string;
+  stepSaved: string;
+}> = {
   en: {
     story: 'Story',
     scenes: 'Scenes',
@@ -57,8 +69,7 @@ const COPY = {
 };
 
 export const StepStory: React.FC<StepStoryProps> = ({
-  lesson,
-  currentSessionStep,
+  currentSessionStep: _currentSessionStep,
   locale,
   scenes,
   storyIndex,
@@ -68,7 +79,7 @@ export const StepStory: React.FC<StepStoryProps> = ({
   onPlayAudio,
   busyKey,
 }) => {
-  const copy = COPY[locale] || COPY.en;
+  const copy = COPY[locale];
   const currentScene = scenes[storyIndex];
 
   if (!currentScene) {
@@ -92,7 +103,7 @@ export const StepStory: React.FC<StepStoryProps> = ({
 
       <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
         <AssetTile
-          asset={currentScene.imageUrl}
+          asset={{ url: currentScene.imageUrl } as AssetReference}
           label={`${copy.story} ${storyIndex + 1}`}
           emoji={`0${storyIndex + 1}`}
           showAssetMeta
