@@ -69,4 +69,51 @@ describe('AR interaction lifecycle contracts', () => {
       complete: true,
     })
   })
+
+  it('restores CAT idle before consuming the combo and starts return afterward', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const triggerStart = source.indexOf('function triggerComboAnimation')
+    const triggerEnd = source.indexOf('\n    function evaluateInteraction', triggerStart)
+    const triggerSource = source.slice(triggerStart, triggerEnd)
+    const eatFinished = triggerSource.indexOf("sendARDebug('COMBO_ANIMATION_FINISHED'")
+    const idleRestore = triggerSource.indexOf("restoreCatIdleAfterOneShot(instance, action, 'CAT_EAT'")
+    const comboConsumed = triggerSource.indexOf('setInteractionPhase(InteractionPhase.COMBO_CONSUMED)')
+    const returnStart = triggerSource.indexOf("sendARDebug('CAT_RETURN_START'")
+
+    expect(triggerSource).toContain("sendARDebug('CAT_ACTION_STATE_AFTER_EAT'")
+    expect(source).toContain("sendARDebug('CAT_IDLE_RESTORED'")
+    expect(eatFinished).toBeGreaterThanOrEqual(0)
+    expect(idleRestore).toBeGreaterThan(eatFinished)
+    expect(comboConsumed).toBeGreaterThan(idleRestore)
+    expect(returnStart).toBeGreaterThan(comboConsumed)
+    expect(triggerSource.indexOf("sendARDebug('CAT_IDLE_RESTORED'", returnStart)).toBe(-1)
+  })
+
+  it('uses immediate one-shot cleanup instead of an unowned delayed stop', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const restoreStart = source.indexOf('function restoreCatIdleAfterOneShot')
+    const restoreEnd = source.indexOf('\n    // Cancel CAT_MEOW', restoreStart)
+    const restoreSource = source.slice(restoreStart, restoreEnd)
+    const cancelStart = source.indexOf('function cancelCatMeowForCombo')
+    const cancelEnd = source.indexOf('\n    // Pointer event handler', cancelStart)
+    const cancelSource = source.slice(cancelStart, cancelEnd)
+
+    expect(restoreSource).toContain('oneShotAction.fadeOut(0.12)')
+    expect(restoreSource).not.toContain('setTimeout(')
+    expect(cancelSource).toContain('catTapState.action.fadeOut(0.12)')
+    expect(cancelSource).not.toContain('setTimeout(')
+  })
+
+  it('restores CAT idle after CAT_MEOW finishes without creating a CAT return', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const meowStart = source.indexOf('function playCatMeow')
+    const meowEnd = source.indexOf('\n    // Cancel CAT_MEOW', meowStart)
+    const meowSource = source.slice(meowStart, meowEnd)
+    const meowFinished = meowSource.indexOf("sendARDebug('CAT_MEOW_FINISHED'")
+    const idleRestore = meowSource.indexOf("restoreCatIdleAfterOneShot(catInst, action, 'CAT_MEOW'")
+
+    expect(meowFinished).toBeGreaterThanOrEqual(0)
+    expect(idleRestore).toBeGreaterThan(meowFinished)
+    expect(meowSource).not.toContain('CAT_RETURN_START')
+  })
 })

@@ -404,6 +404,43 @@
       return true;
     }
 
+    function getCatIdleClip(instance) {
+      return instance?.animations?.find(
+        clip => clip.name === (instance.config?.default_animation || 'CAT_IDLE')
+      ) || instance?.animations?.find(clip => clip.name === 'CAT_IDLE');
+    }
+
+    // One-shot actions are faded out immediately after completion. There is no
+    // delayed stop/reset, so an older run cannot mutate a newer AnimationAction.
+    function restoreCatIdleAfterOneShot(instance, oneShotAction, source, oneShotClipName = null) {
+      if (!instance?.mixer) return;
+
+      const idleClip = getCatIdleClip(instance);
+      if (!idleClip) {
+        sendARDebug('CAT_IDLE_RESTORE_FAILED', {
+          source,
+          reason: 'idle_clip_missing',
+        });
+        return;
+      }
+
+      if (oneShotAction) {
+        oneShotAction.fadeOut(0.12);
+      }
+
+      const idleAction = instance.mixer.clipAction(idleClip);
+      idleAction.reset();
+      idleAction.enabled = true;
+      idleAction.fadeIn(0.12);
+      idleAction.play();
+
+      sendARDebug('CAT_IDLE_RESTORED', {
+        source,
+        idleClip: idleClip.name,
+        oneShotClip: oneShotClipName,
+      });
+    }
+
     // Preload meow audio when CAT becomes ready.
     function preloadCatMeowAudio() {
       if (!CAT_AUDIO_CONFIG.meowUrl || catMeowAudioLoaded) return;
@@ -430,9 +467,7 @@
         return;
       }
 
-      const idleClip =
-        catInst.animations?.find(c => c.name === (catInst.config?.default_animation || 'CAT_IDLE')) ||
-        catInst.animations?.find(c => c.name === 'CAT_IDLE');
+      const idleClip = getCatIdleClip(catInst);
 
       catTapState.runId++;
       const runId = catTapState.runId;
@@ -489,13 +524,7 @@
         catTapState.playing = false;
         catTapState.action = null;
         sendARDebug('CAT_MEOW_FINISHED', { runId });
-        // Return to idle
-        if (idleClip) {
-          const idleAction = catInst.mixer.clipAction(idleClip);
-          idleAction.reset();
-          idleAction.fadeIn(0.12);
-          idleAction.play();
-        }
+        restoreCatIdleAfterOneShot(catInst, action, 'CAT_MEOW', meowClip.name);
       };
       catInst.mixer.addEventListener('finished', onFinished);
     }
@@ -505,6 +534,7 @@
       if (!catTapState.playing || !catTapState.action) return;
       const runId = catTapState.runId;
       catTapState.runId++; // invalidate old callbacks
+      catTapState.action.fadeOut(0.12);
       catTapState.playing = false;
       catTapState.action = null;
       sendARDebug('CAT_MEOW_CANCELLED_FOR_COMBO', { cancelledRunId: runId });
@@ -1476,8 +1506,7 @@
         return;
       }
       const mixer = instance.mixer;
-      const idleName = instance.config?.default_animation || null;
-      const idleClip = idleName && instance.animations.find(c => c.name === idleName);
+      const idleClip = getCatIdleClip(instance);
       if (idleClip) {
         mixer.clipAction(idleClip).fadeOut(0.15);
       }
@@ -1506,10 +1535,18 @@
           });
           return;
         }
-        if (idleClip) {
-          mixer.clipAction(idleClip).reset().fadeIn(0.15).play();
-        }
+        const idleAction = idleClip ? mixer.clipAction(idleClip) : null;
+        sendARDebug('CAT_ACTION_STATE_AFTER_EAT', {
+          eatRunning: action.isRunning(),
+          eatWeight: action.getEffectiveWeight(),
+          eatTime: action.time,
+          eatClampWhenFinished: action.clampWhenFinished,
+          idleRunning: idleAction ? idleAction.isRunning() : false,
+          idleWeight: idleAction ? idleAction.getEffectiveWeight() : 0,
+          idleTime: idleAction ? idleAction.time : null,
+        });
         sendARDebug('COMBO_ANIMATION_FINISHED', { targetName: instance.config.qr_id, runId });
+        restoreCatIdleAfterOneShot(instance, action, 'CAT_EAT', clip.name);
         interactionState.comboPlaying = false;
         interactionState.comboConsumed = true;
         setInteractionPhase(InteractionPhase.COMBO_CONSUMED);
