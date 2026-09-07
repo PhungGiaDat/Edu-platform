@@ -1,7 +1,7 @@
 # AR Interaction Stabilization Design
 
-**Date:** 2026-09-08  
-**Runtime:** `frontend/public/ar-xr.html`  
+**Date:** 2026-09-08
+**Runtime:** `frontend/public/ar-xr.html`
 **Scope:** isolated `/learn-ar-xr` 8th Wall CAT/FISH experience only
 
 ## Goal
