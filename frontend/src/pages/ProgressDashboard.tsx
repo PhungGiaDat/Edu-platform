@@ -75,39 +75,46 @@ export const ProgressDashboard: React.FC = () => {
             >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                     <div>
-                        <h1 className="text-2xl font-black text-white">Progress Report</h1>
-                        <p className="text-white/80 text-sm">Track learning journey</p>
+                        <h1 className="text-2xl font-black" style={{ color: colors.deepSlate }}>Progress Report</h1>
+                        <p className="text-sm" style={{ color: colors.mediumGray }}>Track learning journey</p>
                     </div>
                     <button
                         onClick={() => refresh()}
-                        className="self-start sm:self-auto p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
-                        style={{ minWidth: 44, minHeight: 44 }}
+                        className="self-start sm:self-auto p-2 rounded-full transition-colors"
+                        style={{ minWidth: 44, minHeight: 44, background: 'rgba(255,255,255,0.75)', color: colors.deepSlate, boxShadow: '0 4px 0 rgba(26,39,68,.10)' }}
+                        aria-label="Refresh progress"
                     >
                         <span className="text-xl">🔄</span>
                     </button>
                 </div>
-                
+
                 {/* View Toggle */}
                 <div className="flex flex-col sm:flex-row gap-2">
                     <button
                         onClick={() => setViewMode('overview')}
                         className={`flex-1 py-2 px-4 rounded-xl font-bold text-sm transition-all ${
-                            viewMode === 'overview'
-                                ? 'bg-white text-sky-700'
-                                : 'bg-white/20 text-white'
+                            viewMode === 'overview' ? 'bg-white' : ''
                         }`}
-                        style={{ minHeight: 44 }}
+                        style={{
+                            minHeight: 44,
+                            ...(viewMode === 'overview'
+                                ? { color: colors.deepSlate, boxShadow: '0 4px 0 rgba(26,39,68,.10), inset 0 2px 0 rgba(255,255,255,.85)' }
+                                : { background: 'rgba(255,255,255,0.4)', color: colors.mediumGray }),
+                        }}
                     >
                         Overview
                     </button>
                     <button
                         onClick={() => setViewMode('detailed')}
                         className={`flex-1 py-2 px-4 rounded-xl font-bold text-sm transition-all ${
-                            viewMode === 'detailed'
-                                ? 'bg-white text-sky-700'
-                                : 'bg-white/20 text-white'
+                            viewMode === 'detailed' ? 'bg-white' : ''
                         }`}
-                        style={{ minHeight: 44 }}
+                        style={{
+                            minHeight: 44,
+                            ...(viewMode === 'detailed'
+                                ? { color: colors.deepSlate, boxShadow: '0 4px 0 rgba(26,39,68,.10), inset 0 2px 0 rgba(255,255,255,.85)' }
+                                : { background: 'rgba(255,255,255,0.4)', color: colors.mediumGray }),
+                        }}
                     >
                         Detailed
                     </button>
