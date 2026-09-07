@@ -172,13 +172,13 @@ const Navbar: React.FC = () => {
 
               {/* AR Mode - Prominent Button */}
               <Link
-                to="/learn-ar"
+                to="/learn-ar-xr"
                 className={`
                   flex items-center gap-2 px-5 py-2.5 mx-2 rounded-full
                   bg-gradient-to-r from-cyan-400 to-sky-500
                   text-white font-bold shadow-lg shadow-cyan-500/30
                   hover:shadow-xl hover:scale-105 transition-all duration-200 min-h-[44px]
-                  ${isActive('/learn-ar') ? 'ring-2 ring-cyan-300 ring-offset-2' : ''}
+                  ${isActive('/learn-ar-xr') ? 'ring-2 ring-cyan-300 ring-offset-2' : ''}
                 `}
                 title="AR Mode"
               >
@@ -295,10 +295,10 @@ const Navbar: React.FC = () => {
                 onClick={closeMobileMenu}
               />
               <MobileNavItem
-                to="/learn-ar"
+                to="/learn-ar-xr"
                 icon="📷"
                 label="AR Mode"
-                isActive={isActive('/learn-ar')}
+                isActive={isActive('/learn-ar-xr')}
                 onClick={closeMobileMenu}
                 highlight
               />

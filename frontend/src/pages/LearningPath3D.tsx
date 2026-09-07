@@ -136,7 +136,7 @@ export const LearningPath3D: React.FC = () => {
     // Navigate based on lesson type
     switch (lesson.type) {
       case 'ar_session':
-        navigate('/learn-ar');
+        navigate('/learn-ar-xr');
         break;
       case 'flashcard':
         navigate('/flashcards');

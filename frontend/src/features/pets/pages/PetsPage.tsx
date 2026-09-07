@@ -669,7 +669,7 @@ export default function PetsPage() {
                         </button>
                         <button
                             className="clay-cta-secondary"
-                            onClick={() => window.location.href = '/learn-ar'}
+                            onClick={() => window.location.href = '/learn-ar-xr'}
                         >
                             Try AR Mode
                         </button>

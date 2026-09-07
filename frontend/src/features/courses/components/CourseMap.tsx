@@ -109,7 +109,7 @@ export const CourseMap: React.FC<CourseMapProps> = ({
         if (!selectedLesson) return;
 
         if (selectedLesson.type === 'ar_session') {
-            navigate('/learn-ar');
+            navigate('/learn-ar-xr');
         } else if (selectedLesson.type === 'flashcard') {
             navigate('/flashcards');
         } else {

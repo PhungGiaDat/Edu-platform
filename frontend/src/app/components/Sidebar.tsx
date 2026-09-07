@@ -254,7 +254,7 @@ const fullNavItems: Array<{
     { path: '/courses', iconKey: 'learn', labelKey: 'navLearn', shortLabelKey: 'navLearn' },
     { path: '/learning-path-3d', iconKey: 'path3d', labelKey: 'navLearningPath', shortLabelKey: 'navPathShort' },
     { path: '/games', iconKey: 'games', labelKey: 'navGames', shortLabelKey: 'navGamesShort' },
-    { path: '/learn-ar', iconKey: 'ar', labelKey: 'navArPractice', shortLabelKey: 'navArShort' },
+    { path: '/learn-ar-xr', iconKey: 'ar', labelKey: 'navArPractice', shortLabelKey: 'navArShort' },
     { path: '/leaderboard', iconKey: 'leaderboard', labelKey: 'navLeaderboard', shortLabelKey: 'navLeaderboardShort' },
     { path: '/flashcards', iconKey: 'flashcards', labelKey: 'navFlashcards', shortLabelKey: 'navFlashcardsShort' },
     { path: '/dictionary', iconKey: 'dictionary', labelKey: 'navDictionary', shortLabelKey: 'navDictionaryShort', showInMobileBar: false },
@@ -576,7 +576,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
     const previousPathRef = useRef(location.pathname);
 
     const navItems = isGuest
-        ? fullNavItems.filter((item) => item.path === '/courses' || item.path === '/learn-ar')
+        ? fullNavItems.filter((item) => item.path === '/courses' || item.path === '/learn-ar-xr')
         : fullNavItems;
 
     useEffect(() => {
@@ -761,7 +761,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                         <Tracker stats={stats} />
 
                         <section className="pb-4 text-center">
-                            <button onClick={() => goTo(isGuest ? '/register' : '/learn-ar')} className="clay-cta-primary min-h-11 w-full">{isGuest ? t('startFreeTrial') : t('jumpIntoAr')}</button>
+                            <button onClick={() => goTo(isGuest ? '/register' : '/learn-ar-xr')} className="clay-cta-primary min-h-11 w-full">{isGuest ? t('startFreeTrial') : t('jumpIntoAr')}</button>
                             <button onClick={() => goTo('/courses')} className="clay-cta-secondary mt-3 min-h-11 w-full">{t('browseCourses')}</button>
                         </section>
                     </div>
@@ -866,7 +866,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                             <CourseCatalog courses={courses} progressByCourse={progressByCourse} onNavigate={goTo} />
                             <Tracker stats={stats} />
                             <div className="grid grid-cols-1 gap-3 pb-2 sm:grid-cols-2">
-                                <button onClick={() => goTo(isGuest ? '/register' : '/learn-ar')} className="clay-cta-primary min-h-12 w-full flex items-center justify-center gap-2">
+                                <button onClick={() => goTo(isGuest ? '/register' : '/learn-ar-xr')} className="clay-cta-primary min-h-12 w-full flex items-center justify-center gap-2">
                                     <SparkleIcon className="h-5 w-5" />
                                     {isGuest ? t('startFreeTrial') : t('jumpIntoAr')}
                                     <ArrowRightIcon className="h-5 w-5" />

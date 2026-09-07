@@ -427,7 +427,7 @@ export const LandingPage: React.FC = () => {
                 {t('landingStartFree')}
                 <ArrowRightIcon />
               </Link>
-              <Link to="/learn-ar" className="clay-btn" style={{
+              <Link to="/learn-ar-xr" className="clay-btn" style={{
                 background: '#fff',
                 padding: '16px 28px',
                 fontWeight: 900, fontSize: 17,
@@ -906,7 +906,7 @@ export const LandingPage: React.FC = () => {
               {t('landingCreateAccount')}
               <ArrowRightIcon />
             </Link>
-            <Link to="/learn-ar" className="clay-btn" style={{
+            <Link to="/learn-ar-xr" className="clay-btn" style={{
               background: 'transparent', padding: '18px 32px',
               fontWeight: 900, fontSize: 18, color: '#fff',
               textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8,
