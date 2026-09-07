@@ -123,7 +123,7 @@
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    import { advanceCatReturnTween, smoothstep } from './static/ar-assets/js/ar-interaction-lifecycle.js';
+    import { advanceCatReturnTween, canPlayCatMeow, classifyCatTap, smoothstep } from './static/ar-assets/js/ar-interaction-lifecycle.js';
     window.THREE = THREE;
 
     // ========== RUNTIME DIAGNOSTICS ==========
@@ -315,6 +315,7 @@
         modelState: 'idle', // idle | loading | loaded | error
         modelLoadStart: 0,
         pivotNormalized: false, // normalize pivot only once per model
+        catInteractionProxy: null,
         // Interaction fields
         foundAt: null,
         stable: false,
@@ -378,6 +379,7 @@
     // Three.js Raycaster (reusable, not allocated per tap)
     const raycaster = new THREE.Raycaster();
     const pointerNdc = new THREE.Vector2();
+    const CAT_HIT_PROXY_SCALE = 1.30;
 
     // Check if CAT_MEOW is allowed right now.
     // Blocks: combo phases, CAT_EAT active, no model, invisible, no clip.
@@ -392,16 +394,13 @@
       // Must have CAT_MEOW clip
       const clip = catInst.animations?.find(c => c.name === 'CAT_MEOW');
       if (!clip) return false;
-      // Must not already be playing
-      if (catTapState.playing) return false;
-      // Block during combo-critical phases
-      const phase = interactionState.phase;
-      if (
-        phase === InteractionPhase.COMBO_ARMED ||
-        phase === InteractionPhase.COMBO_TURNING ||
-        phase === InteractionPhase.COMBO_PLAYING
-      ) return false;
-      return true;
+      return canPlayCatMeow({
+        phase: interactionState.phase,
+        catReturn: interactionState.catReturn,
+        catReady: catInst.modelState === 'loaded',
+        catTracked: catInst.tracked,
+        catMeowing: catTapState.playing,
+      });
     }
 
     function getCatIdleClip(instance) {
@@ -438,6 +437,48 @@
         source,
         idleClip: idleClip.name,
         oneShotClip: oneShotClipName,
+      });
+    }
+
+    function cacheCatInteractionProxy(instance) {
+      if (
+        !instance?.model ||
+        instance.config?.qr_id !== primaryModelTargetName ||
+        instance.catInteractionProxy
+      ) return;
+
+      const model = instance.model;
+      model.updateWorldMatrix(true, true);
+      const box = new THREE.Box3().setFromObject(model);
+      if (box.isEmpty()) {
+        sendARDebug('CAT_INTERACTION_PROXY_FAILED', { reason: 'empty_bounds' });
+        return;
+      }
+
+      const worldSphere = box.getBoundingSphere(new THREE.Sphere());
+      const worldScale = model.getWorldScale(new THREE.Vector3());
+      const largestWorldScale = Math.max(worldScale.x, worldScale.y, worldScale.z);
+      if (!Number.isFinite(largestWorldScale) || largestWorldScale <= 0) {
+        sendARDebug('CAT_INTERACTION_PROXY_FAILED', { reason: 'invalid_scale' });
+        return;
+      }
+
+      const localCenter = model.worldToLocal(worldSphere.center.clone());
+      const localRadius = (worldSphere.radius / largestWorldScale) * CAT_HIT_PROXY_SCALE;
+      const proxy = new THREE.Mesh(
+        new THREE.SphereGeometry(localRadius, 16, 12),
+        new THREE.MeshBasicMaterial(),
+      );
+      proxy.name = 'cat-interaction-proxy';
+      proxy.visible = false;
+      proxy.userData.isCatInteractionProxy = true;
+      proxy.position.copy(localCenter);
+      model.add(proxy);
+      instance.catInteractionProxy = proxy;
+
+      sendARDebug('CAT_INTERACTION_PROXY_READY', {
+        scale: CAT_HIT_PROXY_SCALE,
+        radius: Number(localRadius.toFixed(4)),
       });
     }
 
@@ -557,20 +598,33 @@
       pointerNdc.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(pointerNdc, camera);
 
-      // Only check CAT model
-      const hits = raycaster.intersectObject(catInst.model, true);
-      if (hits.length === 0) {
+      // Mesh stays authoritative. The cached invisible proxy only handles
+      // near-misses around the CAT body and is never raycast as part of a scene.
+      const meshHits = raycaster.intersectObject(catInst.model, true)
+        .filter(hit => !hit.object.userData.isCatInteractionProxy);
+      const meshHit = meshHits[0] || null;
+      const proxyHits = !meshHit && catInst.catInteractionProxy
+        ? raycaster.intersectObject(catInst.catInteractionProxy, false)
+        : [];
+      const proxyHit = proxyHits[0] || null;
+      const hitSource = classifyCatTap({
+        meshHit: !!meshHit,
+        proxyHit: !!proxyHit,
+      });
+      if (hitSource === 'miss') {
         sendARDebug('CAT_TAP_MISS', { x: event.clientX, y: event.clientY });
         return;
       }
 
-      const hitDistance = hits[0].distance;
-      sendARDebug('CAT_TAP', { targetName: primaryModelTargetName, hitDistance });
+      const hitDistance = (meshHit || proxyHit).distance;
+      sendARDebug('CAT_TAP', { targetName: primaryModelTargetName, hitDistance, hitSource });
 
       if (!canTriggerCatMeow()) {
         const phase = interactionState.phase;
         const reason = catTapState.playing
           ? 'already_playing'
+          : interactionState.catReturn
+            ? 'returning'
           : phase === InteractionPhase.COMBO_ARMED || phase === InteractionPhase.COMBO_TURNING || phase === InteractionPhase.COMBO_PLAYING
             ? 'combo_busy'
             : 'not_ready';
@@ -887,6 +941,8 @@
         model.parent?.remove(model);
         (instance.offsetGroup || instance.anchor).add(model);
       }
+
+      cacheCatInteractionProxy(instance);
 
       sendARDebug('MODEL_REPARENTED', {
         targetName: instance.config.qr_id,
