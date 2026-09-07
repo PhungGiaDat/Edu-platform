@@ -1,13 +1,28 @@
 import { describe, expect, it } from 'vitest'
-import {
-  advanceCatReturnTween,
-  canPlayCatMeow,
-  classifyCatTap,
-  shouldRevealAR,
-  smoothstep,
-} from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+// @ts-expect-error Public browser helper is intentionally plain JavaScript.
+import { advanceCatReturnTween, canPlayCatMeow, classifyCatTap, shouldRevealAR, smoothstep } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 describe('AR interaction lifecycle contracts', () => {
+  it('keeps the active CAT return ticking ahead of combo phase exits', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const activeReturnMarker = 'const activeCatReturn = interactionState.catReturn;'
+    const comboTurningEarlyReturn = 'if (phase === InteractionPhase.COMBO_TURNING) {'
+    const comboPlayingEarlyReturn = 'if (phase === InteractionPhase.COMBO_PLAYING) {'
+
+    expect(source.indexOf(activeReturnMarker)).toBeGreaterThanOrEqual(0)
+    expect(source.indexOf(activeReturnMarker)).toBeLessThan(source.indexOf(comboTurningEarlyReturn))
+    expect(source.indexOf(activeReturnMarker)).toBeLessThan(source.indexOf(comboPlayingEarlyReturn))
+    expect(source).toContain("from './static/ar-assets/js/ar-interaction-lifecycle.js'")
+    expect(source).not.toContain('function applyCatReturn(')
+    expect(source).not.toContain('function smoothstep(')
+    expect(source).toContain('comboLatch?.catOriginalYaw ?? 0')
+    expect(source).toContain("sendARDebug('CAT_RETURN_CANCELLED_STALE'")
+    expect(source).toContain('interactionState.catReturn = null;')
+    expect(source).toContain('CAT_RETURN_COMPLETE')
+  })
+
   it('reveals AR only after both camera and CAT are ready', () => {
     expect(shouldRevealAR({ cameraReady: false, catReady: false })).toBe(false)
     expect(shouldRevealAR({ cameraReady: true, catReady: false })).toBe(false)

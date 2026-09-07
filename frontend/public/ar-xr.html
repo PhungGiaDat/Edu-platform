@@ -123,6 +123,7 @@
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { advanceCatReturnTween, smoothstep } from './static/ar-assets/js/ar-interaction-lifecycle.js';
     window.THREE = THREE;
 
     // ========== RUNTIME DIAGNOSTICS ==========
@@ -1422,12 +1423,6 @@
       return Math.atan2(dx, dz);
     }
 
-    // Smooth-step easing: smoothstep(t) = t*t*(3-2*t)
-    function smoothstep(t) {
-      const c = Math.max(0, Math.min(1, t));
-      return c * c * (3 - 2 * c);
-    }
-
     // Tween the CAT body yaw each frame during COMBO_TURNING.
     // Called inline from evaluateInteraction each frame.
     function updateCatTurn(now) {
@@ -1462,31 +1457,6 @@
         // finish callback sees phase===COMBO_TURNING and treats the finish as stale.
         setInteractionPhase(InteractionPhase.COMBO_PLAYING);
         triggerComboAnimation(instance, turn.runId);
-      }
-    }
-
-    // Tween CAT body yaw back to original after combo consumed.
-    function applyCatReturn(now) {
-      const ret = interactionState.catReturn;
-      if (!ret) return;
-
-      if (ret.runId !== interactionState.comboRunId) {
-        interactionState.catReturn = null;
-        return;
-      }
-
-      const elapsed = now - ret.startedAt;
-      const t = smoothstep(Math.min(elapsed / ret.durationMs, 1));
-      const currentYaw = ret.fromYaw + (ret.toYaw - ret.fromYaw) * t;
-
-      const instance = targetInstances.get(primaryModelTargetName);
-      const root = instance ? getInteractionRoot(instance) : null;
-      if (root) root.rotation.y = currentYaw;
-
-      if (elapsed >= ret.durationMs) {
-        if (root) root.rotation.y = ret.toYaw;
-        interactionState.catReturn = null;
-        sendARDebug('CAT_RETURN_COMPLETE', { runId: ret.runId });
       }
     }
 
@@ -1548,7 +1518,7 @@
         const instance2 = targetInstances.get(primaryModelTargetName);
         const root2 = instance2 ? getInteractionRoot(instance2) : null;
         const fromYaw = root2 ? root2.rotation.y : 0;
-        const toYaw = 0;
+        const toYaw = interactionState.comboLatch?.catOriginalYaw ?? 0;
         if (Math.abs(fromYaw - toYaw) > 0.01) {
           sendARDebug('CAT_RETURN_START', { runId });
           interactionState.catReturn = {
@@ -1642,6 +1612,31 @@
         }
       }
 
+      const activeCatReturn = interactionState.catReturn;
+      if (activeCatReturn) {
+        if (activeCatReturn.runId !== interactionState.comboRunId) {
+          interactionState.catReturn = null;
+          sendARDebug('CAT_RETURN_CANCELLED_STALE', {
+            runId: activeCatReturn.runId,
+            currentRunId: interactionState.comboRunId,
+          });
+        } else {
+          const returnTick = advanceCatReturnTween(now, activeCatReturn);
+          const instance = targetInstances.get(primaryModelTargetName);
+          const root = instance ? getInteractionRoot(instance) : null;
+          if (root) root.rotation.y = returnTick.yaw;
+
+          if (returnTick.complete) {
+            if (root) root.rotation.y = activeCatReturn.toYaw;
+            interactionState.catReturn = null;
+            sendARDebug('CAT_RETURN_COMPLETE', {
+              runId: activeCatReturn.runId,
+              finalYawDeg: (activeCatReturn.toYaw * 180 / Math.PI).toFixed(1),
+            });
+          }
+        }
+      }
+
       const phase = interactionState.phase;
 
       // ---- COMBO_TURNING: tween cat body yaw each frame, then start CAT_EAT ----
@@ -1652,9 +1647,8 @@
         return;
       }
 
-      // ---- COMBO_PLAYING: CAT_EAT animating; tween return if active ----
+      // ---- COMBO_PLAYING: CAT_EAT animating ----
       if (phase === InteractionPhase.COMBO_PLAYING) {
-        applyCatReturn(now);
         const raw = computeAnchorDistance();
         updateFilteredDistance(raw);
         return;
