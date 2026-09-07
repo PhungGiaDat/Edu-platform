@@ -30,6 +30,36 @@ export function PronunciationCourseDetailPage() {
   const [wordProgress, setWordProgress] = useState<Record<string, number>>({});
   const [lastXp, setLastXp] = useState<{ xp: number; levelUp: boolean } | null>(null);
 
+  // Watch recordingState to trigger evaluation
+  useEffect(() => {
+    if (recordingState === 'processing' && selectedWord && transcription) {
+      void evaluate(selectedWord);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recordingState, transcription]);
+
+  // Log attempt and update word progress when result arrives
+  useEffect(() => {
+    if (!result || !selectedWord) return;
+    void logAttempt({
+      user_id: user?.id || 'guest',
+      topic_id: topicId || '',
+      word_id: selectedWord.word_id,
+      score: result.score,
+      stars: result.stars,
+      transcription: result.transcription,
+    });
+    setLastXp({ xp: 0, levelUp: false });
+    setWordProgress((prev) => ({
+      ...prev,
+      [selectedWord.word_id]: Math.max(
+        prev[selectedWord.word_id] || 0,
+        result.stars
+      ),
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result]);
+
   const handleWordSelect = (wordId: string) => {
     const word = course?.words.find((w) => w.word_id === wordId);
     if (word) {
@@ -37,31 +67,6 @@ export function PronunciationCourseDetailPage() {
       reset();
     }
   };
-
-  useEffect(() => {
-    if (recordingState === 'processing' && selectedWord && transcription) {
-      evaluate(selectedWord).then(async (evalResult) => {
-        if (evalResult) {
-          const attemptResult = await logAttempt({
-            user_id: user?.id || 'guest',
-            topic_id: topicId || '',
-            word_id: selectedWord.word_id,
-            score: evalResult.score,
-            stars: evalResult.stars,
-            transcription: evalResult.transcription,
-          });
-          setLastXp({ xp: attemptResult.xpAwarded || 0, levelUp: !!attemptResult.levelUp });
-          setWordProgress((prev) => ({
-            ...prev,
-            [selectedWord.word_id]: Math.max(
-              prev[selectedWord.word_id] || 0,
-              evalResult.stars
-            ),
-          }));
-        }
-      });
-    }
-  }, [recordingState, transcription, selectedWord, topicId, evaluate, logAttempt]);
 
   if (loading || !course) {
     return (

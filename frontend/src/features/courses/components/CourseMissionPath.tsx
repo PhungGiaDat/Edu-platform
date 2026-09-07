@@ -114,6 +114,15 @@ export function CourseMissionPath({ lessons, progress, locale, onLessonOpen }: C
                   {missionContent}
                 </article>
               )}
+              {status === 'current' && (
+                <span className="course-mission-path__active-lexi">
+                  <CodexPetSprite
+                    animationState="running"
+                    label={locale === 'vi' ? 'Lexi chờ ở nhiệm vụ hiện tại' : 'Lexi waits at the current mission'}
+                    size={56}
+                  />
+                </span>
+              )}
             </li>
           );
         })}

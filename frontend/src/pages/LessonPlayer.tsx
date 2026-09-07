@@ -29,6 +29,19 @@ import type {
   VocabularyItem,
 } from '@/types/course';
 
+// Step components (extracted)
+import {
+  StepIntro,
+  StepWatch,
+  StepStory,
+  StepGame,
+  StepWords,
+  StepRead,
+  StepSay,
+  StepQuiz,
+  StepFinish,
+} from './components/steps';
+
 const getLearnerId = (userId?: string | null) => userId || 'guest-learner';
 
 const shellTone = (stepId?: string) => {

@@ -82,8 +82,3 @@ export function useLogAttempt() {
 
   return { logAttempt, loading, error };
 }
-
-export function usePronunciationProgress() {
-  // TODO: wire to real API
-  return { progress: null, loading: false, error: null };
-}

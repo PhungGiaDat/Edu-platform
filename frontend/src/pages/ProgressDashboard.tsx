@@ -9,6 +9,7 @@ import { WeeklyReport } from '@/features/gamification/components/WeeklyReport';
 import { StreakBadge } from '@/features/gamification/components/StreakBadge';
 import { DailyGoal } from '@/features/gamification/components/DailyGoal';
 import { useAuth } from '../contexts/AuthContext';
+import { colors, withOpacity } from '../design-tokens/claymorphic';
 
 type ViewMode = 'overview' | 'detailed';
 
@@ -65,11 +66,11 @@ export const ProgressDashboard: React.FC = () => {
 
     return (
         <div className="min-h-screen clay-bg-playful pb-24 md:pb-8 md:pl-24 lg:pl-72 transition-all duration-300">
-            {/* Header */}
-            <div 
+            {/* Header — claymorphic warm gradient (brand-aligned) */}
+            <div
                 className="px-4 pt-6 pb-4"
                 style={{
-                    background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
+                    background: `linear-gradient(135deg, ${withOpacity(colors.sunshineYellow, 0.45)}, ${withOpacity(colors.coralPink, 0.4)})`
                 }}
             >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">

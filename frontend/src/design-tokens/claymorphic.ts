@@ -39,6 +39,15 @@ export const colors = {
   lightGray: '#94A3B8',
   darkBg: '#111827',
   backgroundBase: '#FFF8EE',
+
+  // Extended palette (for game pages)
+  skyLight: '#C5E4FF',
+  skyDark: '#3A8FD1',
+  mintLight: '#DFFFD0',
+  coralLight: '#FFD5D5',
+  coralDark: '#D97070',
+  sunshineDark: '#E5B800',
+  grayLight: '#CBD5E1',
 } as const;
 
 // ─── Shadows ──────────────────────────────────────────────────
@@ -54,6 +63,7 @@ export const shadows = {
   clayGreen: `0 6px 0 #7DC760, inset 0 1px 0 rgba(255,255,255,0.4)`,
   clayPink: `0 6px 0 #D97070, inset 0 1px 0 rgba(255,255,255,0.4)`,
   clayWhite: '0 6px 0 #E2E8F0, inset 0 1px 0 rgba(255,255,255,0.4)',
+  clayCard: '0 6px 0 rgba(0,0,0,0.08), 0 4px 14px rgba(0,0,0,0.07)',
 } as const;
 
 // ─── Border Radius ────────────────────────────────────────────

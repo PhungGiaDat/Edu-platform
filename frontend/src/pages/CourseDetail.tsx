@@ -3,6 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { AssetTile } from '@/features/courses/components/CourseLearningBlocks';
 import { CourseMissionPath } from '@/features/courses/components/CourseMissionPath';
+import { CourseExploreRail } from '@/features/courses/components/CourseExploreRail';
+import { CourseTrailerCard } from '@/features/courses/components/CourseTrailerCard';
+import { CourseWarmupChallenge } from '@/features/courses/components/CourseWarmupChallenge';
+import { selectCourseWarmupQuestions } from '@/features/courses/courseWarmup';
+import { buildCourseExploreCards } from '@/features/courses/courseExploreRail';
+import { CodexPetSprite } from '@/features/pets/components/CodexPetSprite';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
 import {
@@ -57,6 +63,7 @@ export const CourseDetail: React.FC = () => {
       studentVoices: 'Student voices',
       sections: 'Sections',
       rewardXp: 'Reward XP',
+      lexiGuide: 'Lexi guides your next lesson',
     },
     vi: {
       loadingCourse: 'Đang tải khóa học...',
@@ -77,6 +84,7 @@ export const CourseDetail: React.FC = () => {
       studentVoices: 'Cảm nhận học viên',
       sections: 'Phần học',
       rewardXp: 'XP thưởng',
+      lexiGuide: 'Lexi dẫn con tới bài học tiếp theo',
     },
   }[locale];
 
@@ -127,6 +135,12 @@ export const CourseDetail: React.FC = () => {
     };
   }, [course, progress]);
 
+  const warmupQuestions = useMemo(
+    () => course ? selectCourseWarmupQuestions(course.lessons, progress?.current_lesson_id) : [],
+    [course, progress?.current_lesson_id],
+  );
+  const exploreCards = useMemo(() => course ? buildCourseExploreCards(course.lessons) : [], [course]);
+
   const handleLessonOpen = (lessonId: string) => {
     if (!course) return;
     navigate(`/courses/${course.course_id}/lessons/${lessonId}`);
@@ -169,8 +183,13 @@ export const CourseDetail: React.FC = () => {
 
         <header className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-stretch">
           <div className="rounded-[36px] border-4 border-white bg-white p-5 shadow-[0_12px_0_rgba(91,141,239,0.14)] sm:p-7">
-            <div className="mb-4 inline-flex rounded-full bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-600">
-              {copy.age} {course.age_range} - {courseTheme(course, locale)}
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <div className="inline-flex rounded-full bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-600">
+                {copy.age} {course.age_range} - {courseTheme(course, locale)}
+              </div>
+              <div className="rounded-3xl bg-[#EEF9E7] p-2 shadow-[0_5px_0_rgba(34,197,94,0.14)]">
+                <CodexPetSprite animationState="waving" label={copy.lexiGuide} size={72} />
+              </div>
             </div>
             <h1 className="text-4xl font-black leading-tight text-slate-800 sm:text-5xl lg:text-6xl">{courseTitle(course, locale)}</h1>
             <p className="mt-4 max-w-3xl text-xl font-bold text-slate-600">{courseSubtitle(course, locale)}</p>
@@ -205,6 +224,20 @@ export const CourseDetail: React.FC = () => {
             </div>
           </div>
         </header>
+
+        {course.courseTrailer && (
+          <div className="mt-8">
+            <CourseTrailerCard trailer={course.courseTrailer} locale={locale} />
+          </div>
+        )}
+
+        {warmupQuestions.length > 0 && (
+          <div className="mt-8">
+            <CourseWarmupChallenge questions={warmupQuestions} locale={locale} />
+          </div>
+        )}
+
+        <CourseExploreRail cards={exploreCards} locale={locale} onLessonOpen={handleLessonOpen} />
 
         <section className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
           <div>

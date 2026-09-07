@@ -175,6 +175,15 @@ export interface EnrollmentCTA {
   buttonLabel: string;
 }
 
+export interface CourseTrailer {
+  title: string;
+  duration_seconds: number;
+  asset: AssetReference;
+  poster?: AssetReference | null;
+  captions_vi: string;
+  autoplay: boolean;
+}
+
 export interface Lesson {
   id?: string;
   lesson_id: string;
@@ -228,6 +237,7 @@ export interface Course {
   catalogPreview: CourseCatalogPreview[];
   studentTestimonials: StudentTestimonial[];
   enrollmentCta?: EnrollmentCTA | null;
+  courseTrailer?: CourseTrailer | null;
   lessons: Lesson[];
   is_published: boolean;
 }

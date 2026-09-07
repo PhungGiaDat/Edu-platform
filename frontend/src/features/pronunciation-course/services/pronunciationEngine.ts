@@ -78,7 +78,8 @@ export interface PronunciationEngineOptions {
 }
 
 export class PronunciationEngine {
-  private recognition: SpeechRecognition | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private recognition: any = null;
   private options: PronunciationEngineOptions;
   private isRecording = false;
 
@@ -88,7 +89,8 @@ export class PronunciationEngine {
   }
 
   private initRecognition() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
       this.options.onError?.('Web Speech API not supported');
       return;
@@ -99,15 +101,18 @@ export class PronunciationEngine {
     this.recognition.continuous = false;
     this.recognition.interimResults = true;
 
-    this.recognition.onresult = (event) => {
-      const result = event.results[0];
-      const transcript = result[0].transcript;
-      const isFinal = result.isFinal;
-      this.options.onTranscription?.(transcript, isFinal);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.recognition.onresult = (event: any) => {
+      const resultList = event.results;
+      if (!resultList || !resultList[0]) return;
+      const alt = resultList[0][0];
+      if (!alt) return;
+      this.options.onTranscription?.(alt.transcript, !!resultList[0].isFinal);
     };
 
-    this.recognition.onerror = (event) => {
-      this.options.onError?.(event.error);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.recognition.onerror = (event: any) => {
+      this.options.onError?.(event.error ?? 'unknown');
     };
 
     this.recognition.onend = () => {
@@ -181,13 +186,5 @@ export class PronunciationEngine {
     if (this.recognition) {
       this.recognition.abort();
     }
-  }
-}
-
-// Type augmentation for Web Speech API
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
   }
 }
