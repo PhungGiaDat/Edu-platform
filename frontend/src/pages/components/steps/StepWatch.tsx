@@ -130,7 +130,7 @@ export const StepWatch: React.FC<StepWatchProps> = ({
           {videoUrl ? (
             <LessonVideoPlayer
               src={videoUrl}
-              poster={videoPoster}
+              poster={videoPoster ?? undefined}
               onEnded={onWatchComplete}
               onTimeUpdate={() => {
                 // Track video progress if needed

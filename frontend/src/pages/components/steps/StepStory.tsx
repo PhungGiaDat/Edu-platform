@@ -103,7 +103,7 @@ export const StepStory: React.FC<StepStoryProps> = ({
 
       <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
         <AssetTile
-          asset={{ url: currentScene.imageUrl } as AssetReference}
+          asset={{ url: currentScene.imageUrl } as unknown as AssetReference}
           label={`${copy.story} ${storyIndex + 1}`}
           emoji={`0${storyIndex + 1}`}
           showAssetMeta

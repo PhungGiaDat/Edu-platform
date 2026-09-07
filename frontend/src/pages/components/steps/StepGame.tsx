@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { AssetTile } from '@/features/courses/components/CourseLearningBlocks';
-import type { AssetReference, LessonSessionStepState, SectionGame } from '@/types/course';
+import type { AssetReference, Lesson, LessonSessionStepState, SectionGame } from '@/types/course';
 import { ActionButton, StatusPill, statusTone } from './StepShared';
 import type { Locale } from './types';
 

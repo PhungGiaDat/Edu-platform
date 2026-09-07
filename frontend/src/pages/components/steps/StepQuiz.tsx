@@ -33,6 +33,7 @@ const COPY: Record<Locale, {
 };
 
 export const StepQuiz: React.FC<StepQuizProps> = ({
+  lesson,
   locale,
   answers,
   result,

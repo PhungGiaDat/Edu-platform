@@ -3,11 +3,12 @@
 
 import React from 'react';
 import { AssetTile } from '@/features/courses/components/CourseLearningBlocks';
-import type { Lesson, QuizSubmitResult } from '@/types/course';
+import type { Lesson, LessonSessionStepState, QuizSubmitResult } from '@/types/course';
 import type { Locale } from './types';
 
 export interface StepFinishProps {
   lesson: Lesson;
+  currentSessionStep?: LessonSessionStepState;
   locale: Locale;
   result?: QuizSubmitResult | null;
 }
