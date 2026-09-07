@@ -1578,16 +1578,14 @@
         const root2 = instance2 ? getInteractionRoot(instance2) : null;
         const fromYaw = root2 ? root2.rotation.y : 0;
         const toYaw = interactionState.comboLatch?.catOriginalYaw ?? 0;
-        if (Math.abs(fromYaw - toYaw) > 0.01) {
-          sendARDebug('CAT_RETURN_START', { runId });
-          interactionState.catReturn = {
-            runId,
-            fromYaw,
-            toYaw,
-            startedAt: performance.now(),
-            durationMs: COMBO_VISUAL_CONFIG.returnTurnMs,
-          };
-        }
+        interactionState.catReturn = {
+          runId,
+          fromYaw,
+          toYaw,
+          startedAt: performance.now(),
+          durationMs: COMBO_VISUAL_CONFIG.returnTurnMs,
+        };
+        sendARDebug('CAT_RETURN_START', { runId });
       };
       mixer.addEventListener('finished', onFinish);
     }

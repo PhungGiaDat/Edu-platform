@@ -78,6 +78,7 @@ describe('AR interaction lifecycle contracts', () => {
     const eatFinished = triggerSource.indexOf("sendARDebug('COMBO_ANIMATION_FINISHED'")
     const idleRestore = triggerSource.indexOf("restoreCatIdleAfterOneShot(instance, action, 'CAT_EAT'")
     const comboConsumed = triggerSource.indexOf('setInteractionPhase(InteractionPhase.COMBO_CONSUMED)')
+    const returnCreated = triggerSource.indexOf('interactionState.catReturn = {')
     const returnStart = triggerSource.indexOf("sendARDebug('CAT_RETURN_START'")
 
     expect(triggerSource).toContain("sendARDebug('CAT_ACTION_STATE_AFTER_EAT'")
@@ -85,7 +86,9 @@ describe('AR interaction lifecycle contracts', () => {
     expect(eatFinished).toBeGreaterThanOrEqual(0)
     expect(idleRestore).toBeGreaterThan(eatFinished)
     expect(comboConsumed).toBeGreaterThan(idleRestore)
-    expect(returnStart).toBeGreaterThan(comboConsumed)
+    expect(returnCreated).toBeGreaterThan(comboConsumed)
+    expect(returnStart).toBeGreaterThan(returnCreated)
+    expect(triggerSource).not.toContain('Math.abs(fromYaw - toYaw) > 0.01')
     expect(triggerSource.indexOf("sendARDebug('CAT_IDLE_RESTORED'", returnStart)).toBe(-1)
   })
 
