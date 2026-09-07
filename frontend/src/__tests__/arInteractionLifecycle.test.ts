@@ -48,26 +48,57 @@ describe('AR interaction lifecycle contracts', () => {
     expect(classifyCatTap({ meshHit: false, proxyHit: false })).toBe('miss')
   })
 
-  it('advances a CAT return deterministically through its real yaw range', () => {
-    const returnState = {
-      fromYaw: 55 * Math.PI / 180,
-      toYaw: 0.2,
-      startedAt: 1000,
-      durationMs: 400,
-      runId: 4,
+  it('completes the real CAT return lifecycle during COMBO_CONSUMED', () => {
+    const returnLifecycle: {
+      phase: string
+      comboRunId: number
+      catReturn: {
+        fromYaw: number
+        toYaw: number
+        startedAt: number
+        durationMs: number
+        runId: number
+      } | null
+      yaw: number
+      events: string[]
+    } = {
+      phase: 'COMBO_CONSUMED',
+      comboRunId: 4,
+      catReturn: {
+        fromYaw: 55 * Math.PI / 180,
+        toYaw: 0.2,
+        startedAt: 1000,
+        durationMs: 400,
+        runId: 4,
+      },
+      yaw: 55 * Math.PI / 180,
+      events: [] as string[],
     }
 
-    const halfway = advanceCatReturnTween(1200, returnState)
-    expect(halfway.complete).toBe(false)
-    expect(halfway.yaw).toBeLessThan(returnState.fromYaw)
-    expect(halfway.yaw).toBeGreaterThan(returnState.toYaw)
+    const tickReturn = (now: number) => {
+      const activeReturn = returnLifecycle.catReturn
+      if (!activeReturn || activeReturn.runId !== returnLifecycle.comboRunId) return
+
+      const tick = advanceCatReturnTween(now, activeReturn)
+      returnLifecycle.yaw = tick.yaw
+      if (tick.complete) {
+        returnLifecycle.catReturn = null
+        returnLifecycle.events.push('CAT_RETURN_COMPLETE')
+      }
+    }
+
+    expect(returnLifecycle.phase).toBe('COMBO_CONSUMED')
+    tickReturn(1200)
+    expect(returnLifecycle.yaw).toBeLessThan(55 * Math.PI / 180)
+    expect(returnLifecycle.yaw).toBeGreaterThan(0.2)
+    expect(returnLifecycle.catReturn).not.toBeNull()
     expect(smoothstep(0)).toBe(0)
     expect(smoothstep(1)).toBe(1)
 
-    expect(advanceCatReturnTween(1401, returnState)).toEqual({
-      yaw: returnState.toYaw,
-      complete: true,
-    })
+    tickReturn(1401)
+    expect(returnLifecycle.yaw).toBe(0.2)
+    expect(returnLifecycle.catReturn).toBeNull()
+    expect(returnLifecycle.events).toEqual(['CAT_RETURN_COMPLETE'])
   })
 
   it('restores CAT idle before consuming the combo and starts return afterward', () => {
