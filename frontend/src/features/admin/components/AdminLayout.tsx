@@ -46,10 +46,12 @@ const getInitials = (name?: string, username?: string, email?: string) => {
 const AdminBrand: React.FC = () => (
   <div className="admin-brand">
     <span className="admin-brand-mark" aria-hidden="true">
-      <BookOpenIcon className="h-6 w-6" />
+      <BookOpenIcon className="h-5 w-5" />
     </span>
     <div>
-      <p className="m-0 text-xl font-extrabold leading-none">EduAdmin</p>
+      <p className="m-0 text-xl font-black leading-none tracking-tight" style={{ fontFamily: "'Nunito', sans-serif" }}>
+        Edu<span style={{ color: 'var(--admin-accent)' }}>Admin</span>
+      </p>
       <p className="mt-1 mb-0 text-xs font-bold text-[var(--admin-text-muted)]">EduAR Platform</p>
     </div>
   </div>
@@ -79,8 +81,14 @@ const AdminNavigation: React.FC<{
                   onNavigate?.();
                 }}
               >
-                <item.icon className="h-5 w-5" />
-                <span>{t(`admin.nav.${item.label}`)}</span>
+                <span
+                  className="admin-nav-icon"
+                  aria-hidden="true"
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: 8, background: 'var(--admin-accent-soft)', color: 'var(--admin-accent)', flexShrink: 0 }}
+                >
+                  <item.icon className="h-3.5 w-3.5" />
+                </span>
+                {t(`admin.nav.${item.label}`)}
               </button>
             </li>
           );
