@@ -7,6 +7,7 @@ observe an applied snapshot; it never re-awards XP.
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Any, Optional
 from uuid import uuid4
@@ -14,8 +15,26 @@ from uuid import uuid4
 from database.postgres_connection import postgres_pool
 from models.gamification_model import XP_REWARDS, calculate_next_level_xp
 
+logger = logging.getLogger(__name__)
+
 
 class PostgresGamificationService:
+    @staticmethod
+    def _decode_badges(raw_badges: Any) -> list[str]:
+        """Return the list contract when asyncpg exposes JSONB as text."""
+        if raw_badges is None:
+            return []
+        if isinstance(raw_badges, str):
+            try:
+                raw_badges = json.loads(raw_badges)
+            except json.JSONDecodeError:
+                logger.warning("Ignoring malformed gamification badges JSON")
+                return []
+        if not isinstance(raw_badges, list):
+            logger.warning("Ignoring non-list gamification badges value")
+            return []
+        return [badge for badge in raw_badges if isinstance(badge, str)]
+
     @staticmethod
     def _same_semantics(
         existing,
@@ -271,6 +290,7 @@ class PostgresGamificationService:
         value.setdefault("longest_streak", 0)
         value.setdefault("last_activity_date", None)
         value.setdefault("daily_progress", [])
+        value["badges"] = self._decode_badges(value.get("badges"))
         value["stickers"] = [
             dict(item)
             for item in await postgres_pool().fetch(
