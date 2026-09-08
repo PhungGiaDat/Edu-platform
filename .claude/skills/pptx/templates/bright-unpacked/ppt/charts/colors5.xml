@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cs:colorStyle xmlns:cs="http://schemas.microsoft.com/office/drawing/2012/chartStyle" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" meth="cycle" id="20">
+  <a:schemeClr val="dk1"/>
+  <cs:variation>
+    <a:tint val="88500"/>
+  </cs:variation>
+  <cs:variation>
+    <a:tint val="55000"/>
+  </cs:variation>
+  <cs:variation>
+    <a:tint val="75000"/>
+  </cs:variation>
+  <cs:variation>
+    <a:tint val="98500"/>
+  </cs:variation>
+  <cs:variation>
+    <a:tint val="30000"/>
+  </cs:variation>
+  <cs:variation>
+    <a:tint val="60000"/>
+  </cs:variation>
+  <cs:variation>
+    <a:tint val="80000"/>
+  </cs:variation>
+</cs:colorStyle>

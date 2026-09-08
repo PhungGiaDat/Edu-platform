@@ -1,0 +1,2 @@
+# Vendored Claude tooling preserves upstream whitespace verbatim.
+.claude/** -whitespace

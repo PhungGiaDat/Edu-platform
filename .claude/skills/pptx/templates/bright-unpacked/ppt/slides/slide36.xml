@@ -1,0 +1,916 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name=""/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="2" name="TextBox 1"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="3803549" y="466807"/>
+            <a:ext cx="4584909" cy="584775"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="none" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:r>
+              <a:rPr lang="vi-VN" sz="3200" b="1" spc="600" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="034EA2"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>FONT GUIDELINE</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="3" name="Group 2">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{7A7DF28A-9E4E-DE4D-B62B-C4C4E6818C6A}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="4189176" y="3659588"/>
+            <a:ext cx="6624304" cy="2090284"/>
+            <a:chOff x="2587762" y="1899636"/>
+            <a:chExt cx="7195843" cy="2499295"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="4" name="TextBox 3"/>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="2587762" y="1899636"/>
+              <a:ext cx="3276600" cy="1582400"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" sz="8000" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Aa</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="5" name="TextBox 4"/>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="4588934" y="2582852"/>
+              <a:ext cx="5194671" cy="441600"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="none" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="pt-BR" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>A B C D E F G H I K L M N O P Q R S T V X Y Z</a:t>
+              </a:r>
+              <a:endParaRPr lang="en-US" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="6" name="TextBox 5"/>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="4588935" y="2959880"/>
+              <a:ext cx="4527751" cy="441600"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="none" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="pt-BR" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>a b c d e f g h i k l m n o p q r s t v x y z</a:t>
+              </a:r>
+              <a:endParaRPr lang="en-US" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="7" name="TextBox 6"/>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="4588935" y="3515731"/>
+              <a:ext cx="853381" cy="883200"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="none" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" sz="1400" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Regular</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" sz="1400" i="1" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Italic</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" sz="1400" b="1" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Bold</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="8" name="TextBox 7"/>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="2587762" y="3426836"/>
+              <a:ext cx="2001173" cy="368001"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="vi-VN" sz="1400" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Segoe UI</a:t>
+              </a:r>
+              <a:endParaRPr lang="en-US" sz="1400" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="9" name="TextBox 8">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{E47404E4-46B8-D542-AB68-7A04C183BFA7}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="1092720" y="4216658"/>
+            <a:ext cx="2598389" cy="492443"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="B5B5B5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Body text/</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="B5B5B5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Information text</a:t>
+            </a:r>
+            <a:endParaRPr lang="en-IN" sz="1600" b="1" dirty="0">
+              <a:solidFill>
+                <a:srgbClr val="B5B5B5"/>
+              </a:solidFill>
+              <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="10" name="Group 9">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{027572A6-DB11-484B-8846-455B73621CE1}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="4185443" y="1331271"/>
+            <a:ext cx="6722088" cy="1993818"/>
+            <a:chOff x="2587762" y="1899636"/>
+            <a:chExt cx="7302064" cy="2383953"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="11" name="TextBox 10">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{45F6FB89-96C2-6845-9162-30D6B2C25234}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="2587762" y="1899636"/>
+              <a:ext cx="3276600" cy="1582400"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" sz="8000" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="BR Omega VN" pitchFamily="2" charset="77"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Aa</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="12" name="TextBox 11">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{F57DEDC6-286F-454A-B7D0-67ACC6D2B4F0}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="4588934" y="2582852"/>
+              <a:ext cx="5300892" cy="441600"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="none" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="pt-BR" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="BR Omega VN" pitchFamily="2" charset="77"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>A B C D E F G H I K L M N O P Q R S T V X Y Z</a:t>
+              </a:r>
+              <a:endParaRPr lang="en-US" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+                <a:latin typeface="BR Omega VN" pitchFamily="2" charset="77"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="13" name="TextBox 12">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{8D1D605B-A211-004F-892C-A5CBA0D5BBB9}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="4588935" y="2959880"/>
+              <a:ext cx="4527751" cy="441600"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="none" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="pt-BR" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="BR Omega VN" pitchFamily="2" charset="77"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>a b c d e f g h i k l m n o p q r s t v x y z</a:t>
+              </a:r>
+              <a:endParaRPr lang="en-US" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+                <a:latin typeface="BR Omega VN" pitchFamily="2" charset="77"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="14" name="TextBox 13">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{347F4FDF-4D03-6747-A379-1643DF02BD46}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="4588935" y="3400389"/>
+              <a:ext cx="897122" cy="883200"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="none" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" sz="1400" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="BR Omega VN" pitchFamily="2" charset="77"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Regular</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" sz="1400" i="1" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="BR Omega VN" pitchFamily="2" charset="77"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Italic</a:t>
+              </a:r>
+            </a:p>
+            <a:p>
+              <a:r>
+                <a:rPr lang="en-US" sz="1400" b="1" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="BR Omega VN" pitchFamily="2" charset="77"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Bold</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="15" name="TextBox 14">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{7DF4DFFE-755D-E34B-AF99-60435CD4BCAF}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="2587762" y="3426836"/>
+              <a:ext cx="2001173" cy="368001"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:r>
+                <a:rPr lang="vi-VN" sz="1400" dirty="0">
+                  <a:solidFill>
+                    <a:srgbClr val="19226D"/>
+                  </a:solidFill>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>BR Omega VN</a:t>
+              </a:r>
+              <a:endParaRPr lang="en-US" sz="1400" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+                <a:latin typeface="BR Omega VN" pitchFamily="2" charset="77"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="16" name="TextBox 15">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{8AE80836-1AA5-F34F-9C60-AD20CEA6D3AC}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="1092721" y="1902678"/>
+            <a:ext cx="1531210" cy="492443"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="F37121"/>
+                </a:solidFill>
+                <a:latin typeface="BR Omega VN" pitchFamily="2" charset="77"/>
+              </a:rPr>
+              <a:t>Title/Headline</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="F37121"/>
+                </a:solidFill>
+                <a:latin typeface="BR Omega VN" pitchFamily="2" charset="77"/>
+              </a:rPr>
+              <a:t>/Section text</a:t>
+            </a:r>
+            <a:endParaRPr lang="en-IN" sz="1600" b="1" dirty="0">
+              <a:solidFill>
+                <a:srgbClr val="F37121"/>
+              </a:solidFill>
+              <a:latin typeface="BR Omega VN" pitchFamily="2" charset="77"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:cxnSp>
+        <p:nvCxnSpPr>
+          <p:cNvPr id="18" name="Straight Connector 17">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{060AB9E8-C5DF-0844-94F0-E596EDBE92AF}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvCxnSpPr/>
+          <p:nvPr/>
+        </p:nvCxnSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="3593451" y="3659588"/>
+            <a:ext cx="7768424" cy="0"/>
+          </a:xfrm>
+          <a:prstGeom prst="line">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:ln w="12700">
+            <a:solidFill>
+              <a:srgbClr val="F37121"/>
+            </a:solidFill>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:lnRef>
+          <a:fillRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="tx1"/>
+          </a:fontRef>
+        </p:style>
+      </p:cxnSp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="19" name="TextBox 18">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{4D1B37E6-82C6-EA4C-8B69-FDE7AF434E4C}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="1092720" y="2540833"/>
+            <a:ext cx="1960581" cy="202367"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" rtlCol="0" anchor="t">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr>
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="en-IN" sz="1200" b="1" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+                <a:ea typeface="Open Sans" panose="020B0606030504020204" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Need to be installed</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="20" name="TextBox 19">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{C75E41EA-415A-AC4B-B543-58ECDDB7F0AE}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="1092720" y="2787728"/>
+            <a:ext cx="1960581" cy="202367"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" rtlCol="0" anchor="t">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr>
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="en-IN" sz="1200" b="1" u="sng" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="33B2C1"/>
+                </a:solidFill>
+                <a:ea typeface="Open Sans" panose="020B0606030504020204" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                <a:hlinkClick r:id="rId2"/>
+              </a:rPr>
+              <a:t>DOWNLOAD HERE</a:t>
+            </a:r>
+            <a:endParaRPr lang="en-IN" sz="1200" b="1" u="sng" dirty="0">
+              <a:solidFill>
+                <a:srgbClr val="33B2C1"/>
+              </a:solidFill>
+              <a:ea typeface="Open Sans" panose="020B0606030504020204" pitchFamily="34" charset="0"/>
+              <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="21" name="TextBox 20">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{D21D1FFF-9ADB-8048-9940-C6CE2891C9A4}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="1092719" y="4804514"/>
+            <a:ext cx="2397904" cy="201017"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" rtlCol="0" anchor="t">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr>
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="en-IN" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="B5B5B5"/>
+                </a:solidFill>
+                <a:ea typeface="Open Sans" panose="020B0606030504020204" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Available on Default Font System</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:pic>
+        <p:nvPicPr>
+          <p:cNvPr id="23" name="Picture 22">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{D428F4E0-4E43-404B-BDD3-A864D81A3E3F}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvPicPr>
+            <a:picLocks noChangeAspect="1"/>
+          </p:cNvPicPr>
+          <p:nvPr/>
+        </p:nvPicPr>
+        <p:blipFill>
+          <a:blip r:embed="rId3" cstate="print">
+            <a:extLst>
+              <a:ext uri="{28A0092B-C50C-407E-A947-70E740481C1C}">
+                <a14:useLocalDpi xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" val="0"/>
+              </a:ext>
+            </a:extLst>
+          </a:blip>
+          <a:stretch>
+            <a:fillRect/>
+          </a:stretch>
+        </p:blipFill>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="3591835" y="1228518"/>
+            <a:ext cx="7770040" cy="2332604"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+      </p:pic>
+    </p:spTree>
+    <p:extLst>
+      <p:ext uri="{BB962C8B-B14F-4D97-AF65-F5344CB8AC3E}">
+        <p14:creationId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="2729928610"/>
+      </p:ext>
+    </p:extLst>
+  </p:cSld>
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+</p:sld>

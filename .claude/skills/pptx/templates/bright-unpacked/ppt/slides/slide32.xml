@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name=""/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="2" name="Slide Number Placeholder 1">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{AF55CB69-669D-A4CE-D4D3-30FC573E654A}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="sldNum" sz="quarter" idx="12"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr/>
+        <p:txBody>
+          <a:bodyPr/>
+          <a:lstStyle/>
+          <a:p>
+            <a:fld id="{E012F146-47F9-A646-B182-8CC39B8AD32B}" type="slidenum">
+              <a:rPr lang="x-none" smtClean="0"/>
+              <a:pPr/>
+              <a:t>32</a:t>
+            </a:fld>
+            <a:endParaRPr lang="x-none"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="3" name="TextBox 2">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{699BC830-7100-614E-7816-F3A7D81563C7}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="849084" y="3907631"/>
+            <a:ext cx="3720861" cy="2324675"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr>
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="en-US" sz="1400" b="1" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>CONTACT US </a:t>
+            </a:r>
+            <a:endParaRPr lang="en-US" sz="1200" dirty="0">
+              <a:solidFill>
+                <a:srgbClr val="19226D"/>
+              </a:solidFill>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr>
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>FPT </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0" err="1">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Cau</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0" err="1">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Giay</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> Building, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0" err="1">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Duy</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> Tan Street, Dich </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0" err="1">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Vong</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0" err="1">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Hau</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> Ward, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0" err="1">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Cau</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0" err="1">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Giay</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> District, Hanoi City, Vietnam</a:t>
+            </a:r>
+            <a:br>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+            </a:br>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Tel.: +84 (24) 3 768 9048</a:t>
+            </a:r>
+            <a:br>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+            </a:br>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Fax: +84 (24) 3 768 9049</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr>
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr>
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" b="1" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Contact Person: </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0" err="1">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Mr</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>/</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0" err="1">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Ms.ABC</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t/>
+            </a:r>
+            <a:br>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+            </a:br>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Head of ABC</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr>
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Email: </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" u="sng" dirty="0" err="1">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>abc@fpt-software.com</a:t>
+            </a:r>
+            <a:endParaRPr lang="en-US" sz="1200" u="sng" dirty="0">
+              <a:solidFill>
+                <a:srgbClr val="19226D"/>
+              </a:solidFill>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr>
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="en-US" sz="1200" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="19226D"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+    <p:extLst>
+      <p:ext uri="{BB962C8B-B14F-4D97-AF65-F5344CB8AC3E}">
+        <p14:creationId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="486271189"/>
+      </p:ext>
+    </p:extLst>
+  </p:cSld>
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+</p:sld>

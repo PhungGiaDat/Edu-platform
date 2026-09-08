@@ -1,0 +1,4125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:bg>
+      <p:bgPr>
+        <a:solidFill>
+          <a:schemeClr val="bg1"/>
+        </a:solidFill>
+        <a:effectLst/>
+      </p:bgPr>
+    </p:bg>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name=""/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+      <p:cxnSp>
+        <p:nvCxnSpPr>
+          <p:cNvPr id="91" name="Straight Connector 90">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{AC93AC4B-DAEB-482C-A684-3DDB2964B4BC}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvCxnSpPr>
+            <a:cxnSpLocks/>
+          </p:cNvCxnSpPr>
+          <p:nvPr/>
+        </p:nvCxnSpPr>
+        <p:spPr>
+          <a:xfrm flipH="1">
+            <a:off x="6024730" y="1983996"/>
+            <a:ext cx="2" cy="1597475"/>
+          </a:xfrm>
+          <a:prstGeom prst="line">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="19050" cap="flat" cmpd="sng" algn="ctr">
+            <a:solidFill>
+              <a:srgbClr val="50B848"/>
+            </a:solidFill>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+            <a:headEnd type="none"/>
+            <a:tailEnd type="none"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+      </p:cxnSp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="79" name="Round Diagonal Corner Rectangle 78">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{554D6CA4-ABC2-3446-8B00-966E20A4F519}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="4609313" y="1150867"/>
+            <a:ext cx="2821289" cy="985795"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="19226D"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="81" name="Round Diagonal Corner Rectangle 80">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{604232CB-F9E0-9541-8CF2-0611D4A9F629}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="4609313" y="2301241"/>
+            <a:ext cx="2821289" cy="985795"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="034EA2"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="82" name="Round Diagonal Corner Rectangle 81">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{250A7C11-3B37-BD48-8652-5B539C88C477}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="358595" y="3894067"/>
+            <a:ext cx="2688896" cy="985795"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="33B2C1"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="83" name="Round Diagonal Corner Rectangle 82">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{797766C8-00A9-1A42-9801-7CD8D8AD780F}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="3146040" y="3894067"/>
+            <a:ext cx="2810650" cy="985795"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="33B2C1"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="84" name="Round Diagonal Corner Rectangle 83">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{7225EB2F-D384-CD43-BCD0-74F2B8EF8D2F}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="6110466" y="3894067"/>
+            <a:ext cx="2810650" cy="985795"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="33B2C1"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="85" name="Round Diagonal Corner Rectangle 84">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{3155731A-EF22-CA48-AC8F-7238694C8BED}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="9045395" y="3894067"/>
+            <a:ext cx="2810650" cy="985795"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="33B2C1"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:cxnSp>
+        <p:nvCxnSpPr>
+          <p:cNvPr id="92" name="Straight Connector 91">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{9809AAF2-C553-42AF-876B-215649C09995}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvCxnSpPr>
+            <a:cxnSpLocks/>
+          </p:cNvCxnSpPr>
+          <p:nvPr/>
+        </p:nvCxnSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="2174283" y="3593265"/>
+            <a:ext cx="7413193" cy="0"/>
+          </a:xfrm>
+          <a:prstGeom prst="line">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="19050" cap="flat" cmpd="sng" algn="ctr">
+            <a:solidFill>
+              <a:srgbClr val="50B848"/>
+            </a:solidFill>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+            <a:headEnd type="none"/>
+            <a:tailEnd type="none"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+      </p:cxnSp>
+      <p:cxnSp>
+        <p:nvCxnSpPr>
+          <p:cNvPr id="93" name="Straight Connector 92">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{0A05BCFB-76B5-4592-A30E-895A82253B77}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvCxnSpPr>
+            <a:cxnSpLocks/>
+          </p:cNvCxnSpPr>
+          <p:nvPr/>
+        </p:nvCxnSpPr>
+        <p:spPr>
+          <a:xfrm flipV="1">
+            <a:off x="2174283" y="3581471"/>
+            <a:ext cx="0" cy="257780"/>
+          </a:xfrm>
+          <a:prstGeom prst="line">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="19050" cap="flat" cmpd="sng" algn="ctr">
+            <a:solidFill>
+              <a:srgbClr val="50B848"/>
+            </a:solidFill>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+            <a:headEnd type="none"/>
+            <a:tailEnd type="none"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+      </p:cxnSp>
+      <p:cxnSp>
+        <p:nvCxnSpPr>
+          <p:cNvPr id="99" name="Straight Connector 98">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{FA2E7B35-8CEA-4579-8318-D9EA1DE464FD}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvCxnSpPr>
+            <a:cxnSpLocks/>
+          </p:cNvCxnSpPr>
+          <p:nvPr/>
+        </p:nvCxnSpPr>
+        <p:spPr>
+          <a:xfrm flipH="1">
+            <a:off x="6019784" y="3585365"/>
+            <a:ext cx="9196" cy="1481760"/>
+          </a:xfrm>
+          <a:prstGeom prst="line">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="19050" cap="flat" cmpd="sng" algn="ctr">
+            <a:solidFill>
+              <a:srgbClr val="50B848"/>
+            </a:solidFill>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+            <a:headEnd type="none"/>
+            <a:tailEnd type="none"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+      </p:cxnSp>
+      <p:cxnSp>
+        <p:nvCxnSpPr>
+          <p:cNvPr id="106" name="Straight Connector 105">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{75BECA65-93AE-4805-A1A9-FFE3B1FC9196}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvCxnSpPr>
+            <a:cxnSpLocks/>
+          </p:cNvCxnSpPr>
+          <p:nvPr/>
+        </p:nvCxnSpPr>
+        <p:spPr>
+          <a:xfrm flipV="1">
+            <a:off x="4578251" y="5059513"/>
+            <a:ext cx="2723026" cy="1391"/>
+          </a:xfrm>
+          <a:prstGeom prst="line">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="19050" cap="flat" cmpd="sng" algn="ctr">
+            <a:solidFill>
+              <a:srgbClr val="50B848"/>
+            </a:solidFill>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+            <a:headEnd type="none"/>
+            <a:tailEnd type="none"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+      </p:cxnSp>
+      <p:cxnSp>
+        <p:nvCxnSpPr>
+          <p:cNvPr id="107" name="Straight Connector 106">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{30BA9859-E65F-4921-B167-01E1EECC74BD}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvCxnSpPr>
+            <a:cxnSpLocks/>
+          </p:cNvCxnSpPr>
+          <p:nvPr/>
+        </p:nvCxnSpPr>
+        <p:spPr>
+          <a:xfrm flipV="1">
+            <a:off x="4578251" y="5060904"/>
+            <a:ext cx="0" cy="380308"/>
+          </a:xfrm>
+          <a:prstGeom prst="line">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="19050" cap="flat" cmpd="sng" algn="ctr">
+            <a:solidFill>
+              <a:srgbClr val="50B848"/>
+            </a:solidFill>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+            <a:headEnd type="none"/>
+            <a:tailEnd type="none"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+      </p:cxnSp>
+      <p:cxnSp>
+        <p:nvCxnSpPr>
+          <p:cNvPr id="108" name="Straight Connector 107">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{AEB4ECA1-ECC5-4106-BFFC-4E39F31D28FC}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvCxnSpPr>
+            <a:cxnSpLocks/>
+          </p:cNvCxnSpPr>
+          <p:nvPr/>
+        </p:nvCxnSpPr>
+        <p:spPr>
+          <a:xfrm flipV="1">
+            <a:off x="7301277" y="5067125"/>
+            <a:ext cx="0" cy="334723"/>
+          </a:xfrm>
+          <a:prstGeom prst="line">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="19050" cap="flat" cmpd="sng" algn="ctr">
+            <a:solidFill>
+              <a:srgbClr val="50B848"/>
+            </a:solidFill>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+            <a:headEnd type="none"/>
+            <a:tailEnd type="none"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+      </p:cxnSp>
+      <p:cxnSp>
+        <p:nvCxnSpPr>
+          <p:cNvPr id="109" name="Straight Connector 108">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{04459D10-B4E9-428C-A9D7-3E0F23CA12C8}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvCxnSpPr>
+            <a:cxnSpLocks/>
+          </p:cNvCxnSpPr>
+          <p:nvPr/>
+        </p:nvCxnSpPr>
+        <p:spPr>
+          <a:xfrm flipV="1">
+            <a:off x="9593873" y="4814116"/>
+            <a:ext cx="0" cy="502835"/>
+          </a:xfrm>
+          <a:prstGeom prst="line">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="19050" cap="flat" cmpd="sng" algn="ctr">
+            <a:solidFill>
+              <a:srgbClr val="50B848"/>
+            </a:solidFill>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+            <a:headEnd type="none"/>
+            <a:tailEnd type="none"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+      </p:cxnSp>
+      <p:cxnSp>
+        <p:nvCxnSpPr>
+          <p:cNvPr id="123" name="Straight Connector 122">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{D1BD0179-4FE2-4F4B-AF79-4D23A2F8F07E}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvCxnSpPr>
+            <a:cxnSpLocks/>
+          </p:cNvCxnSpPr>
+          <p:nvPr/>
+        </p:nvCxnSpPr>
+        <p:spPr>
+          <a:xfrm flipV="1">
+            <a:off x="7411866" y="3589490"/>
+            <a:ext cx="0" cy="257780"/>
+          </a:xfrm>
+          <a:prstGeom prst="line">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="19050" cap="flat" cmpd="sng" algn="ctr">
+            <a:solidFill>
+              <a:srgbClr val="50B848"/>
+            </a:solidFill>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+            <a:headEnd type="none"/>
+            <a:tailEnd type="none"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+      </p:cxnSp>
+      <p:cxnSp>
+        <p:nvCxnSpPr>
+          <p:cNvPr id="154" name="Straight Connector 153">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{0A05BCFB-76B5-4592-A30E-895A82253B77}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvCxnSpPr>
+            <a:cxnSpLocks/>
+          </p:cNvCxnSpPr>
+          <p:nvPr/>
+        </p:nvCxnSpPr>
+        <p:spPr>
+          <a:xfrm flipV="1">
+            <a:off x="3853530" y="3584134"/>
+            <a:ext cx="0" cy="257780"/>
+          </a:xfrm>
+          <a:prstGeom prst="line">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="19050" cap="flat" cmpd="sng" algn="ctr">
+            <a:solidFill>
+              <a:srgbClr val="50B848"/>
+            </a:solidFill>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+            <a:headEnd type="none"/>
+            <a:tailEnd type="none"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+      </p:cxnSp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="2" name="Group 1">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{6503EAF6-D104-AF4A-AA81-874903878F6D}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="479993" y="3971449"/>
+            <a:ext cx="2357063" cy="832104"/>
+            <a:chOff x="479993" y="3971449"/>
+            <a:chExt cx="2357063" cy="832104"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="157" name="TextBox 156">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{BA73B4B1-4F0B-4155-ABD2-CE42D4B427E6}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4379401"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Position</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="158" name="TextBox 157">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{0B9C033B-FB9C-4855-84EE-E0E0D77C4944}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4102402"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>To Be hired</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="80" name="Oval 79">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{39D4F175-C86C-5146-B7D9-47F9A58F9D87}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr>
+              <a:spLocks/>
+            </p:cNvSpPr>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="479993" y="3971449"/>
+              <a:ext cx="832104" cy="832104"/>
+            </a:xfrm>
+            <a:prstGeom prst="ellipse">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:solidFill>
+              <a:schemeClr val="bg1"/>
+            </a:solidFill>
+            <a:ln>
+              <a:noFill/>
+            </a:ln>
+          </p:spPr>
+          <p:style>
+            <a:lnRef idx="2">
+              <a:schemeClr val="accent1">
+                <a:shade val="50000"/>
+              </a:schemeClr>
+            </a:lnRef>
+            <a:fillRef idx="1">
+              <a:schemeClr val="accent1"/>
+            </a:fillRef>
+            <a:effectRef idx="0">
+              <a:schemeClr val="accent1"/>
+            </a:effectRef>
+            <a:fontRef idx="minor">
+              <a:schemeClr val="lt1"/>
+            </a:fontRef>
+          </p:style>
+          <p:txBody>
+            <a:bodyPr rtlCol="0" anchor="ctr"/>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1050" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="tx1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Vacant</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="70" name="Group 69">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{2B6B39FB-2F79-6E46-9DC5-083B2D03617B}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="4917467" y="1227000"/>
+            <a:ext cx="2357063" cy="832104"/>
+            <a:chOff x="479993" y="3971449"/>
+            <a:chExt cx="2357063" cy="832104"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="71" name="TextBox 70">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{BC4A9F02-80D8-6F48-B639-3D3443F3A1A0}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4379401"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Position</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="72" name="TextBox 71">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{C45AA303-E454-AA44-9BC8-DF0C760F10D9}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4102402"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>To Be hired</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="73" name="Oval 72">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{BD1B5EA3-72DD-A449-8DC4-5F5C15AAD8A7}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr>
+              <a:spLocks/>
+            </p:cNvSpPr>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="479993" y="3971449"/>
+              <a:ext cx="832104" cy="832104"/>
+            </a:xfrm>
+            <a:prstGeom prst="ellipse">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:solidFill>
+              <a:schemeClr val="bg1"/>
+            </a:solidFill>
+            <a:ln>
+              <a:noFill/>
+            </a:ln>
+          </p:spPr>
+          <p:style>
+            <a:lnRef idx="2">
+              <a:schemeClr val="accent1">
+                <a:shade val="50000"/>
+              </a:schemeClr>
+            </a:lnRef>
+            <a:fillRef idx="1">
+              <a:schemeClr val="accent1"/>
+            </a:fillRef>
+            <a:effectRef idx="0">
+              <a:schemeClr val="accent1"/>
+            </a:effectRef>
+            <a:fontRef idx="minor">
+              <a:schemeClr val="lt1"/>
+            </a:fontRef>
+          </p:style>
+          <p:txBody>
+            <a:bodyPr rtlCol="0" anchor="ctr"/>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1050" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="tx1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Vacant</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="74" name="Group 73">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{389E0834-BD58-D248-B2CA-3FFA8DB012F3}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="4917467" y="2363270"/>
+            <a:ext cx="2357063" cy="832104"/>
+            <a:chOff x="479993" y="3971449"/>
+            <a:chExt cx="2357063" cy="832104"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="75" name="TextBox 74">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{F58A70EA-86A1-0D40-85E1-4F2FB8DE3856}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4379401"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Position</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="76" name="TextBox 75">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{6776E5E8-0973-1948-B3EF-54BD0AD09FDA}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4102402"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>To Be hired</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="77" name="Oval 76">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{64C7D742-CA1C-7447-9EFF-DFCD6B2FC84D}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr>
+              <a:spLocks/>
+            </p:cNvSpPr>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="479993" y="3971449"/>
+              <a:ext cx="832104" cy="832104"/>
+            </a:xfrm>
+            <a:prstGeom prst="ellipse">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:solidFill>
+              <a:schemeClr val="bg1"/>
+            </a:solidFill>
+            <a:ln>
+              <a:noFill/>
+            </a:ln>
+          </p:spPr>
+          <p:style>
+            <a:lnRef idx="2">
+              <a:schemeClr val="accent1">
+                <a:shade val="50000"/>
+              </a:schemeClr>
+            </a:lnRef>
+            <a:fillRef idx="1">
+              <a:schemeClr val="accent1"/>
+            </a:fillRef>
+            <a:effectRef idx="0">
+              <a:schemeClr val="accent1"/>
+            </a:effectRef>
+            <a:fontRef idx="minor">
+              <a:schemeClr val="lt1"/>
+            </a:fontRef>
+          </p:style>
+          <p:txBody>
+            <a:bodyPr rtlCol="0" anchor="ctr"/>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1050" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="tx1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Vacant</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="86" name="Group 85">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{97DDE54E-BDBB-6647-ABB6-F0AC4E81ED37}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="3508266" y="3963349"/>
+            <a:ext cx="2357063" cy="832104"/>
+            <a:chOff x="479993" y="3971449"/>
+            <a:chExt cx="2357063" cy="832104"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="94" name="TextBox 93">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{234C78BC-4337-B448-B037-00C3D4B393DA}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4379401"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Position</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="101" name="TextBox 100">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{94BF2121-5431-F74A-B026-CF64DFFDB5B9}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4102402"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>To Be hired</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="110" name="Oval 109">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{94568C4A-EDA8-B642-9833-EFC39B894B84}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr>
+              <a:spLocks/>
+            </p:cNvSpPr>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="479993" y="3971449"/>
+              <a:ext cx="832104" cy="832104"/>
+            </a:xfrm>
+            <a:prstGeom prst="ellipse">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:solidFill>
+              <a:schemeClr val="bg1"/>
+            </a:solidFill>
+            <a:ln>
+              <a:noFill/>
+            </a:ln>
+          </p:spPr>
+          <p:style>
+            <a:lnRef idx="2">
+              <a:schemeClr val="accent1">
+                <a:shade val="50000"/>
+              </a:schemeClr>
+            </a:lnRef>
+            <a:fillRef idx="1">
+              <a:schemeClr val="accent1"/>
+            </a:fillRef>
+            <a:effectRef idx="0">
+              <a:schemeClr val="accent1"/>
+            </a:effectRef>
+            <a:fontRef idx="minor">
+              <a:schemeClr val="lt1"/>
+            </a:fontRef>
+          </p:style>
+          <p:txBody>
+            <a:bodyPr rtlCol="0" anchor="ctr"/>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1050" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="tx1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Vacant</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="111" name="Group 110">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{602CD26C-7D02-424C-8BBD-22CB35A62BC8}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="6469551" y="3963349"/>
+            <a:ext cx="2357063" cy="832104"/>
+            <a:chOff x="479993" y="3971449"/>
+            <a:chExt cx="2357063" cy="832104"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="116" name="TextBox 115">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{3675E2C1-0BF8-7947-8717-C13216282229}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4379401"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Position</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="117" name="TextBox 116">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{B0E3404E-FA01-C64B-9948-5C31F645FF00}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4102402"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>To Be hired</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="124" name="Oval 123">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{75841B86-522D-3740-A48D-96B60542E3C5}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr>
+              <a:spLocks/>
+            </p:cNvSpPr>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="479993" y="3971449"/>
+              <a:ext cx="832104" cy="832104"/>
+            </a:xfrm>
+            <a:prstGeom prst="ellipse">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:solidFill>
+              <a:schemeClr val="bg1"/>
+            </a:solidFill>
+            <a:ln>
+              <a:noFill/>
+            </a:ln>
+          </p:spPr>
+          <p:style>
+            <a:lnRef idx="2">
+              <a:schemeClr val="accent1">
+                <a:shade val="50000"/>
+              </a:schemeClr>
+            </a:lnRef>
+            <a:fillRef idx="1">
+              <a:schemeClr val="accent1"/>
+            </a:fillRef>
+            <a:effectRef idx="0">
+              <a:schemeClr val="accent1"/>
+            </a:effectRef>
+            <a:fontRef idx="minor">
+              <a:schemeClr val="lt1"/>
+            </a:fontRef>
+          </p:style>
+          <p:txBody>
+            <a:bodyPr rtlCol="0" anchor="ctr"/>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1050" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="tx1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Vacant</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="129" name="Group 128">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{1EEAF485-D2A4-E546-A643-095E96CC25F9}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="9354944" y="3949883"/>
+            <a:ext cx="2357063" cy="832104"/>
+            <a:chOff x="479993" y="3971449"/>
+            <a:chExt cx="2357063" cy="832104"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="130" name="TextBox 129">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{C19A7466-5C1D-694B-BDB3-092005404925}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4379401"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Position</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="135" name="TextBox 134">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{B536B07C-CBE1-6345-844B-4B7F5BA4205B}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4102402"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>To Be hired</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="136" name="Oval 135">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{3432E16C-2FF7-2C47-98B8-2563C948B5BA}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr>
+              <a:spLocks/>
+            </p:cNvSpPr>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="479993" y="3971449"/>
+              <a:ext cx="832104" cy="832104"/>
+            </a:xfrm>
+            <a:prstGeom prst="ellipse">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:solidFill>
+              <a:schemeClr val="bg1"/>
+            </a:solidFill>
+            <a:ln>
+              <a:noFill/>
+            </a:ln>
+          </p:spPr>
+          <p:style>
+            <a:lnRef idx="2">
+              <a:schemeClr val="accent1">
+                <a:shade val="50000"/>
+              </a:schemeClr>
+            </a:lnRef>
+            <a:fillRef idx="1">
+              <a:schemeClr val="accent1"/>
+            </a:fillRef>
+            <a:effectRef idx="0">
+              <a:schemeClr val="accent1"/>
+            </a:effectRef>
+            <a:fontRef idx="minor">
+              <a:schemeClr val="lt1"/>
+            </a:fontRef>
+          </p:style>
+          <p:txBody>
+            <a:bodyPr rtlCol="0" anchor="ctr"/>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1050" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="tx1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Vacant</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:cxnSp>
+        <p:nvCxnSpPr>
+          <p:cNvPr id="142" name="Straight Connector 141">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{3F01A67A-3DFC-3D45-BBB0-1ABC87BD0A5A}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvCxnSpPr>
+            <a:cxnSpLocks/>
+          </p:cNvCxnSpPr>
+          <p:nvPr/>
+        </p:nvCxnSpPr>
+        <p:spPr>
+          <a:xfrm flipV="1">
+            <a:off x="9583068" y="3581471"/>
+            <a:ext cx="0" cy="257780"/>
+          </a:xfrm>
+          <a:prstGeom prst="line">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="19050" cap="flat" cmpd="sng" algn="ctr">
+            <a:solidFill>
+              <a:srgbClr val="50B848"/>
+            </a:solidFill>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+            <a:headEnd type="none"/>
+            <a:tailEnd type="none"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+      </p:cxnSp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="143" name="Round Diagonal Corner Rectangle 142">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{4D0F1FD7-80CA-2F4C-A1E6-816006F756CE}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="6008776" y="5313407"/>
+            <a:ext cx="2810650" cy="985795"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="33B2C1"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="155" name="Group 154">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{3E959564-3F3B-344B-B1EF-6758B89FFEB5}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="6367861" y="5382689"/>
+            <a:ext cx="2357063" cy="832104"/>
+            <a:chOff x="479993" y="3971449"/>
+            <a:chExt cx="2357063" cy="832104"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="160" name="TextBox 159">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{A9AD36DE-94AB-0D4D-BCA5-7B69FA33FC8B}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4379401"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Position</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="161" name="TextBox 160">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{C62659E2-5172-264D-B9BC-7297427491E2}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4102402"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>To Be hired</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="162" name="Oval 161">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{4CF74417-1BB3-EF44-AFE6-7D3330433D43}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr>
+              <a:spLocks/>
+            </p:cNvSpPr>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="479993" y="3971449"/>
+              <a:ext cx="832104" cy="832104"/>
+            </a:xfrm>
+            <a:prstGeom prst="ellipse">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:solidFill>
+              <a:schemeClr val="bg1"/>
+            </a:solidFill>
+            <a:ln>
+              <a:noFill/>
+            </a:ln>
+          </p:spPr>
+          <p:style>
+            <a:lnRef idx="2">
+              <a:schemeClr val="accent1">
+                <a:shade val="50000"/>
+              </a:schemeClr>
+            </a:lnRef>
+            <a:fillRef idx="1">
+              <a:schemeClr val="accent1"/>
+            </a:fillRef>
+            <a:effectRef idx="0">
+              <a:schemeClr val="accent1"/>
+            </a:effectRef>
+            <a:fontRef idx="minor">
+              <a:schemeClr val="lt1"/>
+            </a:fontRef>
+          </p:style>
+          <p:txBody>
+            <a:bodyPr rtlCol="0" anchor="ctr"/>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1050" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="tx1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Vacant</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="163" name="Round Diagonal Corner Rectangle 162">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{7B7B1062-DAD5-A246-91E8-356F6F1AD069}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="2921063" y="5321410"/>
+            <a:ext cx="2810650" cy="985795"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="33B2C1"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="164" name="Group 163">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{5DD33AE5-1CD3-B044-BC96-D6EFC2E3FA52}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="3280148" y="5390692"/>
+            <a:ext cx="2357063" cy="832104"/>
+            <a:chOff x="479993" y="3971449"/>
+            <a:chExt cx="2357063" cy="832104"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="165" name="TextBox 164">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{58B68763-ACE9-614F-9129-E22A9FCDB7FE}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4379401"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Position</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="166" name="TextBox 165">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{187F1A46-5C98-1D40-A00F-C8B6AF59A7E1}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4102402"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>To Be hired</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="167" name="Oval 166">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{2DD86DE3-D8A7-A54B-AFEB-16CB320E1AC9}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr>
+              <a:spLocks/>
+            </p:cNvSpPr>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="479993" y="3971449"/>
+              <a:ext cx="832104" cy="832104"/>
+            </a:xfrm>
+            <a:prstGeom prst="ellipse">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:solidFill>
+              <a:schemeClr val="bg1"/>
+            </a:solidFill>
+            <a:ln>
+              <a:noFill/>
+            </a:ln>
+          </p:spPr>
+          <p:style>
+            <a:lnRef idx="2">
+              <a:schemeClr val="accent1">
+                <a:shade val="50000"/>
+              </a:schemeClr>
+            </a:lnRef>
+            <a:fillRef idx="1">
+              <a:schemeClr val="accent1"/>
+            </a:fillRef>
+            <a:effectRef idx="0">
+              <a:schemeClr val="accent1"/>
+            </a:effectRef>
+            <a:fontRef idx="minor">
+              <a:schemeClr val="lt1"/>
+            </a:fontRef>
+          </p:style>
+          <p:txBody>
+            <a:bodyPr rtlCol="0" anchor="ctr"/>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1050" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="tx1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Vacant</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="168" name="Round Diagonal Corner Rectangle 167">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{D4AAC661-E263-AB49-B2F5-2DDD6D18A4EB}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="9045395" y="5313407"/>
+            <a:ext cx="2810650" cy="985795"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="33B2C1"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="169" name="Group 168">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{249DDC5E-2018-0740-9C08-B65319F3C67B}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="9404480" y="5382689"/>
+            <a:ext cx="2357063" cy="832104"/>
+            <a:chOff x="479993" y="3971449"/>
+            <a:chExt cx="2357063" cy="832104"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="170" name="TextBox 169">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{AF7DDD73-919B-5D44-AEF0-041D69C530FB}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4379401"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Position</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="171" name="TextBox 170">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{297935AA-E477-5547-9B44-49DF3C1DF9EE}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="1454826" y="4102402"/>
+              <a:ext cx="1382230" cy="307777"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr wrap="square" rtlCol="0">
+              <a:spAutoFit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>To Be hired</a:t>
+              </a:r>
+              <a:endParaRPr kumimoji="0" lang="en-ID" sz="1400" b="1" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="172" name="Oval 171">
+              <a:extLst>
+                <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                  <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{D3D60C32-8229-BD4D-8409-5B94685CAAF4}"/>
+                </a:ext>
+              </a:extLst>
+            </p:cNvPr>
+            <p:cNvSpPr>
+              <a:spLocks/>
+            </p:cNvSpPr>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="479993" y="3971449"/>
+              <a:ext cx="832104" cy="832104"/>
+            </a:xfrm>
+            <a:prstGeom prst="ellipse">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:solidFill>
+              <a:schemeClr val="bg1"/>
+            </a:solidFill>
+            <a:ln>
+              <a:noFill/>
+            </a:ln>
+          </p:spPr>
+          <p:style>
+            <a:lnRef idx="2">
+              <a:schemeClr val="accent1">
+                <a:shade val="50000"/>
+              </a:schemeClr>
+            </a:lnRef>
+            <a:fillRef idx="1">
+              <a:schemeClr val="accent1"/>
+            </a:fillRef>
+            <a:effectRef idx="0">
+              <a:schemeClr val="accent1"/>
+            </a:effectRef>
+            <a:fontRef idx="minor">
+              <a:schemeClr val="lt1"/>
+            </a:fontRef>
+          </p:style>
+          <p:txBody>
+            <a:bodyPr rtlCol="0" anchor="ctr"/>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+                <a:lnSpc>
+                  <a:spcPct val="100000"/>
+                </a:lnSpc>
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClrTx/>
+                <a:buSzTx/>
+                <a:buFontTx/>
+                <a:buNone/>
+                <a:tabLst/>
+                <a:defRPr/>
+              </a:pPr>
+              <a:r>
+                <a:rPr kumimoji="0" lang="en-US" sz="1050" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                  <a:ln>
+                    <a:noFill/>
+                  </a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="tx1"/>
+                  </a:solidFill>
+                  <a:effectLst/>
+                  <a:uLnTx/>
+                  <a:uFillTx/>
+                  <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                  <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                </a:rPr>
+                <a:t>Vacant</a:t>
+              </a:r>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="173" name="Rounded Rectangle 172">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{D8B18E4C-8011-104D-9CD6-A16285214434}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="-426720" y="1118429"/>
+            <a:ext cx="266700" cy="685815"/>
+          </a:xfrm>
+          <a:prstGeom prst="roundRect">
+            <a:avLst>
+              <a:gd name="adj" fmla="val 8511"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="034EA2"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="174" name="Rounded Rectangle 173">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{D778F522-9FAB-3F48-93A1-F4F5E9E280E2}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="-426720" y="1914296"/>
+            <a:ext cx="266700" cy="685815"/>
+          </a:xfrm>
+          <a:prstGeom prst="roundRect">
+            <a:avLst>
+              <a:gd name="adj" fmla="val 8511"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="19226D"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="175" name="Rounded Rectangle 174">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{A8015E1E-097E-A34F-B041-7E1C36043C54}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="-426720" y="2710163"/>
+            <a:ext cx="266700" cy="685815"/>
+          </a:xfrm>
+          <a:prstGeom prst="roundRect">
+            <a:avLst>
+              <a:gd name="adj" fmla="val 8511"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="33B2C1"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="176" name="Rounded Rectangle 175">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{7EEE66F7-CD23-4240-B3A4-BE263EC34523}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="-426720" y="3506030"/>
+            <a:ext cx="266700" cy="685815"/>
+          </a:xfrm>
+          <a:prstGeom prst="roundRect">
+            <a:avLst>
+              <a:gd name="adj" fmla="val 8511"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="50B848"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="177" name="Rounded Rectangle 176">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{DFF92E29-E76E-5B47-AED9-161D1BC7BCE2}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="-426720" y="4301897"/>
+            <a:ext cx="266700" cy="685815"/>
+          </a:xfrm>
+          <a:prstGeom prst="roundRect">
+            <a:avLst>
+              <a:gd name="adj" fmla="val 8511"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="F37121"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="178" name="Rounded Rectangle 177">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{EA47BEBF-9602-2043-9331-AD8DCAF083C8}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="-426720" y="5097764"/>
+            <a:ext cx="266700" cy="685815"/>
+          </a:xfrm>
+          <a:prstGeom prst="roundRect">
+            <a:avLst>
+              <a:gd name="adj" fmla="val 8511"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="E4E5E6"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="4" name="Title 3">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{A7187B1E-D1EF-9044-9880-FA4A602D5CEF}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="title"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr/>
+        <p:txBody>
+          <a:bodyPr/>
+          <a:lstStyle/>
+          <a:p>
+            <a:endParaRPr lang="en-VN"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="3" name="Slide Number Placeholder 2">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{9D62DD08-1A17-1C41-B6DB-C701A3152CF3}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="sldNum" sz="quarter" idx="12"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr/>
+        <p:txBody>
+          <a:bodyPr/>
+          <a:lstStyle/>
+          <a:p>
+            <a:fld id="{E012F146-47F9-A646-B182-8CC39B8AD32B}" type="slidenum">
+              <a:rPr lang="x-none" smtClean="0"/>
+              <a:pPr/>
+              <a:t>17</a:t>
+            </a:fld>
+            <a:endParaRPr lang="x-none"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+    <p:extLst>
+      <p:ext uri="{BB962C8B-B14F-4D97-AF65-F5344CB8AC3E}">
+        <p14:creationId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="1433598744"/>
+      </p:ext>
+    </p:extLst>
+  </p:cSld>
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+  <p:timing>
+    <p:tnLst>
+      <p:par>
+        <p:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot">
+          <p:childTnLst>
+            <p:seq concurrent="1" nextAc="seek">
+              <p:cTn id="2" dur="indefinite" nodeType="mainSeq">
+                <p:childTnLst>
+                  <p:par>
+                    <p:cTn id="3" fill="hold">
+                      <p:stCondLst>
+                        <p:cond delay="indefinite"/>
+                        <p:cond evt="onBegin" delay="0">
+                          <p:tn val="2"/>
+                        </p:cond>
+                      </p:stCondLst>
+                      <p:childTnLst>
+                        <p:par>
+                          <p:cTn id="4" fill="hold">
+                            <p:stCondLst>
+                              <p:cond delay="0"/>
+                            </p:stCondLst>
+                            <p:childTnLst>
+                              <p:par>
+                                <p:cTn id="5" presetID="22" presetClass="entr" presetSubtype="1" fill="hold" nodeType="afterEffect">
+                                  <p:stCondLst>
+                                    <p:cond delay="0"/>
+                                  </p:stCondLst>
+                                  <p:childTnLst>
+                                    <p:set>
+                                      <p:cBhvr>
+                                        <p:cTn id="6" dur="1" fill="hold">
+                                          <p:stCondLst>
+                                            <p:cond delay="0"/>
+                                          </p:stCondLst>
+                                        </p:cTn>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="91"/>
+                                        </p:tgtEl>
+                                        <p:attrNameLst>
+                                          <p:attrName>style.visibility</p:attrName>
+                                        </p:attrNameLst>
+                                      </p:cBhvr>
+                                      <p:to>
+                                        <p:strVal val="visible"/>
+                                      </p:to>
+                                    </p:set>
+                                    <p:animEffect transition="in" filter="wipe(up)">
+                                      <p:cBhvr>
+                                        <p:cTn id="7" dur="500"/>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="91"/>
+                                        </p:tgtEl>
+                                      </p:cBhvr>
+                                    </p:animEffect>
+                                  </p:childTnLst>
+                                </p:cTn>
+                              </p:par>
+                            </p:childTnLst>
+                          </p:cTn>
+                        </p:par>
+                        <p:par>
+                          <p:cTn id="8" fill="hold">
+                            <p:stCondLst>
+                              <p:cond delay="500"/>
+                            </p:stCondLst>
+                            <p:childTnLst>
+                              <p:par>
+                                <p:cTn id="9" presetID="16" presetClass="entr" presetSubtype="37" fill="hold" nodeType="afterEffect">
+                                  <p:stCondLst>
+                                    <p:cond delay="0"/>
+                                  </p:stCondLst>
+                                  <p:childTnLst>
+                                    <p:set>
+                                      <p:cBhvr>
+                                        <p:cTn id="10" dur="1" fill="hold">
+                                          <p:stCondLst>
+                                            <p:cond delay="0"/>
+                                          </p:stCondLst>
+                                        </p:cTn>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="92"/>
+                                        </p:tgtEl>
+                                        <p:attrNameLst>
+                                          <p:attrName>style.visibility</p:attrName>
+                                        </p:attrNameLst>
+                                      </p:cBhvr>
+                                      <p:to>
+                                        <p:strVal val="visible"/>
+                                      </p:to>
+                                    </p:set>
+                                    <p:animEffect transition="in" filter="barn(outVertical)">
+                                      <p:cBhvr>
+                                        <p:cTn id="11" dur="500"/>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="92"/>
+                                        </p:tgtEl>
+                                      </p:cBhvr>
+                                    </p:animEffect>
+                                  </p:childTnLst>
+                                </p:cTn>
+                              </p:par>
+                            </p:childTnLst>
+                          </p:cTn>
+                        </p:par>
+                        <p:par>
+                          <p:cTn id="12" fill="hold">
+                            <p:stCondLst>
+                              <p:cond delay="1000"/>
+                            </p:stCondLst>
+                            <p:childTnLst>
+                              <p:par>
+                                <p:cTn id="13" presetID="22" presetClass="entr" presetSubtype="1" fill="hold" nodeType="afterEffect">
+                                  <p:stCondLst>
+                                    <p:cond delay="0"/>
+                                  </p:stCondLst>
+                                  <p:childTnLst>
+                                    <p:set>
+                                      <p:cBhvr>
+                                        <p:cTn id="14" dur="1" fill="hold">
+                                          <p:stCondLst>
+                                            <p:cond delay="0"/>
+                                          </p:stCondLst>
+                                        </p:cTn>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="93"/>
+                                        </p:tgtEl>
+                                        <p:attrNameLst>
+                                          <p:attrName>style.visibility</p:attrName>
+                                        </p:attrNameLst>
+                                      </p:cBhvr>
+                                      <p:to>
+                                        <p:strVal val="visible"/>
+                                      </p:to>
+                                    </p:set>
+                                    <p:animEffect transition="in" filter="wipe(up)">
+                                      <p:cBhvr>
+                                        <p:cTn id="15" dur="500"/>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="93"/>
+                                        </p:tgtEl>
+                                      </p:cBhvr>
+                                    </p:animEffect>
+                                  </p:childTnLst>
+                                </p:cTn>
+                              </p:par>
+                              <p:par>
+                                <p:cTn id="16" presetID="22" presetClass="entr" presetSubtype="1" fill="hold" nodeType="withEffect">
+                                  <p:stCondLst>
+                                    <p:cond delay="0"/>
+                                  </p:stCondLst>
+                                  <p:childTnLst>
+                                    <p:set>
+                                      <p:cBhvr>
+                                        <p:cTn id="17" dur="1" fill="hold">
+                                          <p:stCondLst>
+                                            <p:cond delay="0"/>
+                                          </p:stCondLst>
+                                        </p:cTn>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="123"/>
+                                        </p:tgtEl>
+                                        <p:attrNameLst>
+                                          <p:attrName>style.visibility</p:attrName>
+                                        </p:attrNameLst>
+                                      </p:cBhvr>
+                                      <p:to>
+                                        <p:strVal val="visible"/>
+                                      </p:to>
+                                    </p:set>
+                                    <p:animEffect transition="in" filter="wipe(up)">
+                                      <p:cBhvr>
+                                        <p:cTn id="18" dur="500"/>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="123"/>
+                                        </p:tgtEl>
+                                      </p:cBhvr>
+                                    </p:animEffect>
+                                  </p:childTnLst>
+                                </p:cTn>
+                              </p:par>
+                            </p:childTnLst>
+                          </p:cTn>
+                        </p:par>
+                        <p:par>
+                          <p:cTn id="19" fill="hold">
+                            <p:stCondLst>
+                              <p:cond delay="1500"/>
+                            </p:stCondLst>
+                            <p:childTnLst>
+                              <p:par>
+                                <p:cTn id="20" presetID="22" presetClass="entr" presetSubtype="1" fill="hold" nodeType="afterEffect">
+                                  <p:stCondLst>
+                                    <p:cond delay="0"/>
+                                  </p:stCondLst>
+                                  <p:childTnLst>
+                                    <p:set>
+                                      <p:cBhvr>
+                                        <p:cTn id="21" dur="1" fill="hold">
+                                          <p:stCondLst>
+                                            <p:cond delay="0"/>
+                                          </p:stCondLst>
+                                        </p:cTn>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="99"/>
+                                        </p:tgtEl>
+                                        <p:attrNameLst>
+                                          <p:attrName>style.visibility</p:attrName>
+                                        </p:attrNameLst>
+                                      </p:cBhvr>
+                                      <p:to>
+                                        <p:strVal val="visible"/>
+                                      </p:to>
+                                    </p:set>
+                                    <p:animEffect transition="in" filter="wipe(up)">
+                                      <p:cBhvr>
+                                        <p:cTn id="22" dur="500"/>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="99"/>
+                                        </p:tgtEl>
+                                      </p:cBhvr>
+                                    </p:animEffect>
+                                  </p:childTnLst>
+                                </p:cTn>
+                              </p:par>
+                            </p:childTnLst>
+                          </p:cTn>
+                        </p:par>
+                        <p:par>
+                          <p:cTn id="23" fill="hold">
+                            <p:stCondLst>
+                              <p:cond delay="2000"/>
+                            </p:stCondLst>
+                            <p:childTnLst>
+                              <p:par>
+                                <p:cTn id="24" presetID="16" presetClass="entr" presetSubtype="37" fill="hold" nodeType="afterEffect">
+                                  <p:stCondLst>
+                                    <p:cond delay="0"/>
+                                  </p:stCondLst>
+                                  <p:childTnLst>
+                                    <p:set>
+                                      <p:cBhvr>
+                                        <p:cTn id="25" dur="1" fill="hold">
+                                          <p:stCondLst>
+                                            <p:cond delay="0"/>
+                                          </p:stCondLst>
+                                        </p:cTn>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="106"/>
+                                        </p:tgtEl>
+                                        <p:attrNameLst>
+                                          <p:attrName>style.visibility</p:attrName>
+                                        </p:attrNameLst>
+                                      </p:cBhvr>
+                                      <p:to>
+                                        <p:strVal val="visible"/>
+                                      </p:to>
+                                    </p:set>
+                                    <p:animEffect transition="in" filter="barn(outVertical)">
+                                      <p:cBhvr>
+                                        <p:cTn id="26" dur="500"/>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="106"/>
+                                        </p:tgtEl>
+                                      </p:cBhvr>
+                                    </p:animEffect>
+                                  </p:childTnLst>
+                                </p:cTn>
+                              </p:par>
+                            </p:childTnLst>
+                          </p:cTn>
+                        </p:par>
+                        <p:par>
+                          <p:cTn id="27" fill="hold">
+                            <p:stCondLst>
+                              <p:cond delay="2500"/>
+                            </p:stCondLst>
+                            <p:childTnLst>
+                              <p:par>
+                                <p:cTn id="28" presetID="22" presetClass="entr" presetSubtype="1" fill="hold" nodeType="afterEffect">
+                                  <p:stCondLst>
+                                    <p:cond delay="0"/>
+                                  </p:stCondLst>
+                                  <p:childTnLst>
+                                    <p:set>
+                                      <p:cBhvr>
+                                        <p:cTn id="29" dur="1" fill="hold">
+                                          <p:stCondLst>
+                                            <p:cond delay="0"/>
+                                          </p:stCondLst>
+                                        </p:cTn>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="107"/>
+                                        </p:tgtEl>
+                                        <p:attrNameLst>
+                                          <p:attrName>style.visibility</p:attrName>
+                                        </p:attrNameLst>
+                                      </p:cBhvr>
+                                      <p:to>
+                                        <p:strVal val="visible"/>
+                                      </p:to>
+                                    </p:set>
+                                    <p:animEffect transition="in" filter="wipe(up)">
+                                      <p:cBhvr>
+                                        <p:cTn id="30" dur="500"/>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="107"/>
+                                        </p:tgtEl>
+                                      </p:cBhvr>
+                                    </p:animEffect>
+                                  </p:childTnLst>
+                                </p:cTn>
+                              </p:par>
+                              <p:par>
+                                <p:cTn id="31" presetID="22" presetClass="entr" presetSubtype="1" fill="hold" nodeType="withEffect">
+                                  <p:stCondLst>
+                                    <p:cond delay="0"/>
+                                  </p:stCondLst>
+                                  <p:childTnLst>
+                                    <p:set>
+                                      <p:cBhvr>
+                                        <p:cTn id="32" dur="1" fill="hold">
+                                          <p:stCondLst>
+                                            <p:cond delay="0"/>
+                                          </p:stCondLst>
+                                        </p:cTn>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="108"/>
+                                        </p:tgtEl>
+                                        <p:attrNameLst>
+                                          <p:attrName>style.visibility</p:attrName>
+                                        </p:attrNameLst>
+                                      </p:cBhvr>
+                                      <p:to>
+                                        <p:strVal val="visible"/>
+                                      </p:to>
+                                    </p:set>
+                                    <p:animEffect transition="in" filter="wipe(up)">
+                                      <p:cBhvr>
+                                        <p:cTn id="33" dur="500"/>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="108"/>
+                                        </p:tgtEl>
+                                      </p:cBhvr>
+                                    </p:animEffect>
+                                  </p:childTnLst>
+                                </p:cTn>
+                              </p:par>
+                              <p:par>
+                                <p:cTn id="34" presetID="22" presetClass="entr" presetSubtype="1" fill="hold" nodeType="withEffect">
+                                  <p:stCondLst>
+                                    <p:cond delay="0"/>
+                                  </p:stCondLst>
+                                  <p:childTnLst>
+                                    <p:set>
+                                      <p:cBhvr>
+                                        <p:cTn id="35" dur="1" fill="hold">
+                                          <p:stCondLst>
+                                            <p:cond delay="0"/>
+                                          </p:stCondLst>
+                                        </p:cTn>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="109"/>
+                                        </p:tgtEl>
+                                        <p:attrNameLst>
+                                          <p:attrName>style.visibility</p:attrName>
+                                        </p:attrNameLst>
+                                      </p:cBhvr>
+                                      <p:to>
+                                        <p:strVal val="visible"/>
+                                      </p:to>
+                                    </p:set>
+                                    <p:animEffect transition="in" filter="wipe(up)">
+                                      <p:cBhvr>
+                                        <p:cTn id="36" dur="500"/>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="109"/>
+                                        </p:tgtEl>
+                                      </p:cBhvr>
+                                    </p:animEffect>
+                                  </p:childTnLst>
+                                </p:cTn>
+                              </p:par>
+                            </p:childTnLst>
+                          </p:cTn>
+                        </p:par>
+                        <p:par>
+                          <p:cTn id="37" fill="hold">
+                            <p:stCondLst>
+                              <p:cond delay="3000"/>
+                            </p:stCondLst>
+                            <p:childTnLst>
+                              <p:par>
+                                <p:cTn id="38" presetID="22" presetClass="entr" presetSubtype="1" fill="hold" nodeType="afterEffect">
+                                  <p:stCondLst>
+                                    <p:cond delay="0"/>
+                                  </p:stCondLst>
+                                  <p:childTnLst>
+                                    <p:set>
+                                      <p:cBhvr>
+                                        <p:cTn id="39" dur="1" fill="hold">
+                                          <p:stCondLst>
+                                            <p:cond delay="0"/>
+                                          </p:stCondLst>
+                                        </p:cTn>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="154"/>
+                                        </p:tgtEl>
+                                        <p:attrNameLst>
+                                          <p:attrName>style.visibility</p:attrName>
+                                        </p:attrNameLst>
+                                      </p:cBhvr>
+                                      <p:to>
+                                        <p:strVal val="visible"/>
+                                      </p:to>
+                                    </p:set>
+                                    <p:animEffect transition="in" filter="wipe(up)">
+                                      <p:cBhvr>
+                                        <p:cTn id="40" dur="500"/>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="154"/>
+                                        </p:tgtEl>
+                                      </p:cBhvr>
+                                    </p:animEffect>
+                                  </p:childTnLst>
+                                </p:cTn>
+                              </p:par>
+                              <p:par>
+                                <p:cTn id="41" presetID="22" presetClass="entr" presetSubtype="1" fill="hold" nodeType="withEffect">
+                                  <p:stCondLst>
+                                    <p:cond delay="0"/>
+                                  </p:stCondLst>
+                                  <p:childTnLst>
+                                    <p:set>
+                                      <p:cBhvr>
+                                        <p:cTn id="42" dur="1" fill="hold">
+                                          <p:stCondLst>
+                                            <p:cond delay="0"/>
+                                          </p:stCondLst>
+                                        </p:cTn>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="142"/>
+                                        </p:tgtEl>
+                                        <p:attrNameLst>
+                                          <p:attrName>style.visibility</p:attrName>
+                                        </p:attrNameLst>
+                                      </p:cBhvr>
+                                      <p:to>
+                                        <p:strVal val="visible"/>
+                                      </p:to>
+                                    </p:set>
+                                    <p:animEffect transition="in" filter="wipe(up)">
+                                      <p:cBhvr>
+                                        <p:cTn id="43" dur="500"/>
+                                        <p:tgtEl>
+                                          <p:spTgt spid="142"/>
+                                        </p:tgtEl>
+                                      </p:cBhvr>
+                                    </p:animEffect>
+                                  </p:childTnLst>
+                                </p:cTn>
+                              </p:par>
+                            </p:childTnLst>
+                          </p:cTn>
+                        </p:par>
+                      </p:childTnLst>
+                    </p:cTn>
+                  </p:par>
+                </p:childTnLst>
+              </p:cTn>
+              <p:prevCondLst>
+                <p:cond evt="onPrev" delay="0">
+                  <p:tgtEl>
+                    <p:sldTgt/>
+                  </p:tgtEl>
+                </p:cond>
+              </p:prevCondLst>
+              <p:nextCondLst>
+                <p:cond evt="onNext" delay="0">
+                  <p:tgtEl>
+                    <p:sldTgt/>
+                  </p:tgtEl>
+                </p:cond>
+              </p:nextCondLst>
+            </p:seq>
+          </p:childTnLst>
+        </p:cTn>
+      </p:par>
+    </p:tnLst>
+  </p:timing>
+</p:sld>

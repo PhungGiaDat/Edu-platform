@@ -1,0 +1,2865 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:bg>
+      <p:bgPr>
+        <a:solidFill>
+          <a:schemeClr val="bg1"/>
+        </a:solidFill>
+        <a:effectLst/>
+      </p:bgPr>
+    </p:bg>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name=""/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="31" name="Rounded Rectangle 30">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{79EE11F5-2ED5-C342-8444-99494C5A96F5}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="-426720" y="1118429"/>
+            <a:ext cx="266700" cy="685815"/>
+          </a:xfrm>
+          <a:prstGeom prst="roundRect">
+            <a:avLst>
+              <a:gd name="adj" fmla="val 8511"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="034EA2"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="32" name="Rounded Rectangle 31">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{E2D97DF2-F492-2141-9F75-95E01ADBD2E2}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="-426720" y="1914296"/>
+            <a:ext cx="266700" cy="685815"/>
+          </a:xfrm>
+          <a:prstGeom prst="roundRect">
+            <a:avLst>
+              <a:gd name="adj" fmla="val 8511"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="19226D"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="33" name="Rounded Rectangle 32">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{E0CB8DFC-8EAD-7146-9DA2-DCE69E9D8A31}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="-426720" y="2710163"/>
+            <a:ext cx="266700" cy="685815"/>
+          </a:xfrm>
+          <a:prstGeom prst="roundRect">
+            <a:avLst>
+              <a:gd name="adj" fmla="val 8511"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="33B2C1"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="34" name="Rounded Rectangle 33">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{0188E7A0-5D28-C24B-8977-5C0BED8C3B3C}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="-426720" y="3506030"/>
+            <a:ext cx="266700" cy="685815"/>
+          </a:xfrm>
+          <a:prstGeom prst="roundRect">
+            <a:avLst>
+              <a:gd name="adj" fmla="val 8511"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="50B848"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="35" name="Rounded Rectangle 34">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{8050812C-61EE-F94F-9165-8D99B7B2BD81}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="-426720" y="4301897"/>
+            <a:ext cx="266700" cy="685815"/>
+          </a:xfrm>
+          <a:prstGeom prst="roundRect">
+            <a:avLst>
+              <a:gd name="adj" fmla="val 8511"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="F37121"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="36" name="Rounded Rectangle 35">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{C1BB22BE-C1D9-FB48-AF8B-7D2B244C7D9E}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="-426720" y="5097764"/>
+            <a:ext cx="266700" cy="685815"/>
+          </a:xfrm>
+          <a:prstGeom prst="roundRect">
+            <a:avLst>
+              <a:gd name="adj" fmla="val 8511"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="E4E5E6"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="37" name="Round Diagonal Corner Rectangle 36">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{81443FE0-F509-2342-985F-E866C974601C}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="667811" y="4059428"/>
+            <a:ext cx="3252600" cy="2278527"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="19226D"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-VN"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="38" name="Round Diagonal Corner Rectangle 37">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{60E3F05E-7184-F54B-8592-98A9BE89369E}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="4318833" y="4021385"/>
+            <a:ext cx="3252600" cy="2278527"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="034EA2"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-VN"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="39" name="Round Diagonal Corner Rectangle 38">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{775375F1-3B8E-6D40-818F-AE63D6BC7B7B}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="4318833" y="1389128"/>
+            <a:ext cx="3252600" cy="2278527"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="19226D"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-VN"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="40" name="Round Diagonal Corner Rectangle 39">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{E36D9E51-3CAC-4743-B188-FA9755BBEB46}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="8016392" y="4021385"/>
+            <a:ext cx="3252600" cy="2278527"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="19226D"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-VN"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="41" name="Round Diagonal Corner Rectangle 40">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{42969B67-8850-0947-9311-E33A64753221}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="8016392" y="1389128"/>
+            <a:ext cx="3252600" cy="2278527"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="034EA2"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-VN"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="42" name="Round Diagonal Corner Rectangle 41">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{1D4F2E19-C2D8-7C4C-9779-71B56991366E}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="673055" y="1391624"/>
+            <a:ext cx="3252600" cy="2278527"/>
+          </a:xfrm>
+          <a:prstGeom prst="round2DiagRect">
+            <a:avLst>
+              <a:gd name="adj1" fmla="val 16667"/>
+              <a:gd name="adj2" fmla="val 0"/>
+            </a:avLst>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="034EA2"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="2">
+            <a:schemeClr val="accent1">
+              <a:shade val="50000"/>
+            </a:schemeClr>
+          </a:lnRef>
+          <a:fillRef idx="1">
+            <a:schemeClr val="accent1"/>
+          </a:fillRef>
+          <a:effectRef idx="0">
+            <a:schemeClr val="accent1"/>
+          </a:effectRef>
+          <a:fontRef idx="minor">
+            <a:schemeClr val="lt1"/>
+          </a:fontRef>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="ctr"/>
+            <a:endParaRPr lang="en-VN"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="43" name="テキスト ボックス 15">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{46CCE74E-0731-B14C-9FBE-06B85B87D9F9}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="923008" y="1731983"/>
+            <a:ext cx="1885950" cy="400110"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr lvl="0">
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="2000" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Key result </a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="44" name="テキスト ボックス 30">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{79B85FA9-5692-4A44-A702-1EBF80F50D5A}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="4564999" y="4373196"/>
+            <a:ext cx="1885950" cy="400110"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr lvl="0">
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="2000" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Key result </a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="45" name="楕円 33">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{AF11136A-5EFF-764D-B060-34014572C4F3}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="7040607" y="3859593"/>
+            <a:ext cx="739302" cy="739302"/>
+          </a:xfrm>
+          <a:prstGeom prst="ellipse">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="F37121"/>
+          </a:solidFill>
+          <a:ln w="12700" cap="flat" cmpd="sng" algn="ctr">
+            <a:noFill/>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr lIns="0" tIns="0" rIns="0" bIns="0" rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+              <a:lnSpc>
+                <a:spcPct val="100000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClrTx/>
+              <a:buSzTx/>
+              <a:buFontTx/>
+              <a:buNone/>
+              <a:tabLst/>
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1800" b="1" i="0" u="none" strike="noStrike" kern="0" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+                <a:ea typeface="ヒラギノ角ゴ 簡体中文 W3" panose="020B0300000000000000" pitchFamily="34" charset="-128"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>KR4</a:t>
+            </a:r>
+            <a:endParaRPr kumimoji="1" lang="ja-JP" altLang="en-US" sz="1800" b="1" i="0" u="none" strike="noStrike" kern="0" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+              <a:ln>
+                <a:noFill/>
+              </a:ln>
+              <a:solidFill>
+                <a:schemeClr val="bg1"/>
+              </a:solidFill>
+              <a:effectLst/>
+              <a:uLnTx/>
+              <a:uFillTx/>
+              <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+              <a:ea typeface="ヒラギノ角ゴ 簡体中文 W3" panose="020B0300000000000000" pitchFamily="34" charset="-128"/>
+              <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="46" name="テキスト ボックス 29">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{1B64E96A-A047-0E47-8960-1D79ACCB6306}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="8218100" y="1850314"/>
+            <a:ext cx="2530207" cy="400110"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr lvl="0">
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="2000" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Key result </a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="47" name="テキスト ボックス 28">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{8002CF3D-AB84-1049-8FFC-2EAAA1FFD86F}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="890274" y="4339153"/>
+            <a:ext cx="1885950" cy="400110"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr lvl="0">
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="2000" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Key result </a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="48" name="楕円 35">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{E2D226B1-11C5-434A-BD8E-E0582D2C1FDD}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="3411127" y="3869690"/>
+            <a:ext cx="739302" cy="739302"/>
+          </a:xfrm>
+          <a:prstGeom prst="ellipse">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="F37121"/>
+          </a:solidFill>
+          <a:ln w="12700" cap="flat" cmpd="sng" algn="ctr">
+            <a:noFill/>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr lIns="0" tIns="0" rIns="0" bIns="0" rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+              <a:lnSpc>
+                <a:spcPct val="100000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClrTx/>
+              <a:buSzTx/>
+              <a:buFontTx/>
+              <a:buNone/>
+              <a:tabLst/>
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1800" b="1" i="0" u="none" strike="noStrike" kern="0" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+                <a:ea typeface="ヒラギノ角ゴ 簡体中文 W3" panose="020B0300000000000000" pitchFamily="34" charset="-128"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>KR4</a:t>
+            </a:r>
+            <a:endParaRPr kumimoji="1" lang="ja-JP" altLang="en-US" sz="1800" b="1" i="0" u="none" strike="noStrike" kern="0" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+              <a:ln>
+                <a:noFill/>
+              </a:ln>
+              <a:solidFill>
+                <a:schemeClr val="bg1"/>
+              </a:solidFill>
+              <a:effectLst/>
+              <a:uLnTx/>
+              <a:uFillTx/>
+              <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+              <a:ea typeface="ヒラギノ角ゴ 簡体中文 W3" panose="020B0300000000000000" pitchFamily="34" charset="-128"/>
+              <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="49" name="楕円 36">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{2A95B24B-ADD3-0744-8B20-9B7112ED6A65}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="3317776" y="1170830"/>
+            <a:ext cx="739302" cy="739302"/>
+          </a:xfrm>
+          <a:prstGeom prst="ellipse">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="F37121"/>
+          </a:solidFill>
+          <a:ln w="12700" cap="flat" cmpd="sng" algn="ctr">
+            <a:noFill/>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr lIns="0" tIns="0" rIns="0" bIns="0" rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+              <a:lnSpc>
+                <a:spcPct val="100000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClrTx/>
+              <a:buSzTx/>
+              <a:buFontTx/>
+              <a:buNone/>
+              <a:tabLst/>
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1800" b="1" i="0" u="none" strike="noStrike" kern="0" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+                <a:ea typeface="ヒラギノ角ゴ 簡体中文 W3" panose="020B0300000000000000" pitchFamily="34" charset="-128"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>KR1</a:t>
+            </a:r>
+            <a:endParaRPr kumimoji="1" lang="ja-JP" altLang="en-US" sz="1800" b="1" i="0" u="none" strike="noStrike" kern="0" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+              <a:ln>
+                <a:noFill/>
+              </a:ln>
+              <a:solidFill>
+                <a:schemeClr val="bg1"/>
+              </a:solidFill>
+              <a:effectLst/>
+              <a:uLnTx/>
+              <a:uFillTx/>
+              <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+              <a:ea typeface="ヒラギノ角ゴ 簡体中文 W3" panose="020B0300000000000000" pitchFamily="34" charset="-128"/>
+              <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="50" name="テキスト ボックス 17">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{CA18CC04-0D56-7641-96AE-A95C142722E1}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="4534771" y="1774244"/>
+            <a:ext cx="2571549" cy="400110"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+              <a:lnSpc>
+                <a:spcPct val="100000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClrTx/>
+              <a:buSzTx/>
+              <a:buFontTx/>
+              <a:buNone/>
+              <a:tabLst/>
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="2000" b="1" i="0" u="none" strike="noStrike" kern="1200" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Key result </a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="52" name="楕円 1">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{47B7F4BD-8283-4242-A0CD-4D4D30C40A15}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="10845175" y="1144733"/>
+            <a:ext cx="739302" cy="739302"/>
+          </a:xfrm>
+          <a:prstGeom prst="ellipse">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="F37121"/>
+          </a:solidFill>
+          <a:ln w="12700" cap="flat" cmpd="sng" algn="ctr">
+            <a:noFill/>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr lIns="0" tIns="0" rIns="0" bIns="0" rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+              <a:lnSpc>
+                <a:spcPct val="100000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClrTx/>
+              <a:buSzTx/>
+              <a:buFontTx/>
+              <a:buNone/>
+              <a:tabLst/>
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1800" b="1" i="0" u="none" strike="noStrike" kern="0" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+                <a:ea typeface="ヒラギノ角ゴ 簡体中文 W3" panose="020B0300000000000000" pitchFamily="34" charset="-128"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>KR2</a:t>
+            </a:r>
+            <a:endParaRPr kumimoji="1" lang="ja-JP" altLang="en-US" sz="1800" b="1" i="0" u="none" strike="noStrike" kern="0" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+              <a:ln>
+                <a:noFill/>
+              </a:ln>
+              <a:solidFill>
+                <a:schemeClr val="bg1"/>
+              </a:solidFill>
+              <a:effectLst/>
+              <a:uLnTx/>
+              <a:uFillTx/>
+              <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+              <a:ea typeface="ヒラギノ角ゴ 簡体中文 W3" panose="020B0300000000000000" pitchFamily="34" charset="-128"/>
+              <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="56" name="楕円 39">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{DA857391-74FB-E941-93AD-0D254205D853}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="7001105" y="1163082"/>
+            <a:ext cx="739302" cy="739302"/>
+          </a:xfrm>
+          <a:prstGeom prst="ellipse">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="F37121"/>
+          </a:solidFill>
+          <a:ln w="12700" cap="flat" cmpd="sng" algn="ctr">
+            <a:noFill/>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr lIns="0" tIns="0" rIns="0" bIns="0" rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+              <a:lnSpc>
+                <a:spcPct val="100000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClrTx/>
+              <a:buSzTx/>
+              <a:buFontTx/>
+              <a:buNone/>
+              <a:tabLst/>
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1800" b="1" i="0" u="none" strike="noStrike" kern="0" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+                <a:ea typeface="ヒラギノ角ゴ 簡体中文 W3" panose="020B0300000000000000" pitchFamily="34" charset="-128"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>KR3</a:t>
+            </a:r>
+            <a:endParaRPr kumimoji="1" lang="ja-JP" altLang="en-US" sz="1800" b="1" i="0" u="none" strike="noStrike" kern="0" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+              <a:ln>
+                <a:noFill/>
+              </a:ln>
+              <a:solidFill>
+                <a:schemeClr val="bg1"/>
+              </a:solidFill>
+              <a:effectLst/>
+              <a:uLnTx/>
+              <a:uFillTx/>
+              <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+              <a:ea typeface="ヒラギノ角ゴ 簡体中文 W3" panose="020B0300000000000000" pitchFamily="34" charset="-128"/>
+              <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="57" name="テキスト ボックス 30">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{D3DF6C7C-F246-F94F-AC14-056EB5638130}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="8259713" y="4379729"/>
+            <a:ext cx="1885950" cy="400110"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr lvl="0">
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="2000" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Key result </a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="58" name="楕円 33">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{95D84412-397E-4D40-80B2-BE10B4EC61C4}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="10845175" y="3859593"/>
+            <a:ext cx="739302" cy="739302"/>
+          </a:xfrm>
+          <a:prstGeom prst="ellipse">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="F37121"/>
+          </a:solidFill>
+          <a:ln w="12700" cap="flat" cmpd="sng" algn="ctr">
+            <a:noFill/>
+            <a:prstDash val="solid"/>
+            <a:miter lim="800000"/>
+          </a:ln>
+          <a:effectLst/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr lIns="0" tIns="0" rIns="0" bIns="0" rtlCol="0" anchor="ctr"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="auto" latinLnBrk="0" hangingPunct="1">
+              <a:lnSpc>
+                <a:spcPct val="100000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClrTx/>
+              <a:buSzTx/>
+              <a:buFontTx/>
+              <a:buNone/>
+              <a:tabLst/>
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1800" b="1" i="0" u="none" strike="noStrike" kern="0" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+                <a:solidFill>
+                  <a:schemeClr val="bg1"/>
+                </a:solidFill>
+                <a:effectLst/>
+                <a:uLnTx/>
+                <a:uFillTx/>
+                <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+                <a:ea typeface="ヒラギノ角ゴ 簡体中文 W3" panose="020B0300000000000000" pitchFamily="34" charset="-128"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>KR4</a:t>
+            </a:r>
+            <a:endParaRPr kumimoji="1" lang="ja-JP" altLang="en-US" sz="1800" b="1" i="0" u="none" strike="noStrike" kern="0" cap="none" spc="0" normalizeH="0" baseline="0" noProof="0" dirty="0">
+              <a:ln>
+                <a:noFill/>
+              </a:ln>
+              <a:solidFill>
+                <a:schemeClr val="bg1"/>
+              </a:solidFill>
+              <a:effectLst/>
+              <a:uLnTx/>
+              <a:uFillTx/>
+              <a:latin typeface="BR Omega" pitchFamily="2" charset="77"/>
+              <a:ea typeface="ヒラギノ角ゴ 簡体中文 W3" panose="020B0300000000000000" pitchFamily="34" charset="-128"/>
+              <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="60" name="Rectangle 59">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{7F6957FD-7B65-E045-B3A6-602E9E13B57A}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="814970" y="2173685"/>
+            <a:ext cx="2760553" cy="1077218"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="87313" lvl="0">
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Lorem ipsum dolor sit </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>amet</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>consectetur</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>adipiscing</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>elit</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Etiam</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> a dui non </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>nulla</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>tempor</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>molestie</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="61" name="Rectangle 60">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{CDFBF91F-0140-3A47-BE81-583C780B908D}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="4440268" y="2173685"/>
+            <a:ext cx="2760553" cy="1077218"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="87313" lvl="0">
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Lorem ipsum dolor sit </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>amet</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>consectetur</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>adipiscing</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>elit</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Etiam</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> a dui non </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>nulla</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>tempor</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>molestie</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="62" name="Rectangle 61">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{5C1DA7A2-F508-4E4B-B20C-A639CEBA70C5}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="8102926" y="2246499"/>
+            <a:ext cx="2760553" cy="1077218"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="87313" lvl="0">
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Lorem ipsum dolor sit </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>amet</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>consectetur</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>adipiscing</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>elit</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Etiam</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> a dui non </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>nulla</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>tempor</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>molestie</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="63" name="Rectangle 62">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{23E81875-9CD7-C344-B759-E9BFC322767E}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="4455454" y="4823589"/>
+            <a:ext cx="2760553" cy="1077218"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="87313" lvl="0">
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Lorem ipsum dolor sit </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>amet</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>consectetur</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>adipiscing</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>elit</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Etiam</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> a dui non </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>nulla</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>tempor</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>molestie</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="64" name="Rectangle 63">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{F0106550-2D18-9248-BBAD-C34F4CE609B2}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="814969" y="4823589"/>
+            <a:ext cx="2760553" cy="1077218"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="87313" lvl="0">
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Lorem ipsum dolor sit </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>amet</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>consectetur</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>adipiscing</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>elit</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Etiam</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> a dui non </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>nulla</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>tempor</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>molestie</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="65" name="Rectangle 64">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{6F2AE9CC-D2C0-F744-B7AE-67B7507C876E}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="8185826" y="4823589"/>
+            <a:ext cx="2760553" cy="1077218"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="87313" lvl="0">
+              <a:defRPr/>
+            </a:pPr>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Lorem ipsum dolor sit </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>amet</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>consectetur</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>adipiscing</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>elit</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Etiam</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> a dui non </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>nulla</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>tempor</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0" err="1">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>molestie</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr kumimoji="1" lang="en-US" altLang="ja-JP" sz="1600" kern="0" dirty="0">
+                <a:solidFill>
+                  <a:prstClr val="white"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:ea typeface="メイリオ"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="3" name="Title 2">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{AB6A6F83-A752-F94E-B249-3BA7489FED68}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="title"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr/>
+        <p:txBody>
+          <a:bodyPr/>
+          <a:lstStyle/>
+          <a:p>
+            <a:endParaRPr lang="en-VN"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="2" name="Slide Number Placeholder 1">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{A1479401-C1C9-7F45-9ACE-4447DBC356ED}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="sldNum" sz="quarter" idx="12"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr/>
+        <p:txBody>
+          <a:bodyPr/>
+          <a:lstStyle/>
+          <a:p>
+            <a:fld id="{E012F146-47F9-A646-B182-8CC39B8AD32B}" type="slidenum">
+              <a:rPr lang="x-none" smtClean="0"/>
+              <a:pPr/>
+              <a:t>16</a:t>
+            </a:fld>
+            <a:endParaRPr lang="x-none"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+    <p:extLst>
+      <p:ext uri="{BB962C8B-B14F-4D97-AF65-F5344CB8AC3E}">
+        <p14:creationId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="3912524764"/>
+      </p:ext>
+    </p:extLst>
+  </p:cSld>
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+</p:sld>

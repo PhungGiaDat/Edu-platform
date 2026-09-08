@@ -1,0 +1,1028 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name=""/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="2" name="Title 1">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{F4C717B1-9B99-0EB2-EBAC-8A773A74C87B}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="title"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr/>
+        <p:txBody>
+          <a:bodyPr/>
+          <a:lstStyle/>
+          <a:p>
+            <a:endParaRPr lang="en-VN"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="3" name="Slide Number Placeholder 2">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{5D2B6F8D-A1BC-D253-AE6F-FC005D914A76}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="sldNum" sz="quarter" idx="12"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr/>
+        <p:txBody>
+          <a:bodyPr/>
+          <a:lstStyle/>
+          <a:p>
+            <a:fld id="{E012F146-47F9-A646-B182-8CC39B8AD32B}" type="slidenum">
+              <a:rPr lang="x-none" smtClean="0"/>
+              <a:pPr/>
+              <a:t>16</a:t>
+            </a:fld>
+            <a:endParaRPr lang="x-none"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:graphicFrame>
+        <p:nvGraphicFramePr>
+          <p:cNvPr id="4" name="Chart 3">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{3C3C8ED8-45A6-89D0-E8E7-5F9396E536F2}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvGraphicFramePr/>
+          <p:nvPr>
+            <p:extLst>
+              <p:ext uri="{D42A27DB-BD31-4B8C-83A1-F6EECF244321}">
+                <p14:modId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="3040889717"/>
+              </p:ext>
+            </p:extLst>
+          </p:nvPr>
+        </p:nvGraphicFramePr>
+        <p:xfrm>
+          <a:off x="5183990" y="1139603"/>
+          <a:ext cx="6724725" cy="5418667"/>
+        </p:xfrm>
+        <a:graphic>
+          <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart">
+            <c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId2"/>
+          </a:graphicData>
+        </a:graphic>
+      </p:graphicFrame>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="5" name="Text Placeholder 6">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{0181FB83-FE27-5DB3-80FF-B49AB7594AD9}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1">
+            <a:spLocks/>
+          </p:cNvSpPr>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="952214" y="1900498"/>
+            <a:ext cx="4964492" cy="4123863"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr/>
+          <a:lstStyle>
+            <a:lvl1pPr marL="457120" indent="-457120" algn="l" defTabSz="1218987" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1">
+              <a:spcBef>
+                <a:spcPct val="20000"/>
+              </a:spcBef>
+              <a:buFont typeface="Arial" pitchFamily="34" charset="0"/>
+              <a:buChar char="•"/>
+              <a:defRPr sz="3600" kern="1200">
+                <a:solidFill>
+                  <a:schemeClr val="tx1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="+mn-ea"/>
+                <a:cs typeface="+mn-cs"/>
+              </a:defRPr>
+            </a:lvl1pPr>
+            <a:lvl2pPr marL="990427" indent="-380933" algn="l" defTabSz="1218987" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1">
+              <a:spcBef>
+                <a:spcPct val="20000"/>
+              </a:spcBef>
+              <a:buFont typeface="Arial" pitchFamily="34" charset="0"/>
+              <a:buChar char="–"/>
+              <a:defRPr sz="3200" kern="1200">
+                <a:solidFill>
+                  <a:schemeClr val="tx1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="+mn-ea"/>
+                <a:cs typeface="+mn-cs"/>
+              </a:defRPr>
+            </a:lvl2pPr>
+            <a:lvl3pPr marL="1523733" indent="-304747" algn="l" defTabSz="1218987" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1">
+              <a:spcBef>
+                <a:spcPct val="20000"/>
+              </a:spcBef>
+              <a:buFont typeface="Arial" pitchFamily="34" charset="0"/>
+              <a:buChar char="•"/>
+              <a:defRPr sz="2400" kern="1200">
+                <a:solidFill>
+                  <a:schemeClr val="tx1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="+mn-ea"/>
+                <a:cs typeface="+mn-cs"/>
+              </a:defRPr>
+            </a:lvl3pPr>
+            <a:lvl4pPr marL="2133227" indent="-304747" algn="l" defTabSz="1218987" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1">
+              <a:spcBef>
+                <a:spcPct val="20000"/>
+              </a:spcBef>
+              <a:buFont typeface="Arial" pitchFamily="34" charset="0"/>
+              <a:buChar char="–"/>
+              <a:defRPr sz="2000" kern="1200">
+                <a:solidFill>
+                  <a:schemeClr val="tx1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="+mn-ea"/>
+                <a:cs typeface="+mn-cs"/>
+              </a:defRPr>
+            </a:lvl4pPr>
+            <a:lvl5pPr marL="2742720" indent="-304747" algn="l" defTabSz="1218987" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1">
+              <a:spcBef>
+                <a:spcPct val="20000"/>
+              </a:spcBef>
+              <a:buFont typeface="Arial" pitchFamily="34" charset="0"/>
+              <a:buChar char="»"/>
+              <a:defRPr sz="2000" kern="1200">
+                <a:solidFill>
+                  <a:schemeClr val="tx1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="+mn-ea"/>
+                <a:cs typeface="+mn-cs"/>
+              </a:defRPr>
+            </a:lvl5pPr>
+            <a:lvl6pPr marL="3352213" indent="-304747" algn="l" defTabSz="1218987" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1">
+              <a:spcBef>
+                <a:spcPct val="20000"/>
+              </a:spcBef>
+              <a:buFont typeface="Arial" pitchFamily="34" charset="0"/>
+              <a:buChar char="•"/>
+              <a:defRPr sz="2700" kern="1200">
+                <a:solidFill>
+                  <a:schemeClr val="tx1"/>
+                </a:solidFill>
+                <a:latin typeface="+mn-lt"/>
+                <a:ea typeface="+mn-ea"/>
+                <a:cs typeface="+mn-cs"/>
+              </a:defRPr>
+            </a:lvl6pPr>
+            <a:lvl7pPr marL="3961707" indent="-304747" algn="l" defTabSz="1218987" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1">
+              <a:spcBef>
+                <a:spcPct val="20000"/>
+              </a:spcBef>
+              <a:buFont typeface="Arial" pitchFamily="34" charset="0"/>
+              <a:buChar char="•"/>
+              <a:defRPr sz="2700" kern="1200">
+                <a:solidFill>
+                  <a:schemeClr val="tx1"/>
+                </a:solidFill>
+                <a:latin typeface="+mn-lt"/>
+                <a:ea typeface="+mn-ea"/>
+                <a:cs typeface="+mn-cs"/>
+              </a:defRPr>
+            </a:lvl7pPr>
+            <a:lvl8pPr marL="4571200" indent="-304747" algn="l" defTabSz="1218987" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1">
+              <a:spcBef>
+                <a:spcPct val="20000"/>
+              </a:spcBef>
+              <a:buFont typeface="Arial" pitchFamily="34" charset="0"/>
+              <a:buChar char="•"/>
+              <a:defRPr sz="2700" kern="1200">
+                <a:solidFill>
+                  <a:schemeClr val="tx1"/>
+                </a:solidFill>
+                <a:latin typeface="+mn-lt"/>
+                <a:ea typeface="+mn-ea"/>
+                <a:cs typeface="+mn-cs"/>
+              </a:defRPr>
+            </a:lvl8pPr>
+            <a:lvl9pPr marL="5180693" indent="-304747" algn="l" defTabSz="1218987" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1">
+              <a:spcBef>
+                <a:spcPct val="20000"/>
+              </a:spcBef>
+              <a:buFont typeface="Arial" pitchFamily="34" charset="0"/>
+              <a:buChar char="•"/>
+              <a:defRPr sz="2700" kern="1200">
+                <a:solidFill>
+                  <a:schemeClr val="tx1"/>
+                </a:solidFill>
+                <a:latin typeface="+mn-lt"/>
+                <a:ea typeface="+mn-ea"/>
+                <a:cs typeface="+mn-cs"/>
+              </a:defRPr>
+            </a:lvl9pPr>
+          </a:lstStyle>
+          <a:p>
+            <a:pPr marL="0" indent="0">
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="1200"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Lorem ipsum dolor sit </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>amet</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>consectetur</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>adipiscing</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>elit</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Etiam</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> a dui non </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>nulla</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>tempor</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>molestie</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr marL="171450" indent="-171450">
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="1200"/>
+              </a:spcAft>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Duis </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>lobortis</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> mi at </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>arcu</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>mattis</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> convallis. </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Phasellus</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>tincidunt</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>tellus</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> sit </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>amet</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> nisi </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>lobortis</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>, sed </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>fringilla</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> diam </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>luctus</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr marL="171450" indent="-171450">
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="1200"/>
+              </a:spcAft>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Sed </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>mattis</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>consectetur</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> ex, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>ut</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>aliquam</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> libero semper </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>porttitor</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Quisque</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>vulputate</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>sapien</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> et convallis cursus.</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr marL="171450" indent="-171450">
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="1200"/>
+              </a:spcAft>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Sed tempus vel </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>enim</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> convallis </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>sollicitudin</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>. </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>Curabitur</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> dictum </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>odio</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>eget</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>massa</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t> semper </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>luctus</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="1600" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="accent5"/>
+                </a:solidFill>
+                <a:latin typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Segoe UI" panose="020B0502040204020203" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>.</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+    <p:extLst>
+      <p:ext uri="{BB962C8B-B14F-4D97-AF65-F5344CB8AC3E}">
+        <p14:creationId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="2530146580"/>
+      </p:ext>
+    </p:extLst>
+  </p:cSld>
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+</p:sld>

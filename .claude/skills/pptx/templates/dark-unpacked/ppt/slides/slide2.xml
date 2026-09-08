@@ -1,0 +1,3373 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name=""/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+      <p:graphicFrame>
+        <p:nvGraphicFramePr>
+          <p:cNvPr id="2" name="Table 1"/>
+          <p:cNvGraphicFramePr>
+            <a:graphicFrameLocks noGrp="1"/>
+          </p:cNvGraphicFramePr>
+          <p:nvPr>
+            <p:extLst>
+              <p:ext uri="{D42A27DB-BD31-4B8C-83A1-F6EECF244321}">
+                <p14:modId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="2449064430"/>
+              </p:ext>
+            </p:extLst>
+          </p:nvPr>
+        </p:nvGraphicFramePr>
+        <p:xfrm>
+          <a:off x="389355" y="442457"/>
+          <a:ext cx="11370027" cy="4480525"/>
+        </p:xfrm>
+        <a:graphic>
+          <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table">
+            <a:tbl>
+              <a:tblPr>
+                <a:tableStyleId>{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}</a:tableStyleId>
+              </a:tblPr>
+              <a:tblGrid>
+                <a:gridCol w="523876">
+                  <a:extLst>
+                    <a:ext uri="{9D8B030D-6E8A-4147-A177-3AD203B41FA5}">
+                      <a16:colId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="4237591142"/>
+                    </a:ext>
+                  </a:extLst>
+                </a:gridCol>
+                <a:gridCol w="1552222">
+                  <a:extLst>
+                    <a:ext uri="{9D8B030D-6E8A-4147-A177-3AD203B41FA5}">
+                      <a16:colId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="1926035370"/>
+                    </a:ext>
+                  </a:extLst>
+                </a:gridCol>
+                <a:gridCol w="970139">
+                  <a:extLst>
+                    <a:ext uri="{9D8B030D-6E8A-4147-A177-3AD203B41FA5}">
+                      <a16:colId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="1014065635"/>
+                    </a:ext>
+                  </a:extLst>
+                </a:gridCol>
+                <a:gridCol w="2774418">
+                  <a:extLst>
+                    <a:ext uri="{9D8B030D-6E8A-4147-A177-3AD203B41FA5}">
+                      <a16:colId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="946925643"/>
+                    </a:ext>
+                  </a:extLst>
+                </a:gridCol>
+                <a:gridCol w="2519359">
+                  <a:extLst>
+                    <a:ext uri="{9D8B030D-6E8A-4147-A177-3AD203B41FA5}">
+                      <a16:colId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="3095928194"/>
+                    </a:ext>
+                  </a:extLst>
+                </a:gridCol>
+                <a:gridCol w="1361374">
+                  <a:extLst>
+                    <a:ext uri="{9D8B030D-6E8A-4147-A177-3AD203B41FA5}">
+                      <a16:colId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="2654595980"/>
+                    </a:ext>
+                  </a:extLst>
+                </a:gridCol>
+                <a:gridCol w="1668639">
+                  <a:extLst>
+                    <a:ext uri="{9D8B030D-6E8A-4147-A177-3AD203B41FA5}">
+                      <a16:colId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="3777438377"/>
+                    </a:ext>
+                  </a:extLst>
+                </a:gridCol>
+              </a:tblGrid>
+              <a:tr h="354439">
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike" dirty="0">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:extLst>
+                  <a:ext uri="{0D108BD9-81ED-4DB2-BD59-A6C34878D82A}">
+                    <a16:rowId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="2604778593"/>
+                  </a:ext>
+                </a:extLst>
+              </a:tr>
+              <a:tr h="368616">
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>II</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc gridSpan="2">
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1400" b="1" u="none" strike="noStrike" dirty="0">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>RECORD OF CHANGE</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1400" b="1" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc hMerge="1">
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:endParaRPr lang="en-US"/>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr/>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike" dirty="0">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:extLst>
+                  <a:ext uri="{0D108BD9-81ED-4DB2-BD59-A6C34878D82A}">
+                    <a16:rowId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="1920735348"/>
+                  </a:ext>
+                </a:extLst>
+              </a:tr>
+              <a:tr h="185440">
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1200" b="1" u="none" strike="noStrike" dirty="0">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1200" b="1" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0">
+                    <a:lnL w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="12700" cap="flat" cmpd="sng" algn="ctr">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:lnTlToBr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnTlToBr>
+                    <a:lnBlToTr w="12700" cmpd="sng">
+                      <a:noFill/>
+                      <a:prstDash val="solid"/>
+                    </a:lnBlToTr>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:extLst>
+                  <a:ext uri="{0D108BD9-81ED-4DB2-BD59-A6C34878D82A}">
+                    <a16:rowId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="103491229"/>
+                  </a:ext>
+                </a:extLst>
+              </a:tr>
+              <a:tr h="532288">
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="ctr"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1400" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>No</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1400" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1">
+                        <a:lumMod val="85000"/>
+                      </a:schemeClr>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="ctr"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1400" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>Effective Date</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1400" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1">
+                        <a:lumMod val="85000"/>
+                      </a:schemeClr>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="ctr"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1400" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>Version</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1400" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1">
+                        <a:lumMod val="85000"/>
+                      </a:schemeClr>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="ctr"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1400" b="1" u="none" strike="noStrike" dirty="0">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>Change Description</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1400" b="1" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1">
+                        <a:lumMod val="85000"/>
+                      </a:schemeClr>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="ctr"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1400" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>Reason</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1400" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1">
+                        <a:lumMod val="85000"/>
+                      </a:schemeClr>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="ctr"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1400" b="1" u="none" strike="noStrike">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>Reviewer</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1400" b="1" i="0" u="none" strike="noStrike">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1">
+                        <a:lumMod val="85000"/>
+                      </a:schemeClr>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="ctr"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1400" b="1" u="none" strike="noStrike" dirty="0">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>Approver</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1400" b="1" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1">
+                        <a:lumMod val="85000"/>
+                      </a:schemeClr>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:extLst>
+                  <a:ext uri="{0D108BD9-81ED-4DB2-BD59-A6C34878D82A}">
+                    <a16:rowId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="2721296265"/>
+                  </a:ext>
+                </a:extLst>
+              </a:tr>
+              <a:tr h="967006">
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1400" u="none" strike="noStrike" dirty="0">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>1</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1400" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>15-Dec-2021</a:t>
+                      </a:r>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>1.0</a:t>
+                      </a:r>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>Create</a:t>
+                      </a:r>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" baseline="0" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> New</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:solidFill>
+                          <a:srgbClr val="000000"/>
+                        </a:solidFill>
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr marL="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="t" latinLnBrk="0" hangingPunct="1"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" kern="1200" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:ea typeface="+mn-ea"/>
+                          <a:cs typeface="+mn-cs"/>
+                        </a:rPr>
+                        <a:t>To the request of the BOD, the purpose is enhance the brand image of FPT Software, and the security system and regulations of the new commercial brand of FPT Software</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="vi-VN" sz="1100" b="0" i="0" u="none" strike="noStrike" kern="1200" dirty="0">
+                        <a:solidFill>
+                          <a:srgbClr val="000000"/>
+                        </a:solidFill>
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:ea typeface="+mn-ea"/>
+                        <a:cs typeface="+mn-cs"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>BOD</a:t>
+                      </a:r>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>BOD</a:t>
+                      </a:r>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:extLst>
+                  <a:ext uri="{0D108BD9-81ED-4DB2-BD59-A6C34878D82A}">
+                    <a16:rowId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="2926550587"/>
+                  </a:ext>
+                </a:extLst>
+              </a:tr>
+              <a:tr h="1034473">
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1400" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>2</a:t>
+                      </a:r>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>03-Apr-2023</a:t>
+                      </a:r>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>1.1</a:t>
+                      </a:r>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>Update more</a:t>
+                      </a:r>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" baseline="0" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t> slide for </a:t>
+                      </a:r>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>EVP project: 7, 10, 14, 20,21, 23, 24, 25, 26, 29, 37</a:t>
+                      </a:r>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="t" latinLnBrk="0" hangingPunct="1">
+                        <a:lnSpc>
+                          <a:spcPct val="100000"/>
+                        </a:lnSpc>
+                        <a:spcBef>
+                          <a:spcPts val="0"/>
+                        </a:spcBef>
+                        <a:spcAft>
+                          <a:spcPts val="0"/>
+                        </a:spcAft>
+                        <a:buClrTx/>
+                        <a:buSzTx/>
+                        <a:buFontTx/>
+                        <a:buNone/>
+                        <a:tabLst/>
+                        <a:defRPr/>
+                      </a:pPr>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" kern="1200" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:ea typeface="+mn-ea"/>
+                          <a:cs typeface="+mn-cs"/>
+                        </a:rPr>
+                        <a:t>To the request of the BOD, the purpose is enhance the brand image of FPT Software, and the security system and regulations of the new commercial brand of FPT Software</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="vi-VN" sz="1100" b="0" i="0" u="none" strike="noStrike" kern="1200" dirty="0">
+                        <a:solidFill>
+                          <a:srgbClr val="000000"/>
+                        </a:solidFill>
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:ea typeface="+mn-ea"/>
+                        <a:cs typeface="+mn-cs"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>BOD</a:t>
+                      </a:r>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>BOD</a:t>
+                      </a:r>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:extLst>
+                  <a:ext uri="{0D108BD9-81ED-4DB2-BD59-A6C34878D82A}">
+                    <a16:rowId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="607354144"/>
+                  </a:ext>
+                </a:extLst>
+              </a:tr>
+              <a:tr h="1034473">
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="vi-VN" sz="1400" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>3</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1400" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0" smtClean="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>15</a:t>
+                      </a:r>
+                      <a:r>
+                        <a:rPr lang="vi-VN" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0" smtClean="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>-Aug-2025</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:solidFill>
+                          <a:srgbClr val="000000"/>
+                        </a:solidFill>
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="vi-VN" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>1.2</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:solidFill>
+                          <a:srgbClr val="000000"/>
+                        </a:solidFill>
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="l" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="vi-VN" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>Update Global map in slide 46</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:solidFill>
+                          <a:srgbClr val="000000"/>
+                        </a:solidFill>
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" fontAlgn="t" latinLnBrk="0" hangingPunct="1">
+                        <a:lnSpc>
+                          <a:spcPct val="100000"/>
+                        </a:lnSpc>
+                        <a:spcBef>
+                          <a:spcPts val="0"/>
+                        </a:spcBef>
+                        <a:spcAft>
+                          <a:spcPts val="0"/>
+                        </a:spcAft>
+                        <a:buClrTx/>
+                        <a:buSzTx/>
+                        <a:buFontTx/>
+                        <a:buNone/>
+                        <a:tabLst/>
+                        <a:defRPr/>
+                      </a:pPr>
+                      <a:r>
+                        <a:rPr lang="vi-VN" sz="1100" b="0" i="0" u="none" strike="noStrike" kern="1200" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:ea typeface="+mn-ea"/>
+                          <a:cs typeface="+mn-cs"/>
+                        </a:rPr>
+                        <a:t>To the request</a:t>
+                      </a:r>
+                      <a:r>
+                        <a:rPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" kern="1200" dirty="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                          <a:ea typeface="+mn-ea"/>
+                          <a:cs typeface="+mn-cs"/>
+                        </a:rPr>
+                        <a:t> of QMS, the purpose is Standardizing Vietnam map images</a:t>
+                      </a:r>
+                      <a:endParaRPr lang="vi-VN" sz="1100" b="0" i="0" u="none" strike="noStrike" kern="1200" dirty="0">
+                        <a:solidFill>
+                          <a:srgbClr val="000000"/>
+                        </a:solidFill>
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        <a:ea typeface="+mn-ea"/>
+                        <a:cs typeface="+mn-cs"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="vi-VN" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0" smtClean="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>ThaoNTT32 </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="vi-VN" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:solidFill>
+                          <a:srgbClr val="000000"/>
+                        </a:solidFill>
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:endParaRPr lang="en-US" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:solidFill>
+                          <a:srgbClr val="000000"/>
+                        </a:solidFill>
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:tc>
+                  <a:txBody>
+                    <a:bodyPr/>
+                    <a:lstStyle/>
+                    <a:p>
+                      <a:pPr algn="ctr" fontAlgn="t"/>
+                      <a:r>
+                        <a:rPr lang="vi-VN" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0" smtClean="0">
+                          <a:solidFill>
+                            <a:srgbClr val="000000"/>
+                          </a:solidFill>
+                          <a:effectLst/>
+                          <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                        </a:rPr>
+                        <a:t>QuynhHN </a:t>
+                      </a:r>
+                      <a:endParaRPr lang="vi-VN" sz="1100" b="0" i="0" u="none" strike="noStrike" dirty="0">
+                        <a:solidFill>
+                          <a:srgbClr val="000000"/>
+                        </a:solidFill>
+                        <a:effectLst/>
+                        <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                      </a:endParaRPr>
+                    </a:p>
+                  </a:txBody>
+                  <a:tcPr marL="6350" marR="6350" marT="6350" marB="0" anchor="ctr">
+                    <a:lnL w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnL>
+                    <a:lnR w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnR>
+                    <a:lnT w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnT>
+                    <a:lnB w="6350" cap="flat" cmpd="sng" algn="ctr">
+                      <a:solidFill>
+                        <a:schemeClr val="tx1"/>
+                      </a:solidFill>
+                      <a:prstDash val="solid"/>
+                      <a:round/>
+                      <a:headEnd type="none" w="med" len="med"/>
+                      <a:tailEnd type="none" w="med" len="med"/>
+                    </a:lnB>
+                    <a:solidFill>
+                      <a:schemeClr val="bg1"/>
+                    </a:solidFill>
+                  </a:tcPr>
+                </a:tc>
+                <a:extLst>
+                  <a:ext uri="{0D108BD9-81ED-4DB2-BD59-A6C34878D82A}">
+                    <a16:rowId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" val="4199292966"/>
+                  </a:ext>
+                </a:extLst>
+              </a:tr>
+            </a:tbl>
+          </a:graphicData>
+        </a:graphic>
+      </p:graphicFrame>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="3" name="TextBox 2"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="680884" y="5649264"/>
+            <a:ext cx="8895806" cy="553998"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:r>
+              <a:rPr lang="en-GB" sz="1200" b="1" u="sng" dirty="0">
+                <a:solidFill>
+                  <a:srgbClr val="FF0000"/>
+                </a:solidFill>
+                <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+                <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+              </a:rPr>
+              <a:t>*Note: This 2 page only record doc information, not use</a:t>
+            </a:r>
+            <a:endParaRPr lang="en-US" sz="1200" b="1" dirty="0">
+              <a:solidFill>
+                <a:srgbClr val="FF0000"/>
+              </a:solidFill>
+              <a:latin typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+              <a:cs typeface="Arial" panose="020B0604020202020204" pitchFamily="34" charset="0"/>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:endParaRPr lang="en-US" dirty="0"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+    <p:extLst>
+      <p:ext uri="{BB962C8B-B14F-4D97-AF65-F5344CB8AC3E}">
+        <p14:creationId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="1603625148"/>
+      </p:ext>
+    </p:extLst>
+  </p:cSld>
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+</p:sld>
