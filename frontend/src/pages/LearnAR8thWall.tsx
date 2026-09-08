@@ -32,7 +32,7 @@ type Phase =
   | 'ERROR';
 
 /** XR target data for one flashcard, fetched after QR scan */
-interface XRTarget {
+export interface XRTarget {
   qr_id: string;
   word: string;
   xr_target_json_url?: string;
@@ -45,6 +45,55 @@ interface XRTarget {
   position?: string;
   rotation?: string;
   scale?: string;
+}
+
+type XRTargetResponse = {
+  word?: string;
+  xr_target_json_url?: string;
+  xr_target_image_url?: string;
+  model_3d_url?: string;
+  texture_url?: string;
+  animations?: string[];
+  default_animation?: string;
+  combo_animation?: string;
+  position?: string;
+  rotation?: string;
+  scale?: string;
+  tracking_target?: Partial<XRTargetResponse>;
+  target?: Partial<XRTargetResponse>;
+};
+
+export function normalizeXRTarget(targetQrId: string, raw: XRTargetResponse): XRTarget {
+  return {
+    qr_id: targetQrId,
+    word: raw.word || targetQrId.replace('001', ''),
+    xr_target_json_url: raw.tracking_target?.xr_target_json_url || raw.xr_target_json_url,
+    xr_target_image_url: raw.tracking_target?.xr_target_image_url || raw.xr_target_image_url,
+    model_3d_url: raw.target?.model_3d_url || raw.model_3d_url,
+    texture_url: raw.target?.texture_url || raw.texture_url,
+    animations: raw.target?.animations || raw.animations,
+    default_animation: raw.target?.default_animation || raw.default_animation || 'IDLE',
+    combo_animation: raw.target?.combo_animation || raw.combo_animation,
+    position: raw.target?.position || '0 0 0',
+    rotation: raw.target?.rotation || '0 0 0',
+    scale: raw.target?.scale || '1 1 1',
+  };
+}
+
+export function serializeXRTargets(targets: XRTarget[]): string {
+  return JSON.stringify(targets.map(target => ({
+    qr_id: target.qr_id,
+    word: target.word,
+    xr_target_json_url: target.xr_target_json_url,
+    xr_target_image_url: target.xr_target_image_url,
+    model_3d_url: target.model_3d_url,
+    animations: target.animations,
+    default_animation: target.default_animation,
+    combo_animation: target.combo_animation,
+    position: target.position,
+    rotation: target.rotation,
+    scale: target.scale,
+  })));
 }
 
 export const LearnAR8thWall: React.FC = () => {
@@ -243,21 +292,7 @@ export const LearnAR8thWall: React.FC = () => {
   const fetchXRTarget = useCallback(async (targetQrId: string): Promise<XRTarget> => {
     const res = await fetch(`${API_BASE}/api/v1/flashcard/${targetQrId}/xr-urls`);
     if (!res.ok) throw new Error(`XR target ${targetQrId}: API ${res.status}`);
-    const raw = await res.json();
-    return {
-      qr_id: targetQrId,
-      word: raw.word || targetQrId.replace('001', ''),
-      xr_target_json_url: raw.tracking_target?.xr_target_json_url || raw.xr_target_json_url,
-      xr_target_image_url: raw.tracking_target?.xr_target_image_url || raw.xr_target_image_url,
-      model_3d_url: raw.target?.model_3d_url || raw.model_3d_url,
-      texture_url: raw.target?.texture_url || raw.texture_url,
-      animations: raw.target?.animations || raw.animations,
-      default_animation: raw.target?.default_animation || raw.default_animation || 'IDLE',
-      combo_animation: raw.target?.combo_animation || raw.combo_animation,
-      position: raw.target?.position || '0 0 0',
-      rotation: raw.target?.rotation || '0 0 0',
-      scale: raw.target?.scale || '1 1 1',
-    };
+    return normalizeXRTarget(targetQrId, await res.json());
   }, []);
 
   // ========================================================================
@@ -476,20 +511,7 @@ export const LearnAR8thWall: React.FC = () => {
     if (currentTarget.scale)     params.set('scale', currentTarget.scale);
     // Milestone 1: pass all tracked targets (cat + fish) to viewer
     if (xrTargets.length > 0) {
-      const trackingPayload = xrTargets.map(t => ({
-        qr_id: t.qr_id,
-        word: t.word,
-        xr_target_json_url: t.xr_target_json_url,
-        xr_target_image_url: t.xr_target_image_url,
-        model_3d_url: t.model_3d_url,
-        animations: t.animations,
-        default_animation: t.default_animation,
-        combo_animation: t.combo_animation,
-        position: t.position,
-        rotation: t.rotation,
-        scale: t.scale,
-      }));
-      params.set('xr_targets', JSON.stringify(trackingPayload));
+      params.set('xr_targets', serializeXRTargets(xrTargets));
     }
     params.set('debug', 'true');
     return `/ar-xr.html?${params.toString()}`;
