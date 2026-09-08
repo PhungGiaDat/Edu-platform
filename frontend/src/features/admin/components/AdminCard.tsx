@@ -43,10 +43,9 @@ interface StatCardProps {
   title: string;
   value: string | number;
   icon?: React.ReactNode;
-  trend?: {
-    value: number;
-    isPositive: boolean;
-  };
+  trend?: { value: number; isPositive: boolean };
+  foot?: React.ReactNode;
+  /** reserved: kept for caller compatibility, not applied to styles yet */
   color?: 'blue' | 'green' | 'yellow' | 'pink';
 }
 
@@ -55,21 +54,24 @@ export const StatCard: React.FC<StatCardProps> = ({
   value,
   icon,
   trend,
+  foot,
 }) => (
   <AdminCard className="admin-stat-card">
-    <div className="flex items-start justify-between gap-4">
-      <div>
-        <p className="admin-stat-label">{title}</p>
-        <p className="admin-stat-value">{value}</p>
-        {trend && (
-          <p className={`mt-2 mb-0 text-xs font-extrabold ${trend.isPositive ? 'text-emerald-700' : 'text-red-700'}`}>
-            <span aria-hidden="true">{trend.isPositive ? '↑' : '↓'}</span>{' '}
-            {Math.abs(trend.value)}%
-          </p>
-        )}
-      </div>
-      {icon && <div className="admin-stat-icon">{icon}</div>}
+    <div className="flex items-start justify-between gap-3">
+      <p className="admin-stat-label" style={{ marginBottom: 0 }}>{title}</p>
+      {icon && (
+        <span className="admin-stat-icon" aria-hidden="true" style={{ width: 30, height: 30, borderRadius: 10 }}>
+          {icon}
+        </span>
+      )}
     </div>
+    <p className="admin-stat-value" style={{ marginTop: 6 }}>{value}</p>
+    {trend && (
+      <p className="mt-1.5 mb-0 text-[11px] font-extrabold" style={{ color: trend.isPositive ? 'var(--admin-accent)' : 'var(--admin-danger)', fontFamily: "'Nunito', sans-serif" }}>
+        <span aria-hidden="true">{trend.isPositive ? '▲' : '▼'}</span> {Math.abs(trend.value)}%
+      </p>
+    )}
+    {foot && <div className="mt-2">{foot}</div>}
   </AdminCard>
 );
 
