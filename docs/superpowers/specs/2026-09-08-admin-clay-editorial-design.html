@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spec — Admin Clay Editorial Redesign</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=DM+Sans:wght@400;500;700&display=swap');
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: linear-gradient(150deg, #F7F5F0, #F2EFE7);
+    color: #22303A;
+    line-height: 1.65;
+    padding: 32px 16px 80px;
+  }
+  .page { max-width: 860px; margin: 0 auto; }
+  .hero {
+    background: #fff;
+    border: 2px solid #fff;
+    border-radius: 18px;
+    padding: 26px 30px;
+    margin-bottom: 22px;
+    box-shadow: 0 5px 0 rgba(34,48,58,.05), 0 10px 22px rgba(34,48,58,.05), inset 0 2px 0 #fff;
+  }
+  .hero h1 { font-family: 'Nunito'; font-weight: 900; font-size: 26px; letter-spacing: -.02em; margin-bottom: 6px; }
+  .hero .meta { font-family: 'DM Sans'; font-size: 13px; color: rgba(34,48,58,.55); }
+  .hero .meta b { color: #0D9488; }
+  section {
+    background: #fff;
+    border: 2px solid #fff;
+    border-radius: 18px;
+    padding: 22px 26px;
+    margin-bottom: 18px;
+    box-shadow: 0 5px 0 rgba(34,48,58,.05), 0 10px 22px rgba(34,48,58,.05), inset 0 2px 0 #fff;
+  }
+  h2 {
+    font-family: 'Nunito'; font-weight: 900; font-size: 16px;
+    letter-spacing: .01em; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 9px;
+  }
+  h2 .n {
+    width: 26px; height: 26px; border-radius: 9px; flex-shrink: 0;
+    background: rgba(13,148,136,.12); color: #0D9488;
+    display: grid; place-items: center; font-size: 13px; font-weight: 900;
+  }
+  p { margin-bottom: 10px; font-size: 14px; }
+  p:last-child { margin-bottom: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th {
+    text-align: left; font-size: 10.5px; letter-spacing: .07em; text-transform: uppercase;
+    color: rgba(34,48,58,.55); padding: 7px 10px; border-bottom: 2px solid rgba(34,48,58,.1);
+    font-weight: 800;
+  }
+  td { padding: 8px 10px; border-bottom: 1.5px dashed rgba(34,48,58,.08); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td code, p code {
+    font-family: 'Fira Code', ui-monospace, monospace; font-size: 12px;
+    background: rgba(13,148,136,.08); color: #0F766E;
+    border-radius: 5px; padding: 1px 6px; white-space: nowrap;
+  }
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+  .sw { display: flex; align-items: center; gap: 8px; background: #fff; border: 1.5px solid rgba(34,48,58,.08); border-radius: 12px; padding: 6px 10px 6px 6px; }
+  .sw i { width: 24px; height: 24px; border-radius: 8px; display: block; box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 2px 0 rgba(34,48,58,.08); }
+  .sw small { font-size: 11px; line-height: 1.3; }
+  .sw small b { display: block; font-family: 'Fira Code', monospace; font-size: 10.5px; color: rgba(34,48,58,.6); }
+  ul { padding-left: 20px; font-size: 14px; }
+  li { margin-bottom: 6px; }
+  li::marker { color: #0D9488; font-weight: 900; }
+  .ok { color: #0D9488; font-weight: 800; }
+  .note {
+    background: rgba(13,148,136,.06); border: 1.5px dashed rgba(13,148,136,.3);
+    border-radius: 13px; padding: 12px 16px; font-size: 13.5px; margin-top: 12px;
+  }
+  .frame-demo {
+    display: grid; grid-template-columns: 200px 1fr; border-radius: 20px; overflow: hidden;
+    border: 2px solid rgba(255,255,255,.8); box-shadow: 0 5px 0 rgba(34,48,58,.06); margin: 14px 0 4px;
+    font-size: 13px; min-height: 430px; font-family: 'Nunito', sans-serif; color: #22303A;
+    background: linear-gradient(150deg, #F7F5F0 0%, #F2EFE7 100%);
+  }
+  .frame-demo .side { width:200px; padding:16px 12px; display:flex; flex-direction:column; gap:4px; flex-shrink:0; background:rgba(255,255,255,.65); border-right:2px solid #fff; }
+  .frame-demo .brand { display:flex; align-items:center; gap:9px; font-weight:900; font-size:15px; padding:2px 8px 14px; letter-spacing:-.02em; }
+  .frame-demo .mark { width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:15px; background:linear-gradient(145deg,#14B8A6,#0D9488); box-shadow:0 4px 0 #0B6B60, inset 0 2px 0 rgba(255,255,255,.4); color:#fff; }
+  .frame-demo .brand em { font-style:normal; color:#0D9488; }
+  .frame-demo .nav { display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:13px;font-weight:700;font-size:12.5px;opacity:.62; }
+  .frame-demo .nav.on { opacity:1; background:#fff; box-shadow:0 4px 0 rgba(34,48,58,.08), inset 0 1px 0 #fff; color:#0D9488; }
+  .frame-demo .nav .ic { width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font-size:12px; background:rgba(13,148,136,.12); color:#0D9488; }
+  .frame-demo .user { margin-top:auto; display:flex;align-items:center;gap:8px;padding:10px;border-radius:14px;font-weight:800;font-size:12px; background:#fff; box-shadow:0 3px 0 rgba(34,48,58,.07); }
+  .frame-demo .ava { width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:11px;font-weight:900; background:linear-gradient(145deg,#FDE68A,#FCD34D); color:#92400E; }
+  .frame-demo .gear { margin-left:auto; opacity:.4; }
+  .frame-demo .main { flex:1; padding:18px 20px; min-width:0; }
+  .frame-demo .ph { display:flex;align-items:center;justify-content:space-between;margin-bottom:14px; }
+  .frame-demo h3 { margin:0;font-size:19px;font-weight:900;letter-spacing:-.02em; font-family:'Nunito'; }
+  .frame-demo .sub { font-family:'DM Sans';font-size:12px;opacity:.55;font-weight:500; }
+  .frame-demo .btn { border:none;border-radius:13px;padding:9px 16px;font-family:'Nunito';font-weight:800;font-size:12.5px;cursor:pointer; background:linear-gradient(145deg,#14B8A6,#0D9488); color:#fff; box-shadow:0 5px 0 #0B6B60, inset 0 2px 0 rgba(255,255,255,.35); }
+  .frame-demo .lbl { font-family:'DM Sans';font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;opacity:.5; }
+  .frame-demo .num { font-weight:900;font-size:25px;letter-spacing:-.02em;line-height:1.15; }
+  .frame-demo .stats { display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:14px; }
+  .frame-demo .stat { background:#fff; border-radius:18px; padding:13px 15px; box-shadow:0 5px 0 rgba(34,48,58,.06), 0 10px 22px rgba(34,48,58,.06), inset 0 2px 0 #fff; border:2px solid #fff; }
+  .frame-demo .stat .head { display:flex;justify-content:space-between;align-items:center; }
+  .frame-demo .stat .ic { width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:14px; background:rgba(13,148,136,.12); color:#0D9488; }
+  .frame-demo .delta { font-size:11px;font-weight:800;color:#0D9488; }
+  .frame-demo .dim { font-size:11px;font-weight:800;opacity:.45; }
+  .frame-demo .panels { display:grid;grid-template-columns:1.7fr 1fr;gap:11px; }
+  .frame-demo .panel { background:#fff; border-radius:18px; padding:14px 16px; box-shadow:0 5px 0 rgba(34,48,58,.05), 0 10px 20px rgba(34,48,58,.05), inset 0 2px 0 #fff; border:2px solid #fff; }
+  .frame-demo .panel .head { display:flex;justify-content:space-between;align-items:center;margin-bottom:4px; }
+  .frame-demo .more { font-size:11px;font-weight:800;color:#0D9488; }
+  .frame-demo table { width:100%;border-collapse:collapse; }
+  .frame-demo td { padding:8px 0; font-family:'DM Sans';font-weight:500; border-bottom:1.5px dashed rgba(34,48,58,.08); }
+  .frame-demo tr:last-child td { border-bottom:none; }
+  .frame-demo td.n { text-align:right;font-weight:900;font-family:'Nunito'; color:rgba(34,48,58,.4);font-size:11px; }
+  .frame-demo .chip { display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:3px 9px;font-size:10.5px;font-weight:800; background:rgba(13,148,136,.1); color:#0F766E; }
+  .frame-demo .chip.amber { background:rgba(217,119,6,.12); color:#B45309; }
+  .frame-demo .ring { width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:12px; background:conic-gradient(#0D9488 calc(3.6deg * 72), #EDEAE3 0); flex-shrink:0; }
+  .frame-demo .ring span { background:#fff;border-radius:50%;width:38px;height:38px;display:grid;place-items:center; }
+  @media (max-width: 700px) {
+    .frame-demo { grid-template-columns: 1fr; }
+    .frame-demo .side { width:auto; flex-direction:row; flex-wrap:wrap; align-items:center; }
+    .frame-demo .user { margin:0 0 0 auto; }
+    .frame-demo .stats { grid-template-columns: repeat(2,1fr); }
+    .frame-demo .panels { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 21px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero">
+    <h1>Admin Redesign — Clay Editorial</h1>
+    <div class="meta">
+      <b>● Approved</b> &nbsp;·&nbsp; 2026-09-08 &nbsp;·&nbsp; Minimalist cho giảng viên
+      &nbsp;·&nbsp; Redesign 7 trang qua design tokens — không đổi logic / API / i18n
+    </div>
+  </div>
+
+  <section>
+    <h2><span class="n">1</span> Bối cảnh</h2>
+    <p>Admin hiện dùng <strong>neumorphic</strong> (shadow đôi tối/sáng, xanh dương <code>#3578d4</code>).
+    Yêu cầu: minimalist phù hợp giảng viên. Qua 2 vòng mockup, chọn <strong>Clay Editorial</strong> —
+    giữ soft-3D clay depth của hệ sinh thái EduAR nhưng palette <strong>teal + giấy ngà</strong> trưởng thành:
+    tách tông với app học sinh (claymorphic sunshine/sky) nhưng vẫn "một gia đình sản phẩm".</p>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span> Design Tokens</h2>
+    <div class="swatches">
+      <div class="sw"><i style="background:linear-gradient(150deg,#F7F5F0,#F2EFE7)"></i><small>Nền giấy<small>#F7F5F0→#F2EFE7</small></small></div>
+      <div class="sw"><i style="background:#FFFFFF"></i><small>Surface<small>#FFFFFF</small></small></div>
+      <div class="sw"><i style="background:#0D9488"></i><small>Accent teal<small>#0D9488</small></small></div>
+      <div class="sw"><i style="background:#0B6B60"></i><small>Teal dark<small>#0B6B60</small></small></div>
+      <div class="sw"><i style="background:rgba(13,148,136,.12)"></i><small>Teal soft<small>rgba(13,148,136,.12)</small></small></div>
+      <div class="sw"><i style="background:#B45309"></i><small>Amber<small>#B45309</small></small></div>
+      <div class="sw"><i style="background:#1D4ED8"></i><small>Info blue<small>#1D4ED8</small></small></div>
+      <div class="sw"><i style="background:#DC2626"></i><small>Danger<small>#DC2626</small></small></div>
+      <div class="sw"><i style="background:#22303A"></i><small>Text<small>#22303A</small></small></div>
+    </div>
+    <table>
+      <tr><th>Token</th><th>Giá trị</th><th>Ghi chú</th></tr>
+      <tr><td>Radius</td><td><code>18px</code> card · <code>13px</code> button · <code>12px</code> chip</td><td>mềm, không bloat</td></tr>
+      <tr><td>Shadow card</td><td><code>0 5px 0 rgba(34,48,58,.05), 0 10px 22px rgba(34,48,58,.05), inset 0 2px 0 #fff</code></td><td>clay lift tint theo nền — không đen</td></tr>
+      <tr><td>Shadow button</td><td><code>0 5px 0 #0B6B60, inset 0 2px 0 #fff</code></td><td>active lún <code>translateY(3px)</code> + shadow co <code>0 2px 0</code></td></tr>
+      <tr><td>Typography</td><td>Nunito 700–900 · DM Sans 400/500/700</td><td>đã có sẵn trong index.html — zero thêm network</td></tr>
+      <tr><td>Số liệu</td><td>Nunito 900 · 25px · tracking <code>-.02em</code></td><td>"đọc như dữ liệu"</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span> Signature — "Sổ điểm clay"</h2>
+    <p>Bảng/list trình bày như sổ điểm: divider <strong>dashed 1.5px</strong> giữa hàng (không kẻ đặc),
+    header cột <strong>uppercase 10.5px tracking .07em</strong>, số canh phải Nunito 900.
+    Familiar với giảng viên, nhất quán với brand.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span> Bố cục — xem trước trực quan</h2>
+    <div class="frame-demo">
+      <div class="side">
+        <div class="brand"><span class="mark">✦</span> Edu<em>Admin</em></div>
+        <div class="nav on"><span class="ic">▦</span> Tổng quan</div>
+        <div class="nav"><span class="ic">◉</span> Học sinh</div>
+        <div class="nav"><span class="ic">▤</span> Khóa học</div>
+        <div class="nav"><span class="ic">✎</span> Bộ thẻ</div>
+        <div class="nav"><span class="ic">▲</span> Thống kê</div>
+        <div class="user"><span class="ava">CT</span> cô Trang <span class="gear">⚙</span></div>
+      </div>
+      <div class="main">
+        <div class="ph">
+          <div><h3>Chào cô Trang</h3><div class="sub">Thứ ba, 08 tháng 9 · lớp Mầm non Hoa Mai</div></div>
+          <button class="btn">+ Thêm bài học</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="head"><span class="lbl">Học sinh</span><span class="ic">◉</span></div><div class="num">128</div><span class="delta">▲ 12 tuần này</span></div>
+          <div class="stat"><div class="head"><span class="lbl">Khóa học</span><span class="ic" style="background:rgba(217,119,6,.12);color:#B45309;">▤</span></div><div class="num">6</div><span class="chip amber">2 đang soạn</span></div>
+          <div class="stat"><div class="head"><span class="lbl">Bộ thẻ</span><span class="ic" style="background:rgba(37,99,235,.1);color:#1D4ED8;">✎</span></div><div class="num">24</div><span class="dim">312 thẻ</span></div>
+          <div class="stat"><div class="head"><span class="lbl">XP hôm nay</span><span class="ic" style="background:rgba(220,38,38,.09);color:#DC2626;">⚡</span></div><div class="num">4.320</div><svg class="spark" width="70" height="18" viewBox="0 0 70 18" style="display:block;"><polyline points="0,14 10,12 20,13 30,9 40,10 50,6 60,7 70,3" fill="none" stroke="#0D9488" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+        </div>
+        <div class="panels">
+          <div class="panel">
+            <div class="head"><span class="lbl">Hoạt động gần đây</span><span class="more">Xem tất cả</span></div>
+            <table>
+              <tr><td><b>Tuấn Anh</b> hoàn thành bài <span class="chip">Hello Family</span></td><td class="n">10p trước</td></tr>
+              <tr><td><b>Mai Linh</b> mở khóa <span class="chip amber">sticker Phoenix</span></td><td class="n">25p</td></tr>
+              <tr><td><b>Đức Hùng</b> nối streak 7 ngày</td><td class="n">1 giờ</td></tr>
+            </table>
+          </div>
+          <div class="panel" style="display:flex;align-items:center;gap:12px;">
+            <div class="ring"><span>72%</span></div>
+            <div><div class="lbl">Mục tiêu tuần</div><div style="font-weight:900;font-size:14px;">92/128 học sinh</div><div class="sub">đạt 15 phút/ngày</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:rgba(34,48,58,.6);">Mọi trang: header (tiêu đề + 1 action teal duy nhất) → nội dung card trắng viền 2px trắng + clay lift → sidebar trắng mờ với user card đáy.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">5</span> Trạng thái UI</h2>
+    <table>
+      <tr><th>State</th><th>Hành vi</th></tr>
+      <tr><td><strong>Loading</strong></td><td>Skeleton khớp bố cục (stat + panel), shimmer trên trắng — không spinner tròn</td></tr>
+      <tr><td><strong>Empty</strong></td><td>1 dòng + action hướng dẫn: "Chưa có hoạt động nào hôm nay · Mời học sinh bằng mã lớp"</td></tr>
+      <tr><td><strong>Error</strong></td><td>Inline trong panel + nút "Thử lại" ghost; <code>AdminErrorBoundary</code> giữ nguyên</td></tr>
+      <tr><td><strong>Tactile</strong></td><td>Nút chính lún khi <code>:active</code>; hover chỉ đổi màu/background/shadow — không scale gây layout shift</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">6</span> Accessibility</h2>
+    <ul>
+      <li>Contrast WCAG AA: text <span class="ok">12.6:1</span> · muted <span class="ok">≥4.6:1</span> · trắng trên teal <span class="ok">4.7:1</span></li>
+      <li><code>:focus-visible</code> outline 2px teal, offset 2px — mọi control</li>
+      <li><code>prefers-reduced-motion</code>: tắt shimmer/press, state đổi tức thì</li>
+      <li>Icon kèm label chữ hoặc <code>aria-label</code>; bảng có <code>&lt;th scope&gt;</code>; nav <code>aria-current</code>; touch target ≥ 44px</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="n">7</span> Phạm vi file</h2>
+    <table>
+      <tr><th>File</th><th>Hành động</th></tr>
+      <tr><td><code>frontend/src/styles/admin.css</code></td><td>Viết lại toàn bộ (~465 dòng) theo tokens mới</td></tr>
+      <tr><td><code>features/admin/components/AdminLayout.tsx</code></td><td>Cập nhật markup brand + user card</td></tr>
+      <tr><td><code>features/admin/components/AdminCard.tsx</code></td><td>StatCard/SectionCard khớp tokens</td></tr>
+      <tr><td><code>frontend/index.html</code></td><td>Không đổi — fonts đã đủ</td></tr>
+      <tr><td>7 trang admin</td><td><strong>Không sửa logic</strong> — ăn theo tokens</td></tr>
+    </table>
+    <div class="note"><strong>Ngoài phạm vi:</strong> mobile app, learner pages, backend, i18n keys, routes.</div>
+  </section>
+
+  <section>
+    <h2><span class="n">8</span> Anti-check (taste-skill)</h2>
+    <ul>
+      <li>Không emoji làm icon production · không glow · không gradient text · không <code>#000</code> thuần</li>
+      <li>Shadow tint theo nền · hover không layout shift · <strong>1 accent duy nhất</strong> (teal)</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="n">9</span> Testing &amp; Verify</h2>
+    <ul>
+      <li><code>tsc --noEmit</code> sạch</li>
+      <li>Contrast check script trên tokens (assert ≥ 4.5:1 các cặp text)</li>
+      <li>Playwright screenshot 7 trang × 2 viewport (1280 / 768) trước–sau → <code>docs/report/ui-audit/admin-*.png</code></li>
+      <li>Smoke: điều hướng 7 trang + flow CourseManager → CourseEditor; không lỗi console</li>
+    </ul>
+  </section>
+
+</div>
+</body>
+</html>

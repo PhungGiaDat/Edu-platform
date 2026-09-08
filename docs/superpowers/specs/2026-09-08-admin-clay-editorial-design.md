@@ -55,6 +55,10 @@ phải Nunito 900. Kết hợp depth clay nhẹ — familiar với giảng viên
 - **Nav chip icon**: 24px rounded-8 nền soft màu, icon 12px — KHÔNG emoji trong code,
   dùng bộ icons hiện có (`@/shared/components/icons`)
 - **Chip**: 99px pill, soft bg + màu đậm, 10.5px/800
+- **StatCard đầu**: label + icon chip 30px rounded-10 soft màu riêng mỗi metric
+  (teal/amber/blue/red), số 25px, footer: delta teal ▲ / chip trạng thái / đếm mờ / sparkline
+- **Activity panel**: head = label + link "Xem tất cả" teal; timestamp canh phải Nunito 900 mờ
+- **User card**: avatar amber gradient + tên + gear bên phải
 - **Progress ring**: conic-gradient(accent p%, neutral 0), lỗ trắng 38px, số % bên trong
 - **Sparkline**: SVG polyline stroke accent 2.5px round-cap
 
