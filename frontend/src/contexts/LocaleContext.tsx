@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { I18nextProvider } from 'react-i18next';
 import adminI18n from '../i18n/adminI18n';
 
 export type Locale = 'en' | 'vi';
@@ -431,7 +432,14 @@ export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     t: (key: string) => messages[locale][key] || messages.en[key] || key,
   }), [locale]);
 
-  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
+  // useTranslation() calls inside admin pages resolve against the GLOBAL
+  // react-i18next instance; without this provider they return raw keys
+  // (bug visible as "admin.nav.dashboard" in the sidebar).
+  return (
+    <I18nextProvider i18n={adminI18n}>
+      <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
+    </I18nextProvider>
+  );
 };
 
 export const useLocale = () => {
