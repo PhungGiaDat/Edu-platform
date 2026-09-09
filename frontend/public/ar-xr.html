@@ -204,7 +204,7 @@
     ];
 
     try {
-      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js');
+      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=cat-interactions-v2');
       const missingExports = expectedLifecycleExports.filter((name) => !(name in lifecycleModule));
       if (missingExports.length > 0) {
         debug('MODULE_PROBE_LIFECYCLE_FAIL', {
@@ -239,7 +239,7 @@
       shouldReplaceCatAnimation,
       shouldRevealAR,
       smoothstep,
-    } from './static/ar-assets/js/ar-interaction-lifecycle.js';
+    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=cat-interactions-v2';
     window.THREE = THREE;
 
     // ========== RUNTIME DIAGNOSTICS ==========

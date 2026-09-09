@@ -26,7 +26,6 @@ describe('AR interaction lifecycle contracts', () => {
     expect(source.indexOf(activeReturnMarker)).toBeGreaterThanOrEqual(0)
     expect(source.indexOf(activeReturnMarker)).toBeLessThan(source.indexOf(comboTurningEarlyReturn))
     expect(source.indexOf(activeReturnMarker)).toBeLessThan(source.indexOf(comboPlayingEarlyReturn))
-    expect(source).toContain("from './static/ar-assets/js/ar-interaction-lifecycle.js'")
     expect(source).not.toContain('function applyCatReturn(')
     expect(source).not.toContain('function smoothstep(')
     expect(source).toContain('comboLatch?.catOriginalYaw ?? 0')
@@ -262,7 +261,10 @@ describe('AR interaction lifecycle contracts', () => {
       'utf8',
     )
     const namedImport = viewerSource.match(
-      /import \{\s*\n([\s\S]*?)\n\s*\} from '\.\/static\/ar-assets\/js\/ar-interaction-lifecycle\.js';/,
+      /import \{\s*\n([\s\S]*?)\n\s*\} from '([^']*ar-interaction-lifecycle\.js(?:\?[^']+)?)';/,
+    )
+    const probeImport = viewerSource.match(
+      /await import\('([^']*ar-interaction-lifecycle\.js(?:\?[^']+)?)'\)/,
     )
     const importedNames = (namedImport?.[1] || '')
       .split(',')
@@ -281,9 +283,14 @@ describe('AR interaction lifecycle contracts', () => {
     )
 
     expect(namedImport).not.toBeNull()
+    expect(probeImport).not.toBeNull()
     expect(importedNames).not.toHaveLength(0)
     expect(probedNames).toEqual(importedNames)
     expect(importedNames.filter((name) => !exportedNames.includes(name))).toEqual([])
+    expect(probeImport?.[1]).toBe(namedImport?.[2])
+    expect(namedImport?.[2]).toBe(
+      './static/ar-assets/js/ar-interaction-lifecycle.js?v=cat-interactions-v2',
+    )
   })
 
   it('resolves the locked CAT plus FISH proximity rule from backend or the exact pair fallback', () => {
