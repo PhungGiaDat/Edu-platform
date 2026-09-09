@@ -9,8 +9,8 @@
  * - pushsubscriptionchange re-registers with the backend automatically.
  */
 
-const STATIC_CACHE = 'eduar-static-v2';
-const DYNAMIC_CACHE = 'eduar-dynamic-v2';
+const STATIC_CACHE = 'eduar-static-v3';
+const DYNAMIC_CACHE = 'eduar-dynamic-v3';
 
 const STATIC_ASSETS = [
   '/',
@@ -42,9 +42,17 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
+  const url = new URL(request.url);
 
-  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
   if (request.url.includes('/api/')) return;
+
+  // AR runtime modules must always reflect the deployed version. In particular,
+  // never let a stale helper module block the AR entrypoint during module linking.
+  if (url.pathname.startsWith('/static/ar-assets/')) {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   if (request.mode === 'navigate') {
     event.respondWith(fetch(request).catch(() => caches.match('/index.html')));

@@ -37,4 +37,17 @@ describe('PWA shell contract', () => {
     expect(serviceWorkerSource).toContain("caches.match('/index.html')");
     expect(serviceWorkerSource).not.toContain('module.exports');
   });
+
+  it('never serves AR runtime assets from the dynamic cache', () => {
+    const arRuntimeBypass = serviceWorkerSource.indexOf("url.pathname.startsWith('/static/ar-assets/')");
+    const dynamicCacheLookup = serviceWorkerSource.indexOf('caches.match(request)');
+
+    expect(serviceWorkerSource).toContain("const STATIC_CACHE = 'eduar-static-v3';");
+    expect(serviceWorkerSource).toContain("const DYNAMIC_CACHE = 'eduar-dynamic-v3';");
+    expect(arRuntimeBypass).toBeGreaterThan(-1);
+    expect(arRuntimeBypass).toBeLessThan(dynamicCacheLookup);
+    expect(serviceWorkerSource.slice(arRuntimeBypass, dynamicCacheLookup)).toContain(
+      'event.respondWith(fetch(request));',
+    );
+  });
 });
