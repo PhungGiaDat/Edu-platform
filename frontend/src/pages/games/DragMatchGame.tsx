@@ -63,7 +63,7 @@ function handleImgError(
   img.style.display = 'none';
 }
 
-function emojiFallback(topic: GameTopic | null, word: string): string {
+function emojiFallback(topic: GameTopic | null): string {
   return topic ? TOPIC_EMOJI[topic] : '🔤';
 }
 
@@ -338,7 +338,7 @@ export const DragMatchGame: React.FC = () => {
                 disabled={done}
                 aria-label={`Hình: ${card.word}`}
               >
-                <span className="dm-img-emoji" aria-hidden="true">{emojiFallback(topic, card.word)}</span>
+                <span className="dm-img-emoji" aria-hidden="true">{emojiFallback(topic)}</span>
                 <img src={card.image_url} alt="" loading="lazy" draggable={false} onError={(e) => handleImgError(e, topic, card.word)} />
                 {done && <Msr icon="check_circle" size={22} color="#4C8A2A" style={{ position: 'absolute', top: 6, right: 6 }} />}
               </button>
@@ -378,7 +378,7 @@ export const DragMatchGame: React.FC = () => {
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
               style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 14 }}
             />
-            <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>{emojiFallback(topic, card.word)}</span>
+            <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>{emojiFallback(topic)}</span>
           </div>
         );
       })()}
