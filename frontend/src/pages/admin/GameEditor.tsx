@@ -21,7 +21,7 @@ import {
   type AdminGameType,
   type GameConfigDraft,
 } from '../../services/gamesAdminApi';
-import { SaveIcon, TrashIcon, EditIcon } from '@/shared/components/icons/Icons';
+import { SaveIcon, TrashIcon } from '@/shared/components/icons/Icons';
 
 export type DifficultyPreset = 'easy' | 'mid' | 'hard';
 
@@ -247,21 +247,6 @@ const GameEditor: React.FC<{ isEdit?: boolean }> = ({ isEdit = false }) => {
       setTopicId(topic.id);
       setNewTopicName('');
       setShowNewTopic(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  };
-
-  const addVocabWord = async () => {
-    if (!newWord.trim() || !topicId) return;
-    try {
-      const item = await adminGamesApi.addVocab(topicId, {
-        word: newWord.trim(),
-        translation_vi: newTranslation.trim(),
-      });
-      setVocab(prev => [...prev, item]);
-      setNewWord('');
-      setNewTranslation('');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }

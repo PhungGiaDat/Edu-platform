@@ -1,6 +1,6 @@
-// frontend/src/services/gamesAdminApi.ts
+﻿// frontend/src/services/gamesAdminApi.ts
 /**
- * Admin Games Management API (2026-09-09 activation — approved spec §3.2)
+ * Admin Games Management API (2026-09-09 activation â€” approved spec Â§3.2)
  *
  * Mirrors adminApi.ts conventions (apiClient + '/api/v1/admin' base).
  * Endpoints:
@@ -10,7 +10,7 @@
  *   PUT        /admin/games/topics/{id}    update topic
  *   GET|POST   /admin/games/topics/{id}/vocab
  *   PUT|DELETE /admin/games/vocab/{itemId}
- *   POST       /admin/games/upload-media   base64 media → Supabase
+ *   POST       /admin/games/upload-media   base64 media â†’ Supabase
  */
 import { apiClient } from './apiClient';
 
@@ -67,11 +67,11 @@ const gamesUrl = `${ADMIN_BASE_URL}/games`;
 export const adminGamesApi = {
   // ------------------------------------------------------------- Games ----
   async listGames(): Promise<AdminGame[]> {
-    return apiClient.get<AdminGame[]>(`${gamesUrl}`);
+    return apiClient.get(`${gamesUrl}`);
   },
 
   async getGame(gameId: string): Promise<AdminGame> {
-    return apiClient.get<AdminGame>(`${gamesUrl}/${gameId}`);
+    return apiClient.get(`${gamesUrl}/${gameId}`);
   },
 
   async createGame(payload: {
@@ -82,7 +82,7 @@ export const adminGamesApi = {
     config: GameConfigDraft;
     is_published: boolean;
   }): Promise<AdminGame> {
-    return apiClient.post<AdminGame>(`${gamesUrl}`, payload);
+    return apiClient.post(`${gamesUrl}`, payload);
   },
 
   async updateGame(gameId: string, payload: Partial<{
@@ -93,7 +93,7 @@ export const adminGamesApi = {
     config: GameConfigDraft;
     is_published: boolean;
   }>): Promise<AdminGame> {
-    return apiClient.put<AdminGame>(`${gamesUrl}/${gameId}`, payload);
+    return apiClient.put(`${gamesUrl}/${gameId}`, payload);
   },
 
   async deleteGame(gameId: string): Promise<void> {
@@ -102,20 +102,20 @@ export const adminGamesApi = {
 
   // ------------------------------------------------------------ Topics ----
   async listTopics(): Promise<AdminGameTopic[]> {
-    return apiClient.get<AdminGameTopic[]>(`${topicsUrl}`);
+    return apiClient.get(`${topicsUrl}`);
   },
 
   async createTopic(payload: { name: string; name_vi?: string; is_published?: boolean }): Promise<AdminGameTopic> {
-    return apiClient.post<AdminGameTopic>(`${topicsUrl}`, payload);
+    return apiClient.post(`${topicsUrl}`, payload);
   },
 
   async updateTopic(topicId: string, payload: Partial<{ name: string; name_vi: string; is_published: boolean; sort_order: number }>): Promise<AdminGameTopic> {
-    return apiClient.put<AdminGameTopic>(`${topicsUrl}/${topicId}`, payload);
+    return apiClient.put(`${topicsUrl}/${topicId}`, payload);
   },
 
   // ------------------------------------------------------------- Vocab ----
   async listVocab(topicId: string): Promise<AdminVocabItem[]> {
-    return apiClient.get<AdminVocabItem[]>(`${topicsUrl}/${topicId}/vocab`);
+    return apiClient.get(`${topicsUrl}/${topicId}/vocab`);
   },
 
   async addVocab(topicId: string, payload: {
@@ -124,7 +124,7 @@ export const adminGamesApi = {
     image_url?: string | null;
     audio_url?: string | null;
   }): Promise<AdminVocabItem> {
-    return apiClient.post<AdminVocabItem>(`${topicsUrl}/${topicId}/vocab`, payload);
+    return apiClient.post(`${topicsUrl}/${topicId}/vocab`, payload);
   },
 
   async updateVocab(itemId: string, payload: Partial<{
@@ -133,7 +133,7 @@ export const adminGamesApi = {
     image_url: string | null;
     audio_url: string | null;
   }>): Promise<AdminVocabItem> {
-    return apiClient.put<AdminVocabItem>(`${ADMIN_BASE_URL}/games/vocab/${itemId}`, payload);
+    return apiClient.put(`${ADMIN_BASE_URL}/games/vocab/${itemId}`, payload);
   },
 
   async deleteVocab(itemId: string): Promise<void> {
@@ -142,7 +142,7 @@ export const adminGamesApi = {
 
   // ------------------------------------------------------------- Upload ----
   /**
-   * Upload media (image/audio) via base64 — mirrors uploadFlashcardImage
+   * Upload media (image/audio) via base64 â€” mirrors uploadFlashcardImage
    * contract (JSON body, base64 data). Returns the Supabase public URL.
    */
   async uploadMedia(file: File): Promise<string> {
@@ -152,14 +152,15 @@ export const adminGamesApi = {
         const result = String(reader.result || '');
         resolve(result.includes(',') ? result.split(',')[1] : result);
       };
-      reader.onerror = () => reject(new Error('Không đọc được tệp'));
+      reader.onerror = () => reject(new Error('KhÃ´ng Ä‘á»c Ä‘Æ°á»£c tá»‡p'));
       reader.readAsDataURL(file);
     });
 
-    const response = await apiClient.post<{ url: string; path: string; bucket: string }>(
+    const response = await apiClient.post(
       `${gamesUrl}/upload-media`,
       { data_b64: dataB64, content_type: file.type || 'image/png', filename: file.name },
     );
     return response.url;
   },
 };
+

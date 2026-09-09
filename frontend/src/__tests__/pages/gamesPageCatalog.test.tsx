@@ -7,7 +7,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import React from 'react';
 import { GamesPage } from '../../pages/GamesPage';
 import * as vocabService from '../../services/gamesVocabService';
 
