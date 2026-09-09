@@ -233,6 +233,26 @@ describe('AR interaction lifecycle contracts', () => {
     expect(audioSource).not.toContain('CAT_MEOW_AUDIO_START')
   })
 
+  it('keeps CSP, resource, and module-import probes outside the main AR module', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const xrScriptIndex = source.indexOf('id="xr8-engine-script"')
+    const probeStart = source.indexOf("debug('MODULE_PROBE_START')")
+    const mainModuleStart = source.indexOf("import * as THREE from 'three';")
+
+    expect(source).toContain('window.__arSendDebug = sendDebug')
+    expect(source).toContain("window.addEventListener('securitypolicyviolation'")
+    expect(source).toContain("sendDebug('CSP_VIOLATION'")
+    expect(source).toContain("sendDebug('VIEWER_ERROR'")
+    expect(source).toContain("debug('XR8_SCRIPT_LOAD'")
+    expect(source).toContain("debug('XR8_SCRIPT_ERROR'")
+    expect(source).toContain("debug('MODULE_PROBE_THREE_OK'")
+    expect(source).toContain("debug('MODULE_PROBE_GLTF_OK'")
+    expect(source).toContain("debug('MODULE_PROBE_LIFECYCLE_OK'")
+    expect(xrScriptIndex).toBeGreaterThan(-1)
+    expect(probeStart).toBeGreaterThan(xrScriptIndex)
+    expect(probeStart).toBeLessThan(mainModuleStart)
+  })
+
   it('resolves the locked CAT plus FISH proximity rule from backend or the exact pair fallback', () => {
     const fallback = resolveCatFishComboRule({
       primaryTargetName: 'cat001',

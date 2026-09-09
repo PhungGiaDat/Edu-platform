@@ -49,6 +49,21 @@
         } catch (_) {}
       }
 
+      // Keep this bridge available before any module import. If the main AR
+      // module fails to resolve, the probes below can still report the cause.
+      window.__arSendDebug = sendDebug;
+
+      window.addEventListener('securitypolicyviolation', function(event) {
+        sendDebug('CSP_VIOLATION', {
+          blockedURI: event.blockedURI || null,
+          violatedDirective: event.violatedDirective || null,
+          effectiveDirective: event.effectiveDirective || null,
+          sourceFile: event.sourceFile || null,
+          lineNumber: event.lineNumber || null,
+          columnNumber: event.columnNumber || null,
+        });
+      });
+
       function serialise(args) {
         return Array.prototype.slice.call(args).map(function(value) {
           try {
@@ -67,7 +82,16 @@
       });
 
       window.addEventListener('error', function(event) {
-        sendDebug('VIEWER_UNCAUGHT_ERROR', { level: 'error', text: String(event.message || event.error || 'Unknown'), url: event.filename, line: event.lineno });
+        var el = event.target;
+        sendDebug('VIEWER_ERROR', {
+          message: event.message || null,
+          error: event.error && (event.error.stack || event.error.message) || null,
+          filename: event.filename || null,
+          line: event.lineno || null,
+          column: event.colno || null,
+          tag: el && el.tagName || null,
+          src: el && (el.src || el.href) || null,
+        });
       }, true);
 
       window.addEventListener('unhandledrejection', function(event) {
@@ -114,10 +138,66 @@
     <div id="debug-engine">Engine: 8th Wall (self-hosted)</div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js" async crossorigin="anonymous"></script>
+  <script
+    id="xr8-engine-script"
+    src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js"
+    async
+    crossorigin="anonymous">
+  </script>
+
+  <script>
+    (function installXr8ScriptProbe() {
+      var xrScript = document.getElementById('xr8-engine-script');
+      var debug = window.__arSendDebug;
+      if (!xrScript || typeof debug !== 'function') return;
+
+      xrScript.addEventListener('load', function() {
+        debug('XR8_SCRIPT_LOAD', { hasXR8: !!window.XR8 });
+      });
+
+      xrScript.addEventListener('error', function(event) {
+        debug('XR8_SCRIPT_ERROR', { src: xrScript.src, type: event.type });
+      });
+    })();
+  </script>
 
   <script type="importmap">
     { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/" } }
+  </script>
+
+  <script type="module">
+    const debug = (label, details = {}) => window.__arSendDebug?.(label, details);
+
+    debug('MODULE_PROBE_START');
+
+    try {
+      await import('three');
+      debug('MODULE_PROBE_THREE_OK');
+    } catch (error) {
+      debug('MODULE_PROBE_THREE_FAIL', {
+        error: error?.stack || error?.message || String(error),
+      });
+    }
+
+    try {
+      await import('three/addons/loaders/GLTFLoader.js');
+      debug('MODULE_PROBE_GLTF_OK');
+    } catch (error) {
+      debug('MODULE_PROBE_GLTF_FAIL', {
+        error: error?.stack || error?.message || String(error),
+      });
+    }
+
+    try {
+      await import('./static/ar-assets/js/ar-interaction-lifecycle.js');
+      debug('MODULE_PROBE_LIFECYCLE_OK');
+    } catch (error) {
+      debug('MODULE_PROBE_LIFECYCLE_FAIL', {
+        error: error?.stack || error?.message || String(error),
+      });
+    }
+
+    debug('MODULE_PROBE_COMPLETE');
   </script>
 
   <script type="module">
