@@ -248,9 +248,42 @@ describe('AR interaction lifecycle contracts', () => {
     expect(source).toContain("debug('MODULE_PROBE_THREE_OK'")
     expect(source).toContain("debug('MODULE_PROBE_GLTF_OK'")
     expect(source).toContain("debug('MODULE_PROBE_LIFECYCLE_OK'")
+    expect(source).toContain('const expectedLifecycleExports = [')
+    expect(source).toContain('missingExports')
     expect(xrScriptIndex).toBeGreaterThan(-1)
     expect(probeStart).toBeGreaterThan(xrScriptIndex)
     expect(probeStart).toBeLessThan(mainModuleStart)
+  })
+
+  it('keeps every main lifecycle named import present in the lifecycle helper exports', () => {
+    const viewerSource = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const lifecycleSource = readFileSync(
+      resolve(process.cwd(), 'public/static/ar-assets/js/ar-interaction-lifecycle.js'),
+      'utf8',
+    )
+    const namedImport = viewerSource.match(
+      /import \{\s*\n([\s\S]*?)\n\s*\} from '\.\/static\/ar-assets\/js\/ar-interaction-lifecycle\.js';/,
+    )
+    const importedNames = (namedImport?.[1] || '')
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean)
+    const probeExportList = viewerSource.match(
+      /const expectedLifecycleExports = \[\s*([\s\S]*?)\s*\];/,
+    )
+    const probedNames = Array.from(
+      (probeExportList?.[1] || '').matchAll(/'([A-Za-z0-9_]+)'/g),
+      (match) => match[1],
+    )
+    const exportedNames = Array.from(
+      lifecycleSource.matchAll(/export function\s+([A-Za-z0-9_]+)/g),
+      (match) => match[1],
+    )
+
+    expect(namedImport).not.toBeNull()
+    expect(importedNames).not.toHaveLength(0)
+    expect(probedNames).toEqual(importedNames)
+    expect(importedNames.filter((name) => !exportedNames.includes(name))).toEqual([])
   })
 
   it('resolves the locked CAT plus FISH proximity rule from backend or the exact pair fallback', () => {
