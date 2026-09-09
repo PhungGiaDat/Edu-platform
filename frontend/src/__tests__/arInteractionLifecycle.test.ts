@@ -1,8 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-// @ts-expect-error Public browser helper is intentionally plain JavaScript.
-import { advanceCatReturnTween, canPlayCatMeow, classifyCatTap, shouldRevealAR, smoothstep } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
+import {
+  advanceCatReturnTween,
+  advanceComboProximityGate,
+  canPlayCatMeow,
+  classifyCatGesture,
+  classifyCatTap,
+  getEligibleCatAmbient,
+  isCatOneShotCompletionOwner,
+  resolveCatFishComboRule,
+  selectComboSecondaryTargetName,
+  shouldReplaceCatAnimation,
+  shouldRevealAR,
+  smoothstep,
+} from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 describe('AR interaction lifecycle contracts', () => {
   it('keeps the active CAT return ticking ahead of combo phase exits', () => {
@@ -126,29 +138,34 @@ describe('AR interaction lifecycle contracts', () => {
   it('uses immediate one-shot cleanup instead of an unowned delayed stop', () => {
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
     const restoreStart = source.indexOf('function restoreCatIdleAfterOneShot')
-    const restoreEnd = source.indexOf('\n    // Cancel CAT_MEOW', restoreStart)
+    const restoreEnd = source.indexOf('\n    function cacheCatInteractionProxy', restoreStart)
     const restoreSource = source.slice(restoreStart, restoreEnd)
-    const cancelStart = source.indexOf('function cancelCatMeowForCombo')
-    const cancelEnd = source.indexOf('\n    // Pointer event handler', cancelStart)
+    const cancelStart = source.indexOf('function cancelActiveCatOneShotForCombo')
+    const cancelEnd = source.indexOf('\n    function playCatOneShot', cancelStart)
     const cancelSource = source.slice(cancelStart, cancelEnd)
 
     expect(restoreSource).toContain('oneShotAction.fadeOut(0.12)')
     expect(restoreSource).not.toContain('setTimeout(')
-    expect(cancelSource).toContain('catTapState.action.fadeOut(0.12)')
+    expect(cancelSource).toContain('catAnimationState.generation++')
+    expect(cancelSource).toContain('catAnimationState.action.fadeOut(0.12)')
     expect(cancelSource).not.toContain('setTimeout(')
   })
 
   it('restores CAT idle after CAT_MEOW finishes without creating a CAT return', () => {
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
-    const meowStart = source.indexOf('function playCatMeow')
-    const meowEnd = source.indexOf('\n    // Cancel CAT_MEOW', meowStart)
-    const meowSource = source.slice(meowStart, meowEnd)
-    const meowFinished = meowSource.indexOf("sendARDebug('CAT_MEOW_FINISHED'")
-    const idleRestore = meowSource.indexOf("restoreCatIdleAfterOneShot(catInst, action, 'CAT_MEOW'")
+    const finishStart = source.indexOf('function emitCatOneShotFinished')
+    const finishEnd = source.indexOf('\n    function cancelActiveCatOneShotForCombo', finishStart)
+    const finishSource = source.slice(finishStart, finishEnd)
+    const oneShotStart = source.indexOf('function playCatOneShot')
+    const oneShotEnd = source.indexOf('\n    function playCatMeow', oneShotStart)
+    const oneShotSource = source.slice(oneShotStart, oneShotEnd)
+    const finishedDispatch = oneShotSource.indexOf('emitCatOneShotFinished(source, clip, generation)')
+    const idleRestore = oneShotSource.indexOf('restoreCatIdleAfterOneShot(catInst, action, source, clip.name)')
 
-    expect(meowFinished).toBeGreaterThanOrEqual(0)
-    expect(idleRestore).toBeGreaterThan(meowFinished)
-    expect(meowSource).not.toContain('CAT_RETURN_START')
+    expect(finishSource).toContain("sendARDebug('CAT_MEOW_FINISHED'")
+    expect(finishedDispatch).toBeGreaterThanOrEqual(0)
+    expect(idleRestore).toBeGreaterThan(finishedDispatch)
+    expect(oneShotSource).not.toContain('CAT_RETURN_START')
   })
 
   it('uses a cached 1.30x CAT proxy only after a direct mesh miss', () => {
@@ -200,18 +217,167 @@ describe('AR interaction lifecycle contracts', () => {
 
   it('reports CAT audio request and browser-confirmed outcomes without claiming play at invocation', () => {
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
-    const meowStart = source.indexOf('function playCatMeow')
-    const meowEnd = source.indexOf('\n    // Cancel CAT_MEOW', meowStart)
-    const meowSource = source.slice(meowStart, meowEnd)
-    const requested = meowSource.indexOf("sendARDebug('CAT_MEOW_AUDIO_REQUESTED'")
-    const playInvocation = meowSource.indexOf('catMeowAudio.play()')
-    const playing = meowSource.indexOf("sendARDebug('CAT_MEOW_AUDIO_PLAYING'")
-    const playError = meowSource.indexOf("sendARDebug('CAT_MEOW_AUDIO_PLAY_ERROR'")
+    const audioStart = source.indexOf('function requestCatMeowAudio')
+    const audioEnd = source.indexOf('\n    function emitCatOneShotStart', audioStart)
+    const audioSource = source.slice(audioStart, audioEnd)
+    const requested = audioSource.indexOf("sendARDebug('CAT_MEOW_AUDIO_REQUESTED'")
+    const playInvocation = audioSource.indexOf('catMeowAudio.play()')
+    const playing = audioSource.indexOf("sendARDebug('CAT_MEOW_AUDIO_PLAYING'")
+    const playError = audioSource.indexOf("sendARDebug('CAT_MEOW_AUDIO_PLAY_ERROR'")
 
     expect(requested).toBeGreaterThanOrEqual(0)
     expect(requested).toBeLessThan(playInvocation)
-    expect(playing).toBeGreaterThan(playInvocation)
-    expect(playError).toBeGreaterThan(playInvocation)
-    expect(meowSource).not.toContain('CAT_MEOW_AUDIO_START')
+    expect(playing).toBeGreaterThanOrEqual(0)
+    expect(playError).toBeGreaterThanOrEqual(0)
+    expect(audioSource).toContain("catMeowAudio.addEventListener('playing', reportPlaying")
+    expect(audioSource).not.toContain('CAT_MEOW_AUDIO_START')
+  })
+
+  it('resolves the locked CAT plus FISH proximity rule from backend or the exact pair fallback', () => {
+    const fallback = resolveCatFishComboRule({
+      primaryTargetName: 'cat001',
+      secondaryTargetName: 'fish001',
+      rules: [],
+    })
+    const backend = resolveCatFishComboRule({
+      primaryTargetName: 'cat001',
+      secondaryTargetName: 'fish001',
+      rules: [{
+        tags: ['fish001', 'cat001'],
+        proximity: {
+          enter_distance: 0.52,
+          exit_distance: 0.60,
+          proximity_stable_ms: 300,
+          smoothing_alpha: 0.25,
+        },
+      }],
+    })
+
+    expect(fallback).toEqual({
+      primaryTargetName: 'cat001',
+      secondaryTargetName: 'fish001',
+      source: 'fallback',
+      enterDistance: 0.52,
+      exitDistance: 0.60,
+      proximityStableMs: 300,
+      smoothingAlpha: 0.25,
+    })
+    expect(backend).toEqual({ ...fallback, source: 'backend' })
+    expect(fallback).not.toEqual(expect.objectContaining({ enterDistance: 0.72, exitDistance: 0.80 }))
+  })
+
+  it('selects fish001 rather than an arbitrary secondary target for the CAT plus FISH combo', () => {
+    expect(selectComboSecondaryTargetName({
+      primaryTargetName: 'cat001',
+      targetNames: ['cat001', 'bird001', 'fish001'],
+    })).toBe('fish001')
+
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const distanceFunction = source.slice(
+      source.indexOf('function computeAnchorDistance()'),
+      source.indexOf('function updateFilteredDistance(raw)'),
+    )
+    expect(distanceFunction).toContain('selectComboSecondaryTargetName')
+    expect(distanceFunction).toContain('targetInstances.get(secondaryTargetName)')
+  })
+
+  it('applies the approved CAT plus FISH enter/stable/exit hysteresis', () => {
+    const config = resolveCatFishComboRule({
+      primaryTargetName: 'cat001',
+      secondaryTargetName: 'fish001',
+      rules: [],
+    })
+    expect(config).not.toBeNull()
+
+    const outside = advanceComboProximityGate({
+      now: 0,
+      distance: 0.53,
+      enteredAt: null,
+      comboConsumed: false,
+      config: config!,
+    })
+    expect(outside.enteredAt).toBeNull()
+    expect(outside.stable).toBe(false)
+
+    const entered = advanceComboProximityGate({
+      now: 100,
+      distance: 0.51,
+      enteredAt: null,
+      comboConsumed: false,
+      config: config!,
+    })
+    const stable = advanceComboProximityGate({
+      now: 400,
+      distance: 0.51,
+      enteredAt: entered.enteredAt,
+      comboConsumed: false,
+      config: config!,
+    })
+    expect(stable.stable).toBe(true)
+
+    const notRearmed = advanceComboProximityGate({
+      now: 500,
+      distance: 0.56,
+      enteredAt: null,
+      comboConsumed: true,
+      config: config!,
+    })
+    const rearmed = advanceComboProximityGate({
+      now: 600,
+      distance: 0.61,
+      enteredAt: null,
+      comboConsumed: true,
+      config: config!,
+    })
+    expect(notRearmed.rearmEligible).toBe(false)
+    expect(rearmed.rearmEligible).toBe(true)
+  })
+
+  it('classifies CAT tap, pet, swipe, and invalid gestures without overlap', () => {
+    expect(classifyCatGesture({ durationMs: 200, dx: 4, dy: 5 })).toBe('tap')
+    expect(classifyCatGesture({ durationMs: 500, dx: 4, dy: 3 })).toBe('pet')
+    expect(classifyCatGesture({ durationMs: 400, dx: 75, dy: 12 })).toBe('swipe')
+    expect(classifyCatGesture({ durationMs: 400, dx: 30, dy: 30 })).toBe('none')
+  })
+
+  it('rejects stale CAT one-shot cleanup and lets CAT_EAT take ownership', () => {
+    const firstAction = {}
+    const secondAction = {}
+    expect(isCatOneShotCompletionOwner({
+      capturedGeneration: 1,
+      capturedAction: firstAction,
+      current: { generation: 2, action: secondAction },
+    })).toBe(false)
+    expect(isCatOneShotCompletionOwner({
+      capturedGeneration: 2,
+      capturedAction: secondAction,
+      current: { generation: 2, action: secondAction },
+    })).toBe(true)
+    expect(shouldReplaceCatAnimation({ currentPriority: 60, nextPriority: 100 })).toBe(true)
+  })
+
+  it('schedules deterministic CAT ambient clips only when all suppressors are clear', () => {
+    const common = {
+      idleSince: 0,
+      activeOneShot: false,
+      pointerGestureActive: false,
+      catReturn: null,
+      phase: 'WAIT_SECONDARY',
+    }
+    expect(getEligibleCatAmbient({ now: 7999, nextClip: 'CAT_LOOK_UP', ...common })).toBeNull()
+    expect(getEligibleCatAmbient({ now: 8000, nextClip: 'CAT_LOOK_UP', ...common })).toBe('CAT_LOOK_UP')
+    expect(getEligibleCatAmbient({ now: 15999, nextClip: 'CAT_SIT', ...common })).toBeNull()
+    expect(getEligibleCatAmbient({ now: 16000, nextClip: 'CAT_SIT', ...common })).toBe('CAT_SIT')
+
+    for (const blocked of [
+      { activeOneShot: true },
+      { pointerGestureActive: true },
+      { catReturn: { runId: 1 } },
+      { phase: 'COMBO_ARMED' },
+      { phase: 'COMBO_TURNING' },
+      { phase: 'COMBO_PLAYING' },
+    ]) {
+      expect(getEligibleCatAmbient({ now: 16000, nextClip: 'CAT_SIT', ...common, ...blocked })).toBeNull()
+    }
   })
 })

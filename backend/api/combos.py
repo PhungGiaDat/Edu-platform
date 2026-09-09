@@ -15,7 +15,11 @@ from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional
 from pydantic import BaseModel
 
-from models.ar_combination import ArCombinationSchema, serialize_ar_combination
+from models.ar_combination import (
+    ArCombinationSchema,
+    ProximityConfigSchema,
+    serialize_ar_combination,
+)
 from services.ar_service import ARService, get_ar_service
 
 router = APIRouter(prefix="/combos", tags=["combos"])
@@ -29,6 +33,7 @@ class ComboRule(BaseModel):
     name: str
     combo_id: str
     animation_trigger: Optional[str] = None
+    proximity: Optional[ProximityConfigSchema] = None
 
 class ComboRulesResponse(BaseModel):
     """Response for combo rules endpoint"""
@@ -147,16 +152,31 @@ async def get_combo_rules(
         combos = [c for c in combos if c.get("active", True)]
 
     # Convert to simple rules format
-    rules = [
-        {
-            "tags": c.get("required_tags", []),
-            "name": c.get("combo_name") or c.get("description") or "",
-            "combo_id": c.get("combo_id", ""),
-            "animation_trigger": c.get("animation_trigger"),
-        }
-        for c in combos
-        if c.get("required_tags")
-    ]
+    rules = []
+    for combo in combos:
+        if not combo.get("required_tags"):
+            continue
+        proximity_values = (
+            combo.get("proximity_enter_distance"),
+            combo.get("proximity_exit_distance"),
+            combo.get("proximity_stable_ms"),
+            combo.get("proximity_smoothing_alpha"),
+        )
+        proximity = None
+        if all(value is not None for value in proximity_values):
+            proximity = {
+                "enter_distance": proximity_values[0],
+                "exit_distance": proximity_values[1],
+                "proximity_stable_ms": proximity_values[2],
+                "smoothing_alpha": proximity_values[3],
+            }
+        rules.append({
+            "tags": combo.get("required_tags", []),
+            "name": combo.get("combo_name") or combo.get("description") or "",
+            "combo_id": combo.get("combo_id", ""),
+            "animation_trigger": combo.get("animation_trigger"),
+            "proximity": proximity,
+        })
 
     return ComboRulesResponse(rules=rules, total=len(rules))
 

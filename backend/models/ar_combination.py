@@ -22,6 +22,14 @@ class TransformSchema(BaseModel):
     scale: Optional[str] = None
 
 
+class ProximityConfigSchema(BaseModel):
+    """Typed combo proximity thresholds resolved by WebAR clients."""
+    enter_distance: float
+    exit_distance: float
+    proximity_stable_ms: int
+    smoothing_alpha: float
+
+
 # ---------------------------------------------------------------------------
 # Pydantic DTO (API request/response — no database persistence)
 # ---------------------------------------------------------------------------
@@ -55,6 +63,10 @@ class ArCombinationSchema(BaseModel):
     cross_category_allowed: bool = Field(default=False)
     combo_name: Optional[str] = None
     reward_points: int = 0
+    proximity_enter_distance: Optional[float] = None
+    proximity_exit_distance: Optional[float] = None
+    proximity_stable_ms: Optional[int] = None
+    proximity_smoothing_alpha: Optional[float] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

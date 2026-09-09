@@ -501,6 +501,8 @@ export const LearnAR8thWall: React.FC = () => {
   const viewerSrc = (() => {
     if (!currentTarget) return '';
     const params = new URLSearchParams();
+    params.set('api_base', API_BASE);
+    params.set('deck_id', deckIdRef.current);
     params.set('qr_id', currentTarget.qr_id);
     params.set('word', currentTarget.word);
     if (currentTarget.xr_target_json_url)   params.set('xr_target_json_url', currentTarget.xr_target_json_url);
@@ -594,7 +596,7 @@ export const LearnAR8thWall: React.FC = () => {
             ref={viewerRef}
             src={viewerSrc}
             title="AR Viewer"
-            allow="camera; xr-spatial-tracking; gyroscope; accelerometer"
+            allow="camera; xr-spatial-tracking; gyroscope; accelerometer; autoplay"
             style={{ width: '100%', height: '100%', border: 'none' }}
             onLoad={() => {
               iframeTimingRef.current = {

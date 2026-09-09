@@ -28,6 +28,7 @@ describe('Vercel AR iframe headers', () => {
   it.each([
     ['/ar-scanner.html', false],
     ['/ar-viewer.html', true],
+    ['/ar-xr.html', false],
   ] as const)('keeps %s out of conflicting global security headers', (requestPath, needsAFrame) => {
     expect(matchingHeaderValues(requestPath, 'X-Frame-Options')).toEqual(['SAMEORIGIN']);
 
@@ -39,4 +40,18 @@ describe('Vercel AR iframe headers', () => {
       expect(cspValues[0]).toContain('https://aframe.io');
     }
   });
+
+  it('permits the canonical combo-rule API only in the XR viewer CSP', () => {
+    const cspValues = matchingHeaderValues('/ar-xr.html', 'Content-Security-Policy')
+
+    expect(cspValues).toHaveLength(1)
+    expect(cspValues[0]).toContain('https://edu-platform-api-do20.onrender.com')
+  })
+
+  it('permits project-owned Supabase audio in the XR viewer media policy', () => {
+    const cspValues = matchingHeaderValues('/ar-xr.html', 'Content-Security-Policy')
+
+    expect(cspValues).toHaveLength(1)
+    expect(cspValues[0]).toContain("media-src 'self' blob: data: https://*.supabase.co")
+  })
 });

@@ -3,6 +3,8 @@ import {
   normalizeXRTarget,
   serializeXRTargets,
 } from '../pages/LearnAR8thWall';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 describe('LearnAR8thWall target visual configuration', () => {
   it('preserves the canonical fish visual scale in generated xr_targets', () => {
@@ -22,5 +24,16 @@ describe('LearnAR8thWall target visual configuration', () => {
         scale: '0.30 0.30 0.30',
       }),
     ]);
+  });
+
+  it('passes the parent API base and active deck to the isolated XR viewer', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/pages/LearnAR8thWall.tsx'),
+      'utf8',
+    );
+
+    expect(source).toContain("params.set('api_base', API_BASE);");
+    expect(source).toContain("params.set('deck_id', deckIdRef.current);");
+    expect(source).toContain('allow="camera; xr-spatial-tracking; gyroscope; accelerometer; autoplay"');
   });
 });

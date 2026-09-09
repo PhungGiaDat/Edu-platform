@@ -4,6 +4,19 @@ const CAT_MEOW_BLOCKING_PHASES = new Set([
   'COMBO_PLAYING',
 ])
 
+const CAT_AMBIENT_BLOCKING_PHASES = new Set([
+  'COMBO_ARMED',
+  'COMBO_TURNING',
+  'COMBO_PLAYING',
+])
+
+const CAT_FISH_PROXIMITY = Object.freeze({
+  enterDistance: 0.52,
+  exitDistance: 0.60,
+  proximityStableMs: 300,
+  smoothingAlpha: 0.25,
+})
+
 export function shouldRevealAR({ cameraReady, catReady }) {
   return Boolean(cameraReady && catReady)
 }
@@ -28,6 +41,99 @@ export function classifyCatTap({ meshHit, proxyHit }) {
   if (meshHit) return 'mesh'
   if (proxyHit) return 'proxy'
   return 'miss'
+}
+
+export function classifyCatGesture({ durationMs, dx, dy }) {
+  const absDx = Math.abs(dx)
+  const absDy = Math.abs(dy)
+  const movement = Math.hypot(dx, dy)
+
+  if (durationMs <= 700 && absDx >= 60 && absDx >= absDy * 1.4) return 'swipe'
+  if (durationMs >= 450 && movement <= 18) return 'pet'
+  if (durationMs < 350 && movement <= 14) return 'tap'
+  return 'none'
+}
+
+export function resolveCatFishComboRule({ primaryTargetName, secondaryTargetName, rules }) {
+  if (primaryTargetName !== 'cat001' || secondaryTargetName !== 'fish001') return null
+
+  const rule = Array.isArray(rules)
+    ? rules.find(candidate => {
+      const tags = candidate?.tags
+      return Array.isArray(tags) && tags.length === 2 && tags.includes('cat001') && tags.includes('fish001')
+    })
+    : null
+  const proximity = rule?.proximity
+  const fromBackend = proximity &&
+    proximity.enter_distance === CAT_FISH_PROXIMITY.enterDistance &&
+    proximity.exit_distance === CAT_FISH_PROXIMITY.exitDistance &&
+    proximity.proximity_stable_ms === CAT_FISH_PROXIMITY.proximityStableMs &&
+    proximity.smoothing_alpha === CAT_FISH_PROXIMITY.smoothingAlpha
+
+  return {
+    primaryTargetName,
+    secondaryTargetName,
+    source: fromBackend ? 'backend' : 'fallback',
+    ...CAT_FISH_PROXIMITY,
+  }
+}
+
+export function selectComboSecondaryTargetName({ primaryTargetName, targetNames }) {
+  if (primaryTargetName === 'cat001' && targetNames.includes('fish001')) {
+    return 'fish001'
+  }
+  return targetNames.find(targetName => targetName !== primaryTargetName) || null
+}
+
+export function advanceComboProximityGate({ now, distance, enteredAt, comboConsumed, config }) {
+  if (distance == null) {
+    return { enteredAt: null, stable: false, rearmEligible: false }
+  }
+  if (comboConsumed) {
+    return {
+      enteredAt: null,
+      stable: false,
+      rearmEligible: distance >= config.exitDistance,
+    }
+  }
+  if (distance > config.enterDistance) {
+    return { enteredAt: null, stable: false, rearmEligible: false }
+  }
+
+  const nextEnteredAt = enteredAt ?? now
+  return {
+    enteredAt: nextEnteredAt,
+    stable: now - nextEnteredAt >= config.proximityStableMs,
+    rearmEligible: false,
+  }
+}
+
+export function isCatOneShotCompletionOwner({ capturedGeneration, capturedAction, current }) {
+  return capturedGeneration === current?.generation && capturedAction === current?.action
+}
+
+export function shouldReplaceCatAnimation({ currentPriority, nextPriority }) {
+  return nextPriority >= currentPriority
+}
+
+export function getEligibleCatAmbient({
+  now,
+  idleSince,
+  nextClip,
+  activeOneShot,
+  pointerGestureActive,
+  catReturn,
+  phase,
+}) {
+  if (
+    activeOneShot ||
+    pointerGestureActive ||
+    catReturn ||
+    CAT_AMBIENT_BLOCKING_PHASES.has(phase)
+  ) return null
+
+  const delayMs = nextClip === 'CAT_SIT' ? 16000 : 8000
+  return now - idleSince >= delayMs ? nextClip : null
 }
 
 export function smoothstep(value) {

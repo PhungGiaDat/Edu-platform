@@ -123,7 +123,20 @@
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    import { advanceCatReturnTween, canPlayCatMeow, classifyCatTap, shouldRevealAR, smoothstep } from './static/ar-assets/js/ar-interaction-lifecycle.js';
+    import {
+      advanceCatReturnTween,
+      advanceComboProximityGate,
+      canPlayCatMeow,
+      classifyCatGesture,
+      classifyCatTap,
+      getEligibleCatAmbient,
+      isCatOneShotCompletionOwner,
+      resolveCatFishComboRule,
+      selectComboSecondaryTargetName,
+      shouldReplaceCatAnimation,
+      shouldRevealAR,
+      smoothstep,
+    } from './static/ar-assets/js/ar-interaction-lifecycle.js';
     window.THREE = THREE;
 
     // ========== RUNTIME DIAGNOSTICS ==========
@@ -160,6 +173,7 @@
     const targetJsonUrl  = params.get('xr_target_json_url') || '';
     const targetImageUrl = params.get('xr_target_image_url') || '';
     const word           = params.get('word') || qrId;
+    const apiBase        = (params.get('api_base') || 'https://edu-platform-api-do20.onrender.com').replace(/\/+$/, '');
     const isDebug        = location.hostname === 'localhost' || params.get('debug') === 'true';
 
     // ========== BOOTSTRAP STATE (must exist before any sendARDebug call) ==========
@@ -228,11 +242,27 @@
       lastProgressLogPercent: 0,  // throttle to 20/40/60/80/100
     };
 
-    // CAT tap / meow state (independent of combo)
-    const catTapState = {
-      playing: false,
-      runId: 0,
+    // The one CAT mixer owns every CAT clip. A callback can mutate it only if
+    // it still owns both the generation and exact AnimationAction it started.
+    const catAnimationState = {
+      generation: 0,
       action: null,
+      clipName: null,
+      source: null,
+      priority: 0,
+    };
+    const catPointerGesture = {
+      active: false,
+      pointerId: null,
+      startedAt: 0,
+      startX: 0,
+      startY: 0,
+      hitDistance: null,
+      hitSource: null,
+    };
+    const catAmbientState = {
+      idleSince: performance.now(),
+      nextClip: 'CAT_LOOK_UP',
     };
 
     // CAT meow audio (preloaded when CAT becomes ready)
@@ -242,6 +272,9 @@
     };
     let catMeowAudio = null;
     let catMeowAudioLoaded = false;
+    let comboRules = [];
+    let resolvedComboRule = null;
+    let comboRuleResolutionEmitted = false;
 
     const interactionState = {
       phase: InteractionPhase.SEARCH_PRIMARY,
@@ -322,6 +355,41 @@
     const targetConfigByName = new Map(xrTargetConfigs.map(c => [c.qr_id, c]));
     const primaryModelTargetName = qrId;
 
+    function requiresCatFishComboRule() {
+      return primaryModelTargetName === 'cat001' && targetInstances.has('fish001');
+    }
+
+    function resolveActiveComboRule() {
+      if (!requiresCatFishComboRule()) return null;
+      const rule = resolveCatFishComboRule({
+        primaryTargetName: primaryModelTargetName,
+        secondaryTargetName: 'fish001',
+        rules: comboRules,
+      });
+      if (!rule) return null;
+      resolvedComboRule = rule;
+      if (!comboRuleResolutionEmitted) {
+        comboRuleResolutionEmitted = true;
+        sendARDebug('COMBO_RULE_RESOLVED', rule);
+      }
+      return rule;
+    }
+
+    function getInteractionConfig() {
+      if (!requiresCatFishComboRule()) return INTERACTION_CONFIG;
+      if (!resolvedComboRule) return null;
+      return {
+        ...INTERACTION_CONFIG,
+        proximityStableMs: resolvedComboRule.proximityStableMs,
+        distance: {
+          ...INTERACTION_CONFIG.distance,
+          enter: resolvedComboRule.enterDistance,
+          exit: resolvedComboRule.exitDistance,
+          smoothingAlpha: resolvedComboRule.smoothingAlpha,
+        },
+      };
+    }
+
     sendARDebug('XR_MULTI_CONFIG', {
       count: xrTargetConfigs.length,
       targets: xrTargetConfigs.map(t => t.qr_id),
@@ -374,9 +442,9 @@
     const pointerNdc = new THREE.Vector2();
     const CAT_HIT_PROXY_SCALE = 1.30;
 
-    // Check if CAT_MEOW is allowed right now.
-    // Blocks: combo phases, CAT_EAT active, no model, invisible, no clip.
-    function canTriggerCatMeow() {
+    // All normal CAT gestures share the existing CAT_MEOW eligibility boundary.
+    // CAT_EAT/turn/return still block every normal one-shot.
+    function canTriggerCatInteraction() {
       const catInst = targetInstances.get(primaryModelTargetName);
       if (!catInst) return false;
       if (!catInst.model) return false;
@@ -392,8 +460,12 @@
         catReturn: interactionState.catReturn,
         catReady: catInst.modelState === 'loaded',
         catTracked: catInst.tracked,
-        catMeowing: catTapState.playing,
+        catMeowing: !!catAnimationState.action,
       });
+    }
+
+    function resetCatAmbientIdle() {
+      catAmbientState.idleSince = performance.now();
     }
 
     function getCatIdleClip(instance) {
@@ -481,6 +553,8 @@
       try {
         catMeowAudio = new Audio(CAT_AUDIO_CONFIG.meowUrl);
         catMeowAudio.preload = 'auto';
+        catMeowAudio.playsInline = true;
+        catMeowAudio.load();
         catMeowAudioLoaded = true;
         sendARDebug('CAT_MEOW_AUDIO_PRELOADED', { url: CAT_AUDIO_CONFIG.meowUrl });
       } catch (e) {
@@ -488,95 +562,170 @@
       }
     }
 
-    // Play CAT_MEOW one-shot animation + audio.
-    function playCatMeow(hitDistance) {
-      const catInst = targetInstances.get(primaryModelTargetName);
-      if (!catInst || !catInst.mixer) return;
+    function describeAudioError(error) {
+      return {
+        name: error?.name || null,
+        message: error?.message || String(error),
+        mediaErrorCode: catMeowAudio?.error?.code || null,
+        mediaErrorMessage: catMeowAudio?.error?.message || null,
+      };
+    }
 
-      const meowClip =
-        catInst.animations?.find(c => c.name === 'CAT_MEOW') ||
-        catInst.animations?.find(c => c.name.toUpperCase().includes('MEOW'));
-      if (!meowClip) {
-        sendARDebug('CAT_MEOW_CLIP_MISSING', {});
-        return;
+    // This function is always called synchronously from a valid CAT pointer
+    // gesture. Audio errors are telemetry only and never affect animation.
+    function requestCatMeowAudio() {
+      if (!catMeowAudio || catMeowAudio.error) {
+        catMeowAudio = new Audio(CAT_AUDIO_CONFIG.meowUrl);
+        catMeowAudio.preload = 'auto';
+        catMeowAudio.playsInline = true;
+      }
+      let playbackOutcomeReported = false;
+      const reportPlaying = () => {
+        if (playbackOutcomeReported) return;
+        playbackOutcomeReported = true;
+        sendARDebug('CAT_MEOW_AUDIO_PLAYING', { url: CAT_AUDIO_CONFIG.meowUrl });
+      };
+      const reportError = error => {
+        if (playbackOutcomeReported) return;
+        playbackOutcomeReported = true;
+        sendARDebug('CAT_MEOW_AUDIO_PLAY_ERROR', describeAudioError(error));
+      };
+
+      try {
+        catMeowAudio.currentTime = 0;
+        catMeowAudio.addEventListener('playing', reportPlaying, { once: true });
+        catMeowAudio.addEventListener('error', () => reportError(catMeowAudio.error), { once: true });
+        sendARDebug('CAT_MEOW_AUDIO_REQUESTED', { url: CAT_AUDIO_CONFIG.meowUrl });
+        const playPromise = catMeowAudio.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.then(reportPlaying).catch(reportError);
+        }
+      } catch (error) {
+        reportError(error);
+      }
+    }
+
+    function emitCatOneShotStart(source, clip, generation) {
+      const details = {
+        targetName: primaryModelTargetName,
+        clip: clip.name,
+        generation,
+        durationMs: Math.round((clip.duration || 0) * 1000),
+      };
+      if (source === 'CAT_MEOW') sendARDebug('CAT_MEOW_START', details);
+      if (source === 'CAT_PET_REACT') sendARDebug('CAT_PET_REACT_START', details);
+      if (source === 'CAT_SPIN') sendARDebug('CAT_SPIN_START', details);
+      if (source === 'CAT_AMBIENT') sendARDebug('CAT_AMBIENT_START', { clip: clip.name, generation });
+    }
+
+    function emitCatOneShotFinished(source, clip, generation) {
+      if (source === 'CAT_MEOW') sendARDebug('CAT_MEOW_FINISHED', { generation });
+      if (source === 'CAT_PET_REACT') sendARDebug('CAT_PET_REACT_FINISHED', { generation });
+      if (source === 'CAT_SPIN') sendARDebug('CAT_SPIN_FINISHED', { generation });
+      if (source === 'CAT_AMBIENT') sendARDebug('CAT_AMBIENT_FINISHED', { clip: clip.name, generation });
+    }
+
+    function cancelActiveCatOneShotForCombo() {
+      if (!catAnimationState.action) return;
+      const cancelled = {
+        generation: catAnimationState.generation,
+        source: catAnimationState.source,
+        clipName: catAnimationState.clipName,
+      };
+      catAnimationState.generation++;
+      catAnimationState.action.fadeOut(0.12);
+      catAnimationState.action = null;
+      catAnimationState.clipName = null;
+      catAnimationState.source = null;
+      catAnimationState.priority = 0;
+      sendARDebug('CAT_ONE_SHOT_CANCELLED_FOR_COMBO', cancelled);
+    }
+
+    function playCatOneShot({ clipName, source, priority, audio = false }) {
+      const catInst = targetInstances.get(primaryModelTargetName);
+      if (!catInst || !catInst.mixer) return false;
+      const clip = catInst.animations?.find(candidate => candidate.name === clipName);
+      if (!clip) {
+        sendARDebug('CAT_ONE_SHOT_CLIP_MISSING', { source, clipName });
+        return false;
+      }
+      if (catAnimationState.action) {
+        if (!shouldReplaceCatAnimation({ currentPriority: catAnimationState.priority, nextPriority: priority })) {
+          return false;
+        }
+        catAnimationState.generation++;
+        catAnimationState.action.fadeOut(0.12);
       }
 
+      catAnimationState.generation++;
+      const generation = catAnimationState.generation;
+      const action = catInst.mixer.clipAction(clip);
+      catAnimationState.action = action;
+      catAnimationState.clipName = clip.name;
+      catAnimationState.source = source;
+      catAnimationState.priority = priority;
+
       const idleClip = getCatIdleClip(catInst);
-
-      catTapState.runId++;
-      const runId = catTapState.runId;
-      const action = catInst.mixer.clipAction(meowClip);
-      catTapState.playing = true;
-      catTapState.action = action;
-
-      sendARDebug('CAT_MEOW_START', {
-        targetName: primaryModelTargetName,
-        clip: meowClip.name,
-        runId,
-        durationMs: Math.round((meowClip.duration || 0) * 1000),
-      });
-
-      // Fade out idle
       if (idleClip) {
         const idleAction = catInst.mixer.clipAction(idleClip);
         idleAction.fadeOut(0.12);
       }
-
-      // Play meow
       action.reset();
       action.setLoop(THREE.LoopOnce, 1);
       action.clampWhenFinished = true;
       action.fadeIn(0.12);
       action.play();
+      emitCatOneShotStart(source, clip, generation);
+      if (audio) requestCatMeowAudio();
 
-      // Start meow audio (fire-and-forget; animation is primary)
-      if (catMeowAudio) {
-        try {
-          catMeowAudio.currentTime = 0;
-          sendARDebug('CAT_MEOW_AUDIO_REQUESTED', { url: CAT_AUDIO_CONFIG.meowUrl });
-          const playPromise = catMeowAudio.play();
-          if (playPromise && typeof playPromise.then === 'function') {
-            playPromise.then(() => {
-              sendARDebug('CAT_MEOW_AUDIO_PLAYING', { url: CAT_AUDIO_CONFIG.meowUrl });
-            }).catch(err => {
-              sendARDebug('CAT_MEOW_AUDIO_PLAY_ERROR', { error: String(err) });
-            });
-          }
-        } catch (e) {
-          sendARDebug('CAT_MEOW_AUDIO_PLAY_ERROR', { error: String(e) });
-        }
-      } else {
-        sendARDebug('CAT_MEOW_AUDIO_MISSING', {});
-      }
-
-      // Register finished callback
       const onFinished = (event) => {
         if (event.action !== action) return;
         catInst.mixer.removeEventListener('finished', onFinished);
-        if (runId !== catTapState.runId) {
-          sendARDebug('CAT_MEOW_FINISH_IGNORED_STALE', { runId, currentRunId: catTapState.runId });
+        if (!isCatOneShotCompletionOwner({
+          capturedGeneration: generation,
+          capturedAction: action,
+          current: catAnimationState,
+        })) {
+          sendARDebug('CAT_ONE_SHOT_FINISH_IGNORED_STALE', {
+            generation,
+            currentGeneration: catAnimationState.generation,
+            source,
+          });
           return;
         }
-        catTapState.playing = false;
-        catTapState.action = null;
-        sendARDebug('CAT_MEOW_FINISHED', { runId });
-        restoreCatIdleAfterOneShot(catInst, action, 'CAT_MEOW', meowClip.name);
+        catAnimationState.action = null;
+        catAnimationState.clipName = null;
+        catAnimationState.source = null;
+        catAnimationState.priority = 0;
+        emitCatOneShotFinished(source, clip, generation);
+        if (source === 'CAT_AMBIENT') {
+          catAmbientState.nextClip = clip.name === 'CAT_LOOK_UP' ? 'CAT_SIT' : 'CAT_LOOK_UP';
+        }
+        restoreCatIdleAfterOneShot(catInst, action, source, clip.name);
+        if (source === 'CAT_AMBIENT') resetCatAmbientIdle('ambient_complete');
       };
       catInst.mixer.addEventListener('finished', onFinished);
+      return true;
     }
 
-    // Cancel CAT_MEOW so COMBO can take priority.
-    function cancelCatMeowForCombo() {
-      if (!catTapState.playing || !catTapState.action) return;
-      const runId = catTapState.runId;
-      catTapState.runId++; // invalidate old callbacks
-      catTapState.action.fadeOut(0.12);
-      catTapState.playing = false;
-      catTapState.action = null;
-      sendARDebug('CAT_MEOW_CANCELLED_FOR_COMBO', { cancelledRunId: runId });
+    function playCatMeow() {
+      return playCatOneShot({
+        clipName: 'CAT_MEOW',
+        source: 'CAT_MEOW',
+        priority: 60,
+        audio: true,
+      });
     }
 
-    // Pointer event handler — raycasts against CAT only.
+    function playCatPetReact() {
+      return playCatOneShot({ clipName: 'CAT_PET_REACT', source: 'CAT_PET_REACT', priority: 60 });
+    }
+
+    function playCatSpin() {
+      return playCatOneShot({ clipName: 'CAT_SPIN', source: 'CAT_SPIN', priority: 60 });
+    }
+
+    // Pointer event handler — records hit eligibility and classifies on pointerup.
     function onPointerDown(event) {
       // Ignore UI interactions
       if (event.target.closest?.('#overlay, #debug-panel, button, input')) return;
@@ -612,22 +761,79 @@
       }
 
       const hitDistance = (meshHit || proxyHit).distance;
-      sendARDebug('CAT_TAP', { targetName: primaryModelTargetName, hitDistance, hitSource });
-
-      if (!canTriggerCatMeow()) {
+      if (!canTriggerCatInteraction()) {
         const phase = interactionState.phase;
-        const reason = catTapState.playing
+        const reason = catAnimationState.action
           ? 'already_playing'
           : interactionState.catReturn
             ? 'returning'
           : phase === InteractionPhase.COMBO_ARMED || phase === InteractionPhase.COMBO_TURNING || phase === InteractionPhase.COMBO_PLAYING
             ? 'combo_busy'
             : 'not_ready';
-        sendARDebug('CAT_MEOW_TAP_IGNORED', { reason, phase });
+        sendARDebug('CAT_GESTURE_IGNORED', { reason, phase });
         return;
       }
+      catPointerGesture.active = true;
+      catPointerGesture.pointerId = event.pointerId;
+      catPointerGesture.startedAt = performance.now();
+      catPointerGesture.startX = event.clientX;
+      catPointerGesture.startY = event.clientY;
+      catPointerGesture.hitDistance = hitDistance;
+      catPointerGesture.hitSource = hitSource;
+    }
 
-      playCatMeow(hitDistance);
+    function onPointerUp(event) {
+      if (!catPointerGesture.active || event.pointerId !== catPointerGesture.pointerId) return;
+      const durationMs = performance.now() - catPointerGesture.startedAt;
+      const dx = event.clientX - catPointerGesture.startX;
+      const dy = event.clientY - catPointerGesture.startY;
+      const hitDistance = catPointerGesture.hitDistance;
+      catPointerGesture.active = false;
+      catPointerGesture.pointerId = null;
+
+      const gesture = classifyCatGesture({ durationMs, dx, dy });
+      if (gesture === 'none' || !canTriggerCatInteraction()) {
+        if (gesture === 'none') sendARDebug('CAT_GESTURE_NONE', { durationMs, dx, dy });
+        return;
+      }
+      if (gesture === 'tap') {
+        sendARDebug('CAT_GESTURE_TAP', { durationMs, dx, dy, hitDistance });
+        if (playCatMeow()) resetCatAmbientIdle('user_interaction');
+      }
+      if (gesture === 'pet') {
+        sendARDebug('CAT_GESTURE_LONG_PRESS', { durationMs, dx, dy, hitDistance });
+        if (playCatPetReact()) resetCatAmbientIdle('user_interaction');
+      }
+      if (gesture === 'swipe') {
+        sendARDebug('CAT_GESTURE_SWIPE', { durationMs, dx, dy, hitDistance });
+        if (playCatSpin()) resetCatAmbientIdle('user_interaction');
+      }
+    }
+
+    function onPointerCancel(event) {
+      if (event.pointerId !== catPointerGesture.pointerId) return;
+      catPointerGesture.active = false;
+      catPointerGesture.pointerId = null;
+    }
+
+    function updateCatAmbient(now) {
+      const catInst = targetInstances.get(primaryModelTargetName);
+      if (
+        !catInst?.model ||
+        catInst.modelState !== 'loaded' ||
+        !catInst.tracked ||
+        !catInst.model.visible
+      ) return;
+      const clipName = getEligibleCatAmbient({
+        now,
+        idleSince: catAmbientState.idleSince,
+        nextClip: catAmbientState.nextClip,
+        activeOneShot: !!catAnimationState.action,
+        pointerGestureActive: catPointerGesture.active,
+        catReturn: interactionState.catReturn,
+        phase: interactionState.phase,
+      });
+      if (clipName) playCatOneShot({ clipName, source: 'CAT_AMBIENT', priority: 20 });
     }
 
     // ========== BOOT GATE ==========
@@ -1180,6 +1386,7 @@
           if (now - lastInteractionEvalMs >= 100) {
             lastInteractionEvalMs = now;
             evaluateInteraction(now);
+            updateCatAmbient(now);
           }
           if (renderCheckFrame % 60 === 0) {
             const primaryInst = targetInstances.get(primaryModelTargetName);
@@ -1275,10 +1482,13 @@
 
     function computeAnchorDistance() {
       const catInst = targetInstances.get(primaryModelTargetName);
-      const otherIds = Array.from(targetInstances.keys()).filter(k => k !== primaryModelTargetName);
-      if (otherIds.length === 0) return null;
-      // Use first secondary target for proximity (fish001 in current lesson).
-      const fishInst = targetInstances.get(otherIds[0]);
+      const secondaryTargetName = selectComboSecondaryTargetName({
+        primaryTargetName,
+        targetNames: Array.from(targetInstances.keys()),
+      });
+      if (!secondaryTargetName) return null;
+      // CAT-FISH proximity always measures tracking anchors, never model bounds.
+      const fishInst = targetInstances.get(secondaryTargetName);
       const a = getAnchorWorldPosition(catInst);
       const b = getAnchorWorldPosition(fishInst);
       if (!a || !b) return null;
@@ -1291,75 +1501,13 @@
         interactionState.filteredDistance = null;
         return null;
       }
-      const a = INTERACTION_CONFIG.distance.smoothingAlpha;
+      const a = getInteractionConfig()?.distance.smoothingAlpha
+        ?? INTERACTION_CONFIG.distance.smoothingAlpha;
       interactionState.filteredDistance =
         interactionState.filteredDistance == null
           ? raw
           : interactionState.filteredDistance * (1 - a) + raw * a;
       return interactionState.filteredDistance;
-    }
-
-    function playComboAnimation(instance, runId) {
-      if (!instance?.mixer) return false;
-      const requestedName = instance.config?.combo_animation || 'CAT_EAT';
-      const clip = instance.animations?.find(c => c.name === requestedName)
-        || instance.animations?.find(c => c.name.toUpperCase().includes('EAT'))
-        || instance.animations?.find(c => c.name.toUpperCase().includes('COMBO'));
-      if (!clip) {
-        sendARDebug('COMBO_ANIMATION_MISSING', {
-          targetName: instance.config.qr_id,
-          requested: requestedName,
-          available: instance.animations?.map(c => c.name) || [],
-        });
-        return false;
-      }
-      const mixer = instance.mixer;
-      const idleName = instance.config?.default_animation || null;
-      const idleClip = idleName && instance.animations.find(c => c.name === idleName);
-      // Fade out idle if currently playing
-      if (idleClip) {
-        const idleAction = mixer.clipAction(idleClip);
-        idleAction.fadeOut(0.15);
-      }
-      const action = mixer.clipAction(clip);
-      action.reset();
-      action.setLoop(THREE.LoopOnce, 1);
-      action.clampWhenFinished = true;
-      action.fadeIn(0.15);
-      action.play();
-      sendARDebug('COMBO_ANIMATION_START', {
-        targetName: instance.config.qr_id,
-        clip: clip.name,
-        durationMs: Math.round((clip.duration || 0) * 1000),
-      });
-      const onFinish = (e) => {
-        if (e.action !== action) return;
-        mixer.removeEventListener('finished', onFinish);
-
-        // Stale callback guard: ignore if runId has changed or phase moved away from COMBO_PLAYING
-        if (
-          runId !== interactionState.comboRunId ||
-          interactionState.phase !== InteractionPhase.COMBO_PLAYING
-        ) {
-          sendARDebug('COMBO_FINISH_IGNORED_STALE', {
-            runId,
-            currentRunId: interactionState.comboRunId,
-            phase: interactionState.phase,
-          });
-          return;
-        }
-
-        // Restore idle
-        if (idleClip) {
-          mixer.clipAction(idleClip).reset().fadeIn(0.15).play();
-        }
-        sendARDebug('COMBO_ANIMATION_FINISHED', { targetName: instance.config.qr_id, runId });
-        interactionState.comboPlaying = false;
-        interactionState.comboConsumed = true;
-        setInteractionPhase(InteractionPhase.COMBO_CONSUMED);
-      };
-      mixer.addEventListener('finished', onFinish);
-      return true;
     }
 
     function consumeSecondaryTarget() {
@@ -1533,6 +1681,12 @@
         mixer.clipAction(idleClip).fadeOut(0.15);
       }
       const action = mixer.clipAction(clip);
+      catAnimationState.generation++;
+      const animationGeneration = catAnimationState.generation;
+      catAnimationState.action = action;
+      catAnimationState.clipName = clip.name;
+      catAnimationState.source = 'CAT_EAT';
+      catAnimationState.priority = 100;
       action.reset();
       action.setLoop(THREE.LoopOnce, 1);
       action.clampWhenFinished = true;
@@ -1548,7 +1702,12 @@
         mixer.removeEventListener('finished', onFinish);
         if (
           runId !== interactionState.comboRunId ||
-          interactionState.phase !== InteractionPhase.COMBO_PLAYING
+          interactionState.phase !== InteractionPhase.COMBO_PLAYING ||
+          !isCatOneShotCompletionOwner({
+            capturedGeneration: animationGeneration,
+            capturedAction: action,
+            current: catAnimationState,
+          })
         ) {
           sendARDebug('COMBO_FINISH_IGNORED_STALE', {
             runId,
@@ -1569,6 +1728,11 @@
         });
         sendARDebug('COMBO_ANIMATION_FINISHED', { targetName: instance.config.qr_id, runId });
         restoreCatIdleAfterOneShot(instance, action, 'CAT_EAT', clip.name);
+        catAnimationState.action = null;
+        catAnimationState.clipName = null;
+        catAnimationState.source = null;
+        catAnimationState.priority = 0;
+        resetCatAmbientIdle('combo_complete');
         interactionState.comboPlaying = false;
         interactionState.comboConsumed = true;
         setInteractionPhase(InteractionPhase.COMBO_CONSUMED);
@@ -1593,8 +1757,11 @@
     function evaluateInteraction(now) {
       const cfg = INTERACTION_CONFIG;
       const catInst = targetInstances.get(primaryModelTargetName);
-      const otherIds = Array.from(targetInstances.keys()).filter(k => k !== primaryModelTargetName);
-      const fishInst = otherIds.length ? targetInstances.get(otherIds[0]) : null;
+      const secondaryTargetName = selectComboSecondaryTargetName({
+        primaryTargetName,
+        targetNames: Array.from(targetInstances.keys()),
+      });
+      const fishInst = secondaryTargetName ? targetInstances.get(secondaryTargetName) : null;
 
       // Grace-period tracked: true if currently tracked OR lost within grace window
       const catLostGrace = catInst?.lostAt != null && (now - catInst.lostAt) < cfg.lostGraceMs;
@@ -1704,6 +1871,9 @@
 
       // ---- COMBO_PLAYING: CAT_EAT animating ----
       if (phase === InteractionPhase.COMBO_PLAYING) {
+        const comboConfig = getInteractionConfig();
+        if (!comboConfig) return;
+
         const raw = computeAnchorDistance();
         updateFilteredDistance(raw);
         return;
@@ -1787,6 +1957,9 @@
           setInteractionPhase(InteractionPhase.PROXIMITY_PENDING);
         }
 
+        const comboConfig = getInteractionConfig();
+        if (!comboConfig) return;
+
         const raw = computeAnchorDistance();
         const filtered = updateFilteredDistance(raw);
 
@@ -1797,8 +1970,8 @@
           sendARDebug('PROXIMITY_SAMPLE', {
             rawDistance: Number(raw.toFixed(4)),
             filteredDistance: filtered != null ? Number(filtered.toFixed(4)) : null,
-            enterDistance: cfg.distance.enter,
-            exitDistance: cfg.distance.exit,
+            enterDistance: comboConfig.distance.enter,
+            exitDistance: comboConfig.distance.exit,
             catTracked: catEffectivelyTracked,
             fishTracked: fishEffectivelyTracked,
             secondaryInteractionReady,
@@ -1807,23 +1980,38 @@
 
         // ---- Proximity enter / stable / combo arm ----
         if (filtered != null && catEffectivelyTracked && fishEffectivelyTracked && !interactionState.comboPlaying) {
-          if (filtered <= cfg.distance.enter) {
-            if (interactionState.proximityEnteredAt == null) {
+          const gate = advanceComboProximityGate({
+            now,
+            distance: filtered,
+            enteredAt: interactionState.proximityEnteredAt,
+            comboConsumed: interactionState.comboConsumed,
+            config: {
+              enterDistance: comboConfig.distance.enter,
+              exitDistance: comboConfig.distance.exit,
+              proximityStableMs: comboConfig.proximityStableMs,
+            },
+          });
+          if (!interactionState.comboConsumed) {
+            if (gate.enteredAt != null && interactionState.proximityEnteredAt == null) {
               interactionState.proximityEnteredAt = now;
               sendARDebug('PROXIMITY_ENTER', { filteredDistance: Number(filtered.toFixed(4)) });
             }
-            const stableFor = now - interactionState.proximityEnteredAt;
+            if (gate.enteredAt == null && interactionState.proximityEnteredAt != null) {
+              sendARDebug('PROXIMITY_EXIT', { filteredDistance: Number(filtered.toFixed(4)) });
+            }
+            interactionState.proximityEnteredAt = gate.enteredAt;
+            const stableFor = gate.enteredAt == null ? 0 : now - gate.enteredAt;
             if (
               phase === InteractionPhase.PROXIMITY_PENDING &&
               secondaryInteractionReady &&
-              stableFor >= cfg.proximityStableMs &&
+              gate.stable &&
               !interactionState.comboConsumed
             ) {
               sendARDebug('PROXIMITY_STABLE', { stableMs: stableFor, distance: Number(filtered.toFixed(4)) });
               sendARDebug('COMBO_ARMED', { targetName: primaryModelTargetName });
 
-              // Cancel any active CAT_MEOW — combo has priority
-              cancelCatMeowForCombo();
+              // CAT_EAT owns the mixer at priority 100.
+              cancelActiveCatOneShotForCombo();
 
               // Capture comboRunId
               interactionState.comboRunId++;
@@ -1892,17 +2080,11 @@
               };
               interactionState.comboPlaying = true;
             }
-          } else {
-            if (interactionState.proximityEnteredAt != null) {
-              sendARDebug('PROXIMITY_EXIT', { filteredDistance: Number(filtered.toFixed(4)) });
-              interactionState.proximityEnteredAt = null;
-            }
           }
 
           // Rearm when cards separate beyond EXIT
           if (
-            interactionState.comboConsumed &&
-            filtered >= cfg.distance.exit &&
+            gate.rearmEligible &&
             phase === InteractionPhase.COMBO_CONSUMED
           ) {
             sendARDebug('COMBO_REARMED', { distance: Number(filtered.toFixed(4)) });
@@ -1961,6 +2143,7 @@
 
       // Primary target: legacy singleton attach path (preserves CAT_IDLE mixer, etc.)
       if (detail.name === primaryModelTargetName) {
+        resetCatAmbientIdle('target_acquired');
         attemptModelAttach(detail.name);
       } else {
         // Non-primary: reuse the already-preloaded promise (concurrent preload started in main()).
@@ -2028,15 +2211,21 @@
     }
 
     // ========== COMBO DETECTION (background) ==========
-    let comboRules = [];
     async function loadComboRules() {
+      const deck = params.get('deck_id') || 'claymorphic-animals-001';
       try {
-        const deck = params.get('deck_id') || 'claymorphic-animals-001';
-        const url = `https://edu-platform-api-do20.onrender.com/api/v1/combos/rules?flashcard_set=${encodeURIComponent(deck)}`;
+        const url = `${apiBase}/api/v1/combos/rules?flashcard_set=${encodeURIComponent(deck)}`;
         const res = await fetch(url);
-        if (res.ok) { comboRules = (await res.json()).rules || []; sendARDebug('COMBO_RULE_LOAD_COMPLETE', { count: comboRules.length }); }
+        if (res.ok) {
+          comboRules = (await res.json()).rules || [];
+          sendARDebug('COMBO_RULE_LOAD_COMPLETE', { count: comboRules.length, url });
+        }
         else sendARDebug('COMBO_RULE_LOAD_ERROR', { status: res.status });
-      } catch (e) { sendARDebug('COMBO_RULE_LOAD_ERROR', { error: String(e) }); }
+      } catch (e) {
+        sendARDebug('COMBO_RULE_LOAD_ERROR', { error: String(e) });
+      } finally {
+        resolveActiveComboRule();
+      }
     }
 
     // ========== MESSAGE LISTENER ==========
@@ -2104,9 +2293,11 @@
         setPhase('viewing');
         sendARDebug('INIT_COMPLETE', { modelLoaded: !!loadedModel, targetCount: targetDataList.length });
 
-        // Attach CAT tap handler — use pointer events (works for both touch and mouse)
+        // Attach CAT gesture handlers — pointer events work for touch and mouse.
         window.addEventListener('pointerdown', onPointerDown, { passive: true });
-        sendARDebug('CAT_TAP_HANDLER_REGISTERED', {});
+        window.addEventListener('pointerup', onPointerUp, { passive: true });
+        window.addEventListener('pointercancel', onPointerCancel, { passive: true });
+        sendARDebug('CAT_GESTURE_HANDLERS_REGISTERED', {});
         logToBuffer('info', 'Initialization complete');
       } catch (error) {
         setPhase('error');
