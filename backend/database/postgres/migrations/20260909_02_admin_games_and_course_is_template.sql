@@ -56,6 +56,8 @@ CREATE TABLE IF NOT EXISTS public.game_vocab_items (
     image_url TEXT,
     audio_url TEXT,
     sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT uq_game_vocab_topic_word UNIQUE (topic_id, word)
 );
 

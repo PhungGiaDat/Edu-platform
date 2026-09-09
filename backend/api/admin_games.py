@@ -69,53 +69,10 @@ async def create_game(
         raise
 
 
-@router.get("/{game_id}", response_model=GameResponse)
-async def get_game(
-    game_id: str,
-    repo: AdminGamesService = Depends(_svc),
-    current_user: PostgresUser = Depends(get_current_teacher),
-):
-    game = await repo.get_game(game_id)
-    if not game:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Game not found")
-    return game
-
-
-@router.put("/{game_id}", response_model=GameResponse)
-async def update_game(
-    game_id: str,
-    data: GameUpdate,
-    repo: AdminGamesService = Depends(_svc),
-    current_user: PostgresUser = Depends(get_current_teacher),
-):
-    payload = {k: v for k, v in data.model_dump().items() if v is not None}
-    if payload.get("game_type"):
-        from models.admin_models import GAME_CONFIG_MODELS
-        model = GAME_CONFIG_MODELS.get(payload["game_type"])
-        if model is not None and payload.get("config"):
-            model(**payload["config"])  # 422 on invalid config
-    try:
-        game = await repo.update_game(game_id, payload)
-    except ValueError as e:
-        if str(e) == "SLUG_CONFLICT":
-            raise HTTPException(
-                status.HTTP_409_CONFLICT,
-                detail="Tên game đã tồn tại (slug trùng) — chọn tên khác",
-            )
-        raise
-    if not game:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Game not found")
-    return game
-
-
-@router.delete("/{game_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_game(
-    game_id: str,
-    repo: AdminGamesService = Depends(_svc),
-    current_user: PostgresUser = Depends(get_current_teacher),
-):
-    if not await repo.delete_game(game_id):
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Game not found")
+# NOTE: route order matters — static paths (/topics, /topics/{id}/vocab,
+# /vocab/{item_id}) MUST be registered BEFORE the dynamic /{game_id} routes,
+# otherwise "topics"/"vocab" get captured as a game_id. The {game_id} CRUD
+# block therefore lives at the bottom of this module.
 
 
 # --------------------------------------------------------------- Topics ----
@@ -219,6 +176,58 @@ async def delete_vocab(
 ):
     if not await repo.delete_vocab(item_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Vocab item not found")
+
+
+# ---------------------------------------------- {game_id} CRUD (LAST) ----
+# Dynamic path segments must register AFTER the static ones (see NOTE above).
+
+@router.get("/{game_id}", response_model=GameResponse)
+async def get_game(
+    game_id: str,
+    repo: AdminGamesService = Depends(_svc),
+    current_user: PostgresUser = Depends(get_current_teacher),
+):
+    game = await repo.get_game(game_id)
+    if not game:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Game not found")
+    return game
+
+
+@router.put("/{game_id}", response_model=GameResponse)
+async def update_game(
+    game_id: str,
+    data: GameUpdate,
+    repo: AdminGamesService = Depends(_svc),
+    current_user: PostgresUser = Depends(get_current_teacher),
+):
+    payload = {k: v for k, v in data.model_dump().items() if v is not None}
+    if payload.get("game_type"):
+        from models.admin_models import GAME_CONFIG_MODELS
+        model = GAME_CONFIG_MODELS.get(payload["game_type"])
+        if model is not None and payload.get("config"):
+            model(**payload["config"])  # 422 on invalid config
+    try:
+        game = await repo.update_game(game_id, payload)
+    except ValueError as e:
+        if str(e) == "SLUG_CONFLICT":
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                detail="Tên game đã tồn tại (slug trùng) — chọn tên khác",
+            )
+        raise
+    if not game:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Game not found")
+    return game
+
+
+@router.delete("/{game_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_game(
+    game_id: str,
+    repo: AdminGamesService = Depends(_svc),
+    current_user: PostgresUser = Depends(get_current_teacher),
+):
+    if not await repo.delete_game(game_id):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Game not found")
 
 
 # --------------------------------------------------------------- Upload ----
