@@ -3,6 +3,7 @@
 **Spec:** `docs/superpowers/specs/2026-09-09-admin-course-game-design.md`
 **Branch:** `10-days-quick-run` (work directly; no reset; `git fetch` before commit; commit only our files — user WIP exists)
 **Mode:** YOLO
+**Status:** ✅ COMPLETED 2026-09-09 — commits 1f930ed2 / 729b45e7 / a4aca756 / 12f659f7; progress: `docs/mobile_migration/progress/2026-09-09-admin-course-game-activation.md`
 
 ## Tasks
 
