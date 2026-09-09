@@ -20,6 +20,7 @@ import {
   normalizeGameTopic,
   speakWord,
   topicBackgroundUrl,
+  localGameCardUrl,
   GAME_TOPICS,
   type GameVocabItem,
   type GameTopic,
@@ -55,6 +56,16 @@ function buildTiles(pairs: Pair[]): Tile[] {
   });
   return tiles.sort(() => Math.random() - 0.5);
 }
+
+/**
+ * Storage image 404s happen (manifest paths point at a bucket that was never
+ * populated), so a broken image falls back to the local chibi PNG for the
+ * same word; if that is missing too the tile shows a topic emoji instead of
+ * a broken-image icon.
+ */
+const TOPIC_EMOJI: Record<GameTopic, string> = {
+  animals: '🐾', home: '🏠', nature: '🌿', school_food: '🍎',
+};
 
 export const MemoryPairsGame: React.FC = () => {
   const [params] = useSearchParams();
@@ -181,7 +192,7 @@ export const MemoryPairsGame: React.FC = () => {
           aria-hidden="true"
           style={{
             height: 118, margin: '-16px -16px 12px', borderRadius: '0 0 26px 26px',
-            backgroundImage: `linear-gradient(rgba(255,248,238,0.45),rgba(255,248,238,1)), url(${themeBg})`,
+            backgroundImage: `linear-gradient(rgba(255,248,238,0.12),rgba(255,248,238,0.55) 55%,${colors.backgroundBase} 100%), url(${themeBg})`,
             backgroundSize: 'cover', backgroundPosition: 'center',
           }}
         />
@@ -210,7 +221,18 @@ export const MemoryPairsGame: React.FC = () => {
                 <span className="mp-face mp-back"><Msr icon="pets" size={22} /></span>
                 {tile.kind === 'image' ? (
                   <span className="mp-face mp-front mp-front-img">
-                    <img src={pair.image_url} alt="" loading="lazy" onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.25'; }} />
+                    <img
+                      src={pair.image_url}
+                      alt=""
+                      loading="lazy"
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        const local = localGameCardUrl(topic, pair.word);
+                        if (local && !img.src.endsWith(local)) { img.src = local; return; }
+                        img.style.display = 'none';
+                      }}
+                    />
+                    <span className="mp-emoji" aria-hidden="true">{topic ? TOPIC_EMOJI[topic] : '🔤'}</span>
                   </span>
                 ) : (
                   <span className="mp-face mp-front mp-front-word">{pair.word}</span>
@@ -236,7 +258,9 @@ export const MemoryPairsGame: React.FC = () => {
         .mp-back{background:${colors.skyBlue};box-shadow:0 4px 0 ${colors.skyDark},inset 0 2px 0 rgba(255,255,255,.5)}
         .mp-back .msr{color:#fff;font-size:22px}
         .mp-front{transform:rotateY(180deg);background:#fff;box-shadow:0 4px 0 rgba(26,39,68,.10)}
-        .mp-front-img img{width:82%;height:82%;object-fit:cover;border-radius:12px}
+        .mp-front-img{background:#fff;overflow:hidden}
+        .mp-front-img img{position:relative;z-index:1;width:82%;height:82%;object-fit:cover;border-radius:12px}
+        .mp-emoji{position:absolute;inset:0;display:grid;place-items:center;font-size:34px}
         .mp-front-word{background:${colors.warmWhite};padding:6px;text-align:center}
         .mp-matched .mp-front{background:${colors.mintLight};box-shadow:0 4px 0 rgba(125,199,96,.4);opacity:.9}
         .mp-btn{border:none;border-radius:16px;padding:12px 20px;font-family:${DISPLAY_FONT};font-weight:800;font-size:.9rem;background:${withOpacity(colors.skyBlue, 0.3)};color:${colors.deepSlate};cursor:pointer;box-shadow:0 4px 0 ${colors.skyDark}}

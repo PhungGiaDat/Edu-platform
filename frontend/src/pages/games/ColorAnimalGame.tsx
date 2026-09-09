@@ -396,14 +396,14 @@ export const ColorAnimalGame: React.FC = () => {
             aria-hidden="true"
             style={{
               height: 118, margin: '-16px -16px 12px', borderRadius: '0 0 26px 26px',
-              backgroundImage: `linear-gradient(rgba(255,248,238,0.45),rgba(255,248,238,1)), url(${themeBg})`,
+                backgroundImage: `linear-gradient(rgba(255,248,238,0.12),rgba(255,248,238,0.55) 55%,${colors.backgroundBase} 100%), url(${themeBg})`,
               backgroundSize: 'cover', backgroundPosition: 'center',
             }}
           />
         )}
         <div className="ca-topbar">
           <button className="ca-icon-btn" onClick={() => navigate('/games')} aria-label="Về Khu chơi"><Msr icon="arrow_back" size={20} /></button>
-          <div className="ca-topic-chip"><Msr icon="brush" size={16} color={colors.coralLight} />Tô màu con vật</div>
+          <div className="ca-topic-chip"><Msr icon="brush" size={16} color={colors.coralDark ?? colors.coralPink} />Tô màu con vật</div>
         </div>
         <p className="ca-guide">Chọn một con vật để tô màu cùng Lexi nhé!</p>
         <div className="ca-picker">
@@ -425,7 +425,7 @@ export const ColorAnimalGame: React.FC = () => {
     <div className="ca-shell">
       <div className="ca-topbar">
         <button className="ca-icon-btn" onClick={() => setAnimal(null)} aria-label="Chọn con vật khác"><Msr icon="arrow_back" size={20} /></button>
-        <div className="ca-topic-chip"><Msr icon="brush" size={16} color={colors.coralLight} />{animal.word} · {animal.nameVi}</div>
+        <div className="ca-topic-chip"><Msr icon="brush" size={16} color={colors.coralDark ?? colors.coralPink} />{animal.word} · <i className="ca-vi">{animal.nameVi}</i></div>
         <div className="ca-moves">{doneCount}/{requiredRegions.length} vùng</div>
       </div>
 
@@ -499,6 +499,7 @@ const caStyles = `
   .ca-topbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
   .ca-icon-btn{width:44px;height:44px;border:none;border-radius:14px;background:${colors.warmWhite};box-shadow:0 4px 0 rgba(26,39,68,.10);cursor:pointer;display:grid;place-items:center;color:${colors.deepSlate}}
   .ca-topic-chip{display:inline-flex;align-items:center;gap:6px;font-family:${DISPLAY_FONT};font-weight:800;font-size:.85rem;background:${colors.warmWhite};border-radius:999px;padding:8px 14px;box-shadow:0 3px 0 rgba(26,39,68,.08)}
+  .ca-vi{font-style:normal;color:${colors.mediumGray}}
   .ca-moves{margin-left:auto;font-family:${DISPLAY_FONT};font-weight:900;font-size:.9rem;color:${colors.mediumGray}}
   .ca-guide{text-align:center;font-size:.92rem;color:${colors.mediumGray};margin:4px 0 14px}
   .ca-picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
@@ -506,7 +507,7 @@ const caStyles = `
   .ca-pick:hover{transform:translateY(-3px)}
   .ca-pick svg{width:100%;height:auto}
   .ca-pick b{font-family:${DISPLAY_FONT};font-weight:900;font-size:.95rem;color:${colors.deepSlate}}
-  .ca-pick small{font-size:.75rem;color:${colors.grayLight}}
+  .ca-pick small{font-size:.78rem;font-weight:700;color:${colors.mediumGray}}
   .ca-stage{background:#fff;border-radius:24px;box-shadow:${shadows.clayCard};padding:12px}
   .ca-stage svg{display:block;width:100%;height:auto}
   .cr{cursor:pointer;transition:fill .25s ease}

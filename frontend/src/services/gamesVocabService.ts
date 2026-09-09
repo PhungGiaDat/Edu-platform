@@ -76,6 +76,12 @@ export function topicBackgroundUrl(topic: GameTopic | null | undefined): string 
   return `/assets/game-themes/${topic}/bg.jpg`;
 }
 
+/** Local chibi PNG card for a word (fallback when a storage URL 404s). */
+export function localGameCardUrl(topic: GameTopic | null, word: string): string | null {
+  if (!topic) return null;
+  return `/assets/game-cards/${topic}/${encodeURIComponent(word)}.png`;
+}
+
 export async function fetchGameVocab(topic: GameTopic, limit = 8): Promise<GameVocab> {
   const data = await request(`/api/v1/games/vocab?topic=${encodeURIComponent(topic)}&limit=${limit}`, {
     method: 'GET',

@@ -51,10 +51,11 @@ async def test_notebook_words_first_then_seed_fills():
     assert words.count("elephant") == 1  # no dup between notebook & seed
     assert len(words) == 8               # filled to limit with seed
     dolphin = next(it for it in data["items"] if it["word"] == "dolphin")
-    assert dolphin["image_url"].startswith("/assets/game-cards/animals/")  # not in manifest → local card
+    # CDN game-card URL (bucket) — manifest_base always present in dev/prod
+    assert dolphin["image_url"].startswith("http") and "game-cards/animals/" in dolphin["image_url"]
     for it in data["items"]:
-        # real Supabase asset (manifest hit) OR local game-card fallback
-        assert it["image_url"].startswith("/assets/game-cards/") or "supabase" in it["image_url"]
+        # bucket CDN asset OR local game-card fallback (offline env without manifest)
+        assert "game-cards/" in it["image_url"] or "supabase" in it["image_url"]
         assert "audio_url" in it
 
 
@@ -83,17 +84,15 @@ async def test_limit_capped():
 
 @pytest.mark.asyncio
 async def test_real_assets_attached_when_manifest_has_word():
-    """Words present in the course manifest must carry the real Supabase
-    image + audio urls (not the local game-card fallback)."""
+    """Words present in the course manifest must carry a real asset URL —
+    a local /learnar-assets/ path served by the SPA host (the Supabase
+    bucket was never populated; manifest only indexes files on disk)."""
     from services.games_vocab_service import MANIFEST_INDEX
     if not MANIFEST_INDEX:
         pytest.skip("manifest not built in this environment")
-    sample_word = next(iter(MANIFEST_INDEX))
     db = FakeDB([])
     data = await get_game_vocab(db, "u-5", "nature", limit=8)
-    all_items = data["items"]
-    # also probe a direct merge through any topic containing the sample word
-    for it in all_items:
+    for it in data["items"]:
         assert it["image_url"]
         assert "audio_url" in it
 

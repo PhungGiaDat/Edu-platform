@@ -17,6 +17,7 @@ import json
 import random
 from pathlib import Path
 from typing import Any, Dict, List
+from urllib.parse import quote
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -101,27 +102,58 @@ TOPIC_ALIASES = {
     "food": "school_food",
 }
 
-# ── Real-asset manifest (built by scripts/build_game_vocab_manifest.py) ──
-# Every entry carries a PUBLIC Supabase Storage image_url (and audio_url when
-# the course ships pronunciation) — real course assets, not placeholders.
+# ── Real-asset manifest (built by scripts/rebuild_game_vocab_manifest.py) ──
+# Media lives in the public Supabase `learnar-assets` bucket (populated by
+# scripts/upload_game_media_to_storage.py). Entries carry `storage_path`s the
+# service turns into plain CDN URLs — no signing, browser-cacheable. The
+# frontend onError chain falls back to local chibi PNGs when offline.
 _MANIFEST_PATH = Path(__file__).resolve().parents[1] / "seeds" / "game_vocab_manifest.json"
 
 
-def _load_manifest_index() -> Dict[str, Dict[str, Any]]:
+def _load_manifest() -> tuple[str, Dict[str, Dict[str, Any]]]:
     try:
         raw = json.loads(_MANIFEST_PATH.read_text(encoding="utf-8"))
     except Exception:  # missing file never blocks the games
-        return {}
+        return "", {}
+    base = str(raw.get("public_base") or "").rstrip("/")
+    if not base:
+        return "", {}
     index: Dict[str, Dict[str, Any]] = {}
-    for entries in raw.values():
+    for entries in (raw.get("topics") or {}).values():
         for entry in entries:
             w = str(entry.get("word") or "").strip().lower()
-            if w:
+            if w and entry.get("storage_path"):
                 index[w] = entry
-    return index
+    return base, index
 
 
-MANIFEST_INDEX = _load_manifest_index()
+MANIFEST_BASE, MANIFEST_INDEX = _load_manifest()
+
+
+def _resolve_asset(
+    entry: Dict[str, Any],
+    topic: str,
+    word: str,
+    translation_vi: str,
+    source: str,
+) -> Dict[str, Any]:
+    """
+    Attach bucket CDN media for a manifest entry. The item's own
+    word/translation (notebook case, seed case) is preserved — the manifest
+    only contributes media, never text.
+    """
+    item: Dict[str, Any] = {
+        "word": word,
+        "translation_vi": translation_vi,
+        "image_url": image_url_for(word, topic),
+        "audio_url": None,
+        "source": source,
+    }
+    if MANIFEST_BASE:
+        item["image_url"] = f"{MANIFEST_BASE}/{entry['storage_path']}"
+        if entry.get("audio_storage_path"):
+            item["audio_url"] = f"{MANIFEST_BASE}/{entry['audio_storage_path']}"
+    return item
 
 
 def normalize_topic(topic: str | None) -> str | None:
@@ -131,8 +163,12 @@ def normalize_topic(topic: str | None) -> str | None:
 
 
 def image_url_for(word: str, topic: str) -> str:
-    """Local game-card asset; SVG chibi fallback if the PNG has not been generated yet."""
-    return f"/assets/game-cards/{topic}/{word}.png"
+    """Public bucket CDN URL for the chibi game-card (uploaded 2026-09-08,
+    scripts/upload_game_media_to_storage.py). The frontend onError chain
+    falls back to the same file inside frontend/public when offline."""
+    if MANIFEST_BASE:
+        return f"{MANIFEST_BASE}/assets/game-cards/{topic}/{quote(word)}.png"
+    return f"/assets/game-cards/{topic}/{quote(word)}.png"
 
 
 async def get_game_vocab(
@@ -155,17 +191,7 @@ async def get_game_vocab(
     items: List[Dict[str, Any]] = []
     seen: set[str] = set()
 
-    def decorate(item: Dict[str, Any]) -> Dict[str, Any]:
-        """Attach real Supabase assets when the word exists in course manifest."""
-        entry = MANIFEST_INDEX.get(item["word"].strip().lower())
-        if entry:
-            item["image_url"] = entry.get("image_url") or item["image_url"]
-            item["audio_url"] = entry.get("audio_url")
-        else:
-            item["audio_url"] = None
-        return item
-
-    # 1) Learner's notebook words for this topic
+    # 1) Learner's notebook words for this topic (personalized)
     rows = await db.execute(
         text(
             "SELECT word, translation_vi FROM notebook_entries "
@@ -179,13 +205,9 @@ async def get_game_vocab(
         if not w or w.lower() in seen:
             continue
         seen.add(w.lower())
-        items.append(
-            decorate(
-                {"word": w, "translation_vi": r[1] or "", "image_url": image_url_for(w, topic), "source": "notebook"}
-            )
-        )
+        items.append({"word": w, "translation_vi": r[1] or "", "source": "notebook", "manifest": MANIFEST_INDEX.get(w.lower())})
 
-    # 2) Seed fallback (dedup, then fill to limit)
+    # 2) Seed fallback (dedup, fill to limit) — manifest entry attached when present
     for seed in SEED_VOCAB[topic]:
         if len(items) >= limit:
             break
@@ -193,17 +215,30 @@ async def get_game_vocab(
             continue
         seen.add(seed["word"].lower())
         items.append(
-            decorate(
-                {
-                    "word": seed["word"],
-                    "translation_vi": seed["translation_vi"],
-                    "image_url": image_url_for(seed["word"], topic),
-                    "source": "seed",
-                }
-            )
+            {
+                "word": seed["word"],
+                "translation_vi": seed["translation_vi"],
+                "source": "seed",
+                "manifest": MANIFEST_INDEX.get(seed["word"].lower()),
+            }
         )
 
-    # 3) Final shuffle — notebook words stay in the pool, order is not predictable
     items = items[:limit]
-    random.shuffle(items)
-    return {"topic": topic, "items": items, "source": "merged"}
+
+    out: List[Dict[str, Any]] = []
+    for it in items:
+        entry = it.pop("manifest")
+        if entry:
+            out.append(_resolve_asset(entry, topic, it["word"], it["translation_vi"], it["source"]))
+        else:
+            out.append(
+                {
+                    "word": it["word"],
+                    "translation_vi": it["translation_vi"],
+                    "image_url": image_url_for(it["word"], topic),
+                    "audio_url": None,
+                    "source": it["source"],
+                }
+            )
+
+    return {"topic": topic, "items": out, "source": "merged"}

@@ -13,7 +13,7 @@
  *   decides XP amounts.
  * - Claymorphic tokens throughout; copy in Vietnamese, Lexi's voice.
  */
-import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, useLayoutEffect, Fragment } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ClayCard } from '@/shared/components/clay/ClayCard';
 import { colors, shadows, withOpacity } from '@/design-tokens/claymorphic';
@@ -24,6 +24,7 @@ import {
   normalizeGameTopic,
   speakWord,
   topicBackgroundUrl,
+  localGameCardUrl,
   GAME_TOPICS,
   type GameVocabItem,
   type GameTopic,
@@ -35,6 +36,35 @@ const DISPLAY_FONT = "'Nunito', sans-serif";
 
 interface Card extends GameVocabItem {
   id: string;
+}
+
+/**
+ * Storage image 404s happen (manifest paths point at a bucket that was never
+ * populated), so a broken image falls back to the local chibi PNG for the
+ * same word; if that is missing too the tile shows a topic emoji instead of
+ * a broken-image icon.
+ */
+const TOPIC_EMOJI: Record<GameTopic, string> = {
+  animals: '🐾', home: '🏠', nature: '🌿', school_food: '🍎',
+};
+
+function handleImgError(
+  e: React.SyntheticEvent<HTMLImageElement>,
+  topic: GameTopic | null,
+  word: string,
+): void {
+  const img = e.currentTarget;
+  const local = localGameCardUrl(topic, word);
+  if (local && !img.src.endsWith(local)) {
+    img.src = local;
+    return;
+  }
+  // Both sources failed — hide the <img>, the emoji placeholder shows through
+  img.style.display = 'none';
+}
+
+function emojiFallback(topic: GameTopic | null, word: string): string {
+  return topic ? TOPIC_EMOJI[topic] : '🔤';
 }
 
 type Phase = 'LOADING' | 'PLAYING' | 'SUCCESS' | 'EMPTY';
@@ -58,6 +88,12 @@ const EmptyTopic: React.FC<{ onBack: () => void }> = ({ onBack }) => (
   </div>
 );
 
+/**
+ * Storage image 404s happen (manifest paths point at a bucket that was never
+ * populated), so a broken image falls back to the local chibi PNG for the
+ * same word; if that is missing too the tile shows a topic emoji instead of
+ * a broken-image icon.
+ */
 export const DragMatchGame: React.FC = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -263,7 +299,7 @@ export const DragMatchGame: React.FC = () => {
           aria-hidden="true"
           style={{
             height: 118, margin: '-16px -16px 12px', borderRadius: '0 0 26px 26px',
-            backgroundImage: `linear-gradient(rgba(255,248,238,0.45),rgba(255,248,238,1)), url(${themeBg})`,
+            backgroundImage: `linear-gradient(rgba(255,248,238,0.12),rgba(255,248,238,0.55) 55%,${colors.backgroundBase} 100%), url(${themeBg})`,
             backgroundSize: 'cover', backgroundPosition: 'center',
           }}
         />
@@ -284,12 +320,14 @@ export const DragMatchGame: React.FC = () => {
       <p className="dm-guide">Kéo hình đến từ đúng — hoặc chạm hình rồi chạm từ nhé!</p>
 
       <div className="dm-board">
-        <div className="dm-col">
-          {cards.map((card) => {
-            const done = matched.has(card.id);
-            return (
+        {cards.map((card, i) => {
+          const done = matched.has(card.id);
+          const wordCard = shuffledWords[i];
+          const wordDone = matched.has(wordCard.id);
+          const shaking = shakeWord === wordCard.word;
+          return (
+            <Fragment key={card.id}>
               <button
-                key={`img-${card.id}`}
                 className={`dm-img-card ${done ? 'dm-done' : ''} ${draggingCard === card.id ? 'dm-lifting' : ''}`}
                 onPointerDown={(e) => {
                   if (done || e.button !== 0) return;
@@ -300,30 +338,22 @@ export const DragMatchGame: React.FC = () => {
                 disabled={done}
                 aria-label={`Hình: ${card.word}`}
               >
-                <img src={card.image_url} alt="" loading="lazy" draggable={false} onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.25'; }} />
+                <span className="dm-img-emoji" aria-hidden="true">{emojiFallback(topic, card.word)}</span>
+                <img src={card.image_url} alt="" loading="lazy" draggable={false} onError={(e) => handleImgError(e, topic, card.word)} />
                 {done && <Msr icon="check_circle" size={22} color="#4C8A2A" style={{ position: 'absolute', top: 6, right: 6 }} />}
               </button>
-            );
-          })}
-        </div>
-        <div className="dm-col">
-          {shuffledWords.map((card) => {
-            const done = matched.has(card.id);
-            const shaking = shakeWord === card.word;
-            return (
               <button
-                key={`w-${card.id}`}
-                data-word={card.word}
-                className={`dm-word-card ${done ? 'dm-done' : ''} ${shaking ? 'dm-shake' : ''} ${selectedWord === card.word ? 'dm-sel' : ''} ${dragOverWord === card.word && !done ? 'dm-drop-target' : ''}`}
-                onClick={() => tryMatch(card)}
-                disabled={done}
-                aria-pressed={selectedWord === card.word}
+                data-word={wordCard.word}
+                className={`dm-word-card ${wordDone ? 'dm-done' : ''} ${shaking ? 'dm-shake' : ''} ${selectedWord === wordCard.word ? 'dm-sel' : ''} ${dragOverWord === wordCard.word && !wordDone ? 'dm-drop-target' : ''}`}
+                onClick={() => tryMatch(wordCard)}
+                disabled={wordDone}
+                aria-pressed={selectedWord === wordCard.word}
               >
-                {card.word}
+                {wordCard.word}
               </button>
-            );
-          })}
-        </div>
+            </Fragment>
+          );
+        })}
       </div>
 
       {/* Drag ghost — fixed overlay following the finger */}
@@ -338,10 +368,17 @@ export const DragMatchGame: React.FC = () => {
               position: 'fixed', top: 0, left: 0, width: 116, height: 116, zIndex: 70,
               pointerEvents: 'none', borderRadius: 20, background: '#fff',
               boxShadow: '0 10px 0 rgba(26,39,68,.12), 0 18px 34px rgba(26,39,68,.18)',
-              padding: 8, willChange: 'transform',
+              padding: 8, willChange: 'transform', display: 'grid', placeItems: 'center', fontSize: 56,
             }}
           >
-            <img src={card.image_url} alt="" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 14 }} />
+            <img
+              src={card.image_url}
+              alt=""
+              draggable={false}
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 14 }}
+            />
+            <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>{emojiFallback(topic, card.word)}</span>
           </div>
         );
       })()}
@@ -354,12 +391,12 @@ export const DragMatchGame: React.FC = () => {
         .dm-progress{flex:1;height:10px;border-radius:999px;background:rgba(26,39,68,.08);overflow:hidden}
         .dm-progress span{display:block;height:100%;border-radius:999px;background:${colors.mintGreen};transition:width .35s cubic-bezier(.34,1.56,.64,1)}
         .dm-guide{text-align:center;font-size:.9rem;color:${colors.mediumGray};margin:2px 0 14px}
-        .dm-board{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-        .dm-col{display:flex;flex-direction:column;gap:10px}
-        .dm-img-card{position:relative;border:3px solid transparent;border-radius:20px;background:#fff;box-shadow:0 6px 0 rgba(26,39,68,.08),0 10px 18px rgba(26,39,68,.08);padding:10px;cursor:pointer;min-height:96px;display:grid;place-items:center;transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s;touch-action:none;-webkit-user-select:none;user-select:none}
+        .dm-board{display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center}
+        .dm-img-card{position:relative;border:3px solid transparent;border-radius:20px;background:#fff;box-shadow:0 6px 0 rgba(26,39,68,.08),0 10px 18px rgba(26,39,68,.08);padding:8px;cursor:pointer;display:grid;place-items:center;transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s;touch-action:none;-webkit-user-select:none;user-select:none}
+        .dm-img-emoji{position:absolute;inset:0;display:grid;place-items:center;font-size:46px;filter:saturate(.9)}
         .dm-img-card:active{transform:scale(.97)}
-        .dm-img-card img{width:100%;max-width:120px;aspect-ratio:1;object-fit:cover;border-radius:14px;transition:opacity .3s}
-        .dm-word-card{border:3px solid transparent;border-radius:18px;background:${colors.warmWhite};box-shadow:0 5px 0 rgba(26,39,68,.10);padding:18px 10px;font-family:${DISPLAY_FONT};font-weight:900;font-size:1rem;color:${colors.deepSlate};cursor:pointer;min-height:56px;transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s,background .2s}
+        .dm-img-card img{position:relative;z-index:1;width:96px;height:96px;object-fit:cover;border-radius:14px;transition:opacity .3s}
+        .dm-word-card{border:3px solid transparent;border-radius:18px;background:${colors.warmWhite};box-shadow:0 5px 0 rgba(26,39,68,.10);padding:16px 12px;font-family:${DISPLAY_FONT};font-weight:900;font-size:1rem;color:${colors.deepSlate};cursor:pointer;text-align:center;min-height:64px;transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s,background .2s;width:100%}
         .dm-lifting{opacity:.35}
         .dm-drop-target{border-color:${colors.mintGreen};background:${withOpacity(colors.mintGreen, 0.25)};transform:scale(1.04)}
         .dm-sel{border-color:${colors.skyBlue};background:${withOpacity(colors.skyBlue, 0.18)}}
