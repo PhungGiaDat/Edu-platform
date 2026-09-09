@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import FlashcardPage from "./pages/FlashcardPage";
 import LearnARV2 from "./pages/LearnARV2";
 import LearnAR8thWall from "./pages/LearnAR8thWall";
@@ -52,6 +53,8 @@ import AdminAnalytics from "./pages/admin/Analytics";
 import AdminGoalSettings from "./pages/admin/GoalSettings";
 import AdminErrorBoundary from "./features/admin/components/AdminErrorBoundary";
 import { CourseCreatePage, CourseEditPage } from "./pages/admin/CourseEditor";
+import GameManager from "./pages/admin/GameManager";
+import { GameCreatePage, GameEditPage } from "./pages/admin/GameEditor";
 import { DeckNewPage, DeckEditPage, CardNewPage, CardEditPage } from "./pages/admin/FlashcardEditor";
 import FlashcardView from "./pages/public/FlashcardView";
 import { PronunciationCoursesPage } from "./features/pronunciation-course/pages/PronunciationCoursesPage";
@@ -229,17 +232,48 @@ const RequireUserAuth: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
 const RequireTeacherRole: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
+  const { t } = useTranslation();
   if (isLoading) return null;
   
   // Check if user has teacher/admin privileges
   const hasTeacherRole = user?.role === 'teacher' || user?.role === 'admin' || user?.is_superuser;
   
   if (!hasTeacherRole) {
-    // Redirect non-teachers away from admin pages
-    return <Navigate to="/profile" replace />;
+    // Non-teachers get an explicit notice instead of a silent redirect
+    // (silent bounce looked exactly like "buttons don't work")
+    return (
+      <div className="min-h-dvh flex items-center justify-center bg-[#f7f5f0] px-4">
+        <div className="bg-white border-2 border-white rounded-[18px] shadow-[0_5px_0_rgba(34,48,58,0.05),0_10px_22px_rgba(34,48,58,0.05)] max-w-md w-full p-8 text-center">
+          <div className="mx-auto mb-4 w-12 h-12 rounded-[13px] bg-[rgba(217,119,6,0.12)] flex items-center justify-center">
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h2 className="text-lg font-bold text-[#22303a] mb-2">
+            {t('admin.access.noPermissionTitle', 'Yêu cầu quyền giáo viên')}
+          </h2>
+          <p className="text-sm text-[rgba(34,48,58,0.55)] mb-6">
+            {t('admin.access.noPermission', 'Tài khoản của bạn chưa có quyền giáo viên — cần quyền giáo viên để truy cập khu vực quản lý.')}
+          </p>
+          <a
+            href="/profile"
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded-[13px] bg-white text-[#0d9488] font-semibold text-sm shadow-[0_4px_0_rgba(34,48,58,0.08),inset_0_1px_0_#fff] hover:bg-[rgba(13,148,136,0.06)] transition-colors"
+          >
+            {t('admin.access.backToProfile', '← Về trang cá nhân')}
+          </a>
+        </div>
+      </div>
+    );
   }
   
   return <>{children}</>;
+};
+
+/**
+ * /admin/courses/:courseId had no registered route (blank page on card click).
+ * Card click now lands here and forwards to the existing edit page.
+ */
+const CourseDetailRedirect: React.FC = () => {
+  const { courseId } = useParams<{ courseId: string }>();
+  return <Navigate to={`/admin/courses/${courseId}/edit`} replace />;
 };
 
 // ========== App ==========
@@ -339,6 +373,7 @@ const App = () => {
         {/* Admin Routes - Require Teacher/Admin Role with Error Boundary */}
         <Route path="/admin" element={<RequireTeacherRole><AdminErrorBoundary><AdminDashboard /></AdminErrorBoundary></RequireTeacherRole>} />
         <Route path="/admin/flashcards" element={<RequireTeacherRole><AdminErrorBoundary><AdminFlashcardManager /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/games" element={<RequireTeacherRole><AdminErrorBoundary><GameManager /></AdminErrorBoundary></RequireTeacherRole>} />
         <Route path="/admin/courses" element={<RequireTeacherRole><AdminErrorBoundary><AdminCourseManager /></AdminErrorBoundary></RequireTeacherRole>} />
         <Route path="/admin/students" element={<RequireTeacherRole><AdminErrorBoundary><AdminStudentList /></AdminErrorBoundary></RequireTeacherRole>} />
         <Route path="/admin/students/:userId" element={<RequireTeacherRole><AdminErrorBoundary><AdminStudentDetail /></AdminErrorBoundary></RequireTeacherRole>} />
@@ -346,8 +381,14 @@ const App = () => {
         <Route path="/admin/analytics" element={<RequireTeacherRole><AdminErrorBoundary><AdminAnalytics /></AdminErrorBoundary></RequireTeacherRole>} />
 
         {/* Course CRUD Routes */}
+        {/* Card-click route (was missing → blank page): redirect to the edit page */}
+        <Route path="/admin/courses/:courseId" element={<RequireTeacherRole><AdminErrorBoundary><CourseDetailRedirect /></AdminErrorBoundary></RequireTeacherRole>} />
         <Route path="/admin/courses/new" element={<RequireTeacherRole><AdminErrorBoundary><CourseCreatePage /></AdminErrorBoundary></RequireTeacherRole>} />
         <Route path="/admin/courses/:courseId/edit" element={<RequireTeacherRole><AdminErrorBoundary><CourseEditPage /></AdminErrorBoundary></RequireTeacherRole>} />
+
+        {/* Game CRUD Routes (2026-09-09 activation) */}
+        <Route path="/admin/games/new" element={<RequireTeacherRole><AdminErrorBoundary><GameCreatePage /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/games/:gameId/edit" element={<RequireTeacherRole><AdminErrorBoundary><GameEditPage /></AdminErrorBoundary></RequireTeacherRole>} />
 
         {/* Flashcard CRUD Routes */}
         <Route path="/admin/flashcards/new-deck" element={<RequireTeacherRole><AdminErrorBoundary><DeckNewPage /></AdminErrorBoundary></RequireTeacherRole>} />

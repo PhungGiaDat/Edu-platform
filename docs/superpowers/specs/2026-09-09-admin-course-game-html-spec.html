@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML Spec — Admin Course & Game Creation (Clay Editorial)</title>
+<style>
+  :root{
+    --bg:#f7f5f0; --bg-grad:linear-gradient(150deg,#f7f5f0 0%,#f2efe7 100%);
+    --surface:#ffffff; --border:rgba(34,48,58,.08);
+    --text:#22303a; --muted:rgba(34,48,58,.55);
+    --accent:#0d9488; --accent-dark:#0b6b60; --accent-soft:rgba(13,148,136,.12);
+    --amber:#b45309; --amber-soft:rgba(217,119,6,.12);
+    --info:#1d4ed8; --info-soft:rgba(37,99,235,.1);
+    --danger:#dc2626; --danger-soft:rgba(220,38,38,.09);
+    --card-shadow:0 5px 0 rgba(34,48,58,.05),0 10px 22px rgba(34,48,58,.05),inset 0 2px 0 #fff;
+    --radius-card:18px; --radius-btn:13px; --radius-chip:12px;
+    --font-display:'Nunito','Segoe UI',system-ui,sans-serif;
+    --font-body:'DM Sans','Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg-grad);color:var(--text);font-family:var(--font-body);padding:24px;max-width:1200px;margin:0 auto}
+  h1,h2,h3,h4{font-family:var(--font-display)}
+  h1{font-size:1.7rem;margin-bottom:4px}
+  .meta{color:var(--muted);font-size:.85rem;margin-bottom:24px}
+  h2{font-size:1.15rem;margin:40px 0 6px;padding-top:18px;border-top:2px dashed var(--border)}
+  .desc{color:var(--muted);font-size:.9rem;margin-bottom:16px;max-width:70ch}
+  .badge{display:inline-block;padding:3px 10px;border-radius:var(--radius-chip);font-size:.72rem;font-weight:700;font-family:var(--font-display)}
+  .badge.new{background:var(--accent-soft);color:var(--accent-dark)}
+  .badge.fix{background:var(--amber-soft);color:var(--amber)}
+  .grid{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+  .frame{background:var(--surface);border:2px solid #fff;border-radius:var(--radius-card);box-shadow:var(--card-shadow);overflow:hidden}
+  .frame-bar{padding:10px 16px;font-family:var(--font-display);font-weight:700;font-size:.8rem;color:var(--muted);border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center}
+  .frame-body{padding:16px}
+  .phone{width:360px}
+  .wide{flex:1;min-width:480px}
+  /* admin shell bits */
+  .admin-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .admin-title{font-family:var(--font-display);font-weight:800;font-size:1.05rem}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:none;border-radius:var(--radius-btn);
+       background:var(--accent);color:#fff;font-family:var(--font-display);font-weight:700;font-size:.85rem;cursor:pointer;
+       box-shadow:0 5px 0 var(--accent-dark),inset 0 2px 0 rgba(255,255,255,.35)}
+  .btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--accent-dark)}
+  .btn-ghost{background:var(--surface);color:var(--accent);box-shadow:0 4px 0 rgba(34,48,58,.08),inset 0 1px 0 #fff}
+  .btn-danger{background:var(--danger);box-shadow:0 5px 0 #a71d1d,inset 0 2px 0 rgba(255,255,255,.3)}
+  .chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:var(--radius-chip);font-size:.7rem;font-weight:700;font-family:var(--font-display)}
+  .chip.pub{background:var(--accent-soft);color:var(--accent-dark)}
+  .chip.draft{background:var(--amber-soft);color:var(--amber)}
+  .chip.type{background:var(--info-soft);color:var(--info)}
+  .card{background:var(--surface);border:2px solid #fff;border-radius:var(--radius-card);box-shadow:var(--card-shadow);padding:14px}
+  .list-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--radius-card);margin-bottom:10px}
+  .thumb{width:44px;height:44px;border-radius:var(--radius-btn);background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex:0 0 auto}
+  .li-main{flex:1;min-width:0}
+  .li-title{font-family:var(--font-display);font-weight:700;font-size:.92rem}
+  .li-sub{font-size:.75rem;color:var(--muted)}
+  .li-actions{display:flex;gap:6px}
+  .icon-btn{width:32px;height:32px;border:none;border-radius:10px;background:var(--accent-soft);color:var(--accent-dark);cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center}
+  .icon-btn.red{background:var(--danger-soft);color:var(--danger)}
+  /* form */
+  .field{margin-bottom:14px}
+  .field label{display:block;font-family:var(--font-display);font-weight:700;font-size:.78rem;margin-bottom:5px}
+  .field .hint{font-size:.7rem;color:var(--muted);margin-top:4px}
+  .input,select.input{width:100%;padding:10px 12px;border-radius:var(--radius-btn);border:2px solid var(--border);background:var(--surface);font-family:var(--font-body);font-size:.85rem;color:var(--text)}
+  .input:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .row{display:flex;gap:12px}.row>*{flex:1}
+  .seg{display:flex;gap:8px;flex-wrap:wrap}
+  .seg .opt{padding:8px 12px;border-radius:var(--radius-btn);border:2px solid var(--border);font-size:.78rem;font-weight:700;font-family:var(--font-display);cursor:pointer}
+  .seg .opt.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-dark)}
+  .vocab-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-btn);border:1.5px solid var(--border);margin-bottom:8px}
+  .vocab-word{font-family:var(--font-display);font-weight:700;font-size:.85rem}
+  .vocab-tr{font-size:.75rem;color:var(--muted)}
+  .vocab-img{width:34px;height:34px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:1rem}
+  /* banner */
+  .banner{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--radius-btn);font-size:.82rem;font-weight:600;margin-bottom:12px}
+  .banner.warn{background:var(--amber-soft);color:var(--amber)}
+  .banner.err{background:var(--danger-soft);color:var(--danger)}
+  .banner.info{background:var(--info-soft);color:var(--info)}
+  /* flow */
+  .flow{display:flex;gap:0;align-items:stretch;flex-wrap:wrap}
+  .flow-step{flex:1;min-width:170px;background:var(--surface);border:2px solid #fff;border-radius:var(--radius-card);box-shadow:var(--card-shadow);padding:14px;position:relative;margin-bottom:14px}
+  .flow-step h4{font-size:.85rem;margin-bottom:6px}
+  .flow-step p{font-size:.75rem;color:var(--muted)}
+  .flow-arrow{align-self:center;padding:0 10px;color:var(--accent);font-weight:800;font-family:var(--font-display)}
+  .tag-row{margin-top:10px}
+  .note{background:var(--info-soft);border-radius:var(--radius-btn);padding:12px 14px;font-size:.82rem;color:var(--info);font-weight:600}
+  .check{list-style:none}.check li{padding:5px 0 5px 26px;position:relative;font-size:.85rem}
+  .check li::before{content:"✓";position:absolute;left:0;top:5px;width:18px;height:18px;border-radius:6px;background:var(--accent-soft);color:var(--accent-dark);font-weight:800;font-size:.7rem;display:flex;align-items:center;justify-content:center}
+  .foot{margin-top:40px;padding-top:16px;border-top:2px dashed var(--border);color:var(--muted);font-size:.78rem}
+</style>
+</head>
+<body>
+
+<h1>HTML Spec — Kích hoạt Tạo Course & Tạo Game (Admin/Teacher)</h1>
+<div class="meta">2026-09-09 · Style: <b>Clay Editorial</b> (admin.css hiện có) · Spec gốc: <code>docs/superpowers/specs/2026-09-09-admin-course-game-design.md</code> · Branch: <code>10-days-quick-run</code></div>
+
+<h2>1 · Luồng tổng thể</h2>
+<p class="desc">Hai luồng độc lập: (A) sửa chuỗi chặn course hiện có, (B) xây mới Game Management theo đúng pattern Course/Flashcard. XP vẫn backend-authoritative — không đổi.</p>
+<div class="flow">
+  <div class="flow-step"><span class="badge fix">FIX</span><h4>Teacher vào /admin</h4><p>Role gate hiện thông báo thay vì redirect im lặng. Promote role qua superuser endpoint.</p></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><span class="badge fix">FIX</span><h4>Tạo Course có media</h4><p>Video/ảnh lưu JSONB, update không còn 500 với learner progress. Card click → edit (route mới).</p></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><span class="badge new">NEW</span><h4>Tạo Game</h4><p>Chọn engine (4 loại) + topic + từ vựng (ảnh/audio) + tuning → xuất bản.</p></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><span class="badge new">NEW</span><h4>Learner chơi</h4><p>GamesPage đọc catalog động từ API (fallback giữ bản cứng). XP idempotent như cũ.</p></div>
+</div>
+
+<h2>2 · GameManager <span class="badge new">NEW PAGE</span></h2>
+<p class="desc"><code>/admin/games</code> — copy pattern CourseManager: list card + tạo mới + xoá (confirm) + error banner có Retry. Nav thêm mục "Trò chơi".</p>
+<div class="grid">
+  <div class="frame wide">
+    <div class="frame-bar">admin-shell · /admin/games</div>
+    <div class="frame-body">
+      <div class="admin-top">
+        <div class="admin-title">🎮 Trò chơi</div>
+        <button class="btn">＋ Tạo game</button>
+      </div>
+      <div class="banner err">⚠️ Không tải được danh sách trò chơi. <button class="btn btn-ghost" style="margin-left:auto;padding:6px 12px">Thử lại</button></div>
+      <div class="card list-item">
+        <div class="thumb">🍎</div>
+        <div class="li-main">
+          <div class="li-title">Bắt chữ rơi — Động vật <span class="chip pub">Đã XB</span></div>
+          <div class="li-sub">catch_word · topic: animals · 8 từ · rơi 1.2× · 800ms</div>
+        </div>
+        <div class="li-actions"><button class="icon-btn">✎</button><button class="icon-btn red">🗑</button></div>
+      </div>
+      <div class="card list-item">
+        <div class="thumb">🧩</div>
+        <div class="li-main">
+          <div class="li-title">Ghép cặp — Đồ gia dụng <span class="chip draft">Nháp</span></div>
+          <div class="li-sub">drag_match · topic: home · 6 cặp · 90s</div>
+        </div>
+        <div class="li-actions"><button class="icon-btn">✎</button><button class="icon-btn red">🗑</button></div>
+      </div>
+      <div class="card list-item">
+        <div class="thumb">🔤</div>
+        <div class="li-main">
+          <div class="li-title">Xếp chữ — Bữa ăn học đường <span class="chip pub">Đã XB</span></div>
+          <div class="li-sub">word_scramble · topic: school_food · 10 từ · 2 gợi ý</div>
+        </div>
+        <div class="li-actions"><button class="icon-btn">✎</button><button class="icon-btn red">🗑</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>3 · GameEditor <span class="badge new">NEW PAGE</span> <span class="badge fix">UX REVISED</span></h2>
+<p class="desc">Pattern CourseEditor + <b>teacher-friendly UX</b>: (1) tuning kỹ thuật thay bằng preset <b>Độ khó Dễ/Vừa/Khó</b> — số kỹ thuật nằm gọn trong "Nâng cao" (collapsible); (2) upload ảnh = dropzone kéo-thả có preview + nút thay/xoá (SVG icons, không input file trần); (3) mọi field có helper text tiếng Việt dễ hiểu; (4) khung "Xem trước" mini bên phải.</p>
+<div class="grid">
+  <div class="frame wide">
+    <div class="frame-bar">admin-shell · /admin/games/new</div>
+    <div class="frame-body">
+      <div class="admin-top"><div class="admin-title">Tạo trò chơi</div><span class="chip draft">Nháp</span></div>
+      <div class="row">
+        <div class="field"><label>Tên game *</label><input class="input" value="Bắt chữ rơi — Động vật"><div class="hint">Tên học viên sẽ thấy trong Khu chơi.</div></div>
+        <div class="field"><label>Tên tiếng Anh</label><input class="input" value="Catch Words — Animals"></div>
+      </div>
+      <div class="field">
+        <label>Loại trò chơi *</label>
+        <div class="seg">
+          <span class="opt">🧩 Ghép cặp</span><span class="opt on">🌧 Bắt chữ rơi</span><span class="opt">🔤 Xếp chữ</span><span class="opt">🃏 Lật thẻ nhớ</span>
+        </div>
+        <div class="hint">Chọn cách chơi — nội dung từ vựng dùng chung theo chủ đề bên dưới.</div>
+      </div>
+      <div class="field">
+        <label>Chủ đề * <button class="btn btn-ghost" style="padding:4px 10px;margin-left:8px">＋ Chủ đề mới</button></label>
+        <select class="input"><option>🐾 Động vật (animals)</option><option>🏠 Đồ gia dụng (home)</option><option>🌳 Thiên nhiên (nature)</option><option>🍱 Bữa ăn học đường (school_food)</option></select>
+      </div>
+      <div class="field">
+        <label>Độ khó * <span class="hint">— học viên muốn thử thách hơn hay nhẹ nhàng hơn?</span></label>
+        <div class="seg" style="max-width:420px">
+          <span class="opt">🌿 Dễ</span><span class="opt on">⚡ Vừa</span><span class="opt">🔥 Khó</span>
+        </div>
+        <div class="hint" id="diff-hint">⚡ Vừa: từ rơi tốc độ vừa phải, sinh cách đều — phù hợp đa số học viên.</div>
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer;font-size:.75rem;color:var(--muted);font-weight:700;font-family:var(--font-display)">⚙️ Nâng cao — chỉnh thông số chi tiết</summary>
+          <div class="row" style="margin-top:10px;padding:12px;background:var(--bg);border-radius:var(--radius-btn)">
+            <div class="field" style="margin:0"><label>Tốc độ rơi (1.0 = chuẩn)</label><input class="input" value="1.2"></div>
+            <div class="field" style="margin:0"><label>Chu kỳ sinh từ (ms)</label><input class="input" value="800"></div>
+          </div>
+          <div class="hint" style="margin-top:6px">Chỉnh ở đây sẽ ghi đè preset — dành cho người đã quen hệ thống.</div>
+        </details>
+      </div>
+      <div class="note" style="margin-top:4px">👁 <b>Xem trước:</b> khung bên phải mô phỏng màn chơi từ dữ liệu thật của chủ đề — giáo viên kiểm tra trước khi xuất bản.</div>
+    </div>
+  </div>
+  <div class="frame phone">
+    <div class="frame-bar">Xem trước · chủ đề Động vật (8 từ)</div>
+    <div class="frame-body">
+      <div style="background:var(--accent-soft);border-radius:var(--radius-card);padding:14px;margin-bottom:14px;text-align:center">
+        <div style="font-family:var(--font-display);font-weight:800;font-size:.8rem;color:var(--accent-dark);margin-bottom:8px">Đang rơi…</div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <span class="chip type">elephant 🐘</span><span class="chip type">lion 🦁</span><span class="chip type">tiger 🐯</span>
+        </div>
+        <div class="hint" style="margin-top:8px">⚡ Vừa · 8 từ · 30 XP/lượt</div>
+      </div>
+      <div class="field">
+        <label>Từ vựng của chủ đề <span class="hint">(8/12)</span></label>
+        <div class="vocab-row"><div class="vocab-img">🐘</div><div style="flex:1"><div class="vocab-word">elephant</div><div class="vocab-tr">con voi</div></div><button class="icon-btn" title="Sửa">✎</button><button class="icon-btn red" title="Xoá">🗑</button></div>
+        <div class="vocab-row"><div class="vocab-img">🦁</div><div style="flex:1"><div class="vocab-word">lion</div><div class="vocab-tr">con sư tử</div></div><button class="icon-btn" title="Sửa">✎</button><button class="icon-btn red" title="Xoá">🗑</button></div>
+        <div class="vocab-row" style="border-style:dashed;cursor:pointer"><div class="vocab-img">＋</div><div style="flex:1;font-size:.8rem;font-weight:700">Thêm từ mới…</div></div>
+      </div>
+      <div class="field">
+        <label>Ảnh minh hoạ cho từ</label>
+        <div class="dropzone" style="border:2px dashed rgba(13,148,136,.4);border-radius:var(--radius-card);padding:18px;text-align:center;cursor:pointer;background:var(--accent-soft)">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:6px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div style="font-family:var(--font-display);font-weight:700;font-size:.8rem;color:var(--accent-dark)">Kéo ảnh vào đây</div>
+          <div class="hint">hoặc bấm để chọn từ máy · PNG/JPG · nén tự động</div>
+        </div>
+        <div class="vocab-row" style="margin-top:10px">
+          <div class="vocab-img" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0b6b60" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>
+          <div style="flex:1"><div class="vocab-word" style="font-size:.78rem">elephant.png</div><div class="vocab-tr">Đã tải lên ✓ Supabase</div></div>
+          <button class="icon-btn" title="Thay ảnh">⟳</button><button class="icon-btn red" title="Xoá">🗑</button>
+        </div>
+      </div>
+      <div class="field"><label>Xuất bản</label><label style="display:flex;gap:8px;align-items:center;font-weight:600;font-size:.82rem"><input type="checkbox" checked> Hiển thị trong Khu chơi của học viên</label></div>
+      <div style="display:flex;gap:10px"><button class="btn btn-ghost" style="flex:1;justify-content:center">Lưu nháp</button><button class="btn" style="flex:1;justify-content:center">Xuất bản</button></div>
+    </div>
+  </div>
+</div>
+
+<h2>3b · Bảng map preset Độ khó → config kỹ thuật <span class="badge new">MỚI THEO FEEDBACK</span></h2>
+<p class="desc">Giáo viên chỉ chạm vào Dễ/Vừa/Khó. Preset là <b>frontend-only</b>: khi bấm Lưu, FE map ra config JSONB đúng contract API (backend không đổi). Mục "Nâng cao" ghi đè preset khi được chỉnh.</p>
+<div class="grid">
+  <div class="frame" style="flex:1;min-width:420px">
+    <div class="frame-bar">Mapping (FE transform on save)</div>
+    <div class="frame-body" style="font-size:.8rem;line-height:1.7">
+      <div><b>🌧 Bắt chữ rơi</b> — Dễ: <code>fall_speed 0.8 · spawn 1200ms</code> · Vừa: <code>1.2 · 800</code> · Khó: <code>1.6 · 500</code></div>
+      <div><b>🧩 Ghép cặp</b> — Dễ: <code>pair_count 4 · timer 120s</code> · Vừa: <code>6 · 90s</code> · Khó: <code>8 · 60s</code></div>
+      <div><b>🃏 Lật thẻ nhớ</b> — Dễ: <code>pair_count 4 · flip 1500ms</code> · Vừa: <code>6 · 1000ms</code> · Khó: <code>8 · 600ms</code></div>
+      <div><b>🔤 Xếp chữ</b> — Dễ: <code>word_count 5 · hint 3</code> · Vừa: <code>8 · 2</code> · Khó: <code>10 · 1</code></div>
+      <div class="hint" style="margin-top:8px">Preset mặc định khi tạo mới = ⚡ Vừa. Helper text dưới preset diễn giải bằng lời thường ("từ rơi nhanh hơn, số cặp nhiều hơn…").</div>
+    </div>
+  </div>
+  <div class="frame" style="flex:1;min-width:300px">
+    <div class="frame-bar">Quy tắc upload (áp dụng ui-ux-pro-max)</div>
+    <div class="frame-body">
+      <ul class="check">
+        <li>Dropzone kéo-thả + bấm-chọn — không bao giờ để input file trần</li>
+        <li>Preview thumbnail ngay sau chọn + progress + "Đã tải lên ✓"</li>
+        <li>Nút Thay ảnh / Xoá bằng SVG icon (Lucide) + title tooltip</li>
+        <li>Nén tự động client-side trước khi upload Supabase</li>
+        <li>Không dùng emoji làm icon chức năng trong UI thật (mockup chỉ minh hoạ)</li>
+        <li>Cursor-pointer + focus-visible cho mọi vùng bấm được</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h2>4 · Các fix Course <span class="badge fix">P0</span></h2>
+<div class="grid">
+  <div class="frame phone">
+    <div class="frame-bar">RequireTeacherRole — thay redirect im lặng</div>
+    <div class="frame-body">
+      <div class="banner warn">🔒 Tài khoản của bạn chưa có quyền giáo viên.</div>
+      <p style="font-size:.8rem;color:var(--muted)">Tài khoản chỉ có thể được cấp quyền giáo viên bởi quản trị viên (superuser). Liên hệ quản trị hoặc dùng tài khoản teacher đã cấp.</p>
+      <button class="btn btn-ghost" style="margin-top:10px">← Về trang cá nhân</button>
+    </div>
+  </div>
+  <div class="frame phone">
+    <div class="frame-bar">CourseManager — lỗi hiện banner thay vì console</div>
+    <div class="frame-body">
+      <div class="banner err">⚠️ Không tải được danh sách khóa học. <button class="btn btn-ghost" style="margin-left:auto;padding:6px 12px">Thử lại</button></div>
+      <div class="card list-item"><div class="thumb">📘</div><div class="li-main"><div class="li-title">Gia đình & Bạn bè</div><div class="li-sub">4 bài học · Momo · Đã XB</div></div><div class="li-actions"><button class="icon-btn">✎</button><button class="icon-btn red">🗑</button></div></div>
+      <div class="note">Click card → chuyển tới trang Edit (route <code>/admin/courses/:id</code> mới — hết màn trắng). Overlay chuyển trang không còn chặn click trong khu /admin.</div>
+    </div>
+  </div>
+</div>
+
+<h2>5 · GamesPage học viên <span class="badge new">DYNAMIC</span></h2>
+<div class="grid">
+  <div class="frame phone">
+    <div class="frame-bar">Khu chơi — catalog từ API</div>
+    <div class="frame-body">
+      <div class="field"><label>Chủ đề</label><div class="seg"><span class="opt on">🐾 Động vật</span><span class="opt">🏠 Nhà</span><span class="opt">🌳 Thiên nhiên</span><span class="opt">🍱 Bữa ăn</span><span class="opt" style="border-style:dashed;color:var(--muted)">＋ Home (mới)</span></div></div>
+      <div class="card list-item"><div class="thumb">🌧</div><div class="li-main"><div class="li-title">Bắt chữ rơi</div><div class="li-sub">Hôm nay: 0/12 lượt · 30 XP/lượt</div></div></div>
+      <div class="card list-item"><div class="thumb">🧩</div><div class="li-main"><div class="li-title">Ghép cặp</div><div class="li-sub">Hôm nay: 2/12 lượt · 30 XP/lượt</div></div></div>
+      <div class="note">Topics & games đọc từ <code>GET /games/catalog</code> (chỉ game đã XB). API fail → fallback đúng bản hardcode hiện tại, không bao giờ trắng trang. Copy trần lượt chơi derive từ catalog.</div>
+    </div>
+  </div>
+  <div class="frame" style="flex:1;min-width:300px">
+    <div class="frame-bar">Bạn đang duyệt những gì — checklist</div>
+    <div class="frame-body">
+      <ul class="check">
+        <li>Style Clay Editorial giữ nguyên — chỉ thêm 2 trang admin mới theo đúng tokens</li>
+        <li>GameManager + GameEditor: 4 engine (ghép cặp / bắt chữ rơi / xếp chữ / lật thẻ). Coloring không admin-editable ở v1</li>
+        <li><b>Độ khó = preset Dễ/Vừa/Khó</b> (FE map ra config khi lưu); số kỹ thuật ẩn trong "Nâng cao" collapsible — không nhét số ms/× vào mặt giáo viên</li>
+        <li><b>Upload = dropzone kéo-thả + preview + nút thay/xoá</b> (SVG icon, nén tự động, progress) — không input file trần</li>
+        <li>Khung "Xem trước" mini trong GameEditor (mô phỏng màn chơi từ dữ liệu chủ đề)</li>
+        <li>Topic là dữ liệu (bảng mới + seed 4 topic cũ giữ slug)</li>
+        <li>Fix course: route chi tiết, overlay /admin, role notice, banner lỗi, media persist, update không 500, is_template, learning-goals body</li>
+        <li>GamesPage động + fallback hardcode</li>
+        <li>XP không đổi — backend authoritative, idempotent</li>
+      </ul>
+      <div class="foot">Approve spec này → tôi implement theo plan <code>docs/plan/20260909_admin_course_game_activation.md</code> (BE + FE song song, sau đó reviewer + tester).</div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">HTML Spec · EduAR Admin Course & Game Activation · Clay Editorial tokens từ <code>frontend/src/styles/admin.css</code> · Không thay đổi code khi chưa được duyệt.</div>
+</body>
+</html>

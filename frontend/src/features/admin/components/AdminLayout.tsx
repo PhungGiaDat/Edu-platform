@@ -7,6 +7,7 @@ import {
   CardsIcon,
   ChartBarIcon,
   HomeIcon,
+  LightningBoltIcon,
   UsersIcon,
 } from '@/shared/components/icons/Icons';
 import '@/styles/admin.css';
@@ -19,11 +20,12 @@ const navItems = [
   { path: '/admin', label: 'dashboard', icon: HomeIcon },
   { path: '/admin/flashcards', label: 'flashcards', icon: CardsIcon },
   { path: '/admin/courses', label: 'courses', icon: BookOpenIcon },
+  { path: '/admin/games', label: 'games', icon: LightningBoltIcon },
   { path: '/admin/students', label: 'students', icon: UsersIcon },
   { path: '/admin/analytics', label: 'analytics', icon: ChartBarIcon },
 ];
 
-const mobileNavItems = navItems.slice(0, 4);
+const mobileNavItems = navItems.slice(0, 5);
 
 const isPathActive = (currentPath: string, itemPath: string) => (
   currentPath === itemPath

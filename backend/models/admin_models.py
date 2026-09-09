@@ -293,6 +293,10 @@ class DashboardStats(BaseModel):
 
 
 class LearningGoalCreate(BaseModel):
+    # user_id moves from a query param to the body — the frontend sends it
+    # in the JSON body (adminApi.ts setStudentLearningGoal), so declaring it
+    # as a query param made every call 422 (research CRITICAL evidence).
+    user_id: str = Field(..., description="Target student's user ID")
     daily_xp_goal: int = Field(default=100, ge=10, le=500)
     daily_minutes_goal: int = Field(default=15, ge=5, le=120)
     streak_protection_enabled: bool = True
@@ -324,3 +328,184 @@ class PaginatedResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ===========================================================================
+# Admin Games (2026-09-09 activation — spec §3.2)
+# ===========================================================================
+
+GameTypeLiteral = Literal["drag_match", "catch_word", "word_scramble", "memory_match"]
+
+
+class GameConfigBase(BaseModel):
+    """Raw config payload persisted as JSONB. The teacher-facing difficulty
+    presets (Dễ/Vừa/Khó) are a FRONTEND-only transform — the API always
+    receives concrete values (spec §3.2 revised)."""
+
+
+class DragMatchConfig(GameConfigBase):
+    pair_count: int = Field(default=6, ge=1, le=8)
+    timer_seconds: int = Field(default=90, ge=30, le=300)
+
+
+class CatchWordConfig(GameConfigBase):
+    fall_speed: float = Field(default=1.2, ge=0.3, le=3.0)
+    spawn_interval: int = Field(default=800, ge=200, le=3000)
+
+
+class WordScrambleConfig(GameConfigBase):
+    word_count: int = Field(default=8, ge=3, le=12)
+    hint_letters: int = Field(default=2, ge=0, le=5)
+
+
+class MemoryMatchConfig(GameConfigBase):
+    pair_count: int = Field(default=6, ge=2, le=8)
+    flip_duration_ms: int = Field(default=1000, ge=400, le=3000)
+
+
+GAME_CONFIG_MODELS: Dict[str, type] = {
+    "drag_match": DragMatchConfig,
+    "catch_word": CatchWordConfig,
+    "word_scramble": WordScrambleConfig,
+    "memory_match": MemoryMatchConfig,
+}
+
+
+class GameTopicCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=80)
+    name_vi: str = ""
+    slug: Optional[str] = None
+    description: Optional[str] = None
+    cover_image_url: Optional[str] = None
+    is_published: bool = False
+    sort_order: int = 0
+
+
+class GameTopicUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=1, max_length=80)
+    name_vi: Optional[str] = None
+    description: Optional[str] = None
+    cover_image_url: Optional[str] = None
+    is_published: Optional[bool] = None
+    sort_order: Optional[int] = None
+
+
+class GameTopicResponse(BaseModel):
+    id: str
+    slug: str
+    name: str
+    name_vi: str
+    description: Optional[str] = None
+    cover_image_url: Optional[str] = None
+    is_published: bool
+    sort_order: int
+    _id: str = ""
+
+    class Config:
+        from_attributes = True
+
+
+class GameVocabItemCreate(BaseModel):
+    word: str = Field(..., min_length=1, max_length=60)
+    translation_vi: str = Field(default="", max_length=120)
+    image_url: Optional[str] = None
+    audio_url: Optional[str] = None
+    sort_order: int = 0
+
+
+class GameVocabItemUpdate(BaseModel):
+    word: Optional[str] = Field(default=None, min_length=1, max_length=60)
+    translation_vi: Optional[str] = Field(default=None, max_length=120)
+    image_url: Optional[str] = None
+    audio_url: Optional[str] = None
+    sort_order: Optional[int] = None
+
+
+class GameVocabItemResponse(BaseModel):
+    id: str
+    topic_id: str
+    word: str
+    translation_vi: str
+    image_url: Optional[str] = None
+    audio_url: Optional[str] = None
+    sort_order: int
+    _id: str = ""
+
+    class Config:
+        from_attributes = True
+
+
+class GameCreate(BaseModel):
+    title: str = Field(..., min_length=1, max_length=120)
+    title_vi: str = ""
+    slug: Optional[str] = None
+    game_type: GameTypeLiteral
+    topic_id: str
+    config: Dict[str, Any] = Field(default_factory=dict)
+    is_published: bool = False
+
+    @field_validator("config")
+    @classmethod
+    def validate_config(cls, v: Dict[str, Any], info) -> Dict[str, Any]:
+        game_type = info.data.get("game_type") if info.data else None
+        model = GAME_CONFIG_MODELS.get(game_type or "")
+        if model is not None:
+            model(**v)  # raises pydantic ValidationError → 422
+        return v
+
+
+class GameUpdate(BaseModel):
+    title: Optional[str] = Field(default=None, min_length=1, max_length=120)
+    title_vi: Optional[str] = None
+    slug: Optional[str] = None
+    game_type: Optional[GameTypeLiteral] = None
+    topic_id: Optional[str] = None
+    config: Optional[Dict[str, Any]] = None
+    is_published: Optional[bool] = None
+
+
+class GameResponse(BaseModel):
+    id: str
+    _id: str = ""
+    slug: str
+    title: str
+    title_vi: str
+    game_type: GameTypeLiteral
+    topic_id: str
+    config: Dict[str, Any] = Field(default_factory=dict)
+    is_published: bool
+    teacher_id: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class GameCatalogTopic(BaseModel):
+    id: str
+    slug: str
+    name: str
+    name_vi: str
+    description: Optional[str] = None
+    cover_image_url: Optional[str] = None
+
+
+class GameCatalogGame(BaseModel):
+    id: str
+    slug: str
+    title: str
+    title_vi: str
+    game_type: GameTypeLiteral
+    topic_id: str
+    config: Dict[str, Any] = Field(default_factory=dict)
+
+
+class GameCatalogResponse(BaseModel):
+    topics: List[GameCatalogTopic] = Field(default_factory=list)
+    games: List[GameCatalogGame] = Field(default_factory=list)
+
+
+class GameRoleUpdate(BaseModel):
+    role: Literal["teacher", "learner"]
+    is_superuser: Optional[bool] = None

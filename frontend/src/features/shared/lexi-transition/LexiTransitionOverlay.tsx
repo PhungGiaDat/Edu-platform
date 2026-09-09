@@ -39,6 +39,10 @@ const isArPath = (p: string) =>
 
 const isAuthPath = (p: string) => p === '/login' || p === '/register';
 
+// Admin area: teachers navigate frequently between management screens —
+// a fullscreen click-blocking overlay read exactly like "the page is frozen".
+const isAdminPath = (p: string) => p.startsWith('/admin');
+
 const pathOf = (p: string) => p.split('?')[0].split('#')[0];
 
 /** One-time, idempotent history.pushState wrapper. */
@@ -91,9 +95,10 @@ export const LexiTransitionOverlay: React.FC = () => {
 
     const onNavigate = (e: Event) => {
       const detail = (e as CustomEvent).detail as { from: string; to: string };
-      // Suppression rules — AR both ways, auth pages, same-path (query-only)
+      // Suppression rules — AR both ways, auth pages, admin area, same-path (query-only)
       if (isArPath(detail.from) || isArPath(detail.to)) return;
       if (isAuthPath(detail.from)) return;
+      if (isAdminPath(detail.from) || isAdminPath(detail.to)) return;
       if (pathOf(detail.from) === pathOf(detail.to)) return;
 
       setMsgIndex(0);

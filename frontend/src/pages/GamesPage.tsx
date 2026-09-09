@@ -5,12 +5,22 @@
  * Home / Nature / School & Food — momo course themes), then a game.
  * Topic progress = 3 mini-games played today (XP idempotent per game/day,
  * so the daily ceiling is 60 XP). Lexi hero + clay tokens, Vietnamese copy.
+ *
+ * 2026-09-09 activation: topics/games load from GET /games/catalog
+ * (teacher-created content, spec §3.3). On API failure the hardcoded
+ * catalog below is used unchanged — the Play area must never blank out.
  */
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { colors, shadows, withOpacity } from '@/design-tokens/claymorphic';
 import { CodexPetSprite } from '@/features/pets/components';
-import { GAME_TOPICS, normalizeGameTopic, topicBackgroundUrl } from '@/services/gamesVocabService';
+import {
+  GAME_TOPICS,
+  normalizeGameTopic,
+  topicBackgroundUrl,
+  fetchGameCatalog,
+  type GameCatalog,
+} from '@/services/gamesVocabService';
 import { Msr } from '@/shared/components/Msr';
 
 const DISPLAY_FONT = "'Nunito', sans-serif";
@@ -22,6 +32,12 @@ const GAMES: { slug: GameSlug; name: string; desc: string; icon: string; bg: str
   { slug: 'memory-pairs', name: 'Tìm cặp thẻ', desc: 'Lật thẻ ghép hình với từ', icon: 'style', bg: colors.mintLight, color: '#4C8A2A' },
   { slug: 'color-animal', name: 'Tô màu con vật', desc: 'Tô màu và nghe phát âm', icon: 'brush', bg: colors.coralLight, color: colors.coralDark ?? colors.coralPink },
 ];
+
+/** Backend game_type → playable standalone route (only these two exist). */
+const PLAYABLE_ROUTES: Partial<Record<string, GameSlug>> = {
+  drag_match: 'drag-match',
+  memory_match: 'memory-pairs',
+};
 
 const TOPIC_THUMB: Record<string, React.ReactNode> = {
   animals: (<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="7" r="2.6" fill="#1A2744"/><circle cx="16" cy="7" r="2.6" fill="#1A2744"/><circle cx="4.8" cy="12" r="2.2" fill="#1A2744"/><circle cx="19.2" cy="12" r="2.2" fill="#1A2744"/><path d="M12 11c3.2 0 5.6 2.4 5.6 5 0 2.2-1.8 3.4-5.6 3.4S6.4 18.2 6.4 16c0-2.6 2.4-5 5.6-5z" fill="#1A2744"/></svg>),
@@ -57,6 +73,69 @@ export const GamesPage: React.FC = () => {
   const [params] = useSearchParams();
   const activeTopic = normalizeGameTopic(params.get('topic'));
 
+  // ---- dynamic catalog (teacher-created games; graceful fallback below)
+  const [catalog, setCatalog] = useState<GameCatalog | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await fetchGameCatalog();
+        if (!cancelled && (data.topics?.length || data.games?.length)) {
+          setCatalog(data);
+        }
+      } catch {
+        /* fallback to hardcoded catalog — never blank the Play area */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  /** Topics rendered: backend catalog when available, else hardcoded. */
+  const topics = useMemo(() => {
+    if (catalog?.topics?.length) {
+      return catalog.topics.map(t => ({
+        slug: t.slug,
+        label: t.name_vi || t.name,
+        labelEn: t.name,
+      }));
+    }
+    return GAME_TOPICS;
+  }, [catalog]);
+
+  /** Playable games for the active topic: backend catalog (filtered to
+   *  game_types that have standalone routes), else the hardcoded 3. */
+  const gamesForTopic: typeof GAMES = useMemo(() => {
+    if (catalog?.games?.length && activeTopic) {
+      const topic = catalog.topics.find(t => t.slug === activeTopic);
+      if (topic) {
+        const dynamic = catalog.games
+          .filter(g => g.topic_id === topic.id && PLAYABLE_ROUTES[g.game_type])
+          .map(g => {
+            const slug = PLAYABLE_ROUTES[g.game_type]!;
+            const base = GAMES.find(x => x.slug === slug)!;
+            return { ...base, slug, name: g.title, desc: g.title_vi || base.desc };
+          });
+        if (dynamic.length > 0) return dynamic;
+      }
+    }
+    return GAMES;
+  }, [catalog, activeTopic]);
+
+  /** All playable route slugs across the whole catalog (ceiling calc). */
+  const allPlayableSlugs = useMemo(() => {
+    const slugs = new Set<GameSlug>(['drag-match', 'memory-pairs', 'color-animal']);
+    if (catalog?.games?.length) {
+      slugs.clear();
+      catalog.games.forEach(g => {
+        const slug = PLAYABLE_ROUTES[g.game_type];
+        if (slug) slugs.add(slug);
+      });
+    }
+    return [...slugs];
+  }, [catalog]);
+
+  const dailyCeiling = Math.max(1, allPlayableSlugs.length * topics.length);
+
   const playedToday = useMemo(() => {
     try { return JSON.parse(localStorage.getItem(playedTodayKey()) || '{}') as Record<string, string[]>; }
     catch { return {}; }
@@ -72,7 +151,7 @@ export const GamesPage: React.FC = () => {
       const key = playedTodayKey();
       const map = JSON.parse(localStorage.getItem(key) || '{}') as Record<string, string[]>;
       const forTopic = new Set(map[game] ?? []);
-      (activeTopic ? [activeTopic] : GAME_TOPICS.map((t) => t.slug)).forEach((t) => forTopic.add(t));
+      (activeTopic ? [activeTopic] : topics.map((t) => t.slug)).forEach((t) => forTopic.add(t));
       map[game] = [...forTopic];
       localStorage.setItem(key, JSON.stringify(map));
     } catch { /* UI hint only */ }
@@ -96,7 +175,7 @@ export const GamesPage: React.FC = () => {
 
       <div className="gsh-daily" role="status">
         <Msr icon="local_fire_department" size={18} color={colors.sunshineDark ?? colors.sunshineYellow} />
-        Hôm nay: {totalToday}/12 lượt chơi · 3 game × 4 chủ đề
+        Hôm nay: {totalToday}/{dailyCeiling} lượt chơi · {allPlayableSlugs.length} game × {topics.length} chủ đề
       </div>
 
       {/* Topic selection */}
@@ -104,9 +183,9 @@ export const GamesPage: React.FC = () => {
         <div className="gsh-topics">
           <h2 className="gsh-section-title"><Msr icon="category" size={18} color={colors.skyBlue} /> Chọn chủ đề</h2>
           <div className="gsh-topic-grid">
-            {GAME_TOPICS.map((t) => {
-              const done = GAMES.filter((g) => (playedToday[g.slug] ?? []).includes(t.slug)).length;
-              const bg = topicBackgroundUrl(t.slug);
+            {topics.map((t) => {
+              const done = allPlayableSlugs.filter((g) => (playedToday[g] ?? []).includes(t.slug)).length;
+              const bg = topicBackgroundUrl(t.slug as Parameters<typeof topicBackgroundUrl>[0]);
               return (
                 <button
                   key={t.slug}
@@ -118,11 +197,13 @@ export const GamesPage: React.FC = () => {
                     backgroundSize: 'cover', backgroundPosition: 'center',
                   } : undefined}
                 >
-                  <span className="gsh-topic-thumb" style={{ background: TOPIC_TINT[t.slug] }}>{TOPIC_THUMB[t.slug]}</span>
+                  <span className="gsh-topic-thumb" style={{ background: TOPIC_TINT[t.slug] ?? colors.skyLight }}>
+                    {TOPIC_THUMB[t.slug] ?? <Msr icon="category" size={22} color={colors.skyBlue} />}
+                  </span>
                   <b>{t.labelEn}</b>
                   <small>{t.label}</small>
-                  <span className="gsh-topic-bar"><i style={{ width: `${(done / GAMES.length) * 100}%`, background: TOPIC_BAR[t.slug] }} /></span>
-                  <small className="gsh-topic-done">{done}/3 game hôm nay</small>
+                  <span className="gsh-topic-bar"><i style={{ width: `${(done / allPlayableSlugs.length) * 100}%`, background: TOPIC_BAR[t.slug] ?? colors.skyBlue }} /></span>
+                  <small className="gsh-topic-done">{done}/{allPlayableSlugs.length} game hôm nay</small>
                 </button>
               );
             })}
@@ -137,10 +218,10 @@ export const GamesPage: React.FC = () => {
             <Msr icon="arrow_back" size={16} /> Đổi chủ đề
           </button>
           <h2 className="gsh-section-title">
-            {TOPIC_THUMB[activeTopic]} {GAME_TOPICS.find((t) => t.slug === activeTopic)?.labelEn}
+            {TOPIC_THUMB[activeTopic] ?? <Msr icon="category" size={18} color={colors.skyBlue} />} {topics.find((t) => t.slug === activeTopic)?.labelEn ?? activeTopic}
           </h2>
           <div className="gsh-game-list">
-            {GAMES.map((g) => {
+            {gamesForTopic.map((g) => {
               const done = (playedToday[g.slug] ?? []).includes(activeTopic);
               return (
                 <button key={g.slug} className="gsh-game-card" onClick={() => openGame(g.slug, activeTopic)}>

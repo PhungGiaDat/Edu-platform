@@ -89,6 +89,40 @@ export async function fetchGameVocab(topic: GameTopic, limit = 8): Promise<GameV
   return data;
 }
 
+/** Catalog shape served by GET /api/v1/games/catalog (2026-09-09 activation). */
+export interface GameCatalogTopic {
+  id: string;
+  slug: string;
+  name: string;
+  name_vi: string;
+  description?: string | null;
+  cover_image_url?: string | null;
+}
+
+export interface GameCatalogGame {
+  id: string;
+  slug: string;
+  title: string;
+  title_vi: string;
+  game_type: 'drag_match' | 'catch_word' | 'word_scramble' | 'memory_match';
+  topic_id: string;
+  config: Record<string, number>;
+}
+
+export interface GameCatalog {
+  topics: GameCatalogTopic[];
+  games: GameCatalogGame[];
+}
+
+/**
+ * Fetch the learner game catalog (published topics + games). The caller
+ * (GamesPage) falls back to the hardcoded catalog when this fails, so a
+ * backend outage must never blank the Play area.
+ */
+export async function fetchGameCatalog(): Promise<GameCatalog> {
+  return await request('/api/v1/games/catalog', { method: 'GET' }) as GameCatalog;
+}
+
 function todayStamp(): string {
   const d = new Date();
   const p = (n: number) => String(n).padStart(2, '0');

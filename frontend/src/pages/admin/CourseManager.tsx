@@ -19,11 +19,13 @@ const CourseManager: React.FC = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [total, setTotal] = useState(0);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const limit = 20;
 
   const loadCourses = useCallback(async (resetPage = false) => {
     try {
       setLoading(true);
+      setLoadError(null);
       const currentPage = resetPage ? 0 : page;
       const skip = currentPage * limit;
       
@@ -37,7 +39,11 @@ const CourseManager: React.FC = () => {
       setHasMore(response.has_more);
       setTotal(response.total);
     } catch (error) {
+      // Surface the failure in-UI: an empty list + console-only error looked
+      // exactly like "the feature does nothing" (research finding #6/#9)
       console.error('Failed to load courses:', error);
+      setLoadError(error instanceof Error ? error.message : String(error));
+      if (resetPage) setCourses([]);
     } finally {
       setLoading(false);
     }
@@ -66,8 +72,12 @@ const CourseManager: React.FC = () => {
     try {
       await adminCoursesApi.deleteCourse(courseId);
       setCourses(prev => prev.filter(c => c.course_id !== courseId));
+      setLoadError(null);
     } catch (error) {
       console.error('Failed to delete course:', error);
+      setLoadError(
+        error instanceof Error ? error.message : String(error)
+      );
     }
   };
 
@@ -91,6 +101,25 @@ const CourseManager: React.FC = () => {
           {t('admin.courses.createNew')}
         </button>
       </div>
+
+      {/* Error banner — visible failure + retry (was console-only) */}
+      {loadError && (
+        <div
+          role="alert"
+          className="flex items-center gap-3 mb-4 px-4 py-3 rounded-[13px] bg-[rgba(220,38,38,0.09)] border border-[rgba(220,38,38,0.25)]"
+        >
+          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span className="text-sm font-semibold text-[#dc2626] flex-1">
+            {t('admin.courses.loadError', 'Không tải được danh sách khóa học')}: {loadError}
+          </span>
+          <button
+            onClick={() => loadCourses(true)}
+            className="px-3 py-1.5 rounded-[10px] bg-white text-[#dc2626] text-sm font-bold shadow-[0_2px_0_rgba(34,48,58,0.08)] hover:bg-red-50 transition-colors"
+          >
+            {t('admin.common.retry', 'Thử lại')}
+          </button>
+        </div>
+      )}
 
       {/* Course List */}
       {loading && courses.length === 0 ? (

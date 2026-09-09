@@ -25,7 +25,7 @@ COURSE_COLUMNS = {
     "course_id", "title", "title_vi", "description", "description_vi",
     "thumbnail_url", "subtitle_vi", "theme", "category_key", "category_label",
     "category_icon", "age_range", "level", "is_published", "teacher_id",
-    "is_active", "created_at", "updated_at",
+    "is_active", "created_at", "updated_at", "is_template",
 }
 DECK_COLUMNS = {"deck_id", "teacher_id", "is_active", "card_count",
                 "created_at", "updated_at"}
@@ -78,6 +78,86 @@ def _row_course(row) -> Dict[str, Any]:
     value.setdefault("enrollment_count", 0)
     value.setdefault("is_template", False)
     value.setdefault("lessons", [])
+    return value
+
+
+def _lesson_video_jsonb(lesson: Dict[str, Any]) -> Optional[str]:
+    """Map the admin editor's flat ``video_url`` onto the legacy learner
+    VideoSchema JSONB contract stored in lessons.video
+    ({title, url, duration_seconds, thumbnail_url})."""
+    video_url = lesson.get("video_url")
+    if not video_url:
+        return None
+    payload = {
+        "title": lesson.get("title", ""),
+        "url": video_url,
+        "duration_seconds": int(lesson.get("duration_seconds") or 0),
+        "thumbnail_url": lesson.get("thumbnail_url"),
+    }
+    return json.dumps(payload, ensure_ascii=False)
+
+
+def _lesson_media_jsonb(lesson: Dict[str, Any]) -> Optional[str]:
+    """Map the admin editor's flat ``images`` list onto lessons.media JSONB
+    ({"images": [...]}) — the shape the learner lesson reader expects."""
+    images = lesson.get("images")
+    if not images:
+        return None
+    return json.dumps({"images": list(images)}, ensure_ascii=False)
+
+
+async def _upsert_lesson(lesson: Dict[str, Any], course_id: str,
+                         lesson_order: int) -> str:
+    """Insert-or-update one lesson row, persisting media JSONB columns.
+
+    Shared by create_course / update_course. Uses ON CONFLICT DO UPDATE so
+    learner progress rows (FK ON DELETE RESTRICT) survive course updates.
+    """
+    lesson_id = lesson.get("lesson_id") or str(uuid.uuid4())
+    video_json = _lesson_video_jsonb(lesson)
+    media_json = _lesson_media_jsonb(lesson)
+    await postgres_pool().execute(
+        """INSERT INTO public.lessons
+               (lesson_id, course_id, title, title_vi, description,
+                lesson_order, duration_minutes, content, video, media)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+                   CAST($9 AS jsonb), CAST($10 AS jsonb))
+           ON CONFLICT (lesson_id) DO UPDATE SET
+               course_id = EXCLUDED.course_id,
+               title = EXCLUDED.title,
+               title_vi = EXCLUDED.title_vi,
+               description = EXCLUDED.description,
+               lesson_order = EXCLUDED.lesson_order,
+               duration_minutes = EXCLUDED.duration_minutes,
+               content = EXCLUDED.content,
+               video = COALESCE(EXCLUDED.video, public.lessons.video),
+               media = COALESCE(EXCLUDED.media, public.lessons.media)""",
+        lesson_id,
+        course_id,
+        lesson.get("title", ""),
+        lesson.get("title_vi", ""),
+        lesson.get("description", ""),
+        lesson_order,
+        lesson.get("duration_minutes", 3),
+        lesson.get("content", ""),
+        video_json,
+        media_json,
+    )
+    return lesson_id
+
+
+def _lesson_row_for_admin(row) -> Dict[str, Any]:
+    """Convert a lessons row for the admin editor: lift media JSONB back to
+    the flat video_url / images fields the editor round-trips on."""
+    value = dict(row)
+    video = _parse_jsonb(value.pop("video", None))
+    if isinstance(video, dict) and video.get("url"):
+        value["video_url"] = video["url"]
+    media = _parse_jsonb(value.pop("media", None))
+    if isinstance(media, dict) and media.get("images"):
+        value["images"] = media["images"]
+    if "images" not in value:
+        value["images"] = []
     return value
 
 
@@ -304,7 +384,9 @@ class AdminRepository:
                WHERE course_id=$1 ORDER BY lesson_order ASC""",
             course_id,
         )
-        course["lessons"] = [dict(r) for r in lesson_rows]
+        course["lessons"] = [
+            _lesson_row_for_admin(r) for r in lesson_rows
+        ]
         course["lesson_count"] = len(course["lessons"])
         return course
 
@@ -334,22 +416,7 @@ class AdminRepository:
 
         # Insert lessons into public.lessons if present
         for i, lesson in enumerate(lessons_raw):
-            lesson_id = lesson.get("lesson_id", str(uuid.uuid4()))
-            await postgres_pool().fetchrow(
-                """INSERT INTO public.lessons
-                       (lesson_id, course_id, title, title_vi, description,
-                        lesson_order, duration_minutes, content)
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                   ON CONFLICT (lesson_id) DO NOTHING""",
-                lesson_id,
-                course_id,
-                lesson.get("title", ""),
-                lesson.get("title_vi", ""),
-                lesson.get("description", ""),
-                i + 1,
-                lesson.get("duration_minutes", 3),
-                lesson.get("content", ""),
-            )
+            await _upsert_lesson(lesson, course_id, i + 1)
 
         return {
             "course_id": course_id,
@@ -384,24 +451,25 @@ class AdminRepository:
         if row is None:
             return False
 
-        # Replace lessons if provided
+        # Replace lessons if provided — per-lesson UPSERT (NOT delete-all) so
+        # learner progress FKs (ON DELETE RESTRICT) never 500 the update.
+        # Only lessons absent from the payload are removed.
         if lessons_update is not None:
-            await postgres_pool().execute(
-                "DELETE FROM public.lessons WHERE course_id=$1", course_id,
-            )
+            incoming_ids: List[str] = []
             for i, lesson in enumerate(lessons_update):
-                lesson_id = lesson.get("lesson_id", str(uuid.uuid4()))
-                await postgres_pool().fetchrow(
-                    """INSERT INTO public.lessons
-                           (lesson_id, course_id, title, title_vi, description,
-                            lesson_order, duration_minutes, content)
-                       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                       ON CONFLICT (lesson_id) DO NOTHING""",
-                    lesson_id, course_id,
-                    lesson.get("title", ""), lesson.get("title_vi", ""),
-                    lesson.get("description", ""), i + 1,
-                    lesson.get("duration_minutes", 3), lesson.get("content", ""),
-                )
+                incoming_ids.append(await _upsert_lesson(lesson, course_id, i + 1))
+
+            existing_rows = await postgres_pool().fetch(
+                "SELECT lesson_id FROM public.lessons WHERE course_id=$1",
+                course_id,
+            )
+            incoming_set = set(incoming_ids)
+            for r in existing_rows:
+                if r["lesson_id"] not in incoming_set:
+                    await postgres_pool().execute(
+                        "DELETE FROM public.lessons WHERE lesson_id=$1 AND course_id=$2",
+                        r["lesson_id"], course_id,
+                    )
 
         return True
 
