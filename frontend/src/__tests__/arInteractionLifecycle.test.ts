@@ -91,6 +91,25 @@ describe('AR interaction lifecycle contracts', () => {
     })
   })
 
+  it('rejects unsupported high-priority rules even when every target is tracked', () => {
+    const unsupported = normalizeInteractionRule({
+      tags: ['rain001', 'soil001', 'seed001'],
+      target_order: ['rain001', 'soil001', 'seed001'],
+      combo_id: 'grow-seed',
+      priority: 1000,
+    })
+
+    expect(unsupported.executable).toBe(false)
+    expect(isInteractionRuleMatched(
+      unsupported,
+      ['rain001', 'soil001', 'seed001'],
+    )).toBe(false)
+    expect(selectActiveInteractionRule(
+      [unsupported],
+      ['rain001', 'soil001', 'seed001'],
+    )).toBeNull()
+  })
+
   it('matches configured pairs independently of unrelated tracked targets', () => {
     const catFish = normalizeInteractionRule({
       tags: ['cat001', 'fish001'],
