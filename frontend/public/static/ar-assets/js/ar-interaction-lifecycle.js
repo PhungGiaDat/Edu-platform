@@ -54,6 +54,26 @@ export function classifyCatGesture({ durationMs, dx, dy }) {
   return 'none'
 }
 
+export function getTargetLossGraceState({ lostAt, now, lostGraceMs }) {
+  if (lostAt == null) {
+    return {
+      lostForMs: 0,
+      withinGrace: false,
+      confirmed: false,
+      hide: false,
+    }
+  }
+
+  const lostForMs = Math.max(0, now - lostAt)
+  const withinGrace = lostForMs < lostGraceMs
+  return {
+    lostForMs,
+    withinGrace,
+    confirmed: !withinGrace,
+    hide: !withinGrace,
+  }
+}
+
 export function resolveCatFishComboRule({ primaryTargetName, secondaryTargetName, rules }) {
   if (primaryTargetName !== 'cat001' || secondaryTargetName !== 'fish001') return null
 

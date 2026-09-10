@@ -195,6 +195,7 @@
       'classifyCatGesture',
       'classifyCatTap',
       'getEligibleCatAmbient',
+      'getTargetLossGraceState',
       'isCatOneShotCompletionOwner',
       'resolveCatFishComboRule',
       'selectComboSecondaryTargetName',
@@ -233,6 +234,7 @@
       classifyCatGesture,
       classifyCatTap,
       getEligibleCatAmbient,
+      getTargetLossGraceState,
       isCatOneShotCompletionOwner,
       resolveCatFishComboRule,
       selectComboSecondaryTargetName,
@@ -395,6 +397,7 @@
       catReturn: null,          // { runId, fromYaw, toYaw, startedAt, durationMs }
       // Visual grace: targets pending hidden due to grace expiry
       pendingGraceHides: new Map(), // targetName → graceStartTime
+      deferredConfirmedLossHides: new Map(), // targetName → { lostForMs, confirmedAt }
       // Debug: last logged SECONDARY_READINESS to avoid spam
       lastSecondaryReadiness: null,
       consumeTimeoutId: null,
@@ -450,6 +453,7 @@
         stable: false,
         lastSeenAt: 0,
         lostAt: null,
+        lossConfirmedAt: null,
         interactionReady: false,
         visibleByInteraction: true,
       });
@@ -1488,6 +1492,7 @@
           const now = performance.now();
           if (now - lastInteractionEvalMs >= 100) {
             lastInteractionEvalMs = now;
+            processPendingTargetLosses(now);
             evaluateInteraction(now);
             updateCatAmbient(now);
           }
@@ -1586,7 +1591,7 @@
     function computeAnchorDistance() {
       const catInst = targetInstances.get(primaryModelTargetName);
       const secondaryTargetName = selectComboSecondaryTargetName({
-        primaryTargetName,
+        primaryTargetName: primaryModelTargetName,
         targetNames: Array.from(targetInstances.keys()),
       });
       if (!secondaryTargetName) return null;
@@ -1857,11 +1862,79 @@
       mixer.addEventListener('finished', onFinish);
     }
 
+    function hasActivePrimaryComboVisibilityLatch(targetName) {
+      if (targetName !== primaryModelTargetName) return false;
+      if (!interactionState.comboLatch || interactionState.comboLatch.runId !== interactionState.comboRunId) return false;
+      return interactionState.phase === InteractionPhase.COMBO_ARMED
+        || interactionState.phase === InteractionPhase.COMBO_TURNING
+        || interactionState.phase === InteractionPhase.COMBO_PLAYING;
+    }
+
+    function hideConfirmedTargetLoss(targetName, lostForMs) {
+      const instance = targetInstances.get(targetName);
+      const wasTargetModelVisible = !!instance?.model?.visible;
+      const wasPrimaryModelVisible = targetName === primaryModelTargetName && !!loadedModel?.visible;
+
+      if (instance?.model) instance.model.visible = false;
+      if (targetName === primaryModelTargetName) {
+        if (loadedModel) loadedModel.visible = false;
+        if (activeTargetName === targetName) activeTargetName = null;
+        modelAttached = false;
+      }
+
+      sendARDebug('MODEL_HIDDEN_TARGET_LOST', {
+        targetName,
+        lostForMs: Math.round(lostForMs),
+        wasVisible: wasTargetModelVisible || wasPrimaryModelVisible,
+      });
+    }
+
+    function processPendingTargetLosses(now) {
+      for (const [targetName, graceStart] of interactionState.pendingGraceHides) {
+        const lossGrace = getTargetLossGraceState({
+          lostAt: graceStart,
+          now,
+          lostGraceMs: INTERACTION_CONFIG.lostGraceMs,
+        });
+        if (!lossGrace.confirmed) continue;
+
+        interactionState.pendingGraceHides.delete(targetName);
+        const instance = targetInstances.get(targetName);
+        if (instance) instance.lossConfirmedAt = now;
+        sendARDebug('TARGET_LOST_CONFIRMED', {
+          targetName,
+          lostForMs: Math.round(lossGrace.lostForMs),
+        });
+
+        if (hasActivePrimaryComboVisibilityLatch(targetName)) {
+          interactionState.deferredConfirmedLossHides.set(targetName, {
+            lostForMs: lossGrace.lostForMs,
+            confirmedAt: now,
+          });
+          continue;
+        }
+
+        hideConfirmedTargetLoss(targetName, lossGrace.lostForMs);
+      }
+
+      for (const [targetName, confirmedLoss] of interactionState.deferredConfirmedLossHides) {
+        const instance = targetInstances.get(targetName);
+        if (instance?.tracked) {
+          interactionState.deferredConfirmedLossHides.delete(targetName);
+          continue;
+        }
+        if (hasActivePrimaryComboVisibilityLatch(targetName)) continue;
+
+        interactionState.deferredConfirmedLossHides.delete(targetName);
+        hideConfirmedTargetLoss(targetName, confirmedLoss.lostForMs);
+      }
+    }
+
     function evaluateInteraction(now) {
       const cfg = INTERACTION_CONFIG;
       const catInst = targetInstances.get(primaryModelTargetName);
       const secondaryTargetName = selectComboSecondaryTargetName({
-        primaryTargetName,
+        primaryTargetName: primaryModelTargetName,
         targetNames: Array.from(targetInstances.keys()),
       });
       const fishInst = secondaryTargetName ? targetInstances.get(secondaryTargetName) : null;
@@ -1876,25 +1949,6 @@
       // Confirmed-lost: tracked=false AND grace fully expired
       const catGraceExpired = !!(catInst && !catInst.tracked && catInst.lostAt != null && (now - catInst.lostAt) >= cfg.lostGraceMs);
       const fishGraceExpired = !!(fishInst && !fishInst.tracked && fishInst.lostAt != null && (now - fishInst.lostAt) >= cfg.lostGraceMs);
-
-      // ---- Visual grace: process pending hides ----
-      // Skip during combo: cat must stay visible even if target is lost
-      const latchActive = interactionState.comboLatch != null && interactionState.comboLatch.runId === interactionState.comboRunId;
-      for (const [targetName, graceStart] of interactionState.pendingGraceHides) {
-        const elapsed = now - graceStart;
-        if (elapsed >= cfg.lostGraceMs) {
-          // Grace expired — confirm loss and hide unless combo is latched
-          interactionState.pendingGraceHides.delete(targetName);
-          sendARDebug('TARGET_LOST_CONFIRMED', { targetName, lostForMs: Math.round(elapsed) });
-          if (!latchActive || targetName !== primaryModelTargetName) {
-            const inst = targetInstances.get(targetName);
-            if (inst?.model && inst.model.visible) inst.model.visible = false;
-            if (targetName === primaryModelTargetName && loadedModel && loadedModel.visible) {
-              loadedModel.visible = false;
-            }
-          }
-        }
-      }
 
       // ---- Primary lock state ----
       // Only stamp foundAt on the first tracking contact of a fresh cycle
@@ -2207,30 +2261,39 @@
     // ========== TARGET FOUND / LOST ==========
     function onTargetFound(detail) {
       saveTargetPose(detail);
+      const now = performance.now();
       const instance = targetInstances.get(detail.name);
-      const wasPendingGrace = instance && interactionState.pendingGraceHides.has(detail.name);
-      const lostForMs = wasPendingGrace
-        ? performance.now() - interactionState.pendingGraceHides.get(detail.name)
-        : null;
+      const graceStart = interactionState.pendingGraceHides.get(detail.name);
+      const lossGrace = graceStart == null
+        ? null
+        : getTargetLossGraceState({
+          lostAt: graceStart,
+          now,
+          lostGraceMs: INTERACTION_CONFIG.lostGraceMs,
+        });
+
+      if (lossGrace?.confirmed) processPendingTargetLosses(now);
 
       if (instance) {
         instance.tracked = true;
         instance.lostAt = null;
-        if (instance.foundAt == null) instance.foundAt = performance.now();
+        instance.lossConfirmedAt = null;
+        if (instance.foundAt == null) instance.foundAt = now;
         // If model was already loaded before this FOUND event, mark ready immediately.
         if (detail.name !== primaryModelTargetName && instance.modelState === 'loaded' && instance.model) {
           instance.interactionReady = true;
         }
       }
 
-      // Cancel any pending grace hide and keep model visible
-      if (wasPendingGrace) {
+      // Cancel only a brief loss. A late callback was confirmed above.
+      if (lossGrace?.withinGrace) {
         interactionState.pendingGraceHides.delete(detail.name);
         sendARDebug('TARGET_REACQUIRED_WITHIN_GRACE', {
           targetName: detail.name,
-          lostForMs: Math.round(lostForMs),
+          lostForMs: Math.round(lossGrace.lostForMs),
         });
       }
+      interactionState.deferredConfirmedLossHides.delete(detail.name);
 
       const config = targetConfigByName.get(detail.name);
       const targetWord = config?.word || detail.name;
@@ -2288,27 +2351,26 @@
         instance.tracked = false;
         instance.pose = null;
         instance.lostAt = now;
-        // DO NOT hide model immediately — visual grace handled in evaluateInteraction
+        instance.lossConfirmedAt = null;
+        // DO NOT hide model immediately — visual grace is handled independently.
         // after lostGraceMs expires.  This preserves cat visibility during
         // brief occlusion and during COMBO_PLAYING.
       }
 
       // Register pending grace hide
-      interactionState.pendingGraceHides.set(name, now);
-
-      sendARDebug('TARGET_LOST_PENDING', {
-        qrId: name,
-        graceMs: INTERACTION_CONFIG.lostGraceMs,
-        isPrimary: name === primaryModelTargetName,
-      });
+      if (!interactionState.pendingGraceHides.has(name)) {
+        interactionState.pendingGraceHides.set(name, now);
+        sendARDebug('TARGET_LOST_PENDING', {
+          qrId: name,
+          graceMs: INTERACTION_CONFIG.lostGraceMs,
+          isPrimary: name === primaryModelTargetName,
+        });
+      }
       sendMessage('TARGET_LOST', { qrId: name });
 
-      // For primary target, also clear modelAttached so reattach works on reacquire
-      if (activeTargetName === name) {
-        activeTargetName = null;
-        modelAttached = false;
-        // Do NOT hide model here — evaluateInteraction handles it after grace
-      }
+      // Preserve primary attachment through grace; confirmed loss clears it.
+      // Keep the existing model attached and visible during grace. Confirmed loss
+      // clears activeTargetName/modelAttached in processPendingTargetLosses().
 
       sendARDebug('MULTI_TARGET_STATE', { count: trackedTargets.size, targets: Array.from(trackedTargets.keys()), lost: name });
     }

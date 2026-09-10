@@ -15,6 +15,16 @@ export function canPlayCatMeow(args: Record<string, unknown>): boolean
 export function classifyCatGesture(args: { durationMs: number; dx: number; dy: number }): 'tap' | 'pet' | 'swipe' | 'none'
 export function classifyCatTap(args: { meshHit: boolean; proxyHit: boolean }): string
 export function getEligibleCatAmbient(args: Record<string, unknown>): 'CAT_LOOK_UP' | 'CAT_SIT' | null
+export function getTargetLossGraceState(args: {
+  lostAt: number | null
+  now: number
+  lostGraceMs: number
+}): {
+  lostForMs: number
+  withinGrace: boolean
+  confirmed: boolean
+  hide: boolean
+}
 export function isCatOneShotCompletionOwner(args: Record<string, unknown>): boolean
 
 export function resolveCatFishComboRule(args: {
