@@ -1,9 +1,9 @@
 # Generic Rule-Driven Multi-Target AR Interaction Design
 
-**Date:** 2026-09-10  
-**Repository:** `PhungGiaDat/Edu-platform`  
-**Branch:** `10-days-quick-run`  
-**Runtime:** `frontend/public/ar-xr.html`  
+**Date:** 2026-09-10
+**Repository:** `PhungGiaDat/Edu-platform`
+**Branch:** `10-days-quick-run`
+**Runtime:** `frontend/public/ar-xr.html`
 **Scope:** 8th Wall `/learn-ar-xr` only
 
 ## Goal
