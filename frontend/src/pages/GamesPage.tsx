@@ -14,6 +14,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { colors, shadows, withOpacity } from '@/design-tokens/claymorphic';
 import { CodexPetSprite } from '@/features/pets/components';
+import { useLocale } from '@/contexts/LocaleContext';
 import {
   GAME_TOPICS,
   normalizeGameTopic,
@@ -70,6 +71,7 @@ function playedTodayKey(): string {
 
 export const GamesPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useLocale();
   const [params] = useSearchParams();
   const activeTopic = normalizeGameTopic(params.get('topic'));
 
@@ -166,44 +168,44 @@ export const GamesPage: React.FC = () => {
     <div className="gsh-shell">
       {/* Lexi hero */}
       <div className="gsh-hero">
-        <CodexPetSprite animationState="waving" label="Lexi chào bạn" size={62} />
+        <CodexPetSprite animationState="waving" label={t('gamesHeroTitle')} size={62} />
         <div>
-          <b>Chơi cùng Lexi nhé!</b>
-          <span>Chọn chủ đề con thích — mỗi game nhận 30 XP</span>
+          <b>{t('gamesHeroTitle')}</b>
+          <span>{t('gamesHeroSubtitle')}</span>
         </div>
       </div>
 
       <div className="gsh-daily" role="status">
         <Msr icon="local_fire_department" size={18} color={colors.sunshineDark ?? colors.sunshineYellow} />
-        Hôm nay: {totalToday}/{dailyCeiling} lượt chơi · {allPlayableSlugs.length} game × {topics.length} chủ đề
+        {t('gamesTodayCeiling', { done: totalToday, ceiling: dailyCeiling, games: allPlayableSlugs.length, topics: topics.length })}
       </div>
 
       {/* Topic selection */}
       {!activeTopic && (
         <div className="gsh-topics">
-          <h2 className="gsh-section-title"><Msr icon="category" size={18} color={colors.skyBlue} /> Chọn chủ đề</h2>
+          <h2 className="gsh-section-title"><Msr icon="category" size={18} color={colors.skyBlue} /> {t('gamesChooseTopic')}</h2>
           <div className="gsh-topic-grid">
-            {topics.map((t) => {
-              const done = allPlayableSlugs.filter((g) => (playedToday[g] ?? []).includes(t.slug)).length;
-              const bg = topicBackgroundUrl(t.slug as Parameters<typeof topicBackgroundUrl>[0]);
+            {topics.map((topic) => {
+              const done = allPlayableSlugs.filter((g) => (playedToday[g] ?? []).includes(topic.slug)).length;
+              const bg = topicBackgroundUrl(topic.slug as Parameters<typeof topicBackgroundUrl>[0]);
               return (
                 <button
-                  key={t.slug}
+                  key={topic.slug}
                   className="gsh-topic"
-                  onClick={() => navigate(`/games?topic=${t.slug}`)}
-                  aria-label={`Chủ đề ${t.label}`}
+                  onClick={() => navigate(`/games?topic=${topic.slug}`)}
+                  aria-label={`Chủ đề ${topic.label}`}
                   style={bg ? {
                     backgroundImage: `linear-gradient(rgba(255,251,240,.82),rgba(255,251,240,.94)), url(${bg})`,
                     backgroundSize: 'cover', backgroundPosition: 'center',
                   } : undefined}
                 >
-                  <span className="gsh-topic-thumb" style={{ background: TOPIC_TINT[t.slug] ?? colors.skyLight }}>
-                    {TOPIC_THUMB[t.slug] ?? <Msr icon="category" size={22} color={colors.skyBlue} />}
+                  <span className="gsh-topic-thumb" style={{ background: TOPIC_TINT[topic.slug] ?? colors.skyLight }}>
+                    {TOPIC_THUMB[topic.slug] ?? <Msr icon="category" size={22} color={colors.skyBlue} />}
                   </span>
-                  <b>{t.labelEn}</b>
-                  <small>{t.label}</small>
-                  <span className="gsh-topic-bar"><i style={{ width: `${(done / allPlayableSlugs.length) * 100}%`, background: TOPIC_BAR[t.slug] ?? colors.skyBlue }} /></span>
-                  <small className="gsh-topic-done">{done}/{allPlayableSlugs.length} game hôm nay</small>
+                  <b>{topic.labelEn}</b>
+                  <small>{topic.label}</small>
+                  <span className="gsh-topic-bar"><i style={{ width: `${(done / allPlayableSlugs.length) * 100}%`, background: TOPIC_BAR[topic.slug] ?? colors.skyBlue }} /></span>
+                  <small className="gsh-topic-done">{t('gamesTopicDone', { done, total: allPlayableSlugs.length })}</small>
                 </button>
               );
             })}
@@ -215,7 +217,7 @@ export const GamesPage: React.FC = () => {
       {activeTopic && (
         <div className="gsh-games">
           <button className="gsh-switch" onClick={() => navigate('/games')}>
-            <Msr icon="arrow_back" size={16} /> Đổi chủ đề
+            <Msr icon="arrow_back" size={16} /> {t('gamesSwitchTopic')}
           </button>
           <h2 className="gsh-section-title">
             {TOPIC_THUMB[activeTopic] ?? <Msr icon="category" size={18} color={colors.skyBlue} />} {topics.find((t) => t.slug === activeTopic)?.labelEn ?? activeTopic}
@@ -233,7 +235,7 @@ export const GamesPage: React.FC = () => {
                     <small>{g.desc}</small>
                   </span>
                   {done
-                    ? <span className="gsh-done-badge"><Msr icon="check_circle" size={18} color="#4C8A2A" />Đã chơi</span>
+                    ? <span className="gsh-done-badge"><Msr icon="check_circle" size={18} color="#4C8A2A" />{t('gamesPlayed')}</span>
                     : <Msr icon="chevron_right" size={22} color={colors.lightGray} />}
                 </button>
               );

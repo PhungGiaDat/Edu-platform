@@ -30,6 +30,7 @@ import {
   type GameTopic,
 } from '@/services/gamesVocabService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { ClayBurst3D } from '@/shared/components/ClayBurst3D';
 
 const DISPLAY_FONT = "'Nunito', sans-serif";
@@ -75,18 +76,21 @@ const Msr: React.FC<{ icon: string; size?: number; color?: string; style?: React
   <span aria-hidden="true" className="msr" style={{ fontSize: size, color, ...style }}>{icon}</span>
 );
 
-const EmptyTopic: React.FC<{ onBack: () => void }> = ({ onBack }) => (
-  <div className="dm-shell">
-    <ClayCard style={{ padding: 28, textAlign: 'center', maxWidth: 420 }}>
-      <Msr icon="sentiment_satisfied" size={40} color={colors.sunshineDark ?? colors.sunshineYellow} />
-      <h2 style={{ fontFamily: DISPLAY_FONT, fontWeight: 900, margin: '10px 0 6px' }}>Chủ đề đang cập nhật</h2>
-      <p style={{ fontSize: 14, color: colors.mediumGray }}>
-        Lexi đang chuẩn bị thêm từ cho chủ đề này. Con quay lại sau nhé!
-      </p>
-      <button onClick={onBack} className="dm-back-btn" style={{ marginTop: 16 }}>Về màn hình chính</button>
-    </ClayCard>
-  </div>
-);
+const EmptyTopic: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const { t } = useLocale();
+  return (
+    <div className="dm-shell">
+      <ClayCard style={{ padding: 28, textAlign: 'center', maxWidth: 420 }}>
+        <Msr icon="sentiment_satisfied" size={40} color={colors.sunshineDark ?? colors.sunshineYellow} />
+        <h2 style={{ fontFamily: DISPLAY_FONT, fontWeight: 900, margin: '10px 0 6px' }}>Chủ đề đang cập nhật</h2>
+        <p style={{ fontSize: 14, color: colors.mediumGray }}>
+          {t('gamesLoadingWords')}
+        </p>
+        <button onClick={onBack} className="dm-back-btn" style={{ marginTop: 16 }}>Về màn hình chính</button>
+      </ClayCard>
+    </div>
+  );
+};
 
 /**
  * Storage image 404s happen (manifest paths point at a bucket that was never
@@ -95,6 +99,7 @@ const EmptyTopic: React.FC<{ onBack: () => void }> = ({ onBack }) => (
  * a broken-image icon.
  */
 export const DragMatchGame: React.FC = () => {
+  const { t } = useLocale();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -279,11 +284,11 @@ export const DragMatchGame: React.FC = () => {
             }}
           >
             <Msr icon="bolt" size={18} color={colors.sunshineDark ?? colors.sunshineYellow} />
-            {xpAwarded === null ? 'Đang nhận phần thưởng…' : xpAwarded > 0 ? `+${xpAwarded} XP` : 'Hôm nay đã nhận XP game này rồi — mai chơi tiếp nhé!'}
+            {xpAwarded === null ? t('gamesXpPending') : xpAwarded > 0 ? `+${xpAwarded} XP` : t('gamesXpDailyDone')}
           </div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 18, flexWrap: 'wrap' }}>
             <button className="dm-back-btn" onClick={() => { setMatched(new Set()); setMismatches(0); setXpAwarded(null); setPhase('PLAYING'); }}>
-              Chơi lại
+              {t('gamesPlayAgain')}
             </button>
             <button className="dm-back-btn dm-back-btn--primary" onClick={() => navigate('/games')}>Về Khu chơi</button>
           </div>

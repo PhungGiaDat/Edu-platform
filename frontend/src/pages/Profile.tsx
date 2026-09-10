@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useLocale } from '../contexts/LocaleContext';
 import { apiClient, type ProfileResponse } from '../services/apiClient';
 import '../styles/claymorphic-utilities.css';
 
 export const Profile: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const { t } = useTranslation();
+    const { locale, setLocale, t } = useLocale();
     const [activeTab, setActiveTab] = useState<'badges' | 'stats'>('badges');
     const [profile, setProfile] = useState<ProfileResponse | null>(null);
     const [profileError, setProfileError] = useState(false);
@@ -160,12 +160,12 @@ export const Profile: React.FC = () => {
                                 <div className="clay-stat-card text-center !p-4 lg:!p-5">
                                     <span className="text-2xl">🔥</span>
                                     <div className="mt-1 text-2xl font-black text-orange-500">{userStats.streak_days}</div>
-                                    <div className="text-xs font-bold text-slate-500">Day Streak</div>
+                                    <div className="text-xs font-bold text-slate-500">{t('profileDayStreak')}</div>
                                 </div>
                                 <div className="clay-stat-card text-center !p-4 lg:!p-5">
                                     <span className="text-2xl">⚡</span>
                                     <div className="mt-1 text-2xl font-black text-sky-500">{userStats.total_points}</div>
-                                    <div className="text-xs font-bold text-slate-500">Total XP</div>
+                                    <div className="text-xs font-bold text-slate-500">{t('profileTotalXp')}</div>
                                 </div>
                             </div>
                         </div>
@@ -179,7 +179,7 @@ export const Profile: React.FC = () => {
                     <button
                         onClick={() => navigate('/admin')}
                         className="mb-6 flex w-full items-center gap-4 rounded-3xl border-3 border-white bg-white/70 p-4 text-left shadow-[0_6px_0_rgba(34,48,58,0.06),0_12px_24px_rgba(34,48,58,0.06)] backdrop-blur transition-transform hover:-translate-y-0.5 sm:p-5"
-                        aria-label={t('profile.adminArea', 'Khu vực quản trị')}
+                        aria-label={t('profileAdminArea')}
                     >
                         <span
                             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white"
@@ -196,10 +196,10 @@ export const Profile: React.FC = () => {
                         </span>
                         <span className="min-w-0 flex-1">
                             <b className="block font-black text-slate-800">
-                                {t('profile.adminArea', 'Khu vực quản trị')}
+                                {t('profileAdminArea')}
                             </b>
                             <small className="block text-xs font-semibold text-slate-500">
-                                {t('profile.adminAreaHint', 'Tạo khóa học, thẻ ghi nhớ và trò chơi cho học viên')}
+                                {t('profileAdminAreaHint')}
                             </small>
                         </span>
                         <svg className="h-5 w-5 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -207,6 +207,37 @@ export const Profile: React.FC = () => {
                         </svg>
                     </button>
                 )}
+
+                {/* Language setting — applies to the whole app (approved approach C).
+                    Visible to every user; persists via LocaleContext. */}
+                <section className="clay-card-sky mb-6 p-4 sm:p-5" aria-label={t('profileLanguageTitle')}>
+                    <h2 className="mb-1 text-base font-black text-slate-800">
+                        {t('profileLanguageTitle')}
+                    </h2>
+                    <p className="mb-3 text-xs font-semibold text-slate-500">
+                        {t('profileLanguageHint')}
+                    </p>
+                    <div className="flex gap-2" role="group">
+                        {([
+                            { code: 'vi' as const, label: '🇻🇳 Tiếng Việt' },
+                            { code: 'en' as const, label: '🇬🇧 English' },
+                        ]).map((opt) => (
+                            <button
+                                key={opt.code}
+                                type="button"
+                                onClick={() => setLocale(opt.code)}
+                                aria-pressed={locale === opt.code}
+                                className={`flex-1 rounded-2xl border-2 px-3 py-2.5 text-sm font-bold transition-colors cursor-pointer ${
+                                    locale === opt.code
+                                        ? 'border-[#0d9488] bg-[rgba(13,148,136,0.12)] text-[#0b6b60]'
+                                        : 'border-[rgba(34,48,58,0.08)] bg-white text-slate-600 hover:border-[#0d9488]/40'
+                                }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                </section>
 
                 {/* Main content grid */}
                 <div className="grid grid-cols-1 gap-6 xl:grid-cols-5 xl:items-start">
@@ -218,13 +249,13 @@ export const Profile: React.FC = () => {
                                 onClick={() => setActiveTab('badges')}
                                 className={`clay-tab ${activeTab === 'badges' ? 'clay-tab-active' : ''}`}
                             >
-                                🏆 Badges
+                                🏆 {t('profileBadges')}
                             </button>
                             <button
                                 onClick={() => setActiveTab('stats')}
                                 className={`clay-tab ${activeTab === 'stats' ? 'clay-tab-active' : ''}`}
                             >
-                                📊 Progress
+                                📊 {t('profileProgress')}
                             </button>
                         </div>
 

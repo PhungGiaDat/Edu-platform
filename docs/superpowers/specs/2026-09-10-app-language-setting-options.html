@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Options — App-wide Language Setting (VI/EN)</title>
+<style>
+  :root{
+    --bg:#f7f5f0; --bg-grad:linear-gradient(150deg,#f7f5f0 0%,#f2efe7 100%);
+    --surface:#ffffff; --border:rgba(34,48,58,.08);
+    --text:#22303a; --muted:rgba(34,48,58,.55);
+    --accent:#0d9488; --accent-dark:#0b6b60; --accent-soft:rgba(13,148,136,.12);
+    --amber:#b45309; --amber-soft:rgba(217,119,6,.12);
+    --info:#1d4ed8; --info-soft:rgba(37,99,235,.1);
+    --danger:#dc2626; --danger-soft:rgba(220,38,38,.09);
+    --card-shadow:0 5px 0 rgba(34,48,58,.05),0 10px 22px rgba(34,48,58,.05),inset 0 2px 0 #fff;
+    --radius-card:18px; --radius-btn:13px; --radius-chip:12px;
+    --font-display:'Nunito','Segoe UI',system-ui,sans-serif;
+    --font-body:'DM Sans','Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg-grad);color:var(--text);font-family:var(--font-body);padding:24px;max-width:1180px;margin:0 auto}
+  h1,h2,h3,h4{font-family:var(--font-display)}
+  h1{font-size:1.65rem;margin-bottom:4px}
+  .meta{color:var(--muted);font-size:.85rem;margin-bottom:24px}
+  h2{font-size:1.12rem;margin:38px 0 6px;padding-top:18px;border-top:2px dashed var(--border)}
+  .desc{color:var(--muted);font-size:.9rem;margin-bottom:14px;max-width:75ch}
+  .badge{display:inline-block;padding:3px 10px;border-radius:var(--radius-chip);font-size:.72rem;font-weight:700;font-family:var(--font-display)}
+  .badge.rec{background:var(--accent-soft);color:var(--accent-dark)}
+  .badge.warn{background:var(--amber-soft);color:var(--amber)}
+  .badge.no{background:var(--danger-soft);color:var(--danger)}
+  .frame{background:var(--surface);border:2px solid #fff;border-radius:var(--radius-card);box-shadow:var(--card-shadow);padding:16px;margin-bottom:14px}
+  table{width:100%;border-collapse:collapse;font-size:.83rem}
+  th{font-family:var(--font-display);text-align:left;padding:8px 10px;background:var(--bg);border-bottom:2px solid var(--border)}
+  td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .pill{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:.7rem;font-weight:800;font-family:var(--font-display)}
+  .pill.ok{background:var(--accent-soft);color:var(--accent-dark)}
+  .pill.part{background:var(--amber-soft);color:var(--amber)}
+  .pill.no{background:var(--danger-soft);color:var(--danger)}
+  .opt{border:2px solid var(--border);border-radius:var(--radius-card);padding:16px;margin-bottom:12px}
+  .opt.rec{border-color:var(--accent);background:linear-gradient(160deg,rgba(13,148,136,.05),transparent)}
+  .opt h3{font-size:.98rem;margin-bottom:6px}
+  .opt p{font-size:.85rem;color:var(--text);margin-bottom:8px}
+  .kv{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);font-weight:700;font-family:var(--font-display)}
+  .check{list-style:none}.check li{padding:4px 0 4px 26px;position:relative;font-size:.85rem}
+  .check li::before{content:"✓";position:absolute;left:0;top:4px;width:18px;height:18px;border-radius:6px;background:var(--accent-soft);color:var(--accent-dark);font-weight:800;font-size:.7rem;display:flex;align-items:center;justify-content:center}
+  .q{background:var(--info-soft);border-radius:var(--radius-btn);padding:12px 14px;font-size:.84rem;margin-bottom:10px}
+  .q b{color:var(--info)}
+  .q .a{color:var(--text);font-weight:600}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .foot{margin-top:34px;padding-top:14px;border-top:2px dashed var(--border);color:var(--muted);font-size:.78rem}
+  code{background:var(--bg);padding:1px 6px;border-radius:6px;font-size:.8em}
+</style>
+</head>
+<body>
+
+<h1>App-wide Language Setting (Tiếng Việt / English)</h1>
+<div class="meta">2026-09-10 · Options for approval · <b>NO implementation until bạn duyệt</b> · Style: Clay Editorial · <code>docs/superpowers/specs/2026-09-10-app-language-setting-options.md</code></div>
+
+<h2>1 · Hiện trạng — engine đã có sẵn trong project</h2>
+<p class="desc">Project đã cài <b>i18next v26.3.3 + react-i18next v17.0.8</b> (industry standard). Vấn đề KHÔNG phải thiếu library — mà là engine đang <b>chỉ nạp namespace admin</b>, trong khi learner pages viết string cứng.</p>
+<div class="frame">
+  <table>
+    <tr><th>Bề mặt</th><th>Cơ chế</th><th>Respond setting?</th></tr>
+    <tr><td>Sidebar (desktop) + Landing</td><td>useLocale + <b>LanguageToggle có sẵn</b></td><td><span class="pill ok">✅</span></td></tr>
+    <tr><td>13 pages learner (CourseList, LessonPlayer, Login…)</td><td>useLocale (dict 369 keys en+vi)</td><td><span class="pill ok">✅</span></td></tr>
+    <tr><td>Admin pages (GameEditor, GameManager…)</td><td>useTranslation + admin.json</td><td><span class="pill ok">✅</span></td></tr>
+    <tr><td><b>Profile.tsx</b></td><td>string cứng EN/VN lẫn</td><td><span class="pill part">⚠️ một phần</span></td></tr>
+    <tr><td><b>GamesPage + games/</b></td><td>string cứng VN</td><td><span class="pill no">❌</span></td></tr>
+    <tr><td>Setting UI ở Profile (mobile-first)</td><td>— chưa có —</td><td><span class="pill no">❌</span></td></tr>
+  </table>
+</div>
+
+<h2>2 · Library options — có engine nào hay hơn không?</h2>
+<p class="desc">So sánh landscape; tiêu chí: graduation timeline, 2 locales (vi/en), tránh big-bang migration.</p>
+<div class="frame">
+  <table>
+    <tr><th>Library</th><th>Điểm mạnh</th><th>Nếu đổi sang</th><th>Kết luận</th></tr>
+    <tr>
+      <td><b>i18next / react-i18next</b><br><small>v26 — ĐÃ CÀI SẴN</small></td>
+      <td>Interpolation, plurals, namespaces, lazy-load, languagedetector plugin, community #1, type-safe keys</td>
+      <td>— (đang dùng)</td>
+      <td><span class="pill ok">✅ DỰNG TRÊN NÀY</span></td>
+    </tr>
+    <tr>
+      <td><b>react-intl (FormatJS)</b></td>
+      <td>ICU MessageFormat mạnh (gender/select), dates/numbers</td>
+      <td>Thay toàn bộ API + viết lại 369 keys + admin.json</td>
+      <td><span class="pill no">✗ Không đáng</span></td>
+    </tr>
+    <tr>
+      <td><b>LinguiJS</b></td>
+      <td>Compile-time catalogs, macro t`` DX đẹp, runtime nhỏ</td>
+      <td>Cần build integration mới + migration toàn bộ</td>
+      <td><span class="pill no">✗ Trễ deadline</span></td>
+    </tr>
+    <tr>
+      <td><b>inlang/paraglide, typesafe-i18n</b></td>
+      <td>Hiện đại, type-safe, compiler-based</td>
+      <td>Rất mới, ecosystem nhỏ, team phải học lại</td>
+      <td><span class="pill no">✗ Rủi ro</span></td>
+    </tr>
+  </table>
+  <p style="font-size:.83rem;color:var(--muted);margin-top:10px"><b>Kết luận:</b> dùng tiếp i18next — câu hỏi đúng là <i>"dồn hết về engine này theo cách nào"</i> (3 approaches bên dưới) + vài <b>polish plugin</b> tuỳ chọn.</p>
+</div>
+
+<h2>3 · Ba approaches (best-of-n)</h2>
+<div class="opt">
+  <h3>A — Dict consolidation</h3>
+  <p>Giữ dict 369 keys làm nguồn duy nhất learner; migrate GamesPage + games pages + Profile sang useLocale; thêm settings UI ở Profile.</p>
+  <div class="kv"><span>⏱ Effort: ~7 files</span><span>🎯 Risk: THẤP</span><span>⚠️ 2 hệ thống song song vĩnh viễn</span></div>
+</div>
+<div class="opt">
+  <h3>B — react-i18next full consolidation</h3>
+  <p>Chuyển 369 keys → JSON, 16 files useLocale → useTranslation, 1 hệ thống duy nhất.</p>
+  <div class="kv"><span>⏱ Effort: LỚN</span><span>🎯 Risk: CAO trước graduation</span><span>✅ Sạch nhất dài hạn</span></div>
+</div>
+<div class="opt rec">
+  <h3>C — Hybrid bridge <span class="badge rec">RECOMMENDED</span></h3>
+  <p>Scope migrate = A, NHƯNG thêm bridge: <code>t(key)</code> fallback <code>i18n.t(key)</code> khi thiếu → <b>keys mới viết vào JSON (prefix <code>learner.*</code>)</b>, keys cũ giữ dict. Path dần dần về B không big-bang. Setting UI ở Profile (mọi user).</p>
+  <div class="kv"><span>⏱ Effort: ≈ A + 10 dòng bridge</span><span>🎯 Risk: THẤP</span><span>🧭 Có exit-path về B</span></div>
+</div>
+
+<h2>4 · Polish tuỳ chọn (nếu muốn "hay hơn nữa" — đều trên i18next, không đổi library)</h2>
+<div class="grid2">
+  <div class="frame">
+    <h3 style="font-size:.9rem;margin-bottom:8px">Không cần thêm package</h3>
+    <ul class="check">
+      <li>Type-safe keys: augment <code>CustomTypeOptions</code> resources → autocomplete + chống sai key</li>
+      <li>Plural rules en (<code>_one/_other</code>) — vi không cần nhưng sẵn sàng</li>
+      <li>Language names native trong switcher: "Tiếng Việt / English"</li>
+      <li><code>document.documentElement.lang</code> — đã có sẵn trong LocaleProvider</li>
+    </ul>
+  </div>
+  <div class="frame">
+    <h3 style="font-size:.9rem;margin-bottom:8px">Cần thêm plugin nhỏ (tuỳ chọn)</h3>
+    <ul class="check">
+      <li><code>i18next-browser-languagedetector</code> — thay hand-rolled detect (hiện tại đã hoạt động tốt → ưu tiên THẤP)</li>
+      <li><code>i18next-http-backend</code> lazy-load locale JSON — chỉ đáng khi JSON phình (hiện 2 locales nhỏ → KHÔNG cần)</li>
+    </ul>
+  </div>
+</div>
+
+<h2>5 · Grill-me — 7 câu sắc (kèm câu trả lời đề xuất)</h2>
+<div class="q"><b>Q1. "Toàn bộ app" = đến đâu?</b><br><span class="a">→ P0: Profile + GamesPage + games pages + settings card. P1: còn lại dần dần (mỗi lần đụng page thì chuyển keys sang JSON). Dịch 30+ page một nhịp là không thực tế.</span></div>
+<div class="q"><b>Q2. Fallback copy GamesPage khi catalog API fail — locale=en?</b><br><span class="a">→ Mọi copy fallback đi qua t() — dict en đã có key.</span></div>
+<div class="q"><b>Q3. Test impact?</b><br><span class="a">→ gamesPageCatalog test phải wrap LocaleProvider (pattern đã có ở CourseDetail/CourseList tests). Chấp nhận.</span></div>
+<div class="q"><b>Q4. Keys mới để JSON nào?</b><br><span class="a">→ Trong admin.json prefix <code>learner.*</code> — 1 file/locale giảm churn; hy sinh namespace sạch lấy tốc độ.</span></div>
+<div class="q"><b>Q5. profile.* keys thêm hôm qua?</b><br><span class="a">→ Xoá khỏi admin.json, chuyển sang dict LocaleContext — Profile chỉ dùng 1 nguồn.</span></div>
+<div class="q"><b>Q6. Auto-detect browser?</b><br><span class="a">→ Giữ nguyên (có cờ auto-detected; user chọn tay thì ngừng auto).</span></div>
+<div class="q"><b>Q7. Persistence?</b><br><span class="a">→ localStorage <code>edu-platform-locale</code> — 1 key dùng chung, không migrate storage.</span></div>
+
+<h2>6 · Scope P0 nếu duyệt C</h2>
+<div class="frame">
+  <ul class="check">
+    <li>Bridge: <code>LocaleContext.t()</code> fallback <code>i18n.t()</code> (~10 dòng) — giữ các edits interpolation hiện có</li>
+    <li><b>Language settings card ở Profile</b> (segmented Tiếng Việt / English, clay style, mọi user thấy, gọi setLocale)</li>
+    <li>Migrate GamesPage + DragMatchGame + MemoryPairsGame + Profile strings → t() (keys mới JSON <code>learner.*</code>)</li>
+    <li>Xoá <code>profile.*</code> khỏi admin.json (gộp về dict)</li>
+    <li>gamesPageCatalog test wrap LocaleProvider + test switch language</li>
+    <li>Verify: <code>tsc -b</code> exit 0 · <code>vite build</code> · vitest · manual smoke Profile ↔ Sidebar/Landing/Games đổi theo</li>
+  </ul>
+  <div class="foot">P1 (dần dần): các trang learner còn lại chuyển keys sang JSON mỗi khi đụng đến.</div>
+</div>
+
+<div class="foot">Awaiting approval — không implement cho tới khi bạn chọn approach. · Options doc: <code>docs/superpowers/specs/2026-09-10-app-language-setting-options.md</code></div>
+</body>
+</html>

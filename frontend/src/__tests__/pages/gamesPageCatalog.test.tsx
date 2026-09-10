@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { LocaleProvider } from '../../contexts/LocaleContext';
 import { GamesPage } from '../../pages/GamesPage';
 import * as vocabService from '../../services/gamesVocabService';
 
@@ -25,9 +26,11 @@ vi.mock('@/features/pets/components', () => ({
 
 const renderPage = () =>
   render(
-    <MemoryRouter initialEntries={['/games']}>
-      <GamesPage />
-    </MemoryRouter>,
+    <LocaleProvider>
+      <MemoryRouter initialEntries={['/games']}>
+        <GamesPage />
+      </MemoryRouter>
+    </LocaleProvider>,
   );
 
 describe('GamesPage dynamic catalog', () => {

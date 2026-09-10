@@ -26,6 +26,7 @@ import {
   type GameTopic,
 } from '@/services/gamesVocabService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { ClayBurst3D } from '@/shared/components/ClayBurst3D';
 
 const DISPLAY_FONT = "'Nunito', sans-serif";
@@ -68,6 +69,7 @@ const TOPIC_EMOJI: Record<GameTopic, string> = {
 };
 
 export const MemoryPairsGame: React.FC = () => {
+  const { t } = useLocale();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -155,7 +157,7 @@ export const MemoryPairsGame: React.FC = () => {
       <div className="mp-shell">
         <ClayCard style={{ padding: 28, textAlign: 'center', maxWidth: 420 }}>
           <h2 style={{ fontFamily: DISPLAY_FONT, fontWeight: 900 }}>Chủ đề đang cập nhật</h2>
-          <p style={{ fontSize: 14, color: colors.mediumGray }}>Lexi đang thêm từ cho chủ đề này, quay lại sau nhé!</p>
+          <p style={{ fontSize: 14, color: colors.mediumGray }}>{t('gamesLoadingWords')}</p>
           <button className="mp-btn" style={{ marginTop: 14 }} onClick={() => navigate('/games')}>Về Khu chơi</button>
         </ClayCard>
       </div>
@@ -172,10 +174,10 @@ export const MemoryPairsGame: React.FC = () => {
           <p style={{ fontSize: 15, color: colors.mediumGray }}>Ghép đủ {pairs.length} cặp trong {moves} lượt</p>
           <div className="mp-xp-chip">
             <Msr icon="bolt" size={18} color={colors.sunshineDark ?? colors.sunshineYellow} />
-            {xpAwarded === null ? 'Đang nhận phần thưởng…' : xpAwarded > 0 ? `+${xpAwarded} XP` : 'Hôm nay game này đã nhận XP rồi — mai nhé!'}
+            {xpAwarded === null ? t('gamesXpPending') : xpAwarded > 0 ? `+${xpAwarded} XP` : t('gamesXpDailyDone')}
           </div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 18, flexWrap: 'wrap' }}>
-            <button className="mp-btn" onClick={restart}>Chơi lại</button>
+            <button className="mp-btn" onClick={restart}>{t('gamesPlayAgain')}</button>
             <button className="mp-btn mp-btn--primary" onClick={() => navigate('/games')}>Về Khu chơi</button>
           </div>
         </ClayCard>

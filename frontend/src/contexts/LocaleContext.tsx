@@ -7,7 +7,7 @@ export type Locale = 'en' | 'vi';
 type LocaleContextValue = {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 };
 
 const STORAGE_KEY = 'edu-platform-locale';
@@ -172,6 +172,27 @@ const messages: Record<Locale, Record<string, string>> = {
     grading: 'Grading...',
     lessonNotFound: 'Lesson not found.',
     loadingLesson: 'Opening lesson...',
+    // Profile page
+    profileAdminArea: 'Teacher admin area',
+    profileAdminAreaHint: 'Create courses, flashcards and games for learners',
+    profileBadges: 'Badges',
+    profileProgress: 'Progress',
+    profileDayStreak: 'Day Streak',
+    profileTotalXp: 'Total XP',
+    profileLanguageTitle: 'Language',
+    profileLanguageHint: 'Applies to the whole app',
+    // Games hub
+    gamesHeroTitle: 'Play with Lexi!',
+    gamesHeroSubtitle: 'Pick a topic — every game earns 30 XP',
+    gamesChooseTopic: 'Choose a topic',
+    gamesSwitchTopic: 'Change topic',
+    gamesTodayCeiling: 'Today: {{done}}/{{ceiling}} rounds · {{games}} games × {{topics}} topics',
+    gamesTopicDone: '{{done}}/{{total}} games today',
+    gamesPlayed: 'Played',
+    gamesLoadingWords: 'Lexi is adding words for this topic — come back soon!',
+    gamesXpPending: 'Claiming reward…',
+    gamesXpDailyDone: 'This game already gave XP today — come back tomorrow!',
+    gamesPlayAgain: 'Play again',
   },
   vi: {
     language: 'Ngôn ngữ',
@@ -381,6 +402,27 @@ const messages: Record<Locale, Record<string, string>> = {
     sessionExitNow: 'Thoát lúc này',
     sessionLimitFooter: 'Nghỉ ngơi cũng rất quan trọng để học tốt! Hẹn gặp lại bạn sớm nhé!',
     sessionWarningFooter: 'Bạn luôn có thể quay lại sau!',
+    // Profile page
+    profileAdminArea: 'Khu vực quản trị',
+    profileAdminAreaHint: 'Tạo khóa học, thẻ ghi nhớ và trò chơi cho học viên',
+    profileBadges: 'Huy hiệu',
+    profileProgress: 'Tiến trình',
+    profileDayStreak: 'Chuỗi ngày',
+    profileTotalXp: 'Tổng XP',
+    profileLanguageTitle: 'Ngôn ngữ',
+    profileLanguageHint: 'Áp dụng cho toàn bộ ứng dụng',
+    // Games hub
+    gamesHeroTitle: 'Chơi cùng Lexi nhé!',
+    gamesHeroSubtitle: 'Chọn chủ đề cho bé — mỗi game nhận 30 XP',
+    gamesChooseTopic: 'Chọn chủ đề',
+    gamesSwitchTopic: 'Đổi chủ đề',
+    gamesTodayCeiling: 'Hôm nay: {{done}}/{{ceiling}} lượt chơi · {{games}} game × {{topics}} chủ đề',
+    gamesTopicDone: '{{done}}/{{total}} game hôm nay',
+    gamesPlayed: 'Đã chơi',
+    gamesLoadingWords: 'Lexi đang chuẩn bị thêm từ cho chủ đề này. Con quay lại sau nhé!',
+    gamesXpPending: 'Đang nhận phần thưởng…',
+    gamesXpDailyDone: 'Hôm nay đã nhận XP game này rồi — mai chơi tiếp nhé!',
+    gamesPlayAgain: 'Chơi lại',
   },
 };
 
@@ -429,7 +471,21 @@ export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const value = useMemo<LocaleContextValue>(() => ({
     locale,
     setLocale,
-    t: (key: string) => messages[locale][key] || messages.en[key] || key,
+    t: (key: string, params?: Record<string, string | number>) => {
+      const interpolate = (template: string): string => {
+        if (!params) return template;
+        return template.replace(/\{\{(\w+)\}\}/g, (_match, name: string) =>
+          params[name] !== undefined ? String(params[name]) : `{{${name}}}`);
+      };
+      // 1) Inline dict (legacy + curated keys)
+      if (key in messages[locale]) return interpolate(messages[locale][key]);
+      if (key in messages.en) return interpolate(messages.en[key]);
+      // 2) Bridge (hybrid approach C): fall through to the global i18next
+      //    instance so NEW translations can live in JSON (learner.* keys)
+      //    without touching this dict. Language is kept in sync by the
+      //    effect above (adminI18n.changeLanguage).
+      return adminI18n.t(key, params as Record<string, unknown>);
+    },
   }), [locale]);
 
   // useTranslation() calls inside admin pages resolve against the GLOBAL
