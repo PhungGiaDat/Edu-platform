@@ -44,6 +44,16 @@ export function normalizeInteractionRule(rule: Record<string, unknown>): {
   executable: boolean
 }
 
+export function isInteractionRuleMatched(
+  rule: ReturnType<typeof normalizeInteractionRule>,
+  trackedTargetNames: string[] | Set<string>,
+): boolean
+
+export function selectActiveInteractionRule(
+  rules: Array<ReturnType<typeof normalizeInteractionRule>>,
+  trackedTargetNames: string[] | Set<string>,
+): ReturnType<typeof normalizeInteractionRule> | null
+
 export function resolveCatFishComboRule(args: {
   primaryTargetName: string
   secondaryTargetName: string

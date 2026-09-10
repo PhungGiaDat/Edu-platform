@@ -110,6 +110,23 @@ export function normalizeInteractionRule(rule) {
   }
 }
 
+export function isInteractionRuleMatched(rule, trackedTargetNames) {
+  if (!rule?.executable) return false
+  const tracked = trackedTargetNames instanceof Set
+    ? trackedTargetNames
+    : new Set(trackedTargetNames || [])
+  return rule.requiredTargets.every((target) => tracked.has(target))
+}
+
+export function selectActiveInteractionRule(rules, trackedTargetNames) {
+  return (rules || [])
+    .filter((rule) => isInteractionRuleMatched(rule, trackedTargetNames))
+    .sort((a, b) => {
+      if (b.priority !== a.priority) return b.priority - a.priority
+      return String(a.id).localeCompare(String(b.id))
+    })[0] || null
+}
+
 export function resolveCatFishComboRule({ primaryTargetName, secondaryTargetName, rules }) {
   if (primaryTargetName !== 'cat001' || secondaryTargetName !== 'fish001') return null
 

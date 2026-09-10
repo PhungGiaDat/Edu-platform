@@ -9,10 +9,12 @@ import {
   classifyCatTap,
   getEligibleCatAmbient,
   getTargetLossGraceState,
+  isInteractionRuleMatched,
   isCatOneShotCompletionOwner,
   normalizeInteractionRule,
   resolveCatFishComboRule,
   selectComboSecondaryTargetName,
+  selectActiveInteractionRule,
   shouldReplaceCatAnimation,
   shouldRevealAR,
   smoothstep,
@@ -87,6 +89,69 @@ describe('AR interaction lifecycle contracts', () => {
       partnerTargets: ['soil001', 'seed001'],
       executable: false,
     })
+  })
+
+  it('matches configured pairs independently of unrelated tracked targets', () => {
+    const catFish = normalizeInteractionRule({
+      tags: ['cat001', 'fish001'],
+      combo_id: 'cat-fish',
+      priority: 100,
+    })
+    const dogBone = normalizeInteractionRule({
+      tags: ['dog001', 'bone001'],
+      combo_id: 'dog-bone',
+      priority: 50,
+    })
+
+    expect(isInteractionRuleMatched(catFish, ['cat001', 'fish001'])).toBe(true)
+    expect(isInteractionRuleMatched(catFish, ['cat001', 'fish001', 'dog001'])).toBe(true)
+    expect(isInteractionRuleMatched(catFish, ['cat001'])).toBe(false)
+    expect(isInteractionRuleMatched(dogBone, new Set(['dog001', 'bone001']))).toBe(true)
+    expect(selectActiveInteractionRule([dogBone], ['unknown001'])).toBeNull()
+  })
+
+  it('selects matching rules by priority then lexical id regardless of input order', () => {
+    const catFish = normalizeInteractionRule({
+      tags: ['cat001', 'fish001'],
+      target_order: ['cat001', 'fish001'],
+      combo_id: 'cat-fish',
+      priority: 100,
+    })
+    const dogBone = normalizeInteractionRule({
+      tags: ['dog001', 'bone001'],
+      target_order: ['dog001', 'bone001'],
+      combo_id: 'dog-bone',
+      priority: 50,
+    })
+    const tracked = ['bone001', 'fish001', 'dog001', 'cat001']
+
+    for (const rules of [[dogBone, catFish], [catFish, dogBone]]) {
+      expect(selectActiveInteractionRule(rules, tracked)).toMatchObject({
+        id: 'cat-fish',
+        actorTarget: 'cat001',
+        partnerTargets: ['fish001'],
+      })
+    }
+
+    const aRule = normalizeInteractionRule({
+      tags: ['marker-a', 'marker-b'],
+      combo_id: 'a-rule',
+      priority: 20,
+    })
+    const bRule = normalizeInteractionRule({
+      tags: ['marker-c', 'marker-d'],
+      combo_id: 'b-rule',
+      priority: 20,
+    })
+
+    expect(selectActiveInteractionRule(
+      [bRule, aRule],
+      ['marker-d', 'marker-b', 'marker-c', 'marker-a'],
+    )?.id).toBe('a-rule')
+    expect(selectActiveInteractionRule(
+      [aRule, bRule],
+      ['marker-a', 'marker-c', 'marker-b', 'marker-d'],
+    )?.id).toBe('a-rule')
   })
 
   it('passes the canonical primary target explicitly to every runtime combo-secondary selector', () => {
