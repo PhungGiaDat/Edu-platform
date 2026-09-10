@@ -1,4 +1,8 @@
 {
+  "profile": {
+    "adminArea": "Teacher admin area",
+    "adminAreaHint": "Create courses, flashcards and games for learners"
+  },
   "admin": {
     "access": {
       "noPermissionTitle": "Teacher access required",

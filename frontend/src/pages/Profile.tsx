@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiClient, type ProfileResponse } from '../services/apiClient';
 import '../styles/claymorphic-utilities.css';
 
 export const Profile: React.FC = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'badges' | 'stats'>('badges');
     const [profile, setProfile] = useState<ProfileResponse | null>(null);
     const [profileError, setProfileError] = useState(false);
@@ -168,6 +171,42 @@ export const Profile: React.FC = () => {
                         </div>
                     </div>
                 </section>
+
+                {/* Teacher/Admin quick access — visible only to elevated accounts
+                    (role teacher|admin or superuser). Links into the admin area:
+                    the admin entry point previously existed only as a raw URL. */}
+                {(user?.role === 'teacher' || user?.role === 'admin' || user?.is_superuser) && (
+                    <button
+                        onClick={() => navigate('/admin')}
+                        className="mb-6 flex w-full items-center gap-4 rounded-3xl border-3 border-white bg-white/70 p-4 text-left shadow-[0_6px_0_rgba(34,48,58,0.06),0_12px_24px_rgba(34,48,58,0.06)] backdrop-blur transition-transform hover:-translate-y-0.5 sm:p-5"
+                        aria-label={t('profile.adminArea', 'Khu vực quản trị')}
+                    >
+                        <span
+                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white"
+                            style={{
+                                background: 'linear-gradient(145deg, #14b8a6, #0d9488)',
+                                boxShadow: '0 4px 0 #0b6b60, inset 0 2px 0 rgba(255,255,255,0.4)',
+                            }}
+                            aria-hidden="true"
+                        >
+                            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 3 2 8l10 5 10-5-10-5z" />
+                                <path d="M6 10.5V15c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5" />
+                            </svg>
+                        </span>
+                        <span className="min-w-0 flex-1">
+                            <b className="block font-black text-slate-800">
+                                {t('profile.adminArea', 'Khu vực quản trị')}
+                            </b>
+                            <small className="block text-xs font-semibold text-slate-500">
+                                {t('profile.adminAreaHint', 'Tạo khóa học, thẻ ghi nhớ và trò chơi cho học viên')}
+                            </small>
+                        </span>
+                        <svg className="h-5 w-5 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="m9 18 6-6-6-6" />
+                        </svg>
+                    </button>
+                )}
 
                 {/* Main content grid */}
                 <div className="grid grid-cols-1 gap-6 xl:grid-cols-5 xl:items-start">

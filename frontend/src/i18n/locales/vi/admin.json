@@ -1,4 +1,8 @@
 {
+  "profile": {
+    "adminArea": "Khu vực quản trị",
+    "adminAreaHint": "Tạo khóa học, thẻ ghi nhớ và trò chơi cho học viên"
+  },
   "admin": {
     "access": {
       "noPermissionTitle": "Yêu cầu quyền giáo viên",
