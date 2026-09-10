@@ -52,6 +52,21 @@ describe('AR interaction lifecycle contracts', () => {
     })
   })
 
+  it('filters unrelated target-order entries before selecting the actor', () => {
+    const rule = normalizeInteractionRule({
+      tags: ['dog001', 'bone001'],
+      target_order: ['unrelated001', 'bone001', 'dog001'],
+      combo_id: 'dog-eats-bone',
+    })
+
+    expect(rule).toMatchObject({
+      actorTarget: 'bone001',
+      partnerTargets: ['dog001'],
+      actorSource: 'target_order',
+      executable: true,
+    })
+  })
+
   it('uses required-tags actor fallback and marks three-target rules unsupported', () => {
     expect(normalizeInteractionRule({
       tags: ['cat001', 'fish001'],
