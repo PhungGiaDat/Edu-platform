@@ -2101,11 +2101,8 @@
       const actorEffectivelyTracked = effectiveTargets.has(activeRule.actorTarget);
       const partnerEffectivelyTracked = effectiveTargets.has(partnerTarget);
 
-      // ---- Primary lock state ----
-      // Only stamp foundAt on the first tracking contact of a fresh cycle
-      if (!actorInst?.tracked && actorInst && actorInst.tracked) {
-        // transition: not tracked → now tracked
-      }
+      // ---- Actor lock state ----
+      // Only stamp foundAt on the first tracking contact of a fresh cycle.
       if (actorInst?.tracked && actorInst.foundAt == null) {
         actorInst.foundAt = now;
       }
