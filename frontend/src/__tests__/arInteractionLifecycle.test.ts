@@ -8,6 +8,7 @@ import {
   classifyCatGesture,
   classifyCatTap,
   getEligibleCatAmbient,
+  getTargetLossGraceState,
   isCatOneShotCompletionOwner,
   resolveCatFishComboRule,
   selectComboSecondaryTargetName,
@@ -17,6 +18,107 @@ import {
 } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 describe('AR interaction lifecycle contracts', () => {
+  it('passes the canonical primary target explicitly to every runtime combo-secondary selector', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const callsites = [
+      [
+        'function computeAnchorDistance()',
+        'function updateFilteredDistance(raw)',
+      ],
+      [
+        'function evaluateInteraction(now)',
+        '// ========== TARGET FOUND / LOST ==========',
+      ],
+    ] as const
+
+    for (const [startMarker, endMarker] of callsites) {
+      const start = source.indexOf(startMarker)
+      const end = source.indexOf(endMarker, start)
+      const functionSource = source.slice(start, end)
+
+      expect(start).toBeGreaterThanOrEqual(0)
+      expect(end).toBeGreaterThan(start)
+      expect(functionSource).toContain('selectComboSecondaryTargetName({')
+      expect(functionSource).toContain('primaryTargetName: primaryModelTargetName,')
+      expect(functionSource).not.toMatch(
+        /selectComboSecondaryTargetName\(\{\s*primaryTargetName\s*,/,
+      )
+    }
+  })
+
+  it('keeps target-loss visibility processing independent from interaction evaluation', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const processorStart = source.indexOf('function processPendingTargetLosses(now)')
+    const evaluatorStart = source.indexOf('function evaluateInteraction(now)')
+    const evaluatorEnd = source.indexOf('// ========== TARGET FOUND / LOST ==========', evaluatorStart)
+    const evaluatorSource = source.slice(evaluatorStart, evaluatorEnd)
+    const updateStart = source.indexOf('const cameraPipelineModule = {')
+    const updateEnd = source.indexOf('// Image target events', updateStart)
+    const updateSource = source.slice(updateStart, updateEnd)
+
+    expect(processorStart).toBeGreaterThanOrEqual(0)
+    expect(evaluatorStart).toBeGreaterThan(processorStart)
+    expect(evaluatorSource).not.toContain('pendingGraceHides')
+    expect(updateSource.indexOf('processPendingTargetLosses(now);')).toBeGreaterThanOrEqual(0)
+    expect(updateSource.indexOf('processPendingTargetLosses(now);')).toBeLessThan(
+      updateSource.indexOf('evaluateInteraction(now);'),
+    )
+    expect(updateSource.indexOf('evaluateInteraction(now);')).toBeLessThan(
+      updateSource.indexOf('updateCatAmbient(now);'),
+    )
+  })
+
+  it('classifies target loss at the 300ms boundary without hiding during grace', () => {
+    expect(getTargetLossGraceState({
+      lostAt: 1000,
+      now: 1200,
+      lostGraceMs: 300,
+    })).toMatchObject({
+      lostForMs: 200,
+      withinGrace: true,
+      confirmed: false,
+      hide: false,
+    })
+
+    expect(getTargetLossGraceState({
+      lostAt: 1000,
+      now: 1301,
+      lostGraceMs: 300,
+    })).toMatchObject({
+      lostForMs: 301,
+      withinGrace: false,
+      confirmed: true,
+      hide: true,
+    })
+  })
+
+  it('cancels a pending hide only for a target reacquired within grace', () => {
+    const pendingGraceHides = new Map([['cat001', 1000]])
+    const reacquired = getTargetLossGraceState({
+      lostAt: pendingGraceHides.get('cat001')!,
+      now: 1180,
+      lostGraceMs: 300,
+    })
+
+    if (reacquired.withinGrace) pendingGraceHides.delete('cat001')
+
+    expect(reacquired.withinGrace).toBe(true)
+    expect(reacquired.confirmed).toBe(false)
+    expect(pendingGraceHides.has('cat001')).toBe(false)
+  })
+
+  it('never calls a 1.2-second reacquisition within grace', () => {
+    const reacquired = getTargetLossGraceState({
+      lostAt: 1000,
+      now: 2200,
+      lostGraceMs: 300,
+    })
+
+    expect(reacquired.withinGrace).toBe(false)
+    expect(reacquired.confirmed).toBe(true)
+    expect(reacquired.hide).toBe(true)
+  })
+
   it('keeps the active CAT return ticking ahead of combo phase exits', () => {
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
     const activeReturnMarker = 'const activeCatReturn = interactionState.catReturn;'
