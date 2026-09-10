@@ -1,0 +1,20 @@
+# App-wide Language Setting (VI/EN) — Approach C Hybrid — COMPLETED
+
+**Date:** 2026-09-10 · **Branch:** `10-days-quick-run` · **Commit:** `e1384134`
+**Options doc (user-approved):** `docs/superpowers/specs/2026-09-10-app-language-setting-options.{md,html}`
+
+## What shipped
+- **LocaleContext.t() bridge** (approach C): dict keys first → fallback global i18next (JSON `admin.*`/`learner.*` keys) → raw key. `{{var}}` interpolation added.
+- **Language settings card on Profile** (clay style, every user — learner feature, not teacher-gated): Tiếng Việt 🇻🇳 / English 🇬🇧 segmented, calls `setLocale` → persists `edu-platform-locale` + syncs `i18n.changeLanguage` + `document.documentElement.lang`.
+- **Migrated hardcoded strings → t()**: Profile (tabs/stats/admin button), GamesPage (hero, daily ceiling with interpolation, topic progress, played badge), DragMatchGame + MemoryPairsGame (empty-topic, XP status, replay button).
+- **Single source cleanup**: `profile.*` removed from admin.json (now lives in dict).
+- **LanguageToggle** already existed (Sidebar desktop + Landing) — now joined by Profile card (mobile-first surface).
+
+## Verification
+- `tsc -b` exit 0 (production chain) · `vite build` SUCCESS
+- vitest: **435 passed** (4 new locale tests: interpolation, switch+persist, i18n bridge); 9 pre-existing AR/sentry failures unchanged vs baseline
+- Bugs caught during impl: `topics.map((t))` shadowed translator `t` in GamesPage; DragMatchGame `EmptyTopic` was a separate component without hook
+
+## P1 backlog (documented, not in this pass)
+- Remaining learner pages with hardcoded strings → migrate keys to JSON (`learner.*`) opportunistically
+- Optional polish: type-safe i18n keys (`CustomTypeOptions`), `i18next-browser-languagedetector` plugin (current hand-rolled detection works)
