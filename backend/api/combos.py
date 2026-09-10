@@ -30,9 +30,11 @@ router = APIRouter(prefix="/combos", tags=["combos"])
 class ComboRule(BaseModel):
     """Single combo rule for frontend"""
     tags: List[str]
+    target_order: Optional[List[str]] = None
     name: str
     combo_id: str
     animation_trigger: Optional[str] = None
+    priority: Optional[int] = None
     proximity: Optional[ProximityConfigSchema] = None
 
 class ComboRulesResponse(BaseModel):
@@ -128,7 +130,11 @@ async def get_combos_by_flashcard_set(
     return [_to_combo_response(c) for c in filtered]
 
 
-@router.get("/rules", response_model=ComboRulesResponse)
+@router.get(
+    "/rules",
+    response_model=ComboRulesResponse,
+    response_model_exclude_unset=True,
+)
 async def get_combo_rules(
     flashcard_set: Optional[str] = Query(None, description="Flashcard set ID to filter rules"),
     active_only: bool = Query(True, description="Only return active combos"),
@@ -170,13 +176,18 @@ async def get_combo_rules(
                 "proximity_stable_ms": proximity_values[2],
                 "smoothing_alpha": proximity_values[3],
             }
-        rules.append({
+        rule = {
             "tags": combo.get("required_tags", []),
             "name": combo.get("combo_name") or combo.get("description") or "",
             "combo_id": combo.get("combo_id", ""),
             "animation_trigger": combo.get("animation_trigger"),
             "proximity": proximity,
-        })
+        }
+        if "target_order" in combo:
+            rule["target_order"] = combo["target_order"]
+        if "priority" in combo:
+            rule["priority"] = combo["priority"]
+        rules.append(rule)
 
     return ComboRulesResponse(rules=rules, total=len(rules))
 
