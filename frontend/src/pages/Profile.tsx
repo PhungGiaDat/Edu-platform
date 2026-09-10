@@ -209,7 +209,8 @@ export const Profile: React.FC = () => {
                 )}
 
                 {/* Language setting — applies to the whole app (approved approach C).
-                    Visible to every user; persists via LocaleContext. */}
+                    Sliding toggle: knob animates between VI/EN. Visible to every user;
+                    persists via LocaleContext. */}
                 <section className="clay-card-sky mb-6 p-4 sm:p-5" aria-label={t('profileLanguageTitle')}>
                     <h2 className="mb-1 text-base font-black text-slate-800">
                         {t('profileLanguageTitle')}
@@ -217,26 +218,40 @@ export const Profile: React.FC = () => {
                     <p className="mb-3 text-xs font-semibold text-slate-500">
                         {t('profileLanguageHint')}
                     </p>
-                    <div className="flex gap-2" role="group">
-                        {([
-                            { code: 'vi' as const, label: '🇻🇳 Tiếng Việt' },
-                            { code: 'en' as const, label: '🇬🇧 English' },
-                        ]).map((opt) => (
-                            <button
-                                key={opt.code}
-                                type="button"
-                                onClick={() => setLocale(opt.code)}
-                                aria-pressed={locale === opt.code}
-                                className={`flex-1 rounded-2xl border-2 px-3 py-2.5 text-sm font-bold transition-colors cursor-pointer ${
-                                    locale === opt.code
-                                        ? 'border-[#0d9488] bg-[rgba(13,148,136,0.12)] text-[#0b6b60]'
-                                        : 'border-[rgba(34,48,58,0.08)] bg-white text-slate-600 hover:border-[#0d9488]/40'
-                                }`}
-                            >
-                                {opt.label}
-                            </button>
-                        ))}
-                    </div>
+                    <button
+                        type="button"
+                        role="switch"
+                        aria-checked={locale === 'en'}
+                        aria-label={`${t('profileLanguageTitle')}: ${locale === 'en' ? 'English' : 'Tiếng Việt'}`}
+                        onClick={() => setLocale(locale === 'en' ? 'vi' : 'en')}
+                        className="relative flex h-12 w-full max-w-xs cursor-pointer items-center rounded-full border-2 border-white bg-[#E8E8E8] p-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.08)] transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-[#0d9488] motion-reduce:transition-none"
+                    >
+                        {/* Sliding knob — clay lift, animates left↔right */}
+                        <span
+                            aria-hidden="true"
+                            className={`absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-full transition-transform duration-300 ease-out motion-reduce:transition-none ${
+                                locale === 'en' ? 'translate-x-full' : 'translate-x-0'
+                            }`}
+                            style={{
+                                background: 'linear-gradient(145deg, #14b8a6, #0d9488)',
+                                boxShadow: '0 3px 0 #0b6b60, inset 0 2px 0 rgba(255,255,255,0.4)',
+                            }}
+                        />
+                        <span
+                            className={`relative z-10 flex-1 text-center text-sm font-black transition-colors duration-300 motion-reduce:transition-none ${
+                                locale === 'vi' ? 'text-white' : 'text-slate-500'
+                            }`}
+                        >
+                            🇻🇳 Tiếng Việt
+                        </span>
+                        <span
+                            className={`relative z-10 flex-1 text-center text-sm font-black transition-colors duration-300 motion-reduce:transition-none ${
+                                locale === 'en' ? 'text-white' : 'text-slate-500'
+                            }`}
+                        >
+                            🇬🇧 English
+                        </span>
+                    </button>
                 </section>
 
                 {/* Main content grid */}
