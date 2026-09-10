@@ -180,7 +180,7 @@ async def get_combo_rules(
             "tags": combo.get("required_tags", []),
             "name": combo.get("combo_name") or combo.get("description") or "",
             "combo_id": combo.get("combo_id", ""),
-            "animation_trigger": combo.get("animation_trigger"),
+            "animation_trigger": combo.get("animation_trigger") or combo.get("animation"),
             "priority": combo.get("priority", 0),
             "proximity": proximity,
         }
