@@ -27,6 +27,23 @@ export function getTargetLossGraceState(args: {
 }
 export function isCatOneShotCompletionOwner(args: Record<string, unknown>): boolean
 
+export function normalizeInteractionRule(rule: Record<string, unknown>): {
+  id: string
+  requiredTargets: string[]
+  actorTarget: string | null
+  partnerTargets: string[]
+  animation: string | null
+  priority: number
+  proximity: {
+    enterDistance: number
+    exitDistance: number
+    stableMs: number
+    smoothingAlpha: number
+  } | null
+  actorSource: 'target_order' | 'required_tags_fallback'
+  executable: boolean
+}
+
 export function resolveCatFishComboRule(args: {
   primaryTargetName: string
   secondaryTargetName: string

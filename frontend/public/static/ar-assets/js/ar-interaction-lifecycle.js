@@ -74,6 +74,42 @@ export function getTargetLossGraceState({ lostAt, now, lostGraceMs }) {
   }
 }
 
+export function normalizeInteractionRule(rule) {
+  const requiredTargets = Array.isArray(rule?.tags)
+    ? rule.tags.filter((target) => typeof target === 'string' && target.length > 0)
+    : []
+  const orderedTargets = Array.isArray(rule?.target_order)
+    ? rule.target_order.filter((target) => requiredTargets.includes(target))
+    : []
+  const actorSource = orderedTargets.length > 0
+    ? 'target_order'
+    : 'required_tags_fallback'
+  const actorTarget = orderedTargets[0] ?? requiredTargets[0] ?? null
+  const partnerTargets = actorTarget == null
+    ? []
+    : requiredTargets.filter((target) => target !== actorTarget)
+  const proximity = rule?.proximity
+    ? {
+        enterDistance: rule.proximity.enter_distance,
+        exitDistance: rule.proximity.exit_distance,
+        stableMs: rule.proximity.proximity_stable_ms,
+        smoothingAlpha: rule.proximity.smoothing_alpha,
+      }
+    : null
+
+  return {
+    id: String(rule?.combo_id || ''),
+    requiredTargets,
+    actorTarget,
+    partnerTargets,
+    animation: rule?.animation_trigger || null,
+    priority: Number(rule?.priority || 0),
+    proximity,
+    actorSource,
+    executable: requiredTargets.length === 2 && actorTarget != null && partnerTargets.length === 1,
+  }
+}
+
 export function resolveCatFishComboRule({ primaryTargetName, secondaryTargetName, rules }) {
   if (primaryTargetName !== 'cat001' || secondaryTargetName !== 'fish001') return null
 

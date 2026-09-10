@@ -10,6 +10,7 @@ import {
   getEligibleCatAmbient,
   getTargetLossGraceState,
   isCatOneShotCompletionOwner,
+  normalizeInteractionRule,
   resolveCatFishComboRule,
   selectComboSecondaryTargetName,
   shouldReplaceCatAnimation,
@@ -18,6 +19,61 @@ import {
 } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 describe('AR interaction lifecycle contracts', () => {
+  it('normalizes a configured pair using target order for actor and backend proximity', () => {
+    const rule = normalizeInteractionRule({
+      tags: ['dog001', 'bone001'],
+      target_order: ['dog001', 'bone001'],
+      combo_id: 'dog-eats-bone',
+      animation_trigger: 'DOG_EAT',
+      priority: 40,
+      proximity: {
+        enter_distance: 0.45,
+        exit_distance: 0.55,
+        proximity_stable_ms: 300,
+        smoothing_alpha: 0.25,
+      },
+    })
+
+    expect(rule).toEqual({
+      id: 'dog-eats-bone',
+      requiredTargets: ['dog001', 'bone001'],
+      actorTarget: 'dog001',
+      partnerTargets: ['bone001'],
+      animation: 'DOG_EAT',
+      priority: 40,
+      proximity: {
+        enterDistance: 0.45,
+        exitDistance: 0.55,
+        stableMs: 300,
+        smoothingAlpha: 0.25,
+      },
+      actorSource: 'target_order',
+      executable: true,
+    })
+  })
+
+  it('uses required-tags actor fallback and marks three-target rules unsupported', () => {
+    expect(normalizeInteractionRule({
+      tags: ['cat001', 'fish001'],
+      combo_id: 'cat-fish',
+      priority: 100,
+    })).toMatchObject({
+      actorTarget: 'cat001',
+      partnerTargets: ['fish001'],
+      actorSource: 'required_tags_fallback',
+      executable: true,
+    })
+
+    expect(normalizeInteractionRule({
+      tags: ['rain001', 'soil001', 'seed001'],
+      combo_id: 'grow-seed',
+    })).toMatchObject({
+      actorTarget: 'rain001',
+      partnerTargets: ['soil001', 'seed001'],
+      executable: false,
+    })
+  })
+
   it('passes the canonical primary target explicitly to every runtime combo-secondary selector', () => {
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
     const callsites = [
