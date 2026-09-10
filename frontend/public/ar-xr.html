@@ -194,11 +194,18 @@
       'canPlayCatMeow',
       'classifyCatGesture',
       'classifyCatTap',
+      'distanceBetweenPositions',
+      'getConsumablePartnerTargets',
       'getEligibleCatAmbient',
+      'getInteractionParticipantTargets',
       'getTargetLossGraceState',
+      'hasAnimationCapability',
       'isCatOneShotCompletionOwner',
-      'resolveCatFishComboRule',
-      'selectComboSecondaryTargetName',
+      'normalizeInteractionRule',
+      'resolveInteractionAnimation',
+      'resolveRuleProximityConfig',
+      'selectActiveInteractionRule',
+      'setInteractionPartnerVisibility',
       'shouldReplaceCatAnimation',
       'shouldRevealAR',
       'smoothstep',
@@ -233,11 +240,18 @@
       canPlayCatMeow,
       classifyCatGesture,
       classifyCatTap,
+      distanceBetweenPositions,
+      getConsumablePartnerTargets,
       getEligibleCatAmbient,
+      getInteractionParticipantTargets,
       getTargetLossGraceState,
+      hasAnimationCapability,
       isCatOneShotCompletionOwner,
-      resolveCatFishComboRule,
-      selectComboSecondaryTargetName,
+      normalizeInteractionRule,
+      resolveInteractionAnimation,
+      resolveRuleProximityConfig,
+      selectActiveInteractionRule,
+      setInteractionPartnerVisibility,
       shouldReplaceCatAnimation,
       shouldRevealAR,
       smoothstep,
@@ -377,9 +391,9 @@
     };
     let catMeowAudio = null;
     let catMeowAudioLoaded = false;
-    let comboRules = [];
-    let resolvedComboRule = null;
-    let comboRuleResolutionEmitted = false;
+    let normalizedInteractionRules = [];
+    let selectedInteractionRuleId = null;
+    const unavailableAnimationRuleIds = new Set();
 
     const interactionState = {
       phase: InteractionPhase.SEARCH_PRIMARY,
@@ -390,14 +404,15 @@
       comboConsumed: false,
       comboRunId: 0,
       // Latched state captured at COMBO_ARMED
-      comboLatch: null,          // { runId, catPose, fishPose, secondaryTargetName, catOriginalYaw }
+      comboLatch: null,          // { runId, ruleId, actorTarget, partnerTargets, actorPose, partnerPose, actorOriginalYaw }
       // Procedural turn state
-      catTurn: null,            // { runId, fromYaw, toYaw, startedAt, durationMs }
+      actorTurn: null,          // { runId, actorTarget, fromYaw, toYaw, startedAt, durationMs }
       // Post-combo return state
-      catReturn: null,          // { runId, fromYaw, toYaw, startedAt, durationMs }
+      actorReturn: null,        // { runId, actorTarget, fromYaw, toYaw, startedAt, durationMs }
+      actorTarget: null,
+      partnerTargets: [],
       // Visual grace: targets pending hidden due to grace expiry
       pendingGraceHides: new Map(), // targetName → graceStartTime
-      deferredConfirmedLossHides: new Map(), // targetName → { lostForMs, confirmedAt }
       // Debug: last logged SECONDARY_READINESS to avoid spam
       lastSecondaryReadiness: null,
       consumeTimeoutId: null,
@@ -462,39 +477,91 @@
     const targetConfigByName = new Map(xrTargetConfigs.map(c => [c.qr_id, c]));
     const primaryModelTargetName = qrId;
 
-    function requiresCatFishComboRule() {
-      return primaryModelTargetName === 'cat001' && targetInstances.has('fish001');
+    function isExactTargetPair(tags, first, second) {
+      return Array.isArray(tags)
+        && tags.length === 2
+        && tags.includes(first)
+        && tags.includes(second);
     }
 
-    function resolveActiveComboRule() {
-      if (!requiresCatFishComboRule()) return null;
-      const rule = resolveCatFishComboRule({
-        primaryTargetName: primaryModelTargetName,
-        secondaryTargetName: 'fish001',
-        rules: comboRules,
-      });
-      if (!rule) return null;
-      resolvedComboRule = rule;
-      if (!comboRuleResolutionEmitted) {
-        comboRuleResolutionEmitted = true;
-        sendARDebug('COMBO_RULE_RESOLVED', rule);
-      }
-      return rule;
-    }
+    // Demo resilience belongs only at the configuration boundary. The fallback
+    // is normalized and executed through the same generic path as backend rules.
+    function withConfiguredDemoFallback(rawRules) {
+      const rules = Array.isArray(rawRules) ? [...rawRules] : [];
+      const hasDemoPair = targetInstances.has('cat001') && targetInstances.has('fish001');
+      if (!hasDemoPair) return rules;
 
-    function getInteractionConfig() {
-      if (!requiresCatFishComboRule()) return INTERACTION_CONFIG;
-      if (!resolvedComboRule) return null;
-      return {
-        ...INTERACTION_CONFIG,
-        proximityStableMs: resolvedComboRule.proximityStableMs,
-        distance: {
-          ...INTERACTION_CONFIG.distance,
-          enter: resolvedComboRule.enterDistance,
-          exit: resolvedComboRule.exitDistance,
-          smoothingAlpha: resolvedComboRule.smoothingAlpha,
-        },
+      const expected = {
+        enter_distance: 0.52,
+        exit_distance: 0.60,
+        proximity_stable_ms: 300,
+        smoothing_alpha: 0.25,
       };
+      const validBackendRule = rules.find((rule) => (
+        isExactTargetPair(rule?.tags, 'cat001', 'fish001')
+        && rule?.proximity?.enter_distance === expected.enter_distance
+        && rule?.proximity?.exit_distance === expected.exit_distance
+        && rule?.proximity?.proximity_stable_ms === expected.proximity_stable_ms
+        && rule?.proximity?.smoothing_alpha === expected.smoothing_alpha
+      ));
+      if (validBackendRule) return rules;
+
+      return [
+        ...rules.filter((rule) => !isExactTargetPair(rule?.tags, 'cat001', 'fish001')),
+        {
+          tags: ['cat001', 'fish001'],
+          target_order: ['cat001', 'fish001'],
+          combo_id: 'cat001-fish001-fallback',
+          animation_trigger: 'CAT_EAT',
+          priority: 100,
+          proximity: expected,
+          consume_at_ratio: 0.65,
+          source: 'fallback',
+        },
+      ];
+    }
+
+    function installInteractionRules(rawRules) {
+      normalizedInteractionRules = withConfiguredDemoFallback(rawRules)
+        .map((rawRule) => normalizeInteractionRule(rawRule));
+      unavailableAnimationRuleIds.clear();
+
+      sendARDebug('INTERACTION_RULES_LOADED', {
+        count: normalizedInteractionRules.length,
+        executableCount: normalizedInteractionRules.filter((rule) => rule.executable).length,
+      });
+      for (const rule of normalizedInteractionRules) {
+        sendARDebug('INTERACTION_RULE_NORMALIZED', {
+          ruleId: rule.id,
+          requiredTargets: rule.requiredTargets,
+          executable: rule.executable,
+          source: rule.source,
+        });
+        sendARDebug('RULE_ACTOR_RESOLVED', {
+          ruleId: rule.id,
+          actorTarget: rule.actorTarget,
+          partnerTargets: rule.partnerTargets,
+          source: rule.actorSource,
+        });
+        if (!rule.executable) {
+          sendARDebug('INTERACTION_RULE_UNSUPPORTED', {
+            ruleId: rule.id,
+            requiredTargetCount: rule.requiredTargets.length,
+          });
+        }
+        if (isExactTargetPair(rule.requiredTargets, 'cat001', 'fish001')) {
+          const proximity = resolveRuleProximityConfig(rule, null);
+          sendARDebug('COMBO_RULE_RESOLVED', {
+            primaryTargetName: rule.actorTarget,
+            secondaryTargetName: rule.partnerTargets[0] || null,
+            source: rule.source,
+            enterDistance: proximity?.enterDistance ?? null,
+            exitDistance: proximity?.exitDistance ?? null,
+            proximityStableMs: proximity?.stableMs ?? null,
+            smoothingAlpha: proximity?.smoothingAlpha ?? null,
+          });
+        }
+      }
     }
 
     sendARDebug('XR_MULTI_CONFIG', {
@@ -549,22 +616,28 @@
     const pointerNdc = new THREE.Vector2();
     const CAT_HIT_PROXY_SCALE = 1.30;
 
-    // All normal CAT gestures share the existing CAT_MEOW eligibility boundary.
-    // CAT_EAT/turn/return still block every normal one-shot.
+    function isCatMascotInstance(instance) {
+      return hasAnimationCapability(instance, 'CAT_IDLE') && (
+        hasAnimationCapability(instance, 'CAT_MEOW')
+        || hasAnimationCapability(instance, 'CAT_PET_REACT')
+        || hasAnimationCapability(instance, 'CAT_SPIN')
+      );
+    }
+
+    // CAT gestures are a per-model capability layer. Generic pair interaction
+    // never depends on CAT_MEOW or any other mascot clip.
     function canTriggerCatInteraction() {
       const catInst = targetInstances.get(primaryModelTargetName);
       if (!catInst) return false;
+      if (!isCatMascotInstance(catInst)) return false;
       if (!catInst.model) return false;
       if (!catInst.mixer) return false;
       if (!catInst.model.visible) return false;
       // Must be effectively tracked (grace-ok)
       if (!catInst.tracked) return false;
-      // Must have CAT_MEOW clip
-      const clip = catInst.animations?.find(c => c.name === 'CAT_MEOW');
-      if (!clip) return false;
       return canPlayCatMeow({
         phase: interactionState.phase,
-        catReturn: interactionState.catReturn,
+        catReturn: interactionState.actorReturn,
         catReady: catInst.modelState === 'loaded',
         catTracked: catInst.tracked,
         catMeowing: !!catAnimationState.action,
@@ -751,6 +824,7 @@
     function playCatOneShot({ clipName, source, priority, audio = false }) {
       const catInst = targetInstances.get(primaryModelTargetName);
       if (!catInst || !catInst.mixer) return false;
+      if (!hasAnimationCapability(catInst, clipName)) return false;
       const clip = catInst.animations?.find(candidate => candidate.name === clipName);
       if (!clip) {
         sendARDebug('CAT_ONE_SHOT_CLIP_MISSING', { source, clipName });
@@ -872,7 +946,7 @@
         const phase = interactionState.phase;
         const reason = catAnimationState.action
           ? 'already_playing'
-          : interactionState.catReturn
+          : interactionState.actorReturn
             ? 'returning'
           : phase === InteractionPhase.COMBO_ARMED || phase === InteractionPhase.COMBO_TURNING || phase === InteractionPhase.COMBO_PLAYING
             ? 'combo_busy'
@@ -937,7 +1011,7 @@
         nextClip: catAmbientState.nextClip,
         activeOneShot: !!catAnimationState.action,
         pointerGestureActive: catPointerGesture.active,
-        catReturn: interactionState.catReturn,
+        catReturn: interactionState.actorReturn,
         phase: interactionState.phase,
       });
       if (clipName) playCatOneShot({ clipName, source: 'CAT_AMBIENT', priority: 20 });
@@ -1527,7 +1601,7 @@
               // the latched pose is frozen so CAT stays visually stable.
               const latchActive = interactionState.comboLatch != null
                 && interactionState.comboLatch.runId === interactionState.comboRunId;
-              if (!latchActive || detail.name !== primaryModelTargetName) {
+              if (!latchActive || detail.name !== interactionState.comboLatch.actorTarget) {
                 applyTargetPose(instance, pose);
               }
             }
@@ -1588,29 +1662,19 @@
       return { x: pose.position.x, y: pose.position.y, z: pose.position.z };
     }
 
-    function computeAnchorDistance() {
-      const catInst = targetInstances.get(primaryModelTargetName);
-      const secondaryTargetName = selectComboSecondaryTargetName({
-        primaryTargetName: primaryModelTargetName,
-        targetNames: Array.from(targetInstances.keys()),
-      });
-      if (!secondaryTargetName) return null;
-      // CAT-FISH proximity always measures tracking anchors, never model bounds.
-      const fishInst = targetInstances.get(secondaryTargetName);
-      const a = getAnchorWorldPosition(catInst);
-      const b = getAnchorWorldPosition(fishInst);
-      if (!a || !b) return null;
-      const dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z;
-      return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    function computeTargetPairDistance(actorInst, partnerInst) {
+      return distanceBetweenPositions(
+        getAnchorWorldPosition(actorInst),
+        getAnchorWorldPosition(partnerInst),
+      );
     }
 
-    function updateFilteredDistance(raw) {
+    function updateFilteredDistance(raw, proximityConfig) {
       if (raw == null) {
         interactionState.filteredDistance = null;
         return null;
       }
-      const a = getInteractionConfig()?.distance.smoothingAlpha
-        ?? INTERACTION_CONFIG.distance.smoothingAlpha;
+      const a = proximityConfig?.smoothingAlpha ?? INTERACTION_CONFIG.distance.smoothingAlpha;
       interactionState.filteredDistance =
         interactionState.filteredDistance == null
           ? raw
@@ -1618,79 +1682,137 @@
       return interactionState.filteredDistance;
     }
 
-    function consumeSecondaryTarget() {
-      // Hide secondary target's model without unloading GLB cache.
-      // Re-show when distance exceeds EXIT.
-      for (const [name, inst] of targetInstances) {
-        if (name === primaryModelTargetName) continue;
-        inst.visibleByInteraction = false;
-        if (inst.model) inst.model.visible = false;
+    function getInteractionRuleById(ruleId) {
+      return normalizedInteractionRules.find((rule) => rule.id === ruleId) || null;
+    }
+
+    function getEffectivelyTrackedTargetNames(now) {
+      const names = [];
+      for (const [targetName, instance] of targetInstances) {
+        const withinGrace = instance.lostAt != null
+          && (now - instance.lostAt) < INTERACTION_CONFIG.lostGraceMs;
+        if (instance.tracked || withinGrace) names.push(targetName);
+      }
+      return names;
+    }
+
+    function isInteractionExecutionLocked() {
+      return interactionState.actorReturn != null
+        || interactionState.phase === InteractionPhase.COMBO_ARMED
+        || interactionState.phase === InteractionPhase.COMBO_TURNING
+        || interactionState.phase === InteractionPhase.COMBO_PLAYING;
+    }
+
+    function clearConsumeTimer() {
+      if (interactionState.consumeTimeoutId == null) return;
+      clearTimeout(interactionState.consumeTimeoutId);
+      interactionState.consumeTimeoutId = null;
+    }
+
+    function clearInteractionExecutionState() {
+      const latch = interactionState.comboLatch;
+      const actorInst = latch ? targetInstances.get(latch.actorTarget) : null;
+      const root = actorInst ? getInteractionRoot(actorInst) : null;
+      if (root && Number.isFinite(latch?.actorOriginalYaw)) root.rotation.y = latch.actorOriginalYaw;
+      interactionState.comboRunId++;
+      clearConsumeTimer();
+      interactionState.primaryLockedAt = null;
+      interactionState.proximityEnteredAt = null;
+      interactionState.filteredDistance = null;
+      interactionState.comboPlaying = false;
+      interactionState.comboConsumed = false;
+      interactionState.comboLatch = null;
+      interactionState.actorTurn = null;
+      interactionState.actorReturn = null;
+      interactionState.lastSecondaryReadiness = null;
+    }
+
+    function changeSelectedInteractionRule(nextRule, reason) {
+      const previousRule = getInteractionRuleById(selectedInteractionRuleId);
+      if ((previousRule?.id || null) === (nextRule?.id || null)) return;
+      if (previousRule && interactionState.comboConsumed) {
+        setInteractionPartnerVisibility({ rule: previousRule, targetInstances, visible: true });
+      }
+      clearInteractionExecutionState();
+      if (previousRule) sendARDebug('INTERACTION_RULE_CLEARED', { ruleId: previousRule.id, reason });
+
+      selectedInteractionRuleId = nextRule?.id || null;
+      interactionState.actorTarget = nextRule?.actorTarget || null;
+      interactionState.partnerTargets = nextRule ? [...nextRule.partnerTargets] : [];
+      setInteractionPhase(InteractionPhase.SEARCH_PRIMARY, { reason });
+      if (nextRule) {
+        sendARDebug('INTERACTION_RULE_SELECTED', {
+          ruleId: nextRule.id,
+          actorTarget: nextRule.actorTarget,
+          partnerTargets: nextRule.partnerTargets,
+          priority: nextRule.priority,
+        });
       }
     }
 
-    function scheduleSecondaryConsume(runId, clipDurationMs) {
-      // Clear any pending consume timer
-      if (interactionState.consumeTimeoutId != null) {
-        clearTimeout(interactionState.consumeTimeoutId);
-        interactionState.consumeTimeoutId = null;
+    function selectRuntimeInteractionRule(now) {
+      if (isInteractionExecutionLocked() && interactionState.comboLatch) {
+        return getInteractionRuleById(interactionState.comboLatch.ruleId);
       }
-      const delayMs = Math.round(clipDurationMs * INTERACTION_CONFIG.consumeAtRatio);
-      sendARDebug('SECONDARY_CONSUME_SCHEDULED', { runId, delayMs, ratio: INTERACTION_CONFIG.consumeAtRatio });
-      const timeoutId = setTimeout(() => {
+      const availableRules = normalizedInteractionRules.filter(
+        (rule) => !unavailableAnimationRuleIds.has(rule.id),
+      );
+      const nextRule = selectActiveInteractionRule(
+        availableRules,
+        getEffectivelyTrackedTargetNames(now),
+      );
+      changeSelectedInteractionRule(nextRule, nextRule ? 'rule_match_changed' : 'no_matching_rule');
+      return nextRule;
+    }
+
+    function scheduleInteractionPartnerConsume(runId, clipDurationMs, activeRule) {
+      clearConsumeTimer();
+      if (!activeRule.action.consumePartners) return;
+      const delayMs = Math.round(clipDurationMs * activeRule.action.consumeAtRatio);
+      sendARDebug('SECONDARY_CONSUME_SCHEDULED', {
+        runId,
+        ruleId: activeRule.id,
+        delayMs,
+        ratio: activeRule.action.consumeAtRatio,
+      });
+      interactionState.consumeTimeoutId = setTimeout(() => {
         interactionState.consumeTimeoutId = null;
-        // Guard: only consume if this run is still current
-        if (runId !== interactionState.comboRunId) {
+        if (
+          runId !== interactionState.comboRunId
+          || interactionState.phase !== InteractionPhase.COMBO_PLAYING
+        ) {
           sendARDebug('SECONDARY_CONSUME_IGNORED_STALE', { runId, currentRunId: interactionState.comboRunId });
           return;
         }
-        if (interactionState.phase !== InteractionPhase.COMBO_PLAYING) return;
         const latch = interactionState.comboLatch;
-        const secondaryName = latch?.secondaryTargetName;
-        if (secondaryName) {
-          const inst = targetInstances.get(secondaryName);
-          if (inst) {
-            inst.visibleByInteraction = false;
-            if (inst.model) inst.model.visible = false;
-          }
-          sendARDebug('SECONDARY_CONSUMED', { runId, targetName: secondaryName });
+        if (!latch || latch.ruleId !== activeRule.id) return;
+        const changedTargets = setInteractionPartnerVisibility({
+          rule: { partnerTargets: latch.partnerTargets },
+          targetInstances,
+          visible: false,
+        });
+        for (const targetName of changedTargets) {
+          sendARDebug('SECONDARY_CONSUMED', { runId, ruleId: latch.ruleId, targetName });
         }
       }, delayMs);
-      interactionState.consumeTimeoutId = timeoutId;
     }
 
-    function resetInteractionSession(reason, options = {}) {
+    function resetInteractionSession(reason, { restorePartners = true } = {}) {
       const prevPhase = interactionState.phase;
       const prevRunId = interactionState.comboRunId;
-
-      // Advance runId so any pending async work becomes stale
-      interactionState.comboRunId++;
-
-      // Cancel pending consume timer
-      if (interactionState.consumeTimeoutId != null) {
-        clearTimeout(interactionState.consumeTimeoutId);
-        interactionState.consumeTimeoutId = null;
+      const activeRule = getInteractionRuleById(
+        interactionState.comboLatch?.ruleId || selectedInteractionRuleId,
+      );
+      if (restorePartners && activeRule) {
+        setInteractionPartnerVisibility({ rule: activeRule, targetInstances, visible: true });
       }
-
-      interactionState.comboPlaying = false;
-      interactionState.comboConsumed = false;
-      interactionState.proximityEnteredAt = null;
-      interactionState.filteredDistance = null;
-      interactionState.comboLatch = null;
-      interactionState.catTurn = null;
-      interactionState.catReturn = null;
-      interactionState.pendingGraceHides.clear();
-
-      // Restore secondary visibility and reset flags
-      for (const [name, inst] of targetInstances) {
-        if (name === primaryModelTargetName) continue;
-        inst.visibleByInteraction = true;
-        inst.interactionReady = false;
-        if (inst.model) {
-          // Only show if target is currently tracked; otherwise stay hidden until re-found
-          inst.model.visible = !!inst.tracked;
-        }
+      clearInteractionExecutionState();
+      if (selectedInteractionRuleId) {
+        sendARDebug('INTERACTION_RULE_CLEARED', { ruleId: selectedInteractionRuleId, reason });
       }
-
+      selectedInteractionRuleId = null;
+      interactionState.actorTarget = null;
+      interactionState.partnerTargets = [];
       sendARDebug('INTERACTION_SESSION_RESET', {
         reason,
         previousPhase: prevPhase,
@@ -1731,15 +1853,22 @@
       return Math.atan2(dx, dz);
     }
 
-    // Tween the CAT body yaw each frame during COMBO_TURNING.
+    function getDefaultAnimationClip(instance) {
+      const defaultName = instance?.config?.default_animation;
+      return defaultName
+        ? instance.animations?.find((clip) => clip.name === defaultName) || null
+        : null;
+    }
+
+    // Tween the selected actor body yaw each frame during COMBO_TURNING.
     // Called inline from evaluateInteraction each frame.
-    function updateCatTurn(now) {
-      const turn = interactionState.catTurn;
+    function updateActorTurn(now) {
+      const turn = interactionState.actorTurn;
       if (!turn) return;
 
       // Check stale
       if (turn.runId !== interactionState.comboRunId) {
-        interactionState.catTurn = null;
+        interactionState.actorTurn = null;
         return;
       }
 
@@ -1747,8 +1876,8 @@
       const t = smoothstep(Math.min(elapsed / turn.durationMs, 1));
       const currentYaw = turn.fromYaw + (turn.toYaw - turn.fromYaw) * t;
 
-      const instance = targetInstances.get(primaryModelTargetName);
-      const root = instance ? getInteractionRoot(instance) : null;
+      const actorInst = targetInstances.get(turn.actorTarget);
+      const root = actorInst ? getInteractionRoot(actorInst) : null;
       if (root) {
         root.rotation.y = currentYaw;
       }
@@ -1756,66 +1885,86 @@
       if (elapsed >= turn.durationMs) {
         // Turn complete — snap to final and clear
         if (root) root.rotation.y = turn.toYaw;
-        interactionState.catTurn = null;
-        sendARDebug('CAT_TURN_COMPLETE', {
+        interactionState.actorTurn = null;
+        sendARDebug('INTERACTION_ACTOR_TURN_COMPLETE', {
           runId: turn.runId,
+          actorTarget: turn.actorTarget,
           finalYawDeg: (turn.toYaw * 180 / Math.PI).toFixed(1),
         });
-        // Set COMBO_PLAYING BEFORE triggering CAT_EAT — otherwise the animation
+        if (isCatMascotInstance(actorInst)) {
+          sendARDebug('CAT_TURN_COMPLETE', {
+            runId: turn.runId,
+            finalYawDeg: (turn.toYaw * 180 / Math.PI).toFixed(1),
+          });
+        }
+        // Set COMBO_PLAYING before triggering the rule animation; otherwise the
         // finish callback sees phase===COMBO_TURNING and treats the finish as stale.
         setInteractionPhase(InteractionPhase.COMBO_PLAYING);
-        triggerComboAnimation(instance, turn.runId);
+        triggerInteractionAnimation(actorInst, getInteractionRuleById(turn.ruleId), turn.runId);
       }
     }
 
-    // Trigger CAT_EAT animation using existing AnimationMixer + stale guard.
-    function triggerComboAnimation(instance, runId) {
-      if (!instance?.mixer) return;
-      const requestedName = instance.config?.combo_animation || 'CAT_EAT';
-      const clip = instance.animations?.find(c => c.name === requestedName)
-        || instance.animations?.find(c => c.name.toUpperCase().includes('EAT'))
-        || instance.animations?.find(c => c.name.toUpperCase().includes('COMBO'));
-      if (!clip) {
-        sendARDebug('COMBO_ANIMATION_MISSING', {
-          targetName: instance.config.qr_id,
-          requested: requestedName,
-          available: instance.animations?.map(c => c.name) || [],
+    // Trigger the selected rule animation using the actor's existing mixer.
+    function triggerInteractionAnimation(actorInst, activeRule, runId) {
+      const resolution = resolveInteractionAnimation({ rule: activeRule, actorInstance: actorInst });
+      if (!actorInst?.mixer || !resolution.ok) {
+        sendARDebug('INTERACTION_ANIMATION_MISSING', {
+          ruleId: activeRule?.id || null,
+          actorTarget: activeRule?.actorTarget || null,
+          requested: resolution.requested,
+          available: resolution.available,
+          reason: actorInst?.mixer ? 'clip_missing' : 'mixer_missing',
         });
-        return;
+        if (activeRule?.id) unavailableAnimationRuleIds.add(activeRule.id);
+        resetInteractionSession('animation_missing', { restorePartners: false });
+        return false;
       }
-      const mixer = instance.mixer;
-      const idleClip = getCatIdleClip(instance);
+      const clip = resolution.clip;
+      const mixer = actorInst.mixer;
+      const catActor = isCatMascotInstance(actorInst);
+      const idleClip = catActor ? getCatIdleClip(actorInst) : getDefaultAnimationClip(actorInst);
       if (idleClip) {
         mixer.clipAction(idleClip).fadeOut(0.15);
       }
       const action = mixer.clipAction(clip);
-      catAnimationState.generation++;
-      const animationGeneration = catAnimationState.generation;
-      catAnimationState.action = action;
-      catAnimationState.clipName = clip.name;
-      catAnimationState.source = 'CAT_EAT';
-      catAnimationState.priority = 100;
+      let animationGeneration = null;
+      if (catActor) {
+        catAnimationState.generation++;
+        animationGeneration = catAnimationState.generation;
+        catAnimationState.action = action;
+        catAnimationState.clipName = clip.name;
+        catAnimationState.source = activeRule.animation;
+        catAnimationState.priority = 100;
+      }
       action.reset();
       action.setLoop(THREE.LoopOnce, 1);
       action.clampWhenFinished = true;
       action.fadeIn(0.15);
       action.play();
+      sendARDebug('INTERACTION_ANIMATION_START', {
+        ruleId: activeRule.id,
+        actorTarget: activeRule.actorTarget,
+        clip: clip.name,
+        runId,
+      });
       sendARDebug('COMBO_ANIMATION_START', {
-        targetName: instance.config.qr_id,
+        targetName: activeRule.actorTarget,
         clip: clip.name,
         durationMs: Math.round((clip.duration || 0) * 1000),
       });
+      scheduleInteractionPartnerConsume(runId, (clip.duration || 0) * 1000, activeRule);
       const onFinish = (e) => {
         if (e.action !== action) return;
         mixer.removeEventListener('finished', onFinish);
+        const catOwnershipValid = !catActor || isCatOneShotCompletionOwner({
+          capturedGeneration: animationGeneration,
+          capturedAction: action,
+          current: catAnimationState,
+        });
         if (
           runId !== interactionState.comboRunId ||
           interactionState.phase !== InteractionPhase.COMBO_PLAYING ||
-          !isCatOneShotCompletionOwner({
-            capturedGeneration: animationGeneration,
-            capturedAction: action,
-            current: catAnimationState,
-          })
+          !catOwnershipValid
         ) {
           sendARDebug('COMBO_FINISH_IGNORED_STALE', {
             runId,
@@ -1824,50 +1973,76 @@
           });
           return;
         }
-        const idleAction = idleClip ? mixer.clipAction(idleClip) : null;
-        sendARDebug('CAT_ACTION_STATE_AFTER_EAT', {
-          eatRunning: action.isRunning(),
-          eatWeight: action.getEffectiveWeight(),
-          eatTime: action.time,
-          eatClampWhenFinished: action.clampWhenFinished,
-          idleRunning: idleAction ? idleAction.isRunning() : false,
-          idleWeight: idleAction ? idleAction.getEffectiveWeight() : 0,
-          idleTime: idleAction ? idleAction.time : null,
-        });
-        sendARDebug('COMBO_ANIMATION_FINISHED', { targetName: instance.config.qr_id, runId });
-        restoreCatIdleAfterOneShot(instance, action, 'CAT_EAT', clip.name);
-        catAnimationState.action = null;
-        catAnimationState.clipName = null;
-        catAnimationState.source = null;
-        catAnimationState.priority = 0;
-        resetCatAmbientIdle('combo_complete');
+        if (catActor) {
+          const idleAction = idleClip ? mixer.clipAction(idleClip) : null;
+          sendARDebug('CAT_ACTION_STATE_AFTER_EAT', {
+            eatRunning: action.isRunning(),
+            eatWeight: action.getEffectiveWeight(),
+            eatTime: action.time,
+            eatClampWhenFinished: action.clampWhenFinished,
+            idleRunning: idleAction ? idleAction.isRunning() : false,
+            idleWeight: idleAction ? idleAction.getEffectiveWeight() : 0,
+            idleTime: idleAction ? idleAction.time : null,
+          });
+        }
+        sendARDebug('COMBO_ANIMATION_FINISHED', { targetName: activeRule.actorTarget, runId });
+        if (catActor) {
+          restoreCatIdleAfterOneShot(actorInst, action, activeRule.animation, clip.name);
+          catAnimationState.action = null;
+          catAnimationState.clipName = null;
+          catAnimationState.source = null;
+          catAnimationState.priority = 0;
+          resetCatAmbientIdle('combo_complete');
+        } else if (idleClip) {
+          action.fadeOut(0.12);
+          const idleAction = mixer.clipAction(idleClip);
+          idleAction.reset();
+          idleAction.fadeIn(0.12);
+          idleAction.play();
+          sendARDebug('INTERACTION_IDLE_RESTORED', {
+            ruleId: activeRule.id,
+            actorTarget: activeRule.actorTarget,
+            idleClip: idleClip.name,
+          });
+        }
         interactionState.comboPlaying = false;
         interactionState.comboConsumed = true;
         setInteractionPhase(InteractionPhase.COMBO_CONSUMED);
 
-        // Begin return rotation
-        const instance2 = targetInstances.get(primaryModelTargetName);
-        const root2 = instance2 ? getInteractionRoot(instance2) : null;
+        const root2 = getInteractionRoot(actorInst);
         const fromYaw = root2 ? root2.rotation.y : 0;
-        const toYaw = interactionState.comboLatch?.catOriginalYaw ?? 0;
-        interactionState.catReturn = {
+        const toYaw = interactionState.comboLatch?.actorOriginalYaw ?? 0;
+        interactionState.actorReturn = {
+          ruleId: activeRule.id,
+          actorTarget: activeRule.actorTarget,
           runId,
           fromYaw,
           toYaw,
           startedAt: performance.now(),
           durationMs: COMBO_VISUAL_CONFIG.returnTurnMs,
         };
-        sendARDebug('CAT_RETURN_START', { runId });
+        if (catActor) sendARDebug('CAT_RETURN_START', { runId });
+        sendARDebug('INTERACTION_ANIMATION_FINISHED', {
+          ruleId: activeRule.id,
+          actorTarget: activeRule.actorTarget,
+          clip: clip.name,
+          runId,
+        });
       };
       mixer.addEventListener('finished', onFinish);
+      return true;
     }
 
-    function hasActivePrimaryComboVisibilityLatch(targetName) {
-      if (targetName !== primaryModelTargetName) return false;
-      if (!interactionState.comboLatch || interactionState.comboLatch.runId !== interactionState.comboRunId) return false;
-      return interactionState.phase === InteractionPhase.COMBO_ARMED
-        || interactionState.phase === InteractionPhase.COMBO_TURNING
-        || interactionState.phase === InteractionPhase.COMBO_PLAYING;
+    function isTargetInActiveInteraction(targetName) {
+      const latch = interactionState.comboLatch;
+      const selectedParticipants = {
+        actorTarget: interactionState.actorTarget,
+        partnerTargets: interactionState.partnerTargets,
+      };
+      const participants = latch
+        ? getInteractionParticipantTargets(latch)
+        : getInteractionParticipantTargets(selectedParticipants);
+      return participants.includes(targetName);
     }
 
     function hideConfirmedTargetLoss(targetName, lostForMs) {
@@ -1906,111 +2081,99 @@
           lostForMs: Math.round(lossGrace.lostForMs),
         });
 
-        if (hasActivePrimaryComboVisibilityLatch(targetName)) {
-          interactionState.deferredConfirmedLossHides.set(targetName, {
-            lostForMs: lossGrace.lostForMs,
-            confirmedAt: now,
-          });
-          continue;
+        if (isTargetInActiveInteraction(targetName)) {
+          resetInteractionSession('interaction_participant_lost');
         }
-
         hideConfirmedTargetLoss(targetName, lossGrace.lostForMs);
-      }
-
-      for (const [targetName, confirmedLoss] of interactionState.deferredConfirmedLossHides) {
-        const instance = targetInstances.get(targetName);
-        if (instance?.tracked) {
-          interactionState.deferredConfirmedLossHides.delete(targetName);
-          continue;
-        }
-        if (hasActivePrimaryComboVisibilityLatch(targetName)) continue;
-
-        interactionState.deferredConfirmedLossHides.delete(targetName);
-        hideConfirmedTargetLoss(targetName, confirmedLoss.lostForMs);
       }
     }
 
     function evaluateInteraction(now) {
-      const cfg = INTERACTION_CONFIG;
-      const catInst = targetInstances.get(primaryModelTargetName);
-      const secondaryTargetName = selectComboSecondaryTargetName({
-        primaryTargetName: primaryModelTargetName,
-        targetNames: Array.from(targetInstances.keys()),
-      });
-      const fishInst = secondaryTargetName ? targetInstances.get(secondaryTargetName) : null;
+      const activeRule = selectRuntimeInteractionRule(now);
+      if (!activeRule) return;
+      const actorInst = targetInstances.get(activeRule.actorTarget);
+      const partnerTarget = activeRule.partnerTargets[0];
+      const partnerInst = targetInstances.get(partnerTarget);
+      const proximityConfig = resolveRuleProximityConfig(activeRule, null);
+      if (!actorInst || !partnerInst || !proximityConfig) return;
 
-      // Grace-period tracked: true if currently tracked OR lost within grace window
-      const catLostGrace = catInst?.lostAt != null && (now - catInst.lostAt) < cfg.lostGraceMs;
-      const catEffectivelyTracked = !!(catInst?.tracked || catLostGrace);
-
-      const fishLostGrace = fishInst?.lostAt != null && (now - fishInst.lostAt) < cfg.lostGraceMs;
-      const fishEffectivelyTracked = !!(fishInst?.tracked || fishLostGrace);
-
-      // Confirmed-lost: tracked=false AND grace fully expired
-      const catGraceExpired = !!(catInst && !catInst.tracked && catInst.lostAt != null && (now - catInst.lostAt) >= cfg.lostGraceMs);
-      const fishGraceExpired = !!(fishInst && !fishInst.tracked && fishInst.lostAt != null && (now - fishInst.lostAt) >= cfg.lostGraceMs);
+      const effectiveTargets = new Set(getEffectivelyTrackedTargetNames(now));
+      const actorEffectivelyTracked = effectiveTargets.has(activeRule.actorTarget);
+      const partnerEffectivelyTracked = effectiveTargets.has(partnerTarget);
 
       // ---- Primary lock state ----
       // Only stamp foundAt on the first tracking contact of a fresh cycle
-      if (!catInst?.tracked && catInst && catInst.tracked) {
+      if (!actorInst?.tracked && actorInst && actorInst.tracked) {
         // transition: not tracked → now tracked
       }
-      if (catInst?.tracked && catInst.foundAt == null) {
-        catInst.foundAt = now;
+      if (actorInst?.tracked && actorInst.foundAt == null) {
+        actorInst.foundAt = now;
       }
 
-      // Confirmed cat loss (grace expired) → full reset
-      if (catGraceExpired && interactionState.phase !== InteractionPhase.SEARCH_PRIMARY) {
+      // Confirmed actor loss (grace expired) → full reset
+      if (!actorEffectivelyTracked && interactionState.phase !== InteractionPhase.SEARCH_PRIMARY) {
         sendARDebug('PRIMARY_UNLOCKED', {
-          reason: 'cat_lost_grace',
-          lostForMs: catInst ? now - catInst.lostAt : null,
+          reason: 'actor_lost_grace',
+          lostForMs: actorInst ? now - actorInst.lostAt : null,
         });
-        resetInteractionSession('cat_lost_grace');
+        resetInteractionSession('actor_lost_grace');
         return;
       }
 
-      // Lock cat when continuously tracked for primaryLockMs
-      if (catInst?.tracked && interactionState.phase === InteractionPhase.SEARCH_PRIMARY) {
-        if (catInst.foundAt == null) catInst.foundAt = now;
-        const stableMs = now - catInst.foundAt;
-        if (stableMs >= cfg.primaryLockMs) {
+      // Lock the selected actor when continuously tracked for primaryLockMs
+      if (actorInst?.tracked && interactionState.phase === InteractionPhase.SEARCH_PRIMARY) {
+        if (actorInst.foundAt == null) actorInst.foundAt = now;
+        const stableMs = now - actorInst.foundAt;
+        if (stableMs >= INTERACTION_CONFIG.primaryLockMs) {
           if (stableMs > 3000) {
-            sendARDebug('PRIMARY_STABLE_TIME_SUSPICIOUS', { stableMs, targetName: primaryModelTargetName });
+            sendARDebug('PRIMARY_STABLE_TIME_SUSPICIOUS', { stableMs, targetName: activeRule.actorTarget });
           }
           interactionState.primaryLockedAt = now;
-          sendARDebug('PRIMARY_LOCKED', { targetName: primaryModelTargetName, stableMs });
+          sendARDebug('PRIMARY_LOCKED', { targetName: activeRule.actorTarget, stableMs });
+          sendARDebug('INTERACTION_ACTOR_LOCKED', {
+            ruleId: activeRule.id,
+            actorTarget: activeRule.actorTarget,
+            stableMs,
+          });
           setInteractionPhase(InteractionPhase.PRIMARY_LOCKED, { stableMs });
           setInteractionPhase(InteractionPhase.WAIT_SECONDARY);
         }
       }
 
-      // Clear foundAt if cat was lost before ever locking
-      if (!catInst?.tracked && catInst?.foundAt != null && catInst?.lostAt != null) {
-        if ((now - catInst.foundAt) < cfg.primaryLockMs) {
-          catInst.foundAt = null;
+      // Clear foundAt if the actor was lost before ever locking
+      if (!actorInst?.tracked && actorInst?.foundAt != null && actorInst?.lostAt != null) {
+        if ((now - actorInst.foundAt) < INTERACTION_CONFIG.primaryLockMs) {
+          actorInst.foundAt = null;
         }
       }
 
-      const activeCatReturn = interactionState.catReturn;
-      if (activeCatReturn) {
-        if (activeCatReturn.runId !== interactionState.comboRunId) {
-          interactionState.catReturn = null;
-          sendARDebug('CAT_RETURN_CANCELLED_STALE', {
-            runId: activeCatReturn.runId,
+      const activeReturn = interactionState.actorReturn;
+      if (activeReturn) {
+        if (activeReturn.runId !== interactionState.comboRunId) {
+          interactionState.actorReturn = null;
+          if (isCatMascotInstance(actorInst)) sendARDebug('CAT_RETURN_CANCELLED_STALE', {
+            runId: activeReturn.runId,
             currentRunId: interactionState.comboRunId,
           });
         } else {
-          const returnTick = advanceCatReturnTween(now, activeCatReturn);
-          const instance = targetInstances.get(primaryModelTargetName);
-          const root = instance ? getInteractionRoot(instance) : null;
+          const returnTick = advanceCatReturnTween(now, activeReturn);
+          const returnActorInst = targetInstances.get(activeReturn.actorTarget);
+          const root = returnActorInst ? getInteractionRoot(returnActorInst) : null;
           if (root) root.rotation.y = returnTick.yaw;
 
           if (returnTick.complete) {
-            if (root) root.rotation.y = activeCatReturn.toYaw;
-            interactionState.catReturn = null;
-            sendARDebug('CAT_RETURN_COMPLETE', {
-              runId: activeCatReturn.runId,
-              finalYawDeg: (activeCatReturn.toYaw * 180 / Math.PI).toFixed(1),
+            if (root) root.rotation.y = activeReturn.toYaw;
+            interactionState.actorReturn = null;
+            if (isCatMascotInstance(returnActorInst)) {
+              sendARDebug('CAT_RETURN_COMPLETE', {
+                runId: activeReturn.runId,
+                finalYawDeg: (activeReturn.toYaw * 180 / Math.PI).toFixed(1),
+              });
+            }
+            sendARDebug('INTERACTION_ACTOR_RETURN_COMPLETE', {
+              ruleId: activeReturn.ruleId,
+              actorTarget: activeReturn.actorTarget,
+              runId: activeReturn.runId,
             });
           }
         }
@@ -2018,21 +2181,18 @@
 
       const phase = interactionState.phase;
 
-      // ---- COMBO_TURNING: tween cat body yaw each frame, then start CAT_EAT ----
+      // ---- COMBO_TURNING: tween actor body yaw, then start the rule animation ----
       if (phase === InteractionPhase.COMBO_TURNING) {
-        updateCatTurn(now);
-        const raw = computeAnchorDistance();
-        updateFilteredDistance(raw);
+        updateActorTurn(now);
+        const raw = computeTargetPairDistance(actorInst, partnerInst);
+        updateFilteredDistance(raw, proximityConfig);
         return;
       }
 
-      // ---- COMBO_PLAYING: CAT_EAT animating ----
+      // ---- COMBO_PLAYING: selected rule animation running ----
       if (phase === InteractionPhase.COMBO_PLAYING) {
-        const comboConfig = getInteractionConfig();
-        if (!comboConfig) return;
-
-        const raw = computeAnchorDistance();
-        updateFilteredDistance(raw);
+        const raw = computeTargetPairDistance(actorInst, partnerInst);
+        updateFilteredDistance(raw, proximityConfig);
         return;
       }
 
@@ -2049,10 +2209,10 @@
         // Secondary asset readiness: GLB loaded + model object exists.
         // NOT dependent on model.visible (output state).
         const secondaryAssetReady = !!(
-          fishInst?.modelState === 'loaded' &&
-          fishInst?.model
+          partnerInst?.modelState === 'loaded' &&
+          partnerInst?.model
         );
-        const secondaryTracked = fishEffectivelyTracked;
+        const secondaryTracked = partnerEffectivelyTracked;
         const secondaryInteractionReady = !!(
           secondaryAssetReady &&
           secondaryTracked &&
@@ -2060,98 +2220,106 @@
         );
 
         // Throttled diagnostic: only log when values actually change
-        if (fishInst) {
-          const key = `${fishInst.modelState}|${!!fishInst.model}|${!!fishInst.tracked}|${!!fishInst.visibleByInteraction}`;
+        if (partnerInst) {
+          const key = `${activeRule.id}|${partnerInst.modelState}|${!!partnerInst.model}|${!!partnerInst.tracked}|${!!partnerInst.visibleByInteraction}`;
           if (key !== interactionState.lastSecondaryReadiness) {
             interactionState.lastSecondaryReadiness = key;
             sendARDebug('SECONDARY_READINESS', {
-              targetName: fishInst.config?.qr_id,
-              modelState: fishInst.modelState,
-              hasModel: !!fishInst.model,
-              tracked: !!fishInst.tracked,
-              modelVisible: !!fishInst.model?.visible,
-              visibleByInteraction: fishInst.visibleByInteraction,
+              ruleId: activeRule.id,
+              targetName: partnerTarget,
+              modelState: partnerInst.modelState,
+              hasModel: !!partnerInst.model,
+              tracked: !!partnerInst.tracked,
+              modelVisible: !!partnerInst.model?.visible,
+              visibleByInteraction: partnerInst.visibleByInteraction,
               assetReady: secondaryAssetReady,
               interactionReady: secondaryInteractionReady,
             });
           }
         }
 
-        // Fish found → decide if we can go straight to proximity
-        if (fishEffectivelyTracked && phase === InteractionPhase.WAIT_SECONDARY) {
+        // Partner found → decide if we can go straight to proximity
+        if (partnerEffectivelyTracked && phase === InteractionPhase.WAIT_SECONDARY) {
           if (secondaryAssetReady) {
             setInteractionPhase(InteractionPhase.PROXIMITY_PENDING);
           } else {
             setInteractionPhase(InteractionPhase.WAIT_SECONDARY_MODEL);
             sendARDebug('COMBO_WAITING_FOR_SECONDARY_MODEL', {
-              targetName: fishInst?.config?.qr_id,
-              modelState: fishInst?.modelState,
-              hasModel: !!fishInst?.model,
+              ruleId: activeRule.id,
+              targetName: partnerTarget,
+              modelState: partnerInst?.modelState,
+              hasModel: !!partnerInst?.model,
             });
           }
         }
 
-        // Fish leaves → drop back to WAIT_SECONDARY
-        if (!fishEffectivelyTracked) {
+        // Partner leaves → drop back to WAIT_SECONDARY
+        if (!partnerEffectivelyTracked) {
           if (
             phase === InteractionPhase.PROXIMITY_PENDING ||
             phase === InteractionPhase.WAIT_SECONDARY_MODEL
           ) {
             interactionState.proximityEnteredAt = null;
-            updateFilteredDistance(null);
+            updateFilteredDistance(null, proximityConfig);
             setInteractionPhase(InteractionPhase.WAIT_SECONDARY);
           }
         }
 
-        // Fish asset became ready mid-session → reset proximity timer
+        // Partner asset became ready mid-session → reset proximity timer
         if (secondaryAssetReady && phase === InteractionPhase.WAIT_SECONDARY_MODEL) {
           interactionState.proximityEnteredAt = null;
           interactionState.filteredDistance = null;
           sendARDebug('SECONDARY_INTERACTION_READY', {
-            targetName: fishInst.config.qr_id,
-            modelState: fishInst.modelState,
+            ruleId: activeRule.id,
+            targetName: partnerTarget,
+            modelState: partnerInst.modelState,
           });
           setInteractionPhase(InteractionPhase.PROXIMITY_PENDING);
         }
 
-        const comboConfig = getInteractionConfig();
-        if (!comboConfig) return;
-
-        const raw = computeAnchorDistance();
-        const filtered = updateFilteredDistance(raw);
+        const raw = computeTargetPairDistance(actorInst, partnerInst);
+        const filtered = updateFilteredDistance(raw, proximityConfig);
 
         // Throttled proximity log
         const sampleInterval = 1000 / INTERACTION_CONFIG.proximitySampleHz;
         if (raw != null && (now - interactionState.lastProximityLog) >= sampleInterval) {
           interactionState.lastProximityLog = now;
           sendARDebug('PROXIMITY_SAMPLE', {
+            ruleId: activeRule.id,
+            actorTarget: activeRule.actorTarget,
+            partnerTarget,
             rawDistance: Number(raw.toFixed(4)),
             filteredDistance: filtered != null ? Number(filtered.toFixed(4)) : null,
-            enterDistance: comboConfig.distance.enter,
-            exitDistance: comboConfig.distance.exit,
-            catTracked: catEffectivelyTracked,
-            fishTracked: fishEffectivelyTracked,
+            enterDistance: proximityConfig.enterDistance,
+            exitDistance: proximityConfig.exitDistance,
+            actorTracked: actorEffectivelyTracked,
+            partnerTracked: partnerEffectivelyTracked,
             secondaryInteractionReady,
           });
         }
 
         // ---- Proximity enter / stable / combo arm ----
-        if (filtered != null && catEffectivelyTracked && fishEffectivelyTracked && !interactionState.comboPlaying) {
+        if (filtered != null && actorEffectivelyTracked && partnerEffectivelyTracked && !interactionState.comboPlaying) {
           const gate = advanceComboProximityGate({
             now,
             distance: filtered,
             enteredAt: interactionState.proximityEnteredAt,
             comboConsumed: interactionState.comboConsumed,
             config: {
-              enterDistance: comboConfig.distance.enter,
-              exitDistance: comboConfig.distance.exit,
-              proximityStableMs: comboConfig.proximityStableMs,
+              enterDistance: proximityConfig.enterDistance,
+              exitDistance: proximityConfig.exitDistance,
+              proximityStableMs: proximityConfig.stableMs,
             },
           });
           if (!interactionState.comboConsumed) {
             if (gate.enteredAt != null && interactionState.proximityEnteredAt == null) {
               interactionState.proximityEnteredAt = now;
-              sendARDebug('PROXIMITY_ENTER', { filteredDistance: Number(filtered.toFixed(4)) });
+              sendARDebug('PROXIMITY_ENTER', {
+                ruleId: activeRule.id,
+                actorTarget: activeRule.actorTarget,
+                partnerTarget,
+                filteredDistance: Number(filtered.toFixed(4)),
+              });
             }
             if (gate.enteredAt == null && interactionState.proximityEnteredAt != null) {
               sendARDebug('PROXIMITY_EXIT', { filteredDistance: Number(filtered.toFixed(4)) });
@@ -2164,56 +2332,57 @@
               gate.stable &&
               !interactionState.comboConsumed
             ) {
-              sendARDebug('PROXIMITY_STABLE', { stableMs: stableFor, distance: Number(filtered.toFixed(4)) });
-              sendARDebug('COMBO_ARMED', { targetName: primaryModelTargetName });
+              sendARDebug('PROXIMITY_STABLE', {
+                ruleId: activeRule.id,
+                stableMs: stableFor,
+                distance: Number(filtered.toFixed(4)),
+              });
+              sendARDebug('COMBO_ARMED', {
+                ruleId: activeRule.id,
+                actorTarget: activeRule.actorTarget,
+                partnerTargets: activeRule.partnerTargets,
+              });
 
-              // CAT_EAT owns the mixer at priority 100.
-              cancelActiveCatOneShotForCombo();
+              // A CAT mascot one-shot must yield to a priority-100 interaction.
+              if (isCatMascotInstance(actorInst)) cancelActiveCatOneShotForCombo();
 
               // Capture comboRunId
               interactionState.comboRunId++;
               const runId = interactionState.comboRunId;
 
-              // Latch anchor poses
-              const catPose = trackedTargets.get(primaryModelTargetName);
-              const fishPose = trackedTargets.get(fishInst?.config?.qr_id);
-
-              // Capture secondary target name for delayed-consume
-              const secondaryName = fishInst?.config?.qr_id || null;
-
-              // Get current interaction-root yaw (original orientation before combo)
-              const instance = catInst;
-              const root = instance ? getInteractionRoot(instance) : null;
-              const catOriginalYaw = root ? root.rotation.y : 0;
+              const actorPose = trackedTargets.get(activeRule.actorTarget);
+              const partnerPose = trackedTargets.get(partnerTarget);
+              const root = getInteractionRoot(actorInst);
+              const actorOriginalYaw = root ? root.rotation.y : 0;
 
               interactionState.comboLatch = {
                 runId,
-                catPose: catPose ? { ...catPose } : null,
-                fishPose: fishPose ? { ...fishPose } : null,
-                secondaryTargetName: secondaryName,
-                catOriginalYaw,
+                ruleId: activeRule.id,
+                actorTarget: activeRule.actorTarget,
+                partnerTargets: [...activeRule.partnerTargets],
+                actorPose: actorPose ? { ...actorPose } : null,
+                partnerPose: partnerPose ? { ...partnerPose } : null,
+                actorOriginalYaw,
               };
 
               setInteractionPhase(InteractionPhase.COMBO_ARMED);
               sendARDebug('COMBO_TRACKING_LATCHED', {
                 runId,
-                primaryTargetName: primaryModelTargetName,
-                secondaryTargetName: secondaryName,
-                catPose: catPose?.position,
-                fishPose: fishPose?.position,
-                catOriginalYawDeg: (catOriginalYaw * 180 / Math.PI).toFixed(1),
+                ruleId: activeRule.id,
+                actorTarget: activeRule.actorTarget,
+                partnerTargets: activeRule.partnerTargets,
+                actorPose: actorPose?.position,
+                partnerPose: partnerPose?.position,
+                actorOriginalYawDeg: (actorOriginalYaw * 180 / Math.PI).toFixed(1),
               });
 
               // ---- Begin turn: calculate direction from latched poses ----
-              const catAnchor = instance?.anchor;
-              const fishAnchor = fishInst?.anchor;
-              let targetYaw = 0;
-              if (catAnchor && fishAnchor) {
-                const catWorld = new THREE.Vector3();
-                const fishWorld = new THREE.Vector3();
-                catAnchor.getWorldPosition(catWorld);
-                fishAnchor.getWorldPosition(fishWorld);
-                targetYaw = yawFromForward(catWorld, fishWorld) + (COMBO_VISUAL_CONFIG.forwardYawOffsetDeg * Math.PI / 180);
+              let targetYaw = actorOriginalYaw;
+              const actorPoseForTurn = interactionState.comboLatch?.actorPose?.position;
+              const partnerPoseForTurn = interactionState.comboLatch?.partnerPose?.position;
+              if (activeRule.action.facePrimaryPartner && actorPoseForTurn && partnerPoseForTurn) {
+                targetYaw = yawFromForward(actorPoseForTurn, partnerPoseForTurn)
+                  + (COMBO_VISUAL_CONFIG.forwardYawOffsetDeg * Math.PI / 180);
 
                 // Clamp to max body yaw
                 const maxRad = COMBO_VISUAL_CONFIG.maxBodyYawDeg * Math.PI / 180;
@@ -2222,15 +2391,27 @@
               }
 
               setInteractionPhase(InteractionPhase.COMBO_TURNING);
-              sendARDebug('CAT_TURN_START', {
+              sendARDebug('INTERACTION_ACTOR_TURN_START', {
                 runId,
-                secondaryTargetName: secondaryName,
-                requestedYawDeg: ((targetYaw - catOriginalYaw) * 180 / Math.PI).toFixed(1),
+                ruleId: activeRule.id,
+                actorTarget: activeRule.actorTarget,
+                partnerTarget,
+                requestedYawDeg: ((targetYaw - actorOriginalYaw) * 180 / Math.PI).toFixed(1),
                 clampedYawDeg: ((targetYaw) * 180 / Math.PI).toFixed(1),
               });
-              interactionState.catTurn = {
+              if (isCatMascotInstance(actorInst)) {
+                sendARDebug('CAT_TURN_START', {
+                  runId,
+                  secondaryTargetName: partnerTarget,
+                  requestedYawDeg: ((targetYaw - actorOriginalYaw) * 180 / Math.PI).toFixed(1),
+                  clampedYawDeg: ((targetYaw) * 180 / Math.PI).toFixed(1),
+                });
+              }
+              interactionState.actorTurn = {
                 runId,
-                fromYaw: catOriginalYaw,
+                ruleId: activeRule.id,
+                actorTarget: activeRule.actorTarget,
+                fromYaw: actorOriginalYaw,
                 toYaw: targetYaw,
                 startedAt: now,
                 durationMs: COMBO_VISUAL_CONFIG.bodyTurnMs,
@@ -2244,14 +2425,10 @@
             gate.rearmEligible &&
             phase === InteractionPhase.COMBO_CONSUMED
           ) {
-            sendARDebug('COMBO_REARMED', { distance: Number(filtered.toFixed(4)) });
+            sendARDebug('COMBO_REARMED', { ruleId: activeRule.id, distance: Number(filtered.toFixed(4)) });
             interactionState.comboConsumed = false;
             interactionState.proximityEnteredAt = null;
-            for (const [name, inst] of targetInstances) {
-              if (name === primaryModelTargetName) continue;
-              inst.visibleByInteraction = true;
-              if (inst.model && inst.tracked) inst.model.visible = true;
-            }
+            setInteractionPartnerVisibility({ rule: activeRule, targetInstances, visible: true });
             setInteractionPhase(InteractionPhase.WAIT_SECONDARY);
           }
         }
@@ -2293,7 +2470,6 @@
           lostForMs: Math.round(lossGrace.lostForMs),
         });
       }
-      interactionState.deferredConfirmedLossHides.delete(detail.name);
 
       const config = targetConfigByName.get(detail.name);
       const targetWord = config?.word || detail.name;
@@ -2378,18 +2554,19 @@
     // ========== COMBO DETECTION (background) ==========
     async function loadComboRules() {
       const deck = params.get('deck_id') || 'claymorphic-animals-001';
+      let rawRules = [];
       try {
         const url = `${apiBase}/api/v1/combos/rules?flashcard_set=${encodeURIComponent(deck)}`;
         const res = await fetch(url);
         if (res.ok) {
-          comboRules = (await res.json()).rules || [];
-          sendARDebug('COMBO_RULE_LOAD_COMPLETE', { count: comboRules.length, url });
+          rawRules = (await res.json()).rules || [];
+          sendARDebug('COMBO_RULE_LOAD_COMPLETE', { count: rawRules.length, url });
         }
         else sendARDebug('COMBO_RULE_LOAD_ERROR', { status: res.status });
       } catch (e) {
         sendARDebug('COMBO_RULE_LOAD_ERROR', { error: String(e) });
       } finally {
-        resolveActiveComboRule();
+        installInteractionRules(rawRules);
       }
     }
 

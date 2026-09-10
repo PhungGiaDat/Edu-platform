@@ -10,13 +10,6 @@ const CAT_AMBIENT_BLOCKING_PHASES = new Set([
   'COMBO_PLAYING',
 ])
 
-const CAT_FISH_PROXIMITY = Object.freeze({
-  enterDistance: 0.52,
-  exitDistance: 0.60,
-  proximityStableMs: 300,
-  smoothingAlpha: 0.25,
-})
-
 export function shouldRevealAR({ cameraReady, catReady }) {
   return Boolean(cameraReady && catReady)
 }
@@ -96,6 +89,11 @@ export function normalizeInteractionRule(rule) {
         smoothingAlpha: rule.proximity.smoothing_alpha,
       }
     : null
+  const consumeAtRatio = Number.isFinite(rule?.action?.consumeAtRatio)
+    ? rule.action.consumeAtRatio
+    : Number.isFinite(rule?.consume_at_ratio)
+      ? rule.consume_at_ratio
+      : 0.65
 
   return {
     id: String(rule?.combo_id || ''),
@@ -104,8 +102,14 @@ export function normalizeInteractionRule(rule) {
     partnerTargets,
     animation: rule?.animation_trigger || null,
     priority: Number(rule?.priority || 0),
+    action: {
+      consumePartners: rule?.action?.consumePartners ?? rule?.consume_partners ?? true,
+      facePrimaryPartner: rule?.action?.facePrimaryPartner ?? rule?.face_primary_partner ?? true,
+      consumeAtRatio,
+    },
     proximity,
     actorSource,
+    source: rule?.source === 'fallback' ? 'fallback' : 'backend',
     executable: requiredTargets.length === 2 && actorTarget != null && partnerTargets.length === 1,
   }
 }
@@ -127,35 +131,79 @@ export function selectActiveInteractionRule(rules, trackedTargetNames) {
     })[0] || null
 }
 
-export function resolveCatFishComboRule({ primaryTargetName, secondaryTargetName, rules }) {
-  if (primaryTargetName !== 'cat001' || secondaryTargetName !== 'fish001') return null
+export function distanceBetweenPositions(a, b) {
+  if (!a || !b) return null
+  const values = [a.x, a.y, a.z, b.x, b.y, b.z]
+  if (!values.every(Number.isFinite)) return null
 
-  const rule = Array.isArray(rules)
-    ? rules.find(candidate => {
-      const tags = candidate?.tags
-      return Array.isArray(tags) && tags.length === 2 && tags.includes('cat001') && tags.includes('fish001')
-    })
-    : null
+  const dx = a.x - b.x
+  const dy = a.y - b.y
+  const dz = a.z - b.z
+  return Math.sqrt(dx * dx + dy * dy + dz * dz)
+}
+
+export function resolveRuleProximityConfig(rule, fallback = null) {
   const proximity = rule?.proximity
-  const fromBackend = proximity &&
-    proximity.enter_distance === CAT_FISH_PROXIMITY.enterDistance &&
-    proximity.exit_distance === CAT_FISH_PROXIMITY.exitDistance &&
-    proximity.proximity_stable_ms === CAT_FISH_PROXIMITY.proximityStableMs &&
-    proximity.smoothing_alpha === CAT_FISH_PROXIMITY.smoothingAlpha
+  if (!proximity) return fallback
+  const values = [
+    proximity.enterDistance,
+    proximity.exitDistance,
+    proximity.stableMs,
+    proximity.smoothingAlpha,
+  ]
+  if (!values.every(Number.isFinite)) return fallback
 
   return {
-    primaryTargetName,
-    secondaryTargetName,
-    source: fromBackend ? 'backend' : 'fallback',
-    ...CAT_FISH_PROXIMITY,
+    enterDistance: proximity.enterDistance,
+    exitDistance: proximity.exitDistance,
+    stableMs: proximity.stableMs,
+    smoothingAlpha: proximity.smoothingAlpha,
   }
 }
 
-export function selectComboSecondaryTargetName({ primaryTargetName, targetNames }) {
-  if (primaryTargetName === 'cat001' && targetNames.includes('fish001')) {
-    return 'fish001'
+export function getInteractionParticipantTargets(rule) {
+  if (!rule?.actorTarget) return []
+  return [rule.actorTarget, ...(rule.partnerTargets || [])]
+}
+
+export function getConsumablePartnerTargets(rule) {
+  return Array.isArray(rule?.partnerTargets) ? [...rule.partnerTargets] : []
+}
+
+export function setInteractionPartnerVisibility({ rule, targetInstances, visible }) {
+  const changedTargets = []
+  for (const targetName of getConsumablePartnerTargets(rule)) {
+    const instance = targetInstances?.get?.(targetName)
+    if (!instance) continue
+    instance.visibleByInteraction = visible
+    if (instance.model) instance.model.visible = Boolean(visible && instance.tracked)
+    changedTargets.push(targetName)
   }
-  return targetNames.find(targetName => targetName !== primaryTargetName) || null
+  return changedTargets
+}
+
+export function resolveInteractionAnimation({ rule, actorInstance }) {
+  const requested = rule?.animation || null
+  const animations = Array.isArray(actorInstance?.animations) ? actorInstance.animations : []
+  const available = animations
+    .map((clip) => clip?.name)
+    .filter((name) => typeof name === 'string')
+  const clip = requested == null
+    ? null
+    : animations.find((candidate) => candidate?.name === requested) || null
+
+  return {
+    ok: clip != null,
+    clip,
+    requested,
+    available,
+    shouldClearInteraction: clip == null,
+  }
+}
+
+export function hasAnimationCapability(instanceLike, clipName) {
+  if (!clipName || !Array.isArray(instanceLike?.animations)) return false
+  return instanceLike.animations.some((clip) => clip?.name === clipName)
 }
 
 export function advanceComboProximityGate({ now, distance, enteredAt, comboConsumed, config }) {

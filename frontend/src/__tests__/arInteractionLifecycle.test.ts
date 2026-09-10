@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import * as lifecycleModule from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 import {
   advanceCatReturnTween,
   advanceComboProximityGate,
@@ -12,8 +13,6 @@ import {
   isInteractionRuleMatched,
   isCatOneShotCompletionOwner,
   normalizeInteractionRule,
-  resolveCatFishComboRule,
-  selectComboSecondaryTargetName,
   selectActiveInteractionRule,
   shouldReplaceCatAnimation,
   shouldRevealAR,
@@ -21,6 +20,127 @@ import {
 } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 describe('AR interaction lifecycle contracts', () => {
+  it('measures pair distance from positions and rejects incomplete poses', () => {
+    const distanceBetweenPositions = Reflect.get(lifecycleModule, 'distanceBetweenPositions')
+
+    expect(distanceBetweenPositions).toBeTypeOf('function')
+    expect(distanceBetweenPositions?.(
+      { x: 0, y: 0, z: 0 },
+      { x: 3, y: 4, z: 0 },
+    )).toBe(5)
+    expect(distanceBetweenPositions?.(null, { x: 0, y: 0, z: 0 })).toBeNull()
+    expect(distanceBetweenPositions?.(
+      { x: Number.NaN, y: 0, z: 0 },
+      { x: 0, y: 0, z: 0 },
+    )).toBeNull()
+  })
+
+  it('resolves proximity from the selected rule without target-name assumptions', () => {
+    const resolveRuleProximityConfig = Reflect.get(lifecycleModule, 'resolveRuleProximityConfig')
+    const rule = normalizeInteractionRule({
+      tags: ['robot-marker', 'cube-marker'],
+      target_order: ['robot-marker', 'cube-marker'],
+      combo_id: 'robot-cube',
+      proximity: {
+        enter_distance: 0.41,
+        exit_distance: 0.49,
+        proximity_stable_ms: 275,
+        smoothing_alpha: 0.2,
+      },
+    })
+
+    expect(resolveRuleProximityConfig).toBeTypeOf('function')
+    expect(resolveRuleProximityConfig?.(rule, null)).toEqual({
+      enterDistance: 0.41,
+      exitDistance: 0.49,
+      stableMs: 275,
+      smoothingAlpha: 0.2,
+    })
+  })
+
+  it('changes visibility only for the selected rule partners', () => {
+    const getInteractionParticipantTargets = Reflect.get(lifecycleModule, 'getInteractionParticipantTargets')
+    const getConsumablePartnerTargets = Reflect.get(lifecycleModule, 'getConsumablePartnerTargets')
+    const setInteractionPartnerVisibility = Reflect.get(lifecycleModule, 'setInteractionPartnerVisibility')
+    const rule = normalizeInteractionRule({
+      tags: ['robot-marker', 'cube-marker'],
+      target_order: ['robot-marker', 'cube-marker'],
+      combo_id: 'robot-cube',
+    })
+    const targetInstances = new Map([
+      ['robot-marker', { tracked: true, visibleByInteraction: true, model: { visible: true } }],
+      ['cube-marker', { tracked: true, visibleByInteraction: true, model: { visible: true } }],
+      ['tree-marker', { tracked: true, visibleByInteraction: true, model: { visible: true } }],
+    ])
+
+    expect(getInteractionParticipantTargets?.(rule)).toEqual(['robot-marker', 'cube-marker'])
+    expect(getConsumablePartnerTargets?.(rule)).toEqual(['cube-marker'])
+    expect(setInteractionPartnerVisibility?.({
+      rule,
+      targetInstances,
+      visible: false,
+    })).toEqual(['cube-marker'])
+    expect(targetInstances.get('robot-marker')).toMatchObject({
+      visibleByInteraction: true,
+      model: { visible: true },
+    })
+    expect(targetInstances.get('cube-marker')).toMatchObject({
+      visibleByInteraction: false,
+      model: { visible: false },
+    })
+    expect(targetInstances.get('tree-marker')).toMatchObject({
+      visibleByInteraction: true,
+      model: { visible: true },
+    })
+
+    targetInstances.get('cube-marker')!.tracked = false
+    expect(setInteractionPartnerVisibility?.({
+      rule,
+      targetInstances,
+      visible: true,
+    })).toEqual(['cube-marker'])
+    expect(targetInstances.get('cube-marker')?.visibleByInteraction).toBe(true)
+    expect(targetInstances.get('cube-marker')?.model.visible).toBe(false)
+    expect(targetInstances.get('tree-marker')?.model.visible).toBe(true)
+  })
+
+  it('reports a missing requested animation as a safe clear without mutating visibility', () => {
+    const resolveInteractionAnimation = Reflect.get(lifecycleModule, 'resolveInteractionAnimation')
+    const rule = normalizeInteractionRule({
+      tags: ['robot-marker', 'cube-marker'],
+      target_order: ['robot-marker', 'cube-marker'],
+      combo_id: 'robot-cube',
+      animation_trigger: 'ROBOT_WAVE',
+    })
+    const actorInstance = {
+      animations: [{ name: 'ROBOT_IDLE' }],
+      model: { visible: true },
+    }
+    const partnerInstance = { model: { visible: true }, visibleByInteraction: true }
+    const unrelatedInstance = { model: { visible: true }, visibleByInteraction: true }
+
+    expect(resolveInteractionAnimation).toBeTypeOf('function')
+    expect(() => resolveInteractionAnimation?.({ rule, actorInstance })).not.toThrow()
+    expect(resolveInteractionAnimation?.({ rule, actorInstance })).toEqual({
+      ok: false,
+      clip: null,
+      requested: 'ROBOT_WAVE',
+      available: ['ROBOT_IDLE'],
+      shouldClearInteraction: true,
+    })
+    expect(actorInstance.model.visible).toBe(true)
+    expect(partnerInstance).toMatchObject({ model: { visible: true }, visibleByInteraction: true })
+    expect(unrelatedInstance).toMatchObject({ model: { visible: true }, visibleByInteraction: true })
+  })
+
+  it('detects per-instance animation capabilities without requiring CAT clips globally', () => {
+    const hasAnimationCapability = Reflect.get(lifecycleModule, 'hasAnimationCapability')
+
+    expect(hasAnimationCapability).toBeTypeOf('function')
+    expect(hasAnimationCapability?.({ animations: [{ name: 'DOG_IDLE' }] }, 'CAT_MEOW')).toBe(false)
+    expect(hasAnimationCapability?.({ animations: [{ name: 'CAT_MEOW' }] }, 'CAT_MEOW')).toBe(true)
+    expect(hasAnimationCapability?.(null, 'CAT_MEOW')).toBe(false)
+  })
   it('normalizes a configured pair using target order for actor and backend proximity', () => {
     const rule = normalizeInteractionRule({
       tags: ['dog001', 'bone001'],
@@ -43,6 +163,11 @@ describe('AR interaction lifecycle contracts', () => {
       partnerTargets: ['bone001'],
       animation: 'DOG_EAT',
       priority: 40,
+      action: {
+        consumePartners: true,
+        facePrimaryPartner: true,
+        consumeAtRatio: 0.65,
+      },
       proximity: {
         enterDistance: 0.45,
         exitDistance: 0.55,
@@ -50,6 +175,7 @@ describe('AR interaction lifecycle contracts', () => {
         smoothingAlpha: 0.25,
       },
       actorSource: 'target_order',
+      source: 'backend',
       executable: true,
     })
   })
@@ -173,32 +299,24 @@ describe('AR interaction lifecycle contracts', () => {
     )?.id).toBe('a-rule')
   })
 
-  it('passes the canonical primary target explicitly to every runtime combo-secondary selector', () => {
+  it('wires normalized generic rules into the runtime without legacy pair selectors', () => {
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
-    const callsites = [
-      [
-        'function computeAnchorDistance()',
-        'function updateFilteredDistance(raw)',
-      ],
-      [
-        'function evaluateInteraction(now)',
-        '// ========== TARGET FOUND / LOST ==========',
-      ],
-    ] as const
+    const coreStart = source.indexOf('// ========== INTERACTION HELPERS ==========')
+    const coreEnd = source.indexOf('// ========== TARGET FOUND / LOST ==========', coreStart)
+    const coreSource = source.slice(coreStart, coreEnd)
 
-    for (const [startMarker, endMarker] of callsites) {
-      const start = source.indexOf(startMarker)
-      const end = source.indexOf(endMarker, start)
-      const functionSource = source.slice(start, end)
-
-      expect(start).toBeGreaterThanOrEqual(0)
-      expect(end).toBeGreaterThan(start)
-      expect(functionSource).toContain('selectComboSecondaryTargetName({')
-      expect(functionSource).toContain('primaryTargetName: primaryModelTargetName,')
-      expect(functionSource).not.toMatch(
-        /selectComboSecondaryTargetName\(\{\s*primaryTargetName\s*,/,
-      )
-    }
+    expect(source).toContain('let normalizedInteractionRules = [];')
+    expect(source).toContain('normalizeInteractionRule')
+    expect(source).toContain('selectActiveInteractionRule')
+    expect(source).toContain("sendARDebug('INTERACTION_RULES_LOADED'")
+    expect(coreStart).toBeGreaterThanOrEqual(0)
+    expect(coreEnd).toBeGreaterThan(coreStart)
+    expect(coreSource).toContain('function computeTargetPairDistance(actorInst, partnerInst)')
+    expect(coreSource).toContain('const actorInst = targetInstances.get(activeRule.actorTarget)')
+    expect(coreSource).toContain('const partnerInst = targetInstances.get(partnerTarget)')
+    expect(coreSource).not.toMatch(/\b(?:catInst|fishInst)\b/)
+    expect(coreSource).not.toMatch(/\b(?:resolveCatFishComboRule|selectComboSecondaryTargetName|requiresCatFishComboRule)\b/)
+    expect(coreSource).not.toMatch(/['"](?:cat001|fish001|CAT_EAT|CAT_MEOW)['"]/)
   })
 
   it('keeps target-loss visibility processing independent from interaction evaluation', () => {
@@ -221,6 +339,19 @@ describe('AR interaction lifecycle contracts', () => {
     expect(updateSource.indexOf('evaluateInteraction(now);')).toBeLessThan(
       updateSource.indexOf('updateCatAmbient(now);'),
     )
+  })
+
+  it('resets a selected interaction when either selected participant has confirmed loss', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const activeParticipantStart = source.indexOf('function isTargetInActiveInteraction(targetName)')
+    const activeParticipantEnd = source.indexOf('function hideConfirmedTargetLoss', activeParticipantStart)
+    const activeParticipantSource = source.slice(activeParticipantStart, activeParticipantEnd)
+
+    expect(activeParticipantStart).toBeGreaterThanOrEqual(0)
+    expect(activeParticipantEnd).toBeGreaterThan(activeParticipantStart)
+    expect(activeParticipantSource).toContain('interactionState.actorTarget')
+    expect(activeParticipantSource).toContain('interactionState.partnerTargets')
+    expect(activeParticipantSource).toContain('getInteractionParticipantTargets')
   })
 
   it('classifies target loss at the 300ms boundary without hiding during grace', () => {
@@ -276,7 +407,7 @@ describe('AR interaction lifecycle contracts', () => {
 
   it('keeps the active CAT return ticking ahead of combo phase exits', () => {
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
-    const activeReturnMarker = 'const activeCatReturn = interactionState.catReturn;'
+    const activeReturnMarker = 'const activeReturn = interactionState.actorReturn;'
     const comboTurningEarlyReturn = 'if (phase === InteractionPhase.COMBO_TURNING) {'
     const comboPlayingEarlyReturn = 'if (phase === InteractionPhase.COMBO_PLAYING) {'
 
@@ -285,9 +416,9 @@ describe('AR interaction lifecycle contracts', () => {
     expect(source.indexOf(activeReturnMarker)).toBeLessThan(source.indexOf(comboPlayingEarlyReturn))
     expect(source).not.toContain('function applyCatReturn(')
     expect(source).not.toContain('function smoothstep(')
-    expect(source).toContain('comboLatch?.catOriginalYaw ?? 0')
+    expect(source).toContain('comboLatch?.actorOriginalYaw ?? 0')
     expect(source).toContain("sendARDebug('CAT_RETURN_CANCELLED_STALE'")
-    expect(source).toContain('interactionState.catReturn = null;')
+    expect(source).toContain('interactionState.actorReturn = null;')
     expect(source).toContain('CAT_RETURN_COMPLETE')
   })
 
@@ -371,13 +502,13 @@ describe('AR interaction lifecycle contracts', () => {
 
   it('restores CAT idle before consuming the combo and starts return afterward', () => {
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
-    const triggerStart = source.indexOf('function triggerComboAnimation')
+    const triggerStart = source.indexOf('function triggerInteractionAnimation')
     const triggerEnd = source.indexOf('\n    function evaluateInteraction', triggerStart)
     const triggerSource = source.slice(triggerStart, triggerEnd)
     const eatFinished = triggerSource.indexOf("sendARDebug('COMBO_ANIMATION_FINISHED'")
-    const idleRestore = triggerSource.indexOf("restoreCatIdleAfterOneShot(instance, action, 'CAT_EAT'")
+    const idleRestore = triggerSource.indexOf('restoreCatIdleAfterOneShot(actorInst, action, activeRule.animation')
     const comboConsumed = triggerSource.indexOf('setInteractionPhase(InteractionPhase.COMBO_CONSUMED)')
-    const returnCreated = triggerSource.indexOf('interactionState.catReturn = {')
+    const returnCreated = triggerSource.indexOf('interactionState.actorReturn = {')
     const returnStart = triggerSource.indexOf("sendARDebug('CAT_RETURN_START'")
 
     expect(triggerSource).toContain("sendARDebug('CAT_ACTION_STATE_AFTER_EAT'")
@@ -550,68 +681,118 @@ describe('AR interaction lifecycle contracts', () => {
     )
   })
 
-  it('resolves the locked CAT plus FISH proximity rule from backend or the exact pair fallback', () => {
-    const fallback = resolveCatFishComboRule({
-      primaryTargetName: 'cat001',
-      secondaryTargetName: 'fish001',
-      rules: [],
+  it('preserves the locked CAT plus FISH proximity through the ordinary rule contract', () => {
+    const resolveRuleProximityConfig = Reflect.get(lifecycleModule, 'resolveRuleProximityConfig')
+    const backend = normalizeInteractionRule({
+      tags: ['fish001', 'cat001'],
+      target_order: ['cat001', 'fish001'],
+      combo_id: 'cat-fish-backend',
+      animation_trigger: 'CAT_EAT',
+      proximity: {
+        enter_distance: 0.52,
+        exit_distance: 0.60,
+        proximity_stable_ms: 300,
+        smoothing_alpha: 0.25,
+      },
     })
-    const backend = resolveCatFishComboRule({
-      primaryTargetName: 'cat001',
-      secondaryTargetName: 'fish001',
-      rules: [{
-        tags: ['fish001', 'cat001'],
-        proximity: {
-          enter_distance: 0.52,
-          exit_distance: 0.60,
-          proximity_stable_ms: 300,
-          smoothing_alpha: 0.25,
-        },
-      }],
+    const fallback = normalizeInteractionRule({
+      tags: ['cat001', 'fish001'],
+      target_order: ['cat001', 'fish001'],
+      combo_id: 'cat-fish-fallback',
+      animation_trigger: 'CAT_EAT',
+      source: 'fallback',
+      proximity: {
+        enter_distance: 0.52,
+        exit_distance: 0.60,
+        proximity_stable_ms: 300,
+        smoothing_alpha: 0.25,
+      },
     })
 
-    expect(fallback).toEqual({
-      primaryTargetName: 'cat001',
-      secondaryTargetName: 'fish001',
-      source: 'fallback',
+    expect(resolveRuleProximityConfig?.(backend, null)).toEqual({
       enterDistance: 0.52,
       exitDistance: 0.60,
-      proximityStableMs: 300,
+      stableMs: 300,
       smoothingAlpha: 0.25,
     })
-    expect(backend).toEqual({ ...fallback, source: 'backend' })
-    expect(fallback).not.toEqual(expect.objectContaining({ enterDistance: 0.72, exitDistance: 0.80 }))
+    expect(resolveRuleProximityConfig?.(fallback, null)).toEqual(
+      resolveRuleProximityConfig?.(backend, null),
+    )
+    expect(backend.source).toBe('backend')
+    expect(fallback.source).toBe('fallback')
+    expect(fallback.proximity).not.toEqual(
+      expect.objectContaining({ enterDistance: 0.72, exitDistance: 0.80 }),
+    )
   })
 
-  it('selects fish001 rather than an arbitrary secondary target for the CAT plus FISH combo', () => {
-    expect(selectComboSecondaryTargetName({
-      primaryTargetName: 'cat001',
-      targetNames: ['cat001', 'bird001', 'fish001'],
-    })).toBe('fish001')
+  it('uses the selected rule partner for pair distance even with unrelated targets present', () => {
+    const rule = normalizeInteractionRule({
+      tags: ['cat001', 'fish001'],
+      target_order: ['cat001', 'fish001'],
+      combo_id: 'cat-fish',
+      priority: 100,
+    })
+
+    expect(selectActiveInteractionRule(
+      [rule],
+      ['cat001', 'bird001', 'fish001'],
+    )).toMatchObject({
+      actorTarget: 'cat001',
+      partnerTargets: ['fish001'],
+    })
 
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
     const distanceFunction = source.slice(
-      source.indexOf('function computeAnchorDistance()'),
-      source.indexOf('function updateFilteredDistance(raw)'),
+      source.indexOf('function computeTargetPairDistance(actorInst, partnerInst)'),
+      source.indexOf('function updateFilteredDistance(raw, proximityConfig)'),
     )
-    expect(distanceFunction).toContain('selectComboSecondaryTargetName')
-    expect(distanceFunction).toContain('targetInstances.get(secondaryTargetName)')
+    expect(distanceFunction).toContain('getAnchorWorldPosition(actorInst)')
+    expect(distanceFunction).toContain('getAnchorWorldPosition(partnerInst)')
+    expect(distanceFunction).toContain('return distanceBetweenPositions(')
+    expect(distanceFunction).not.toContain('primaryModelTargetName')
+  })
+
+  it('faces the latched actor and partner poses rather than live anchors after arming', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const turnStart = source.indexOf('// ---- Begin turn: calculate direction from latched poses ----')
+    const turnEnd = source.indexOf('interactionState.actorTurn = {', turnStart)
+    const turnSource = source.slice(turnStart, turnEnd)
+
+    expect(turnStart).toBeGreaterThanOrEqual(0)
+    expect(turnEnd).toBeGreaterThan(turnStart)
+    expect(turnSource).toContain('interactionState.comboLatch?.actorPose?.position')
+    expect(turnSource).toContain('interactionState.comboLatch?.partnerPose?.position')
+    expect(turnSource).not.toContain('actorInst.anchor.getWorldPosition')
+    expect(turnSource).not.toContain('partnerInst.anchor.getWorldPosition')
   })
 
   it('applies the approved CAT plus FISH enter/stable/exit hysteresis', () => {
-    const config = resolveCatFishComboRule({
-      primaryTargetName: 'cat001',
-      secondaryTargetName: 'fish001',
-      rules: [],
+    const resolveRuleProximityConfig = Reflect.get(lifecycleModule, 'resolveRuleProximityConfig')
+    const rule = normalizeInteractionRule({
+      tags: ['cat001', 'fish001'],
+      combo_id: 'cat-fish',
+      proximity: {
+        enter_distance: 0.52,
+        exit_distance: 0.60,
+        proximity_stable_ms: 300,
+        smoothing_alpha: 0.25,
+      },
     })
-    expect(config).not.toBeNull()
+    const proximity = resolveRuleProximityConfig?.(rule, null)
+    expect(proximity).not.toBeNull()
+    if (!proximity) throw new Error('Expected normalized CAT plus FISH proximity')
+    const config = {
+      enterDistance: proximity.enterDistance,
+      exitDistance: proximity.exitDistance,
+      proximityStableMs: proximity.stableMs,
+    }
 
     const outside = advanceComboProximityGate({
       now: 0,
       distance: 0.53,
       enteredAt: null,
       comboConsumed: false,
-      config: config!,
+      config,
     })
     expect(outside.enteredAt).toBeNull()
     expect(outside.stable).toBe(false)
@@ -621,14 +802,14 @@ describe('AR interaction lifecycle contracts', () => {
       distance: 0.51,
       enteredAt: null,
       comboConsumed: false,
-      config: config!,
+      config,
     })
     const stable = advanceComboProximityGate({
       now: 400,
       distance: 0.51,
       enteredAt: entered.enteredAt,
       comboConsumed: false,
-      config: config!,
+      config,
     })
     expect(stable.stable).toBe(true)
 
@@ -637,14 +818,14 @@ describe('AR interaction lifecycle contracts', () => {
       distance: 0.56,
       enteredAt: null,
       comboConsumed: true,
-      config: config!,
+      config,
     })
     const rearmed = advanceComboProximityGate({
       now: 600,
       distance: 0.61,
       enteredAt: null,
       comboConsumed: true,
-      config: config!,
+      config,
     })
     expect(notRearmed.rearmEligible).toBe(false)
     expect(rearmed.rearmEligible).toBe(true)

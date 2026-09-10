@@ -34,7 +34,7 @@ class ComboRule(BaseModel):
     name: str
     combo_id: str
     animation_trigger: Optional[str] = None
-    priority: Optional[int] = None
+    priority: int = 0
     proximity: Optional[ProximityConfigSchema] = None
 
 class ComboRulesResponse(BaseModel):
@@ -181,12 +181,11 @@ async def get_combo_rules(
             "name": combo.get("combo_name") or combo.get("description") or "",
             "combo_id": combo.get("combo_id", ""),
             "animation_trigger": combo.get("animation_trigger"),
+            "priority": combo.get("priority", 0),
             "proximity": proximity,
         }
         if "target_order" in combo:
             rule["target_order"] = combo["target_order"]
-        if "priority" in combo:
-            rule["priority"] = combo["priority"]
         rules.append(rule)
 
     return ComboRulesResponse(rules=rules, total=len(rules))

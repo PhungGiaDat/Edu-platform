@@ -38,6 +38,7 @@ def test_cat_fish_rule_exposes_the_locked_proximity_configuration():
             "name": "Cat eats Fish",
             "combo_id": "clay_cat_fish",
             "animation_trigger": None,
+            "priority": 0,
             "proximity": {
                 "enter_distance": 0.52,
                 "exit_distance": 0.60,

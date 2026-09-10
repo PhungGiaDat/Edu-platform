@@ -34,6 +34,11 @@ export function normalizeInteractionRule(rule: Record<string, unknown>): {
   partnerTargets: string[]
   animation: string | null
   priority: number
+  action: {
+    consumePartners: boolean
+    facePrimaryPartner: boolean
+    consumeAtRatio: number
+  }
   proximity: {
     enterDistance: number
     exitDistance: number
@@ -41,6 +46,7 @@ export function normalizeInteractionRule(rule: Record<string, unknown>): {
     smoothingAlpha: number
   } | null
   actorSource: 'target_order' | 'required_tags_fallback'
+  source: 'backend' | 'fallback'
   executable: boolean
 }
 
@@ -54,24 +60,59 @@ export function selectActiveInteractionRule(
   trackedTargetNames: string[] | Set<string>,
 ): ReturnType<typeof normalizeInteractionRule> | null
 
-export function resolveCatFishComboRule(args: {
-  primaryTargetName: string
-  secondaryTargetName: string
-  rules: Array<Record<string, unknown>>
-}): {
-  primaryTargetName: 'cat001'
-  secondaryTargetName: 'fish001'
-  source: 'backend' | 'fallback'
+export function distanceBetweenPositions(
+  a: { x: number; y: number; z: number } | null,
+  b: { x: number; y: number; z: number } | null,
+): number | null
+
+export function resolveRuleProximityConfig(
+  rule: ReturnType<typeof normalizeInteractionRule>,
+  fallback?: {
+    enterDistance: number
+    exitDistance: number
+    stableMs: number
+    smoothingAlpha: number
+  } | null,
+): {
   enterDistance: number
   exitDistance: number
-  proximityStableMs: number
+  stableMs: number
   smoothingAlpha: number
 } | null
 
-export function selectComboSecondaryTargetName(args: {
-  primaryTargetName: string
-  targetNames: string[]
-}): string | null
+export function getInteractionParticipantTargets(
+  rule: ReturnType<typeof normalizeInteractionRule>,
+): string[]
+
+export function getConsumablePartnerTargets(
+  rule: ReturnType<typeof normalizeInteractionRule>,
+): string[]
+
+export function setInteractionPartnerVisibility(args: {
+  rule: ReturnType<typeof normalizeInteractionRule>
+  targetInstances: Map<string, {
+    tracked: boolean
+    visibleByInteraction: boolean
+    model?: { visible: boolean } | null
+  }>
+  visible: boolean
+}): string[]
+
+export function resolveInteractionAnimation(args: {
+  rule: ReturnType<typeof normalizeInteractionRule>
+  actorInstance: { animations?: Array<{ name?: string }> } | null
+}): {
+  ok: boolean
+  clip: { name?: string } | null
+  requested: string | null
+  available: string[]
+  shouldClearInteraction: boolean
+}
+
+export function hasAnimationCapability(
+  instanceLike: { animations?: Array<{ name?: string }> } | null,
+  clipName: string,
+): boolean
 
 export function shouldReplaceCatAnimation(args: { currentPriority: number; nextPriority: number }): boolean
 export function shouldRevealAR(args: { cameraReady: boolean; catReady: boolean }): boolean

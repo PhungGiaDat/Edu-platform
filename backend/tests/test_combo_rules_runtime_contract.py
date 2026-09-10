@@ -51,3 +51,25 @@ def test_combo_rules_expose_generic_runtime_selection_metadata():
         ],
         "total": 1,
     }
+
+
+def test_combo_rules_default_missing_priority_to_zero_for_runtime_tie_breaking():
+    service = AsyncMock()
+    service.list_combos.return_value = [
+        {
+            "combo_id": "dog_bone",
+            "combo_name": "Dog eats Bone",
+            "required_tags": ["dog001", "bone001"],
+            "animation_trigger": "DOG_EAT",
+            "active": True,
+        }
+    ]
+    app = FastAPI()
+    app.include_router(combos_router, prefix="/api/v1")
+    app.dependency_overrides[get_ar_service] = lambda: service
+    client = TestClient(app, raise_server_exceptions=False)
+
+    response = client.get("/api/v1/combos/rules")
+
+    assert response.status_code == 200
+    assert response.json()["rules"][0]["priority"] == 0
