@@ -16,8 +16,8 @@ def test_cat_fish_rule_exposes_the_locked_proximity_configuration():
             "required_tags": ["cat001", "fish001"],
             "active": True,
             "flashcard_set": "claymorphic-animals-001",
-            "proximity_enter_distance": 0.52,
-            "proximity_exit_distance": 0.60,
+            "proximity_enter_distance": 0.50,
+            "proximity_exit_distance": 0.58,
             "proximity_stable_ms": 300,
             "proximity_smoothing_alpha": 0.25,
         }
@@ -40,8 +40,8 @@ def test_cat_fish_rule_exposes_the_locked_proximity_configuration():
             "animation_trigger": None,
             "priority": 0,
             "proximity": {
-                "enter_distance": 0.52,
-                "exit_distance": 0.60,
+                "enter_distance": 0.50,
+                "exit_distance": 0.58,
                 "proximity_stable_ms": 300,
                 "smoothing_alpha": 0.25,
             },

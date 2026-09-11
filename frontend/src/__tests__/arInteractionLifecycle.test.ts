@@ -699,8 +699,8 @@ describe('AR interaction lifecycle contracts', () => {
       combo_id: 'cat-fish-backend',
       animation_trigger: 'CAT_EAT',
       proximity: {
-        enter_distance: 0.52,
-        exit_distance: 0.60,
+        enter_distance: 0.50,
+        exit_distance: 0.58,
         proximity_stable_ms: 300,
         smoothing_alpha: 0.25,
       },
@@ -712,16 +712,16 @@ describe('AR interaction lifecycle contracts', () => {
       animation_trigger: 'CAT_EAT',
       source: 'fallback',
       proximity: {
-        enter_distance: 0.52,
-        exit_distance: 0.60,
+        enter_distance: 0.50,
+        exit_distance: 0.58,
         proximity_stable_ms: 300,
         smoothing_alpha: 0.25,
       },
     })
 
     expect(resolveRuleProximityConfig?.(backend, null)).toEqual({
-      enterDistance: 0.52,
-      exitDistance: 0.60,
+      enterDistance: 0.50,
+      exitDistance: 0.58,
       stableMs: 300,
       smoothingAlpha: 0.25,
     })
@@ -733,6 +733,18 @@ describe('AR interaction lifecycle contracts', () => {
     expect(fallback.proximity).not.toEqual(
       expect.objectContaining({ enterDistance: 0.72, exitDistance: 0.80 }),
     )
+
+    const runtimeSource = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const fallbackStart = runtimeSource.indexOf('function withConfiguredDemoFallback(rawRules)')
+    const fallbackEnd = runtimeSource.indexOf('function installInteractionRules(rawRules)', fallbackStart)
+    const fallbackSource = runtimeSource.slice(fallbackStart, fallbackEnd)
+
+    expect(fallbackStart).toBeGreaterThanOrEqual(0)
+    expect(fallbackEnd).toBeGreaterThan(fallbackStart)
+    expect(fallbackSource).toContain('enter_distance: 0.50')
+    expect(fallbackSource).toContain('exit_distance: 0.58')
+    expect(fallbackSource).toContain('proximity_stable_ms: 300')
+    expect(fallbackSource).toContain('smoothing_alpha: 0.25')
   })
 
   it('uses the selected rule partner for pair distance even with unrelated targets present', () => {
@@ -782,8 +794,8 @@ describe('AR interaction lifecycle contracts', () => {
       tags: ['cat001', 'fish001'],
       combo_id: 'cat-fish',
       proximity: {
-        enter_distance: 0.52,
-        exit_distance: 0.60,
+        enter_distance: 0.50,
+        exit_distance: 0.58,
         proximity_stable_ms: 300,
         smoothing_alpha: 0.25,
       },
@@ -799,7 +811,7 @@ describe('AR interaction lifecycle contracts', () => {
 
     const outside = advanceComboProximityGate({
       now: 0,
-      distance: 0.53,
+      distance: 0.51,
       enteredAt: null,
       comboConsumed: false,
       config,
@@ -809,14 +821,14 @@ describe('AR interaction lifecycle contracts', () => {
 
     const entered = advanceComboProximityGate({
       now: 100,
-      distance: 0.51,
+      distance: 0.50,
       enteredAt: null,
       comboConsumed: false,
       config,
     })
     const stable = advanceComboProximityGate({
       now: 400,
-      distance: 0.51,
+      distance: 0.50,
       enteredAt: entered.enteredAt,
       comboConsumed: false,
       config,
@@ -825,14 +837,14 @@ describe('AR interaction lifecycle contracts', () => {
 
     const notRearmed = advanceComboProximityGate({
       now: 500,
-      distance: 0.56,
+      distance: 0.55,
       enteredAt: null,
       comboConsumed: true,
       config,
     })
     const rearmed = advanceComboProximityGate({
       now: 600,
-      distance: 0.61,
+      distance: 0.58,
       enteredAt: null,
       comboConsumed: true,
       config,
