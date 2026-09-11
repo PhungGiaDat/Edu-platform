@@ -437,6 +437,48 @@ describe('AR interaction lifecycle contracts', () => {
     )?.id).toBe('a-rule')
   })
 
+  it('accepts a backend-shaped Shiba/Bone pair without a Shiba-specific runtime branch', () => {
+    const shibaBone = normalizeInteractionRule({
+      combo_id: 'shiba001-bone001',
+      tags: ['shiba001', 'bone001'],
+      target_order: ['shiba001', 'bone001'],
+      animation_trigger: 'SHIBA_EAT_BONE',
+      priority: 80,
+      proximity: {
+        enter_distance: 0.50,
+        exit_distance: 0.58,
+        proximity_stable_ms: 300,
+        smoothing_alpha: 0.25,
+      },
+    })
+    const resolution = Reflect.get(lifecycleModule, 'resolveInteractionAnimation')?.({
+      rule: shibaBone,
+      actorInstance: { animations: [{ name: 'SHIBA_IDLE' }] },
+    })
+    const runtimeSource = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const lifecycleSource = readFileSync(
+      resolve(process.cwd(), 'public/static/ar-assets/js/ar-interaction-lifecycle.js'),
+      'utf8',
+    )
+
+    expect(selectActiveInteractionRule([shibaBone], ['shiba001', 'bone001'])).toMatchObject({
+      actorTarget: 'shiba001',
+      partnerTargets: ['bone001'],
+      animation: 'SHIBA_EAT_BONE',
+    })
+    expect(resolution).toMatchObject({
+      ok: false,
+      requested: 'SHIBA_EAT_BONE',
+      shouldClearInteraction: true,
+    })
+    expect(runtimeSource).not.toContain('shiba001')
+    expect(runtimeSource).not.toContain('bone001')
+    expect(runtimeSource).not.toContain('SHIBA_EAT_BONE')
+    expect(lifecycleSource).not.toContain('shiba001')
+    expect(lifecycleSource).not.toContain('bone001')
+    expect(lifecycleSource).not.toContain('SHIBA_EAT_BONE')
+  })
+
   it('wires normalized generic rules into the runtime without legacy pair selectors', () => {
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
     const coreStart = source.indexOf('// ========== INTERACTION HELPERS ==========')
