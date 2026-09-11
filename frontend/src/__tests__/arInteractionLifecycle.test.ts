@@ -20,9 +20,144 @@ import {
 } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 const EXPECTED_LIFECYCLE_MODULE_URL =
-  './static/ar-assets/js/ar-interaction-lifecycle.js?v=generic-multitarget-v1'
+  './static/ar-assets/js/ar-interaction-lifecycle.js?v=surface-presentation-v1'
 
 describe('AR interaction lifecycle contracts', () => {
+  it('resolves generic screen, tabletop, and auto presentation requests', () => {
+    const resolvePresentationMode = Reflect.get(lifecycleModule, 'resolvePresentationMode')
+
+    expect(resolvePresentationMode).toBeTypeOf('function')
+    expect(resolvePresentationMode?.('screen')).toBe('SCREEN')
+    expect(resolvePresentationMode?.('TABLETOP')).toBe('TABLETOP')
+    expect(resolvePresentationMode?.('auto')).toBe('AUTO')
+    expect(resolvePresentationMode?.('unknown')).toBe('AUTO')
+  })
+
+  it('keeps screen identity and aligns model up with the configured tabletop normal', () => {
+    const getSurfaceAlignmentQuaternion = Reflect.get(lifecycleModule, 'getSurfaceAlignmentQuaternion')
+    const rotateVector = (vector: { x: number; y: number; z: number }, quaternion: { x: number; y: number; z: number; w: number }) => {
+      const { x, y, z } = vector
+      const { x: qx, y: qy, z: qz, w: qw } = quaternion
+      const ix = qw * x + qy * z - qz * y
+      const iy = qw * y + qz * x - qx * z
+      const iz = qw * z + qx * y - qy * x
+      const iw = -qx * x - qy * y - qz * z
+      return {
+        x: ix * qw + iw * -qx + iy * -qz - iz * -qy,
+        y: iy * qw + iw * -qy + iz * -qx - ix * -qz,
+        z: iz * qw + iw * -qz + ix * -qy - iy * -qx,
+      }
+    }
+
+    const screen = getSurfaceAlignmentQuaternion?.({
+      presentationMode: 'SCREEN',
+      targetNormal: { x: 0, y: 0, z: 1 },
+    })
+    expect(screen).toEqual({ x: 0, y: 0, z: 0, w: 1 })
+
+    const tabletop = getSurfaceAlignmentQuaternion?.({
+      presentationMode: 'TABLETOP',
+      targetNormal: { x: 0, y: 0, z: 1 },
+    })
+    expect(tabletop).toBeDefined()
+    if (!tabletop) throw new Error('Expected tabletop alignment quaternion')
+    const alignedUp = rotateVector({ x: 0, y: 1, z: 0 }, tabletop)
+    expect(alignedUp.x).toBeCloseTo(0, 6)
+    expect(alignedUp.y).toBeCloseTo(0, 6)
+    expect(alignedUp.z).toBeCloseTo(1, 6)
+  })
+
+  it('uses stable auto-mode hysteresis and safely falls back when world-up is unavailable', () => {
+    const classifySurfaceOrientation = Reflect.get(lifecycleModule, 'classifySurfaceOrientation')
+    const initial = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: 0.90,
+      currentMode: 'SCREEN',
+      candidateMode: null,
+      candidateSince: null,
+      now: 1000,
+    })
+    expect(initial).toMatchObject({
+      presentationMode: 'SCREEN',
+      candidateMode: 'TABLETOP',
+      candidateSince: 1000,
+      changed: false,
+    })
+
+    const tabletop = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: 0.90,
+      currentMode: 'SCREEN',
+      candidateMode: 'TABLETOP',
+      candidateSince: 1000,
+      now: 1400,
+    })
+    expect(tabletop).toMatchObject({
+      presentationMode: 'TABLETOP',
+      candidateMode: null,
+      changed: true,
+    })
+
+    const screen = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: 0.50,
+      currentMode: 'TABLETOP',
+      candidateMode: 'SCREEN',
+      candidateSince: 2000,
+      now: 2400,
+    })
+    expect(screen).toMatchObject({
+      presentationMode: 'SCREEN',
+      candidateMode: null,
+      changed: true,
+    })
+
+    const deadBand = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: 0.72,
+      currentMode: 'TABLETOP',
+      candidateMode: null,
+      candidateSince: null,
+      now: 3000,
+    })
+    expect(deadBand).toMatchObject({
+      presentationMode: 'TABLETOP',
+      candidateMode: null,
+      changed: false,
+    })
+
+    const unavailable = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: null,
+      currentMode: 'TABLETOP',
+      candidateMode: null,
+      candidateSince: null,
+      now: 4000,
+    })
+    expect(unavailable).toMatchObject({
+      presentationMode: 'SCREEN',
+      changed: true,
+      reason: 'world_up_unavailable',
+    })
+  })
+
+  it('keeps persistent config, surface presentation, and interaction yaw in distinct transforms', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const acquisitionStart = source.indexOf('// Create anchors for ALL target instances')
+    const acquisitionEnd = source.indexOf('// Reference primary target', acquisitionStart)
+    const interactionStart = source.indexOf('function getInteractionRoot(instance)')
+    const interactionEnd = source.indexOf('// Calculate yaw angle', interactionStart)
+    const acquisition = source.slice(acquisitionStart, acquisitionEnd)
+    const interaction = source.slice(interactionStart, interactionEnd)
+
+    expect(acquisition).toContain('inst.anchor.add(inst.offsetGroup)')
+    expect(acquisition).toContain('inst.offsetGroup.add(inst.surfaceRoot)')
+    expect(acquisition).toContain('inst.surfaceRoot.name = `surface-root:${name}`')
+    expect(interaction).toContain('const surfaceRoot = getPresentationParent(instance)')
+    expect(interaction).toContain('surfaceRoot.add(root)')
+    expect(interaction).toContain('root.add(model)')
+  })
+
   it('measures pair distance from positions and rejects incomplete poses', () => {
     const distanceBetweenPositions = Reflect.get(lifecycleModule, 'distanceBetweenPositions')
 

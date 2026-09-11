@@ -194,15 +194,19 @@
       'canPlayCatMeow',
       'classifyCatGesture',
       'classifyCatTap',
+      'classifySurfaceOrientation',
       'distanceBetweenPositions',
       'getConsumablePartnerTargets',
       'getEligibleCatAmbient',
       'getInteractionParticipantTargets',
+      'getSurfaceAlignmentQuaternion',
+      'getSurfaceFlatScore',
       'getTargetLossGraceState',
       'hasAnimationCapability',
       'isCatOneShotCompletionOwner',
       'normalizeInteractionRule',
       'resolveInteractionAnimation',
+      'resolvePresentationMode',
       'resolveRuleProximityConfig',
       'selectActiveInteractionRule',
       'setInteractionPartnerVisibility',
@@ -212,7 +216,7 @@
     ];
 
     try {
-      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=generic-multitarget-v1');
+      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=surface-presentation-v1');
       const missingExports = expectedLifecycleExports.filter((name) => !(name in lifecycleModule));
       if (missingExports.length > 0) {
         debug('MODULE_PROBE_LIFECYCLE_FAIL', {
@@ -240,22 +244,26 @@
       canPlayCatMeow,
       classifyCatGesture,
       classifyCatTap,
+      classifySurfaceOrientation,
       distanceBetweenPositions,
       getConsumablePartnerTargets,
       getEligibleCatAmbient,
       getInteractionParticipantTargets,
+      getSurfaceAlignmentQuaternion,
+      getSurfaceFlatScore,
       getTargetLossGraceState,
       hasAnimationCapability,
       isCatOneShotCompletionOwner,
       normalizeInteractionRule,
       resolveInteractionAnimation,
+      resolvePresentationMode,
       resolveRuleProximityConfig,
       selectActiveInteractionRule,
       setInteractionPartnerVisibility,
       shouldReplaceCatAnimation,
       shouldRevealAR,
       smoothstep,
-    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=generic-multitarget-v1';
+    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=surface-presentation-v1';
     window.THREE = THREE;
 
     // ========== RUNTIME DIAGNOSTICS ==========
@@ -294,6 +302,16 @@
     const word           = params.get('word') || qrId;
     const apiBase        = (params.get('api_base') || 'https://edu-platform-api-do20.onrender.com').replace(/\/+$/, '');
     const isDebug        = location.hostname === 'localhost' || params.get('debug') === 'true';
+    const requestedPresentationMode = resolvePresentationMode(params.get('presentation_mode'));
+    const SURFACE_PRESENTATION_CONFIG = {
+      tabletopEnterScore: 0.82,
+      tabletopExitScore: 0.65,
+      orientationStableMs: 400,
+      telemetryIntervalMs: 2000,
+      // 8th Wall planar image targets use the anchor-local XY plane. +Z is
+      // therefore the candidate plane normal to validate with device telemetry.
+      targetNormalLocal: { x: 0, y: 0, z: 1 },
+    };
 
     // ========== BOOTSTRAP STATE (must exist before any sendARDebug call) ==========
     let currentPhase = 'initializing';
@@ -453,6 +471,11 @@
         config,
         anchor: null,
         offsetGroup: null,
+        surfaceRoot: null,
+        presentationMode: 'SCREEN',
+        presentationCandidateMode: null,
+        presentationCandidateSince: null,
+        lastSurfaceTelemetryAt: Number.NEGATIVE_INFINITY,
         model: null,
         mixer: null,
         animations: [],
@@ -1252,6 +1275,107 @@
       return modelPromiseCache.get(modelCfgUrl);
     }
 
+    // ========== SURFACE PRESENTATION (instance-aware) ==========
+    // XR world tracking is deliberately disabled for this image-target-only
+    // viewer. Without a proven gravity-aligned XR frame or an already-granted
+    // device-motion source, AUTO safely remains SCREEN; manual TABLETOP stays
+    // available for device calibration without requesting a new permission.
+    function getSurfaceWorldUp() {
+      return {
+        worldUp: null,
+        source: 'unavailable_disable_world_tracking',
+      };
+    }
+
+    function getPresentationParent(instance) {
+      return instance?.surfaceRoot || instance?.offsetGroup || instance?.anchor || null;
+    }
+
+    function getExistingInteractionRoot(instance) {
+      const presentationParent = getPresentationParent(instance);
+      if (!presentationParent) return null;
+      return presentationParent.children.find((child) => (
+        child.name === `interaction-root:${instance.config.qr_id}`
+      )) || null;
+    }
+
+    function updateSurfacePresentation(instance, now) {
+      if (!instance?.anchor || !instance.surfaceRoot || !instance.tracked) return;
+
+      instance.anchor.updateWorldMatrix(true, false);
+      const anchorWorldQuaternion = new THREE.Quaternion();
+      instance.anchor.getWorldQuaternion(anchorWorldQuaternion);
+      const targetNormalLocal = SURFACE_PRESENTATION_CONFIG.targetNormalLocal;
+      const targetNormalWorld = new THREE.Vector3(
+        targetNormalLocal.x,
+        targetNormalLocal.y,
+        targetNormalLocal.z,
+      ).applyQuaternion(anchorWorldQuaternion).normalize();
+      const worldUpState = getSurfaceWorldUp();
+      const flatScore = getSurfaceFlatScore({
+        targetNormal: targetNormalWorld,
+        worldUp: worldUpState.worldUp,
+      });
+      const classification = classifySurfaceOrientation({
+        requestedMode: requestedPresentationMode,
+        flatScore,
+        currentMode: instance.presentationMode,
+        candidateMode: instance.presentationCandidateMode,
+        candidateSince: instance.presentationCandidateSince,
+        now,
+        tabletopEnterScore: SURFACE_PRESENTATION_CONFIG.tabletopEnterScore,
+        tabletopExitScore: SURFACE_PRESENTATION_CONFIG.tabletopExitScore,
+        orientationStableMs: SURFACE_PRESENTATION_CONFIG.orientationStableMs,
+      });
+
+      instance.presentationCandidateMode = classification.candidateMode;
+      instance.presentationCandidateSince = classification.candidateSince;
+      if (classification.changed) {
+        const previousMode = instance.presentationMode;
+        instance.presentationMode = classification.presentationMode;
+        const correction = getSurfaceAlignmentQuaternion({
+          presentationMode: instance.presentationMode,
+          targetNormal: targetNormalLocal,
+        });
+        instance.surfaceRoot.quaternion.set(
+          correction.x,
+          correction.y,
+          correction.z,
+          correction.w,
+        );
+        sendARDebug('SURFACE_MODE_CHANGED', {
+          targetName: instance.config.qr_id,
+          from: previousMode,
+          to: instance.presentationMode,
+          reason: classification.reason,
+        });
+      }
+
+      if (now - instance.lastSurfaceTelemetryAt >= SURFACE_PRESENTATION_CONFIG.telemetryIntervalMs) {
+        instance.lastSurfaceTelemetryAt = now;
+        sendARDebug('SURFACE_ORIENTATION_SAMPLE', {
+          targetName: instance.config.qr_id,
+          presentationMode: instance.presentationMode,
+          requestedMode: requestedPresentationMode,
+          targetNormalLocal,
+          normal: {
+            x: targetNormalWorld.x,
+            y: targetNormalWorld.y,
+            z: targetNormalWorld.z,
+          },
+          worldUp: worldUpState.worldUp,
+          flatScore,
+          source: worldUpState.source,
+        });
+      }
+    }
+
+    function updateSurfacePresentations(now) {
+      for (const instance of targetInstances.values()) {
+        updateSurfacePresentation(instance, now);
+      }
+    }
+
     // ========== MODEL REPARENTING (instance-aware) ==========
     function reparentModelToAnchor(instance) {
       const model = instance?.model;
@@ -1287,17 +1411,20 @@
         instance.offsetGroup.scale.setScalar(sc);
       }
 
-      // Reparent if not already under correct parent
-      if (model.parent !== (instance.offsetGroup || instance.anchor)) {
+      // Keep presentation and transient interaction transforms separate. If a
+      // turn root already exists, retain it rather than flattening the GLB back
+      // under model-offset on a later found/reacquire event.
+      const modelParent = getExistingInteractionRoot(instance) || getPresentationParent(instance);
+      if (model.parent !== modelParent && modelParent) {
         model.parent?.remove(model);
-        (instance.offsetGroup || instance.anchor).add(model);
+        modelParent.add(model);
       }
 
       cacheCatInteractionProxy(instance);
 
       sendARDebug('MODEL_REPARENTED', {
         targetName: instance.config.qr_id,
-        parentName: (instance.offsetGroup || instance.anchor).name,
+        parentName: modelParent?.name || null,
         glbLocalPosition: [model.position.x, model.position.y, model.position.z],
       });
     }
@@ -1334,7 +1461,7 @@
         return;
       }
 
-      const expectedParent = instance.offsetGroup || instance.anchor;
+      const expectedParent = getExistingInteractionRoot(instance) || getPresentationParent(instance);
       if (
         loadedModel.parent === expectedParent &&
         loadedModel.visible &&
@@ -1516,8 +1643,17 @@
             inst.offsetGroup = new THREE.Group();
             inst.offsetGroup.name = `model-offset:${name}`;
             inst.anchor.add(inst.offsetGroup);
+            inst.surfaceRoot = new THREE.Group();
+            inst.surfaceRoot.name = `surface-root:${name}`;
+            inst.offsetGroup.add(inst.surfaceRoot);
             scene.add(inst.anchor);
             sendARDebug('TARGET_ANCHOR_CREATED', { targetName: name, anchorName: inst.anchor.name });
+            sendARDebug('SURFACE_ROOT_CREATED', {
+              targetName: name,
+              surfaceRootName: inst.surfaceRoot.name,
+              requestedMode: requestedPresentationMode,
+              targetNormalLocal: SURFACE_PRESENTATION_CONFIG.targetNormalLocal,
+            });
           }
 
           // Reference primary target's anchor/mixer for backward compat
@@ -1567,6 +1703,7 @@
           if (now - lastInteractionEvalMs >= 100) {
             lastInteractionEvalMs = now;
             processPendingTargetLosses(now);
+            updateSurfacePresentations(now);
             evaluateInteraction(now);
             updateCatAmbient(now);
           }
@@ -1829,17 +1966,16 @@
     function getInteractionRoot(instance) {
       if (!instance?.model) return null;
       const model = instance.model;
-      // Find if interaction-root already exists (child of offsetGroup, parent of GLB)
-      const offsetGroup = instance.offsetGroup;
-      if (!offsetGroup) return null;
-      for (const child of offsetGroup.children) {
-        if (child.name === 'interaction-root:' + instance.config.qr_id) return child;
-      }
+      // Find if interaction-root already exists (below surface-root and above GLB).
+      const surfaceRoot = getPresentationParent(instance);
+      if (!surfaceRoot) return null;
+      const existingRoot = getExistingInteractionRoot(instance);
+      if (existingRoot) return existingRoot;
       // Create it
       const root = new THREE.Group();
       root.name = 'interaction-root:' + instance.config.qr_id;
       // Reparent GLB under interaction-root
-      offsetGroup.add(root);
+      surfaceRoot.add(root);
       root.add(model);
       sendARDebug('INTERACTION_ROOT_CREATED', { targetName: instance.config.qr_id });
       return root;

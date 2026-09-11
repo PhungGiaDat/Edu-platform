@@ -67,6 +67,142 @@ export function getTargetLossGraceState({ lostAt, now, lostGraceMs }) {
   }
 }
 
+const PRESENTATION_MODE_AUTO = 'AUTO'
+const PRESENTATION_MODE_SCREEN = 'SCREEN'
+const PRESENTATION_MODE_TABLETOP = 'TABLETOP'
+const DEFAULT_TABLETOP_ENTER_SCORE = 0.82
+const DEFAULT_TABLETOP_EXIT_SCORE = 0.65
+const DEFAULT_ORIENTATION_STABLE_MS = 400
+
+export function resolvePresentationMode(requestedMode) {
+  const normalized = String(requestedMode || '').trim().toUpperCase()
+  if (normalized === PRESENTATION_MODE_SCREEN) return PRESENTATION_MODE_SCREEN
+  if (normalized === PRESENTATION_MODE_TABLETOP) return PRESENTATION_MODE_TABLETOP
+  return PRESENTATION_MODE_AUTO
+}
+
+function normalizeVector3(vector) {
+  if (!vector) return null
+  const { x, y, z } = vector
+  if (![x, y, z].every(Number.isFinite)) return null
+  const length = Math.hypot(x, y, z)
+  if (length === 0) return null
+  return { x: x / length, y: y / length, z: z / length }
+}
+
+export function getSurfaceFlatScore({ targetNormal, worldUp }) {
+  const normalizedNormal = normalizeVector3(targetNormal)
+  const normalizedWorldUp = normalizeVector3(worldUp)
+  if (!normalizedNormal || !normalizedWorldUp) return null
+  return Math.abs(
+    normalizedNormal.x * normalizedWorldUp.x
+    + normalizedNormal.y * normalizedWorldUp.y
+    + normalizedNormal.z * normalizedWorldUp.z,
+  )
+}
+
+export function getSurfaceAlignmentQuaternion({ presentationMode, targetNormal }) {
+  if (resolvePresentationMode(presentationMode) !== PRESENTATION_MODE_TABLETOP) {
+    return { x: 0, y: 0, z: 0, w: 1 }
+  }
+
+  const normal = normalizeVector3(targetNormal)
+  if (!normal) return { x: 0, y: 0, z: 0, w: 1 }
+
+  // Shortest rotation from model-local +Y to the target plane normal.
+  // For antiparallel vectors, choose a stable perpendicular axis (+Z).
+  if (normal.y <= -0.999999) return { x: 0, y: 0, z: 1, w: 0 }
+
+  const raw = {
+    x: normal.z,
+    y: 0,
+    z: -normal.x,
+    w: 1 + normal.y,
+  }
+  const length = Math.hypot(raw.x, raw.y, raw.z, raw.w)
+  if (length === 0) return { x: 0, y: 0, z: 0, w: 1 }
+  return {
+    x: raw.x / length,
+    y: raw.y / length,
+    z: raw.z / length,
+    w: raw.w / length,
+  }
+}
+
+export function classifySurfaceOrientation({
+  requestedMode,
+  flatScore,
+  currentMode,
+  candidateMode,
+  candidateSince,
+  now,
+  tabletopEnterScore = DEFAULT_TABLETOP_ENTER_SCORE,
+  tabletopExitScore = DEFAULT_TABLETOP_EXIT_SCORE,
+  orientationStableMs = DEFAULT_ORIENTATION_STABLE_MS,
+}) {
+  const requested = resolvePresentationMode(requestedMode)
+  const current = currentMode === PRESENTATION_MODE_TABLETOP
+    ? PRESENTATION_MODE_TABLETOP
+    : PRESENTATION_MODE_SCREEN
+
+  if (requested !== PRESENTATION_MODE_AUTO) {
+    return {
+      presentationMode: requested,
+      candidateMode: null,
+      candidateSince: null,
+      changed: current !== requested,
+      reason: 'manual_override',
+    }
+  }
+
+  if (!Number.isFinite(flatScore)) {
+    return {
+      presentationMode: PRESENTATION_MODE_SCREEN,
+      candidateMode: null,
+      candidateSince: null,
+      changed: current !== PRESENTATION_MODE_SCREEN,
+      reason: 'world_up_unavailable',
+    }
+  }
+
+  const desired = flatScore >= tabletopEnterScore
+    ? PRESENTATION_MODE_TABLETOP
+    : flatScore <= tabletopExitScore
+      ? PRESENTATION_MODE_SCREEN
+      : current
+
+  if (desired === current) {
+    return {
+      presentationMode: current,
+      candidateMode: null,
+      candidateSince: null,
+      changed: false,
+      reason: desired === PRESENTATION_MODE_TABLETOP ? 'auto_tabletop_hold' : 'auto_screen_hold',
+    }
+  }
+
+  const candidateStartedAt = candidateMode === desired && Number.isFinite(candidateSince)
+    ? candidateSince
+    : now
+  if (now - candidateStartedAt >= orientationStableMs) {
+    return {
+      presentationMode: desired,
+      candidateMode: null,
+      candidateSince: null,
+      changed: true,
+      reason: 'auto_stable',
+    }
+  }
+
+  return {
+    presentationMode: current,
+    candidateMode: desired,
+    candidateSince: candidateStartedAt,
+    changed: false,
+    reason: 'auto_candidate',
+  }
+}
+
 export function normalizeInteractionRule(rule) {
   const requiredTargets = Array.isArray(rule?.tags)
     ? rule.tags.filter((target) => typeof target === 'string' && target.length > 0)

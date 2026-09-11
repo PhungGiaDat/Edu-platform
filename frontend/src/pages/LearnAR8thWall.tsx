@@ -85,6 +85,33 @@ export function normalizeScannedQrId(qrId: unknown): string | null {
   return normalizedQrId || null;
 }
 
+type TrackingRuleLike = {
+  combo_id?: unknown;
+  priority?: unknown;
+  tags?: unknown;
+};
+
+export function resolveTrackingGroup(qrId: string, rules: TrackingRuleLike[] | null | undefined): string[] {
+  const normalizedQrId = normalizeScannedQrId(qrId);
+  if (!normalizedQrId) return [];
+
+  const candidates = (Array.isArray(rules) ? rules : [])
+    .map((rule) => {
+      const tags = Array.isArray(rule?.tags)
+        ? rule.tags.filter((tag): tag is string => typeof tag === 'string' && tag.trim().length > 0)
+        : [];
+      return {
+        id: String(rule?.combo_id || ''),
+        priority: Number(rule?.priority || 0),
+        tags: [...new Set(tags)],
+      };
+    })
+    .filter((rule) => rule.tags.length === 2 && rule.tags.includes(normalizedQrId))
+    .sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id));
+
+  return candidates[0]?.tags || [normalizedQrId];
+}
+
 export function serializeXRTargets(targets: XRTarget[]): string {
   return JSON.stringify(targets.map(target => ({
     qr_id: target.qr_id,
@@ -280,25 +307,19 @@ export const LearnAR8thWall: React.FC = () => {
   }, [phase, targetReady, cameraReleased, currentTarget]);
 
   // ========================================================================
-  // TRACKING GROUP RESOLUTION (Milestone 1: multi-target test)
-  // For now, hardcoded test pairs. Replace with backend combo/lesson config later.
-  // ========================================================================
-  const TRACKING_GROUPS = [
-    ['cat001', 'fish001'],
-  ] as const;
-
-  function resolveTrackingGroup(qrId: string): string[] {
-    const group = TRACKING_GROUPS.find(g => g.includes(qrId));
-    return group ? [...group] : [qrId];
-  }
-
-  // ========================================================================
   // fetchXRTarget — fetch XR metadata for one QR ID from backend
   // ========================================================================
   const fetchXRTarget = useCallback(async (targetQrId: string): Promise<XRTarget> => {
     const res = await fetch(`${API_BASE}/api/v1/flashcard/${targetQrId}/xr-urls`);
     if (!res.ok) throw new Error(`XR target ${targetQrId}: API ${res.status}`);
     return normalizeXRTarget(targetQrId, await res.json());
+  }, []);
+
+  const fetchTrackingRules = useCallback(async (): Promise<TrackingRuleLike[]> => {
+    const res = await fetch(`${API_BASE}/api/v1/combos/rules`);
+    if (!res.ok) throw new Error(`Combo rules: API ${res.status}`);
+    const payload = await res.json();
+    return Array.isArray(payload?.rules) ? payload.rules : [];
   }, []);
 
   // ========================================================================
@@ -332,7 +353,16 @@ export const LearnAR8thWall: React.FC = () => {
     setScanError(null);
 
     try {
-      const trackingIds = resolveTrackingGroup(normalizedQrId);
+      let trackingRules: TrackingRuleLike[] = [];
+      try {
+        trackingRules = await fetchTrackingRules();
+        trace('INTERACTION_RULES_PARENT_LOADED', String(trackingRules.length));
+      } catch (error) {
+        // Tracking a single card remains available when optional pair-rule
+        // loading is unavailable. The viewer will report its own rule state.
+        trace('COMBO_RULE_LOAD_ERROR', String(error));
+      }
+      const trackingIds = resolveTrackingGroup(normalizedQrId, trackingRules);
       trace('MULTI_TARGET_RESOLVE', JSON.stringify(trackingIds));
 
       // Fetch all targets in tracking group in parallel
@@ -420,7 +450,7 @@ export const LearnAR8thWall: React.FC = () => {
       setScanError(err instanceof Error ? err.message : 'Failed to load XR target');
       setPhase('ERROR');
     }
-  }, [foundCards, fetchXRTarget]);
+  }, [foundCards, fetchTrackingRules, fetchXRTarget]);
 
   // ========================================================================
   // LISTEN: messages from viewer iframe (XR lifecycle events from ar-xr.html)
@@ -527,6 +557,8 @@ export const LearnAR8thWall: React.FC = () => {
     if (currentTarget.position)  params.set('position', currentTarget.position);
     if (currentTarget.rotation)  params.set('rotation', currentTarget.rotation);
     if (currentTarget.scale)     params.set('scale', currentTarget.scale);
+    const presentationMode = new URLSearchParams(window.location.search).get('presentation_mode');
+    if (presentationMode) params.set('presentation_mode', presentationMode);
     // Milestone 1: pass all tracked targets (cat + fish) to viewer
     if (xrTargets.length > 0) {
       params.set('xr_targets', serializeXRTargets(xrTargets));
