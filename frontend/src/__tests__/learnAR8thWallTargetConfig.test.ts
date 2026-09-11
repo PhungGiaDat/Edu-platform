@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  normalizeScannedQrId,
   normalizeXRTarget,
   serializeXRTargets,
 } from '../pages/LearnAR8thWall';
@@ -7,6 +8,27 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 describe('LearnAR8thWall target visual configuration', () => {
+  it('rejects empty scanner payloads before AR preparation can begin', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/pages/LearnAR8thWall.tsx'),
+      'utf8',
+    );
+    const handlerStart = source.indexOf('const handleQRDetected = useCallback')
+    const handlerEnd = source.indexOf('\n  // ========================================================================\n  // LISTEN:', handlerStart)
+    const handlerSource = source.slice(handlerStart, handlerEnd)
+    const emptyGuard = handlerSource.indexOf("if (!normalizedQrId) {")
+    const preparing = handlerSource.indexOf("setPhase('PREPARING')")
+    const resolveTargets = handlerSource.indexOf('resolveTrackingGroup(normalizedQrId)')
+
+    expect(normalizeScannedQrId('')).toBeNull()
+    expect(normalizeScannedQrId('   ')).toBeNull()
+    expect(normalizeScannedQrId(' cat001 ')).toBe('cat001')
+    expect(emptyGuard).toBeGreaterThanOrEqual(0)
+    expect(handlerSource).toContain("trace('QR_IGNORED_EMPTY'")
+    expect(emptyGuard).toBeLessThan(preparing)
+    expect(emptyGuard).toBeLessThan(resolveTargets)
+  })
+
   it('preserves the canonical fish visual scale in generated xr_targets', () => {
     const fish = normalizeXRTarget('fish001', {
       target: {

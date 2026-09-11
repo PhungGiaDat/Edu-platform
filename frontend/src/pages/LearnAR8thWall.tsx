@@ -80,6 +80,11 @@ export function normalizeXRTarget(targetQrId: string, raw: XRTargetResponse): XR
   };
 }
 
+export function normalizeScannedQrId(qrId: unknown): string | null {
+  const normalizedQrId = String(qrId || '').trim();
+  return normalizedQrId || null;
+}
+
 export function serializeXRTargets(targets: XRTarget[]): string {
   return JSON.stringify(targets.map(target => ({
     qr_id: target.qr_id,
@@ -196,6 +201,7 @@ export const LearnAR8thWall: React.FC = () => {
 
   // Iframe timing instrumentation
   const iframeTimingRef = useRef<{ srcSet: number; onLoad: number; onError: number } | null>(null);
+  const lastEmptyQrIgnoredAtRef = useRef<number>(Number.NEGATIVE_INFINITY);
 
   // Phase state machine
   const [phase, setPhase] = useState<Phase>('SCANNING');
@@ -301,12 +307,22 @@ export const LearnAR8thWall: React.FC = () => {
   // We record cameraReleased here since we know the camera was just stopped.
   // ========================================================================
   const handleQRDetected = useCallback(async (qrId: string) => {
-    if (foundCards.has(qrId)) {
-      trace('QR_DUPLICATE', `Already scanned: ${qrId}`);
+    const normalizedQrId = normalizeScannedQrId(qrId);
+    if (!normalizedQrId) {
+      const now = performance.now();
+      if (now - lastEmptyQrIgnoredAtRef.current >= 1000) {
+        lastEmptyQrIgnoredAtRef.current = now;
+        trace('QR_IGNORED_EMPTY', 'Scanner payload is empty; skipping AR preparation');
+      }
       return;
     }
 
-    trace('QR_DETECTED', `QR=${qrId} → PHASE=PREPARING`);
+    if (foundCards.has(normalizedQrId)) {
+      trace('QR_DUPLICATE', `Already scanned: ${normalizedQrId}`);
+      return;
+    }
+
+    trace('QR_DETECTED', `QR=${normalizedQrId} → PHASE=PREPARING`);
 
     setPhase('PREPARING');
     setTargetReady(false);
@@ -316,7 +332,7 @@ export const LearnAR8thWall: React.FC = () => {
     setScanError(null);
 
     try {
-      const trackingIds = resolveTrackingGroup(qrId);
+      const trackingIds = resolveTrackingGroup(normalizedQrId);
       trace('MULTI_TARGET_RESOLVE', JSON.stringify(trackingIds));
 
       // Fetch all targets in tracking group in parallel
@@ -324,7 +340,7 @@ export const LearnAR8thWall: React.FC = () => {
         trackingIds.map(id => fetchXRTarget(id))
       );
 
-      const primary = targets.find(t => t.qr_id === qrId) || targets[0];
+      const primary = targets.find(t => t.qr_id === normalizedQrId) || targets[0];
       if (!primary) throw new Error('No primary XR target resolved');
 
       // Validate all have XR target data
@@ -379,7 +395,7 @@ export const LearnAR8thWall: React.FC = () => {
       // The actual GLTFLoader download fires inside ar-xr.html after cat MODEL_LOAD_COMPLETE.
       // Injecting the link here gives the browser a head-start on DNS/TLS for fish.
       for (const target of targets) {
-        if (target.qr_id === qrId) continue; // skip primary
+        if (target.qr_id === normalizedQrId) continue; // skip primary
         if (!target.model_3d_url) continue;
         const fishUrl = target.model_3d_url;
         if (document.querySelector(`link[data-fish-preload="${fishUrl}"]`)) continue;
@@ -395,9 +411,9 @@ export const LearnAR8thWall: React.FC = () => {
 
       setCurrentTarget(primary);
       setXrTargets(targets);
-      setFoundCards(prev => new Set([...prev, qrId]));
+      setFoundCards(prev => new Set([...prev, normalizedQrId]));
       setTargetReady(true);
-      trace('TARGET_READY', qrId);
+      trace('TARGET_READY', normalizedQrId);
       trace('MULTI_TARGET_READY', JSON.stringify(targets.map(t => t.qr_id)));
     } catch (err) {
       trace('API_ERROR', String(err));
