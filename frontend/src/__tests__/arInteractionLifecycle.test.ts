@@ -19,6 +19,9 @@ import {
   smoothstep,
 } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
+const EXPECTED_LIFECYCLE_MODULE_URL =
+  './static/ar-assets/js/ar-interaction-lifecycle.js?v=generic-multitarget-v1'
+
 describe('AR interaction lifecycle contracts', () => {
   it('measures pair distance from positions and rejects incomplete poses', () => {
     const distanceBetweenPositions = Reflect.get(lifecycleModule, 'distanceBetweenPositions')
@@ -675,10 +678,17 @@ describe('AR interaction lifecycle contracts', () => {
     expect(importedNames).not.toHaveLength(0)
     expect(probedNames).toEqual(importedNames)
     expect(importedNames.filter((name) => !exportedNames.includes(name))).toEqual([])
+    expect(probeImport?.[1]).toBe(EXPECTED_LIFECYCLE_MODULE_URL)
+    expect(namedImport?.[2]).toBe(EXPECTED_LIFECYCLE_MODULE_URL)
     expect(probeImport?.[1]).toBe(namedImport?.[2])
-    expect(namedImport?.[2]).toBe(
-      './static/ar-assets/js/ar-interaction-lifecycle.js?v=cat-interactions-v2',
-    )
+    expect(probedNames).not.toContain('resolveCatFishComboRule')
+    expect(probedNames).not.toContain('selectComboSecondaryTargetName')
+    expect(importedNames).not.toContain('resolveCatFishComboRule')
+    expect(importedNames).not.toContain('selectComboSecondaryTargetName')
+    expect(lifecycleModule.normalizeInteractionRule).toBeTypeOf('function')
+    expect(lifecycleModule.selectActiveInteractionRule).toBeTypeOf('function')
+    expect(lifecycleModule.hasAnimationCapability).toBeTypeOf('function')
+    expect(lifecycleModule.distanceBetweenPositions).toBeTypeOf('function')
   })
 
   it('preserves the locked CAT plus FISH proximity through the ordinary rule contract', () => {
