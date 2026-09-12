@@ -23,6 +23,7 @@ import { QRScanner } from '@/features/ar/components/QRScanner';
 import '../styles/LearnAR8thWall.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://edu-platform-api-do20.onrender.com';
+const TRANSITION_FADE_MS = 300;
 
 type Phase =
   | 'SCANNING'
@@ -232,6 +233,9 @@ export const LearnAR8thWall: React.FC = () => {
 
   // Phase state machine
   const [phase, setPhase] = useState<Phase>('SCANNING');
+  const [transitionFrame, setTransitionFrame] = useState<string | null>(null);
+  const [transitionMounted, setTransitionMounted] = useState(false);
+  const [transitionVisible, setTransitionVisible] = useState(false);
 
   // Flags that gate XR_BOOTING transition
   const [cameraReleased, setCameraReleased] = useState(false);
@@ -240,6 +244,7 @@ export const LearnAR8thWall: React.FC = () => {
   // Current scanned target (primary card / UI / primary model)
   const [currentTarget, setCurrentTarget] = useState<XRTarget | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
+  const transitionClearTimerRef = useRef<number | null>(null);
 
   // All scanned cards this session
   const [foundCards, setFoundCards] = useState<Set<string>>(new Set());
@@ -264,6 +269,51 @@ export const LearnAR8thWall: React.FC = () => {
     // Dual sink: also write to persistent ARControlTrace ring buffer (survives reload, immune to drop_console)
     window.ARControlTrace?.(`AR_${label}`, { detail, phase });
   };
+
+  const clearTransitionTimer = useCallback(() => {
+    if (transitionClearTimerRef.current !== null) {
+      window.clearTimeout(transitionClearTimerRef.current);
+      transitionClearTimerRef.current = null;
+    }
+  }, []);
+
+  const clearTransitionPresentation = useCallback(() => {
+    clearTransitionTimer();
+    setTransitionVisible(false);
+    setTransitionMounted(false);
+    setTransitionFrame(null);
+  }, [clearTransitionTimer]);
+
+  const handleTransitionFrame = useCallback((frameDataUrl: string | null) => {
+    clearTransitionTimer();
+    setTransitionFrame(frameDataUrl);
+    setTransitionMounted(true);
+    setTransitionVisible(true);
+  }, [clearTransitionTimer]);
+
+  const dismissTransition = useCallback(() => {
+    setTransitionVisible(false);
+    clearTransitionTimer();
+
+    const reducedMotionQuery = typeof window !== 'undefined'
+      ? window.matchMedia?.('(prefers-reduced-motion: reduce)')
+      : undefined;
+    const prefersReducedMotion = reducedMotionQuery?.matches === true;
+
+    if (prefersReducedMotion) {
+      setTransitionMounted(false);
+      setTransitionFrame(null);
+      return;
+    }
+
+    transitionClearTimerRef.current = window.setTimeout(() => {
+      setTransitionMounted(false);
+      setTransitionFrame(null);
+      transitionClearTimerRef.current = null;
+    }, TRANSITION_FADE_MS);
+  }, [clearTransitionTimer]);
+
+  useEffect(() => () => clearTransitionTimer(), [clearTransitionTimer]);
 
   // Telegram Sync integration
   const { syncTelegram, syncStatus, iframeLogs } = useTelegramSync({
@@ -330,6 +380,7 @@ export const LearnAR8thWall: React.FC = () => {
   const handleQRDetected = useCallback(async (qrId: string) => {
     const normalizedQrId = normalizeScannedQrId(qrId);
     if (!normalizedQrId) {
+      clearTransitionPresentation();
       const now = performance.now();
       if (now - lastEmptyQrIgnoredAtRef.current >= 1000) {
         lastEmptyQrIgnoredAtRef.current = now;
@@ -339,6 +390,7 @@ export const LearnAR8thWall: React.FC = () => {
     }
 
     if (foundCards.has(normalizedQrId)) {
+      clearTransitionPresentation();
       trace('QR_DUPLICATE', `Already scanned: ${normalizedQrId}`);
       return;
     }
@@ -446,11 +498,12 @@ export const LearnAR8thWall: React.FC = () => {
       trace('TARGET_READY', normalizedQrId);
       trace('MULTI_TARGET_READY', JSON.stringify(targets.map(t => t.qr_id)));
     } catch (err) {
+      clearTransitionPresentation();
       trace('API_ERROR', String(err));
       setScanError(err instanceof Error ? err.message : 'Failed to load XR target');
       setPhase('ERROR');
     }
-  }, [foundCards, fetchTrackingRules, fetchXRTarget]);
+  }, [clearTransitionPresentation, foundCards, fetchTrackingRules, fetchXRTarget]);
 
   // ========================================================================
   // LISTEN: messages from viewer iframe (XR lifecycle events from ar-xr.html)
@@ -494,6 +547,7 @@ export const LearnAR8thWall: React.FC = () => {
           console.log('[LearnAR8thWall] XR camera has video — AR is LIVE');
           trace('XR_CAMERA_HAS_VIDEO', 'Camera feed visible, AR tracking active');
           setPhase('VIEWING');
+          dismissTransition();
           trace('PHASE', 'VIEWING — AR session active');
           break;
 
@@ -504,6 +558,7 @@ export const LearnAR8thWall: React.FC = () => {
         case 'XR_ERROR':
           console.error('[LearnAR8thWall] XR error:', data.payload);
           trace('XR_ERROR', data.payload?.message || 'Unknown XR error');
+          clearTransitionPresentation();
           setScanError(data.payload?.message || 'XR session failed');
           setPhase('ERROR');
           break;
@@ -520,7 +575,7 @@ export const LearnAR8thWall: React.FC = () => {
 
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, []);
+  }, [clearTransitionPresentation, dismissTransition]);
 
   // ========================================================================
   // NAVIGATION
@@ -530,12 +585,13 @@ export const LearnAR8thWall: React.FC = () => {
   }, [navigate]);
 
   const handleRetry = useCallback(() => {
+    clearTransitionPresentation();
     setPhase('SCANNING');
     setScanError(null);
     setCurrentTarget(null);
     setCameraReleased(false);
     setTargetReady(false);
-  }, []);
+  }, [clearTransitionPresentation]);
 
   const handleSwitchToMindAR = useCallback(() => {
     navigate('/learn-ar');
@@ -619,21 +675,14 @@ export const LearnAR8thWall: React.FC = () => {
             onReady={() => trace('SCANNER_READY', 'getUserMedia succeeded')}
             onError={(msg) => {
               trace('SCANNER_ERROR', msg);
+              clearTransitionPresentation();
               setScanError(msg);
               setPhase('ERROR');
             }}
+            onTransitionFrame={handleTransitionFrame}
             active={phase === 'SCANNING'}
             debug={isDebugMode}
           />
-        )}
-
-        {/* PREPARING: overlay while fetching XR target */}
-        {phase === 'PREPARING' && (
-          <div className="ar-loading">
-            <div className="loading-spinner" />
-            <p>Loading XR target...</p>
-            <p className="loading-hint">Preparing AR experience</p>
-          </div>
         )}
 
         {/* XR_BOOTING | VIEWING: 8th Wall XR viewer */}
@@ -659,6 +708,40 @@ export const LearnAR8thWall: React.FC = () => {
               trace('VIEWER_IFRAME_ERROR', viewerSrc);
             }}
           />
+        )}
+
+        {transitionMounted && (
+          <div
+            className={`ar-transition-overlay ${transitionVisible ? 'is-visible' : 'is-leaving'}`}
+            data-testid="ar-transition-overlay"
+            data-visible={transitionVisible ? 'true' : 'false'}
+            role="status"
+            aria-live="polite"
+          >
+            {transitionFrame && (
+              <img
+                data-testid="ar-transition-frame"
+                className="ar-transition-frame"
+                src={transitionFrame}
+                alt=""
+                aria-hidden="true"
+              />
+            )}
+            <div className="ar-transition-shade" />
+            <div className="ar-transition-status">
+              <div className="ar-transition-indicator" aria-hidden="true" />
+              <strong>
+                {phase === 'PREPARING' || phase === 'SCANNING'
+                  ? 'Tìm thấy thẻ rồi!'
+                  : 'Đang mở thế giới AR...'}
+              </strong>
+              <span>
+                {phase === 'PREPARING' || phase === 'SCANNING'
+                  ? 'Đang chuẩn bị trải nghiệm AR...'
+                  : 'Giữ điện thoại hướng về thẻ nhé'}
+              </span>
+            </div>
+          </div>
         )}
 
         {/* ERROR: retry option */}
@@ -713,17 +796,9 @@ export const LearnAR8thWall: React.FC = () => {
         </div>
       )}
 
-      {(phase === 'PREPARING' || phase === 'XR_BOOTING') && (
-        <div className="ar-instructions">
-          <p>Preparing AR experience...</p>
-        </div>
-      )}
-
       {phase === 'VIEWING' && (
         <div className="ar-instructions">
-          <button className="btn-secondary scan-more-btn" onClick={handleRetry}>
-            Scan Another Card
-          </button>
+          <p>Giữ thẻ trong khung để khám phá AR</p>
         </div>
       )}
 

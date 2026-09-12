@@ -83,6 +83,101 @@
   z-index: 1;
 }
 
+/* Presentation-only QR-to-XR camera handoff. */
+.ar-transition-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 120;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.ar-transition-overlay.is-visible {
+  opacity: 1;
+}
+
+.ar-transition-overlay.is-leaving {
+  opacity: 0;
+}
+
+.ar-transition-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(2px);
+  transform: scale(1.015);
+}
+
+.ar-transition-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(9, 14, 28, 0.28),
+      rgba(9, 14, 28, 0.66)
+    );
+}
+
+.ar-transition-status {
+  position: absolute;
+  z-index: 1;
+  right: 24px;
+  bottom: max(72px, calc(env(safe-area-inset-bottom) + 48px));
+  left: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
+}
+
+.ar-transition-status strong {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.ar-transition-status span {
+  max-width: 320px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.ar-transition-indicator {
+  width: 30px;
+  height: 30px;
+  margin-bottom: 4px;
+  border: 3px solid rgba(255, 255, 255, 0.28);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ar-transition-spin 900ms linear infinite;
+}
+
+@keyframes ar-transition-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ar-transition-overlay {
+    transition: none;
+  }
+
+  .ar-transition-indicator {
+    animation: none;
+  }
+}
+
 /* Loading */
 .ar-xr-loading {
   position: fixed;
