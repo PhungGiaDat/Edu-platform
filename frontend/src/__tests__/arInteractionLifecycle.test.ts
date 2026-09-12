@@ -20,7 +20,7 @@ import {
 } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 const EXPECTED_LIFECYCLE_MODULE_URL =
-  './static/ar-assets/js/ar-interaction-lifecycle.js?v=surface-presentation-v1'
+  './static/ar-assets/js/ar-interaction-lifecycle.js?v=interaction-transaction-v1'
 
 describe('AR interaction lifecycle contracts', () => {
   it('resolves generic screen, tabletop, and auto presentation requests', () => {
@@ -583,6 +583,165 @@ describe('AR interaction lifecycle contracts', () => {
     expect(reacquired.withinGrace).toBe(false)
     expect(reacquired.confirmed).toBe(true)
     expect(reacquired.hide).toBe(true)
+  })
+
+  it('keeps generic participants owned after arming while leaving pre-arm loss unlocked', () => {
+    const createInteractionTransaction = Reflect.get(lifecycleModule, 'createInteractionTransaction')
+    const classifyInteractionTargetLoss = Reflect.get(lifecycleModule, 'classifyInteractionTargetLoss')
+    const rule = normalizeInteractionRule({
+      tags: ['actor001', 'partner001'],
+      target_order: ['actor001', 'partner001'],
+      combo_id: 'actor-partner',
+    })
+
+    expect(createInteractionTransaction).toBeTypeOf('function')
+    expect(classifyInteractionTargetLoss).toBeTypeOf('function')
+
+    const transaction = createInteractionTransaction?.({
+      runId: 10,
+      rule,
+      lockedAt: 1000,
+      watchdogAt: 5000,
+    })
+
+    expect(transaction).toMatchObject({
+      runId: 10,
+      ruleId: 'actor-partner',
+      actorTarget: 'actor001',
+      partnerTargets: ['partner001'],
+      participantTargets: ['actor001', 'partner001'],
+    })
+
+    expect(classifyInteractionTargetLoss?.({
+      transaction: null,
+      targetName: 'actor001',
+      currentRunId: 10,
+    })).toMatchObject({
+      defer: false,
+      role: null,
+    })
+
+    expect(classifyInteractionTargetLoss?.({
+      transaction,
+      targetName: 'actor001',
+      currentRunId: 10,
+    })).toMatchObject({
+      defer: true,
+      role: 'actor',
+      runId: 10,
+    })
+
+    expect(classifyInteractionTargetLoss?.({
+      transaction,
+      targetName: 'partner001',
+      currentRunId: 10,
+    })).toMatchObject({
+      defer: true,
+      role: 'partner',
+      runId: 10,
+    })
+  })
+
+  it('reconciles acquired and confirmed-lost generic participants only after transaction release', () => {
+    const createInteractionTransaction = Reflect.get(lifecycleModule, 'createInteractionTransaction')
+    const reconcileInteractionParticipantTracking = Reflect.get(lifecycleModule, 'reconcileInteractionParticipantTracking')
+    const rule = normalizeInteractionRule({
+      tags: ['actor001', 'partner001'],
+      target_order: ['actor001', 'partner001'],
+      combo_id: 'actor-partner',
+    })
+    const transaction = createInteractionTransaction?.({
+      runId: 10,
+      rule,
+      lockedAt: 1000,
+      watchdogAt: 5000,
+    })
+
+    expect(reconcileInteractionParticipantTracking).toBeTypeOf('function')
+    expect(reconcileInteractionParticipantTracking?.({
+      transaction,
+      targetName: 'actor001',
+      tracked: true,
+      lossConfirmed: true,
+    })).toEqual({
+      targetName: 'actor001',
+      deferredLossConfirmed: true,
+      result: 'resume_live_tracking',
+    })
+    expect(reconcileInteractionParticipantTracking?.({
+      transaction,
+      targetName: 'partner001',
+      tracked: false,
+      lossConfirmed: true,
+    })).toEqual({
+      targetName: 'partner001',
+      deferredLossConfirmed: true,
+      result: 'apply_confirmed_loss',
+    })
+    expect(reconcileInteractionParticipantTracking?.({
+      transaction,
+      targetName: 'unrelated001',
+      tracked: false,
+      lossConfirmed: true,
+    })).toEqual({
+      targetName: 'unrelated001',
+      deferredLossConfirmed: false,
+      result: 'not_a_participant',
+    })
+  })
+
+  it('rejects stale generic transaction callbacks and expires a bounded transaction watchdog', () => {
+    const createInteractionTransaction = Reflect.get(lifecycleModule, 'createInteractionTransaction')
+    const isInteractionRunOwner = Reflect.get(lifecycleModule, 'isInteractionRunOwner')
+    const isInteractionTransactionWatchdogExpired = Reflect.get(lifecycleModule, 'isInteractionTransactionWatchdogExpired')
+    const rule = normalizeInteractionRule({
+      tags: ['actor001', 'partner001'],
+      target_order: ['actor001', 'partner001'],
+      combo_id: 'actor-partner',
+    })
+    const activeTransaction = createInteractionTransaction?.({
+      runId: 11,
+      rule,
+      lockedAt: 1000,
+      watchdogAt: 5000,
+    })
+
+    expect(isInteractionRunOwner).toBeTypeOf('function')
+    expect(isInteractionTransactionWatchdogExpired).toBeTypeOf('function')
+    expect(isInteractionRunOwner?.({
+      runId: 10,
+      currentRunId: 11,
+      transaction: activeTransaction,
+    })).toBe(false)
+    expect(isInteractionRunOwner?.({
+      runId: 11,
+      currentRunId: 11,
+      transaction: activeTransaction,
+    })).toBe(true)
+    expect(isInteractionTransactionWatchdogExpired?.({ now: 4999, transaction: activeTransaction })).toBe(false)
+    expect(isInteractionTransactionWatchdogExpired?.({ now: 5000, transaction: activeTransaction })).toBe(true)
+  })
+
+  it('defers only locked participant loss in the runtime and reconciles it after return', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const processorStart = source.indexOf('function processPendingTargetLosses(now)')
+    const processorEnd = source.indexOf('function evaluateInteraction(now)', processorStart)
+    const processorSource = source.slice(processorStart, processorEnd)
+    const lossDecisionStart = source.indexOf('function getActiveTransactionLossDecision(targetName)')
+    const lossDecisionEnd = source.indexOf('function restoreDefaultInteractionAnimation', lossDecisionStart)
+    const lossDecisionSource = source.slice(lossDecisionStart, lossDecisionEnd)
+    const releaseStart = source.indexOf('function releaseInteractionTransaction(')
+    const releaseEnd = source.indexOf('function evaluateInteraction(now)', releaseStart)
+    const releaseSource = source.slice(releaseStart, releaseEnd)
+
+    expect(processorStart).toBeGreaterThanOrEqual(0)
+    expect(processorSource).toContain('getActiveTransactionLossDecision')
+    expect(lossDecisionSource).toContain('classifyInteractionTargetLoss')
+    expect(processorSource).toContain("sendARDebug('INTERACTION_TARGET_LOSS_DEFERRED'")
+    expect(processorSource).toContain('continue;')
+    expect(releaseStart).toBeGreaterThanOrEqual(0)
+    expect(releaseSource).toContain('reconcileInteractionParticipantTracking')
+    expect(releaseSource).toContain("sendARDebug('INTERACTION_TRACKING_RECONCILED'")
   })
 
   it('keeps the active CAT return ticking ahead of combo phase exits', () => {

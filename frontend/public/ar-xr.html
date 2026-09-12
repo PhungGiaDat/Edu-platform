@@ -194,7 +194,9 @@
       'canPlayCatMeow',
       'classifyCatGesture',
       'classifyCatTap',
+      'classifyInteractionTargetLoss',
       'classifySurfaceOrientation',
+      'createInteractionTransaction',
       'distanceBetweenPositions',
       'getConsumablePartnerTargets',
       'getEligibleCatAmbient',
@@ -204,7 +206,11 @@
       'getTargetLossGraceState',
       'hasAnimationCapability',
       'isCatOneShotCompletionOwner',
+      'isInteractionRunOwner',
+      'isInteractionTransactionLocked',
+      'isInteractionTransactionWatchdogExpired',
       'normalizeInteractionRule',
+      'reconcileInteractionParticipantTracking',
       'resolveInteractionAnimation',
       'resolvePresentationMode',
       'resolveRuleProximityConfig',
@@ -216,7 +222,7 @@
     ];
 
     try {
-      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=surface-presentation-v1');
+      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=interaction-transaction-v1');
       const missingExports = expectedLifecycleExports.filter((name) => !(name in lifecycleModule));
       if (missingExports.length > 0) {
         debug('MODULE_PROBE_LIFECYCLE_FAIL', {
@@ -244,7 +250,9 @@
       canPlayCatMeow,
       classifyCatGesture,
       classifyCatTap,
+      classifyInteractionTargetLoss,
       classifySurfaceOrientation,
+      createInteractionTransaction,
       distanceBetweenPositions,
       getConsumablePartnerTargets,
       getEligibleCatAmbient,
@@ -254,7 +262,11 @@
       getTargetLossGraceState,
       hasAnimationCapability,
       isCatOneShotCompletionOwner,
+      isInteractionRunOwner,
+      isInteractionTransactionLocked,
+      isInteractionTransactionWatchdogExpired,
       normalizeInteractionRule,
+      reconcileInteractionParticipantTracking,
       resolveInteractionAnimation,
       resolvePresentationMode,
       resolveRuleProximityConfig,
@@ -263,7 +275,7 @@
       shouldReplaceCatAnimation,
       shouldRevealAR,
       smoothstep,
-    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=surface-presentation-v1';
+    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=interaction-transaction-v1';
     window.THREE = THREE;
 
     // ========== RUNTIME DIAGNOSTICS ==========
@@ -368,6 +380,9 @@
       returnTurnMs: 400,
       forwardYawOffsetDeg: 0,
     };
+    const INTERACTION_TRANSACTION_CONFIG = {
+      safetyBufferMs: 750,
+    };
 
     // Boot gate state
     let bootState = {
@@ -388,6 +403,7 @@
       source: null,
       priority: 0,
     };
+    const interactionAnimationCleanupHooks = new Set();
     const catPointerGesture = {
       active: false,
       pointerId: null,
@@ -423,6 +439,9 @@
       comboRunId: 0,
       // Latched state captured at COMBO_ARMED
       comboLatch: null,          // { runId, ruleId, actorTarget, partnerTargets, actorPose, partnerPose, actorOriginalYaw }
+      // Generic ownership lock for a committed actor/partner interaction run.
+      transaction: null,         // { runId, ruleId, actorTarget, partnerTargets, participantTargets, lockedAt, watchdogAt, deferredLosses }
+      activeAnimation: null,     // { runId, actorTarget, action, mixer, onFinish, idleClip, catAnimationGeneration }
       // Procedural turn state
       actorTurn: null,          // { runId, actorTarget, fromYaw, toYaw, startedAt, durationMs }
       // Post-combo return state
@@ -827,6 +846,16 @@
       if (source === 'CAT_SPIN') sendARDebug('CAT_SPIN_FINISHED', { generation });
       if (source === 'CAT_AMBIENT') sendARDebug('CAT_AMBIENT_FINISHED', { clip: clip.name, generation });
     }
+
+    function clearCatOneShotOwnershipForInteractionAction(action) {
+      if (catAnimationState.action !== action) return;
+      catAnimationState.generation++;
+      catAnimationState.action = null;
+      catAnimationState.clipName = null;
+      catAnimationState.source = null;
+      catAnimationState.priority = 0;
+    }
+    interactionAnimationCleanupHooks.add(clearCatOneShotOwnershipForInteractionAction);
 
     function cancelActiveCatOneShotForCombo() {
       if (!catAnimationState.action) return;
@@ -1703,6 +1732,7 @@
           if (now - lastInteractionEvalMs >= 100) {
             lastInteractionEvalMs = now;
             processPendingTargetLosses(now);
+            processInteractionTransactionWatchdog(now);
             updateSurfacePresentations(now);
             evaluateInteraction(now);
             updateCatAmbient(now);
@@ -1734,11 +1764,9 @@
             const instance = targetInstances.get(detail.name);
             const pose = trackedTargets.get(detail.name);
             if (instance && instance.anchor && pose) {
-              // Do NOT overwrite primary anchor while combo is latched —
-              // the latched pose is frozen so CAT stays visually stable.
-              const latchActive = interactionState.comboLatch != null
-                && interactionState.comboLatch.runId === interactionState.comboRunId;
-              if (!latchActive || detail.name !== interactionState.comboLatch.actorTarget) {
+              // A committed interaction freezes only its participant poses.
+              const transactionOwnsTarget = getActiveTransactionLossDecision(detail.name).defer;
+              if (!transactionOwnsTarget) {
                 applyTargetPose(instance, pose);
               }
             }
@@ -1834,10 +1862,10 @@
     }
 
     function isInteractionExecutionLocked() {
-      return interactionState.actorReturn != null
-        || interactionState.phase === InteractionPhase.COMBO_ARMED
-        || interactionState.phase === InteractionPhase.COMBO_TURNING
-        || interactionState.phase === InteractionPhase.COMBO_PLAYING;
+      return isInteractionTransactionLocked({
+        transaction: interactionState.transaction,
+        currentRunId: interactionState.comboRunId,
+      });
     }
 
     function clearConsumeTimer() {
@@ -1846,11 +1874,70 @@
       interactionState.consumeTimeoutId = null;
     }
 
+    function getInteractionTransactionWatchdogAt({ now, activeRule, actorInst }) {
+      const animation = resolveInteractionAnimation({ rule: activeRule, actorInstance: actorInst });
+      const animationDurationMs = animation.ok ? (animation.clip.duration || 0) * 1000 : 0;
+      return now
+        + COMBO_VISUAL_CONFIG.bodyTurnMs
+        + animationDurationMs
+        + COMBO_VISUAL_CONFIG.returnTurnMs
+        + INTERACTION_TRANSACTION_CONFIG.safetyBufferMs;
+    }
+
+    function getActiveTransactionLossDecision(targetName) {
+      return classifyInteractionTargetLoss({
+        transaction: interactionState.transaction,
+        targetName,
+        currentRunId: interactionState.comboRunId,
+      });
+    }
+
+    function restoreDefaultInteractionAnimation(instance, action, reason) {
+      if (!instance?.mixer || !instance?.model?.visible) return;
+      const idleClip = getDefaultAnimationClip(instance);
+      if (!idleClip) return;
+      if (action) {
+        action.fadeOut(0.12);
+        action.stop();
+        action.reset();
+      }
+      const idleAction = instance.mixer.clipAction(idleClip);
+      idleAction.reset();
+      idleAction.fadeIn(0.12);
+      idleAction.play();
+      sendARDebug('INTERACTION_IDLE_RESTORED', {
+        actorTarget: instance.config?.qr_id || null,
+        idleClip: idleClip.name,
+        reason,
+      });
+    }
+
+    // Removes only the action owned by a cancelled generic interaction run.
+    function abortOwnedInteractionAnimation(runId, reason) {
+      const execution = interactionState.activeAnimation;
+      if (!execution || execution.runId !== runId) return false;
+      execution.mixer.removeEventListener('finished', execution.onFinish);
+      const actorInst = targetInstances.get(execution.actorTarget);
+      restoreDefaultInteractionAnimation(actorInst, execution.action, reason);
+      for (const cleanupHook of interactionAnimationCleanupHooks) {
+        cleanupHook(execution.action);
+      }
+      interactionState.activeAnimation = null;
+      sendARDebug('INTERACTION_ANIMATION_ABORTED', {
+        runId,
+        actorTarget: execution.actorTarget,
+        reason,
+      });
+      return true;
+    }
+
     function clearInteractionExecutionState() {
+      const ownedRunId = interactionState.comboRunId;
       const latch = interactionState.comboLatch;
       const actorInst = latch ? targetInstances.get(latch.actorTarget) : null;
       const root = actorInst ? getInteractionRoot(actorInst) : null;
       if (root && Number.isFinite(latch?.actorOriginalYaw)) root.rotation.y = latch.actorOriginalYaw;
+      abortOwnedInteractionAnimation(ownedRunId, 'interaction_execution_cleared');
       interactionState.comboRunId++;
       clearConsumeTimer();
       interactionState.primaryLockedAt = null;
@@ -1859,6 +1946,8 @@
       interactionState.comboPlaying = false;
       interactionState.comboConsumed = false;
       interactionState.comboLatch = null;
+      interactionState.transaction = null;
+      interactionState.activeAnimation = null;
       interactionState.actorTurn = null;
       interactionState.actorReturn = null;
       interactionState.lastSecondaryReadiness = null;
@@ -1915,7 +2004,11 @@
       interactionState.consumeTimeoutId = setTimeout(() => {
         interactionState.consumeTimeoutId = null;
         if (
-          runId !== interactionState.comboRunId
+          !isInteractionRunOwner({
+            runId,
+            currentRunId: interactionState.comboRunId,
+            transaction: interactionState.transaction,
+          })
           || interactionState.phase !== InteractionPhase.COMBO_PLAYING
         ) {
           sendARDebug('SECONDARY_CONSUME_IGNORED_STALE', { runId, currentRunId: interactionState.comboRunId });
@@ -1958,6 +2051,81 @@
       });
 
       setInteractionPhase(InteractionPhase.SEARCH_PRIMARY, { reason });
+    }
+
+    function releaseInteractionTransaction(runId, reason, { abort = false } = {}) {
+      const transaction = interactionState.transaction;
+      if (!isInteractionRunOwner({
+        runId,
+        currentRunId: interactionState.comboRunId,
+        transaction,
+      })) return false;
+
+      interactionState.transaction = null;
+      sendARDebug('INTERACTION_TRANSACTION_RELEASED', {
+        runId,
+        ruleId: transaction.ruleId,
+        actorTarget: transaction.actorTarget,
+        partnerTargets: transaction.partnerTargets,
+        reason,
+        abort,
+      });
+
+      if (abort) {
+        resetInteractionSession(reason);
+      }
+
+      const confirmedLosses = [];
+      for (const targetName of transaction.participantTargets) {
+        const instance = targetInstances.get(targetName);
+        const lossConfirmed = transaction.deferredLosses?.has(targetName)
+          || instance?.lossConfirmedAt != null;
+        const reconciliation = reconcileInteractionParticipantTracking({
+          transaction,
+          targetName,
+          tracked: !!instance?.tracked,
+          lossConfirmed,
+        });
+        sendARDebug('INTERACTION_TRACKING_RECONCILED', {
+          runId,
+          targetName,
+          tracked: !!instance?.tracked,
+          deferredLossConfirmed: reconciliation.deferredLossConfirmed,
+          result: reconciliation.result,
+        });
+        if (reconciliation.result === 'apply_confirmed_loss') {
+          confirmedLosses.push({
+            targetName,
+            lostForMs: transaction.deferredLosses?.get(targetName)?.lostForMs
+              ?? Math.max(0, performance.now() - (instance?.lostAt ?? performance.now())),
+          });
+        }
+      }
+
+      if (!abort && confirmedLosses.length > 0) {
+        resetInteractionSession('interaction_participant_lost_after_transaction');
+      }
+      for (const loss of confirmedLosses) {
+        hideConfirmedTargetLoss(loss.targetName, loss.lostForMs);
+      }
+      return true;
+    }
+
+    function processInteractionTransactionWatchdog(now) {
+      const transaction = interactionState.transaction;
+      if (!isInteractionTransactionLocked({
+        transaction,
+        currentRunId: interactionState.comboRunId,
+      })) return;
+      if (!isInteractionTransactionWatchdogExpired({ now, transaction })) return;
+      sendARDebug('INTERACTION_TRANSACTION_WATCHDOG', {
+        runId: transaction.runId,
+        ruleId: transaction.ruleId,
+        actorTarget: transaction.actorTarget,
+        partnerTargets: transaction.partnerTargets,
+        lockedForMs: Math.round(now - transaction.lockedAt),
+      });
+      releaseInteractionTransaction(transaction.runId, 'interaction_transaction_watchdog', { abort: true });
     }
 
     // Get or create the interaction-root group for the primary model.
@@ -2003,7 +2171,11 @@
       if (!turn) return;
 
       // Check stale
-      if (turn.runId !== interactionState.comboRunId) {
+      if (!isInteractionRunOwner({
+        runId: turn.runId,
+        currentRunId: interactionState.comboRunId,
+        transaction: interactionState.transaction,
+      })) {
         interactionState.actorTurn = null;
         return;
       }
@@ -2088,7 +2260,6 @@
         clip: clip.name,
         durationMs: Math.round((clip.duration || 0) * 1000),
       });
-      scheduleInteractionPartnerConsume(runId, (clip.duration || 0) * 1000, activeRule);
       const onFinish = (e) => {
         if (e.action !== action) return;
         mixer.removeEventListener('finished', onFinish);
@@ -2098,7 +2269,11 @@
           current: catAnimationState,
         });
         if (
-          runId !== interactionState.comboRunId ||
+          !isInteractionRunOwner({
+            runId,
+            currentRunId: interactionState.comboRunId,
+            transaction: interactionState.transaction,
+          }) ||
           interactionState.phase !== InteractionPhase.COMBO_PLAYING ||
           !catOwnershipValid
         ) {
@@ -2122,6 +2297,12 @@
           });
         }
         sendARDebug('COMBO_ANIMATION_FINISHED', { targetName: activeRule.actorTarget, runId });
+        if (
+          interactionState.activeAnimation?.runId === runId
+          && interactionState.activeAnimation.action === action
+        ) {
+          interactionState.activeAnimation = null;
+        }
         if (catActor) {
           restoreCatIdleAfterOneShot(actorInst, action, activeRule.animation, clip.name);
           catAnimationState.action = null;
@@ -2165,7 +2346,17 @@
           runId,
         });
       };
+      interactionState.activeAnimation = {
+        runId,
+        actorTarget: activeRule.actorTarget,
+        action,
+        mixer,
+        onFinish,
+        idleClip,
+        catAnimationGeneration: animationGeneration,
+      };
       mixer.addEventListener('finished', onFinish);
+      scheduleInteractionPartnerConsume(runId, (clip.duration || 0) * 1000, activeRule);
       return true;
     }
 
@@ -2217,6 +2408,28 @@
           lostForMs: Math.round(lossGrace.lostForMs),
         });
 
+        const lossDecision = getActiveTransactionLossDecision(targetName);
+        if (lossDecision.defer) {
+          const transaction = interactionState.transaction;
+          if (transaction) {
+            if (!transaction.deferredLosses) transaction.deferredLosses = new Map();
+            transaction.deferredLosses.set(targetName, {
+              role: lossDecision.role,
+              lostForMs: lossGrace.lostForMs,
+              confirmedAt: now,
+            });
+          }
+          sendARDebug('INTERACTION_TARGET_LOSS_DEFERRED', {
+            runId: lossDecision.runId,
+            ruleId: transaction?.ruleId || null,
+            targetName,
+            role: lossDecision.role,
+            phase: interactionState.phase,
+            lostForMs: Math.round(lossGrace.lostForMs),
+          });
+          continue;
+        }
+
         if (isTargetInActiveInteraction(targetName)) {
           resetInteractionSession('interaction_participant_lost');
         }
@@ -2244,7 +2457,11 @@
       }
 
       // Confirmed actor loss (grace expired) → full reset
-      if (!actorEffectivelyTracked && interactionState.phase !== InteractionPhase.SEARCH_PRIMARY) {
+      if (
+        !actorEffectivelyTracked
+        && interactionState.phase !== InteractionPhase.SEARCH_PRIMARY
+        && !isInteractionExecutionLocked()
+      ) {
         sendARDebug('PRIMARY_UNLOCKED', {
           reason: 'actor_lost_grace',
           lostForMs: actorInst ? now - actorInst.lostAt : null,
@@ -2282,7 +2499,11 @@
 
       const activeReturn = interactionState.actorReturn;
       if (activeReturn) {
-        if (activeReturn.runId !== interactionState.comboRunId) {
+        if (!isInteractionRunOwner({
+          runId: activeReturn.runId,
+          currentRunId: interactionState.comboRunId,
+          transaction: interactionState.transaction,
+        })) {
           interactionState.actorReturn = null;
           if (isCatMascotInstance(actorInst)) sendARDebug('CAT_RETURN_CANCELLED_STALE', {
             runId: activeReturn.runId,
@@ -2308,6 +2529,7 @@
               actorTarget: activeReturn.actorTarget,
               runId: activeReturn.runId,
             });
+            releaseInteractionTransaction(activeReturn.runId, 'actor_return_complete');
           }
         }
       }
@@ -2498,7 +2720,23 @@
                 actorOriginalYaw,
               };
 
+              const transaction = createInteractionTransaction({
+                runId,
+                rule: activeRule,
+                lockedAt: now,
+                watchdogAt: getInteractionTransactionWatchdogAt({ now, activeRule, actorInst }),
+              });
+              transaction.deferredLosses = new Map();
+              interactionState.transaction = transaction;
+
               setInteractionPhase(InteractionPhase.COMBO_ARMED);
+              sendARDebug('INTERACTION_TRANSACTION_LOCKED', {
+                runId,
+                ruleId: transaction.ruleId,
+                actorTarget: transaction.actorTarget,
+                partnerTargets: transaction.partnerTargets,
+                watchdogAt: Math.round(transaction.watchdogAt),
+              });
               sendARDebug('COMBO_TRACKING_LATCHED', {
                 runId,
                 ruleId: activeRule.id,
@@ -2634,7 +2872,9 @@
           // Guard against lost-during-preload AND combo-consume state.
           if (inst.tracked && trackedTargets.has(detail.name) && inst.visibleByInteraction) {
             const pose = trackedTargets.get(detail.name);
-            if (pose) applyTargetPose(inst, pose);
+            if (pose && !getActiveTransactionLossDecision(detail.name).defer) {
+              applyTargetPose(inst, pose);
+            }
             inst.model.visible = true;
             // Mark interaction-ready so combo can fire only after model is visible.
             inst.interactionReady = true;

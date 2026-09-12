@@ -306,6 +306,80 @@ export function getConsumablePartnerTargets(rule) {
   return Array.isArray(rule?.partnerTargets) ? [...rule.partnerTargets] : []
 }
 
+export function createInteractionTransaction({ runId, rule, lockedAt, watchdogAt }) {
+  const actorTarget = rule?.actorTarget || null
+  const partnerTargets = getConsumablePartnerTargets(rule)
+  return {
+    runId,
+    ruleId: rule?.id || null,
+    actorTarget,
+    partnerTargets,
+    participantTargets: actorTarget == null ? [] : [actorTarget, ...partnerTargets],
+    lockedAt,
+    watchdogAt,
+  }
+}
+
+export function isInteractionTransactionLocked({ transaction, currentRunId }) {
+  return transaction != null && transaction.runId === currentRunId
+}
+
+export function isInteractionRunOwner({ runId, currentRunId, transaction }) {
+  return runId === currentRunId && isInteractionTransactionLocked({ transaction, currentRunId })
+}
+
+export function classifyInteractionTargetLoss({ transaction, targetName, currentRunId }) {
+  if (!isInteractionTransactionLocked({ transaction, currentRunId })) {
+    return { defer: false, role: null, runId: null }
+  }
+  if (targetName === transaction.actorTarget) {
+    return { defer: true, role: 'actor', runId: transaction.runId }
+  }
+  if (transaction.partnerTargets.includes(targetName)) {
+    return { defer: true, role: 'partner', runId: transaction.runId }
+  }
+  return { defer: false, role: null, runId: transaction.runId }
+}
+
+export function reconcileInteractionParticipantTracking({
+  transaction,
+  targetName,
+  tracked,
+  lossConfirmed,
+}) {
+  const isParticipant = transaction?.participantTargets?.includes(targetName) || false
+  if (!isParticipant) {
+    return {
+      targetName,
+      deferredLossConfirmed: false,
+      result: 'not_a_participant',
+    }
+  }
+  if (tracked) {
+    return {
+      targetName,
+      deferredLossConfirmed: Boolean(lossConfirmed),
+      result: 'resume_live_tracking',
+    }
+  }
+  if (lossConfirmed) {
+    return {
+      targetName,
+      deferredLossConfirmed: true,
+      result: 'apply_confirmed_loss',
+    }
+  }
+  return {
+    targetName,
+    deferredLossConfirmed: false,
+    result: 'await_loss_grace',
+  }
+}
+
+export function isInteractionTransactionWatchdogExpired({ now, transaction }) {
+  return Number.isFinite(transaction?.watchdogAt) && now >= transaction.watchdogAt
+}
+
 export function setInteractionPartnerVisibility({ rule, targetInstances, visible }) {
   const changedTargets = []
   for (const targetName of getConsumablePartnerTargets(rule)) {
