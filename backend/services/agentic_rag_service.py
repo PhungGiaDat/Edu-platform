@@ -4,12 +4,15 @@ Agentic RAG Service — Planner → Generator → Validator Pipeline
 Architecture:
   1. PLANNER   — Queries learning progress → determines topic/difficulty/focus
   2. GENERATOR — Retrieves Qdrant context using the plan, calls LLM to draft response
-  3. VALIDATOR — Checks quality, age-appropriateness, dedup vs recent chat history
+  3. VALIDATOR — Rule-based content protection (rag_content_rules: banned terms,
+                 refusal echo/rotation, length bounds, dedup) with LLM escalation
+                 only for drafts a rule cannot fix. settings.VALIDATOR_MODE="llm"
+                 restores the legacy always-LLM validation.
 
 TokenRouter multi-model routing:
   - Planner → Qwen3.8 (structured JSON extraction)
   - Generator → DeepSeek-V4-Pro (narrative generation)
-  - Validator → Nemotron-3 (quality / age-appropriateness check)
+  - Validator → Nemotron-3 (escalation only in "rule" mode; every answer in "llm" mode)
   - Fallback cascade: if primary model fails → next in MODEL_FALLBACKS list
   - Circuit breaker per model: fail_max=5 → skip for 60s
   - Centralized tenacity retry: wait_exponential(2-30s), max 3 attempts
@@ -41,6 +44,7 @@ from services.qdrant_rag_service import (
     QdrantRAGUnavailable,
     get_qdrant_rag_service,
 )
+from services.rag_content_rules import REFUSAL_VARIANTS, evaluate_answer
 from repositories.learning_progress_repository import LearningProgressRepository
 from repositories.chat_repository import ChatRepository
 
@@ -54,6 +58,10 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────────
 INTER_AGENT_DELAY = 1.0          # seconds between LLM calls (free tier RPM safety)
 CACHE_TTL_HOURS = 24            # MongoDB rag_cache document lifetime
+
+# Rendered into GENERATOR_PROMPT; kept in sync with the validator's
+# refusal-echo detection (services/rag_content_rules.REFUSAL_VARIANTS).
+_REFUSAL_PROMPT_LINES = "\n".join(f"  - {v}" for v in REFUSAL_VARIANTS)
 
 
 # ──────────────────────────────────────────────
@@ -97,13 +105,21 @@ class AgenticRAGService:
 
     GENERATOR_PROMPT = ChatPromptTemplate.from_messages([
         ("system",
-         "Bạn là trợ lý AI thân thiện dành cho trẻ em học tiếng Anh. "
-         "Trả lời vui vẻ, ngắn gọn, dùng emoji phù hợp 🌟\n"
+         "Bạn là trợ lý AI thân thiện của ứng dụng học tiếng Anh cho trẻ em (5-10 tuổi), chủ đề động vật. "
+         "Giọng vui vẻ, gần gũi, dùng 1-2 emoji phù hợp 🌟\n"
          "Quy tắc:\n"
-         "- Ngắn gọn (tối đa 3-4 câu)\n"
-         "- Dựa vào Context để trả lời chính xác\n"
-         "- Nếu không tìm thấy: 'Mình chưa biết từ này, hỏi thầy cô nhé! 📚'\n"
-         "- Không bịa đặt\n"
+         "- Trả lời 4-6 câu theo đúng cấu trúc:\n"
+         "  (1) Mở đầu bằng câu trả lời trực tiếp cho câu hỏi, bằng tiếng Việt;\n"
+         "  (2)-(3) Kể 1-2 dữ kiện thú vị về con vật, CHỈ lấy từ Context, diễn đạt lại tự nhiên (không chép nguyên văn Context);\n"
+         "  (4) Cho 1 câu tiếng Anh mẫu đơn giản kèm nghĩa tiếng Việt và 1-2 từ vựng, ví dụ: Dogs run fast. = Chó chạy rất nhanh. (dog: con chó);\n"
+         "  (5) Kết bằng 1 câu hỏi nhỏ gợi tò mò, ví dụ: Con biết tiếng kêu của nó không?\n"
+         "- CHỈ dùng thông tin có trong Context. Không tự thêm màu sắc, số đo, tốc độ, tuổi thọ, nơi sống... nếu Context không nói tới.\n"
+         "- Nếu Context nói về con vật được hỏi nhưng KHÔNG có đúng thuộc tính con hỏi (màu, kích thước, giấc ngủ...): "
+         "trả lời phần Context CÓ, rồi nói rõ 'Bài học của mình chưa có thông tin về [X] nhé'. Tuyệt đối không đoán.\n"
+         "- Nếu Context không có thông tin liên quan: từ chối nhẹ nhàng và chọn 1 cách diễn đạt dưới đây, "
+         "KHÔNG dùng lại nguyên văn cách đã xuất hiện trong lịch sử chat gần đây:\n"
+         + _REFUSAL_PROMPT_LINES + "\n"
+         "- Không lặp lại nguyên văn câu hỏi của trẻ làm mở đầu câu trả lời.\n"
          "Qdrant kid-learning context (animals + Wikipedia summaries):\n{context}"
         ),
         ("human", "Câu hỏi: {question}")
@@ -118,6 +134,10 @@ class AgenticRAGService:
          "- Phù hợp lứa tuổi (không bạo lực, không tiêu cực)\n"
          "- Ngắn gọn, rõ ràng\n"
          "- Không trùng lặp với lịch sử chat gần đây\n"
+         "- QUAN TRỌNG: KHÔNG được thêm dữ kiện mới (màu sắc, số đo, tốc độ, tuổi thọ...) "
+         "mà bản nháp chưa có — bạn KHÔNG có tài liệu tham khảo, chỉ được chỉnh câu chữ. "
+         "Nếu bản nháp quá cụt hoặc không chắc chắn, thay bằng một lời từ chối nhẹ nhàng, "
+         "khác nguyên văn các lời từ chối trong lịch sử gần đây.\n"
          "Lịch sử gần đây:\n{recent_history}\n"
          "Câu trả lời cần kiểm tra:"
         ),
@@ -209,8 +229,8 @@ class AgenticRAGService:
 
     # ── Recent Chat History ────────────────────────────────────────────────────
 
-    async def _get_recent_history(self, session_id: str, limit: int = 5) -> str:
-        """Fetch recent AI responses for the Validator to check for duplicates."""
+    async def _get_recent_history_texts(self, session_id: str, limit: int = 5) -> List[str]:
+        """Recent AI responses as raw strings (for rule checks and the validator prompt)."""
         try:
             if self._chat_repo is not None:
                 docs = await self._chat_repo.find_many(
@@ -226,12 +246,15 @@ class AgenticRAGService:
                     row["message"] for row in rows if row.get("sender") == "ai"
                 ]
                 docs = [{"message": m} for m in ai_messages[-limit:]]
-            if not docs:
-                return "Không có lịch sử."
-            return "\n---\n".join(d.get("message", "") for d in docs)
+            return [str(d.get("message", "")) for d in docs if d.get("message")]
         except Exception as e:
             logger.warning(f"[AgenticRAG] History query failed: {e}")
-            return "Không có lịch sử."
+            return []
+
+    async def _get_recent_history(self, session_id: str, limit: int = 5) -> str:
+        """Fetch recent AI responses for the Validator to check for duplicates."""
+        texts = await self._get_recent_history_texts(session_id, limit)
+        return "\n---\n".join(texts) if texts else "Không có lịch sử."
 
     # ── Agent 1: Planner ──────────────────────────────────────────────────────
 
@@ -362,16 +385,43 @@ class AgenticRAGService:
         session_id: str,
         model_override: Optional[str],
         agent_trace: List[str],
+        sources: Optional[List[Dict[str, Any]]] = None,
     ) -> str:
         """
-        Validator Agent: Quality-check the draft, ensure age-appropriateness,
-        remove duplicates vs recent history.
+        Validator stage: deterministic content protection by default.
+
+        Rule mode (settings.VALIDATOR_MODE="rule"): rag_content_rules checks banned
+        terms, refusal echo/repetition, length bounds and duplicates. Drafts that
+        pass are returned untouched (~0ms); a rule-sanitizable flag is fixed in
+        code; only what rules cannot fix escalates to the LLM validator.
+
+        LLM mode ("llm", an explicit validator_model override, or escalation):
+        the legacy LLM quality/age-appropriateness check runs.
         Returns the final validated response.
         """
-        logger.info("[AgenticRAG] ✅ Validator agent starting...")
-        agent_trace.append("validator:start")
+        use_llm = bool(model_override) or settings.VALIDATOR_MODE.strip().lower() == "llm"
+        history = await self._get_recent_history_texts(session_id)
 
-        recent_history = await self._get_recent_history(session_id)
+        if not use_llm:
+            verdict = evaluate_answer(draft_response, history, bool(sources))
+            if not verdict.needs_llm:
+                if verdict.flags:
+                    agent_trace.append(f"validator:rule-fix [{','.join(verdict.flags)}]")
+                    logger.info(f"[AgenticRAG] 🛡 Validator rule-fix: {verdict.flags}")
+                else:
+                    agent_trace.append("validator:rule-pass")
+                    logger.info("[AgenticRAG] 🛡 Validator rules passed (no LLM call)")
+                return verdict.sanitized
+            agent_trace.append(f"validator:rule-escalate [{','.join(verdict.flags)}]")
+            logger.info(f"[AgenticRAG] 🛡 Validator escalating to LLM: {verdict.flags}")
+            draft_response = verdict.sanitized
+
+        logger.info("[AgenticRAG] ✅ Validator LLM starting...")
+        agent_trace.append("validator:start")
+        # Only pay the inter-call delay when we are actually issuing another LLM call.
+        await asyncio.sleep(INTER_AGENT_DELAY)
+
+        recent_history = "\n---\n".join(history) if history else "Không có lịch sử."
 
         async def do_call(llm: "BaseChatModel", inputs: Dict[str, Any]) -> str:
             chain = self.VALIDATOR_PROMPT | llm | self._parser
@@ -384,11 +434,11 @@ class AgenticRAGService:
                 {"draft_response": draft_response, "recent_history": recent_history},
             )
             agent_trace.append(f"validator:done model={model_name}")
-            return validated.strip()
+            return validated.strip() or draft_response
         except Exception as e:
             logger.warning(f"[AgenticRAG] Validator fallback: {e}")
             agent_trace.append("validator:fallback")
-            return draft_response  # Return draft as-is if validator fails
+            return draft_response  # sanitized/draft as-is if validator fails
 
     # ── Main Entry Point ──────────────────────────────────────────────────────
 
@@ -433,11 +483,12 @@ class AgenticRAGService:
         draft_response, sources = await self._generator(
             question, plan, generator_model, agent_trace
         )
-        await asyncio.sleep(INTER_AGENT_DELAY)
 
         # ── 4. VALIDATOR ─────────────────────────────────────────────────────
+        # Rule mode adds no LLM call, so the inter-call delay is paid inside
+        # _validator only when it actually escalates to the LLM.
         final_response = await self._validator(
-            draft_response, session_id, validator_model, agent_trace
+            draft_response, session_id, validator_model, agent_trace, sources
         )
 
         # ── 5. Cache the result ───────────────────────────────────────────────

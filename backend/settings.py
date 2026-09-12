@@ -36,7 +36,9 @@ class Settings(BaseSettings):
 
     # ========== MongoDB Configuration ==========
     # Legacy/transitional. Remove when all domains are Postgres-native.
-    MONGO_URL: Optional[str]
+    # Legacy-only optional setting. PostgreSQL course workflows must not need a
+    # dummy Mongo URL merely to import application configuration.
+    MONGO_URL: Optional[str] = None
     MONGO_DB: Optional[str] = "eduplatform"
 
     # PostgreSQL owns migrated mobile-core paths.  Optional only for isolated
@@ -127,6 +129,12 @@ class Settings(BaseSettings):
     # Circuit breaker: fail_max consecutive failures before skipping a model (60s reset)
     LLM_CIRCUIT_BREAKER_FAIL_MAX: int = 5
     LLM_CIRCUIT_BREAKER_RESET_SECONDS: int = 60
+    # Validator strategy for the Agentic RAG pipeline:
+    #   "rule" (default) — deterministic content protection (services/rag_content_rules);
+    #                      the LLM validator only runs when a rule cannot fix the draft.
+    #   "llm"            — legacy behaviour: LLM validation on every answer (~7s p50 cost).
+    # Explicit per-request validator_model always forces the LLM path.
+    VALIDATOR_MODE: str = "rule"
 
     # B.AI provider (OpenAI-compatible fallback for LLM generation)
     BAI_API_KEY: Optional[SecretStr] = None

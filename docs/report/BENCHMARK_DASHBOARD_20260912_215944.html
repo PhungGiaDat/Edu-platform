@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentic RAG Benchmark Dashboard</title>
+<style>
+  :root {
+    --bg: #f6f7fb; --card: #ffffff; --ink: #1a2333; --muted: #64748b;
+    --accent: #4f6df5; --good: #16a34a; --bad: #dc2626; --warn: #d97706;
+    --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+         background: var(--bg); color: var(--ink); }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 10px; border-left: 4px solid var(--accent); padding-left: 10px; }
+  .meta { color: var(--muted); font-size: 12.5px; margin-bottom: 20px; line-height: 1.6; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+           padding: 14px 16px; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
+  .card-value { font-size: 24px; font-weight: 700; }
+  .card-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .card-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .table-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--border);
+                 border-radius: 12px; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { background: #f1f5f9; cursor: pointer; user-select: none; position: sticky; top: 0; }
+  th:hover { background: #e2e8f0; }
+  td.wrap { white-space: normal; min-width: 220px; max-width: 420px; }
+  tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11.5px; font-weight: 600; }
+  .b-good { background: #dcfce7; color: var(--good); }
+  .b-bad { background: #fee2e2; color: var(--bad); }
+  .b-warn { background: #fef3c7; color: var(--warn); }
+  .b-muted { background: #f1f5f9; color: var(--muted); }
+  .bar-row { display: grid; grid-template-columns: 160px 1fr 64px; align-items: center;
+              gap: 10px; margin: 6px 0; font-size: 13px; }
+  .bar-track { background: #eef2f7; border-radius: 99px; height: 12px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; }
+  .bar-value { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .stack { display: flex; height: 16px; border-radius: 4px; overflow: hidden; min-width: 120px; }
+  .stack div { height: 100%; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 8px 0; }
+  .legend span::before { content: ''; display: inline-block; width: 10px; height: 10px;
+                          border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .lg-planner span::before { background: #4f6df5; }
+  .lg-generator span::before { background: #16a34a; }
+  .lg-validator span::before { background: #d97706; }
+  .lg-other span::before { background: #94a3b8; }
+  footer { margin-top: 32px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
+  @media print { body { background: #fff; padding: 0; } .table-wrap { box-shadow: none; } }
+</style>
+</head>
+<body>
+<h1>Agentic RAG Benchmark — Dashboard</h1>
+<div class="meta">Run: 20260912_215944 | mode: inproc | rows: 13 | generator: nex-agi/nex-n2.5-pro:free<br>Dataset: smoke_qa.jsonl | cache: bypassed | A/B: no</div>
+
+<h2>Tổng quan</h2>
+<div class="cards"><div class="card"><div class="card-value">18502 ms</div><div class="card-label">E2E p50</div><div class="card-sub">n=13</div></div><div class="card"><div class="card-value">42744 ms</div><div class="card-label">E2E p95</div></div><div class="card"><div class="card-value">0.0%</div><div class="card-label">Hallucination rate</div><div class="card-sub">judged=10</div></div><div class="card"><div class="card-value">80.0%</div><div class="card-label">Hit@1</div><div class="card-sub">indomain=10</div></div><div class="card"><div class="card-value">0.0%</div><div class="card-label">Refusal accuracy</div><div class="card-sub">ood judged=3</div></div><div class="card"><div class="card-value">100.0%</div><div class="card-label">Consistency</div><div class="card-sub">pairs=1</div></div><div class="card"><div class="card-value">0.98</div><div class="card-label">Faithfulness (mean)</div></div><div class="card"><div class="card-value">18,138</div><div class="card-label">Tokens used</div></div></div>
+
+<h2>Latency theo stage</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Stage</th><th>n</th><th>mean</th><th>p50</th><th>p95</th><th>min</th><th>max</th></tr></thead>
+<tbody><tr><td>planner</td><td>13</td><td>8314 ms</td><td>5238 ms</td><td>21503 ms</td><td>1588 ms</td><td>29506 ms</td></tr><tr><td>generator</td><td>13</td><td>9045 ms</td><td>7194 ms</td><td>17632 ms</td><td>4990 ms</td><td>19251 ms</td></tr><tr><td>retrieval</td><td>12</td><td>3318 ms</td><td>2418 ms</td><td>7876 ms</td><td>1453 ms</td><td>12179 ms</td></tr><tr><td>validator</td><td>13</td><td>4149 ms</td><td>3171 ms</td><td>8896 ms</td><td>1090 ms</td><td>10610 ms</td></tr><tr><td>e2e</td><td>13</td><td>23523 ms</td><td>18502 ms</td><td>42744 ms</td><td>10971 ms</td><td>46123 ms</td></tr></tbody></table></div>
+
+<h2>Latency từng câu hỏi (stacked, in-process runs)</h2>
+<div class="legend">
+  <span class="lg-planner">planner</span><span class="lg-generator">generator (llm+retrieval)</span>
+  <span class="lg-validator">validator</span><span class="lg-other">other/overhead</span>
+</div>
+<div class="table-wrap"><table>
+<thead><tr><th>#</th><th>ID</th><th>Category</th><th>Latency (ms, stacked)</th><th>E2E</th></tr></thead>
+<tbody><tr><td>1</td><td>vi-kid-001</td><td>vi_kid</td><td><div class="stack"><div style="width:45.9%;background:#4f6df5"></div><div style="width:36.2%;background:#16a34a"></div><div style="width:6.3%;background:#d97706"></div><div style="width:11.6%;background:#94a3b8"></div></div></td><td data-v='17331'>17331 ms</td></tr><tr><td>2</td><td>vi-kid-003</td><td>vi_kid</td><td><div class="stack"><div style="width:42.2%;background:#4f6df5"></div><div style="width:33.5%;background:#16a34a"></div><div style="width:12.6%;background:#d97706"></div><div style="width:11.7%;background:#94a3b8"></div></div></td><td data-v='17144'>17144 ms</td></tr><tr><td>3</td><td>vi-kid-021</td><td>vi_kid</td><td><div class="stack"><div style="width:14.1%;background:#4f6df5"></div><div style="width:51.9%;background:#16a34a"></div><div style="width:28.6%;background:#d97706"></div><div style="width:5.5%;background:#94a3b8"></div></div></td><td data-v='37128'>37128 ms</td></tr><tr><td>4</td><td>vi-kid-012</td><td>vi_kid</td><td><div class="stack"><div style="width:49.3%;background:#4f6df5"></div><div style="width:29.2%;background:#16a34a"></div><div style="width:15.4%;background:#d97706"></div><div style="width:6.1%;background:#94a3b8"></div></div></td><td data-v='32815'>32815 ms</td></tr><tr><td>5</td><td>vi-kid-017</td><td>vi_kid</td><td><div class="stack"><div style="width:23.4%;background:#4f6df5"></div><div style="width:51.7%;background:#16a34a"></div><div style="width:9.8%;background:#d97706"></div><div style="width:15.1%;background:#94a3b8"></div></div></td><td data-v='13323'>13323 ms</td></tr><tr><td>6</td><td>vi-kid-009</td><td>vi_kid</td><td><div class="stack"><div style="width:36.7%;background:#4f6df5"></div><div style="width:40.9%;background:#16a34a"></div><div style="width:17.5%;background:#d97706"></div><div style="width:4.9%;background:#94a3b8"></div></div></td><td data-v='40492'>40492 ms</td></tr><tr><td>7</td><td>en-006</td><td>en</td><td><div class="stack"><div style="width:18.7%;background:#4f6df5"></div><div style="width:28.5%;background:#16a34a"></div><div style="width:41.9%;background:#d97706"></div><div style="width:10.9%;background:#94a3b8"></div></div></td><td data-v='18502'>18502 ms</td></tr><tr><td>8</td><td>en-010</td><td>en</td><td><div class="stack"><div style="width:64.0%;background:#4f6df5"></div><div style="width:27.4%;background:#16a34a"></div><div style="width:4.3%;background:#d97706"></div><div style="width:4.4%;background:#94a3b8"></div></div></td><td data-v='46123'>46123 ms</td></tr><tr><td>9</td><td>ood-003</td><td>ood</td><td><div class="stack"><div style="width:32.0%;background:#4f6df5"></div><div style="width:34.5%;background:#16a34a"></div><div style="width:23.9%;background:#d97706"></div><div style="width:9.6%;background:#94a3b8"></div></div></td><td data-v='20876'>20876 ms</td></tr><tr><td>10</td><td>ood-008</td><td>ood</td><td><div class="stack"><div style="width:14.5%;background:#4f6df5"></div><div style="width:45.5%;background:#16a34a"></div><div style="width:21.7%;background:#d97706"></div><div style="width:18.4%;background:#94a3b8"></div></div></td><td data-v='10971'>10971 ms</td></tr><tr><td>11</td><td>ood-010</td><td>ood</td><td><div class="stack"><div style="width:19.5%;background:#4f6df5"></div><div style="width:52.1%;background:#16a34a"></div><div style="width:16.5%;background:#d97706"></div><div style="width:12.0%;background:#94a3b8"></div></div></td><td data-v='16891'>16891 ms</td></tr><tr><td>12</td><td>pair-01-a</td><td>consistency_a</td><td><div class="stack"><div style="width:31.9%;background:#4f6df5"></div><div style="width:34.3%;background:#16a34a"></div><div style="width:20.7%;background:#d97706"></div><div style="width:13.1%;background:#94a3b8"></div></div></td><td data-v='15348'>15348 ms</td></tr><tr><td>13</td><td>pair-01-b</td><td>consistency_b</td><td><div class="stack"><div style="width:21.7%;background:#4f6df5"></div><div style="width:48.4%;background:#16a34a"></div><div style="width:19.2%;background:#d97706"></div><div style="width:10.7%;background:#94a3b8"></div></div></td><td data-v='18857'>18857 ms</td></tr></tbody></table></div>
+
+<h2>Hành vi agentic</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Chỉ số</th><th>Giá trị</th><th>Tỷ lệ</th></tr></thead>
+<tbody><tr><td>Planner thành công</td><td>13</td><td>100.0%</td></tr><tr><td>Planner fallback (JSON/LLM fail)</td><td>0</td><td>0.0%</td></tr><tr><td>Generator thành công</td><td>13</td><td>100.0%</td></tr><tr><td>Generator error</td><td>0</td><td>0.0%</td></tr><tr><td>Validator thành công</td><td>13</td><td>100.0%</td></tr><tr><td>Validator fallback</td><td>0</td><td>0.0%</td></tr><tr><td>Cache hit</td><td>0</td><td>0.0%</td></tr><tr><td>Pipeline error</td><td>0</td><td>0.0%</td></tr></tbody></table></div>
+
+<h2>Phân loại lỗi (error taxonomy)</h2>
+<div class="meta">Không phát hiện lỗi nào được phân loại.</div>
+
+<h2>A/B so sánh Generator model</h2>
+<div class="meta">Không chạy A/B (dùng cờ --ab để bật so sánh model).</div>
+
+<h2>Chi tiết từng câu hỏi</h2>
+<div class="table-wrap"><table id="detail" class="sortable"><thead><tr><th onclick="sortTable('detail', 0)">ID</th><th onclick="sortTable('detail', 1)">Category</th><th onclick="sortTable('detail', 2)">Question</th><th onclick="sortTable('detail', 3)">Hit@1</th><th onclick="sortTable('detail', 4)">Verdict</th><th onclick="sortTable('detail', 5)">Lý do (judge)</th><th onclick="sortTable('detail', 6)">Response</th><th onclick="sortTable('detail', 7)">E2E</th></tr></thead><tbody><tr><td>vi-kid-001</td><td>vi_kid</td><td class='wrap' title='con vẹt ăn gì vậy?'>con vẹt ăn gì vậy?</td><td><span class='badge b-good'>HIT</span></td><td><span class='badge b-good'>OK 1.00</span></td><td class='wrap' title='Câu trả lời từ chối trả lời do ngữ cảnh không chứa thông tin về thức ăn của con vẹt, trung thực với dữ liệu truy xuất.'>Câu trả lời từ chối trả lời do ngữ cảnh không chứa thông tin về thức ăn của con vẹt, trung…</td><td class='wrap' title='Mình chưa biết từ này, hỏi thầy cô nhé! 📚'>Mình chưa biết từ này, hỏi thầy cô nhé! 📚</td><td data-v='17331'>17331 ms</td></tr><tr><td>vi-kid-003</td><td>vi_kid</td><td class='wrap' title='con kiến sống ở đâu?'>con kiến sống ở đâu?</td><td><span class='badge b-good'>HIT</span></td><td><span class='badge b-good'>OK 1.00</span></td><td class='wrap' title='Câu trả lời nêu đúng nơi sống của con kiến theo Context/Golden: đất, khu vườn và các đường hầm nhỏ.; Có dịch sang tiếng Anh nhưng vẫn trả lời bằng tiếng Việt nên không sai ngôn ngữ.'>Câu trả lời nêu đúng nơi sống của con kiến theo Context/Golden: đất, khu vườn và các đường…</td><td class='wrap' title='Con kiến sống trong đất, khu vườn và các đường hầm nhỏ.   🇬🇧 **An ant lives in soil, gardens, and small tunnels.** 🐜'>Con kiến sống trong đất, khu vườn và các đường hầm nhỏ.   🇬🇧 **An ant lives in s…</td><td data-v='17144'>17144 ms</td></tr><tr><td>vi-kid-021</td><td>vi_kid</td><td class='wrap' title='bác ơi con chó ngủ ở đâu vậy?'>bác ơi con chó ngủ ở đâu vậy?</td><td><span class='badge b-muted'>MISS</span></td><td><span class='badge b-good'>OK 1.00</span></td><td class='wrap' title='Câu trả lời không đưa ra dữ kiện nào về con chó nên không bịa thông tin.; Vì không có ngữ cảnh retrieve, việc từ chối trả lời là phù hợp.'>Câu trả lời không đưa ra dữ kiện nào về con chó nên không bịa thông tin.; Vì không có ngữ …</td><td class='wrap' title='Mình chưa biết từ này, hỏi thầy cô nhé! 📚'>Mình chưa biết từ này, hỏi thầy cô nhé! 📚</td><td data-v='37128'>37128 ms</td></tr><tr><td>vi-kid-012</td><td>vi_kid</td><td class='wrap' title='con vịt màu gì vậy?'>con vịt màu gì vậy?</td><td><span class='badge b-good'>HIT</span></td><td><span class='badge b-good'>OK 1.00</span></td><td class='wrap' title='Ngữ cảnh không nêu màu của con vịt.; Chatbot nói chưa biết màu trong bài này là phù hợp với thông tin được retrieve.'>Ngữ cảnh không nêu màu của con vịt.; Chatbot nói chưa biết màu trong bài này là phù hợp vớ…</td><td class='wrap' title='Mình chưa biết con vịt màu gì trong bài này, hỏi thầy cô nhé! 📚'>Mình chưa biết con vịt màu gì trong bài này, hỏi thầy cô nhé! 📚</td><td data-v='32815'>32815 ms</td></tr><tr><td>vi-kid-017</td><td>vi_kid</td><td class='wrap' title='con khỉ to không vậy bác?'>con khỉ to không vậy bác?</td><td><span class='badge b-good'>HIT</span></td><td><span class='badge b-good'>OK 0.90</span></td><td class='wrap' title='Câu trả lời không bịa dữ kiện về kích thước con khỉ vì ngữ cảnh không nói khỉ to hay nhỏ.; Việc từ chối trả lời và khuyên hỏi thầy cô là phù hợp khi thông tin không có trong ngữ cảnh.'>Câu trả lời không bịa dữ kiện về kích thước con khỉ vì ngữ cảnh không nói khỉ to hay nhỏ.;…</td><td class='wrap' title='Mình chưa biết từ này, hỏi thầy cô nhé! 📚'>Mình chưa biết từ này, hỏi thầy cô nhé! 📚</td><td data-v='13323'>13323 ms</td></tr><tr><td>vi-kid-009</td><td>vi_kid</td><td class='wrap' title='bác ơi con cá voi ngủ ở đâu vậy?'>bác ơi con cá voi ngủ ở đâu vậy?</td><td><span class='badge b-good'>HIT</span></td><td><span class='badge b-good'>OK 0.90</span></td><td class='wrap' title='Câu trả lời chỉ nêu cá voi sống ở đại dương, có trong Context/Golden.; Chatbot nói rõ ngữ cảnh không đề cập cá voi ngủ ở đâu nên không bịa đáp án.'>Câu trả lời chỉ nêu cá voi sống ở đại dương, có trong Context/Golden.; Chatbot nói rõ ngữ …</td><td class='wrap' title='Cá voi sống ở đại dương 🌊. Bài này chưa nói cá voi ngủ ở đâu, con hỏi thầy cô nhé! 📚'>Cá voi sống ở đại dương 🌊. Bài này chưa nói cá voi ngủ ở đâu, con hỏi thầy cô nh…</td><td data-v='40492'>40492 ms</td></tr><tr><td>en-006</td><td>en</td><td class='wrap' title='What color is a lion?'>What color is a lion?</td><td><span class='badge b-muted'>MISS</span></td><td><span class='badge b-good'>OK 1.00</span></td><td class='wrap' title='Ngữ cảnh không có thông tin về sư tử hay màu của sư tử.; Chatbot không bịa đáp án mà nói chưa biết, phù hợp với việc thiếu dữ kiện trong ngữ cảnh.'>Ngữ cảnh không có thông tin về sư tử hay màu của sư tử.; Chatbot không bịa đáp án mà nói c…</td><td class='wrap' title='Mình chưa biết từ này, hỏi thầy cô nhé! 📚'>Mình chưa biết từ này, hỏi thầy cô nhé! 📚</td><td data-v='18502'>18502 ms</td></tr><tr><td>en-010</td><td>en</td><td class='wrap' title='Can a turtle swim?'>Can a turtle swim?</td><td><span class='badge b-good'>HIT</span></td><td><span class='badge b-good'>OK 1.00</span></td><td class='wrap' title='Ngữ cảnh ghi rõ turtle có thể bơi, nên câu trả lời hoàn toàn phù hợp.'>Ngữ cảnh ghi rõ turtle có thể bơi, nên câu trả lời hoàn toàn phù hợp.</td><td class='wrap' title='Yes, a turtle can swim! 🐢🌊'>Yes, a turtle can swim! 🐢🌊</td><td data-v='46123'>46123 ms</td></tr><tr><td>ood-003</td><td>ood</td><td class='wrap' title='tàu vũ trụ bay nhanh lắm đúng không?'>tàu vũ trụ bay nhanh lắm đúng không?</td><td>—</td><td><span class='badge b-bad'>REFUSAL MISS</span></td><td class='wrap' title='Câu hỏi ngoài phạm vi động vật tiếng Anh.; Chatbot trả lời cụ thể như thể chắc chắn về tàu vũ trụ thay vì từ chối lịch sự hoặc bảo chưa biết.'>Câu hỏi ngoài phạm vi động vật tiếng Anh.; Chatbot trả lời cụ thể như thể chắc chắn về tàu…</td><td class='wrap' title='Đúng rồi 🌟 Tàu vũ trụ thường bay rất nhanh; để quay quanh Trái Đất, nó cần khoảng 28.000 km/h. Nhưng khi cất cánh, tàu bay chậm hơn rồi mới tăng tốc dần nhé! 🚀'>Đúng rồi 🌟 Tàu vũ trụ thường bay rất nhanh; để quay quanh Trái Đất, nó cần khoản…</td><td data-v='20876'>20876 ms</td></tr><tr><td>ood-008</td><td>ood</td><td class='wrap' title='số 9 cộng số 10 bằng bao nhiêu?'>số 9 cộng số 10 bằng bao nhiêu?</td><td>—</td><td><span class='badge b-bad'>REFUSAL MISS</span></td><td class='wrap' title='Chatbot trả lời cụ thể như thể biết chắc dù câu hỏi ngoài phạm vi kiến thức.; Đáp án đúng yêu cầu là từ chối lịch sự hoặc gợi ý hỏi thầy cô.'>Chatbot trả lời cụ thể như thể biết chắc dù câu hỏi ngoài phạm vi kiến thức.; Đáp án đúng …</td><td class='wrap' title='Số 9 cộng số 10 bằng **19** nhé! 🌟'>Số 9 cộng số 10 bằng **19** nhé! 🌟</td><td data-v='10971'>10971 ms</td></tr><tr><td>ood-010</td><td>ood</td><td class='wrap' title='ma có thật không hả bác?'>ma có thật không hả bác?</td><td>—</td><td><span class='badge b-bad'>REFUSAL MISS</span></td><td class='wrap' title='Câu hỏi ngoài phạm vi nhưng chatbot trả lời cụ thể như thể biết chắc.; Nên từ chối lịch sự hoặc nói chưa biết thay vì đưa nhận định về ma.'>Câu hỏi ngoài phạm vi nhưng chatbot trả lời cụ thể như thể biết chắc.; Nên từ chối lịch sự…</td><td class='wrap' title='Chưa có bằng chứng khoa học chắc chắn chứng minh ma có thật 👻  Nhiều câu chuyện ma đến từ trí tưởng tượng, giấc mơ hoặc hiểu nhầm thôi.  Nếu con sợ, hãy kể với bố mẹ hoặc thầy cô nhé! 🌟'>Chưa có bằng chứng khoa học chắc chắn chứng minh ma có thật 👻  Nhiều câu chuyện …</td><td data-v='16891'>16891 ms</td></tr><tr><td>pair-01-a</td><td>consistency_a</td><td class='wrap' title='con bướm ăn gì vậy?'>con bướm ăn gì vậy?</td><td><span class='badge b-good'>HIT</span></td><td><span class='badge b-good'>OK 1.00</span></td><td class='wrap' title='Cả hai câu trả lời đều không đưa ra một món ăn cụ thể cho bướm.; Trả lời 2 nói bài chưa nói rõ bướm thích ăn gì, phù hợp với việc trả lời 1 nói chưa biết.; Việc trả lời 2 nhắc bướm ghé thăm hoa không mâu thuẫn với trả lời 1.'>Cả hai câu trả lời đều không đưa ra một món ăn cụ thể cho bướm.; Trả lời 2 nói bài chưa nó…</td><td class='wrap' title='Mình chưa biết từ này, hỏi thầy cô nhé! 📚'>Mình chưa biết từ này, hỏi thầy cô nhé! 📚</td><td data-v='15348'>15348 ms</td></tr><tr><td>pair-01-b</td><td>consistency_b</td><td class='wrap' title='bướm thích ăn gì hả bác?'>bướm thích ăn gì hả bác?</td><td><span class='badge b-good'>HIT</span></td><td><span class='badge b-good'>OK 1.00</span></td><td class='wrap' title='Cả hai câu trả lời đều không đưa ra một món ăn cụ thể cho bướm.; Trả lời 2 nói bài chưa nói rõ bướm thích ăn gì, phù hợp với việc trả lời 1 nói chưa biết.; Việc trả lời 2 nhắc bướm ghé thăm hoa không mâu thuẫn với trả lời 1.'>Cả hai câu trả lời đều không đưa ra một món ăn cụ thể cho bướm.; Trả lời 2 nói bài chưa nó…</td><td class='wrap' title='Trong bài này, bướm ghé thăm hoa 🌸, nhưng chưa nói rõ nó thích ăn gì. Mình chưa biết từ này, hỏi thầy cô nhé! 📚'>Trong bài này, bướm ghé thăm hoa 🌸, nhưng chưa nói rõ nó thích ăn gì. Mình chưa …</td><td data-v='18857'>18857 ms</td></tr></tbody></table></div>
+
+<footer>Generated 2026-09-12 22:08:02 · judge=nex-agi/nex-n2.5-pro:free · mode=inproc · dataset=smoke_qa.jsonl</footer>
+
+<script>
+function sortTable(tableId, colIndex) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const dir = table.dataset['dir' + colIndex] === 'asc' ? -1 : 1;
+  table.dataset['dir' + colIndex] = dir === 1 ? 'asc' : 'desc';
+  rows.sort((a, b) => {
+    const av = a.children[colIndex].dataset.v ?? a.children[colIndex].textContent.trim();
+    const bv = b.children[colIndex].dataset.v ?? b.children[colIndex].textContent.trim();
+    const an = parseFloat(av), bn = parseFloat(bv);
+    if (!isNaN(an) && !isNaN(bn) && av !== '' && bv !== '') return (an - bn) * dir;
+    return av.localeCompare(bv, 'vi') * dir;
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+</script>
+</body>
+</html>

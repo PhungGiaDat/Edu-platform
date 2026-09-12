@@ -1,0 +1,104 @@
+{
+  "summary": {
+    "total": 60,
+    "by_category": {
+      "vi_kid": 24,
+      "en": 12,
+      "ood": 12,
+      "consistency_a": 6,
+      "consistency_b": 6
+    },
+    "retrieval": {
+      "hit1_rate": 0.6041666666666666,
+      "hit3_rate": 0.6875,
+      "mrr": 0.642361111111111,
+      "indomain_count": 48
+    },
+    "quality": {
+      "judged_count": 48,
+      "faithfulness_mean": 0.8875000000000001,
+      "hallucination_rate": 0.18333333333333332,
+      "hallucinated_ids": [
+        "vi-kid-009",
+        "vi-kid-010",
+        "vi-kid-012",
+        "vi-kid-017",
+        "vi-kid-018",
+        "vi-kid-020",
+        "vi-kid-021",
+        "en-010",
+        "en-011",
+        "pair-01-a",
+        "pair-06-b"
+      ],
+      "error_taxonomy": {
+        "fabricated_fact": 11,
+        "ungrounded_claim": 1
+      },
+      "refusal_accuracy": 0.8333333333333334,
+      "refusal_judged": 12,
+      "consistency_rate": 1.0,
+      "consistency_pairs": 6
+    },
+    "latency": {
+      "planner": {
+        "count": 60,
+        "mean": 4.849098583333156,
+        "p50": 3.2424600000013015,
+        "p95": 13.254619845002882,
+        "min": 1.825682599999709,
+        "max": 20.597644099994795
+      },
+      "generator": {
+        "count": 60,
+        "mean": 6.074485506666558,
+        "p50": 5.546430600003077,
+        "p95": 10.323398774999804,
+        "min": 3.3718319999970845,
+        "max": 21.229835599995567
+      },
+      "retrieval": {
+        "count": 0,
+        "mean": null,
+        "p50": null,
+        "p95": null,
+        "min": null,
+        "max": null
+      },
+      "validator": {
+        "count": 60,
+        "mean": 8.472319960000458,
+        "p50": 7.08165839999856,
+        "p95": 17.90313379999788,
+        "min": 2.280305899999803,
+        "max": 22.058387800003402
+      },
+      "e2e": {
+        "count": 60,
+        "mean": 21.408920239999862,
+        "p50": 20.551351999998587,
+        "p95": 33.79182923500084,
+        "min": 11.397703799993906,
+        "max": 46.389603999996325
+      }
+    },
+    "agentic": {
+      "planner_done": 60,
+      "planner_fallback": 0,
+      "generator_done": 60,
+      "generator_error": 0,
+      "validator_done": 60,
+      "validator_fallback": 0,
+      "cache_hit": 0,
+      "pipeline_errors": 0
+    },
+    "tokens": {
+      "prompt": 66737,
+      "completion": 61875,
+      "total": 128612
+    },
+    "errors": []
+  },
+  "ab_table": null,
+  "generated_at": "2026-09-12T02:29:43.943719"
+}

@@ -1,0 +1,89 @@
+{
+  "summary": {
+    "total": 13,
+    "by_category": {
+      "vi_kid": 6,
+      "en": 2,
+      "ood": 3,
+      "consistency_a": 1,
+      "consistency_b": 1
+    },
+    "retrieval": {
+      "hit1_rate": 0.8,
+      "hit3_rate": 0.8,
+      "mrr": 0.8,
+      "indomain_count": 10
+    },
+    "quality": {
+      "judged_count": 10,
+      "faithfulness_mean": 0.9800000000000001,
+      "hallucination_rate": 0.0,
+      "hallucinated_ids": [],
+      "error_taxonomy": {},
+      "refusal_accuracy": 0.0,
+      "refusal_judged": 3,
+      "consistency_rate": 1.0,
+      "consistency_pairs": 1
+    },
+    "latency": {
+      "planner": {
+        "count": 13,
+        "mean": 8.314194415383659,
+        "p50": 5.237707799999043,
+        "p95": 21.503148880004282,
+        "min": 1.587827199997264,
+        "max": 29.506040499996743
+      },
+      "generator": {
+        "count": 13,
+        "mean": 9.045131799998881,
+        "p50": 7.193748500008951,
+        "p95": 17.631847800003012,
+        "min": 4.990376200003084,
+        "max": 19.251443400004064
+      },
+      "retrieval": {
+        "count": 12,
+        "mean": 3.317874499999258,
+        "p50": 2.418494199999259,
+        "p95": 7.876128284997679,
+        "min": 1.4526803999906406,
+        "max": 12.178656899995985
+      },
+      "validator": {
+        "count": 13,
+        "mean": 4.149319723074978,
+        "p50": 3.1707906000083312,
+        "p95": 8.896121279997164,
+        "min": 1.0904318999964744,
+        "max": 10.610221800001455
+      },
+      "e2e": {
+        "count": 13,
+        "mean": 23.52308350769006,
+        "p50": 18.501988299991353,
+        "p95": 42.74432593999663,
+        "min": 10.970682999992277,
+        "max": 46.1227513999911
+      }
+    },
+    "agentic": {
+      "planner_done": 13,
+      "planner_fallback": 0,
+      "generator_done": 13,
+      "generator_error": 0,
+      "validator_done": 13,
+      "validator_fallback": 0,
+      "cache_hit": 0,
+      "pipeline_errors": 0
+    },
+    "tokens": {
+      "prompt": 13931,
+      "completion": 4207,
+      "total": 18138
+    },
+    "errors": []
+  },
+  "ab_table": null,
+  "generated_at": "2026-09-12T22:08:02.753883"
+}
