@@ -327,6 +327,8 @@
 
     // ========== BOOTSTRAP STATE (must exist before any sendARDebug call) ==========
     let currentPhase = 'initializing';
+    const viewerBootStartedAt = performance.timeOrigin + performance.now();
+    let xrCameraStatus = 'unknown';
     let xrTargetConfigs = [];
 
     // ========== PER-TARGET INSTANCE STATE ==========
@@ -1630,7 +1632,13 @@
       const lifecycleModule = {
         name: 'app-lifecycle',
         onCameraStatusChange: ({ status }) => {
-          sendARDebug('XR_CAMERA_STATUS', { status });
+          const cameraStatusAt = performance.timeOrigin + performance.now();
+          xrCameraStatus = status;
+          sendARDebug('XR_CAMERA_STATUS', {
+            status,
+            ts: cameraStatusAt,
+            elapsedSinceViewerBootMs: cameraStatusAt - viewerBootStartedAt,
+          });
           if (status === 'hasVideo') {
             sendARDebug('XR_CAMERA_HAS_VIDEO', {});
             bootState.cameraReady = true;
@@ -1806,6 +1814,11 @@
       RuntimeDiagnostics.xrRunCount++;
       RuntimeDiagnostics.assert(RuntimeDiagnostics.xrRunCount === 1, `XR8.run() called ${RuntimeDiagnostics.xrRunCount} times`);
       sendARDebug('XR_RUN_CALLED', {});
+      const cameraRequestAt = performance.timeOrigin + performance.now();
+      sendARDebug('XR_CAMERA_REQUEST_START', {
+        ts: cameraRequestAt,
+        elapsedSinceViewerBootMs: cameraRequestAt - viewerBootStartedAt,
+      });
       try { XR8.run({ canvas: canvasEl }); }
       catch (err) { sendARDebug('XR_RUN_ERROR', { message: String(err) }); throw err; }
       sendARDebug('XR_SESSION_STARTED', {});
@@ -2945,7 +2958,15 @@
 
     // ========== MESSAGE LISTENER ==========
     window.addEventListener('message', (event) => {
-      const { type, payload } = event.data || {};
+      const messageData = event.data;
+      if (messageData?.type === 'dispose') {
+        sendARDebug('XR_DISPOSE_RECEIVED', {
+          phase: currentPhase,
+          cameraStatus: xrCameraStatus,
+          source: event.source === window.parent ? 'parent' : 'unknown',
+        });
+      }
+      const { type, payload } = messageData || {};
       if (!type) return;
 
       if (type === 'REQUEST_IFRAME_LOGS') {

@@ -24,6 +24,25 @@ import '../styles/LearnAR8thWall.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://edu-platform-api-do20.onrender.com';
 const TRANSITION_FADE_MS = 300;
+const DEBUG_CAMERA_HANDOFF_DELAYS_MS = [0, 150, 300, 500] as const;
+
+export function resolveDebugCameraHandoffDelay(search: string): number {
+  const params = new URLSearchParams(search);
+  if (params.get('debug') !== 'true') return 0;
+
+  const requestedDelay = Number(params.get('camera_handoff_delay_ms') || '0');
+  return DEBUG_CAMERA_HANDOFF_DELAYS_MS.includes(
+    requestedDelay as (typeof DEBUG_CAMERA_HANDOFF_DELAYS_MS)[number],
+  )
+    ? requestedDelay
+    : 0;
+}
+
+function highResolutionTimestamp(): number {
+  return typeof performance !== 'undefined'
+    ? performance.timeOrigin + performance.now()
+    : Date.now();
+}
 
 type Phase =
   | 'SCANNING'
@@ -230,6 +249,10 @@ export const LearnAR8thWall: React.FC = () => {
   // Iframe timing instrumentation
   const iframeTimingRef = useRef<{ srcSet: number; onLoad: number; onError: number } | null>(null);
   const lastEmptyQrIgnoredAtRef = useRef<number>(Number.NEGATIVE_INFINITY);
+  const qrCameraStopAtRef = useRef<number | null>(null);
+  const qrCameraHandoffAtRef = useRef<number | null>(null);
+  const cameraHandoffTimerRef = useRef<number | null>(null);
+  const lastIframeMountSrcRef = useRef<string | null>(null);
 
   // Phase state machine
   const [phase, setPhase] = useState<Phase>('SCANNING');
@@ -239,6 +262,7 @@ export const LearnAR8thWall: React.FC = () => {
 
   // Flags that gate XR_BOOTING transition
   const [cameraReleased, setCameraReleased] = useState(false);
+  const [cameraHandoffGateReady, setCameraHandoffGateReady] = useState(false);
   const [targetReady, setTargetReady] = useState(false);
 
   // Current scanned target (primary card / UI / primary model)
@@ -269,6 +293,55 @@ export const LearnAR8thWall: React.FC = () => {
     // Dual sink: also write to persistent ARControlTrace ring buffer (survives reload, immune to drop_console)
     window.ARControlTrace?.(`AR_${label}`, { detail, phase });
   };
+
+  const clearCameraHandoffTimer = useCallback(() => {
+    if (cameraHandoffTimerRef.current !== null) {
+      window.clearTimeout(cameraHandoffTimerRef.current);
+      cameraHandoffTimerRef.current = null;
+    }
+  }, []);
+
+  const armCameraHandoffGate = useCallback((delayMs: number) => {
+    clearCameraHandoffTimer();
+    const now = highResolutionTimestamp();
+    const handoffAt = qrCameraHandoffAtRef.current ?? now;
+    const remainingDelayMs = Math.max(0, delayMs - (now - handoffAt));
+
+    if (remainingDelayMs === 0) {
+      setCameraHandoffGateReady(true);
+      trace('QR_CAMERA_HANDOFF_GATE_READY', JSON.stringify({
+        ts: now,
+        delayMs,
+        elapsedSinceQrHandoffMs: now - handoffAt,
+      }));
+      return;
+    }
+
+    cameraHandoffTimerRef.current = window.setTimeout(() => {
+      const readyAt = highResolutionTimestamp();
+      setCameraHandoffGateReady(true);
+      cameraHandoffTimerRef.current = null;
+      trace('QR_CAMERA_HANDOFF_GATE_READY', JSON.stringify({
+        ts: readyAt,
+        delayMs,
+        elapsedSinceQrHandoffMs: readyAt - handoffAt,
+      }));
+    }, remainingDelayMs);
+  }, [clearCameraHandoffTimer, trace]);
+
+  const handleQrCameraHandoffTelemetry = useCallback((event: {
+    label: string;
+    ts: number;
+    [key: string]: unknown;
+  }) => {
+    if (event.label === 'QR_CAMERA_STOP_BEGIN') {
+      qrCameraStopAtRef.current = event.ts;
+    }
+    if (event.label === 'QR_HANDOFF_TO_PARENT') {
+      qrCameraHandoffAtRef.current = event.ts;
+    }
+    trace(event.label, JSON.stringify(event));
+  }, [trace]);
 
   const clearTransitionTimer = useCallback(() => {
     if (transitionClearTimerRef.current !== null) {
@@ -314,6 +387,7 @@ export const LearnAR8thWall: React.FC = () => {
   }, [clearTransitionTimer]);
 
   useEffect(() => () => clearTransitionTimer(), [clearTransitionTimer]);
+  useEffect(() => () => clearCameraHandoffTimer(), [clearCameraHandoffTimer]);
 
   // Telegram Sync integration
   const { syncTelegram, syncStatus, iframeLogs } = useTelegramSync({
@@ -350,11 +424,35 @@ export const LearnAR8thWall: React.FC = () => {
   // No more unreliable postMessage bridging.
   // ========================================================================
   useEffect(() => {
-    if (phase === 'PREPARING' && targetReady && cameraReleased && currentTarget) {
+    if (
+      phase === 'PREPARING'
+      && targetReady
+      && cameraReleased
+      && cameraHandoffGateReady
+      && currentTarget
+    ) {
+      const now = highResolutionTimestamp();
+      const elapsedSinceQrStopMs = qrCameraStopAtRef.current == null
+        ? null
+        : now - qrCameraStopAtRef.current;
       setPhase('XR_BOOTING');
-      trace('XR_BOOTING', 'both ready — transitioning');
+      trace('XR_BOOT_TRIGGER', JSON.stringify({
+        ts: now,
+        elapsedSinceQrStopMs,
+        cameraReleased,
+        cameraHandoffGateReady,
+        targetReady,
+      }));
+      trace('XR_BOOTING', 'target and camera handoff gate ready — transitioning');
     }
-  }, [phase, targetReady, cameraReleased, currentTarget]);
+  }, [
+    phase,
+    targetReady,
+    cameraReleased,
+    cameraHandoffGateReady,
+    currentTarget,
+    trace,
+  ]);
 
   // ========================================================================
   // fetchXRTarget — fetch XR metadata for one QR ID from backend
@@ -397,12 +495,27 @@ export const LearnAR8thWall: React.FC = () => {
 
     trace('QR_DETECTED', `QR=${normalizedQrId} → PHASE=PREPARING`);
 
+    clearCameraHandoffTimer();
+    const releaseAssumedAt = highResolutionTimestamp();
+    const elapsedSinceQrStopMs = qrCameraStopAtRef.current == null
+      ? null
+      : releaseAssumedAt - qrCameraStopAtRef.current;
+    const debugHandoffDelayMs = resolveDebugCameraHandoffDelay(window.location.search);
+    trace('PARENT_CAMERA_RELEASE_ASSUMED', JSON.stringify({
+      ts: releaseAssumedAt,
+      elapsedSinceQrStopMs,
+      cameraReleased: true,
+      cameraHandoffDelayMs: debugHandoffDelayMs,
+    }));
     setPhase('PREPARING');
     setTargetReady(false);
     setCameraReleased(true); // QRScanner already stopped the camera
+    setCameraHandoffGateReady(false);
+    armCameraHandoffGate(debugHandoffDelayMs);
     setCurrentTarget(null);
     setXrTargets([]);
     setScanError(null);
+    lastIframeMountSrcRef.current = null;
 
     try {
       let trackingRules: TrackingRuleLike[] = [];
@@ -499,11 +612,21 @@ export const LearnAR8thWall: React.FC = () => {
       trace('MULTI_TARGET_READY', JSON.stringify(targets.map(t => t.qr_id)));
     } catch (err) {
       clearTransitionPresentation();
+      clearCameraHandoffTimer();
+      setCameraHandoffGateReady(false);
       trace('API_ERROR', String(err));
       setScanError(err instanceof Error ? err.message : 'Failed to load XR target');
       setPhase('ERROR');
     }
-  }, [clearTransitionPresentation, foundCards, fetchTrackingRules, fetchXRTarget]);
+  }, [
+    armCameraHandoffGate,
+    clearCameraHandoffTimer,
+    clearTransitionPresentation,
+    foundCards,
+    fetchTrackingRules,
+    fetchXRTarget,
+    trace,
+  ]);
 
   // ========================================================================
   // LISTEN: messages from viewer iframe (XR lifecycle events from ar-xr.html)
@@ -586,12 +709,15 @@ export const LearnAR8thWall: React.FC = () => {
 
   const handleRetry = useCallback(() => {
     clearTransitionPresentation();
+    clearCameraHandoffTimer();
     setPhase('SCANNING');
     setScanError(null);
     setCurrentTarget(null);
     setCameraReleased(false);
+    setCameraHandoffGateReady(false);
     setTargetReady(false);
-  }, [clearTransitionPresentation]);
+    lastIframeMountSrcRef.current = null;
+  }, [clearCameraHandoffTimer, clearTransitionPresentation]);
 
   const handleSwitchToMindAR = useCallback(() => {
     navigate('/learn-ar');
@@ -629,6 +755,23 @@ export const LearnAR8thWall: React.FC = () => {
     iframeTimingRef.current = { srcSet: Date.now(), onLoad: 0, onError: 0 };
     trace('VIEWER_SRC_SET', viewerSrc);
   }, [viewerSrc]);
+
+  useEffect(() => {
+    if ((phase !== 'XR_BOOTING' && phase !== 'VIEWING') || !viewerSrc) return;
+    if (lastIframeMountSrcRef.current === viewerSrc) return;
+
+    lastIframeMountSrcRef.current = viewerSrc;
+    const now = highResolutionTimestamp();
+    const elapsedSinceQrStopMs = qrCameraStopAtRef.current == null
+      ? null
+      : now - qrCameraStopAtRef.current;
+    trace('IFRAME_MOUNT', JSON.stringify({
+      ts: now,
+      elapsedSinceQrStopMs,
+      phase,
+      hasIframeElement: !!viewerRef.current,
+    }));
+  }, [phase, trace, viewerSrc]);
 
   // ========================================================================
   // RENDER
@@ -680,6 +823,7 @@ export const LearnAR8thWall: React.FC = () => {
               setPhase('ERROR');
             }}
             onTransitionFrame={handleTransitionFrame}
+            onCameraHandoffTelemetry={handleQrCameraHandoffTelemetry}
             active={phase === 'SCANNING'}
             debug={isDebugMode}
           />

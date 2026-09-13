@@ -35,11 +35,43 @@ export interface QRScannerProps {
   onReady?: (stream: MediaStream) => void;
   onError?: (error: string) => void;
   onTransitionFrame?: (frameDataUrl: string | null) => void;
+  onCameraHandoffTelemetry?: (event: QRScannerCameraHandoffTelemetry) => void;
   active?: boolean;
   debug?: boolean;
 }
 
+export type QRScannerCameraHandoffTelemetry = {
+  label: string;
+  ts: number;
+  trackCount?: number;
+  tracks?: Array<{
+    kind: string;
+    readyState: MediaStreamTrackState;
+    enabled: boolean;
+    muted: boolean;
+  }>;
+  paused?: boolean;
+  srcObjectIsNull?: boolean;
+};
+
 const JSQR_SRC = '/static/vendor/jsQR-1.4.0.min.js';
+
+function highResolutionTimestamp(): number {
+  return typeof performance !== 'undefined'
+    ? performance.timeOrigin + performance.now()
+    : Date.now();
+}
+
+function describeTracks(
+  stream: MediaStream | null,
+): NonNullable<QRScannerCameraHandoffTelemetry['tracks']> {
+  return (stream?.getTracks() || []).map(track => ({
+    kind: track.kind,
+    readyState: track.readyState,
+    enabled: track.enabled,
+    muted: track.muted,
+  }));
+}
 
 /**
  * Captures the already-rendered QR scan canvas for presentation only.
@@ -77,6 +109,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({
   onReady,
   onError,
   onTransitionFrame,
+  onCameraHandoffTelemetry,
   active = true,
   debug = false,
 }) => {
@@ -87,10 +120,39 @@ export const QRScanner: React.FC<QRScannerProps> = ({
   const isDetectedRef = useRef(false);
 
   // Stable ref holding the latest callbacks — camera effect never restarts on callback identity change
-  const callbacksRef = useRef({ onDetected, onReady, onError, onTransitionFrame });
+  const callbacksRef = useRef({
+    onDetected,
+    onReady,
+    onError,
+    onTransitionFrame,
+    onCameraHandoffTelemetry,
+  });
   useEffect(() => {
-    callbacksRef.current = { onDetected, onReady, onError, onTransitionFrame };
-  }, [onDetected, onReady, onError, onTransitionFrame]);
+    callbacksRef.current = {
+      onDetected,
+      onReady,
+      onError,
+      onTransitionFrame,
+      onCameraHandoffTelemetry,
+    };
+  }, [onDetected, onReady, onError, onTransitionFrame, onCameraHandoffTelemetry]);
+
+  const emitCameraHandoffTelemetry = (
+    label: string,
+    details: Omit<QRScannerCameraHandoffTelemetry, 'label' | 'ts'> = {},
+  ) => {
+    const event: QRScannerCameraHandoffTelemetry = {
+      label,
+      ts: highResolutionTimestamp(),
+      ...details,
+    };
+    console.info(`[QRScanner] ${label}`, event);
+    try {
+      callbacksRef.current.onCameraHandoffTelemetry?.(event);
+    } catch {
+      // Diagnostics must never delay or prevent scanner camera release.
+    }
+  };
 
   // ---- Camera effect: depends ONLY on [active] — callbacks never restart camera ----
   useEffect(() => {
@@ -145,6 +207,12 @@ export const QRScanner: React.FC<QRScannerProps> = ({
         animFrameRef.current = null;
       }
 
+      const cleanupTracks = describeTracks(streamRef.current);
+      emitCameraHandoffTelemetry('QR_SCANNER_UNMOUNT_CLEANUP', {
+        trackCount: cleanupTracks.length,
+        tracks: cleanupTracks,
+      });
+
       // Stop camera tracks
       streamRef.current?.getTracks().forEach(t => t.stop());
       streamRef.current = null;
@@ -197,14 +265,31 @@ export const QRScanner: React.FC<QRScannerProps> = ({
           animFrameRef.current = null;
         }
 
-        // Stop camera tracks FIRST — then call onDetected
+        // Stop camera tracks FIRST — then call onDetected.
+        // Every boundary is instrumented so iOS handoff timing can be measured
+        // without adding another media acquisition or changing release order.
+        const tracksBeforeStop = describeTracks(streamRef.current);
+        emitCameraHandoffTelemetry('QR_CAMERA_STOP_BEGIN', {
+          trackCount: tracksBeforeStop.length,
+          tracks: tracksBeforeStop,
+        });
         streamRef.current?.getTracks().forEach(t => t.stop());
+        const tracksAfterStop = describeTracks(streamRef.current);
+        emitCameraHandoffTelemetry('QR_CAMERA_STOP_CALLED', {
+          trackCount: tracksAfterStop.length,
+          tracks: tracksAfterStop,
+        });
         streamRef.current = null;
         if (videoRef.current) {
           videoRef.current.srcObject = null;
           videoRef.current.pause();
         }
+        emitCameraHandoffTelemetry('QR_VIDEO_RELEASED', {
+          paused: videoRef.current?.paused ?? true,
+          srcObjectIsNull: videoRef.current?.srcObject === null,
+        });
 
+        emitCameraHandoffTelemetry('QR_HANDOFF_TO_PARENT');
         callbacksRef.current.onDetected(code.data);
         return;
       }
