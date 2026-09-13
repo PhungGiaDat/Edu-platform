@@ -1641,6 +1641,9 @@
           });
           if (status === 'hasVideo') {
             sendARDebug('XR_CAMERA_HAS_VIDEO', {});
+            sendMessage('XR_CAMERA_HAS_VIDEO', {
+              status: 'hasVideo',
+            });
             bootState.cameraReady = true;
             sendARDebug('BOOT_CAMERA_READY', {});
             sendMessage('XR_STARTED', { engine: '8th-wall-self-hosted', qrId, word, hasModel: !!modelUrl, hasModelLoaded: !!loadedModel });

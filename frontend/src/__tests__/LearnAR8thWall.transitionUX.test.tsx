@@ -171,6 +171,18 @@ describe('LearnAR8thWall transition UX', () => {
     expect(screen.getByText('Giữ thẻ trong khung để khám phá AR')).toBeInTheDocument();
   });
 
+  it('does not treat AR_DEBUG XR_CAMERA_HAS_VIDEO telemetry as the parent lifecycle event', async () => {
+    await startPreparing('data:image/jpeg;base64,last-frame');
+
+    expect(await screen.findByTestId('ar-transition-overlay')).toHaveAttribute('data-visible', 'true');
+
+    act(() => {
+      postViewerMessage('AR_DEBUG', { label: 'XR_CAMERA_HAS_VIDEO' });
+    });
+
+    expect(screen.getByTestId('ar-transition-overlay')).toHaveAttribute('data-visible', 'true');
+  });
+
   it('clears the transition overlay when XR enters the existing error flow', async () => {
     await startPreparing('data:image/jpeg;base64,last-frame');
 
@@ -207,5 +219,25 @@ describe('LearnAR8thWall transition UX', () => {
     expect(viewerBlock).not.toContain('transitionFrame');
     expect(viewerBlock).not.toContain('transitionVisible');
     expect(viewerBlock).not.toContain('transitionMounted');
+  });
+
+  it('requires the iframe to send XR_CAMERA_HAS_VIDEO as a control-plane event', () => {
+    const parentSource = readFileSync(
+      resolve(process.cwd(), 'src/pages/LearnAR8thWall.tsx'),
+      'utf8',
+    );
+    const viewerSource = readFileSync(
+      resolve(process.cwd(), 'public/ar-xr.html'),
+      'utf8',
+    );
+    const hasVideoStart = viewerSource.indexOf("if (status === 'hasVideo') {");
+    const hasVideoEnd = viewerSource.indexOf("if (status === 'failed')", hasVideoStart);
+    const hasVideoBlock = viewerSource.slice(hasVideoStart, hasVideoEnd);
+
+    expect(hasVideoBlock).toContain("sendARDebug('XR_CAMERA_HAS_VIDEO', {});");
+    expect(hasVideoBlock).toContain("sendMessage('XR_CAMERA_HAS_VIDEO', {");
+    expect(parentSource).toMatch(
+      /case 'XR_CAMERA_HAS_VIDEO':[\s\S]*setPhase\('VIEWING'\)[\s\S]*dismissTransition\(\)/,
+    );
   });
 });
