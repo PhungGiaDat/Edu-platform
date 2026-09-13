@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chatbot Monitor — dev (preview v3)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#2563EB; --blue-soft:#6EB9FF; --mint:#B4E197;
+    --ok:#15803D; --warn:#B45309; --err:#DC2626;
+    --bg:#F4F5F7; --card:#FFFFFF; --line:#E2E5EA;
+    --ink:#111827; --ink2:#374151; --ink3:#6B7280;
+    --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+    --r:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+  .n{font-variant-numeric:tabular-nums}
+  .m{font-family:var(--mono)}
+  svg.ic{width:1em;height:1em;display:inline-block;vertical-align:-.12em;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .page{max-width:1220px;margin:0 auto;padding:18px 22px 70px}
+
+  header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  h1{font-size:19px;font-weight:700;display:flex;align-items:center;gap:9px}
+  h1 .who{font-size:11px;font-weight:700;color:var(--ink3);border:1px solid var(--line);border-radius:5px;padding:2px 8px;background:var(--card)}
+  .asof{font-size:12.5px;color:var(--ink2)}
+  .live{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--ink2);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 13px;cursor:pointer}
+  .live .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:br 1.6s ease-in-out infinite}
+  @keyframes br{50%{opacity:.3}}
+  @media(prefers-reduced-motion:reduce){.live .dot{animation:none}}
+
+  nav{display:flex;gap:26px;border-bottom:2px solid var(--line);margin-bottom:18px}
+  nav button{border:0;background:none;font:inherit;font-weight:700;font-size:14.5px;color:var(--ink3);padding:8px 2px 10px;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-2px;display:flex;gap:7px;align-items:center}
+  nav button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--blue)}
+  nav button:hover{color:var(--ink)}
+  section[hidden]{display:none}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin-bottom:16px}
+  h2{font-size:15px;font-weight:700;margin-bottom:2px}
+  .sub{font-size:12.5px;color:var(--ink3);margin-bottom:14px}
+
+  table{width:100%;border-collapse:collapse}
+  th{font-size:11.5px;font-weight:700;color:var(--ink3);text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--line);white-space:nowrap;text-transform:none}
+  td{padding:11px 10px;border-bottom:1px solid #EEF0F3;font-size:14px;vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  th.r,td.r{text-align:right}
+  td.big{font-family:var(--mono);font-weight:800;font-size:15px}
+  .good{color:var(--ok)} .bad{color:var(--err)} .meh{color:var(--warn)}
+  .bar-cell{display:flex;align-items:center;gap:9px;justify-content:flex-end}
+  .mini{width:110px;height:8px;border-radius:4px;background:#EEF0F3;overflow:hidden;flex:none}
+  .mini>i{display:block;height:100%;background:var(--blue-soft)}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;border:1px solid}
+  .pill.ok{color:var(--ok);border-color:#BBF7D0;background:#F0FDF4}
+  .pill.warn{color:var(--warn);border-color:#FDE68A;background:#FFFBEB}
+  .pill.err{color:var(--err);border-color:#FECACA;background:#FEF2F2}
+  .pill.idle{color:var(--ink3);border-color:var(--line);background:#F9FAFB}
+  .tag{font-size:10.5px;font-weight:700;border-radius:5px;padding:1px 7px;border:1px solid var(--line);color:var(--ink2);background:#F9FAFB}
+  .tag.kilo{color:#1D4ED8;border-color:#BFDBFE;background:#EFF6FF}
+  .tag.teal{color:#0F766E;border-color:#99F6E4;background:#F0FDFA}
+
+  /* stage bar (đơn sắc xanh, chỉ stage chiếm đa số mới nổi bật) */
+  .wf{display:flex;height:14px;border-radius:4px;overflow:hidden;background:#EEF0F3;min-width:200px}
+  .wf i{display:block;height:100%}
+  .s1{background:#1E3A8A}.s2{background:#2563EB}.s3{background:#6EB9FF}.s4{background:#B4E197}
+
+  tr.row{cursor:pointer}
+  tr.row:hover td{background:#F5F8FE}
+  tr.det{display:none}tr.det.open{display:table}
+  tr.det td{background:#FAFBFC;border-bottom:1.5px solid var(--line);padding:14px 12px}
+  .dgrid{display:grid;grid-template-columns:1fr 320px;gap:20px}
+  @media(max-width:900px){.dgrid{grid-template-columns:1fr}}
+  .kv{font-size:13px;color:var(--ink2)}
+  .kv b{color:var(--ink);font-family:var(--mono)}
+
+  .two{display:grid;grid-template-columns:1.6fr 1fr;gap:16px}
+  @media(max-width:900px){.two{grid-template-columns:1fr}}
+  svg.chart{width:100%;height:auto;display:block}
+  .axis{font-size:10.5px;fill:var(--ink3)}
+  .gline{stroke:#EEF0F3;stroke-width:1}
+  .legend{display:flex;gap:18px;font-size:12.5px;color:var(--ink2);margin-top:8px;flex-wrap:wrap}
+  .legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:3px}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .f{font-size:12.5px;font-weight:700;color:var(--ink2);border:1px solid var(--line);background:var(--card);border-radius:7px;padding:4px 11px;cursor:pointer}
+  .f.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  footer{font-size:12px;color:var(--ink3);text-align:center;margin-top:26px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <g id="i-bolt"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></g>
+  <g id="i-server"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 17.5h.01"/></g>
+  <g id="i-globe"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14 0 18-3-4-3-14.5 0-18z"/></g>
+  <g id="i-check"><path d="M20 6L9 17l-5-5"/></g>
+  <g id="i-x"><path d="M18 6L6 18M6 6l12 12"/></g>
+  <g id="i-warn"><path d="M12 3l10 18H2L12 3zM12 10v5M12 18.5v.5"/></g>
+  <g id="i-dash"><path d="M5 12h14"/></g>
+  <g id="i-undo"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 016 6v5"/></g>
+</defs></svg>
+
+<div class="page">
+<header>
+  <div>
+    <h1><svg class="ic" style="color:var(--blue)"><use href="#i-bolt"/></svg> Chatbot Monitor <span class="who">DEV ONLY · teacher-auth</span></h1>
+    <div class="asof">Dữ liệu <b>24h gần nhất</b> · as of <b class="n">21:42:05</b> · <span class="m" style="font-size:11.5px">GET /api/v1/admin/monitoring/*</span></div>
+  </div>
+  <button class="live"><span class="dot"></span> Live 10s</button>
+</header>
+
+<nav role="tablist">
+  <button role="tab" aria-selected="true" onclick="show('lat')"><svg class="ic"><use href="#i-bolt"/></svg> Độ trễ &amp; Model</button>
+  <button role="tab" aria-selected="false" onclick="show('sys')"><svg class="ic"><use href="#i-server"/></svg> Hệ thống</button>
+  <button role="tab" aria-selected="false" onclick="show('api')"><svg class="ic"><use href="#i-globe"/></svg> API</button>
+</nav>
+
+<!-- ═══════════════ TAB 1 : ĐỘ TRỄ & MODEL ═══════════════ -->
+<section id="lat" role="tabpanel">
+
+  <div class="card">
+    <h2>Tốc độ theo model</h2>
+    <div class="sub">Suy ra từ <span class="m">rag_traces</span> · tokens/s = completion tokens ÷ generator time · fallback % = trace có model thực ≠ model yêu cầu</div>
+    <table>
+      <thead><tr>
+        <th>Model</th><th>Nguồn</th><th class="r">Reqs 24h</th><th class="r">e2e p50</th><th class="r">p95</th><th class="r">Max</th>
+        <th class="r">Gen tokens/s</th><th class="r">Timeout/err</th><th class="r">Fallback</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="m" style="font-weight:600">nex-n2.5-pro:free</td><td><span class="tag kilo">Kilo · primary</span></td>
+          <td class="r n">98</td><td class="r big n">17.2s</td><td class="r n" style="font-family:var(--mono)">38.4s</td><td class="r n" style="font-family:var(--mono)">61.2s</td>
+          <td class="r"><div class="bar-cell"><div class="mini"><i style="width:31%"></i></div><b class="n m">24.1</b></div></td>
+          <td class="r n meh">8 / 8.2%</td><td class="r n">—</td>
+        </tr>
+        <tr>
+          <td class="m" style="font-weight:600">nemotron-3-ultra-550b</td><td><span class="tag">Kilo · fallback 2</span></td>
+          <td class="r n">21</td><td class="r big n meh">26.8s</td><td class="r n" style="font-family:var(--mono)">52.1s</td><td class="r n" style="font-family:var(--mono)">78.9s</td>
+          <td class="r"><div class="bar-cell"><div class="mini"><i style="width:11%"></i></div><b class="n m">8.6</b></div></td>
+          <td class="r n bad">5 / 23.8%</td><td class="r n">21 / 100%</td>
+        </tr>
+        <tr>
+          <td class="m" style="font-weight:600">glm-5.3-flash</td><td><span class="tag">BAI</span></td>
+          <td class="r n">11</td><td class="r big n good">9.4s</td><td class="r n" style="font-family:var(--mono)">14.1s</td><td class="r n" style="font-family:var(--mono)">19.8s</td>
+          <td class="r"><div class="bar-cell"><div class="mini"><i style="width:66%"></i></div><b class="n m">51.7</b></div></td>
+          <td class="r n good">0 / 0%</td><td class="r n">4 / 36%</td>
+        </tr>
+        <tr>
+          <td class="m" style="font-weight:600">ling-3.0-flash-fin</td><td><span class="tag">Kilo · fallback 3</span></td>
+          <td class="r n">3</td><td class="r big n">12.9s</td><td class="r n" style="font-family:var(--mono)">15.2s</td><td class="r n" style="font-family:var(--mono)">15.2s</td>
+          <td class="r"><div class="bar-cell"><div class="mini"><i style="width:48%"></i></div><b class="n m">37.4</b></div></td>
+          <td class="r n meh">1 / 33.3% <span class="tag" title="lỗi content rỗng">empty×</span></td><td class="r n">3 / 100%</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="sub" style="margin:10px 0 0">Cột tokens/s là chỉ số “tốc độ model” thật — tách khỏi effect của retrieval/queue. glm nhanh nhất nhưng chỉ là fallback → cân nhắc đổi thứ tự cascade nếu cần demo mượt.</div>
+  </div>
+
+  <div class="two">
+    <div class="card">
+      <h2>Độ trễ theo thời gian</h2>
+      <div class="sub">bucket 1h · e2e p50 (liền) &amp; p95 (mờ) · 24h</div>
+      <svg class="chart" viewBox="0 0 560 170" role="img" aria-label="Biểu đồ p50 và p95 theo giờ">
+        <line x1="40" y1="20" x2="550" y2="20" class="gline"/><line x1="40" y1="60" x2="550" y2="60" class="gline"/><line x1="40" y1="100" x2="550" y2="100" class="gline"/><line x1="40" y1="140" x2="550" y2="140" class="gline"/>
+        <text x="6" y="24" class="axis">60s</text><text x="6" y="64" class="axis">40s</text><text x="6" y="104" class="axis">20s</text><text x="6" y="144" class="axis">0</text>
+        <polyline fill="none" stroke="#BFCAD6" stroke-width="2.5" stroke-dasharray="6 4" points="40,116 105,110 170,104 235,96 300,112 365,70 430,88 495,96 550,92"/>
+        <polyline fill="none" stroke="#2563EB" stroke-width="2.5" points="40,130 105,128 170,126 235,124 300,127 365,118 430,122 495,125 550,124"/>
+        <circle cx="365" cy="70" r="4.5" fill="#DC2626"/>
+        <text x="300" y="56" class="axis" style="fill:#DC2626;font-weight:700">14:00 p95=49.2s — Kilo timeout window</text>
+        <text x="34" y="162" class="axis">00:00</text><text x="228" y="162" class="axis">08:00</text><text x="420" y="162" class="axis">17:00</text><text x="536" y="162" class="axis">21h</text>
+      </svg>
+      <div class="legend"><span><i style="background:#2563EB"></i>e2e p50</span><span><i style="background:#BFCAD6"></i>e2e p95</span></div>
+    </div>
+    <div class="card">
+      <h2>Thời gian dành cho stage nào</h2>
+      <div class="sub">TB/request · 133 req 24h · tổng 20.1s</div>
+      <table>
+        <tbody>
+          <tr><td style="width:88px"><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#1E3A8A;margin-right:6px"></i>planner</td>
+            <td><div class="wf" style="min-width:0"><i class="s1" style="width:6%"></i></div></td><td class="r n m" style="width:64px">1.14s</td><td class="r n" style="width:52px;color:var(--ink3)">5.7%</td></tr>
+          <tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#2563EB;margin-right:6px"></i>retrieval</td>
+            <td><div class="wf" style="min-width:0"><i class="s2" style="width:12%"></i></div></td><td class="r n m">2.36s</td><td class="r n" style="color:var(--ink3)">11.7%</td></tr>
+          <tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#6EB9FF;margin-right:6px"></i>generator</td>
+            <td><div class="wf" style="min-width:0"><i class="s3" style="width:80%"></i></div></td><td class="r n m" style="font-weight:800">16.18s</td><td class="r n" style="font-weight:700">80.5%</td></tr>
+          <tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#B4E197;margin-right:6px"></i>validator</td>
+            <td><div class="wf" style="min-width:0"><i class="s4" style="width:3%"></i></div></td><td class="r n m">0.41s</td><td class="r n" style="color:var(--ink3)">2.0%</td></tr>
+        </tbody>
+      </table>
+      <div class="sub" style="margin:10px 0 0">Kết luận hiển nhiên: tối ưu chatbot = tối ưu <b>generator</b> (model speed + prompt size). Validator Tier 2 đã giảm 3.5s → 0.4s.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Yêu cầu gần đây</h2>
+    <div class="sub">bấm dòng để mở chi tiết stage + tokens</div>
+    <div class="filters">
+      <button class="f on">tất cả (133)</button>
+      <button class="f">chậm &gt;30s (11)</button>
+      <button class="f">lỗi/timeout (14)</button>
+      <button class="f">từ chối OOD (6)</button>
+      <button class="f">model: tất cả ▾</button>
+    </div>
+    <table>
+      <thead><tr><th style="width:74px">Giờ</th><th>Câu hỏi</th><th style="width:150px">Model thực</th><th class="r" style="width:84px">e2e</th><th class="r" style="width:78px">tok/s</th><th class="r" style="width:66px">Tokens</th><th style="width:118px">Verdict</th><th style="width:20px"></th></tr></thead>
+      <tbody>
+        <tr class="row" onclick="tg(this)"><td class="n m" style="font-size:12.5px;color:var(--ink2)">20:31:12</td><td>tại sao bầu trời màu xanh?</td><td class="m" style="font-size:12.5px">nex-n2.5-pro</td><td class="r n m">21.4s</td><td class="r n m">17.6</td><td class="r n" style="color:var(--ink2)">1.5k</td><td><span class="pill ok"><svg class="ic"><use href="#i-check"/></svg> rule</span></td><td>▾</td></tr>
+        <tr class="det"><td colspan="8"><div class="dgrid">
+          <div>
+            <div class="wf" style="height:16px"><i class="s1" style="width:3.1%"></i><i class="s2" style="width:5.2%"></i><i class="s3" style="width:89.7%"></i><i class="s4" style="width:2%"></i></div>
+            <div class="kv" style="margin-top:8px">planner <b>0.67s</b> · retrieval <b>1.12s</b> · <b style="color:var(--ink)">generator 19.21s</b> · validator <b>0.43s</b></div>
+            <div class="kv" style="margin-top:6px"><span class="m" style="font-size:12px">planner:done model=nex-n2.5-pro → gen:start → sources=3 → rule:pass → llm-validator:skipped</span></div>
+          </div>
+          <div class="kv"><b>1,204</b> prompt + <b>337</b> completion · 2 calls<br>Sources: <b>animal_sky#12</b>, animal_bird#4, kb_momo#9<br>Answer: 412 ký tự · sha <b>9f2c…</b></div>
+        </div></td></tr>
+
+        <tr class="row" onclick="tg(this)"><td class="n m" style="font-size:12.5px;color:var(--ink2)">20:29:40</td><td>số 9 cộng số 10 bằng bao nhiêu?</td><td class="m" style="font-size:12.5px">nex-n2.5-pro</td><td class="r n m">9.8s</td><td class="r n m">12.9</td><td class="r n" style="color:var(--ink2)">0.9k</td><td><span class="pill idle" style="color:#0F766E;border-color:#99F6E4;background:#F0FDFA"><svg class="ic"><use href="#i-dash"/></svg> từ chối OOD</span></td><td>▾</td></tr>
+        <tr class="det"><td colspan="8"><div class="kv">refusal template <b>2/8</b> (xoay vòng) · OOD → hành vi đúng · 0 sources</div></td></tr>
+
+        <tr class="row" onclick="tg(this)" style="border-left:3px solid var(--err)">
+          <td class="n m" style="font-size:12.5px;color:var(--err)">20:14:03</td><td>Can a turtle swim?</td><td class="m" style="font-size:12.5px">ultra-550b <span class="tag" style="border-color:#FECACA;color:var(--err);background:#FEF2F2"><svg class="ic"><use href="#i-undo"/></svg> fallback</span></td><td class="r n m bad">46.1s</td><td class="r n m">6.2</td><td class="r n" style="color:var(--ink2)">2.1k</td><td><span class="pill err"><svg class="ic"><use href="#i-x"/></svg> timeout</span></td><td>▾</td></tr>
+        <tr class="det"><td colspan="8"><div class="kv">nex-n2.5-pro <b>APITimeoutError (20s)</b> → cascade → ultra-550b trả lời nhưng chậm (6.2 tok/s) → e2e 46.1s. Trace model ≠ yêu cầu → tự động gắn tag “fallback”.</div></td></tr>
+
+        <tr class="row" onclick="tg(this)"><td class="n m" style="font-size:12.5px;color:var(--ink2)">19:58:31</td><td>con bướm thích ăn gì hả bác?</td><td class="m" style="font-size:12.5px">nex-n2.5-pro</td><td class="r n m">15.9s</td><td class="r n m">22.4</td><td class="r n" style="color:var(--ink2)">1.3k</td><td><span class="pill warn">escalate→pass</span></td><td>▾</td></tr>
+        <tr class="det"><td colspan="8"><div class="kv">rule confidence <b>0.52</b> &lt; threshold 0.7 → LLM validator <b>3.94s</b> → pass · rule_breaks: []</div></td></tr>
+
+        <tr class="row" onclick="tg(this)"><td class="n m" style="font-size:12.5px;color:var(--ink2)">19:47:02</td><td>con kiến sống ở đâu?</td><td class="m" style="font-size:12.5px">glm-5.3-flash</td><td class="r n m good">8.2s</td><td class="r n m good">48.9</td><td class="r n" style="color:var(--ink2)">1.1k</td><td><span class="pill ok"><svg class="ic"><use href="#i-check"/></svg> rule</span></td><td>▾</td></tr>
+        <tr class="det"><td colspan="8"><div class="kv">generator 6.9s @ <b>48.9 tok/s</b> — nhanh nhất trong ca. (glm qua BAI, không quota :free)</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════ TAB 2 : HỆ THỐNG ═══════════════ -->
+<section id="sys" role="tabpanel" hidden>
+  <div class="card">
+    <h2>Process</h2>
+    <div class="sub">psutil · cgroup-first (K8s-ready) · uptime 3d 4h từ 09/09 17:30</div>
+    <table style="max-width:760px"><tbody>
+      <tr><td style="width:190px">CPU process</td><td class="n m">12.4%</td><td><div class="wf" style="min-width:0"><i class="s2" style="width:12%"></i></div></td><td class="n" style="width:150px;color:var(--ink3)">node 62%</td></tr>
+      <tr><td>Memory process</td><td class="n m">214 MiB</td><td><div class="wf" style="min-width:0"><i class="s2" style="width:21%"></i></div></td><td class="n" style="color:var(--ink3)">limit 1 GiB</td></tr>
+      <tr><td>DB pool (asyncpg)</td><td class="n m">8 / 20</td><td><div class="wf" style="min-width:0"><i class="s2" style="width:40%"></i></div></td><td class="n" style="color:var(--ink3)">free 5 · wait 0</td></tr>
+      <tr><td>Event loop lag</td><td class="n m">3 ms</td><td><div class="wf" style="min-width:0"><i class="s4" style="width:2%"></i></div></td><td class="n" style="color:var(--ink3)">p95 10s</td></tr>
+    </tbody></table>
+  </div>
+  <div class="card">
+    <h2>Dependencies</h2>
+    <div class="sub">probe song song, timeout 3s · auto 10s khi Live</div>
+    <table>
+      <thead><tr><th>Thành phần</th><th style="width:150px">Trạng thái</th><th>Chi tiết</th><th class="r" style="width:90px">Đáp ứng</th></tr></thead>
+      <tbody>
+        <tr><td><b>PostgreSQL</b></td><td><span class="pill ok"><svg class="ic"><use href="#i-check"/></svg> UP</span></td><td class="m" style="font-size:12.5px;color:var(--ink2)">SELECT 1 · psycopg3</td><td class="r n m">4ms</td></tr>
+        <tr><td><b>Qdrant</b></td><td><span class="pill ok"><svg class="ic"><use href="#i-check"/></svg> UP</span></td><td class="m" style="font-size:12.5px;color:var(--ink2)">collection animal_rag_kb · 2,341 points</td><td class="r n m">11ms</td></tr>
+        <tr><td><b>Supabase Storage</b></td><td><span class="pill ok"><svg class="ic"><use href="#i-check"/></svg> UP</span></td><td class="m" style="font-size:12.5px;color:var(--ink2)">HEAD media gần nhất: fox.mp4</td><td class="r n m">87ms</td></tr>
+        <tr><td><b>MongoDB</b></td><td><span class="pill idle"><svg class="ic"><use href="#i-dash"/></svg> not configured</span></td><td class="m" style="font-size:12.5px;color:var(--ink2)">chỉ khi bật rag_cache</td><td class="r">—</td></tr>
+        <tr><td><b>nex-n2.5-pro</b> <span class="tag kilo">Kilo</span></td><td><span class="pill ok"><svg class="ic"><use href="#i-check"/></svg> 1.2s</span></td><td class="m" style="font-size:12.5px;color:var(--ink2)">ping “ok” max_tokens=5</td><td class="r n m">1.18s</td></tr>
+        <tr><td><b>ultra-550b</b> <span class="tag kilo">Kilo</span></td><td><span class="pill warn"><svg class="ic"><use href="#i-warn"/></svg> chậm</span></td><td class="m" style="font-size:12.5px;color:var(--ink2)">quá ngưỡng 3s · vẫn trả lời</td><td class="r n m">4.61s</td></tr>
+        <tr><td><b>ling-flash</b> <span class="tag kilo">Kilo</span></td><td><span class="pill err"><svg class="ic"><use href="#i-x"/></svg> FAIL</span></td><td class="m" style="font-size:12.5px;color:var(--ink2)">empty content — đã biết, tránh làm primary</td><td class="r">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════ TAB 3 : API ═══════════════ -->
+<section id="api" role="tabpanel" hidden>
+  <div class="card">
+    <h2>Tổng quan 1h</h2>
+    <div class="sub">đồng thời xuất <span class="m">GET /metrics</span> (Prometheus text) — K8s scrape không cần đổi code</div>
+    <table style="max-width:820px">
+      <thead><tr><th></th><th class="r">Giá trị</th><th class="r" style="color:transparent">.</th><th class="r">p50</th><th class="r">p95</th></tr></thead>
+      <tbody>
+        <tr><td>Tổng requests</td><td class="r n m" style="font-weight:800">1,187</td><td></td><td class="r n m">42ms</td><td class="r n m">310ms</td></tr>
+        <tr><td>Lỗi 5xx</td><td class="r n m meh">14 · 1.18%</td><td></td><td>—</td><td>—</td></tr>
+        <tr><td>Riêng POST /chat</td><td class="r n m">86</td><td></td><td class="r n m">18.9s</td><td class="r n m">42.6s</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h2>Theo route — 1h</h2>
+    <div class="sub">normalize path (uuid→:id) · buffer 60s → flush <span class="m">api_metrics_minute</span></div>
+    <table>
+      <thead><tr><th>Route</th><th class="r" style="width:90px">Req</th><th style="width:190px">Volume</th><th class="r" style="width:90px">p50</th><th class="r" style="width:90px">p95</th><th class="r" style="width:84px">Err%</th></tr></thead>
+      <tbody>
+        <tr><td class="m" style="font-size:13px">GET /api/v1/lessons</td><td class="r n">412</td><td><div class="wf"><i class="s2" style="width:84%"></i></div></td><td class="r n m">31ms</td><td class="r n m">120ms</td><td class="r n">0.2%</td></tr>
+        <tr><td class="m" style="font-size:13px">GET /api/v1/courses</td><td class="r n">300</td><td><div class="wf"><i class="s2" style="width:61%"></i></div></td><td class="r n m">28ms</td><td class="r n m">95ms</td><td class="r n">0.0%</td></tr>
+        <tr><td class="m" style="font-size:13px">POST /api/v1/gamification/events</td><td class="r n">121</td><td><div class="wf"><i class="s2" width="24%" style="width:24%"></i></div></td><td class="r n m">64ms</td><td class="r n m">210ms</td><td class="r n">0.8%</td></tr>
+        <tr><td class="m" style="font-size:13px">POST /api/v1/chat</td><td class="r n">86</td><td><div class="wf"><i class="s2" style="width:18%"></i></div></td><td class="r n m">18.9s</td><td class="r n m">42.6s</td><td class="r n meh">2.3%</td></tr>
+        <tr><td class="m" style="font-size:13px">GET /health · /metrics</td><td class="r n">241</td><td><div class="wf"><i class="s2" style="width:49%"></i></div></td><td class="r n m">6ms</td><td class="r n m">18ms</td><td class="r n">0.0%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>PREVIEW v3 · dev monitor — đã bỏ Tab Học viên theo yêu cầu · mọi số là MẪU · schema: rag_traces (plan 20260912) · style: tối giản 1 accent, mono cho số, icon+chữ không dùng màu đơn độc</footer>
+</div>
+
+<script>
+function show(id){
+  document.querySelectorAll('[role=tabpanel]').forEach(p=>p.hidden=(p.id!==id));
+  document.querySelectorAll('[role=tab]').forEach(b=>b.setAttribute('aria-selected',b.onclick.toString().includes("'"+id+"'")));
+}
+function tg(row){
+  const d=row.nextElementSibling;d.classList.toggle('open');
+  row.lastElementChild.textContent=d.classList.contains('open')?'▴':'▾';
+}
+</script>
+</body>
+</html>

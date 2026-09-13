@@ -138,6 +138,40 @@ export const VolumeUpIcon: React.FC<IconProps> = ({ className = "w-6 h-6" }) => 
   </svg>
 );
 
+// ── Ops Monitoring icons (hand-drawn stroke style, mirrors
+//    docs/design/20260913_ops_dashboard_preview_v3.html) ────────────────
+const monSvg = (path: React.ReactNode): React.FC<IconProps> =>
+  ({ className = "w-4 h-4" }) => (
+    <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+      {path}
+    </svg>
+  );
+
+export const MonitorBoltIcon = monSvg(<path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" />);
+export const MonitorServerIcon = monSvg(
+  <>
+    <rect x="3" y="4" width="18" height="7" rx="1.5" />
+    <rect x="3" y="14" width="18" height="7" rx="1.5" />
+    <path d="M7 7.5h.01M7 17.5h.01" />
+  </>,
+);
+export const MonitorGlobeIcon = monSvg(
+  <>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18M12 3c3 3.5 3 14 0 18-3-4-3-14.5 0-18z" />
+  </>,
+);
+export const MonitorCheckIcon = monSvg(<path d="M20 6L9 17l-5-5" />);
+export const MonitorXIcon = monSvg(<path d="M18 6L6 18M6 6l12 12" />);
+export const MonitorWarnIcon = monSvg(<path d="M12 3l10 18H2L12 3zM12 10v5M12 18.5v.5" />);
+export const MonitorDashIcon = monSvg(<path d="M5 12h14" />);
+export const MonitorUndoIcon = monSvg(
+  <>
+    <path d="M9 14L4 9l5-5" />
+    <path d="M4 9h10a6 6 0 016 6v5" />
+  </>,
+);
+
 // Export all icons as default
 const Icons = {
   HomeIcon,

@@ -60,6 +60,7 @@ from api import (
 )
 from api.pronunciation_enhanced import router as pronunciation_enhanced_router
 from api.admin_games import router as admin_games_router
+from api.admin_monitoring import router as admin_monitoring_router
 from api.pronunciation_course import router as pronunciation_course_router
 from api.lessons import router as lessons_router
 from api.course_lessons import router as course_lessons_router
@@ -281,6 +282,13 @@ app.include_router(
 # Admin games management — /api/v1/admin/games/* (2026-09-09 activation)
 app.include_router(
     admin_games_router, prefix=f"{settings.API_V1_PREFIX}/admin", tags=["Admin Games"]
+)
+
+# Ops Monitoring Dashboard — /api/v1/admin/monitoring/* (teacher-only, P1)
+app.include_router(
+    admin_monitoring_router,
+    prefix=f"{settings.API_V1_PREFIX}/admin/monitoring",
+    tags=["Admin Monitoring"],
 )
 
 # Debug router — logs AR_DEBUG from mobile web app to Vercel runtime logs

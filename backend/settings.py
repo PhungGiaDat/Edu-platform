@@ -136,6 +136,21 @@ class Settings(BaseSettings):
     # Explicit per-request validator_model always forces the LLM path.
     VALIDATOR_MODE: str = "rule"
 
+    # ========== Ops Monitoring (in-app dashboard) ==========
+    # Master switch for RAG trace persistence + /api/v1/admin/monitoring reads.
+    # Fire-and-forget inserts into Postgres `rag_traces`; never affects chat
+    # responses (persist failures are swallowed and logged at debug level).
+    MONITORING_ENABLED: bool = False
+    # Store a truncated (≤500 char) copy of the learner question on each trace
+    # row. Turn off for stricter privacy; stats/latency capture is unaffected.
+    MONITORING_STORE_QUESTIONS: bool = True
+    # Salt for the non-reversible user hash stored on trace rows. Falls back to
+    # SECRET_KEY when empty — set explicitly if SECRET_KEY may rotate.
+    MONITORING_HASH_SALT: str = ""
+    # Advisory retention window (days) surfaced in the dashboard; pruning is a
+    # manual/operational task (docs/plan/20260912_ops_dashboard.md §8).
+    MONITORING_RETENTION_DAYS: int = 90
+
     # B.AI provider (OpenAI-compatible fallback for LLM generation)
     BAI_API_KEY: Optional[SecretStr] = None
     BAI_BASE_URL: str = "https://api.b.ai/v1"

@@ -81,11 +81,15 @@ def install_token_collector(collector: TokenCollector) -> None:
     handler = _Handler()
 
     def _attach(llm: Any) -> Any:
+        # Append (not replace): the factories now ship a production trace
+        # callback (services.rag_trace_context.TRACE_HANDLER) that must keep
+        # working alongside the benchmark collector.
         try:
-            llm.callbacks = [handler]
+            existing = list(llm.callbacks or [])
+            llm.callbacks = existing + [handler]
         except Exception:  # noqa: BLE001
             try:
-                llm.callbacks = llm.callbacks + [handler]
+                llm.callbacks = [handler]
             except Exception:  # noqa: BLE001
                 logger.warning("[bench] could not attach token collector to LLM")
         return llm

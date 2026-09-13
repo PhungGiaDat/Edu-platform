@@ -106,6 +106,12 @@ const Dashboard: React.FC = () => {
       path: '/admin/analytics',
       icon: ChartBarIcon,
     },
+    {
+      // Dev-facing tool — plain literal label is intentional (not learner copy).
+      label: 'Chatbot Monitor',
+      path: '/admin/monitoring',
+      icon: LightningBoltIcon,
+    },
   ];
 
   return (

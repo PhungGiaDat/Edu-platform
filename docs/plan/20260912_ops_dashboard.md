@@ -238,3 +238,16 @@ Order rationale: Tab2 is the crown jewel for the thesis (RAG traces = the A/B ev
 
 ---
 *Next after approval: Phase 3 (Development) per SDLC — @git-manager branch `feature/ops-monitoring-dashboard`, then P1 implementation. Benchmark A/B Batch 2 remains a separate pending approval and should land before new feature code to keep stash-based A/B clean.*
+
+---
+
+## 14. Status ledger (updated inline as phases land)
+
+| Phase | Status | Date | Verification level | Notes |
+|-------|--------|------|--------------------|-------|
+| P1 (rag_traces + monitoring API + Tab "Độ trễ & Model" + Tab "Hệ thống") | ✅ DONE | 2026-09-13 | RUNTIME_VERIFIED (API layer) | 24/24 unit tests; all 5 endpoints exercised against live dev DB (seeded 41 traces); UI reviewed in user browser (design polish may follow) |
+| Scope change vs §2 | Applied | 2026-09-13 | — | **Tab 3 "Learner Analytics" REMOVED** per approved v3 design (dev-tool scope only). §2/§4.3/§5 `/learners` rows are superseded. |
+| Branching policy | Applied | 2026-09-13 | — | Per user directive: work committed **directly on `10-days-quick-run`**, pathspec-limited; no feature branch, no history rewriting. |
+| P2 (ASGI middleware + `api_metrics_minute` + `/metrics` + API tab) | ⏳ Not started | — | — | Next chatbot-side infra task; also add `prometheus-client` here. |
+
+**Dev-data caveat:** dev DB contains seeded demo rows in `rag_traces` (`random.seed(20260913)`) + dev admin `monitor.dev@example.com` — acceptable demo data per DoD; delete/truncate before any staging deploy.

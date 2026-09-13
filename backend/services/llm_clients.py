@@ -21,6 +21,7 @@ import tenacity
 from langchain_openai import ChatOpenAI
 
 from settings import settings
+from services.rag_trace_context import TRACE_HANDLER
 
 if TYPE_CHECKING:
     from tenacity import RetryCallState
@@ -68,6 +69,9 @@ def get_tokenrouter_llm(
         timeout=timeout or settings.AI_CONTENT_TIMEOUT_SECONDS,
         max_retries=0,
         temperature=temperature,
+        # Ops monitoring: forwards usage into the active per-request TraceSink
+        # (no-op when no sink is bound — see services/rag_trace_context.py).
+        callbacks=[TRACE_HANDLER],
     )
 
 
@@ -87,6 +91,7 @@ def get_bai_llm(
         timeout=timeout or settings.AI_CONTENT_TIMEOUT_SECONDS,
         max_retries=0,
         temperature=temperature,
+        callbacks=[TRACE_HANDLER],
     )
 
 

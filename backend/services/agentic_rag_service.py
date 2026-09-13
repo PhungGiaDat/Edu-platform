@@ -24,6 +24,8 @@ import asyncio
 import hashlib
 import json
 import logging
+import time
+import uuid as _uuid
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
@@ -32,6 +34,8 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from sqlalchemy import text
 from services.cache_service import cache_service
+from services.rag_observability import build_rag_trace_row, schedule_rag_trace
+from services.rag_trace_context import begin_sink, end_sink, mark_stage
 from repositories.postgres_chat_log_repository import PostgresChatLogRepository
 from database.postgres_connection import postgres_pool
 from settings import settings
@@ -338,11 +342,14 @@ class AgenticRAGService:
         search_query = " ".join(part for part in [topic, *keywords] if part) or question
 
         context_documents: List[Dict[str, Any]] = []
+        _r0 = time.perf_counter()
         try:
             context_documents = await self._retriever.retrieve(search_query)
             logger.info(f"[AgenticRAG] Generator found {len(context_documents)} Qdrant documents")
         except QdrantRAGUnavailable:
             logger.warning("[AgenticRAG] Qdrant retrieval unavailable; continuing without context")
+        finally:
+            mark_stage("retrieval", time.perf_counter() - _r0)
 
         # Build context string
         context_texts = [str(document.get("text") or "").strip() for document in context_documents]
@@ -467,40 +474,87 @@ class AgenticRAGService:
         """
         agent_trace: List[str] = []
 
-        # ── 1. Check cache first ──────────────────────────────────────────────
-        cache_key = _cache_key(question, user_id, settings.qdrant_retrieval_version)
-        cached = await self._get_cache(cache_key)
-        if cached:
-            cached["cached"] = True
-            cached["agent_trace"] = ["cache:hit"]
-            return cached
+        # ── Ops monitoring (P1): bind a per-request TraceSink. Strict no-op
+        # downstream when MONITORING_ENABLED is false (schedule short-circuits).
+        request_id = str(_uuid.uuid4())
+        sink_token, sink = begin_sink()
+        started = time.perf_counter()
+        plan: Optional[Dict[str, Any]] = None
+        final_response: Optional[str] = None
+        sources: List[Dict[str, Any]] = []
+        cache_hit = False
+        error_text: Optional[str] = None
 
-        # ── 2. PLANNER ────────────────────────────────────────────────────────
-        plan = await self._planner(question, user_id, planner_model, agent_trace)
-        await asyncio.sleep(INTER_AGENT_DELAY)
+        try:
+            # ── 1. Check cache first ──────────────────────────────────────────
+            cache_key = _cache_key(question, user_id, settings.qdrant_retrieval_version)
+            cached = await self._get_cache(cache_key)
+            if cached:
+                cached["cached"] = True
+                cached["agent_trace"] = ["cache:hit"]
+                cache_hit = True
+                sources = list(cached.get("sources") or [])
+                final_response = cached.get("response")
+                return cached
 
-        # ── 3. GENERATOR ──────────────────────────────────────────────────────
-        draft_response, sources = await self._generator(
-            question, plan, generator_model, agent_trace
-        )
+            # ── 2. PLANNER ────────────────────────────────────────────────────
+            _t0 = time.perf_counter()
+            plan = await self._planner(question, user_id, planner_model, agent_trace)
+            mark_stage("planner", time.perf_counter() - _t0)
+            await asyncio.sleep(INTER_AGENT_DELAY)
 
-        # ── 4. VALIDATOR ─────────────────────────────────────────────────────
-        # Rule mode adds no LLM call, so the inter-call delay is paid inside
-        # _validator only when it actually escalates to the LLM.
-        final_response = await self._validator(
-            draft_response, session_id, validator_model, agent_trace, sources
-        )
+            # ── 3. GENERATOR ──────────────────────────────────────────────────
+            _t0 = time.perf_counter()
+            draft_response, sources = await self._generator(
+                question, plan, generator_model, agent_trace
+            )
+            mark_stage("generator", time.perf_counter() - _t0)
 
-        # ── 5. Cache the result ───────────────────────────────────────────────
-        result = {
-            "response": final_response,
-            "sources": sources,
-            "cached": False,
-            "agent_trace": agent_trace,
-        }
-        await self._set_cache(cache_key, result)
+            # ── 4. VALIDATOR ─────────────────────────────────────────────────
+            # Rule mode adds no LLM call, so the inter-call delay is paid inside
+            # _validator only when it actually escalates to the LLM.
+            _t0 = time.perf_counter()
+            final_response = await self._validator(
+                draft_response, session_id, validator_model, agent_trace, sources
+            )
+            mark_stage("validator", time.perf_counter() - _t0)
 
-        return result
+            # ── 5. Cache the result ───────────────────────────────────────────
+            result = {
+                "response": final_response,
+                "sources": sources,
+                "cached": False,
+                "agent_trace": agent_trace,
+            }
+            await self._set_cache(cache_key, result)
+
+            return result
+        except Exception as exc:  # noqa: BLE001 - record then preserve behavior
+            error_text = str(exc)
+            raise
+        finally:
+            try:
+                row = build_rag_trace_row(
+                    request_id=request_id,
+                    question=question,
+                    user_id=user_id,
+                    session_id=session_id,
+                    sink=sink,
+                    agent_trace=agent_trace,
+                    final_response=final_response,
+                    sources=sources,
+                    total_seconds=time.perf_counter() - started,
+                    language=(plan or {}).get("language"),
+                    generator_model_requested=generator_model or settings.MODEL_GENERATOR,
+                    cache_hit=cache_hit,
+                    error=error_text,
+                )
+                if cache_hit:
+                    row["validator_verdict"] = "cache-hit"
+                schedule_rag_trace(row)
+            except Exception as trace_exc:  # noqa: BLE001
+                logger.debug(f"[AgenticRAG] trace build failed (ignored): {trace_exc}")
+            end_sink(sink_token)
 
 
 # ── Dependency injection factory ───────────────────────────────────────────────

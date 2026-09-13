@@ -50,6 +50,7 @@ import AdminStudentDetail from "./pages/admin/StudentDetail";
 import AdminCourseManager from "./pages/admin/CourseManager";
 import AdminFlashcardManager from "./pages/admin/FlashcardManager";
 import AdminAnalytics from "./pages/admin/Analytics";
+import AdminMonitoring from "./pages/admin/monitoring/MonitoringPage";
 import AdminGoalSettings from "./pages/admin/GoalSettings";
 import AdminErrorBoundary from "./features/admin/components/AdminErrorBoundary";
 import { CourseCreatePage, CourseEditPage } from "./pages/admin/CourseEditor";
@@ -379,6 +380,7 @@ const App = () => {
         <Route path="/admin/students/:userId" element={<RequireTeacherRole><AdminErrorBoundary><AdminStudentDetail /></AdminErrorBoundary></RequireTeacherRole>} />
         <Route path="/admin/students/:userId/goals" element={<RequireTeacherRole><AdminErrorBoundary><AdminGoalSettings /></AdminErrorBoundary></RequireTeacherRole>} />
         <Route path="/admin/analytics" element={<RequireTeacherRole><AdminErrorBoundary><AdminAnalytics /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/monitoring" element={<RequireTeacherRole><AdminErrorBoundary><AdminMonitoring /></AdminErrorBoundary></RequireTeacherRole>} />
 
         {/* Course CRUD Routes */}
         {/* Card-click route (was missing → blank page): redirect to the edit page */}
