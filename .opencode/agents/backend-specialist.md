@@ -1,7 +1,7 @@
 ---
 description: Backend architect for APIs, server-side logic, databases, and secure scalable services
 mode: subagent
-model: bai/deepseek-v4-flash
+model: bai/qwen3.8-flash
 temperature: 0.3
 tools:
   read: true
