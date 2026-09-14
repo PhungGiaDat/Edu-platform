@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CodexPetSprite } from '@/features/pets/components/CodexPetSprite';
 import { useAuth } from '@/contexts/AuthContext';
-import { ChatService } from '@/services/ChatService';
+import { ChatService, type ChatErrorKind } from '@/services/ChatService';
 
 interface Message {
     id: string;
@@ -9,6 +10,10 @@ interface Message {
     content: string;
     sources?: { word: string; score: number }[];
     agentTrace?: string[];
+    /** Set on failed replies — renders the error style + retry affordance. */
+    errorKind?: ChatErrorKind;
+    retryable?: boolean;
+    requiresLogin?: boolean;
 }
 
 interface AIChatBuddyProps {
@@ -47,6 +52,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
     show3DPet = true,
 }) => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const effectiveUserId = user?.id || userId;
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [messages, setMessages] = useState<Message[]>([
@@ -58,6 +64,8 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    // Last learner question — lets the error bubble's retry button replay it.
+    const [lastQuestion, setLastQuestion] = useState('');
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -65,41 +73,64 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    const handleSend = async () => {
-        if (!input.trim() || isLoading || !effectiveUserId) return;
+    const sendQuestion = async (raw: string, isResend = false) => {
+        const text = raw.trim();
+        // NOTE: no userId guard on purpose — guests must get the Vietnamese
+        // login prompt back from the 401 path, not a silent no-op click.
+        if (!text || isLoading) return;
 
-        const userMsg: Message = {
-            id: Date.now().toString(),
-            role: 'user',
-            content: input,
-        };
-
-        setMessages((prev) => [...prev, userMsg]);
-        setInput('');
+        if (!isResend) {
+            const userMsg: Message = {
+                id: Date.now().toString(),
+                role: 'user',
+                content: text,
+            };
+            setMessages((prev) => [...prev, userMsg]);
+            setInput('');
+        }
+        setLastQuestion(text);
         setIsLoading(true);
 
         try {
-            const response = await ChatService.sendRAGMessage(input, effectiveUserId);
+            const response = await ChatService.sendRAGMessage(text, effectiveUserId);
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'ai',
                 content: response.response,
                 sources: response.sources,
                 agentTrace: response.agent_trace,
+                errorKind: response.error_kind,
+                retryable: response.retryable,
+                requiresLogin: response.requires_login,
             };
             setMessages((prev) => [...prev, aiMsg]);
         } catch {
+            // Safety net: sendRAGMessage classifies errors itself, but never
+            // let a throw escape into an unmounted/loading dead-end.
             setMessages((prev) => [
                 ...prev,
                 {
                     id: (Date.now() + 1).toString(),
                     role: 'ai',
-                    content: 'Oops, I ran into a problem. Please try again!',
+                    content: 'Có gì đó không ổn, Lexi chưa trả lời được câu này. Bạn thử lại nhé! 🙏',
+                    errorKind: 'unknown',
+                    retryable: true,
                 },
             ]);
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleSend = () => void sendQuestion(input);
+
+    const handleRetry = () => {
+        if (!lastQuestion || isLoading) return;
+        // Drop the stale error bubble, then replay the same question in its place.
+        setMessages((prev) =>
+            prev[prev.length - 1]?.errorKind ? prev.slice(0, -1) : prev,
+        );
+        void sendQuestion(lastQuestion, true);
     };
 
     const handleNewChat = () => {
@@ -223,11 +254,38 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                                         className={`break-words rounded-2xl p-3 text-sm font-medium [overflow-wrap:anywhere] ${
                                             msg.role === 'user'
                                                 ? 'rounded-br-sm bg-gradient-to-br from-sky-500 to-cyan-500 text-white shadow-[0_4px_0_rgba(14,165,233,0.18)]'
+                                                : msg.errorKind === 'auth'
+                                                ? 'rounded-bl-sm border-2 border-sky-200 bg-sky-50 text-sky-800 shadow-[0_4px_0_rgba(56,189,248,0.14)]'
+                                                : msg.errorKind
+                                                ? 'rounded-bl-sm border-2 border-red-200 bg-red-50 text-red-700 shadow-[0_4px_0_rgba(239,68,68,0.12)]'
                                                 : 'rounded-bl-sm border-2 border-yellow-100 bg-white text-slate-700 shadow-[0_4px_0_rgba(251,191,36,0.12)]'
                                         }`}
                                     >
                                         {msg.content}
                                     </div>
+
+                                    {/* Error actions: retry the question / go log in */}
+                                    {msg.errorKind && (
+                                        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                                            {msg.retryable && (
+                                                <button
+                                                    onClick={handleRetry}
+                                                    disabled={isLoading}
+                                                    className="min-h-10 rounded-full border-2 border-amber-200 bg-amber-50 px-3 text-xs font-black text-amber-700 transition-colors hover:bg-amber-100 disabled:opacity-50"
+                                                >
+                                                    Thử lại ✨
+                                                </button>
+                                            )}
+                                            {msg.requiresLogin && (
+                                                <button
+                                                    onClick={() => navigate('/login')}
+                                                    className="min-h-10 rounded-full border-2 border-sky-200 bg-sky-50 px-3 text-xs font-black text-sky-700 transition-colors hover:bg-sky-100"
+                                                >
+                                                    Đăng nhập
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
 
                                     {/* Source chips */}
                                     {msg.role === 'ai' && msg.sources && msg.sources.length > 0 && (
@@ -258,6 +316,10 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                                         <div className="h-2.5 w-2.5 animate-bounce rounded-full bg-sky-400" style={{ animationDelay: '150ms' }} />
                                         <div className="h-2.5 w-2.5 animate-bounce rounded-full bg-sky-400" style={{ animationDelay: '300ms' }} />
                                     </div>
+                                    {/* The pipeline really does take 15-60s — say so. */}
+                                    <p className="mt-1.5 text-xs font-bold text-slate-400">
+                                        Lexi đang nghĩ… (đôi khi lâu xíu, bạn chờ nhé)
+                                    </p>
                                 </div>
                             </div>
                         )}

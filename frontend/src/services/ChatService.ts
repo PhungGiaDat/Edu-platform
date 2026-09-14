@@ -9,6 +9,8 @@ export interface ChatResponse {
     response: string;
 }
 
+export type ChatErrorKind = 'auth' | 'offline' | 'timeout' | 'server' | 'unknown';
+
 export interface RAGChatResponse {
     response: string;
     sources: { word: string; score: number }[];
@@ -16,7 +18,18 @@ export interface RAGChatResponse {
     agent_trace?: string[];
     /** True when the backend rejected an anonymous call (HTTP 401). */
     requires_login?: boolean;
+    /** Present when the call failed — drives the error bubble + retry UI. */
+    error_kind?: ChatErrorKind;
+    /** Whether re-sending the same question makes sense (everything but auth). */
+    retryable?: boolean;
 }
+
+/**
+ * RAG pipeline = up to 3 sequential LLM calls; observed 15–60s end-to-end on
+ * Gemini flash. A 90s ceiling stops a hung request from freezing the chat
+ * forever (fetch has no default timeout) while never cutting off a healthy call.
+ */
+const RAG_TIMEOUT_MS = 90_000;
 
 export interface PronunciationResult {
     feedback: string;
@@ -85,8 +98,9 @@ export const ChatService = {
                     user_id: userId || null,
                     ...modelOverrides,
                 },
-                // Chat degrades gracefully for guests instead of hard-redirecting.
-                { onUnauthorized: 'throw' },
+                // Chat degrades gracefully for guests instead of hard-redirecting;
+                // the signal bounds a hung pipeline (RequestInit passes through fetch).
+                { onUnauthorized: 'throw', signal: AbortSignal.timeout(RAG_TIMEOUT_MS) },
             );
 
             if (response.session_id) {
@@ -96,23 +110,61 @@ export const ChatService = {
             return response as RAGChatResponse;
         } catch (error) {
             const status = (error as { status?: number } | null)?.status;
-            if (status === 401) {
-                // Guests (or expired sessions): prompt to log in, in Vietnamese.
-                console.warn('[ChatService] chat requires login (401)');
-                return {
-                    response:
-                        'Bạn ơi, hãy đăng nhập để trò chuyện với Lexi nhé! 🔑',
-                    sources: [],
-                    session_id: this.getSessionId(),
-                    requires_login: true,
-                };
-            }
+            const errName = (error as { name?: string } | null)?.name;
             console.error('[ChatService] RAG request failed:', error);
-            return {
-                response: "Sorry, I ran into an error. Please try again! 🙏",
+
+            const shaped = (
+                text: string,
+                kind: ChatErrorKind,
+                retryable: boolean,
+                extra?: Partial<RAGChatResponse>,
+            ): RAGChatResponse => ({
+                response: text,
                 sources: [],
                 session_id: this.getSessionId(),
-            };
+                error_kind: kind,
+                retryable,
+                ...extra,
+            });
+
+            // Guests / expired sessions: prompt to log in, in Vietnamese.
+            if (status === 401) {
+                return shaped(
+                    'Bạn ơi, hãy đăng nhập để trò chuyện với Lexi nhé! 🔑',
+                    'auth',
+                    false,
+                    { requires_login: true },
+                );
+            }
+            // Client-side 90s ceiling fired (AbortSignal.timeout → TimeoutError).
+            if (errName === 'TimeoutError' || errName === 'AbortError') {
+                return shaped(
+                    'Câu hỏi này khiến Lexi nghĩ lâu quá… Bạn thử lại lần nữa nhé! ⏳',
+                    'timeout',
+                    true,
+                );
+            }
+            // Backend / LLM provider blew up.
+            if (typeof status === 'number' && status >= 500) {
+                return shaped(
+                    'Lexi đang gặp chút trục trặc từ server. Đợi vài giây rồi thử lại nhé! 🤖',
+                    'server',
+                    true,
+                );
+            }
+            // fetch() network failure (offline / DNS / CORS): error carries no status.
+            if (!status) {
+                return shaped(
+                    'Không kết nối được tới server. Bạn kiểm tra mạng rồi thử lại nhé! 📡',
+                    'offline',
+                    true,
+                );
+            }
+            return shaped(
+                'Có gì đó không ổn, Lexi chưa trả lời được câu này. Bạn thử lại nhé! 🙏',
+                'unknown',
+                true,
+            );
         }
     },
 

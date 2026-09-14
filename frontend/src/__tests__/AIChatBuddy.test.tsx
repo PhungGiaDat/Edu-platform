@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { AIChatBuddy } from '@/features/chat/components/AIChatBuddy';
 import { ChatService } from '@/services/ChatService';
@@ -13,9 +13,10 @@ vi.mock('@/features/pets/components/CodexPetSprite', () => ({
     ),
 }));
 
-// ── Mock AuthContext ────────────────────────────────────────────────────────
+// ── Mock AuthContext (mutable so tests can simulate guests) ─────────────────
+const mockAuth = { user: { id: 'test-user-1' } as { id: string } | null };
 vi.mock('../contexts/AuthContext', () => ({
-    useAuth: () => ({ user: { id: 'test-user-1' } }),
+    useAuth: () => ({ user: mockAuth.user }),
 }));
 
 // ── Mock ChatService (implementation resolves directly) ─────────────────────────
@@ -209,5 +210,86 @@ describe('AIChatBuddy — mobile viewport behavior', () => {
 
         resolveResponse({ response: 'Mock AI response', sources: [], session_id: 'pending-session' });
         await waitFor(() => expect(input).not.toBeDisabled());
+    });
+});
+
+// ── Error UX (sendRAGMessage failure classification surfaced in chat) ───────
+
+describe('AIChatBuddy — error UX', () => {
+    beforeEach(() => {
+        // The shared ChatService mock accumulates call counts across the file
+        // (no global clearMocks configured) — scope counts to this suite.
+        vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        mockAuth.user = { id: 'test-user-1' };
+    });
+
+    it('shows a retryable error bubble and replays the question on "Thử lại"', async () => {
+        const user = userEvent.setup();
+        const spy = vi.mocked(ChatService.sendRAGMessage);
+        spy
+            .mockResolvedValueOnce({
+                response: 'Lexi đang gặp chút trục trặc từ server. Đợi vài giây rồi thử lại nhé! 🤖',
+                sources: [],
+                session_id: 's1',
+                error_kind: 'server',
+                retryable: true,
+            })
+            .mockResolvedValueOnce({
+                response: 'Apple là quả táo 🍎',
+                sources: [],
+                session_id: 's1',
+            });
+
+        renderChatBuddy(true);
+        await user.type(screen.getByPlaceholderText('Ask Lexi...'), 'what is apple?{Enter}');
+
+        const retryBtn = await screen.findByRole('button', { name: /Thử lại/ });
+        expect(screen.getByText(/trục trặc từ server/)).toBeVisible();
+
+        await user.click(retryBtn);
+
+        await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
+        // Error bubble replaced by the successful answer…
+        expect(screen.queryByText(/trục trặc từ server/)).not.toBeInTheDocument();
+        expect(screen.getByText('Apple là quả táo 🍎')).toBeVisible();
+        // …and the replayed question is NOT duplicated in the transcript.
+        expect(screen.getAllByText('what is apple?')).toHaveLength(1);
+    });
+
+    it('auth failure shows login prompt without a retry button', async () => {
+        const user = userEvent.setup();
+        vi.mocked(ChatService.sendRAGMessage).mockResolvedValueOnce({
+            response: 'Bạn ơi, hãy đăng nhập để trò chuyện với Lexi nhé! 🔑',
+            sources: [],
+            session_id: 's1',
+            error_kind: 'auth',
+            retryable: false,
+            requires_login: true,
+        });
+
+        renderChatBuddy(true);
+        await user.type(screen.getByPlaceholderText('Ask Lexi...'), 'hi there{Enter}');
+
+        expect(await screen.findByRole('button', { name: 'Đăng nhập' })).toBeVisible();
+        expect(screen.queryByRole('button', { name: /Thử lại/ })).not.toBeInTheDocument();
+    });
+
+    it('guests without any user id can still send (no silent no-op)', async () => {
+        mockAuth.user = null;
+        const user = userEvent.setup();
+        render(
+            <MemoryRouter>
+                <AIChatBuddy initialOpen />
+            </MemoryRouter>,
+        );
+
+        await user.type(screen.getByPlaceholderText('Ask Lexi...'), 'hello lexi{Enter}');
+
+        await waitFor(() =>
+            expect(ChatService.sendRAGMessage).toHaveBeenCalledWith('hello lexi', undefined),
+        );
     });
 });
