@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -214,6 +214,7 @@
       'resolveInteractionAnimation',
       'resolvePresentationMode',
       'resolveRuleProximityConfig',
+      'resolveTargetModelAttachment',
       'selectActiveInteractionRule',
       'setInteractionPartnerVisibility',
       'shouldReplaceCatAnimation',
@@ -222,7 +223,7 @@
     ];
 
     try {
-      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=interaction-transaction-v1');
+      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=multi-target-attach-v1');
       const missingExports = expectedLifecycleExports.filter((name) => !(name in lifecycleModule));
       if (missingExports.length > 0) {
         debug('MODULE_PROBE_LIFECYCLE_FAIL', {
@@ -270,12 +271,13 @@
       resolveInteractionAnimation,
       resolvePresentationMode,
       resolveRuleProximityConfig,
+      resolveTargetModelAttachment,
       selectActiveInteractionRule,
       setInteractionPartnerVisibility,
       shouldReplaceCatAnimation,
       shouldRevealAR,
       smoothstep,
-    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=interaction-transaction-v1';
+    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=multi-target-attach-v1';
     window.THREE = THREE;
 
     // ========== RUNTIME DIAGNOSTICS ==========
@@ -334,22 +336,21 @@
     // ========== PER-TARGET INSTANCE STATE ==========
     // One entry per tracked QR code. scene/camera/renderer stay singletons (ONE XR scene).
     const targetInstances = new Map();
-    // Primary target's singleton refs — used for the entry (scanned) target's model rendering
-    let loadedModel = null, mixer = null;
-    let targetAnchor = null, modelOffsetGroup = null;
-    let modelWaitingForXRScene = false;
-    let activeTargetName = null;
+    // Primary target's singleton refs â€” used for the entry (scanned) target's model rendering
+    // Compatibility diagnostics for the scanned entry target only. Generic
+    // rendering and interaction ownership live exclusively on targetInstances.
+    let loadedModel = null;
 
-    // Scene singletons — ONE XR scene, shared by all targets
+    // Scene singletons â€” ONE XR scene, shared by all targets
     let scene = null, camera = null, renderer = null;
 
     // ========== INTERACTION STATE MACHINE ==========
     // Phases:
-    // SEARCH_PRIMARY → PRIMARY_LOCKED → WAIT_SECONDARY
-    // → WAIT_SECONDARY_MODEL (fish found but model not yet visible)
-    // → PROXIMITY_PENDING → PROXIMITY_ENTER
-    // → COMBO_ARMED → COMBO_TURNING → COMBO_PLAYING → COMBO_CONSUMED
-    // → (rearm on far) → WAIT_SECONDARY
+    // SEARCH_PRIMARY â†’ PRIMARY_LOCKED â†’ WAIT_SECONDARY
+    // â†’ WAIT_SECONDARY_MODEL (fish found but model not yet visible)
+    // â†’ PROXIMITY_PENDING â†’ PROXIMITY_ENTER
+    // â†’ COMBO_ARMED â†’ COMBO_TURNING â†’ COMBO_PLAYING â†’ COMBO_CONSUMED
+    // â†’ (rearm on far) â†’ WAIT_SECONDARY
     const InteractionPhase = {
       SEARCH_PRIMARY: 'SEARCH_PRIMARY',
       PRIMARY_LOCKED: 'PRIMARY_LOCKED',
@@ -389,10 +390,10 @@
     // Boot gate state
     let bootState = {
       cameraReady: false,
-      catReady: false,
-      catReadyAt: null,       // performance.now() when CAT finished loading
+      primaryReady: false,
+      primaryReadyAt: null,   // performance.now() when the entry model finished loading
       arRevealed: false,
-      fishLastProgress: 0,
+      secondaryProgress: 0,
       lastProgressLogPercent: 0,  // throttle to 20/40/60/80/100
     };
 
@@ -451,7 +452,7 @@
       actorTarget: null,
       partnerTargets: [],
       // Visual grace: targets pending hidden due to grace expiry
-      pendingGraceHides: new Map(), // targetName → graceStartTime
+      pendingGraceHides: new Map(), // targetName â†’ graceStartTime
       // Debug: last logged SECONDARY_READINESS to avoid spam
       lastSecondaryReadiness: null,
       consumeTimeoutId: null,
@@ -502,7 +503,8 @@
         animations: [],
         tracked: false,
         pose: null,
-        lastAttachAttempt: 0,
+        attachPromise: null,
+        modelAttached: false,
         modelState: 'idle', // idle | loading | loaded | error
         modelLoadStart: 0,
         pivotNormalized: false, // normalize pivot only once per model
@@ -521,48 +523,55 @@
     const targetConfigByName = new Map(xrTargetConfigs.map(c => [c.qr_id, c]));
     const primaryModelTargetName = qrId;
 
-    function isExactTargetPair(tags, first, second) {
-      return Array.isArray(tags)
-        && tags.length === 2
-        && tags.includes(first)
-        && tags.includes(second);
-    }
-
-    // Demo resilience belongs only at the configuration boundary. The fallback
-    // is normalized and executed through the same generic path as backend rules.
-    function withConfiguredDemoFallback(rawRules) {
-      const rules = Array.isArray(rawRules) ? [...rawRules] : [];
-      const hasDemoPair = targetInstances.has('cat001') && targetInstances.has('fish001');
-      if (!hasDemoPair) return rules;
-
-      const expected = {
+    // Demo resilience is declarative configuration only. Every fallback passes
+    // through the same normalized rule matcher and executor as backend data.
+    const DEMO_INTERACTION_FALLBACKS = Object.freeze([{
+      tags: ['cat001', 'fish001'],
+      target_order: ['cat001', 'fish001'],
+      combo_id: 'cat001-fish001-fallback',
+      animation_trigger: 'CAT_EAT',
+      priority: 100,
+      proximity: {
         enter_distance: 0.50,
         exit_distance: 0.58,
         proximity_stable_ms: 300,
         smoothing_alpha: 0.25,
-      };
-      const validBackendRule = rules.find((rule) => (
-        isExactTargetPair(rule?.tags, 'cat001', 'fish001')
-        && rule?.proximity?.enter_distance === expected.enter_distance
-        && rule?.proximity?.exit_distance === expected.exit_distance
-        && rule?.proximity?.proximity_stable_ms === expected.proximity_stable_ms
-        && rule?.proximity?.smoothing_alpha === expected.smoothing_alpha
-      ));
-      if (validBackendRule) return rules;
+      },
+      consume_at_ratio: 0.65,
+      source: 'fallback',
+    }]);
 
-      return [
-        ...rules.filter((rule) => !isExactTargetPair(rule?.tags, 'cat001', 'fish001')),
-        {
-          tags: ['cat001', 'fish001'],
-          target_order: ['cat001', 'fish001'],
-          combo_id: 'cat001-fish001-fallback',
-          animation_trigger: 'CAT_EAT',
-          priority: 100,
-          proximity: expected,
-          consume_at_ratio: 0.65,
-          source: 'fallback',
-        },
-      ];
+    function hasSameRuleTargets(left, right) {
+      return Array.isArray(left)
+        && Array.isArray(right)
+        && left.length === right.length
+        && left.every((target) => right.includes(target));
+    }
+
+    function hasCompatibleRuleProximity(rule, fallback) {
+      const ruleProximity = rule?.proximity;
+      const fallbackProximity = fallback?.proximity;
+      return ruleProximity?.enter_distance === fallbackProximity?.enter_distance
+        && ruleProximity?.exit_distance === fallbackProximity?.exit_distance
+        && ruleProximity?.proximity_stable_ms === fallbackProximity?.proximity_stable_ms
+        && ruleProximity?.smoothing_alpha === fallbackProximity?.smoothing_alpha;
+    }
+
+    function withConfiguredDemoFallback(rawRules) {
+      let rules = Array.isArray(rawRules) ? [...rawRules] : [];
+      for (const fallback of DEMO_INTERACTION_FALLBACKS) {
+        if (!fallback.tags.every((targetName) => targetInstances.has(targetName))) continue;
+        const validBackendRule = rules.find((rule) => (
+          hasSameRuleTargets(rule?.tags, fallback.tags)
+          && hasCompatibleRuleProximity(rule, fallback)
+        ));
+        if (validBackendRule) continue;
+        rules = [
+          ...rules.filter((rule) => !hasSameRuleTargets(rule?.tags, fallback.tags)),
+          { ...fallback },
+        ];
+      }
+      return rules;
     }
 
     function installInteractionRules(rawRules) {
@@ -593,11 +602,11 @@
             requiredTargetCount: rule.requiredTargets.length,
           });
         }
-        if (isExactTargetPair(rule.requiredTargets, 'cat001', 'fish001')) {
+        if (rule.executable) {
           const proximity = resolveRuleProximityConfig(rule, null);
-          sendARDebug('COMBO_RULE_RESOLVED', {
-            primaryTargetName: rule.actorTarget,
-            secondaryTargetName: rule.partnerTargets[0] || null,
+          sendARDebug('INTERACTION_RULE_PROXIMITY_RESOLVED', {
+            actorTarget: rule.actorTarget,
+            partnerTargets: rule.partnerTargets,
             source: rule.source,
             enterDistance: proximity?.enterDistance ?? null,
             exitDistance: proximity?.exitDistance ?? null,
@@ -960,7 +969,7 @@
       return playCatOneShot({ clipName: 'CAT_SPIN', source: 'CAT_SPIN', priority: 60 });
     }
 
-    // Pointer event handler — records hit eligibility and classifies on pointerup.
+    // Pointer event handler â€” records hit eligibility and classifies on pointerup.
     function onPointerDown(event) {
       // Ignore UI interactions
       if (event.target.closest?.('#overlay, #debug-panel, button, input')) return;
@@ -1073,30 +1082,30 @@
 
     // ========== BOOT GATE ==========
     // Controls when the AR experience is revealed to the user.
-    // XR camera/engine runs in the background — this only gates visual experience.
+    // XR camera/engine runs in the background â€” this only gates visual experience.
     function maybeRevealAR({ trigger } = {}) {
       if (bootState.arRevealed) return;
       if (!shouldRevealAR({
         cameraReady: bootState.cameraReady,
-        catReady: bootState.catReady,
+        primaryReady: bootState.primaryReady,
       })) return;
 
       bootState.arRevealed = true;
       sendARDebug('BOOT_GATE_OPEN', {
         trigger,
         cameraReady: bootState.cameraReady,
-        catReady: bootState.catReady,
-        fishProgress: bootState.fishLastProgress,
+        primaryReady: bootState.primaryReady,
+        secondaryProgress: bootState.secondaryProgress,
       });
       hideOverlay();
       setPhase('viewing');
     }
 
     // Update overlay text based on boot state
-    function updateOverlayForBoot(catProgress) {
+    function updateOverlayForBoot(primaryProgress) {
       if (bootState.arRevealed) return;
-      if (!bootState.catReady) {
-        const text = catProgress != null ? `Loading cat... (${catProgress}%)` : 'Loading cat...';
+      if (!bootState.primaryReady) {
+        const text = primaryProgress != null ? `Loading model... (${primaryProgress}%)` : 'Loading model...';
         showOverlay(text, '');
       } else {
         showOverlay('Starting camera...', '');
@@ -1124,7 +1133,7 @@
 
     // ========== THREE.JS STUB ==========
     function initThree() {
-      logToBuffer('info', 'Three.js stubs ready — scene/camera/renderer acquired from XR8');
+      logToBuffer('info', 'Three.js stubs ready â€” scene/camera/renderer acquired from XR8');
     }
 
     // ========== MODEL LOADING ==========
@@ -1186,7 +1195,6 @@
                 instance.mixer = instanceMixer;
                 instance.animations = gltf.animations;
               }
-              if (targetName === primaryModelTargetName) mixer = instanceMixer;
               logToBuffer('info', 'Animations available', { targetName, animations: gltf.animations.map(a => a.name) });
             }
 
@@ -1200,15 +1208,15 @@
               isPrimary: targetName === primaryModelTargetName,
             });
 
-            // ---- Boot gate: track CAT readiness ----
-            if (targetName === primaryModelTargetName && !bootState.catReady) {
-              bootState.catReady = true;
-              bootState.catReadyAt = performance.now();
+            // ---- Boot gate: only the scanned entry model gates first reveal ----
+            if (targetName === primaryModelTargetName && !bootState.primaryReady) {
+              bootState.primaryReady = true;
+              bootState.primaryReadyAt = performance.now();
               const durationMs = Math.round(performance.now() - loadStartMs);
-              sendARDebug('BOOT_CAT_READY', { targetName: primaryModelTargetName, durationMs });
-              updateOverlayForBoot(null); // update overlay text now that CAT is ready
-              maybeRevealAR({ trigger: 'catReady' });
-              preloadCatMeowAudio(); // preload meow audio now that CAT GLB is ready
+              sendARDebug('BOOT_PRIMARY_READY', { targetName: primaryModelTargetName, durationMs });
+              updateOverlayForBoot(null);
+              maybeRevealAR({ trigger: 'primaryReady' });
+              if (isCatMascotInstance(instance)) preloadCatMeowAudio();
             }
 
             // Network timing
@@ -1223,25 +1231,14 @@
               sendARDebug('MODEL_NETWORK_TIMING', { url, targetName, totalMs });
             }
 
-            // For primary target: handle XR scene readiness
-            if (targetName === primaryModelTargetName) {
-              if (scene && targetAnchor && modelOffsetGroup) {
-                reparentModelToAnchor(instance);
-                modelWaitingForXRScene = false;
-              } else {
-                modelWaitingForXRScene = true;
-                sendARDebug('MODEL_WAITING_FOR_XR_SCENE', { hasScene: !!scene, hasTargetAnchor: !!targetAnchor, hasModelOffsetGroup: !!modelOffsetGroup });
-              }
-
-              sendARDebug('MODEL_READY_NOT_ATTACHED', {
-                modelName: model.name || targetName,
-                hasTargetFound: trackedTargets.size > 0,
-                boundingBoxSize: [size.x, size.y, size.z],
-              });
-
-              if (trackedTargets.size > 0) {
-                attemptModelAttach(Array.from(trackedTargets.keys())[0]);
-              }
+            sendARDebug('MODEL_READY_NOT_ATTACHED', {
+              targetName,
+              modelName: model.name || targetName,
+              tracked: trackedTargets.has(targetName),
+              boundingBoxSize: [size.x, size.y, size.z],
+            });
+            if (trackedTargets.has(targetName)) {
+              void attachTrackedTargetModel(targetName);
             }
 
             resolve(model);
@@ -1256,9 +1253,9 @@
               }
               updateDebug(`Model ${percent}%`);
 
-              // Track fish warmup for boot gate (non-primary targets only)
+              // Secondary progress is diagnostics only; it never blocks boot.
               if (targetName !== primaryModelTargetName) {
-                bootState.fishLastProgress = percent;
+                bootState.secondaryProgress = percent;
                 // Throttle to meaningful steps
                 const steps = [20, 40, 60, 80, 100];
                 const nearestStep = steps.reduce((prev, curr) =>
@@ -1300,10 +1297,12 @@
       instance.modelLoadStart = performance.now();
       sendARDebug('TARGET_MODEL_LOAD_START', { targetName, url: modelCfgUrl });
 
-      if (!modelPromiseCache.has(modelCfgUrl)) {
-        modelPromiseCache.set(modelCfgUrl, loadModel(modelCfgUrl, targetName));
+      // A TargetInstance owns its own model and mixer even when two cards
+      // happen to reference the same asset URL.
+      if (!modelPromiseCache.has(targetName)) {
+        modelPromiseCache.set(targetName, loadModel(modelCfgUrl, targetName));
       }
-      return modelPromiseCache.get(modelCfgUrl);
+      return modelPromiseCache.get(targetName);
     }
 
     // ========== SURFACE PRESENTATION (instance-aware) ==========
@@ -1468,82 +1467,72 @@
       instance.anchor.scale.setScalar(pose.scale ?? 1);
     }
 
-    // ========== MODEL ATTACHMENT (primary target only in Milestone 1) ==========
-    let modelAttached = false;
-    let lastAttachAttempt = 0;
-
-    function attemptModelAttach(targetName) {
-      if (modelAttached) return;
-      if (targetName !== primaryModelTargetName) return;
-      if (!loadedModel) return;
-      // Skip if already attached at the expected parent with visible=true.
-      const target = trackedTargets.get(targetName);
-      if (!target) return;
-
-      const now = Date.now();
-      if (now - lastAttachAttempt < 500) return;
-      lastAttachAttempt = now;
-
+    // ========== MODEL ATTACHMENT (target-instance owned) ==========
+    async function attachTrackedTargetModel(targetName) {
       const instance = targetInstances.get(targetName);
-      if (!instance) return;
+      if (!instance) return false;
+      if (instance.attachPromise) return instance.attachPromise;
 
-      if (!scene || !instance.anchor || !instance.offsetGroup) {
-        sendARDebug('MODEL_ATTACH_DEFERRED', { targetName, hasScene: !!scene, hasAnchor: !!instance.anchor, hasOffsetGroup: !!instance.offsetGroup });
-        return;
-      }
-
-      const expectedParent = getExistingInteractionRoot(instance) || getPresentationParent(instance);
-      if (
-        loadedModel.parent === expectedParent &&
-        loadedModel.visible &&
-        activeTargetName === targetName
-      ) {
-        // Already attached — refresh pose but skip reparent.
-        applyTargetPose(instance, target);
-        return;
-      }
-
-      if (loadedModel.parent !== expectedParent) {
-        reparentModelToAnchor(instance);
-      }
-
-      applyTargetPose(instance, target);
-
-      activeTargetName = targetName;
-      loadedModel.visible = true;
-      modelAttached = true;
-
-      const wp = new THREE.Vector3();
-      loadedModel.getWorldPosition(wp);
-      sendARDebug('MODEL_ATTACHED', {
-        targetName,
-        visible: true,
-        anchorPosition: [instance.anchor.position.x, instance.anchor.position.y, instance.anchor.position.z],
-      });
-      sendARDebug('MODEL_VISIBLE', { reason: 'anchor_attached', targetName });
-    }
-
-    // Periodic pose update for primary model
-    function updateModelPose(detail) {
-      if (!loadedModel || !modelAttached || activeTargetName !== detail.name) return;
-      const instance = targetInstances.get(detail.name);
-      if (!instance) return;
-
-      const p = detail.position, r = detail.rotation, s = detail.scale ?? 1;
-      if (!p || !r) return;
-
-      applyTargetPose(instance, { position: { x: p.x, y: p.y, z: p.z }, rotation: { x: r.x, y: r.y, z: r.z, w: r.w }, scale: s });
-
-      const now = Date.now();
-      if (!updateModelPose._lastLog || now - updateModelPose._lastLog > 2000) {
-        updateModelPose._lastLog = now;
-        const wp = new THREE.Vector3();
-        loadedModel.getWorldPosition(wp);
-        sendARDebug('XR_ANCHOR_ALIGNMENT_CHECK', {
-          targetName: detail.name,
-          anchorLocalPosition: [instance.anchor.position.x, instance.anchor.position.y, instance.anchor.position.z],
-          modelWorldPosition: [wp.x, wp.y, wp.z],
+      const attachPromise = (async () => {
+        let attachment = resolveTargetModelAttachment({
+          targetName,
+          instance,
+          tracked: instance.tracked && trackedTargets.has(targetName),
+          sceneReady: !!scene,
         });
+
+        if (attachment.action === 'load') {
+          await ensureTargetModelLoaded(targetName);
+          attachment = resolveTargetModelAttachment({
+            targetName,
+            instance,
+            tracked: instance.tracked && trackedTargets.has(targetName),
+            sceneReady: !!scene,
+          });
+        }
+
+        if (attachment.action !== 'attach') {
+          sendARDebug('TARGET_MODEL_ATTACH_DEFERRED', {
+            targetName,
+            action: attachment.action,
+            reason: attachment.reason,
+            tracked: instance.tracked,
+            modelState: instance.modelState,
+            hasScene: !!scene,
+          });
+          return false;
+        }
+
+        const pose = trackedTargets.get(targetName);
+        if (!pose || !instance.tracked || !instance.visibleByInteraction) return false;
+
+        const expectedParent = getExistingInteractionRoot(instance) || getPresentationParent(instance);
+        if (instance.model.parent !== expectedParent) reparentModelToAnchor(instance);
+        if (!getActiveTransactionLossDecision(targetName).defer) applyTargetPose(instance, pose);
+
+        instance.model.visible = true;
+        instance.modelAttached = true;
+        instance.interactionReady = true;
+
+        sendARDebug('TARGET_MODEL_ATTACH', {
+          targetName,
+          source: instance.modelState === 'loaded' ? 'loaded' : 'pending-load',
+          interactionReady: true,
+        });
+        sendARDebug('MODEL_ATTACHED', {
+          targetName,
+          visible: true,
+          anchorPosition: [instance.anchor.position.x, instance.anchor.position.y, instance.anchor.position.z],
+        });
+        sendARDebug('MODEL_VISIBLE', { reason: 'target_instance_attached', targetName });
+        return true;
+      })();
+
+      instance.attachPromise = attachPromise;
+      try {
+        return await attachPromise;
+      } finally {
+        if (instance.attachPromise === attachPromise) instance.attachPromise = null;
       }
     }
 
@@ -1647,7 +1636,7 @@
             bootState.cameraReady = true;
             sendARDebug('BOOT_CAMERA_READY', {});
             sendMessage('XR_STARTED', { engine: '8th-wall-self-hosted', qrId, word, hasModel: !!modelUrl, hasModelLoaded: !!loadedModel });
-            // Don't reveal AR yet — boot gate controls when the experience becomes visible.
+            // Don't reveal AR yet â€” boot gate controls when the experience becomes visible.
             // Camera is live behind the loading overlay.
             maybeRevealAR({ trigger: 'cameraReady' });
           }
@@ -1696,13 +1685,6 @@
             });
           }
 
-          // Reference primary target's anchor/mixer for backward compat
-          const primaryInst = targetInstances.get(primaryModelTargetName);
-          if (primaryInst) {
-            targetAnchor = primaryInst.anchor;
-            modelOffsetGroup = primaryInst.offsetGroup;
-          }
-
           // Lighting (once, shared scene)
           const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
           hemi.name = 'hemi-light';
@@ -1713,17 +1695,10 @@
           fill.name = 'fill-light'; fill.position.set(-2, 0, -1); scene.add(fill);
           sendARDebug('SCENE_LIGHTS_ADDED', { sceneChildren: scene.children.length, lightCount: scene.children.filter(c => c.isLight).length });
 
-          // If primary model already loaded, parent it
-          if (loadedModel && primaryInst) {
-            reparentModelToAnchor(primaryInst);
-            modelWaitingForXRScene = false;
-            sendARDebug('MODEL_XR_SCENE_READY', { targetName: primaryModelTargetName });
-            if (trackedTargets.size > 0 && !modelAttached) {
-              attemptModelAttach(Array.from(trackedTargets.keys())[0]);
-            }
-          }
-
           xrSceneAcquired = true;
+          for (const targetName of trackedTargets.keys()) {
+            void attachTrackedTargetModel(targetName);
+          }
         } catch (e) {}
       }
 
@@ -1803,7 +1778,7 @@
 
       sendARDebug('XR_PIPELINE_READY', {});
 
-      // Configure ALL image targets — disableWorldTracking reduces processing for
+      // Configure ALL image targets â€” disableWorldTracking reduces processing for
       // image-target-only experiences (no surface/plane SLAM needed)
       const imageTargetData = targetDataList.map(t => ({ name: t.name, type: t.type || 'PLANAR', imagePath: t.imagePath, properties: t.properties || {}, metadata: t.metadata || {} }));
       sendARDebug('XR_TARGETS_REGISTER', { count: imageTargetData.length, targets: imageTargetData.map(t => t.name) });
@@ -1836,7 +1811,7 @@
     }
 
     function getAnchorWorldPosition(instance) {
-      // Use target anchor pose (not model transform) — pose is what represents
+      // Use target anchor pose (not model transform) â€” pose is what represents
       // the actual flashcard position in world space, free of pivot/scale/offset.
       const pose = trackedTargets.get(instance.config.qr_id);
       if (!pose) return null;
@@ -2207,7 +2182,7 @@
       }
 
       if (elapsed >= turn.durationMs) {
-        // Turn complete — snap to final and clear
+        // Turn complete â€” snap to final and clear
         if (root) root.rotation.y = turn.toYaw;
         interactionState.actorTurn = null;
         sendARDebug('INTERACTION_ACTOR_TURN_COMPLETE', {
@@ -2391,19 +2366,14 @@
     function hideConfirmedTargetLoss(targetName, lostForMs) {
       const instance = targetInstances.get(targetName);
       const wasTargetModelVisible = !!instance?.model?.visible;
-      const wasPrimaryModelVisible = targetName === primaryModelTargetName && !!loadedModel?.visible;
 
       if (instance?.model) instance.model.visible = false;
-      if (targetName === primaryModelTargetName) {
-        if (loadedModel) loadedModel.visible = false;
-        if (activeTargetName === targetName) activeTargetName = null;
-        modelAttached = false;
-      }
+      if (instance) instance.modelAttached = false;
 
       sendARDebug('MODEL_HIDDEN_TARGET_LOST', {
         targetName,
         lostForMs: Math.round(lostForMs),
-        wasVisible: wasTargetModelVisible || wasPrimaryModelVisible,
+        wasVisible: wasTargetModelVisible,
       });
     }
 
@@ -2472,7 +2442,7 @@
         actorInst.foundAt = now;
       }
 
-      // Confirmed actor loss (grace expired) → full reset
+      // Confirmed actor loss (grace expired) â†’ full reset
       if (
         !actorEffectivelyTracked
         && interactionState.phase !== InteractionPhase.SEARCH_PRIMARY
@@ -2609,7 +2579,7 @@
           }
         }
 
-        // Partner found → decide if we can go straight to proximity
+        // Partner found â†’ decide if we can go straight to proximity
         if (partnerEffectivelyTracked && phase === InteractionPhase.WAIT_SECONDARY) {
           if (secondaryAssetReady) {
             setInteractionPhase(InteractionPhase.PROXIMITY_PENDING);
@@ -2624,7 +2594,7 @@
           }
         }
 
-        // Partner leaves → drop back to WAIT_SECONDARY
+        // Partner leaves â†’ drop back to WAIT_SECONDARY
         if (!partnerEffectivelyTracked) {
           if (
             phase === InteractionPhase.PROXIMITY_PENDING ||
@@ -2636,7 +2606,7 @@
           }
         }
 
-        // Partner asset became ready mid-session → reset proximity timer
+        // Partner asset became ready mid-session â†’ reset proximity timer
         if (secondaryAssetReady && phase === InteractionPhase.WAIT_SECONDARY_MODEL) {
           interactionState.proximityEnteredAt = null;
           interactionState.filteredDistance = null;
@@ -2843,10 +2813,6 @@
         instance.lostAt = null;
         instance.lossConfirmedAt = null;
         if (instance.foundAt == null) instance.foundAt = now;
-        // If model was already loaded before this FOUND event, mark ready immediately.
-        if (detail.name !== primaryModelTargetName && instance.modelState === 'loaded' && instance.model) {
-          instance.interactionReady = true;
-        }
       }
 
       // Cancel only a brief loss. A late callback was confirmed above.
@@ -2870,38 +2836,8 @@
       sendMessage('TARGET_FOUND', { qrId: detail.name, word: targetWord, trackedCount: trackedTargets.size });
       showCardLabel(targetWord);
 
-      // Primary target: legacy singleton attach path (preserves CAT_IDLE mixer, etc.)
-      if (detail.name === primaryModelTargetName) {
-        resetCatAmbientIdle('target_acquired');
-        attemptModelAttach(detail.name);
-      } else {
-        // Non-primary: reuse the already-preloaded promise (concurrent preload started in main()).
-        // Never call GLTFLoader.load again — ensureTargetModelLoaded is a no-op if a promise exists.
-        ensureTargetModelLoaded(detail.name).then(model => {
-          if (!model) return;
-          const inst = targetInstances.get(detail.name);
-          if (!inst) return;
-          if (scene && inst.anchor && inst.offsetGroup) {
-            reparentModelToAnchor(inst);
-          }
-          // Only show if target is still tracked AND interaction allows visibility.
-          // Guard against lost-during-preload AND combo-consume state.
-          if (inst.tracked && trackedTargets.has(detail.name) && inst.visibleByInteraction) {
-            const pose = trackedTargets.get(detail.name);
-            if (pose && !getActiveTransactionLossDecision(detail.name).defer) {
-              applyTargetPose(inst, pose);
-            }
-            inst.model.visible = true;
-            // Mark interaction-ready so combo can fire only after model is visible.
-            inst.interactionReady = true;
-            sendARDebug('TARGET_MODEL_ATTACH', {
-              targetName: detail.name,
-              source: inst.modelState === 'loaded' ? 'preloaded' : 'pending-preload',
-              interactionReady: true,
-            });
-          }
-        });
-      }
+      if (isCatMascotInstance(instance)) resetCatAmbientIdle('target_acquired');
+      void attachTrackedTargetModel(detail.name);
 
       sendARDebug('MULTI_TARGET_STATE', { count: trackedTargets.size, targets: Array.from(trackedTargets.keys()) });
     }
@@ -2917,8 +2853,8 @@
         instance.pose = null;
         instance.lostAt = now;
         instance.lossConfirmedAt = null;
-        // DO NOT hide model immediately — visual grace is handled independently.
-        // after lostGraceMs expires.  This preserves cat visibility during
+        // DO NOT hide model immediately â€” visual grace is handled independently.
+        // after lostGraceMs expires. This preserves participant visibility during
         // brief occlusion and during COMBO_PLAYING.
       }
 
@@ -2928,14 +2864,12 @@
         sendARDebug('TARGET_LOST_PENDING', {
           qrId: name,
           graceMs: INTERACTION_CONFIG.lostGraceMs,
-          isPrimary: name === primaryModelTargetName,
+          isEntryTarget: name === primaryModelTargetName,
         });
       }
       sendMessage('TARGET_LOST', { qrId: name });
 
-      // Preserve primary attachment through grace; confirmed loss clears it.
-      // Keep the existing model attached and visible during grace. Confirmed loss
-      // clears activeTargetName/modelAttached in processPendingTargetLosses().
+      // Each target keeps its own attachment and remains visible through grace.
 
       sendARDebug('MULTI_TARGET_STATE', { count: trackedTargets.size, targets: Array.from(trackedTargets.keys()), lost: name });
     }
@@ -2986,9 +2920,9 @@
     });
 
     // ========== STAGED MODEL PRELOAD ==========
-    // Phase 1: load primary model immediately (cat — user expects this first).
+    // Phase 1: load primary model immediately (cat â€” user expects this first).
     // Phase 2: after primary completes, begin secondary preloads (fish) in background.
-    // Never initiate new downloads from IMAGE_FOUND — reuse existing promises.
+    // Never initiate new downloads from IMAGE_FOUND â€” reuse existing promises.
 
     function preloadSecondaryTargets() {
       const secondary = xrTargetConfigs.filter(
@@ -3011,7 +2945,7 @@
 
         const targetsPromise = Promise.all(xrTargetConfigs.map(cfg => loadTargetData(cfg)));
 
-        // Phase 1: preload primary model immediately — no await.
+        // Phase 1: preload primary model immediately â€” no await.
         sendARDebug('MODEL_PRIMARY_PRELOAD_START', { targetName: primaryModelTargetName });
         const primaryModelPromise = ensureTargetModelLoaded(primaryModelTargetName);
         primaryModelPromise.then(() => {
@@ -3032,7 +2966,7 @@
         setPhase('viewing');
         sendARDebug('INIT_COMPLETE', { modelLoaded: !!loadedModel, targetCount: targetDataList.length });
 
-        // Attach CAT gesture handlers — pointer events work for touch and mouse.
+        // Attach CAT gesture handlers â€” pointer events work for touch and mouse.
         window.addEventListener('pointerdown', onPointerDown, { passive: true });
         window.addEventListener('pointerup', onPointerUp, { passive: true });
         window.addEventListener('pointercancel', onPointerCancel, { passive: true });

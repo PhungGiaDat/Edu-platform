@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import * as lifecycleModule from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
@@ -13,6 +13,7 @@ import {
   isInteractionRuleMatched,
   isCatOneShotCompletionOwner,
   normalizeInteractionRule,
+  resolveTargetModelAttachment,
   selectActiveInteractionRule,
   shouldReplaceCatAnimation,
   shouldRevealAR,
@@ -20,9 +21,113 @@ import {
 } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 const EXPECTED_LIFECYCLE_MODULE_URL =
-  './static/ar-assets/js/ar-interaction-lifecycle.js?v=interaction-transaction-v1'
+  './static/ar-assets/js/ar-interaction-lifecycle.js?v=multi-target-attach-v1'
 
 describe('AR interaction lifecycle contracts', () => {
+  it('plans target-local attachment for every eligible tracked instance without semantic target names', () => {
+    const trackedLoadedInstance = {
+      modelState: 'loaded',
+      model: {},
+      anchor: {},
+      offsetGroup: {},
+      surfaceRoot: {},
+    }
+
+    expect(resolveTargetModelAttachment({
+      targetName: 'actorA',
+      instance: trackedLoadedInstance,
+      tracked: true,
+      sceneReady: true,
+    })).toEqual({ action: 'attach', reason: 'ready' })
+    expect(resolveTargetModelAttachment({
+      targetName: 'partnerB',
+      instance: trackedLoadedInstance,
+      tracked: true,
+      sceneReady: true,
+    })).toEqual({ action: 'attach', reason: 'ready' })
+    expect(resolveTargetModelAttachment({
+      targetName: 'partnerB',
+      instance: { ...trackedLoadedInstance, modelState: 'loading', model: null },
+      tracked: true,
+      sceneReady: true,
+    })).toEqual({ action: 'load', reason: 'model_not_loaded' })
+    expect(resolveTargetModelAttachment({
+      targetName: 'unrelatedC',
+      instance: trackedLoadedInstance,
+      tracked: false,
+      sceneReady: true,
+    })).toEqual({ action: 'wait', reason: 'target_not_tracked' })
+    expect(resolveTargetModelAttachment({
+      targetName: 'actorA',
+      instance: trackedLoadedInstance,
+      tracked: true,
+      sceneReady: false,
+    })).toEqual({ action: 'wait', reason: 'xr_scene_not_ready' })
+  })
+
+  it('keeps rule actor ownership independent from the scanned entry target order', () => {
+    const rule = normalizeInteractionRule({
+      tags: ['actorA', 'partnerB'],
+      target_order: ['actorA', 'partnerB'],
+      combo_id: 'actor-a-with-partner-b',
+      priority: 20,
+    })
+
+    const entryTarget = 'partnerB'
+    const selected = selectActiveInteractionRule([rule], [entryTarget, 'actorA'])
+
+    expect(selected).toMatchObject({
+      actorTarget: 'actorA',
+      partnerTargets: ['partnerB'],
+    })
+    expect(selected?.actorTarget).not.toBe(entryTarget)
+  })
+
+  it('uses one generic attachment path for every image-found target instance', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const attachStart = source.indexOf('async function attachTrackedTargetModel(targetName)')
+    const attachEnd = source.indexOf('\n    // ========== LOAD TARGET JSON', attachStart)
+    const attachSource = source.slice(attachStart, attachEnd)
+    const foundStart = source.indexOf('function onTargetFound(detail)')
+    const foundEnd = source.indexOf('\n    function onTargetLost(name)', foundStart)
+    const foundSource = source.slice(foundStart, foundEnd)
+
+    expect(attachStart).toBeGreaterThanOrEqual(0)
+    expect(attachEnd).toBeGreaterThan(attachStart)
+    expect(attachSource).toContain('resolveTargetModelAttachment')
+    expect(attachSource).toContain('ensureTargetModelLoaded(targetName)')
+    expect(attachSource).toContain('reparentModelToAnchor(instance)')
+    expect(attachSource).toContain('applyTargetPose(instance, pose)')
+    expect(attachSource).toContain('instance.interactionReady = true')
+    expect(attachSource).not.toMatch(/cat001|fish001|CAT_EAT/)
+    expect(foundSource).toContain('void attachTrackedTargetModel(detail.name)')
+    expect(foundSource).not.toContain('attemptModelAttach')
+    expect(foundSource).not.toContain('ensureTargetModelLoaded(detail.name).then')
+    expect(foundSource).not.toContain('detail.name === primaryModelTargetName')
+  })
+
+  it('keeps target registration, preload, and loss ownership scoped to each instance', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const registryStart = source.indexOf('// Populate targetInstances Map for all tracked targets')
+    const registryEnd = source.indexOf('const targetConfigByName', registryStart)
+    const registrySource = source.slice(registryStart, registryEnd)
+    const preloadStart = source.indexOf('function preloadSecondaryTargets()')
+    const preloadEnd = source.indexOf('\n    // ========== MAIN', preloadStart)
+    const preloadSource = source.slice(preloadStart, preloadEnd)
+    const hideStart = source.indexOf('function hideConfirmedTargetLoss(targetName, lostForMs)')
+    const hideEnd = source.indexOf('\n    function processPendingTargetLosses', hideStart)
+    const hideSource = source.slice(hideStart, hideEnd)
+
+    expect(registrySource).toContain('for (const config of xrTargetConfigs)')
+    expect(registrySource).toContain('targetInstances.set(config.qr_id')
+    expect(registrySource).toContain('attachPromise: null')
+    expect(preloadSource).toContain('cfg.qr_id !== primaryModelTargetName')
+    expect(preloadSource).toContain('ensureTargetModelLoaded(cfg.qr_id)')
+    expect(hideSource).toContain('const instance = targetInstances.get(targetName)')
+    expect(hideSource).toContain('if (instance?.model) instance.model.visible = false')
+    expect(hideSource).not.toContain('primaryModelTargetName')
+  })
+
   it('resolves generic screen, tabletop, and auto presentation requests', () => {
     const resolvePresentationMode = Reflect.get(lifecycleModule, 'resolvePresentationMode')
 
@@ -761,11 +866,11 @@ describe('AR interaction lifecycle contracts', () => {
     expect(source).toContain('CAT_RETURN_COMPLETE')
   })
 
-  it('reveals AR only after both camera and CAT are ready', () => {
-    expect(shouldRevealAR({ cameraReady: false, catReady: false })).toBe(false)
-    expect(shouldRevealAR({ cameraReady: true, catReady: false })).toBe(false)
-    expect(shouldRevealAR({ cameraReady: false, catReady: true })).toBe(false)
-    expect(shouldRevealAR({ cameraReady: true, catReady: true })).toBe(true)
+  it('reveals AR only after both camera and entry-target readiness are true', () => {
+    expect(shouldRevealAR({ cameraReady: false, primaryReady: false })).toBe(false)
+    expect(shouldRevealAR({ cameraReady: true, primaryReady: false })).toBe(false)
+    expect(shouldRevealAR({ cameraReady: false, primaryReady: true })).toBe(false)
+    expect(shouldRevealAR({ cameraReady: true, primaryReady: true })).toBe(true)
   })
 
   it('allows CAT meow in COMBO_CONSUMED only after the CAT return completes', () => {
@@ -915,7 +1020,7 @@ describe('AR interaction lifecycle contracts', () => {
     expect(pointerSource).not.toContain('intersectObjects(scene.children')
   })
 
-  it('opens boot only for camera plus CAT readiness, never FISH warmup', () => {
+  it('opens boot only for camera plus entry-target readiness, never secondary warmup', () => {
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
     const bootStart = source.indexOf('function maybeRevealAR')
     const bootEnd = source.indexOf('\n    // Update overlay text', bootStart)
@@ -930,9 +1035,10 @@ describe('AR interaction lifecycle contracts', () => {
     expect(source).toContain('cameraReady: false,')
     expect(source).toContain('shouldRevealAR')
     expect(bootSource).toContain('cameraReady: bootState.cameraReady')
-    expect(bootSource).toContain('catReady: bootState.catReady')
+    expect(bootSource).toContain('primaryReady: bootState.primaryReady')
+    expect(bootSource).not.toContain('catReady')
     expect(bootSource).not.toContain('secondaryWarmup')
-    expect(bootSource).not.toContain('fishLastProgress >=')
+    expect(bootSource).not.toContain('secondaryProgress >=')
     expect(bootSource).not.toContain('maxSecondaryWarmupMs')
     expect(overlaySource).not.toContain('Interaction assets')
     expect(cameraSource.indexOf('bootState.cameraReady = true;')).toBeGreaterThanOrEqual(0)
@@ -987,6 +1093,10 @@ describe('AR interaction lifecycle contracts', () => {
       resolve(process.cwd(), 'public/static/ar-assets/js/ar-interaction-lifecycle.js'),
       'utf8',
     )
+    const lifecycleTypesSource = readFileSync(
+      resolve(process.cwd(), 'public/static/ar-assets/js/ar-interaction-lifecycle.d.ts'),
+      'utf8',
+    )
     const namedImport = viewerSource.match(
       /import \{\s*\n([\s\S]*?)\n\s*\} from '([^']*ar-interaction-lifecycle\.js(?:\?[^']+)?)';/,
     )
@@ -1014,6 +1124,8 @@ describe('AR interaction lifecycle contracts', () => {
     expect(importedNames).not.toHaveLength(0)
     expect(probedNames).toEqual(importedNames)
     expect(importedNames.filter((name) => !exportedNames.includes(name))).toEqual([])
+    expect(lifecycleTypesSource).toContain('export function resolveTargetModelAttachment')
+    expect(lifecycleTypesSource).toContain('primaryReady: boolean')
     expect(probeImport?.[1]).toBe(EXPECTED_LIFECYCLE_MODULE_URL)
     expect(namedImport?.[2]).toBe(EXPECTED_LIFECYCLE_MODULE_URL)
     expect(probeImport?.[1]).toBe(namedImport?.[2])
@@ -1071,7 +1183,7 @@ describe('AR interaction lifecycle contracts', () => {
     )
 
     const runtimeSource = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
-    const fallbackStart = runtimeSource.indexOf('function withConfiguredDemoFallback(rawRules)')
+    const fallbackStart = runtimeSource.indexOf('const DEMO_INTERACTION_FALLBACKS')
     const fallbackEnd = runtimeSource.indexOf('function installInteractionRules(rawRules)', fallbackStart)
     const fallbackSource = runtimeSource.slice(fallbackStart, fallbackEnd)
 

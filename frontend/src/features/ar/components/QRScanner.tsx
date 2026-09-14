@@ -34,7 +34,6 @@ export interface QRScannerProps {
   onDetected: (qrId: string) => void;
   onReady?: (stream: MediaStream) => void;
   onError?: (error: string) => void;
-  onTransitionFrame?: (frameDataUrl: string | null) => void;
   onCameraHandoffTelemetry?: (event: QRScannerCameraHandoffTelemetry) => void;
   active?: boolean;
   debug?: boolean;
@@ -73,23 +72,6 @@ function describeTracks(
   }));
 }
 
-/**
- * Captures the already-rendered QR scan canvas for presentation only.
- * A failed snapshot must never interfere with the scanner-to-XR handoff.
- */
-// eslint-disable-next-line react-refresh/only-export-components
-export function captureTransitionFrame(
-  canvas: HTMLCanvasElement | null,
-): string | null {
-  if (!canvas) return null;
-
-  try {
-    return canvas.toDataURL('image/jpeg', 0.82);
-  } catch {
-    return null;
-  }
-}
-
 function loadJsQR(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (typeof window.jsQR !== 'undefined') {
@@ -108,7 +90,6 @@ export const QRScanner: React.FC<QRScannerProps> = ({
   onDetected,
   onReady,
   onError,
-  onTransitionFrame,
   onCameraHandoffTelemetry,
   active = true,
   debug = false,
@@ -124,7 +105,6 @@ export const QRScanner: React.FC<QRScannerProps> = ({
     onDetected,
     onReady,
     onError,
-    onTransitionFrame,
     onCameraHandoffTelemetry,
   });
   useEffect(() => {
@@ -132,10 +112,9 @@ export const QRScanner: React.FC<QRScannerProps> = ({
       onDetected,
       onReady,
       onError,
-      onTransitionFrame,
       onCameraHandoffTelemetry,
     };
-  }, [onDetected, onReady, onError, onTransitionFrame, onCameraHandoffTelemetry]);
+  }, [onDetected, onReady, onError, onCameraHandoffTelemetry]);
 
   const emitCameraHandoffTelemetry = (
     label: string,
@@ -251,13 +230,6 @@ export const QRScanner: React.FC<QRScannerProps> = ({
 
       if (code && !isDetectedRef.current) {
         isDetectedRef.current = true;
-
-        const transitionFrame = captureTransitionFrame(canvasRef.current);
-        try {
-          callbacksRef.current.onTransitionFrame?.(transitionFrame);
-        } catch {
-          // Presentation failures must not block the existing QR-to-XR handoff.
-        }
 
         // Stop scan loop
         if (animFrameRef.current) {
