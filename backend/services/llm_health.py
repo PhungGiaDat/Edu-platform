@@ -64,7 +64,25 @@ def classify_error(exc: BaseException) -> str:
 
 def configured_providers() -> list[dict]:
     """Ordered provider configs (first = preferred primary)."""
-    from services.llm_clients import _has_configured_key
+    from services.llm_clients import _has_configured_key, parse_provider_model
+
+    def _bare_for(provider: str, default: str) -> str:
+        """
+        Pick a probe model that actually belongs to `provider`.
+        MODEL_* values may be provider-prefixed (e.g. "google/gemini-…");
+        feeding such a slug to another provider's probe would misreport
+        health, so prefer the first configured model of the right provider.
+        """
+        candidates = [
+            settings.MODEL_GENERATOR,
+            *[m.strip() for m in (settings.MODEL_FALLBACKS or "").split(",") if m.strip()],
+            settings.MODEL_PLANNER,
+            settings.MODEL_VALIDATOR,
+        ]
+        for candidate in candidates:
+            if parse_provider_model(candidate)[0] == provider:
+                return candidate
+        return default
 
     providers: list[dict] = []
     if _has_configured_key(settings.TOKENROUTER_API_KEY):
@@ -73,7 +91,18 @@ def configured_providers() -> list[dict]:
                 "name": "tokenrouter",
                 "base_url": settings.TOKENROUTER_BASE_URL,
                 "api_key": settings.TOKENROUTER_API_KEY.get_secret_value(),
-                "default_model": settings.MODEL_GENERATOR,
+                "default_model": _bare_for("tokenrouter", settings.MODEL_GENERATOR),
+            }
+        )
+    if _has_configured_key(settings.GOOGLE_API_KEY):
+        probe_model = _bare_for("google", f"google/{settings.GOOGLE_MODEL_FLASH}")
+        google_default = parse_provider_model(probe_model)[1]
+        providers.append(
+            {
+                "name": "google",
+                "base_url": settings.GOOGLE_LLM_BASE_URL,
+                "api_key": settings.GOOGLE_API_KEY or "",
+                "default_model": google_default,
             }
         )
     if _has_configured_key(settings.BAI_API_KEY):

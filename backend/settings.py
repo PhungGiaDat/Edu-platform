@@ -156,6 +156,12 @@ class Settings(BaseSettings):
     BAI_BASE_URL: str = "https://api.b.ai/v1"
     BAI_GENERATION_MODEL: str = "glm-5.3-flash"
 
+    # Google Gemini provider (OpenAI-compatible endpoint; reuses GOOGLE_API_KEY).
+    # Model slugs prefixed "google/" in MODEL_* route here via llm_clients.
+    GOOGLE_LLM_BASE_URL: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
+    GOOGLE_MODEL_FLASH: str = "gemini-flash-latest"
+    GOOGLE_MODEL_LITE: str = "gemini-flash-lite-latest"
+
     # LLM provider health pings (startup probe + cascade recheck window)
     LLM_HEALTH_TIMEOUT_SECONDS: float = 4.0
     LLM_HEALTH_RECHECK_SECONDS: float = 60.0

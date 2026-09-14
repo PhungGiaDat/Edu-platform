@@ -14,13 +14,109 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pydantic import SecretStr
+
+from settings import settings
 from services.llm_clients import (
     CircuitBreaker,
     CircuitOpenError,
     ModelRouter,
     get_tokenrouter_llm,
     acall_with_retry,
+    build_llm_for_model,
+    parse_provider_model,
 )
+
+
+# ──────────────────────────────────────────────
+# Hermetic provider settings
+# ──────────────────────────────────────────────
+
+# The cascade tests below describe the legacy tokenrouter/bai world:
+# bare (tokenrouter) MODEL_* ids and no Google key. Production .env now
+# points MODEL_* at "google/…" slugs with a live GOOGLE_API_KEY, which
+# would silently add cascade entries — pin the worldview explicitly.
+_LEGACY_MODELS = {
+    "MODEL_PLANNER": "qwen/qwen3.8-max-free",
+    "MODEL_GENERATOR": "deepseek/deepseek-v4-pro-0813-free",
+    "MODEL_VALIDATOR": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    "MODEL_FALLBACKS": (
+        "qwen/qwen3.8-max-free,deepseek/deepseek-v4-pro-0813-free,"
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+    ),
+}
+
+
+@pytest.fixture(autouse=True)
+def _legacy_provider_world(monkeypatch):
+    monkeypatch.setattr(settings, "GOOGLE_API_KEY", None)
+    for key, value in _LEGACY_MODELS.items():
+        monkeypatch.setattr(settings, key, value)
+
+
+# ──────────────────────────────────────────────
+# Provider-prefixed model routing ("google/…", "bai/…", bare = tokenrouter)
+# ──────────────────────────────────────────────
+
+
+class TestProviderPrefixedRouting:
+    def test_parse_known_prefixes(self):
+        assert parse_provider_model("google/gemini-flash-latest") == (
+            "google",
+            "gemini-flash-latest",
+        )
+        assert parse_provider_model("bai/glm-5.3-flash") == ("bai", "glm-5.3-flash")
+
+    def test_parse_bare_stays_tokenrouter(self):
+        # Historical env values must keep working unchanged.
+        assert parse_provider_model("qwen/qwen3.8-max-free") == (
+            "tokenrouter",
+            "qwen/qwen3.8-max-free",
+        )
+
+    def test_build_llm_for_model_dispatches_by_prefix(self):
+        with patch("services.llm_clients.get_google_llm") as google, \
+             patch("services.llm_clients.get_bai_llm") as bai, \
+             patch("services.llm_clients.get_tokenrouter_llm") as tr:
+            build_llm_for_model("google/gemini-flash-latest")
+            google.assert_called_once_with("gemini-flash-latest", 0.4, None)
+            build_llm_for_model("bai/glm-5.3-flash")
+            bai.assert_called_once_with("glm-5.3-flash", 0.4, None)
+            build_llm_for_model("qwen/qwen3.8-max-free")
+            tr.assert_called_once_with("qwen/qwen3.8-max-free", 0.4, None)
+
+    def test_get_llm_returns_google_client_for_prefixed_primary(self, monkeypatch):
+        monkeypatch.setattr(settings, "MODEL_GENERATOR", "google/gemini-flash-latest")
+        with patch("services.llm_clients.get_google_llm") as google:
+            router = ModelRouter(role="generator")
+            router.get_llm()
+        google.assert_called_once()
+        assert google.call_args.args[0] == "gemini-flash-latest"
+
+    def test_google_entries_in_cascade_and_ranked_by_prefix(self, monkeypatch):
+        monkeypatch.setattr(settings, "GOOGLE_API_KEY", "test-google-key")
+        monkeypatch.setattr(settings, "MODEL_GENERATOR", "google/gemini-flash-latest")
+        monkeypatch.setattr(
+            settings,
+            "MODEL_FALLBACKS",
+            "google/gemini-flash-latest,google/gemini-flash-lite-latest",
+        )
+        monkeypatch.setattr(settings, "TOKENROUTER_API_KEY", None)
+        monkeypatch.setattr(settings, "BAI_API_KEY", None)
+        router = ModelRouter(role="generator")
+        entries = list(router._cascade_entries())
+        assert [p for p, _l, _m in entries] == ["google", "google"]
+        assert entries[0][2] == "google/gemini-flash-latest"
+        assert entries[1][2] == "google/gemini-flash-lite-latest"
+
+    def test_google_entry_omitted_without_key(self, monkeypatch):
+        # _legacy_provider_world sets GOOGLE_API_KEY=None; a prefixed model
+        # whose provider has no key must be skipped, not raise OpenAIError.
+        monkeypatch.setattr(settings, "MODEL_GENERATOR", "google/gemini-flash-latest")
+        monkeypatch.setattr(settings, "TOKENROUTER_API_KEY", None)
+        monkeypatch.setattr(settings, "BAI_API_KEY", None)
+        router = ModelRouter(role="generator")
+        assert list(router.llm_cascade()) == []
 
 
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

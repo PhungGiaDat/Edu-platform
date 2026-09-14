@@ -68,17 +68,17 @@ async def chat_message(
 
 MODELS_CATALOG: list[ModelInfo] = [
     ModelInfo(
-        id="qwen/qwen3.8-max-free",
+        id="google/gemini-flash-lite-latest",
         role="planner",
         description="Fast structured extraction — good for JSON plan output",
     ),
     ModelInfo(
-        id="deepseek/deepseek-v4-pro-0813-free",
+        id="google/gemini-flash-latest",
         role="generator",
         description="Best for creative, kid-friendly narrative responses",
     ),
     ModelInfo(
-        id="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        id="google/gemini-flash-lite-latest",
         role="validator",
         description="Quality + age-appropriateness check",
     ),
@@ -87,7 +87,7 @@ MODELS_CATALOG: list[ModelInfo] = [
 
 @router.get("/chat/models", response_model=ChatModelsResponse)
 async def get_chat_models():
-    """Return the available TokenRouter models per pipeline stage."""
+    """Return the available pipeline models per stage (provider-prefixed ids)."""
     from settings import settings as s
 
     defaults = {

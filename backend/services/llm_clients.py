@@ -95,6 +95,62 @@ def get_bai_llm(
     )
 
 
+def get_google_llm(
+    model: str,
+    temperature: float = 0.4,
+    timeout: Optional[float] = None,
+) -> ChatOpenAI:
+    """
+    Return a ChatOpenAI client routed through Google's Gemini
+    OpenAI-compatible endpoint (free tier, reuses GOOGLE_API_KEY).
+    """
+    return ChatOpenAI(
+        model=model,
+        api_key=settings.GOOGLE_API_KEY or "",
+        base_url=settings.GOOGLE_LLM_BASE_URL,
+        timeout=timeout or settings.AI_CONTENT_TIMEOUT_SECONDS,
+        max_retries=0,
+        temperature=temperature,
+        callbacks=[TRACE_HANDLER],
+    )
+
+
+# ──────────────────────────────────────────────
+# 1b. Provider-prefixed model routing
+# ──────────────────────────────────────────────
+
+_PROVIDER_PREFIXES = ("google/", "bai/")
+
+
+def parse_provider_model(model: str) -> tuple[str, str]:
+    """
+    Split a possibly provider-prefixed model id into (provider, bare_model).
+
+    Convention: "google/gemini-flash-latest" → ("google", "gemini-flash-latest"),
+    "bai/glm-5.3-flash" → ("bai", "glm-5.3-flash"), "qwen/..." (bare) →
+    ("tokenrouter", "qwen/..."). Bare ids keep the historical TokenRouter
+    behavior, so existing env values remain valid.
+    """
+    for prefix in _PROVIDER_PREFIXES:
+        if model.startswith(prefix):
+            return prefix.rstrip("/"), model[len(prefix):]
+    return "tokenrouter", model
+
+
+def build_llm_for_model(
+    model: str,
+    temperature: float = 0.4,
+    timeout: Optional[float] = None,
+) -> ChatOpenAI:
+    """Factory dispatch for provider-prefixed model ids."""
+    provider, bare = parse_provider_model(model)
+    if provider == "google":
+        return get_google_llm(bare, temperature, timeout)
+    if provider == "bai":
+        return get_bai_llm(bare, temperature, timeout)
+    return get_tokenrouter_llm(model, temperature, timeout)
+
+
 # ──────────────────────────────────────────────
 # 2. Circuit Breaker
 # ──────────────────────────────────────────────
@@ -310,8 +366,9 @@ class ModelRouter:
     # ── Public API ──────────────────────────────
 
     def get_llm(self) -> ChatOpenAI:
-        """Return the primary LLM. Use llm_cascade() when you want automatic fallback."""
-        return get_tokenrouter_llm(self.primary_model)
+        """Return the primary LLM (provider-routed by model prefix).
+        Use llm_cascade() when you want automatic fallback."""
+        return build_llm_for_model(self.primary_model)
 
     def _cascade_entries(self) -> Iterator[tuple[str, ChatOpenAI, str]]:
         """
@@ -321,32 +378,35 @@ class ModelRouter:
           3. Unhealthy providers LAST — still yielded as a last resort, so a
              total "All models exhausted" outage cannot happen while any
              provider is configured.
-        Providers without a configured API key are omitted entirely:
-        constructing a ChatOpenAI with an empty key raises OpenAIError
-        ("Missing credentials") before any network call, which used to kill
-        the whole cascade (503) even when the other provider was healthy.
+        Models are provider-routed by prefix ("google/…", "bai/…", bare =
+        tokenrouter). Entries whose provider has no configured API key are
+        omitted entirely: constructing a ChatOpenAI with an empty key raises
+        OpenAIError ("Missing credentials") before any network call, which
+        used to kill the whole cascade (503) even when another provider was
+        healthy.
         """
         from services import llm_health
 
+        provider_keys = {
+            "google": settings.GOOGLE_API_KEY,
+            "bai": settings.BAI_API_KEY,
+            "tokenrouter": settings.TOKENROUTER_API_KEY,
+        }
         entries: list[tuple[str, ChatOpenAI, str]] = []
         seen: set[str] = set()
-        if _has_configured_key(settings.TOKENROUTER_API_KEY):
-            seen.add(self.primary_model)
-            entries.append(
-                (
-                    "tokenrouter",
-                    get_tokenrouter_llm(self.primary_model),
-                    self.primary_model,
-                )
-            )
-            for model in self.fallback_models:
-                if model not in seen:
-                    seen.add(model)
-                    entries.append(("tokenrouter", get_tokenrouter_llm(model), model))
+
+        def add(model: str) -> None:
+            provider, _bare = parse_provider_model(model)
+            if not _has_configured_key(provider_keys[provider]) or model in seen:
+                return
+            seen.add(model)
+            entries.append((provider, build_llm_for_model(model), model))
+
+        add(self.primary_model)
+        for model in self.fallback_models:
+            add(model)
         if _has_configured_key(settings.BAI_API_KEY):
-            bai_model = settings.BAI_GENERATION_MODEL
-            if bai_model not in seen:
-                entries.append(("bai", get_bai_llm(bai_model), f"bai/{bai_model}"))
+            add(f"bai/{settings.BAI_GENERATION_MODEL}")
 
         preferred = llm_health.preferred_provider()
 
@@ -389,7 +449,7 @@ class ModelRouter:
         from services import llm_health
 
         for llm, model_name in self.llm_cascade():
-            provider = "bai" if model_name.startswith("bai/") else "tokenrouter"
+            provider = parse_provider_model(model_name)[0]
             started = time.monotonic()
             try:
                 result = await acall_with_retry(fn, llm, *args, **kwargs)
