@@ -37,6 +37,7 @@ import { useQuizData } from '@/hooks/useQuizData';
 import { useGameData } from '@/hooks/useGameData';
 import { usePets } from '@/hooks/usePets';
 import { useGamification } from '@/hooks/useGamification';
+import { ChatService } from '@/services/ChatService';
 import { useMultiFlashcard } from '@/hooks/useMultiFlashcard';
 import { useFlashcardSnapshot } from '@/hooks/useFlashcardSnapshot';
 import { useARFallback } from '@/hooks/useARFallback';
@@ -383,14 +384,17 @@ function PetChatPopup({ petName, word, onClose }: { petName: string; word: strin
                 const prompt = word
                     ? `You are ${petName}, a friendly pet. The student just learned '${word}'. Say something fun and encouraging in 1 short sentence.`
                     : `You are ${petName}, a friendly learning pet. Say a short, fun encouraging message to a student in 1 sentence.`;
-                const res = await fetch(`${API_BASE}/api/v1/chat/rag`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: prompt, session_id: 'pet-chat' }),
-                });
-                if (!res.ok) throw new Error('Chat failed');
-                const data = await res.json();
-                if (!cancelled) setMessage(data.response || 'Keep learning! You are doing great!');
+                // RAGChatRequest requires `question` (the old raw fetch sent
+                // `message` and silently 422'd). ChatService attaches the JWT
+                // via apiClient; guests get a static fallback instead.
+                const data = await ChatService.sendRAGMessage(prompt);
+                if (!cancelled) {
+                    setMessage(
+                        data.requires_login || !data.response
+                            ? 'You are doing amazing! Keep it up!'
+                            : data.response,
+                    );
+                }
             } catch {
                 if (!cancelled) setMessage('You are doing amazing! Keep it up!');
             } finally {

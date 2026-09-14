@@ -16,6 +16,17 @@ from fastapi.testclient import TestClient
 
 from main import app
 from api.chat import get_agentic_rag_service, get_postgres_chat_log_repository
+from core.security import get_current_user
+from repositories.postgres_user_repository import PostgresUser
+
+# Any logged-in user works — the endpoints must take identity from the token,
+# never from the (untrusted) request body.
+FAKE_USER = PostgresUser(
+    id="learner-123",
+    email="learner@example.test",
+    username="learner",
+    hashed_password="not-a-real-hash",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -61,6 +72,7 @@ def client(mock_agentic_rag_service, mock_chat_repo):
     """
     app.dependency_overrides[get_agentic_rag_service] = lambda: mock_agentic_rag_service
     app.dependency_overrides[get_postgres_chat_log_repository] = lambda: mock_chat_repo
+    app.dependency_overrides[get_current_user] = lambda: FAKE_USER
     client = TestClient(app, raise_server_exceptions=False)
     yield client
     app.dependency_overrides.clear()
@@ -253,6 +265,35 @@ class TestModelOverridePassthrough:
         assert kwargs.get("planner_model") is None
         assert kwargs.get("generator_model") is None
         assert kwargs.get("validator_model") is None
+
+
+# ---------------------------------------------------------------------------
+# Authenticated identity (token wins over body)
+# ---------------------------------------------------------------------------
+
+class TestAuthenticatedIdentity:
+
+    def test_body_user_id_is_ignored_in_favor_of_token_identity(
+        self, client, mock_agentic_rag_service
+    ):
+        """A spoofed body user_id must NOT reach the pipeline — token id wins."""
+        client.post(
+            "/api/v1/chat/rag",
+            json={"question": "What is a tiger?", "user_id": "attacker-999"},
+        )
+        mock_agentic_rag_service.run.assert_called_once()
+        _, kwargs = mock_agentic_rag_service.run.call_args
+        assert kwargs.get("user_id") == "learner-123"
+
+    def test_chat_log_uses_token_identity(self, client, mock_chat_repo):
+        """Persisted chat log rows must carry the authenticated user id."""
+        client.post(
+            "/api/v1/chat/rag",
+            json={"question": "What is a tiger?", "user_id": "attacker-999"},
+        )
+        assert mock_chat_repo.log_message.await_count == 2  # user + ai rows
+        for call in mock_chat_repo.log_message.await_args_list:
+            assert call.kwargs["user_id"] == "learner-123"
 
 
 # ---------------------------------------------------------------------------

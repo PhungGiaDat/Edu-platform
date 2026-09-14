@@ -9,6 +9,8 @@ import uuid
 from datetime import datetime
 import logging
 
+from core.security import get_current_user
+from repositories.postgres_user_repository import PostgresUser
 from services.ai_service import AIService, get_ai_service
 from services.agentic_rag_service import AgenticRAGService, get_agentic_rag_service
 from repositories.postgres_chat_log_repository import (
@@ -56,8 +58,9 @@ async def chat_message(
     message: str = Body(..., embed=True),
     context: str = Body("", embed=True),
     service: AIService = Depends(get_ai_service),
+    current_user: PostgresUser = Depends(get_current_user),
 ):
-    """Basic chat endpoint (backward compatibility)."""
+    """Basic chat endpoint (backward compatibility). Requires login."""
     response = await service.chat(message, context)
     return {"response": response}
 
@@ -108,17 +111,23 @@ async def rag_chat(
     request: RAGChatRequest,
     agentic_rag: AgenticRAGService = Depends(get_agentic_rag_service),
     chat_repo: PostgresChatLogRepository = Depends(get_postgres_chat_log_repository),
+    current_user: PostgresUser = Depends(get_current_user),
 ):
     """
-    Agentic RAG chat — Planner → Generator → Validator pipeline.
+    Agentic RAG chat — Planner → Generator → Validator pipeline. Requires login.
     Optional model overrides per stage (planner_model, generator_model, validator_model).
+
+    Identity comes from the JWT (`current_user`); the body's `user_id` field is
+    accepted for backward compatibility but IGNORED — clients cannot spoof who
+    is asking, and guest/an anonymous calls are rejected with 401 upstream.
     """
     session_id = request.session_id or str(uuid.uuid4())
+    user_id = str(current_user.id)
     logger.info(f"[RAG] Processing question: {request.question[:60]}...")
 
     result = await agentic_rag.run(
         question=request.question,
-        user_id=request.user_id,
+        user_id=user_id,
         session_id=session_id,
         planner_model=request.planner_model,
         generator_model=request.generator_model,
@@ -136,13 +145,13 @@ async def rag_chat(
         try:
             await chat_repo.log_message(
                 session_id=session_id,
-                user_id=request.user_id,
+                user_id=user_id,
                 message=request.question,
                 sender="user",
             )
             await chat_repo.log_message(
                 session_id=session_id,
-                user_id=request.user_id,
+                user_id=user_id,
                 message=result["response"],
                 sender="ai",
                 context_flashcard_ids=[
@@ -166,8 +175,9 @@ async def analyze_pronunciation(
     target_text: str = Body(..., embed=True),
     audio_text: str = Body(..., embed=True),
     service: AIService = Depends(get_ai_service),
+    current_user: PostgresUser = Depends(get_current_user),
 ):
-    """Analyze pronunciation by comparing target text with spoken text."""
+    """Analyze pronunciation by comparing target text with spoken text. Requires login."""
     result = await service.analyze_pronunciation(target_text, audio_text)
     return result
 
@@ -177,8 +187,9 @@ async def analyze_pronunciation(
 async def test_embedding(
     text: str = Body(..., embed=True),
     service: AIService = Depends(get_ai_service),
+    current_user: PostgresUser = Depends(get_current_user),
 ):
-    """Test endpoint to verify embedding generation."""
+    """Test endpoint to verify embedding generation. Requires login (dev-only)."""
     embedding = await service.generate_embedding(text)
     return {
         "text": text,

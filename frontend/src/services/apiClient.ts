@@ -15,6 +15,12 @@ const TOKEN_KEY = 'authToken';
 
 export interface ApiClientOptions extends Omit<RequestInit, 'body'> {
   skipAuth?: boolean;
+  /**
+   * What to do on HTTP 401. 'redirect' (default) clears the session and bounces
+   * to /login. 'throw' only raises an Error carrying `status` — for flows that
+   * must degrade gracefully (e.g. guest chatting) instead of losing the page.
+   */
+  onUnauthorized?: 'redirect' | 'throw';
   params?: Record<string, string | number | boolean | undefined>;
   body?: any;
 }
@@ -193,10 +199,17 @@ function apiError(message: string, status: number): Error & { status: number } {
 /**
  * Handle API response
  */
-async function handleResponse(response: Response): Promise<any> {
+async function handleResponse(
+  response: Response,
+  onUnauthorized: 'redirect' | 'throw' = 'redirect'
+): Promise<any> {
   // Handle 401 Unauthorized
   if (response.status === 401) {
-    handle401();
+    // 'throw' callers (e.g. guest-degradable chat) get a status-carrying error
+    // without the global session-clear + hard redirect.
+    if (onUnauthorized !== 'throw') {
+      handle401();
+    }
     throw apiError('Unauthorized', response.status);
   }
 
@@ -247,7 +260,7 @@ export async function request(
   endpoint: string,
   options: ApiClientOptions = {}
 ): Promise<any> {
-  const { params, skipAuth, body, ...fetchOptions } = options;
+  const { params, skipAuth, body, onUnauthorized, ...fetchOptions } = options;
 
   const url = buildUrl(endpoint, params);
   const headers = prepareHeaders({ ...fetchOptions, skipAuth, body });
@@ -260,7 +273,7 @@ export async function request(
       body: serializeRequestBody(body),
     });
 
-    return await handleResponse(response);
+    return await handleResponse(response, onUnauthorized);
   } catch (error) {
     sentryMonitoringService.captureApiFailure(error, {
       feature: 'api-client',

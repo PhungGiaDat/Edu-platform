@@ -14,6 +14,8 @@ export interface RAGChatResponse {
     sources: { word: string; score: number }[];
     session_id: string;
     agent_trace?: string[];
+    /** True when the backend rejected an anonymous call (HTTP 401). */
+    requires_login?: boolean;
 }
 
 export interface PronunciationResult {
@@ -75,12 +77,17 @@ export const ChatService = {
         },
     ): Promise<RAGChatResponse> {
         try {
-            const response = await apiClient.post('/api/v1/chat/rag', {
-                question,
-                session_id: this.getSessionId(),
-                user_id: userId || null,
-                ...modelOverrides,
-            });
+            const response = await apiClient.post(
+                '/api/v1/chat/rag',
+                {
+                    question,
+                    session_id: this.getSessionId(),
+                    user_id: userId || null,
+                    ...modelOverrides,
+                },
+                // Chat degrades gracefully for guests instead of hard-redirecting.
+                { onUnauthorized: 'throw' },
+            );
 
             if (response.session_id) {
                 currentSessionId = response.session_id;
@@ -88,6 +95,18 @@ export const ChatService = {
 
             return response as RAGChatResponse;
         } catch (error) {
+            const status = (error as { status?: number } | null)?.status;
+            if (status === 401) {
+                // Guests (or expired sessions): prompt to log in, in Vietnamese.
+                console.warn('[ChatService] chat requires login (401)');
+                return {
+                    response:
+                        'Bạn ơi, hãy đăng nhập để trò chuyện với Lexi nhé! 🔑',
+                    sources: [],
+                    session_id: this.getSessionId(),
+                    requires_login: true,
+                };
+            }
             console.error('[ChatService] RAG request failed:', error);
             return {
                 response: "Sorry, I ran into an error. Please try again! 🙏",
