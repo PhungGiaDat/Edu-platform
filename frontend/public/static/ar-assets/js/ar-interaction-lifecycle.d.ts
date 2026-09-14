@@ -1,4 +1,4 @@
-export function advanceCatReturnTween(
+﻿export function advanceCatReturnTween(
   now: number,
   run: { fromYaw: number; toYaw: number; startedAt: number; durationMs: number },
 ): { yaw: number; complete: boolean }
@@ -114,6 +114,22 @@ export function hasAnimationCapability(
   clipName: string,
 ): boolean
 
+export function resolveTargetModelAttachment(args: {
+  targetName: string
+  instance: {
+    modelState?: string
+    model?: unknown
+    anchor?: unknown
+    offsetGroup?: unknown
+    surfaceRoot?: unknown
+  } | null
+  tracked: boolean
+  sceneReady: boolean
+}): {
+  action: 'attach' | 'load' | 'wait' | 'skip'
+  reason: string
+}
+
 export function shouldReplaceCatAnimation(args: { currentPriority: number; nextPriority: number }): boolean
-export function shouldRevealAR(args: { cameraReady: boolean; catReady: boolean }): boolean
+export function shouldRevealAR(args: { cameraReady: boolean; primaryReady: boolean }): boolean
 export function smoothstep(value: number): number

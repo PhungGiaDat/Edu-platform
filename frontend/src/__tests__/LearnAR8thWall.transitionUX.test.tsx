@@ -7,7 +7,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 type MockQRScannerProps = {
   onDetected: (qrId: string) => void | Promise<void>;
-  onTransitionFrame?: (frameDataUrl: string | null) => void;
 };
 
 let latestQRScannerProps: MockQRScannerProps | null = null;
@@ -93,12 +92,8 @@ function postViewerMessage(type: string, payload: Record<string, unknown> = {}) 
   }));
 }
 
-async function startPreparing(frame: string | null) {
+async function startPreparing() {
   renderPage();
-
-  act(() => {
-    getQRScannerProps().onTransitionFrame?.(frame);
-  });
 
   await act(async () => {
     await getQRScannerProps().onDetected('cat001');
@@ -117,34 +112,21 @@ describe('LearnAR8thWall transition UX', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders a captured scanner frame as presentation-only PREPARING UI', async () => {
-    renderPage();
+  it('shows an animated XR boot overlay after QR detection without rendering a scanner snapshot', async () => {
+    await startPreparing();
 
-    act(() => {
-      getQRScannerProps().onTransitionFrame?.('data:image/jpeg;base64,last-frame');
-    });
-
-    expect(await screen.findByTestId('ar-transition-frame')).toHaveAttribute(
-      'src',
-      'data:image/jpeg;base64,last-frame',
-    );
     expect(screen.getByTestId('ar-transition-overlay')).toHaveClass(
       'ar-transition-overlay',
       'is-visible',
     );
-    expect(screen.getByTestId('ar-transition-frame')).toHaveClass('ar-transition-frame');
-    expect(screen.getByText('Tìm thấy thẻ rồi!')).toBeInTheDocument();
-
-    await act(async () => {
-      await getQRScannerProps().onDetected('cat001');
-    });
-
+    expect(screen.queryByTestId('ar-transition-frame')).not.toBeInTheDocument();
+    expect(screen.getByText('Đang mở camera AR...')).toBeInTheDocument();
+    expect(screen.getByText('Chỉ mất một chút thôi')).toBeInTheDocument();
     expect(screen.getByTitle('AR Viewer')).toHaveAttribute('src', expect.stringContaining('qr_id=cat001'));
-    expect(screen.getByTitle('AR Viewer')).not.toHaveAttribute('src', expect.stringContaining('last-frame'));
   });
 
-  it('continues preparation with the fallback overlay when no frame is available', async () => {
-    await startPreparing(null);
+  it('keeps the QR-detection overlay presentation-only and out of viewer state', async () => {
+    await startPreparing();
 
     expect(await screen.findByTestId('ar-transition-overlay')).toBeInTheDocument();
     expect(screen.queryByTestId('ar-transition-frame')).not.toBeInTheDocument();
@@ -152,7 +134,7 @@ describe('LearnAR8thWall transition UX', () => {
   });
 
   it('dismisses the transition only after XR_CAMERA_HAS_VIDEO', async () => {
-    await startPreparing('data:image/jpeg;base64,last-frame');
+    await startPreparing();
 
     expect(await screen.findByTestId('ar-transition-overlay')).toHaveAttribute('data-visible', 'true');
 
@@ -168,11 +150,11 @@ describe('LearnAR8thWall transition UX', () => {
     });
 
     expect(screen.getByTestId('ar-transition-overlay')).toHaveAttribute('data-visible', 'false');
-    expect(screen.getByText('Giữ thẻ trong khung để khám phá AR')).toBeInTheDocument();
+    expect(screen.getByText('Đưa thẻ vào khung để khám phá AR')).toBeInTheDocument();
   });
 
   it('does not treat AR_DEBUG XR_CAMERA_HAS_VIDEO telemetry as the parent lifecycle event', async () => {
-    await startPreparing('data:image/jpeg;base64,last-frame');
+    await startPreparing();
 
     expect(await screen.findByTestId('ar-transition-overlay')).toHaveAttribute('data-visible', 'true');
 
@@ -184,7 +166,7 @@ describe('LearnAR8thWall transition UX', () => {
   });
 
   it('clears the transition overlay when XR enters the existing error flow', async () => {
-    await startPreparing('data:image/jpeg;base64,last-frame');
+    await startPreparing();
 
     act(() => {
       postViewerMessage('XR_ERROR', { message: 'XR boot failed' });
@@ -211,6 +193,8 @@ describe('LearnAR8thWall transition UX', () => {
     expect(source).toMatch(/case 'XR_CAMERA_HAS_VIDEO':[\s\S]*setPhase\('VIEWING'\)/);
     expect(source).toContain("phase === 'XR_BOOTING' || phase === 'VIEWING'");
     expect(source).not.toContain('getUserMedia(');
+    expect(source).not.toContain('transitionFrame');
+    expect(source).not.toContain('onTransitionFrame');
     expect(source).not.toContain('Loading XR target...');
     expect(source).not.toContain('Preparing AR experience...');
     const iframeLoadStart = source.indexOf('onLoad={() => {');
@@ -219,6 +203,21 @@ describe('LearnAR8thWall transition UX', () => {
     expect(viewerBlock).not.toContain('transitionFrame');
     expect(viewerBlock).not.toContain('transitionVisible');
     expect(viewerBlock).not.toContain('transitionMounted');
+  });
+
+  it('removes QR canvas serialization because presentation must not freeze a camera frame', () => {
+    const scannerSource = readFileSync(
+      resolve(process.cwd(), 'src/features/ar/components/QRScanner.tsx'),
+      'utf8',
+    );
+    const pageSource = readFileSync(
+      resolve(process.cwd(), 'src/pages/LearnAR8thWall.tsx'),
+      'utf8',
+    );
+
+    expect(scannerSource).not.toContain('captureTransitionFrame');
+    expect(scannerSource).not.toContain('onTransitionFrame');
+    expect(pageSource).not.toContain('ar-transition-frame');
   });
 
   it('requires the iframe to send XR_CAMERA_HAS_VIDEO as a control-plane event', () => {

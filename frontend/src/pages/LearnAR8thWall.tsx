@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 /**
  * LearnAR8thWall.tsx
  *
@@ -256,7 +256,6 @@ export const LearnAR8thWall: React.FC = () => {
 
   // Phase state machine
   const [phase, setPhase] = useState<Phase>('SCANNING');
-  const [transitionFrame, setTransitionFrame] = useState<string | null>(null);
   const [transitionMounted, setTransitionMounted] = useState(false);
   const [transitionVisible, setTransitionVisible] = useState(false);
 
@@ -354,12 +353,10 @@ export const LearnAR8thWall: React.FC = () => {
     clearTransitionTimer();
     setTransitionVisible(false);
     setTransitionMounted(false);
-    setTransitionFrame(null);
   }, [clearTransitionTimer]);
 
-  const handleTransitionFrame = useCallback((frameDataUrl: string | null) => {
+  const showTransition = useCallback(() => {
     clearTransitionTimer();
-    setTransitionFrame(frameDataUrl);
     setTransitionMounted(true);
     setTransitionVisible(true);
   }, [clearTransitionTimer]);
@@ -375,13 +372,11 @@ export const LearnAR8thWall: React.FC = () => {
 
     if (prefersReducedMotion) {
       setTransitionMounted(false);
-      setTransitionFrame(null);
       return;
     }
 
     transitionClearTimerRef.current = window.setTimeout(() => {
       setTransitionMounted(false);
-      setTransitionFrame(null);
       transitionClearTimerRef.current = null;
     }, TRANSITION_FADE_MS);
   }, [clearTransitionTimer]);
@@ -495,6 +490,7 @@ export const LearnAR8thWall: React.FC = () => {
 
     trace('QR_DETECTED', `QR=${normalizedQrId} → PHASE=PREPARING`);
 
+    showTransition();
     clearCameraHandoffTimer();
     const releaseAssumedAt = highResolutionTimestamp();
     const elapsedSinceQrStopMs = qrCameraStopAtRef.current == null
@@ -586,22 +582,21 @@ export const LearnAR8thWall: React.FC = () => {
         document.head.appendChild(preconn);
       }
 
-      // Stage fish preload: inject <link> for any secondary targets.
-      // The actual GLTFLoader download fires inside ar-xr.html after cat MODEL_LOAD_COMPLETE.
-      // Injecting the link here gives the browser a head-start on DNS/TLS for fish.
+      // Stage prefetches for every target beyond the entry card. The generic
+      // viewer registry remains the owner of the actual GLTFLoader request.
       for (const target of targets) {
-        if (target.qr_id === normalizedQrId) continue; // skip primary
+        if (target.qr_id === normalizedQrId) continue; // skip entry target
         if (!target.model_3d_url) continue;
-        const fishUrl = target.model_3d_url;
-        if (document.querySelector(`link[data-fish-preload="${fishUrl}"]`)) continue;
+        const secondaryUrl = target.model_3d_url;
+        if (document.querySelector(`link[data-secondary-preload="${secondaryUrl}"]`)) continue;
         const link = document.createElement('link');
         link.rel = 'prefetch';
         link.as = 'fetch';
-        link.href = fishUrl;
+        link.href = secondaryUrl;
         link.crossOrigin = 'anonymous';
-        link.dataset.fishPreload = fishUrl;
+        link.dataset.secondaryPreload = secondaryUrl;
         document.head.appendChild(link);
-        trace('FISH_PREFETCH', `${target.qr_id}:${fishUrl}`);
+        trace('SECONDARY_PREFETCH', `${target.qr_id}:${secondaryUrl}`);
       }
 
       setCurrentTarget(primary);
@@ -625,6 +620,7 @@ export const LearnAR8thWall: React.FC = () => {
     foundCards,
     fetchTrackingRules,
     fetchXRTarget,
+    showTransition,
     trace,
   ]);
 
@@ -822,7 +818,6 @@ export const LearnAR8thWall: React.FC = () => {
               setScanError(msg);
               setPhase('ERROR');
             }}
-            onTransitionFrame={handleTransitionFrame}
             onCameraHandoffTelemetry={handleQrCameraHandoffTelemetry}
             active={phase === 'SCANNING'}
             debug={isDebugMode}
@@ -862,27 +857,18 @@ export const LearnAR8thWall: React.FC = () => {
             role="status"
             aria-live="polite"
           >
-            {transitionFrame && (
-              <img
-                data-testid="ar-transition-frame"
-                className="ar-transition-frame"
-                src={transitionFrame}
-                alt=""
-                aria-hidden="true"
-              />
-            )}
             <div className="ar-transition-shade" />
             <div className="ar-transition-status">
               <div className="ar-transition-indicator" aria-hidden="true" />
               <strong>
                 {phase === 'PREPARING' || phase === 'SCANNING'
-                  ? 'Tìm thấy thẻ rồi!'
-                  : 'Đang mở thế giới AR...'}
+                  ? 'Đã tìm thấy thẻ!'
+                  : 'Đang mở camera AR...'}
               </strong>
               <span>
                 {phase === 'PREPARING' || phase === 'SCANNING'
                   ? 'Đang chuẩn bị trải nghiệm AR...'
-                  : 'Giữ điện thoại hướng về thẻ nhé'}
+                  : 'Chỉ mất một chút thôi'}
               </span>
             </div>
           </div>
@@ -940,11 +926,11 @@ export const LearnAR8thWall: React.FC = () => {
         </div>
       )}
 
-      {phase === 'VIEWING' && (
-        <div className="ar-instructions">
-          <p>Giữ thẻ trong khung để khám phá AR</p>
-        </div>
-      )}
+        {phase === 'VIEWING' && (
+          <div className="ar-instructions">
+            <p>Đưa thẻ vào khung để khám phá AR</p>
+          </div>
+        )}
 
     </div>
   );

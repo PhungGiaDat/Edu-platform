@@ -1,4 +1,4 @@
-const CAT_MEOW_BLOCKING_PHASES = new Set([
+﻿const CAT_MEOW_BLOCKING_PHASES = new Set([
   'COMBO_ARMED',
   'COMBO_TURNING',
   'COMBO_PLAYING',
@@ -10,8 +10,31 @@ const CAT_AMBIENT_BLOCKING_PHASES = new Set([
   'COMBO_PLAYING',
 ])
 
-export function shouldRevealAR({ cameraReady, catReady }) {
-  return Boolean(cameraReady && catReady)
+export function shouldRevealAR({ cameraReady, primaryReady }) {
+  return Boolean(cameraReady && primaryReady)
+}
+
+/**
+ * Plans attachment for one tracked target instance. The caller owns the
+ * Three.js objects; this helper deliberately owns no target identity or scene
+ * mutation, so every model follows the same load/attach lifecycle.
+ */
+export function resolveTargetModelAttachment({
+  targetName,
+  instance,
+  tracked,
+  sceneReady,
+}) {
+  if (!targetName || !instance) return { action: 'skip', reason: 'missing_target_instance' }
+  if (!tracked) return { action: 'wait', reason: 'target_not_tracked' }
+  if (instance.modelState === 'error') return { action: 'skip', reason: 'model_error' }
+  if (instance.modelState !== 'loaded' || !instance.model) {
+    return { action: 'load', reason: 'model_not_loaded' }
+  }
+  if (!sceneReady || !instance.anchor || !instance.offsetGroup || !instance.surfaceRoot) {
+    return { action: 'wait', reason: 'xr_scene_not_ready' }
+  }
+  return { action: 'attach', reason: 'ready' }
 }
 
 export function canPlayCatMeow({
