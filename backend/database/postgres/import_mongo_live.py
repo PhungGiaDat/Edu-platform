@@ -20,6 +20,8 @@ from bson import ObjectId, json_util
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 
+from database.postgres.pet_catalog import canonical_pet_catalog_values
+
 
 MIGRATION_NAME = "20260812_01_mobile_core"
 SOURCE_DATABASE = "edu_platform"
@@ -115,6 +117,11 @@ class Importer:
             if not pet_id:
                 await self.outcome("pets", str(raw.get("_id")), "SKIPPED_WITH_REASON", "missing_pet_id")
                 continue
+            rarity, unlock_condition = canonical_pet_catalog_values(
+                pet_id,
+                text(raw.get("rarity"), "common"),
+                raw.get("unlock_condition"),
+            )
             await self.target.execute(
                 """INSERT INTO pets (pet_id,name,name_vi,model_url,texture_url,thumbnail_url,category,pack_source,rarity,color,
                     animations,unlock_condition,is_active,created_at,updated_at)
@@ -125,8 +132,8 @@ class Importer:
                     animations=EXCLUDED.animations,unlock_condition=EXCLUDED.unlock_condition,is_active=EXCLUDED.is_active,
                     updated_at=EXCLUDED.updated_at""",
                 pet_id, text(raw.get("name")), raw.get("name_vi"), raw.get("model_url"), raw.get("texture_url"), raw.get("thumbnail_url"),
-                raw.get("category"), raw.get("pack_source"), raw.get("rarity"), raw.get("color"), js(raw.get("animations", [])),
-                js(raw.get("unlock_condition")), raw.get("is_active", True), ts(raw.get("created_at")), ts(raw.get("updated_at")),
+                raw.get("category"), raw.get("pack_source"), rarity, raw.get("color"), js(raw.get("animations", [])),
+                js(unlock_condition), raw.get("is_active", True), ts(raw.get("created_at")), ts(raw.get("updated_at")),
             )
             self.counts["pets"] += 1
 

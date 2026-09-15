@@ -294,12 +294,20 @@ export function usePets(userId: string | null) {
             if (userId) fetchPets();
         };
 
+        const handlePetUnlocked = () => {
+            // A separate usePets instance can perform the authenticated
+            // unlock. Refresh this instance so its cards become selectable.
+            if (userId) void fetchPets();
+        };
+
         eventBus.on('LEVEL_UP', handleLevelUp);
         eventBus.on('STREAK_UPDATED', handleStreakUpdate);
+        eventBus.on('PET_UNLOCKED', handlePetUnlocked);
 
         return () => {
             eventBus.off('LEVEL_UP', handleLevelUp);
             eventBus.off('STREAK_UPDATED', handleStreakUpdate);
+            eventBus.off('PET_UNLOCKED', handlePetUnlocked);
         };
     }, [userId, fetchPets]);
 

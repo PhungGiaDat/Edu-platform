@@ -30,6 +30,11 @@ interface PetXPData {
   };
 }
 
+interface GamificationStats {
+  total_points: number;
+  streak_days: number;
+}
+
 interface EvolutionModalProps {
   newStage: string;
   petXp: number;
@@ -278,6 +283,7 @@ export default function PetsPage() {
         last_action: 'idle',
     });
     const [petXP, setPetXP] = useState<PetXPData | null>(null);
+    const [gamificationStats, setGamificationStats] = useState<GamificationStats | null>(null);
     const [showEvolutionModal, setShowEvolutionModal] = useState(false);
     const [viewerInteraction, setViewerInteraction] = useState<PetViewerInteraction>('idle');
     const [viewerInteractionKey, setViewerInteractionKey] = useState(0);
@@ -321,6 +327,15 @@ export default function PetsPage() {
             })
             .catch((error) => {
                 console.warn('[PetsPage] Pet XP unavailable:', error);
+            });
+
+        apiClient.getUserStats(userId)
+            .then((stats: GamificationStats) => {
+                if (!isMounted) return;
+                setGamificationStats(stats);
+            })
+            .catch((error) => {
+                console.warn('[PetsPage] Gamification stats unavailable:', error);
             });
 
         return () => {
@@ -480,8 +495,8 @@ export default function PetsPage() {
                 {/* Stats Row */}
                 <div className="mb-6 grid min-w-0 grid-cols-2 gap-3 sm:mb-8 sm:grid-cols-3 sm:gap-4">
                     <StatCard icon="🐾" value={unlockedCount} label="Pets Unlocked" color="#5B8DEF" />
-                    <StatCard icon="⚡" value={1250} label="Total XP" color="#FFB347" />
-                    <StatCard icon="🔥" value={12} label="Day Streak" color="#FF9F9F" />
+                    <StatCard icon="⚡" value={gamificationStats?.total_points ?? '—'} label="Total XP" color="#FFB347" />
+                    <StatCard icon="🔥" value={gamificationStats?.streak_days ?? '—'} label="Day Streak" color="#FF9F9F" />
                 </div>
 
                 {/* Main Content Grid */}

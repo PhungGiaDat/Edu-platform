@@ -90,7 +90,7 @@ function saveNotifiedIds(ids: Set<string>) {
   }
 }
 
-const GlobalPetUnlockNotifier: React.FC = () => {
+export const GlobalPetUnlockNotifier: React.FC = () => {
   const [modalPet, setModalPet] = useState<Pet | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -98,11 +98,14 @@ const GlobalPetUnlockNotifier: React.FC = () => {
   const queueRef = useRef<Pet[]>([]);
   const isBusyRef = useRef(false);
 
-  // Track notified pets across navigation within the tab (sessionStorage-backed)
+  // Keep celebration history across navigation and tab restarts (localStorage-backed).
   const notifiedIdsRef = useRef<Set<string>>(loadNotifiedIds());
+  // Guard an initial reconciliation and a simultaneous XP event from racing
+  // duplicate POST /pets/{pet_id}/unlock calls in the same browser tab.
+  const unlockingPetIdsRef = useRef<Set<string>>(new Set());
 
   const { user } = useAuth();
-  const { setActivePet } = usePets(user?.id || null);
+  const { unlockPet, setActivePet } = usePets(user?.id || null);
 
   const handleSetActive = useCallback(async (petId: string) => {
     await setActivePet(petId);
@@ -146,8 +149,9 @@ const GlobalPetUnlockNotifier: React.FC = () => {
     }
   }, []);
 
-  // Listen for PET_CAN_UNLOCK - emitted by useGamification after XP is added.
-  // Fetches fresh data directly to avoid stale closure on pets state.
+  // Reconcile XP-gated pets on login and after every XP event. The client
+  // merely triggers the existing authenticated unlock endpoint; the backend
+  // independently checks the gamification total before persisting ownership.
   useEffect(() => {
     const handleCanUnlock = async () => {
       if (!user?.id) return;
@@ -155,20 +159,35 @@ const GlobalPetUnlockNotifier: React.FC = () => {
       try {
         const { pets: freshPets } = await apiClient.get('/api/v1/pets');
 
-        const newlyUnlockable: Pet[] = freshPets.filter(
-          (p: Pet) => !p.is_unlocked && p.can_unlock && !notifiedIdsRef.current.has(p.pet_id)
+        const xpUnlockablePets: Pet[] = freshPets.filter(
+          (p: Pet) => (
+            !p.is_unlocked
+            && p.can_unlock
+            && p.unlock_condition.type === 'xp'
+            && !unlockingPetIdsRef.current.has(p.pet_id)
+          )
         );
 
-        // Enqueue all newly unlockable pets (most common case: just one)
-        newlyUnlockable.forEach(pet => enqueue(pet));
-      } catch (err) {
-        console.error("[GlobalPetUnlockNotifier] Error checking unlockable pets:", err);
+        await Promise.all(xpUnlockablePets.map(async (pet) => {
+          unlockingPetIdsRef.current.add(pet.pet_id);
+          try {
+            const result = await unlockPet(pet.pet_id);
+            if (!result.success) {
+              console.warn('[GlobalPetUnlockNotifier] Server rejected pet unlock:', result.message);
+            }
+          } finally {
+            unlockingPetIdsRef.current.delete(pet.pet_id);
+          }
+        }));
+      } catch (error) {
+        console.error('[GlobalPetUnlockNotifier] Unable to reconcile XP pet unlocks:', error);
       }
     };
 
-    eventBus.on("PET_CAN_UNLOCK", handleCanUnlock);
-    return () => eventBus.off("PET_CAN_UNLOCK", handleCanUnlock);
-  }, [user?.id, enqueue]);
+    void handleCanUnlock();
+    eventBus.on('PET_CAN_UNLOCK', handleCanUnlock);
+    return () => eventBus.off('PET_CAN_UNLOCK', handleCanUnlock);
+  }, [unlockPet, user?.id]);
 
   // Listen for PET_UNLOCKED - emitted by usePets after a confirmed server unlock.
   // Always show celebration (forceShow=true), even if we notified before.
