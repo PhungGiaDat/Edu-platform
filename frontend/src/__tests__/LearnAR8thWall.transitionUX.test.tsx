@@ -10,6 +10,17 @@ type MockQRScannerProps = {
 };
 
 let latestQRScannerProps: MockQRScannerProps | null = null;
+const authState = vi.hoisted(() => ({
+  user: {
+    id: 'learner-001',
+    email: 'learner@example.test',
+    username: 'learner',
+    role: 'learner',
+    roles: ['learner'],
+    is_superuser: false,
+  } as Record<string, unknown> | null,
+  isAuthenticated: true,
+}));
 
 vi.mock('@/features/ar/components/QRScanner', () => ({
   QRScanner: (props: MockQRScannerProps) => {
@@ -26,7 +37,14 @@ vi.mock('@/hooks/useTelegramSync', () => ({
   }),
 }));
 
-import { LearnAR8thWall } from '@/pages/LearnAR8thWall';
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => authState,
+}));
+
+import {
+  canUseAROperatorControls,
+  LearnAR8thWall,
+} from '@/pages/LearnAR8thWall';
 
 function getQRScannerProps(): MockQRScannerProps {
   if (!latestQRScannerProps) {
@@ -76,9 +94,10 @@ function installARFetchMock() {
   }));
 }
 
-function renderPage() {
+function renderPage(initialEntry = '/learn-ar-xr/claymorphic-animals-001') {
+  window.history.replaceState({}, '', initialEntry);
   return render(
-    <MemoryRouter initialEntries={['/learn-ar-xr/claymorphic-animals-001']}>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route path="/learn-ar-xr/:deckId" element={<LearnAR8thWall />} />
       </Routes>
@@ -103,11 +122,21 @@ async function startPreparing() {
 describe('LearnAR8thWall transition UX', () => {
   beforeEach(() => {
     latestQRScannerProps = null;
+    authState.user = {
+      id: 'learner-001',
+      email: 'learner@example.test',
+      username: 'learner',
+      role: 'learner',
+      roles: ['learner'],
+      is_superuser: false,
+    };
+    authState.isAuthenticated = true;
     installARFetchMock();
   });
 
   afterEach(() => {
     cleanup();
+    window.history.replaceState({}, '', '/');
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -238,5 +267,61 @@ describe('LearnAR8thWall transition UX', () => {
     expect(parentSource).toMatch(
       /case 'XR_CAMERA_HAS_VIDEO':[\s\S]*setPhase\('VIEWING'\)[\s\S]*dismissTransition\(\)/,
     );
+  });
+
+  it('hides AR operator overlays and controls from a learner even when debug is requested', async () => {
+    renderPage('/learn-ar-xr/claymorphic-animals-001?debug=true');
+
+    expect(document.querySelector('.ar-xr-header')).not.toBeInTheDocument();
+    expect(screen.queryByText('MindAR')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /send scanning ar logs to telegram/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Phase:/)).not.toBeInTheDocument();
+
+    await act(async () => {
+      await getQRScannerProps().onDetected('cat001');
+    });
+
+    expect(screen.queryByText('Scanned')).not.toBeInTheDocument();
+    const learnerViewerUrl = new URL(
+      screen.getByTitle('AR Viewer').getAttribute('src') || '',
+      window.location.origin,
+    );
+    expect(learnerViewerUrl.searchParams.get('debug')).toBeNull();
+  });
+
+  it('keeps AR operator controls available to teacher and admin roles', async () => {
+    authState.user = {
+      id: 'teacher-001',
+      email: 'teacher@example.test',
+      username: 'teacher',
+      role: 'teacher',
+      roles: ['teacher'],
+      is_superuser: false,
+    };
+
+    renderPage('/learn-ar-xr/claymorphic-animals-001?debug=true');
+
+    expect(document.querySelector('.ar-xr-header')).toBeInTheDocument();
+    expect(screen.getByText('MindAR')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /send scanning ar logs to telegram/i })).toBeInTheDocument();
+    expect(screen.getByText(/Phase:/)).toBeInTheDocument();
+
+    await act(async () => {
+      await getQRScannerProps().onDetected('cat001');
+    });
+
+    const teacherViewerUrl = new URL(
+      screen.getByTitle('AR Viewer').getAttribute('src') || '',
+      window.location.origin,
+    );
+    expect(teacherViewerUrl.searchParams.get('debug')).toBe('true');
+  });
+
+  it('matches the backend elevated-role contract for AR operator controls', () => {
+    expect(canUseAROperatorControls(null, false)).toBe(false);
+    expect(canUseAROperatorControls({ role: 'learner', roles: ['learner'] }, true)).toBe(false);
+    expect(canUseAROperatorControls({ role: 'teacher' }, true)).toBe(true);
+    expect(canUseAROperatorControls({ role: 'learner', roles: ['admin'] }, true)).toBe(true);
+    expect(canUseAROperatorControls({ role: 'learner', is_superuser: true }, true)).toBe(true);
   });
 });

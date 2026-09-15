@@ -109,10 +109,12 @@ describe('mobile AR debug overlay contract', () => {
     expect(mobileDebugScript).toContain('z-index: 1000001');
   });
 
-  it('keeps the XR route debuggable and exposes Telegram sync during all phases', () => {
+  it('keeps the XR route debuggable while restricting operator controls to elevated roles', () => {
     expect(mobileDebugScript).toContain("pathname === '/learn-ar-xr'");
     expect(mobileDebugScript).toContain("pathname.startsWith('/learn-ar-xr/')");
-    expect(learnAR8thWallPage).toContain('Telegram Sync Button: available throughout the AR lifecycle');
+    expect(learnAR8thWallPage).toContain('canUseAROperatorControls');
+    expect(learnAR8thWallPage).toContain('enabled: canUseOperatorControls');
+    expect(learnAR8thWallPage).toContain('{canUseOperatorControls && (');
     expect(learnAR8thWallPage).toContain('disabled={syncStatus === \'syncing\'}');
     expect(learnAR8thWallPage).toContain('Send ${phase.toLowerCase()} AR logs to Telegram');
   });

@@ -18,6 +18,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth, type User } from '@/contexts/AuthContext';
 import { useTelegramSync } from '@/hooks/useTelegramSync';
 import { QRScanner } from '@/features/ar/components/QRScanner';
 import '../styles/LearnAR8thWall.css';
@@ -50,6 +51,24 @@ type Phase =
   | 'XR_BOOTING'
   | 'VIEWING'
   | 'ERROR';
+
+type AROperatorUser = Pick<User, 'role' | 'roles' | 'is_superuser'>;
+
+/**
+ * Mirrors the backend teacher/admin gate for diagnostics-only AR controls.
+ * This is presentation gating only; the backend remains authoritative.
+ */
+export function canUseAROperatorControls(
+  user: AROperatorUser | null | undefined,
+  isAuthenticated: boolean,
+): boolean {
+  if (!isAuthenticated || !user) return false;
+
+  return user.is_superuser === true
+    || user.role === 'teacher'
+    || user.role === 'admin'
+    || user.roles?.some(role => role === 'teacher' || role === 'admin') === true;
+}
 
 /** XR target data for one flashcard, fetched after QR scan */
 export interface XRTarget {
@@ -151,6 +170,8 @@ export function serializeXRTargets(targets: XRTarget[]): string {
 export const LearnAR8thWall: React.FC = () => {
   const { deckId } = useParams<{ deckId?: string }>();
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+  const canUseOperatorControls = canUseAROperatorControls(user, isAuthenticated);
 
   const deckIdRef = useRef(deckId || 'claymorphic-animals-001');
 
@@ -388,6 +409,7 @@ export const LearnAR8thWall: React.FC = () => {
   const { syncTelegram, syncStatus, iframeLogs } = useTelegramSync({
     iframeRef: viewerRef,
     flashcardCount: foundCards.size || 1,
+    enabled: canUseOperatorControls,
     getParentLogs: () => {
       const arDebug = arDebugBufferRef.current.join('\n') || 'No AR_DEBUG logs';
       const traces = parentTraceLogs.join('\n') || 'No parent traces';
@@ -399,14 +421,14 @@ export const LearnAR8thWall: React.FC = () => {
   // Keyboard shortcut for Telegram sync (Ctrl+Shift+S)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+      if (canUseOperatorControls && e.ctrlKey && e.shiftKey && e.key === 'S') {
         e.preventDefault();
         syncTelegram();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [syncTelegram]);
+  }, [canUseOperatorControls, syncTelegram]);
 
   // Debug: log phase changes
   useEffect(() => {
@@ -741,7 +763,9 @@ export const LearnAR8thWall: React.FC = () => {
     if (xrTargets.length > 0) {
       params.set('xr_targets', serializeXRTargets(xrTargets));
     }
-    params.set('debug', 'true');
+    if (canUseOperatorControls) {
+      params.set('debug', 'true');
+    }
     return `/ar-xr.html?${params.toString()}`;
   })();
 
@@ -772,7 +796,8 @@ export const LearnAR8thWall: React.FC = () => {
   // ========================================================================
   // RENDER
   // ========================================================================
-  const isDebugMode = new URLSearchParams(window.location.search).get('debug') === 'true';
+  const isDebugMode = canUseOperatorControls
+    && new URLSearchParams(window.location.search).get('debug') === 'true';
 
   return (
     <div className="ar-xr-page">
@@ -786,23 +811,25 @@ export const LearnAR8thWall: React.FC = () => {
         </div>
       )}
 
-      {/* Header */}
-      <div className="ar-xr-header">
-        <button className="back-btn" onClick={handleBack}>
-          <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <div className="header-title">
-          <h1>{currentTarget?.word || '8th Wall XR'}</h1>
-          <span className="card-count">
-            {foundCards.size} card{foundCards.size !== 1 ? 's' : ''} scanned
-          </span>
+      {/* Operator-only header and engine switch. Learners stay in the immersive AR viewport. */}
+      {canUseOperatorControls && (
+        <div className="ar-xr-header">
+          <button className="back-btn" onClick={handleBack}>
+            <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <div className="header-title">
+            <h1>{currentTarget?.word || '8th Wall XR'}</h1>
+            <span className="card-count">
+              {foundCards.size} card{foundCards.size !== 1 ? 's' : ''} scanned
+            </span>
+          </div>
+          <button className="engine-switch" onClick={handleSwitchToMindAR}>
+            MindAR
+          </button>
         </div>
-        <button className="engine-switch" onClick={handleSwitchToMindAR}>
-          MindAR
-        </button>
-      </div>
+      )}
 
       {/* AR Viewport */}
       <div className="ar-viewport">
@@ -895,20 +922,22 @@ export const LearnAR8thWall: React.FC = () => {
 
       </div>
 
-      {/* Telegram Sync Button: available throughout the AR lifecycle */}
-      <button
-        type="button"
-        className={`telegram-sync-btn ${syncStatus}`}
-        onClick={syncTelegram}
-        disabled={syncStatus === 'syncing'}
-        aria-label={`Send ${phase.toLowerCase()} AR logs to Telegram`}
-        title={`Sync ${phase.toLowerCase()} logs to Telegram (Ctrl+Shift+S)`}
-      >
-        {syncStatus === 'syncing' ? '...' : syncStatus === 'success' ? 'OK' : syncStatus === 'error' ? 'ERR' : 'TG'}
-      </button>
+      {/* Operator-only diagnostics: the backend separately enforces this role gate. */}
+      {canUseOperatorControls && (
+        <button
+          type="button"
+          className={`telegram-sync-btn ${syncStatus}`}
+          onClick={syncTelegram}
+          disabled={syncStatus === 'syncing'}
+          aria-label={`Send ${phase.toLowerCase()} AR logs to Telegram`}
+          title={`Sync ${phase.toLowerCase()} logs to Telegram (Ctrl+Shift+S)`}
+        >
+          {syncStatus === 'syncing' ? '...' : syncStatus === 'success' ? 'OK' : syncStatus === 'error' ? 'ERR' : 'TG'}
+        </button>
+      )}
 
-      {/* Found Cards Badge */}
-      {foundCards.size > 0 && (
+      {/* Operator-only scan telemetry */}
+      {canUseOperatorControls && foundCards.size > 0 && (
         <div className="found-cards-overlay">
           <div className="found-cards-title">Scanned</div>
           <div className="found-cards-list">
