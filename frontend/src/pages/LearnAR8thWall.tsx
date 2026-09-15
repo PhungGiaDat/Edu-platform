@@ -124,9 +124,9 @@ export function normalizeXRTarget(targetQrId: string, raw: XRTargetResponse): XR
     animations: raw.target?.animations || raw.animations,
     default_animation: raw.target?.default_animation || raw.default_animation || 'IDLE',
     combo_animation: raw.target?.combo_animation || raw.combo_animation,
-    position: raw.target?.position || '0 0 0',
-    rotation: raw.target?.rotation || '0 0 0',
-    scale: raw.target?.scale || '1 1 1',
+    position: raw.target?.position ?? raw.position ?? '0 0 0',
+    rotation: raw.target?.rotation ?? raw.rotation ?? '0 0 0',
+    scale: raw.target?.scale ?? raw.scale ?? '1 1 1',
     physical_width_m: raw.tracking_target?.physical_width_m ?? raw.physical_width_m,
     presentation_profile: raw.target?.presentation_profile ?? raw.presentation_profile,
     presentation_scale_multiplier:

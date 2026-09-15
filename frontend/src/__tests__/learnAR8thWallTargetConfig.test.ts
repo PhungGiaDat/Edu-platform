@@ -50,6 +50,82 @@ describe('LearnAR8thWall target visual configuration', () => {
     ]);
   });
 
+  it('prefers nested target transforms over flat catalogue transforms', () => {
+    const target = normalizeXRTarget('targetA', {
+      position: '1 2 3',
+      rotation: '4 5 6',
+      scale: '0.20 0.20 0.20',
+      target: {
+        position: '7 8 9',
+        rotation: '10 11 12',
+        scale: '0.30 0.30 0.30',
+      },
+    });
+
+    expect(target).toMatchObject({
+      position: '7 8 9',
+      rotation: '10 11 12',
+      scale: '0.30 0.30 0.30',
+    });
+  });
+
+  it('uses flat catalogue transforms when nested target transforms are absent', () => {
+    const target = normalizeXRTarget('targetB', {
+      position: '1 2 3',
+      rotation: '4 5 6',
+      scale: '0.20 0.20 0.20',
+    });
+
+    expect(target).toMatchObject({
+      position: '1 2 3',
+      rotation: '4 5 6',
+      scale: '0.20 0.20 0.20',
+    });
+  });
+
+  it('uses transform defaults only when neither nested nor flat metadata exists', () => {
+    const target = normalizeXRTarget('legacyA', {});
+
+    expect(target).toMatchObject({
+      position: '0 0 0',
+      rotation: '0 0 0',
+      scale: '1 1 1',
+    });
+  });
+
+  it('serializes normalized flat transforms without changing their configured values', () => {
+    const target = normalizeXRTarget('targetC', {
+      position: '0.01 0.02 0.03',
+      rotation: '0 90 0',
+      scale: '0.40 0.40 0.40',
+    });
+
+    expect(JSON.parse(serializeXRTargets([target]))).toEqual([
+      expect.objectContaining({
+        qr_id: 'targetC',
+        position: '0.01 0.02 0.03',
+        rotation: '0 90 0',
+        scale: '0.40 0.40 0.40',
+      }),
+    ]);
+  });
+
+  it('keeps the viewer on the shared legacy presentation result for configured transforms', () => {
+    const viewerSource = readFileSync(
+      resolve(process.cwd(), 'public/ar-xr.html'),
+      'utf8',
+    );
+    const lifecycleSource = readFileSync(
+      resolve(process.cwd(), 'public/static/ar-assets/js/ar-interaction-lifecycle.js'),
+      'utf8',
+    );
+
+    expect(lifecycleSource).toContain('const legacyScale = parseUniformScale(config?.scale, 1)');
+    expect(lifecycleSource).toContain("mode: 'legacy'");
+    expect(lifecycleSource).toContain('finalScale: legacyScale');
+    expect(viewerSource).toContain('instance.offsetGroup.scale.setScalar(presentation.finalScale);');
+  });
+
   it('forwards opt-in presentation metadata and physical width without changing legacy target transforms', () => {
     const pet = normalizeXRTarget('petA', {
       physical_width_m: 0.12,
