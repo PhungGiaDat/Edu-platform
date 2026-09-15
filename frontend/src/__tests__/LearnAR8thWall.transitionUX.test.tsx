@@ -74,6 +74,29 @@ function installARFetchMock() {
           qr_id: 'cat001',
           model_3d_url: 'https://assets.example.test/ragdollcat_mobile_v1.glb',
         },
+        targets: [
+          {
+            qr_id: 'cat001',
+            word: 'cat',
+            xr_target_json_url: 'https://assets.example.test/xr-targets/cat001.json',
+            xr_target_image_url: 'https://assets.example.test/xr-targets/cat001.png',
+            model_3d_url: 'https://assets.example.test/ragdollcat_mobile_v1.glb',
+          },
+        ],
+      });
+    }
+
+    if (url.includes('/api/v1/flashcard/xr-targets/deck/')) {
+      return jsonResponse({
+        targets: [
+          {
+            qr_id: 'cat001',
+            word: 'cat',
+            xr_target_json_url: 'https://assets.example.test/xr-targets/cat001.json',
+            xr_target_image_url: 'https://assets.example.test/xr-targets/cat001.png',
+            model_3d_url: 'https://assets.example.test/ragdollcat_mobile_v1.glb',
+          },
+        ],
       });
     }
 

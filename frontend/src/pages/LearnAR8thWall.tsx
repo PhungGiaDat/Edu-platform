@@ -142,31 +142,41 @@ export function normalizeScannedQrId(qrId: unknown): string | null {
   return normalizedQrId || null;
 }
 
-type TrackingRuleLike = {
-  combo_id?: unknown;
-  priority?: unknown;
-  tags?: unknown;
+type XRTargetCatalogueEntry = XRTargetResponse & {
+  qr_id?: unknown;
 };
 
-export function resolveTrackingGroup(qrId: string, rules: TrackingRuleLike[] | null | undefined): string[] {
-  const normalizedQrId = normalizeScannedQrId(qrId);
-  if (!normalizedQrId) return [];
+/**
+ * Builds the session's tracking catalogue from deck metadata, not combo membership.
+ * The scanned entry target is ordered first; every remaining target with a usable
+ * 8th Wall JSON stays registered so it can be recognized independently.
+ */
+export function resolveSessionTargetCatalogue(
+  entryQrId: unknown,
+  rawTargets: unknown,
+): XRTarget[] {
+  const normalizedEntryQrId = normalizeScannedQrId(entryQrId);
+  const targetsByQrId = new Map<string, XRTarget>();
 
-  const candidates = (Array.isArray(rules) ? rules : [])
-    .map((rule) => {
-      const tags = Array.isArray(rule?.tags)
-        ? rule.tags.filter((tag): tag is string => typeof tag === 'string' && tag.trim().length > 0)
-        : [];
-      return {
-        id: String(rule?.combo_id || ''),
-        priority: Number(rule?.priority || 0),
-        tags: [...new Set(tags)],
-      };
-    })
-    .filter((rule) => rule.tags.length === 2 && rule.tags.includes(normalizedQrId))
-    .sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id));
+  for (const rawTarget of Array.isArray(rawTargets) ? rawTargets : []) {
+    if (!rawTarget || typeof rawTarget !== 'object') continue;
+    const targetQrId = normalizeScannedQrId((rawTarget as XRTargetCatalogueEntry).qr_id);
+    if (!targetQrId || targetsByQrId.has(targetQrId)) continue;
 
-  return candidates[0]?.tags || [normalizedQrId];
+    const target = normalizeXRTarget(targetQrId, rawTarget as XRTargetResponse);
+    // ar-xr.html always loads a target JSON. Image-only records are not safe
+    // to register because inferred JSON paths are not a backend contract.
+    if (!target.xr_target_json_url) continue;
+    targetsByQrId.set(targetQrId, target);
+  }
+
+  const entryTarget = normalizedEntryQrId
+    ? targetsByQrId.get(normalizedEntryQrId)
+    : null;
+
+  return entryTarget
+    ? [entryTarget, ...Array.from(targetsByQrId.values()).filter(target => target.qr_id !== entryTarget.qr_id)]
+    : Array.from(targetsByQrId.values());
 }
 
 export function serializeXRTargets(targets: XRTarget[]): string {
@@ -197,6 +207,9 @@ export const LearnAR8thWall: React.FC = () => {
   const canUseOperatorControls = canUseAROperatorControls(user, isAuthenticated);
 
   const deckIdRef = useRef(deckId || 'claymorphic-animals-001');
+  // Backend deck metadata is the session tracking catalogue source. It is
+  // deliberately independent from the entry QR and interaction rule choices.
+  const deckTargetCatalogueRef = useRef<XRTarget[]>([]);
 
   // ========== AR RUNTIME PREWARM (runs once on mount) ==========
   useEffect(() => {
@@ -267,6 +280,7 @@ export const LearnAR8thWall: React.FC = () => {
         }
 
         const manifest = await res.json();
+        deckTargetCatalogueRef.current = resolveSessionTargetCatalogue('', manifest?.targets);
         // If API returns 200 but primary has no model URL, fall back to hardcoded CAT
         const primaryUrl = manifest.primary?.model_3d_url || FALLBACK_CAT_URL;
         warmARModel(primaryUrl, 'current');
@@ -503,11 +517,23 @@ export const LearnAR8thWall: React.FC = () => {
     return normalizeXRTarget(targetQrId, await res.json());
   }, []);
 
-  const fetchTrackingRules = useCallback(async (): Promise<TrackingRuleLike[]> => {
-    const res = await fetch(`${API_BASE}/api/v1/combos/rules`);
-    if (!res.ok) throw new Error(`Combo rules: API ${res.status}`);
+  const fetchSessionTargetCatalogue = useCallback(async (): Promise<XRTarget[]> => {
+    if (deckTargetCatalogueRef.current.length > 0) {
+      return deckTargetCatalogueRef.current;
+    }
+
+    const activeDeckId = deckIdRef.current || 'claymorphic-animals-001';
+    const res = await fetch(`${API_BASE}/api/v1/flashcard/xr-targets/deck/${activeDeckId}`);
+    if (!res.ok) throw new Error(`XR target catalogue ${activeDeckId}: API ${res.status}`);
+
     const payload = await res.json();
-    return Array.isArray(payload?.rules) ? payload.rules : [];
+    const catalogue = resolveSessionTargetCatalogue('', payload?.targets);
+    if (catalogue.length === 0) {
+      throw new Error(`XR target catalogue ${activeDeckId} contains no usable target JSON`);
+    }
+
+    deckTargetCatalogueRef.current = catalogue;
+    return catalogue;
   }, []);
 
   // ========================================================================
@@ -559,32 +585,22 @@ export const LearnAR8thWall: React.FC = () => {
     lastIframeMountSrcRef.current = null;
 
     try {
-      let trackingRules: TrackingRuleLike[] = [];
-      try {
-        trackingRules = await fetchTrackingRules();
-        trace('INTERACTION_RULES_PARENT_LOADED', String(trackingRules.length));
-      } catch (error) {
-        // Tracking a single card remains available when optional pair-rule
-        // loading is unavailable. The viewer will report its own rule state.
-        trace('COMBO_RULE_LOAD_ERROR', String(error));
+      // Entry target, tracking catalogue, and interaction rules have distinct
+      // ownership. The viewer independently loads combo rules after XR boots.
+      const [entryTarget, deckTargets] = await Promise.all([
+        fetchXRTarget(normalizedQrId),
+        fetchSessionTargetCatalogue(),
+      ]);
+      const targets = resolveSessionTargetCatalogue(normalizedQrId, [
+        entryTarget,
+        ...deckTargets,
+      ]);
+      const primary = targets.find(target => target.qr_id === normalizedQrId);
+      if (!primary?.xr_target_json_url) {
+        throw new Error(`No XR target JSON for entry target ${normalizedQrId}`);
       }
-      const trackingIds = resolveTrackingGroup(normalizedQrId, trackingRules);
-      trace('MULTI_TARGET_RESOLVE', JSON.stringify(trackingIds));
 
-      // Fetch all targets in tracking group in parallel
-      const targets = await Promise.all(
-        trackingIds.map(id => fetchXRTarget(id))
-      );
-
-      const primary = targets.find(t => t.qr_id === normalizedQrId) || targets[0];
-      if (!primary) throw new Error('No primary XR target resolved');
-
-      // Validate all have XR target data
-      for (const target of targets) {
-        if (!target.xr_target_json_url && !target.xr_target_image_url) {
-          throw new Error(`No XR target URL for ${target.qr_id}`);
-        }
-      }
+      trace('SESSION_TARGET_CATALOGUE', JSON.stringify(targets.map(target => target.qr_id)));
 
       // Preload tracking JSONs for all targets
       for (const target of targets) {
@@ -616,7 +632,7 @@ export const LearnAR8thWall: React.FC = () => {
         trace('MODEL_PRELOAD', url);
       }
 
-      // Preconnect to model CDN for primary + any secondary targets.
+      // Preconnect to model CDN without transferring any non-entry GLBs.
       // This reduces DNS+TLS handshake time before the staged preload fires.
       const cdnOrigin = 'https://rofprrtoeyirssfndxag.supabase.co';
       if (!document.querySelector(`link[rel="preconnect"][href="${cdnOrigin}"]`)) {
@@ -625,23 +641,6 @@ export const LearnAR8thWall: React.FC = () => {
         preconn.href = cdnOrigin;
         preconn.crossOrigin = 'anonymous';
         document.head.appendChild(preconn);
-      }
-
-      // Stage prefetches for every target beyond the entry card. The generic
-      // viewer registry remains the owner of the actual GLTFLoader request.
-      for (const target of targets) {
-        if (target.qr_id === normalizedQrId) continue; // skip entry target
-        if (!target.model_3d_url) continue;
-        const secondaryUrl = target.model_3d_url;
-        if (document.querySelector(`link[data-secondary-preload="${secondaryUrl}"]`)) continue;
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
-        link.as = 'fetch';
-        link.href = secondaryUrl;
-        link.crossOrigin = 'anonymous';
-        link.dataset.secondaryPreload = secondaryUrl;
-        document.head.appendChild(link);
-        trace('SECONDARY_PREFETCH', `${target.qr_id}:${secondaryUrl}`);
       }
 
       setCurrentTarget(primary);
@@ -663,7 +662,7 @@ export const LearnAR8thWall: React.FC = () => {
     clearCameraHandoffTimer,
     clearTransitionPresentation,
     foundCards,
-    fetchTrackingRules,
+    fetchSessionTargetCatalogue,
     fetchXRTarget,
     showTransition,
     trace,

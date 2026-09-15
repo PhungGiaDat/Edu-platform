@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   normalizeScannedQrId,
   normalizeXRTarget,
-  resolveTrackingGroup,
+  resolveSessionTargetCatalogue,
   serializeXRTargets,
 } from '../pages/LearnAR8thWall';
 import { readFileSync } from 'node:fs';
@@ -19,7 +19,7 @@ describe('LearnAR8thWall target visual configuration', () => {
     const handlerSource = source.slice(handlerStart, handlerEnd)
     const emptyGuard = handlerSource.indexOf("if (!normalizedQrId) {")
     const preparing = handlerSource.indexOf("setPhase('PREPARING')")
-    const resolveTargets = handlerSource.indexOf('resolveTrackingGroup(normalizedQrId, trackingRules)')
+    const resolveTargets = handlerSource.indexOf('resolveSessionTargetCatalogue(normalizedQrId')
 
     expect(normalizeScannedQrId('')).toBeNull()
     expect(normalizeScannedQrId('   ')).toBeNull()
@@ -99,28 +99,58 @@ describe('LearnAR8thWall target visual configuration', () => {
     expect(source).toContain("params.set('presentation_mode', presentationMode)");
   });
 
-  it('resolves a backend-configured pair without CAT/FISH-specific tracking branches', () => {
-    const catFish = {
-      combo_id: 'cat-fish',
-      priority: 100,
-      tags: ['cat001', 'fish001'],
-    };
-    const dogBone = {
-      combo_id: 'dog-bone',
-      priority: 80,
-      tags: ['dog001', 'bone001'],
-    };
+  it('registers every usable deck target independently from the scanned entry and combo membership', () => {
+    const targets = resolveSessionTargetCatalogue('targetA', [
+      {
+        qr_id: 'targetB',
+        word: 'partner',
+        xr_target_json_url: 'https://assets.example/xr/targetB.json',
+        model_3d_url: 'https://assets.example/models/targetB.glb',
+      },
+      {
+        qr_id: 'targetC',
+        word: 'unrelated',
+        xr_target_json_url: 'https://assets.example/xr/targetC.json',
+        model_3d_url: 'https://assets.example/models/targetC.glb',
+      },
+      {
+        qr_id: 'targetA',
+        word: 'entry',
+        xr_target_json_url: 'https://assets.example/xr/targetA.json',
+        model_3d_url: 'https://assets.example/models/targetA.glb',
+      },
+      {
+        qr_id: 'missingJson',
+        word: 'not-trackable',
+        model_3d_url: 'https://assets.example/models/missingJson.glb',
+      },
+    ]);
 
-    expect(resolveTrackingGroup('dog001', [catFish, dogBone])).toEqual(['dog001', 'bone001']);
-    expect(resolveTrackingGroup('bone001', [catFish, dogBone])).toEqual(['dog001', 'bone001']);
-    expect(resolveTrackingGroup('unknown001', [catFish, dogBone])).toEqual(['unknown001']);
+    expect(targets.map(target => target.qr_id)).toEqual([
+      'targetA',
+      'targetB',
+      'targetC',
+    ]);
+    expect(targets.find(target => target.qr_id === 'targetC')).toMatchObject({
+      model_3d_url: 'https://assets.example/models/targetC.glb',
+    });
   });
 
-  it('selects the tracking pair by priority then combo id deterministically', () => {
-    expect(resolveTrackingGroup('shared001', [
-      { combo_id: 'z-rule', priority: 20, tags: ['shared001', 'z-partner'] },
-      { combo_id: 'a-rule', priority: 20, tags: ['shared001', 'a-partner'] },
-      { combo_id: 'lower-rule', priority: 10, tags: ['shared001', 'lower-partner'] },
-    ])).toEqual(['shared001', 'a-partner']);
+  it('uses deck metadata for the session catalogue rather than selecting one combo pair', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/pages/LearnAR8thWall.tsx'),
+      'utf8',
+    );
+    const handlerStart = source.indexOf('const handleQRDetected = useCallback');
+    const handlerEnd = source.indexOf('\n  // ========================================================================\n  // LISTEN:', handlerStart);
+    const handlerSource = source.slice(handlerStart, handlerEnd);
+
+    expect(source).toContain("/api/v1/flashcard/xr-targets/deck/");
+    expect(handlerSource).toContain('fetchSessionTargetCatalogue()');
+    expect(handlerSource).toContain('resolveSessionTargetCatalogue(normalizedQrId');
+    expect(handlerSource).toContain("trace('SESSION_TARGET_CATALOGUE'");
+    expect(handlerSource).not.toContain('resolveTrackingGroup');
+    expect(handlerSource).not.toContain('fetchTrackingRules');
+    expect(handlerSource).not.toContain('data-secondary-preload');
   });
 });

@@ -51,7 +51,7 @@ describe('AR camera handoff diagnostics', () => {
     const triggerStart = parentSource.indexOf('// XR_BOOTING TRIGGER');
     const triggerEnd = parentSource.indexOf('// ========================================================================\n  // fetchXRTarget', triggerStart);
     const trigger = parentSource.slice(triggerStart, triggerEnd);
-    const metadataFetch = parentSource.indexOf('fetchTrackingRules()', parentSource.indexOf('const handleQRDetected'));
+    const metadataFetch = parentSource.indexOf('fetchSessionTargetCatalogue()', parentSource.indexOf('const handleQRDetected'));
     const delayGate = parentSource.indexOf('cameraHandoffGateReady', parentSource.indexOf('const handleQRDetected'));
 
     expect(parentSource).toContain('PARENT_CAMERA_RELEASE_ASSUMED');

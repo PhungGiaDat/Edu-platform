@@ -3037,20 +3037,8 @@
     });
 
     // ========== STAGED MODEL PRELOAD ==========
-    // Phase 1: load primary model immediately (cat — user expects this first).
-    // Phase 2: after primary completes, begin secondary preloads (fish) in background.
-    // Never initiate new downloads from IMAGE_FOUND — reuse existing promises.
-
-    function preloadSecondaryTargets() {
-      const secondary = xrTargetConfigs.filter(
-        cfg => cfg.qr_id !== primaryModelTargetName && cfg.model_3d_url
-      );
-      if (secondary.length === 0) return;
-      sendARDebug('SECONDARY_PRELOAD_BATCH_START', {
-        targets: secondary.map(c => c.qr_id),
-      });
-      secondary.forEach(cfg => ensureTargetModelLoaded(cfg.qr_id));
-    }
+    // Only the entry target is loaded at boot. The full image-target catalogue
+    // stays registered, while every other GLB starts lazily after IMAGE_FOUND.
 
     // ========== MAIN ==========
     async function main() {
@@ -3067,8 +3055,6 @@
         const primaryModelPromise = ensureTargetModelLoaded(primaryModelTargetName);
         primaryModelPromise.then(() => {
           sendARDebug('PRIMARY_MODEL_READY', { targetName: primaryModelTargetName });
-          // Phase 2: kick off secondary preloads after primary is ready.
-          preloadSecondaryTargets();
         });
 
         const targetDataList = await targetsPromise;
