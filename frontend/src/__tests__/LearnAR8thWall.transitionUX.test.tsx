@@ -175,7 +175,7 @@ describe('LearnAR8thWall transition UX', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows the clay loading presentation during PREPARING while target metadata is unresolved', async () => {
+  it('shows Lexi waving with the approved PREPARING copy while target metadata is unresolved', async () => {
     const entryTarget = createDeferred<Response>();
     const sessionCatalogue = createDeferred<Response>();
 
@@ -201,14 +201,18 @@ describe('LearnAR8thWall transition UX', () => {
       'is-visible',
     );
     expect(screen.getByText('✨ Đã tìm thấy thẻ!')).toBeInTheDocument();
-    expect(screen.getByText('Đang chuẩn bị trải nghiệm AR cho bé...')).toBeInTheDocument();
-    expect(screen.getByTestId('ar-transition-clay-orb')).toBeInTheDocument();
+    expect(screen.getByText('Lexi đang chuẩn bị thế giới AR cho bé...')).toBeInTheDocument();
+    expect(screen.getByTestId('ar-transition-lexi')).toHaveAttribute(
+      'src',
+      '/assets/pets/lexi/ar-transition/lexi-waving.png',
+    );
+    expect(screen.queryByTestId('ar-transition-clay-orb')).not.toBeInTheDocument();
     expect(screen.getByTestId('ar-transition-status-card')).toBeInTheDocument();
     expect(screen.getByTestId('ar-transition-dots')).toBeInTheDocument();
     expect(screen.queryByTitle('AR Viewer')).not.toBeInTheDocument();
   });
 
-  it('shows the clay XR boot overlay above its mounted iframe without rendering a scanner snapshot', async () => {
+  it('shows Lexi waiting above its mounted iframe during XR_BOOTING without rendering a scanner snapshot', async () => {
     await startPreparing();
 
     expect(screen.getByTestId('ar-transition-overlay')).toHaveClass(
@@ -217,8 +221,12 @@ describe('LearnAR8thWall transition UX', () => {
     );
     expect(screen.queryByTestId('ar-transition-frame')).not.toBeInTheDocument();
     expect(screen.getByText('Đang mở thế giới AR...')).toBeInTheDocument();
-    expect(screen.getByText('Chỉ mất một chút thôi — camera AR đang sẵn sàng')).toBeInTheDocument();
-    expect(screen.getByTestId('ar-transition-clay-orb')).toBeInTheDocument();
+    expect(screen.getByText('Chỉ mất một chút thôi')).toBeInTheDocument();
+    expect(screen.getByTestId('ar-transition-lexi')).toHaveAttribute(
+      'src',
+      '/assets/pets/lexi/ar-transition/lexi-waiting.png',
+    );
+    expect(screen.queryByTestId('ar-transition-clay-orb')).not.toBeInTheDocument();
     expect(screen.getByTestId('ar-transition-status-card')).toBeInTheDocument();
     expect(screen.getByTestId('ar-transition-dots')).toBeInTheDocument();
     expect(screen.getByTitle('AR Viewer')).toHaveAttribute('src', expect.stringContaining('qr_id=cat001'));
@@ -231,13 +239,26 @@ describe('LearnAR8thWall transition UX', () => {
     for (const className of [
       'ar-transition-mesh',
       'ar-transition-shade',
-      'ar-transition-bubble--one',
-      'ar-transition-bubble--two',
-      'ar-transition-bubble--three',
+      'ar-transition-blob--one',
+      'ar-transition-blob--two',
       'ar-transition-visual',
     ]) {
       expect(overlay.querySelector(`.${className}`)).toHaveAttribute('aria-hidden', 'true');
     }
+  });
+
+  it('uses a page-level visual cover contract so operator chrome cannot compete during boot', async () => {
+    await startPreparing();
+
+    expect(document.querySelector('.ar-xr-page')).toHaveClass('ar-xr-page--transitioning');
+
+    const css = readFileSync(
+      resolve(process.cwd(), 'src/styles/LearnAR8thWall.css'),
+      'utf8',
+    );
+    expect(css).toMatch(/\.ar-xr-page--transitioning\s+\.ar-xr-header[\s\S]*visibility:\s*hidden/);
+    expect(css).toMatch(/\.ar-xr-page--transitioning\s+\.telegram-sync-btn[\s\S]*opacity:\s*0/);
+    expect(css).toMatch(/\.ar-xr-page--transitioning\s+\.found-cards-overlay/);
   });
 
   it('keeps the QR-detection overlay presentation-only and out of viewer state', async () => {

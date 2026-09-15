@@ -25,6 +25,10 @@ import '../styles/LearnAR8thWall.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://edu-platform-api-do20.onrender.com';
 const TRANSITION_FADE_MS = 250;
+const LEXI_TRANSITION_ASSETS = {
+  preparing: '/assets/pets/lexi/ar-transition/lexi-waving.png',
+  booting: '/assets/pets/lexi/ar-transition/lexi-waiting.png',
+} as const;
 const DEBUG_CAMERA_HANDOFF_DELAYS_MS = [0, 150, 300, 500] as const;
 export const AR_DIAGNOSTICS_VERSION = 'session-catalogue-slam-diagnostics-v1';
 
@@ -881,7 +885,7 @@ export const LearnAR8thWall: React.FC = () => {
     && new URLSearchParams(window.location.search).get('debug') === 'true';
 
   return (
-    <div className="ar-xr-page">
+    <div className={`ar-xr-page ${transitionMounted ? 'ar-xr-page--transitioning' : ''}`}>
 
       {/* Debug Phase Indicator */}
       {isDebugMode && (
@@ -959,7 +963,7 @@ export const LearnAR8thWall: React.FC = () => {
 
         {transitionMounted && (
           <div
-            className={`ar-transition-overlay ${transitionVisible ? 'is-visible' : 'is-leaving'}`}
+            className={`ar-transition-overlay ar-transition-overlay--lexi ${transitionVisible ? 'is-visible' : 'is-leaving'}`}
             data-testid="ar-transition-overlay"
             data-visible={transitionVisible ? 'true' : 'false'}
             role="status"
@@ -967,15 +971,23 @@ export const LearnAR8thWall: React.FC = () => {
           >
             <div className="ar-transition-mesh" aria-hidden="true" />
             <div className="ar-transition-shade" aria-hidden="true" />
-            <div className="ar-transition-bubble ar-transition-bubble--one" aria-hidden="true" />
-            <div className="ar-transition-bubble ar-transition-bubble--two" aria-hidden="true" />
-            <div className="ar-transition-bubble ar-transition-bubble--three" aria-hidden="true" />
+            <div className="ar-transition-blob ar-transition-blob--one" aria-hidden="true" />
+            <div className="ar-transition-blob ar-transition-blob--two" aria-hidden="true" />
 
             <div className="ar-transition-content">
               <div className="ar-transition-visual" aria-hidden="true">
-                <div className="ar-transition-halo" />
-                <div className="ar-transition-clay-orb" data-testid="ar-transition-clay-orb">
-                  <div className="ar-transition-orb-highlight" />
+                <div className="ar-transition-lexi-halo" />
+                <div className="ar-transition-lexi-stage">
+                  <img
+                    className="ar-transition-lexi"
+                    data-testid="ar-transition-lexi"
+                    src={phase === 'PREPARING' || phase === 'SCANNING'
+                      ? LEXI_TRANSITION_ASSETS.preparing
+                      : LEXI_TRANSITION_ASSETS.booting}
+                    alt=""
+                    aria-hidden="true"
+                    decoding="async"
+                  />
                 </div>
                 <div className="ar-transition-dots" data-testid="ar-transition-dots">
                   <span />
@@ -996,8 +1008,8 @@ export const LearnAR8thWall: React.FC = () => {
                 </strong>
                 <span>
                   {phase === 'PREPARING' || phase === 'SCANNING'
-                    ? 'Đang chuẩn bị trải nghiệm AR cho bé...'
-                    : 'Chỉ mất một chút thôi — camera AR đang sẵn sàng'}
+                    ? 'Lexi đang chuẩn bị thế giới AR cho bé...'
+                    : 'Chỉ mất một chút thôi'}
                 </span>
               </div>
             </div>
