@@ -24,7 +24,7 @@ import { QRScanner } from '@/features/ar/components/QRScanner';
 import '../styles/LearnAR8thWall.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://edu-platform-api-do20.onrender.com';
-const TRANSITION_FADE_MS = 300;
+const TRANSITION_FADE_MS = 250;
 const DEBUG_CAMERA_HANDOFF_DELAYS_MS = [0, 150, 300, 500] as const;
 export const AR_DIAGNOSTICS_VERSION = 'session-catalogue-slam-diagnostics-v1';
 
@@ -965,19 +965,41 @@ export const LearnAR8thWall: React.FC = () => {
             role="status"
             aria-live="polite"
           >
-            <div className="ar-transition-shade" />
-            <div className="ar-transition-status">
-              <div className="ar-transition-indicator" aria-hidden="true" />
-              <strong>
-                {phase === 'PREPARING' || phase === 'SCANNING'
-                  ? 'Đã tìm thấy thẻ!'
-                  : 'Đang mở camera AR...'}
-              </strong>
-              <span>
-                {phase === 'PREPARING' || phase === 'SCANNING'
-                  ? 'Đang chuẩn bị trải nghiệm AR...'
-                  : 'Chỉ mất một chút thôi'}
-              </span>
+            <div className="ar-transition-mesh" aria-hidden="true" />
+            <div className="ar-transition-shade" aria-hidden="true" />
+            <div className="ar-transition-bubble ar-transition-bubble--one" aria-hidden="true" />
+            <div className="ar-transition-bubble ar-transition-bubble--two" aria-hidden="true" />
+            <div className="ar-transition-bubble ar-transition-bubble--three" aria-hidden="true" />
+
+            <div className="ar-transition-content">
+              <div className="ar-transition-visual" aria-hidden="true">
+                <div className="ar-transition-halo" />
+                <div className="ar-transition-clay-orb" data-testid="ar-transition-clay-orb">
+                  <div className="ar-transition-orb-highlight" />
+                </div>
+                <div className="ar-transition-dots" data-testid="ar-transition-dots">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
+
+              <div
+                className="ar-transition-status ar-transition-status-card"
+                data-testid="ar-transition-status-card"
+              >
+                <div className="ar-transition-card-gloss" aria-hidden="true" />
+                <strong>
+                  {phase === 'PREPARING' || phase === 'SCANNING'
+                    ? '✨ Đã tìm thấy thẻ!'
+                    : 'Đang mở thế giới AR...'}
+                </strong>
+                <span>
+                  {phase === 'PREPARING' || phase === 'SCANNING'
+                    ? 'Đang chuẩn bị trải nghiệm AR cho bé...'
+                    : 'Chỉ mất một chút thôi — camera AR đang sẵn sàng'}
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -1037,8 +1059,8 @@ export const LearnAR8thWall: React.FC = () => {
       )}
 
         {phase === 'VIEWING' && (
-          <div className="ar-instructions">
-            <p>Đưa thẻ vào khung để khám phá AR</p>
+          <div className="ar-instructions ar-viewing-hint">
+            <p>Đưa thẻ vào khung để khám phá ✨</p>
           </div>
         )}
 

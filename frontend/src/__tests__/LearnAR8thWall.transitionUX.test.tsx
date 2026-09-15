@@ -60,6 +60,17 @@ function jsonResponse(payload: unknown): Response {
   });
 }
 
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+
+  return { promise, resolve, reject };
+}
+
 function installARFetchMock() {
   vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
@@ -164,7 +175,40 @@ describe('LearnAR8thWall transition UX', () => {
     vi.restoreAllMocks();
   });
 
-  it('shows an animated XR boot overlay after QR detection without rendering a scanner snapshot', async () => {
+  it('shows the clay loading presentation during PREPARING while target metadata is unresolved', async () => {
+    const entryTarget = createDeferred<Response>();
+    const sessionCatalogue = createDeferred<Response>();
+
+    vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/api/v1/flashcard/cat001/xr-urls')) {
+        return entryTarget.promise;
+      }
+      if (url.includes('/api/v1/flashcard/xr-targets/deck/')) {
+        return sessionCatalogue.promise;
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    }));
+
+    renderPage();
+
+    await act(async () => {
+      void getQRScannerProps().onDetected('cat001');
+    });
+
+    expect(await screen.findByTestId('ar-transition-overlay')).toHaveClass(
+      'ar-transition-overlay',
+      'is-visible',
+    );
+    expect(screen.getByText('✨ Đã tìm thấy thẻ!')).toBeInTheDocument();
+    expect(screen.getByText('Đang chuẩn bị trải nghiệm AR cho bé...')).toBeInTheDocument();
+    expect(screen.getByTestId('ar-transition-clay-orb')).toBeInTheDocument();
+    expect(screen.getByTestId('ar-transition-status-card')).toBeInTheDocument();
+    expect(screen.getByTestId('ar-transition-dots')).toBeInTheDocument();
+    expect(screen.queryByTitle('AR Viewer')).not.toBeInTheDocument();
+  });
+
+  it('shows the clay XR boot overlay above its mounted iframe without rendering a scanner snapshot', async () => {
     await startPreparing();
 
     expect(screen.getByTestId('ar-transition-overlay')).toHaveClass(
@@ -172,9 +216,28 @@ describe('LearnAR8thWall transition UX', () => {
       'is-visible',
     );
     expect(screen.queryByTestId('ar-transition-frame')).not.toBeInTheDocument();
-    expect(screen.getByText('Đang mở camera AR...')).toBeInTheDocument();
-    expect(screen.getByText('Chỉ mất một chút thôi')).toBeInTheDocument();
+    expect(screen.getByText('Đang mở thế giới AR...')).toBeInTheDocument();
+    expect(screen.getByText('Chỉ mất một chút thôi — camera AR đang sẵn sàng')).toBeInTheDocument();
+    expect(screen.getByTestId('ar-transition-clay-orb')).toBeInTheDocument();
+    expect(screen.getByTestId('ar-transition-status-card')).toBeInTheDocument();
+    expect(screen.getByTestId('ar-transition-dots')).toBeInTheDocument();
     expect(screen.getByTitle('AR Viewer')).toHaveAttribute('src', expect.stringContaining('qr_id=cat001'));
+  });
+
+  it('keeps every decorative transition layer out of the accessibility tree', async () => {
+    await startPreparing();
+
+    const overlay = screen.getByTestId('ar-transition-overlay');
+    for (const className of [
+      'ar-transition-mesh',
+      'ar-transition-shade',
+      'ar-transition-bubble--one',
+      'ar-transition-bubble--two',
+      'ar-transition-bubble--three',
+      'ar-transition-visual',
+    ]) {
+      expect(overlay.querySelector(`.${className}`)).toHaveAttribute('aria-hidden', 'true');
+    }
   });
 
   it('keeps the QR-detection overlay presentation-only and out of viewer state', async () => {
@@ -202,7 +265,23 @@ describe('LearnAR8thWall transition UX', () => {
     });
 
     expect(screen.getByTestId('ar-transition-overlay')).toHaveAttribute('data-visible', 'false');
-    expect(screen.getByText('Đưa thẻ vào khung để khám phá AR')).toBeInTheDocument();
+    expect(screen.getByText('Đưa thẻ vào khung để khám phá ✨')).toBeInTheDocument();
+  });
+
+  it('keeps the overlay visible for iframe, model, target, camera, and XR started events before camera video', async () => {
+    await startPreparing();
+
+    const viewer = screen.getByTitle('AR Viewer');
+    fireEvent.load(viewer);
+    act(() => {
+      postViewerMessage('MODEL_LOAD_COMPLETE', { targetName: 'neutralTarget' });
+      postViewerMessage('IMAGE_FOUND', { targetName: 'neutralTarget' });
+      postViewerMessage('XR_STARTED');
+      postViewerMessage('XR_CAMERA_STATUS', { status: 'hasStream' });
+    });
+
+    expect(screen.getByTestId('ar-transition-overlay')).toHaveAttribute('data-visible', 'true');
+    expect(screen.queryByText('Đưa thẻ vào khung để khám phá ✨')).not.toBeInTheDocument();
   });
 
   it('does not treat AR_DEBUG XR_CAMERA_HAS_VIDEO telemetry as the parent lifecycle event', async () => {
