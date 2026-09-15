@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildSessionTargetCatalogue,
   normalizeScannedQrId,
   normalizeXRTarget,
   resolveSessionTargetCatalogue,
@@ -19,7 +20,7 @@ describe('LearnAR8thWall target visual configuration', () => {
     const handlerSource = source.slice(handlerStart, handlerEnd)
     const emptyGuard = handlerSource.indexOf("if (!normalizedQrId) {")
     const preparing = handlerSource.indexOf("setPhase('PREPARING')")
-    const resolveTargets = handlerSource.indexOf('resolveSessionTargetCatalogue(normalizedQrId')
+    const resolveTargets = handlerSource.indexOf('buildSessionTargetCatalogue(normalizedQrId')
 
     expect(normalizeScannedQrId('')).toBeNull()
     expect(normalizeScannedQrId('   ')).toBeNull()
@@ -136,6 +137,46 @@ describe('LearnAR8thWall target visual configuration', () => {
     });
   });
 
+  it('reports invalid and duplicate catalogue rows without changing usable neutral targets', () => {
+    const catalogue = buildSessionTargetCatalogue('targetA', [
+      {
+        qr_id: 'targetB',
+        xr_target_json_url: 'https://assets.example/xr/targetB.json',
+      },
+      {
+        qr_id: 'targetA',
+        xr_target_json_url: 'https://assets.example/xr/targetA.json',
+      },
+      {
+        qr_id: 'missingJson',
+      },
+      {
+        qr_id: 'targetB',
+        xr_target_json_url: 'https://assets.example/xr/duplicate-targetB.json',
+      },
+      {
+        qr_id: '   ',
+        xr_target_json_url: 'https://assets.example/xr/blank.json',
+      },
+    ]);
+
+    expect(catalogue.targets.map(target => target.qr_id)).toEqual([
+      'targetA',
+      'targetB',
+    ]);
+    expect(catalogue.candidates).toEqual([
+      'targetB',
+      'targetA',
+      'missingJson',
+      'targetB',
+    ]);
+    expect(catalogue.rejectedTargets).toEqual([
+      { targetName: 'missingJson', reason: 'missing_xr_target_json_url' },
+      { targetName: 'targetB', reason: 'duplicate_qr_id' },
+      { targetName: null, reason: 'missing_qr_id' },
+    ]);
+  });
+
   it('uses deck metadata for the session catalogue rather than selecting one combo pair', () => {
     const source = readFileSync(
       resolve(process.cwd(), 'src/pages/LearnAR8thWall.tsx'),
@@ -147,10 +188,27 @@ describe('LearnAR8thWall target visual configuration', () => {
 
     expect(source).toContain("/api/v1/flashcard/xr-targets/deck/");
     expect(handlerSource).toContain('fetchSessionTargetCatalogue()');
-    expect(handlerSource).toContain('resolveSessionTargetCatalogue(normalizedQrId');
+    expect(handlerSource).toContain('buildSessionTargetCatalogue(normalizedQrId');
     expect(handlerSource).toContain("trace('SESSION_TARGET_CATALOGUE'");
     expect(handlerSource).not.toContain('resolveTrackingGroup');
     expect(handlerSource).not.toContain('fetchTrackingRules');
     expect(handlerSource).not.toContain('data-secondary-preload');
+  });
+
+  it('reports the session catalogue source, candidates, usable targets, and rejected targets', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/pages/LearnAR8thWall.tsx'),
+      'utf8',
+    );
+    const handlerStart = source.indexOf('const handleQRDetected = useCallback');
+    const handlerEnd = source.indexOf('\n  // ========================================================================\n  // LISTEN:', handlerStart);
+    const handlerSource = source.slice(handlerStart, handlerEnd);
+
+    expect(handlerSource).toContain("trace('SESSION_TARGET_CATALOGUE', JSON.stringify({");
+    expect(handlerSource).toContain('entryTarget: normalizedQrId');
+    expect(handlerSource).toContain('source: sessionTargetCatalogueSourceRef.current');
+    expect(handlerSource).toContain('candidates: sessionCatalogueCandidates');
+    expect(handlerSource).toContain('usableTargets: targets.map(target => target.qr_id)');
+    expect(handlerSource).toContain('rejectedTargets: sessionCatalogueRejectedTargets');
   });
 });

@@ -322,6 +322,8 @@
     const word           = params.get('word') || qrId;
     const apiBase        = (params.get('api_base') || 'https://edu-platform-api-do20.onrender.com').replace(/\/+$/, '');
     const isDebug        = location.hostname === 'localhost' || params.get('debug') === 'true';
+    const AR_VIEWER_BUILD_VERSION = 'slam-boundary-diagnostics-v1';
+    const parentDiagnosticsVersion = params.get('ar_diagnostics_version') || 'absent';
     const requestedPresentationMode = resolvePresentationMode(params.get('presentation_mode'));
     const SURFACE_PRESENTATION_CONFIG = {
       tabletopEnterScore: 0.82,
@@ -630,6 +632,14 @@
       }
     }
 
+    if (isDebug) {
+      sendARDebug('AR_VIEWER_BUILD', {
+        version: AR_VIEWER_BUILD_VERSION,
+        parentVersion: parentDiagnosticsVersion,
+        diagnosticsVersion: AR_VIEWER_BUILD_VERSION,
+      });
+    }
+
     sendARDebug('XR_MULTI_CONFIG', {
       count: xrTargetConfigs.length,
       targets: xrTargetConfigs.map(t => t.qr_id),
@@ -660,6 +670,13 @@
       };
       sendMessage('AR_DEBUG', debugPayload);
       logToBuffer('debug', label, details);
+    }
+
+    // Boundary probes are intentionally available only to an explicit debug
+    // session. They observe boot ordering and never participate in control flow.
+    function sendDebugOnly(label, details = {}) {
+      if (!isDebug) return;
+      sendARDebug(label, details);
     }
 
     function setPhase(phase) {
@@ -1731,8 +1748,15 @@
         throw err;
       }
 
-      try { await XR8.loadChunk('slam'); sendARDebug('XR_SLAM_LOADED', {}); }
+      sendDebugOnly('XR_SLAM_LOAD_START', { targetCount: targetDataList.length });
+      try {
+        await XR8.loadChunk('slam');
+        sendDebugOnly('XR_SLAM_LOAD_COMPLETE', { targetCount: targetDataList.length });
+        sendARDebug('XR_SLAM_LOADED', {});
+      }
       catch (err) { sendARDebug('XR_SLAM_LOAD_FAILED', { error: String(err) }); throw err; }
+
+      sendDebugOnly('XR_PIPELINE_SETUP_START', { targetCount: targetDataList.length });
 
       // Lifecycle
       const lifecycleModule = {
@@ -3049,6 +3073,23 @@
         loadComboRules();
 
         const targetsPromise = Promise.all(xrTargetConfigs.map(cfg => loadTargetData(cfg)));
+
+        // Secondary models are lazy after IMAGE_FOUND. This is diagnostic only:
+        // there is no completion promise and no boot barrier for this list.
+        const secondaryTargets = xrTargetConfigs
+          .filter(cfg => cfg.qr_id !== primaryModelTargetName && cfg.model_3d_url)
+          .map(cfg => cfg.qr_id);
+        sendDebugOnly('SECONDARY_PRELOAD_PLAN', {
+          targets: secondaryTargets,
+          count: secondaryTargets.length,
+          strategy: 'lazy-after-image-found',
+        });
+        if (secondaryTargets.length === 0) {
+          sendDebugOnly('SECONDARY_PRELOAD_EMPTY', {
+            count: 0,
+            strategy: 'lazy-after-image-found',
+          });
+        }
 
         // Phase 1: preload primary model immediately — no await.
         sendARDebug('MODEL_PRIMARY_PRELOAD_START', { targetName: primaryModelTargetName });

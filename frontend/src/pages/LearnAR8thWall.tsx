@@ -26,6 +26,7 @@ import '../styles/LearnAR8thWall.css';
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://edu-platform-api-do20.onrender.com';
 const TRANSITION_FADE_MS = 300;
 const DEBUG_CAMERA_HANDOFF_DELAYS_MS = [0, 150, 300, 500] as const;
+export const AR_DIAGNOSTICS_VERSION = 'session-catalogue-slam-diagnostics-v1';
 
 export function resolveDebugCameraHandoffDelay(search: string): number {
   const params = new URLSearchParams(search);
@@ -146,27 +147,52 @@ type XRTargetCatalogueEntry = XRTargetResponse & {
   qr_id?: unknown;
 };
 
+export type SessionTargetCatalogue = {
+  targets: XRTarget[];
+  candidates: Array<string | null>;
+  rejectedTargets: Array<{
+    targetName: string | null;
+    reason: 'missing_qr_id' | 'duplicate_qr_id' | 'missing_xr_target_json_url';
+  }>;
+};
+
 /**
  * Builds the session's tracking catalogue from deck metadata, not combo membership.
  * The scanned entry target is ordered first; every remaining target with a usable
  * 8th Wall JSON stays registered so it can be recognized independently.
  */
-export function resolveSessionTargetCatalogue(
+export function buildSessionTargetCatalogue(
   entryQrId: unknown,
   rawTargets: unknown,
-): XRTarget[] {
+): SessionTargetCatalogue {
   const normalizedEntryQrId = normalizeScannedQrId(entryQrId);
   const targetsByQrId = new Map<string, XRTarget>();
+  const candidates: Array<string | null> = [];
+  const rejectedTargets: SessionTargetCatalogue['rejectedTargets'] = [];
 
   for (const rawTarget of Array.isArray(rawTargets) ? rawTargets : []) {
-    if (!rawTarget || typeof rawTarget !== 'object') continue;
+    if (!rawTarget || typeof rawTarget !== 'object') {
+      rejectedTargets.push({ targetName: null, reason: 'missing_qr_id' });
+      continue;
+    }
     const targetQrId = normalizeScannedQrId((rawTarget as XRTargetCatalogueEntry).qr_id);
-    if (!targetQrId || targetsByQrId.has(targetQrId)) continue;
+    if (!targetQrId) {
+      rejectedTargets.push({ targetName: null, reason: 'missing_qr_id' });
+      continue;
+    }
+    candidates.push(targetQrId);
+    if (targetsByQrId.has(targetQrId)) {
+      rejectedTargets.push({ targetName: targetQrId, reason: 'duplicate_qr_id' });
+      continue;
+    }
 
     const target = normalizeXRTarget(targetQrId, rawTarget as XRTargetResponse);
     // ar-xr.html always loads a target JSON. Image-only records are not safe
     // to register because inferred JSON paths are not a backend contract.
-    if (!target.xr_target_json_url) continue;
+    if (!target.xr_target_json_url) {
+      rejectedTargets.push({ targetName: targetQrId, reason: 'missing_xr_target_json_url' });
+      continue;
+    }
     targetsByQrId.set(targetQrId, target);
   }
 
@@ -174,9 +200,18 @@ export function resolveSessionTargetCatalogue(
     ? targetsByQrId.get(normalizedEntryQrId)
     : null;
 
-  return entryTarget
+  const targets = entryTarget
     ? [entryTarget, ...Array.from(targetsByQrId.values()).filter(target => target.qr_id !== entryTarget.qr_id)]
     : Array.from(targetsByQrId.values());
+
+  return { targets, candidates, rejectedTargets };
+}
+
+export function resolveSessionTargetCatalogue(
+  entryQrId: unknown,
+  rawTargets: unknown,
+): XRTarget[] {
+  return buildSessionTargetCatalogue(entryQrId, rawTargets).targets;
 }
 
 export function serializeXRTargets(targets: XRTarget[]): string {
@@ -210,6 +245,8 @@ export const LearnAR8thWall: React.FC = () => {
   // Backend deck metadata is the session tracking catalogue source. It is
   // deliberately independent from the entry QR and interaction rule choices.
   const deckTargetCatalogueRef = useRef<XRTarget[]>([]);
+  const sessionTargetCatalogueSourceRef = useRef('uninitialized');
+  const parentBuildFingerprintEmittedRef = useRef(false);
 
   // ========== AR RUNTIME PREWARM (runs once on mount) ==========
   useEffect(() => {
@@ -281,6 +318,7 @@ export const LearnAR8thWall: React.FC = () => {
 
         const manifest = await res.json();
         deckTargetCatalogueRef.current = resolveSessionTargetCatalogue('', manifest?.targets);
+        sessionTargetCatalogueSourceRef.current = 'ar-preload/deck';
         // If API returns 200 but primary has no model URL, fall back to hardcoded CAT
         const primaryUrl = manifest.primary?.model_3d_url || FALLBACK_CAT_URL;
         warmARModel(primaryUrl, 'current');
@@ -350,6 +388,16 @@ export const LearnAR8thWall: React.FC = () => {
     // Dual sink: also write to persistent ARControlTrace ring buffer (survives reload, immune to drop_console)
     window.ARControlTrace?.(`AR_${label}`, { detail, phase });
   };
+
+  useEffect(() => {
+    if (!canUseOperatorControls || parentBuildFingerprintEmittedRef.current) return;
+
+    parentBuildFingerprintEmittedRef.current = true;
+    trace('AR_PARENT_BUILD', JSON.stringify({
+      version: AR_DIAGNOSTICS_VERSION,
+      diagnosticsVersion: AR_DIAGNOSTICS_VERSION,
+    }));
+  }, [canUseOperatorControls, trace]);
 
   const clearCameraHandoffTimer = useCallback(() => {
     if (cameraHandoffTimerRef.current !== null) {
@@ -533,6 +581,7 @@ export const LearnAR8thWall: React.FC = () => {
     }
 
     deckTargetCatalogueRef.current = catalogue;
+    sessionTargetCatalogueSourceRef.current = 'xr-targets/deck';
     return catalogue;
   }, []);
 
@@ -591,16 +640,25 @@ export const LearnAR8thWall: React.FC = () => {
         fetchXRTarget(normalizedQrId),
         fetchSessionTargetCatalogue(),
       ]);
-      const targets = resolveSessionTargetCatalogue(normalizedQrId, [
+      const sessionTargetCatalogue = buildSessionTargetCatalogue(normalizedQrId, [
         entryTarget,
         ...deckTargets,
       ]);
+      const targets = sessionTargetCatalogue.targets;
+      const sessionCatalogueCandidates = sessionTargetCatalogue.candidates;
+      const sessionCatalogueRejectedTargets = sessionTargetCatalogue.rejectedTargets;
       const primary = targets.find(target => target.qr_id === normalizedQrId);
       if (!primary?.xr_target_json_url) {
         throw new Error(`No XR target JSON for entry target ${normalizedQrId}`);
       }
 
-      trace('SESSION_TARGET_CATALOGUE', JSON.stringify(targets.map(target => target.qr_id)));
+      trace('SESSION_TARGET_CATALOGUE', JSON.stringify({
+        entryTarget: normalizedQrId,
+        source: sessionTargetCatalogueSourceRef.current,
+        candidates: sessionCatalogueCandidates,
+        usableTargets: targets.map(target => target.qr_id),
+        rejectedTargets: sessionCatalogueRejectedTargets,
+      }));
 
       // Preload tracking JSONs for all targets
       for (const target of targets) {
@@ -787,6 +845,7 @@ export const LearnAR8thWall: React.FC = () => {
     }
     if (canUseOperatorControls) {
       params.set('debug', 'true');
+      params.set('ar_diagnostics_version', AR_DIAGNOSTICS_VERSION);
     }
     return `/ar-xr.html?${params.toString()}`;
   })();

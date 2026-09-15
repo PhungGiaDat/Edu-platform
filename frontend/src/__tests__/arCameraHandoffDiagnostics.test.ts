@@ -1,7 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { resolveDebugCameraHandoffDelay } from '../pages/LearnAR8thWall';
+import {
+  AR_DIAGNOSTICS_VERSION,
+  resolveDebugCameraHandoffDelay,
+} from '../pages/LearnAR8thWall';
 
 const scannerSource = readFileSync(
   resolve(process.cwd(), 'src/features/ar/components/QRScanner.tsx'),
@@ -66,6 +69,56 @@ describe('AR camera handoff diagnostics', () => {
     expect(viewerSource).toContain('XR_DISPOSE_RECEIVED');
     expect(viewerSource).toContain('elapsedSinceViewerBootMs');
     expect(viewerSource).toContain("messageData?.type === 'dispose'");
+  });
+
+  it('instruments the single-target boot boundary without introducing a secondary preload barrier', () => {
+    const mainStart = viewerSource.indexOf('async function main()');
+    const mainEnd = viewerSource.indexOf("if (document.readyState === 'loading')", mainStart);
+    const mainSource = viewerSource.slice(mainStart, mainEnd);
+    const initStart = viewerSource.indexOf('async function initXR(targetDataList)');
+    const initEnd = viewerSource.indexOf('// Lifecycle', initStart);
+    const initSource = viewerSource.slice(initStart, initEnd);
+
+    expect(mainSource).toContain("sendDebugOnly('SECONDARY_PRELOAD_PLAN'");
+    expect(mainSource).toContain("sendDebugOnly('SECONDARY_PRELOAD_EMPTY'");
+    expect(mainSource).not.toContain('await preloadSecondaryTargets(');
+    expect(initSource).toContain("sendDebugOnly('XR_SLAM_LOAD_START'");
+    expect(initSource).toContain("sendDebugOnly('XR_SLAM_LOAD_COMPLETE'");
+    expect(initSource.indexOf("sendDebugOnly('XR_SLAM_LOAD_START'")).toBeLessThan(
+      initSource.indexOf("await XR8.loadChunk('slam')"),
+    );
+  });
+
+  it('fingerprints the parent and viewer diagnostic generation without changing SLAM or camera lifecycle control flow', () => {
+    const viewerBuild = viewerSource.indexOf("sendARDebug('AR_VIEWER_BUILD'");
+    const multiConfig = viewerSource.indexOf("sendARDebug('XR_MULTI_CONFIG'");
+    const initStart = viewerSource.indexOf('async function initXR(targetDataList)');
+    const initEnd = viewerSource.indexOf('// Lifecycle', initStart);
+    const initSource = viewerSource.slice(initStart, initEnd);
+    const viewerSrcStart = parentSource.indexOf('const viewerSrc =');
+    const viewerSrcEnd = parentSource.indexOf('// Track when viewerSrc is set', viewerSrcStart);
+    const viewerSrc = parentSource.slice(viewerSrcStart, viewerSrcEnd);
+    const cameraHandlerStart = parentSource.indexOf("case 'XR_CAMERA_HAS_VIDEO':");
+    const cameraHandlerEnd = parentSource.indexOf("case 'XR_STARTED':", cameraHandlerStart);
+    const cameraHandler = parentSource.slice(cameraHandlerStart, cameraHandlerEnd);
+    const catalogueTrace = parentSource.indexOf("trace('SESSION_TARGET_CATALOGUE'");
+    const catalogueStateUpdate = parentSource.indexOf('setXrTargets(targets)', catalogueTrace);
+
+    expect(AR_DIAGNOSTICS_VERSION).toBe('session-catalogue-slam-diagnostics-v1');
+    expect(parentSource).toContain("trace('AR_PARENT_BUILD'");
+    expect(viewerSrc).toContain("params.set('ar_diagnostics_version', AR_DIAGNOSTICS_VERSION)");
+    expect(viewerSource).toContain("const AR_VIEWER_BUILD_VERSION = 'slam-boundary-diagnostics-v1'");
+    expect(viewerBuild).toBeGreaterThanOrEqual(0);
+    expect(viewerBuild).toBeLessThan(multiConfig);
+    expect(initSource).not.toContain('Promise.race(');
+    expect(initSource).not.toContain('setTimeout(');
+    expect(initSource).not.toContain('retry');
+    expect(initSource).not.toContain('fallback');
+    expect(viewerSource).toContain("sendMessage('XR_CAMERA_HAS_VIDEO'");
+    expect(cameraHandler).toContain("setPhase('VIEWING')");
+    expect(cameraHandler).toContain('dismissTransition()');
+    expect(catalogueTrace).toBeGreaterThanOrEqual(0);
+    expect(catalogueStateUpdate).toBeGreaterThan(catalogueTrace);
   });
 
   it('uses a shared epoch timestamp for parent-to-iframe duration calculations', () => {
