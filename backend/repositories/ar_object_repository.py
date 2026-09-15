@@ -40,6 +40,7 @@ class ARObjectRepository:
                     f.word,
                     tt.xr_target_json_url,
                     tt.xr_target_image_url,
+                    tt.physical_width_m,
                     tt.reference_image_url,
                     ao.animation_type,
                     tt.mind_catalog_id,
@@ -55,7 +56,11 @@ class ARObjectRepository:
                     ao.texture_url,
                     COALESCE(ao.position, '0 0 0') as position,
                     COALESCE(ao.rotation, '0 0 0') as rotation,
-                    COALESCE(ao.scale, '1 1 1') as scale
+                    COALESCE(ao.scale, '1 1 1') as scale,
+                    ao.presentation_profile,
+                    ao.presentation_scale_multiplier,
+                    ao.presentation_position_offset,
+                    ao.presentation_forward_axis
                 FROM public.ar_tracking_targets tt
                 JOIN public.flashcards f ON tt.qr_id = f.qr_id
                 JOIN public.flashcard_decks fd ON f.deck_id = fd.deck_id
@@ -71,6 +76,7 @@ class ARObjectRepository:
                     f.word,
                     tt.xr_target_json_url,
                     tt.xr_target_image_url,
+                    tt.physical_width_m,
                     tt.reference_image_url,
                     ao.animation_type,
                     tt.mind_catalog_id,
@@ -86,7 +92,11 @@ class ARObjectRepository:
                     ao.texture_url,
                     COALESCE(ao.position, '0 0 0') as position,
                     COALESCE(ao.rotation, '0 0 0') as rotation,
-                    COALESCE(ao.scale, '1 1 1') as scale
+                    COALESCE(ao.scale, '1 1 1') as scale,
+                    ao.presentation_profile,
+                    ao.presentation_scale_multiplier,
+                    ao.presentation_position_offset,
+                    ao.presentation_forward_axis
                 FROM public.ar_tracking_targets tt
                 JOIN public.flashcards f ON tt.qr_id = f.qr_id
                 JOIN public.flashcard_decks fd ON f.deck_id = fd.deck_id

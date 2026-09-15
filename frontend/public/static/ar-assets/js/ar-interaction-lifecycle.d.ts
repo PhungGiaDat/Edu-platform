@@ -1,4 +1,4 @@
-﻿export function advanceCatReturnTween(
+export function advanceCatReturnTween(
   now: number,
   run: { fromYaw: number; toYaw: number; startedAt: number; durationMs: number },
 ): { yaw: number; complete: boolean }
@@ -26,6 +26,73 @@ export function getTargetLossGraceState(args: {
   hide: boolean
 }
 export function isCatOneShotCompletionOwner(args: Record<string, unknown>): boolean
+
+export function resolveModelPresentationProfile(profileName: unknown): {
+  name: string
+  fitRatio: number
+  minScale: number
+  maxScale: number
+} | null
+
+export function resolveForwardAxis(axis: unknown): {
+  x: number
+  y: number
+  z: number
+  name: '+X' | '-X' | '+Y' | '-Y' | '+Z' | '-Z'
+} | null
+
+export function getGroundedCenterOffset(bounds: {
+  min?: { x?: number; y?: number; z?: number }
+  max?: { x?: number; y?: number; z?: number }
+} | null): { x: number; y: number; z: number } | null
+
+export function getPresentationBoundingWidth(args: {
+  size?: { x?: number; y?: number; z?: number }
+  forwardAxis?: string | null
+}): number | null
+
+export function calculateAutoFitScale(args: {
+  boundingBoxWidth?: number | null
+  physicalWidth?: number | null
+  fitRatio?: number | null
+  scaleMultiplier?: number | null
+  fallbackScale?: number | null
+  minScale?: number | null
+  maxScale?: number | null
+}): {
+  ok: boolean
+  reason: string
+  finalScale: number
+  desiredWidth?: number
+  autoScale?: number
+}
+
+export function resolveModelPresentation(args: {
+  config?: {
+    position?: string | number[] | null
+    rotation?: string | number[] | null
+    scale?: string | number[] | null
+    presentation_profile?: string | null
+    presentation_scale_multiplier?: number | null
+    presentation_position_offset?: string | number[] | null
+    presentation_forward_axis?: string | null
+  } | null
+  bounds?: {
+    min?: { x?: number; y?: number; z?: number }
+    max?: { x?: number; y?: number; z?: number }
+    size?: { x?: number; y?: number; z?: number }
+  } | null
+  physicalWidth?: number | null
+}): {
+  mode: 'legacy' | 'profile'
+  profile: string | null
+  position: number[]
+  rotation: number[]
+  finalScale: number
+  positionOffset: number[]
+  forwardAxis: ReturnType<typeof resolveForwardAxis>
+  autoFit: ReturnType<typeof calculateAutoFitScale> | null
+}
 
 export function normalizeInteractionRule(rule: Record<string, unknown>): {
   id: string

@@ -49,6 +49,35 @@ describe('LearnAR8thWall target visual configuration', () => {
     ]);
   });
 
+  it('forwards opt-in presentation metadata and physical width without changing legacy target transforms', () => {
+    const pet = normalizeXRTarget('petA', {
+      physical_width_m: 0.12,
+      target: {
+        model_3d_url: 'https://assets.example/pet.glb',
+        position: '0 0 0',
+        rotation: '0 0 0',
+        scale: '1 1 1',
+        presentation_profile: 'pet',
+        presentation_scale_multiplier: 1.25,
+        presentation_position_offset: '0.01 0 0',
+        presentation_forward_axis: '+Z',
+      },
+    });
+
+    const xrTargets = JSON.parse(serializeXRTargets([pet]));
+
+    expect(xrTargets).toEqual([
+      expect.objectContaining({
+        qr_id: 'petA',
+        physical_width_m: 0.12,
+        presentation_profile: 'pet',
+        presentation_scale_multiplier: 1.25,
+        presentation_position_offset: '0.01 0 0',
+        presentation_forward_axis: '+Z',
+      }),
+    ]);
+  });
+
   it('passes the parent API base and active deck to the isolated XR viewer', () => {
     const source = readFileSync(
       resolve(process.cwd(), 'src/pages/LearnAR8thWall.tsx'),

@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import * as lifecycleModule from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
@@ -21,7 +21,7 @@ import {
 } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 const EXPECTED_LIFECYCLE_MODULE_URL =
-  './static/ar-assets/js/ar-interaction-lifecycle.js?v=multi-target-attach-v1'
+  './static/ar-assets/js/ar-interaction-lifecycle.js?v=presentation-profile-v1'
 
 describe('AR interaction lifecycle contracts', () => {
   it('plans target-local attachment for every eligible tracked instance without semantic target names', () => {
@@ -126,6 +126,166 @@ describe('AR interaction lifecycle contracts', () => {
     expect(hideSource).toContain('const instance = targetInstances.get(targetName)')
     expect(hideSource).toContain('if (instance?.model) instance.model.visible = false')
     expect(hideSource).not.toContain('primaryModelTargetName')
+  })
+
+  it('calculates generic profile auto-fit scale from physical target width and asset multiplier', () => {
+    const calculateAutoFitScale = Reflect.get(lifecycleModule, 'calculateAutoFitScale')
+
+    expect(calculateAutoFitScale).toBeTypeOf('function')
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 2,
+      physicalWidth: 0.4,
+      fitRatio: 1.25,
+      scaleMultiplier: 1,
+      fallbackScale: 0.8,
+    })).toEqual({
+      ok: true,
+      reason: 'auto_fit',
+      desiredWidth: 0.5,
+      autoScale: 0.25,
+      finalScale: 0.25,
+    })
+
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 2,
+      physicalWidth: 0.8,
+      fitRatio: 1.25,
+      scaleMultiplier: 0.5,
+      fallbackScale: 0.8,
+    })).toMatchObject({
+      ok: true,
+      autoScale: 0.5,
+      finalScale: 0.25,
+    })
+  })
+
+  it('uses the legacy scale safely when profile auto-fit inputs are invalid or absent', () => {
+    const calculateAutoFitScale = Reflect.get(lifecycleModule, 'calculateAutoFitScale')
+
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 0,
+      physicalWidth: 0.1,
+      fitRatio: 1.25,
+      scaleMultiplier: 1,
+      fallbackScale: 0.8,
+    })).toMatchObject({ ok: false, finalScale: 0.8, reason: 'invalid_bounding_box_width' })
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 2,
+      physicalWidth: null,
+      fitRatio: 1.25,
+      scaleMultiplier: 1,
+      fallbackScale: 0.8,
+    })).toMatchObject({ ok: false, finalScale: 0.8, reason: 'invalid_physical_width' })
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 0.01,
+      physicalWidth: 10,
+      fitRatio: 1.25,
+      scaleMultiplier: 1,
+      fallbackScale: 0.8,
+      maxScale: 5,
+    })).toMatchObject({ ok: false, finalScale: 0.8, reason: 'scale_out_of_bounds' })
+  })
+
+  it('derives grounded centering and lateral width without target-name assumptions', () => {
+    const getGroundedCenterOffset = Reflect.get(lifecycleModule, 'getGroundedCenterOffset')
+    const getPresentationBoundingWidth = Reflect.get(lifecycleModule, 'getPresentationBoundingWidth')
+
+    expect(getGroundedCenterOffset).toBeTypeOf('function')
+    expect(getGroundedCenterOffset?.({
+      min: { x: -1, y: -2, z: -3 },
+      max: { x: 3, y: 4, z: 5 },
+    })).toEqual({ x: -1, y: 2, z: -1 })
+
+    expect(getPresentationBoundingWidth).toBeTypeOf('function')
+    const size = { x: 2, y: 7, z: 3 }
+    expect(getPresentationBoundingWidth?.({ size, forwardAxis: '+Z' })).toBe(2)
+    expect(getPresentationBoundingWidth?.({ size, forwardAxis: '-Z' })).toBe(2)
+    expect(getPresentationBoundingWidth?.({ size, forwardAxis: '+X' })).toBe(3)
+    expect(getPresentationBoundingWidth?.({ size, forwardAxis: '-X' })).toBe(3)
+    expect(getPresentationBoundingWidth?.({ size, forwardAxis: '+Y' })).toBe(3)
+    expect(getPresentationBoundingWidth?.({ size, forwardAxis: '-Y' })).toBe(3)
+  })
+
+  it('resolves every declarative asset forward axis without semantic target branches', () => {
+    const resolveForwardAxis = Reflect.get(lifecycleModule, 'resolveForwardAxis')
+
+    expect(resolveForwardAxis).toBeTypeOf('function')
+    expect(resolveForwardAxis?.('+X')).toEqual({ x: 1, y: 0, z: 0, name: '+X' })
+    expect(resolveForwardAxis?.('-X')).toEqual({ x: -1, y: 0, z: 0, name: '-X' })
+    expect(resolveForwardAxis?.('+Y')).toEqual({ x: 0, y: 1, z: 0, name: '+Y' })
+    expect(resolveForwardAxis?.('-Y')).toEqual({ x: 0, y: -1, z: 0, name: '-Y' })
+    expect(resolveForwardAxis?.('+Z')).toEqual({ x: 0, y: 0, z: 1, name: '+Z' })
+    expect(resolveForwardAxis?.('-Z')).toEqual({ x: 0, y: 0, z: -1, name: '-Z' })
+    expect(resolveForwardAxis?.('diagonal')).toBeNull()
+  })
+
+  it('keeps old transforms for unprofiled assets while resolving neutral pet metadata generically', () => {
+    const resolveModelPresentation = Reflect.get(lifecycleModule, 'resolveModelPresentation')
+
+    expect(resolveModelPresentation).toBeTypeOf('function')
+    expect(resolveModelPresentation?.({
+      config: {
+        position: '1 2 3',
+        rotation: '4 5 6',
+        scale: '0.6 0.6 0.6',
+      },
+      bounds: { size: { x: 2, y: 4, z: 6 } },
+      physicalWidth: 0.1,
+    })).toEqual({
+      mode: 'legacy',
+      profile: null,
+      position: [1, 2, 3],
+      rotation: [4, 5, 6],
+      finalScale: 0.6,
+      positionOffset: [0, 0, 0],
+      forwardAxis: null,
+      autoFit: null,
+    })
+
+    expect(resolveModelPresentation?.({
+      config: {
+        presentation_profile: 'pet',
+        presentation_scale_multiplier: 0.5,
+        presentation_position_offset: '0.01 0 0',
+        presentation_forward_axis: '-Z',
+        position: '9 9 9',
+        rotation: '9 9 9',
+        scale: '0.8 0.8 0.8',
+      },
+      bounds: { size: { x: 2, y: 4, z: 6 } },
+      physicalWidth: 0.2,
+    })).toEqual({
+      mode: 'profile',
+      profile: 'pet',
+      position: [0.01, 0, 0],
+      rotation: [0, 0, 0],
+      finalScale: 0.0625,
+      positionOffset: [0.01, 0, 0],
+      forwardAxis: { x: 0, y: 0, z: -1, name: '-Z' },
+      autoFit: {
+        ok: true,
+        reason: 'auto_fit',
+        desiredWidth: 0.25,
+        autoScale: 0.125,
+        finalScale: 0.0625,
+      },
+    })
+  })
+
+  it('keeps generic presentation helpers free of animal identities', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'public/static/ar-assets/js/ar-interaction-lifecycle.js'),
+      'utf8',
+    )
+    const start = source.indexOf('const MODEL_PRESENTATION_PROFILES')
+    const end = source.indexOf('export function classifySurfaceOrientation', start)
+    const presentationSource = source.slice(start, end)
+
+    expect(start).toBeGreaterThanOrEqual(0)
+    expect(end).toBeGreaterThan(start)
+    expect(presentationSource).not.toMatch(
+      /dog001|cat001|fish001|shiba|SHIBA|bone001/i,
+    )
   })
 
   it('resolves generic screen, tabletop, and auto presentation requests', () => {
@@ -1125,6 +1285,10 @@ describe('AR interaction lifecycle contracts', () => {
     expect(probedNames).toEqual(importedNames)
     expect(importedNames.filter((name) => !exportedNames.includes(name))).toEqual([])
     expect(lifecycleTypesSource).toContain('export function resolveTargetModelAttachment')
+    expect(lifecycleTypesSource).toContain('export function resolveModelPresentation')
+    expect(lifecycleTypesSource).toContain('export function calculateAutoFitScale')
+    expect(lifecycleTypesSource).toContain('export function getGroundedCenterOffset')
+    expect(lifecycleTypesSource).toContain('export function resolveForwardAxis')
     expect(lifecycleTypesSource).toContain('primaryReady: boolean')
     expect(probeImport?.[1]).toBe(EXPECTED_LIFECYCLE_MODULE_URL)
     expect(namedImport?.[2]).toBe(EXPECTED_LIFECYCLE_MODULE_URL)

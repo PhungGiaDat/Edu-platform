@@ -6,7 +6,7 @@ All database operations go through ARObjectRepository (PostgreSQL).
 Pydantic schemas are used for API request/response validation.
 """
 from pydantic import BaseModel, Field, model_validator
-from typing import Optional, List
+from typing import Literal, Optional, List
 from datetime import datetime
 
 
@@ -25,6 +25,17 @@ class _AnimationsMixin(BaseModel):
         default=None,
         description="Animation to play during combo (e.g. animal eating animation)"
     )
+
+
+class _PresentationMetadataMixin(BaseModel):
+    """Optional, asset-declared visual normalization for the WebAR viewer."""
+
+    presentation_profile: Optional[str] = None
+    presentation_scale_multiplier: Optional[float] = Field(default=None, gt=0)
+    presentation_position_offset: Optional[str] = None
+    presentation_forward_axis: Optional[
+        Literal['+X', '-X', '+Y', '-Y', '+Z', '-Z']
+    ] = None
 
 
 # ========== Pydantic Schemas (API) ==========
@@ -53,7 +64,7 @@ class _CatalogIdentityMixin(BaseModel):
         return self
 
 
-class ARObjectCreate(_CatalogIdentityMixin, _AnimationsMixin):
+class ARObjectCreate(_CatalogIdentityMixin, _AnimationsMixin, _PresentationMetadataMixin):
     """Schema for creating a new AR object.
 
     Catalog identity is mandatory on create — the runtime cannot resolve
@@ -88,7 +99,7 @@ class ARObjectCreate(_CatalogIdentityMixin, _AnimationsMixin):
         return self
 
 
-class ARObjectUpdate(_CatalogIdentityMixin, _AnimationsMixin):
+class ARObjectUpdate(_CatalogIdentityMixin, _AnimationsMixin, _PresentationMetadataMixin):
     """Schema for updating AR object - all fields optional.
 
     Catalog identity is optional here.  When the caller opts into a
@@ -151,6 +162,10 @@ class ARObjectResponse(BaseModel):
     animations: Optional[List[str]] = None
     default_animation: Optional[str] = None
     combo_animation: Optional[str] = None
+    presentation_profile: Optional[str] = None
+    presentation_scale_multiplier: Optional[float] = None
+    presentation_position_offset: Optional[str] = None
+    presentation_forward_axis: Optional[str] = None
     created_at: datetime
 
     class Config:
@@ -188,6 +203,10 @@ class ArObjectSchema(BaseModel):
     animations: Optional[List[str]] = None
     default_animation: Optional[str] = None
     combo_animation: Optional[str] = None
+    presentation_profile: Optional[str] = None
+    presentation_scale_multiplier: Optional[float] = None
+    presentation_position_offset: Optional[str] = None
+    presentation_forward_axis: Optional[str] = None
     created_at: datetime
 
     class Config:

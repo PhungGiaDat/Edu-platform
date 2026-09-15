@@ -1,4 +1,4 @@
-﻿const CAT_MEOW_BLOCKING_PHASES = new Set([
+const CAT_MEOW_BLOCKING_PHASES = new Set([
   'COMBO_ARMED',
   'COMBO_TURNING',
   'COMBO_PLAYING',
@@ -149,6 +149,157 @@ export function getSurfaceAlignmentQuaternion({ presentationMode, targetNormal }
     y: raw.y / length,
     z: raw.z / length,
     w: raw.w / length,
+  }
+}
+
+const MODEL_PRESENTATION_PROFILES = Object.freeze({
+  // A pet fills approximately one-and-a-quarter target widths. Per-asset
+  // calibration stays declarative through presentation_scale_multiplier.
+  pet: Object.freeze({
+    name: 'pet',
+    fitRatio: 1.25,
+    minScale: 0.01,
+    maxScale: 5,
+  }),
+})
+
+const FORWARD_AXES = Object.freeze({
+  '+X': Object.freeze({ x: 1, y: 0, z: 0, name: '+X' }),
+  '-X': Object.freeze({ x: -1, y: 0, z: 0, name: '-X' }),
+  '+Y': Object.freeze({ x: 0, y: 1, z: 0, name: '+Y' }),
+  '-Y': Object.freeze({ x: 0, y: -1, z: 0, name: '-Y' }),
+  '+Z': Object.freeze({ x: 0, y: 0, z: 1, name: '+Z' }),
+  '-Z': Object.freeze({ x: 0, y: 0, z: -1, name: '-Z' }),
+})
+
+function parseVector3(value, fallback) {
+  if (Array.isArray(value) && value.length === 3 && value.every(Number.isFinite)) {
+    return [...value]
+  }
+  if (typeof value !== 'string') return [...fallback]
+  const parsed = value.trim().split(/\s+/).map(Number)
+  return parsed.length === 3 && parsed.every(Number.isFinite) ? parsed : [...fallback]
+}
+
+function parseUniformScale(value, fallback = 1) {
+  const first = Array.isArray(value) ? value[0] : String(value ?? '').trim().split(/\s+/)[0]
+  const parsed = Number(first)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+
+export function resolveModelPresentationProfile(profileName) {
+  const normalized = String(profileName || '').trim().toLowerCase()
+  const profile = MODEL_PRESENTATION_PROFILES[normalized]
+  return profile ? { ...profile } : null
+}
+
+export function resolveForwardAxis(axis) {
+  const resolved = FORWARD_AXES[String(axis || '').trim().toUpperCase()]
+  return resolved ? { ...resolved } : null
+}
+
+export function getGroundedCenterOffset(bounds) {
+  const min = bounds?.min
+  const max = bounds?.max
+  const values = [min?.x, min?.y, min?.z, max?.x, max?.y, max?.z]
+  if (!values.every(Number.isFinite)) return null
+  return {
+    x: -(min.x + max.x) / 2,
+    y: -min.y,
+    z: -(min.z + max.z) / 2,
+  }
+}
+
+export function getPresentationBoundingWidth({ size, forwardAxis }) {
+  const values = [size?.x, size?.y, size?.z]
+  if (!values.every(Number.isFinite) || values.some((value) => value <= 0)) return null
+  const axis = resolveForwardAxis(forwardAxis)
+  if (!axis) return null
+  if (axis.name === '+X' || axis.name === '-X') return size.z
+  if (axis.name === '+Z' || axis.name === '-Z') return size.x
+  return Math.max(size.x, size.z)
+}
+
+export function calculateAutoFitScale({
+  boundingBoxWidth,
+  physicalWidth,
+  fitRatio,
+  scaleMultiplier = 1,
+  fallbackScale = 1,
+  minScale = 0.01,
+  maxScale = 5,
+}) {
+  const safeFallback = Number.isFinite(fallbackScale) && fallbackScale > 0 ? fallbackScale : 1
+  if (!Number.isFinite(boundingBoxWidth) || boundingBoxWidth <= 0) {
+    return { ok: false, reason: 'invalid_bounding_box_width', finalScale: safeFallback }
+  }
+  if (!Number.isFinite(physicalWidth) || physicalWidth <= 0) {
+    return { ok: false, reason: 'invalid_physical_width', finalScale: safeFallback }
+  }
+  if (!Number.isFinite(fitRatio) || fitRatio <= 0) {
+    return { ok: false, reason: 'invalid_fit_ratio', finalScale: safeFallback }
+  }
+  if (!Number.isFinite(scaleMultiplier) || scaleMultiplier <= 0) {
+    return { ok: false, reason: 'invalid_scale_multiplier', finalScale: safeFallback }
+  }
+
+  const desiredWidth = physicalWidth * fitRatio
+  const autoScale = desiredWidth / boundingBoxWidth
+  const finalScale = autoScale * scaleMultiplier
+  if (
+    !Number.isFinite(finalScale)
+    || finalScale < minScale
+    || finalScale > maxScale
+  ) {
+    return { ok: false, reason: 'scale_out_of_bounds', finalScale: safeFallback }
+  }
+  return { ok: true, reason: 'auto_fit', desiredWidth, autoScale, finalScale }
+}
+
+export function resolveModelPresentation({ config, bounds, physicalWidth }) {
+  const legacyPosition = parseVector3(config?.position, [0, 0, 0])
+  const legacyRotation = parseVector3(config?.rotation, [0, 0, 0])
+  const legacyScale = parseUniformScale(config?.scale, 1)
+  const profile = resolveModelPresentationProfile(config?.presentation_profile)
+  if (!profile) {
+    return {
+      mode: 'legacy',
+      profile: null,
+      position: legacyPosition,
+      rotation: legacyRotation,
+      finalScale: legacyScale,
+      positionOffset: [0, 0, 0],
+      forwardAxis: null,
+      autoFit: null,
+    }
+  }
+
+  const forwardAxis = resolveForwardAxis(config?.presentation_forward_axis) || resolveForwardAxis('+Z')
+  const positionOffset = parseVector3(config?.presentation_position_offset, [0, 0, 0])
+  const scaleMultiplier = Number(config?.presentation_scale_multiplier ?? 1)
+  const boundingBoxWidth = getPresentationBoundingWidth({
+    size: bounds?.size,
+    forwardAxis: forwardAxis?.name,
+  })
+  const autoFit = calculateAutoFitScale({
+    boundingBoxWidth,
+    physicalWidth: Number(physicalWidth),
+    fitRatio: profile.fitRatio,
+    scaleMultiplier,
+    fallbackScale: legacyScale,
+    minScale: profile.minScale,
+    maxScale: profile.maxScale,
+  })
+
+  return {
+    mode: 'profile',
+    profile: profile.name,
+    position: positionOffset,
+    rotation: [0, 0, 0],
+    finalScale: autoFit.finalScale,
+    positionOffset,
+    forwardAxis,
+    autoFit,
   }
 }
 

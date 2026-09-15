@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -200,6 +200,7 @@
       'distanceBetweenPositions',
       'getConsumablePartnerTargets',
       'getEligibleCatAmbient',
+      'getGroundedCenterOffset',
       'getInteractionParticipantTargets',
       'getSurfaceAlignmentQuaternion',
       'getSurfaceFlatScore',
@@ -212,6 +213,8 @@
       'normalizeInteractionRule',
       'reconcileInteractionParticipantTracking',
       'resolveInteractionAnimation',
+      'resolveForwardAxis',
+      'resolveModelPresentation',
       'resolvePresentationMode',
       'resolveRuleProximityConfig',
       'resolveTargetModelAttachment',
@@ -223,7 +226,7 @@
     ];
 
     try {
-      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=multi-target-attach-v1');
+      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=presentation-profile-v1');
       const missingExports = expectedLifecycleExports.filter((name) => !(name in lifecycleModule));
       if (missingExports.length > 0) {
         debug('MODULE_PROBE_LIFECYCLE_FAIL', {
@@ -257,6 +260,7 @@
       distanceBetweenPositions,
       getConsumablePartnerTargets,
       getEligibleCatAmbient,
+      getGroundedCenterOffset,
       getInteractionParticipantTargets,
       getSurfaceAlignmentQuaternion,
       getSurfaceFlatScore,
@@ -269,6 +273,8 @@
       normalizeInteractionRule,
       reconcileInteractionParticipantTracking,
       resolveInteractionAnimation,
+      resolveForwardAxis,
+      resolveModelPresentation,
       resolvePresentationMode,
       resolveRuleProximityConfig,
       resolveTargetModelAttachment,
@@ -277,7 +283,7 @@
       shouldReplaceCatAnimation,
       shouldRevealAR,
       smoothstep,
-    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=multi-target-attach-v1';
+    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=presentation-profile-v1';
     window.THREE = THREE;
 
     // ========== RUNTIME DIAGNOSTICS ==========
@@ -336,21 +342,21 @@
     // ========== PER-TARGET INSTANCE STATE ==========
     // One entry per tracked QR code. scene/camera/renderer stay singletons (ONE XR scene).
     const targetInstances = new Map();
-    // Primary target's singleton refs â€” used for the entry (scanned) target's model rendering
+    // Primary target's singleton refs — used for the entry (scanned) target's model rendering
     // Compatibility diagnostics for the scanned entry target only. Generic
     // rendering and interaction ownership live exclusively on targetInstances.
     let loadedModel = null;
 
-    // Scene singletons â€” ONE XR scene, shared by all targets
+    // Scene singletons — ONE XR scene, shared by all targets
     let scene = null, camera = null, renderer = null;
 
     // ========== INTERACTION STATE MACHINE ==========
     // Phases:
-    // SEARCH_PRIMARY â†’ PRIMARY_LOCKED â†’ WAIT_SECONDARY
-    // â†’ WAIT_SECONDARY_MODEL (fish found but model not yet visible)
-    // â†’ PROXIMITY_PENDING â†’ PROXIMITY_ENTER
-    // â†’ COMBO_ARMED â†’ COMBO_TURNING â†’ COMBO_PLAYING â†’ COMBO_CONSUMED
-    // â†’ (rearm on far) â†’ WAIT_SECONDARY
+    // SEARCH_PRIMARY → PRIMARY_LOCKED → WAIT_SECONDARY
+    // → WAIT_SECONDARY_MODEL (fish found but model not yet visible)
+    // → PROXIMITY_PENDING → PROXIMITY_ENTER
+    // → COMBO_ARMED → COMBO_TURNING → COMBO_PLAYING → COMBO_CONSUMED
+    // → (rearm on far) → WAIT_SECONDARY
     const InteractionPhase = {
       SEARCH_PRIMARY: 'SEARCH_PRIMARY',
       PRIMARY_LOCKED: 'PRIMARY_LOCKED',
@@ -452,7 +458,7 @@
       actorTarget: null,
       partnerTargets: [],
       // Visual grace: targets pending hidden due to grace expiry
-      pendingGraceHides: new Map(), // targetName â†’ graceStartTime
+      pendingGraceHides: new Map(), // targetName → graceStartTime
       // Debug: last logged SECONDARY_READINESS to avoid spam
       lastSecondaryReadiness: null,
       consumeTimeoutId: null,
@@ -482,6 +488,11 @@
         position: null,
         rotation: null,
         scale: null,
+        physical_width_m: null,
+        presentation_profile: null,
+        presentation_scale_multiplier: null,
+        presentation_position_offset: null,
+        presentation_forward_axis: null,
       }];
     }
 
@@ -508,6 +519,8 @@
         modelState: 'idle', // idle | loading | loaded | error
         modelLoadStart: 0,
         pivotNormalized: false, // normalize pivot only once per model
+        modelPresentation: null,
+        presentationBounds: null,
         catInteractionProxy: null,
         // Interaction fields
         foundAt: null,
@@ -969,7 +982,7 @@
       return playCatOneShot({ clipName: 'CAT_SPIN', source: 'CAT_SPIN', priority: 60 });
     }
 
-    // Pointer event handler â€” records hit eligibility and classifies on pointerup.
+    // Pointer event handler — records hit eligibility and classifies on pointerup.
     function onPointerDown(event) {
       // Ignore UI interactions
       if (event.target.closest?.('#overlay, #debug-panel, button, input')) return;
@@ -1082,7 +1095,7 @@
 
     // ========== BOOT GATE ==========
     // Controls when the AR experience is revealed to the user.
-    // XR camera/engine runs in the background â€” this only gates visual experience.
+    // XR camera/engine runs in the background — this only gates visual experience.
     function maybeRevealAR({ trigger } = {}) {
       if (bootState.arRevealed) return;
       if (!shouldRevealAR({
@@ -1133,7 +1146,7 @@
 
     // ========== THREE.JS STUB ==========
     function initThree() {
-      logToBuffer('info', 'Three.js stubs ready â€” scene/camera/renderer acquired from XR8');
+      logToBuffer('info', 'Three.js stubs ready — scene/camera/renderer acquired from XR8');
     }
 
     // ========== MODEL LOADING ==========
@@ -1166,9 +1179,21 @@
             // Get per-target config (defaults from URL params for primary)
             const instance = targetInstances.get(targetName);
             const cfg = instance?.config || {};
-            const pos = parseVector(cfg.position, [0, 0, -0.5]);
-            const rot = parseVector(cfg.rotation, [0, 0, 0]);
-            const sc  = parseScale(cfg.scale || params.get('scale') || '1');
+            const preliminaryPresentation = resolveModelPresentation({
+              config: cfg,
+              bounds: { size: { x: 1, y: 1, z: 1 } },
+              physicalWidth: cfg.physical_width_m,
+            });
+            const hasPresentationProfile = preliminaryPresentation.mode === 'profile';
+            const pos = hasPresentationProfile
+              ? [0, 0, 0]
+              : parseVector(cfg.position, [0, 0, -0.5]);
+            const rot = hasPresentationProfile
+              ? [0, 0, 0]
+              : parseVector(cfg.rotation, [0, 0, 0]);
+            const sc = hasPresentationProfile
+              ? 1
+              : parseScale(cfg.scale || params.get('scale') || '1');
 
             model.position.set(pos[0], pos[1], pos[2]);
             model.rotation.set(rot[0], rot[1], rot[2]);
@@ -1202,6 +1227,7 @@
               url, targetName,
               animations: gltf.animations?.map(a => a.name) || [],
               position: pos, rotation: rot, scale: sc,
+              presentationProfile: preliminaryPresentation.profile,
               boundingBox: { min: [box.min.x, box.min.y, box.min.z], max: [box.max.x, box.max.y, box.max.z], size: [size.x, size.y, size.z] },
               sceneChildren: scene?.children?.length || 0,
               xrSceneReady: !!scene,
@@ -1414,31 +1440,122 @@
       // Normalize pivot only once — re-running Box3 on an already-transformed model
       // produces different values on each found/lost cycle
       if (!instance.pivotNormalized) {
-        const box = new THREE.Box3().setFromObject(model);
-        const center = new THREE.Vector3();
-        box.getCenter(center);
+        const cfg = instance.config || {};
+        const initialPresentation = resolveModelPresentation({
+          config: cfg,
+          bounds: { size: { x: 1, y: 1, z: 1 } },
+          physicalWidth: cfg.physical_width_m,
+        });
 
-        model.position.set(-center.x, -box.min.y, -center.z);
-        model.rotation.set(0, 0, 0);
+        // A profile owns local asset orientation. Legacy transforms remain
+        // on model-offset below, preserving every record without a profile.
+        const usesPresentationProfile = initialPresentation.mode === 'profile';
+        let autoFitBounds = null;
+        if (usesPresentationProfile) {
+          const forwardAxis = initialPresentation.forwardAxis || resolveForwardAxis('+Z');
+          model.position.set(0, 0, 0);
+          model.rotation.set(0, 0, 0);
+          model.scale.setScalar(1);
+          const assetBox = new THREE.Box3().setFromObject(model);
+          const assetSize = new THREE.Vector3();
+          assetBox.getSize(assetSize);
+          autoFitBounds = {
+            min: { x: assetBox.min.x, y: assetBox.min.y, z: assetBox.min.z },
+            max: { x: assetBox.max.x, y: assetBox.max.y, z: assetBox.max.z },
+            size: { x: assetSize.x, y: assetSize.y, z: assetSize.z },
+          };
+          model.quaternion.setFromUnitVectors(
+            new THREE.Vector3(forwardAxis.x, forwardAxis.y, forwardAxis.z),
+            new THREE.Vector3(0, 0, 1),
+          );
+          model.scale.setScalar(1);
+        }
+
+        const box = new THREE.Box3().setFromObject(model);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        const pivotCorrection = getGroundedCenterOffset({ min: box.min, max: box.max });
+        const safePivotCorrection = pivotCorrection || { x: 0, y: 0, z: 0 };
+        if (!pivotCorrection) {
+          sendARDebug('MODEL_PRESENTATION_FALLBACK', {
+            targetName: instance.config.qr_id,
+            reason: 'invalid_bounding_box',
+          });
+        }
+        model.position.set(
+          safePivotCorrection.x,
+          safePivotCorrection.y,
+          safePivotCorrection.z,
+        );
+        if (!usesPresentationProfile) {
+          model.rotation.set(0, 0, 0);
+        }
         model.scale.setScalar(1);
 
+        const presentation = resolveModelPresentation({
+          config: cfg,
+          bounds: autoFitBounds || {
+            min: box.min,
+            max: box.max,
+            size: { x: size.x, y: size.y, z: size.z },
+          },
+          physicalWidth: cfg.physical_width_m,
+        });
+        instance.modelPresentation = presentation;
+        instance.presentationBounds = autoFitBounds || {
+          min: { x: box.min.x, y: box.min.y, z: box.min.z },
+          max: { x: box.max.x, y: box.max.y, z: box.max.z },
+          size: { x: size.x, y: size.y, z: size.z },
+        };
         instance.pivotNormalized = true;
         sendARDebug('MODEL_PIVOT_NORMALIZE', {
           targetName: instance.config.qr_id,
-          bboxCenter: [center.x, center.y, center.z],
-          pivotCorrection: { x: -center.x, y: -box.min.y, z: -center.z },
+          bboxCenter: [
+            (box.min.x + box.max.x) / 2,
+            (box.min.y + box.max.y) / 2,
+            (box.min.z + box.max.z) / 2,
+          ],
+          pivotCorrection: safePivotCorrection,
         });
+        if (presentation.mode === 'profile') {
+          sendARDebug('MODEL_PRESENTATION_PROFILE', {
+            targetName: instance.config.qr_id,
+            profile: presentation.profile,
+            bbox: instance.presentationBounds,
+            physicalWidth: cfg.physical_width_m,
+            scaleMultiplier: cfg.presentation_scale_multiplier ?? 1,
+            positionOffset: presentation.positionOffset,
+          });
+          sendARDebug('MODEL_AUTO_FIT', {
+            targetName: instance.config.qr_id,
+            profile: presentation.profile,
+            physicalWidth: cfg.physical_width_m,
+            autoScale: presentation.autoFit?.autoScale ?? null,
+            scaleMultiplier: cfg.presentation_scale_multiplier ?? 1,
+            finalScale: presentation.finalScale,
+            reason: presentation.autoFit?.reason,
+          });
+          sendARDebug('MODEL_AUTO_ORIENTATION', {
+            targetName: instance.config.qr_id,
+            profile: presentation.profile,
+            forwardAxis: presentation.forwardAxis?.name ?? null,
+          });
+        }
       }
 
       // Apply per-target config to offset group (safe to re-apply — offset is deterministic config)
       const cfg = instance.config;
       if (instance.offsetGroup) {
-        const pos = parseVector(cfg?.position, [0, 0, 0]);
-        const rot = parseVector(cfg?.rotation, [0, 0, 0]);
-        const sc  = parseScale(cfg?.scale);
-        instance.offsetGroup.position.set(pos[0], pos[1], pos[2]);
-        instance.offsetGroup.rotation.set(rot[0], rot[1], rot[2]);
-        instance.offsetGroup.scale.setScalar(sc);
+        const presentation = instance.modelPresentation || resolveModelPresentation({
+          config: cfg,
+          bounds: instance.presentationBounds,
+          physicalWidth: cfg?.physical_width_m,
+        });
+        const [x, y, z] = presentation.position;
+        const [rx, ry, rz] = presentation.rotation;
+        instance.offsetGroup.position.set(x, y, z);
+        instance.offsetGroup.rotation.set(rx, ry, rz);
+        instance.offsetGroup.scale.setScalar(presentation.finalScale);
       }
 
       // Keep presentation and transient interaction transforms separate. If a
@@ -1636,7 +1753,7 @@
             bootState.cameraReady = true;
             sendARDebug('BOOT_CAMERA_READY', {});
             sendMessage('XR_STARTED', { engine: '8th-wall-self-hosted', qrId, word, hasModel: !!modelUrl, hasModelLoaded: !!loadedModel });
-            // Don't reveal AR yet â€” boot gate controls when the experience becomes visible.
+            // Don't reveal AR yet — boot gate controls when the experience becomes visible.
             // Camera is live behind the loading overlay.
             maybeRevealAR({ trigger: 'cameraReady' });
           }
@@ -1778,7 +1895,7 @@
 
       sendARDebug('XR_PIPELINE_READY', {});
 
-      // Configure ALL image targets â€” disableWorldTracking reduces processing for
+      // Configure ALL image targets — disableWorldTracking reduces processing for
       // image-target-only experiences (no surface/plane SLAM needed)
       const imageTargetData = targetDataList.map(t => ({ name: t.name, type: t.type || 'PLANAR', imagePath: t.imagePath, properties: t.properties || {}, metadata: t.metadata || {} }));
       sendARDebug('XR_TARGETS_REGISTER', { count: imageTargetData.length, targets: imageTargetData.map(t => t.name) });
@@ -1811,7 +1928,7 @@
     }
 
     function getAnchorWorldPosition(instance) {
-      // Use target anchor pose (not model transform) â€” pose is what represents
+      // Use target anchor pose (not model transform) — pose is what represents
       // the actual flashcard position in world space, free of pivot/scale/offset.
       const pose = trackedTargets.get(instance.config.qr_id);
       if (!pose) return null;
@@ -2182,7 +2299,7 @@
       }
 
       if (elapsed >= turn.durationMs) {
-        // Turn complete â€” snap to final and clear
+        // Turn complete — snap to final and clear
         if (root) root.rotation.y = turn.toYaw;
         interactionState.actorTurn = null;
         sendARDebug('INTERACTION_ACTOR_TURN_COMPLETE', {
@@ -2442,7 +2559,7 @@
         actorInst.foundAt = now;
       }
 
-      // Confirmed actor loss (grace expired) â†’ full reset
+      // Confirmed actor loss (grace expired) → full reset
       if (
         !actorEffectivelyTracked
         && interactionState.phase !== InteractionPhase.SEARCH_PRIMARY
@@ -2579,7 +2696,7 @@
           }
         }
 
-        // Partner found â†’ decide if we can go straight to proximity
+        // Partner found → decide if we can go straight to proximity
         if (partnerEffectivelyTracked && phase === InteractionPhase.WAIT_SECONDARY) {
           if (secondaryAssetReady) {
             setInteractionPhase(InteractionPhase.PROXIMITY_PENDING);
@@ -2594,7 +2711,7 @@
           }
         }
 
-        // Partner leaves â†’ drop back to WAIT_SECONDARY
+        // Partner leaves → drop back to WAIT_SECONDARY
         if (!partnerEffectivelyTracked) {
           if (
             phase === InteractionPhase.PROXIMITY_PENDING ||
@@ -2606,7 +2723,7 @@
           }
         }
 
-        // Partner asset became ready mid-session â†’ reset proximity timer
+        // Partner asset became ready mid-session → reset proximity timer
         if (secondaryAssetReady && phase === InteractionPhase.WAIT_SECONDARY_MODEL) {
           interactionState.proximityEnteredAt = null;
           interactionState.filteredDistance = null;
@@ -2853,7 +2970,7 @@
         instance.pose = null;
         instance.lostAt = now;
         instance.lossConfirmedAt = null;
-        // DO NOT hide model immediately â€” visual grace is handled independently.
+        // DO NOT hide model immediately — visual grace is handled independently.
         // after lostGraceMs expires. This preserves participant visibility during
         // brief occlusion and during COMBO_PLAYING.
       }
@@ -2920,9 +3037,9 @@
     });
 
     // ========== STAGED MODEL PRELOAD ==========
-    // Phase 1: load primary model immediately (cat â€” user expects this first).
+    // Phase 1: load primary model immediately (cat — user expects this first).
     // Phase 2: after primary completes, begin secondary preloads (fish) in background.
-    // Never initiate new downloads from IMAGE_FOUND â€” reuse existing promises.
+    // Never initiate new downloads from IMAGE_FOUND — reuse existing promises.
 
     function preloadSecondaryTargets() {
       const secondary = xrTargetConfigs.filter(
@@ -2945,7 +3062,7 @@
 
         const targetsPromise = Promise.all(xrTargetConfigs.map(cfg => loadTargetData(cfg)));
 
-        // Phase 1: preload primary model immediately â€” no await.
+        // Phase 1: preload primary model immediately — no await.
         sendARDebug('MODEL_PRIMARY_PRELOAD_START', { targetName: primaryModelTargetName });
         const primaryModelPromise = ensureTargetModelLoaded(primaryModelTargetName);
         primaryModelPromise.then(() => {
@@ -2966,7 +3083,7 @@
         setPhase('viewing');
         sendARDebug('INIT_COMPLETE', { modelLoaded: !!loadedModel, targetCount: targetDataList.length });
 
-        // Attach CAT gesture handlers â€” pointer events work for touch and mouse.
+        // Attach CAT gesture handlers — pointer events work for touch and mouse.
         window.addEventListener('pointerdown', onPointerDown, { passive: true });
         window.addEventListener('pointerup', onPointerUp, { passive: true });
         window.addEventListener('pointercancel', onPointerCancel, { passive: true });
