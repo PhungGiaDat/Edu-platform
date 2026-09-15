@@ -191,6 +191,7 @@
     const expectedLifecycleExports = [
       'advanceCatReturnTween',
       'advanceComboProximityGate',
+      'advanceTargetAcquisitionState',
       'canPlayCatMeow',
       'classifyCatGesture',
       'classifyCatTap',
@@ -206,6 +207,7 @@
       'getSurfaceFlatScore',
       'getTargetLossGraceState',
       'hasAnimationCapability',
+      'selectCapabilityTargetInstance',
       'isCatOneShotCompletionOwner',
       'isInteractionRunOwner',
       'isInteractionTransactionLocked',
@@ -226,7 +228,7 @@
     ];
 
     try {
-      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=presentation-profile-v1');
+      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=acquisition-state-v1');
       const missingExports = expectedLifecycleExports.filter((name) => !(name in lifecycleModule));
       if (missingExports.length > 0) {
         debug('MODULE_PROBE_LIFECYCLE_FAIL', {
@@ -251,6 +253,7 @@
     import {
       advanceCatReturnTween,
       advanceComboProximityGate,
+      advanceTargetAcquisitionState,
       canPlayCatMeow,
       classifyCatGesture,
       classifyCatTap,
@@ -266,6 +269,7 @@
       getSurfaceFlatScore,
       getTargetLossGraceState,
       hasAnimationCapability,
+      selectCapabilityTargetInstance,
       isCatOneShotCompletionOwner,
       isInteractionRunOwner,
       isInteractionTransactionLocked,
@@ -283,7 +287,7 @@
       shouldReplaceCatAnimation,
       shouldRevealAR,
       smoothstep,
-    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=presentation-profile-v1';
+    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=acquisition-state-v1';
     window.THREE = THREE;
 
     // ========== RUNTIME DIAGNOSTICS ==========
@@ -707,10 +711,29 @@
       );
     }
 
+    function getCatMascotInstance({
+      requireTracked = false,
+      requireVisible = false,
+      requireInteractionReady = false,
+    } = {}) {
+      const selected = selectCapabilityTargetInstance({
+        targetInstances,
+        supportsCapability: isCatMascotInstance,
+        requireTracked,
+        requireVisible,
+        requireInteractionReady,
+      });
+      return selected?.instance || null;
+    }
+
     // CAT gestures are a per-model capability layer. Generic pair interaction
     // never depends on CAT_MEOW or any other mascot clip.
     function canTriggerCatInteraction() {
-      const catInst = targetInstances.get(primaryModelTargetName);
+      const catInst = getCatMascotInstance({
+        requireTracked: true,
+        requireVisible: true,
+        requireInteractionReady: true,
+      });
       if (!catInst) return false;
       if (!isCatMascotInstance(catInst)) return false;
       if (!catInst.model) return false;
@@ -771,7 +794,7 @@
     function cacheCatInteractionProxy(instance) {
       if (
         !instance?.model ||
-        instance.config?.qr_id !== primaryModelTargetName ||
+        !isCatMascotInstance(instance) ||
         instance.catInteractionProxy
       ) return;
 
@@ -805,6 +828,7 @@
       instance.catInteractionProxy = proxy;
 
       sendARDebug('CAT_INTERACTION_PROXY_READY', {
+        targetName: instance.config?.qr_id,
         scale: CAT_HIT_PROXY_SCALE,
         radius: Number(localRadius.toFixed(4)),
       });
@@ -868,9 +892,9 @@
       }
     }
 
-    function emitCatOneShotStart(source, clip, generation) {
+    function emitCatOneShotStart(source, clip, generation, catInst) {
       const details = {
-        targetName: primaryModelTargetName,
+        targetName: catInst?.config?.qr_id || null,
         clip: clip.name,
         generation,
         durationMs: Math.round((clip.duration || 0) * 1000),
@@ -881,11 +905,12 @@
       if (source === 'CAT_AMBIENT') sendARDebug('CAT_AMBIENT_START', { clip: clip.name, generation });
     }
 
-    function emitCatOneShotFinished(source, clip, generation) {
-      if (source === 'CAT_MEOW') sendARDebug('CAT_MEOW_FINISHED', { generation });
-      if (source === 'CAT_PET_REACT') sendARDebug('CAT_PET_REACT_FINISHED', { generation });
-      if (source === 'CAT_SPIN') sendARDebug('CAT_SPIN_FINISHED', { generation });
-      if (source === 'CAT_AMBIENT') sendARDebug('CAT_AMBIENT_FINISHED', { clip: clip.name, generation });
+    function emitCatOneShotFinished(source, clip, generation, catInst) {
+      const details = { targetName: catInst?.config?.qr_id || null, generation };
+      if (source === 'CAT_MEOW') sendARDebug('CAT_MEOW_FINISHED', details);
+      if (source === 'CAT_PET_REACT') sendARDebug('CAT_PET_REACT_FINISHED', details);
+      if (source === 'CAT_SPIN') sendARDebug('CAT_SPIN_FINISHED', details);
+      if (source === 'CAT_AMBIENT') sendARDebug('CAT_AMBIENT_FINISHED', { ...details, clip: clip.name });
     }
 
     function clearCatOneShotOwnershipForInteractionAction(action) {
@@ -915,7 +940,7 @@
     }
 
     function playCatOneShot({ clipName, source, priority, audio = false }) {
-      const catInst = targetInstances.get(primaryModelTargetName);
+      const catInst = getCatMascotInstance({ requireTracked: true, requireVisible: true });
       if (!catInst || !catInst.mixer) return false;
       if (!hasAnimationCapability(catInst, clipName)) return false;
       const clip = catInst.animations?.find(candidate => candidate.name === clipName);
@@ -949,7 +974,7 @@
       action.clampWhenFinished = true;
       action.fadeIn(0.12);
       action.play();
-      emitCatOneShotStart(source, clip, generation);
+      emitCatOneShotStart(source, clip, generation, catInst);
       if (audio) requestCatMeowAudio();
 
       const onFinished = (event) => {
@@ -971,7 +996,7 @@
         catAnimationState.clipName = null;
         catAnimationState.source = null;
         catAnimationState.priority = 0;
-        emitCatOneShotFinished(source, clip, generation);
+        emitCatOneShotFinished(source, clip, generation, catInst);
         if (source === 'CAT_AMBIENT') {
           catAmbientState.nextClip = clip.name === 'CAT_LOOK_UP' ? 'CAT_SIT' : 'CAT_LOOK_UP';
         }
@@ -1007,7 +1032,11 @@
       if (!renderer?.domElement) return;
 
       // Only check CAT when AR is visible and CAT exists
-      const catInst = targetInstances.get(primaryModelTargetName);
+      const catInst = getCatMascotInstance({
+        requireTracked: true,
+        requireVisible: true,
+        requireInteractionReady: true,
+      });
       if (!catInst?.model) return;
 
       // Compute NDC pointer
@@ -1091,7 +1120,7 @@
     }
 
     function updateCatAmbient(now) {
-      const catInst = targetInstances.get(primaryModelTargetName);
+      const catInst = getCatMascotInstance({ requireTracked: true, requireVisible: true });
       if (
         !catInst?.model ||
         catInst.modelState !== 'loaded' ||
@@ -1251,6 +1280,8 @@
               isPrimary: targetName === primaryModelTargetName,
             });
 
+            if (isCatMascotInstance(instance)) preloadCatMeowAudio();
+
             // ---- Boot gate: only the scanned entry model gates first reveal ----
             if (targetName === primaryModelTargetName && !bootState.primaryReady) {
               bootState.primaryReady = true;
@@ -1259,7 +1290,6 @@
               sendARDebug('BOOT_PRIMARY_READY', { targetName: primaryModelTargetName, durationMs });
               updateOverlayForBoot(null);
               maybeRevealAR({ trigger: 'primaryReady' });
-              if (isCatMascotInstance(instance)) preloadCatMeowAudio();
             }
 
             // Network timing
@@ -2529,7 +2559,17 @@
 
         interactionState.pendingGraceHides.delete(targetName);
         const instance = targetInstances.get(targetName);
-        if (instance) instance.lossConfirmedAt = now;
+        if (instance) {
+          instance.lossConfirmedAt = now;
+          const acquisitionState = advanceTargetAcquisitionState({
+            foundAt: instance.foundAt,
+            stable: instance.stable,
+            event: 'confirmed_loss',
+            now,
+          });
+          instance.foundAt = acquisitionState.foundAt;
+          instance.stable = acquisitionState.stable;
+        }
         sendARDebug('TARGET_LOST_CONFIRMED', {
           targetName,
           lostForMs: Math.round(lossGrace.lostForMs),
@@ -2953,7 +2993,14 @@
         instance.tracked = true;
         instance.lostAt = null;
         instance.lossConfirmedAt = null;
-        if (instance.foundAt == null) instance.foundAt = now;
+        const acquisitionState = advanceTargetAcquisitionState({
+          foundAt: instance.foundAt,
+          stable: instance.stable,
+          event: 'found',
+          now,
+        });
+        instance.foundAt = acquisitionState.foundAt;
+        instance.stable = acquisitionState.stable;
       }
 
       // Cancel only a brief loss. A late callback was confirmed above.

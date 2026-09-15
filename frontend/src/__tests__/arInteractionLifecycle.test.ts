@@ -21,7 +21,7 @@ import {
 } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 const EXPECTED_LIFECYCLE_MODULE_URL =
-  './static/ar-assets/js/ar-interaction-lifecycle.js?v=presentation-profile-v1'
+  './static/ar-assets/js/ar-interaction-lifecycle.js?v=acquisition-state-v1'
 
 describe('AR interaction lifecycle contracts', () => {
   it('plans target-local attachment for every eligible tracked instance without semantic target names', () => {
@@ -63,6 +63,179 @@ describe('AR interaction lifecycle contracts', () => {
       tracked: true,
       sceneReady: false,
     })).toEqual({ action: 'wait', reason: 'xr_scene_not_ready' })
+  })
+
+  it('selects a loaded mascot capability owner independently of entry-target order', () => {
+    const selectCapabilityTargetInstance = Reflect.get(lifecycleModule, 'selectCapabilityTargetInstance')
+    const entryA = {
+      animations: [{ name: 'FISH_IDLE' }],
+      modelState: 'loaded',
+      model: { visible: true },
+      tracked: true,
+      interactionReady: true,
+    }
+    const mascotB = {
+      animations: [
+        { name: 'CAT_IDLE' },
+        { name: 'CAT_MEOW' },
+        { name: 'CAT_PET_REACT' },
+      ],
+      modelState: 'loaded',
+      model: { visible: true },
+      tracked: true,
+      interactionReady: true,
+    }
+    const supportsMascot = (instance: typeof entryA | typeof mascotB) => (
+      instance.animations.some(animation => animation.name === 'CAT_IDLE')
+      && instance.animations.some(animation => (
+        animation.name === 'CAT_MEOW' || animation.name === 'CAT_PET_REACT'
+      ))
+    )
+
+    expect(selectCapabilityTargetInstance).toBeTypeOf('function')
+
+    const fromFishEntry = selectCapabilityTargetInstance?.({
+      targetInstances: new Map([
+        ['entryA', entryA],
+        ['mascotB', mascotB],
+      ]),
+      supportsCapability: supportsMascot,
+      requireTracked: true,
+      requireVisible: true,
+      requireInteractionReady: true,
+    })
+    const fromMascotEntry = selectCapabilityTargetInstance?.({
+      targetInstances: new Map([
+        ['mascotB', mascotB],
+        ['entryA', entryA],
+      ]),
+      supportsCapability: supportsMascot,
+      requireTracked: true,
+      requireVisible: true,
+      requireInteractionReady: true,
+    })
+
+    expect(fromFishEntry).toMatchObject({ targetName: 'mascotB', instance: mascotB })
+    expect(fromMascotEntry).toMatchObject({ targetName: 'mascotB', instance: mascotB })
+  })
+
+  it('keeps optional mascot ownership capability-based in the viewer runtime', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const capabilityStart = source.indexOf('function getCatMascotInstance(')
+    const capabilityEnd = source.indexOf('\n    function canTriggerCatInteraction()', capabilityStart)
+    const capabilitySource = source.slice(capabilityStart, capabilityEnd)
+    const proxyStart = source.indexOf('function cacheCatInteractionProxy(instance)')
+    const proxyEnd = source.indexOf('\n    // Preload meow audio', proxyStart)
+    const proxySource = source.slice(proxyStart, proxyEnd)
+    const triggerStart = source.indexOf('function canTriggerCatInteraction()')
+    const triggerEnd = source.indexOf('\n    function resetCatAmbientIdle()', triggerStart)
+    const triggerSource = source.slice(triggerStart, triggerEnd)
+    const oneShotStart = source.indexOf('function playCatOneShot')
+    const oneShotEnd = source.indexOf('\n    function playCatMeow', oneShotStart)
+    const oneShotSource = source.slice(oneShotStart, oneShotEnd)
+    const pointerStart = source.indexOf('function onPointerDown(event)')
+    const pointerEnd = source.indexOf('\n    function onPointerUp(event)', pointerStart)
+    const pointerSource = source.slice(pointerStart, pointerEnd)
+    const ambientStart = source.indexOf('function updateCatAmbient(now)')
+    const ambientEnd = source.indexOf('\n    // ========== BOOT GATE', ambientStart)
+    const ambientSource = source.slice(ambientStart, ambientEnd)
+    const modelComplete = source.indexOf("sendARDebug('MODEL_LOAD_COMPLETE'")
+    const primaryGate = source.indexOf("if (targetName === primaryModelTargetName && !bootState.primaryReady)", modelComplete)
+    const modelReadySource = source.slice(modelComplete, primaryGate)
+
+    expect(capabilityStart).toBeGreaterThanOrEqual(0)
+    expect(capabilitySource).toContain('selectCapabilityTargetInstance')
+    expect(capabilitySource).not.toContain('primaryModelTargetName')
+    expect(proxySource).toContain('!isCatMascotInstance(instance)')
+    expect(proxySource).not.toContain('primaryModelTargetName')
+    expect(proxySource).toContain('targetName: instance.config?.qr_id')
+    expect(triggerSource).toContain('getCatMascotInstance')
+    expect(oneShotSource).toContain('getCatMascotInstance')
+    expect(pointerSource).toContain('getCatMascotInstance')
+    expect(ambientSource).toContain('getCatMascotInstance')
+    expect(modelReadySource).toContain('if (isCatMascotInstance(instance)) preloadCatMeowAudio()')
+  })
+
+  it('keeps acquisition continuous during grace and starts a fresh cycle after confirmed loss', () => {
+    const advanceTargetAcquisitionState = Reflect.get(lifecycleModule, 'advanceTargetAcquisitionState')
+
+    expect(advanceTargetAcquisitionState).toBeTypeOf('function')
+
+    const firstFound = advanceTargetAcquisitionState?.({
+      foundAt: null,
+      stable: false,
+      event: 'found',
+      now: 100,
+    })
+    const briefLoss = getTargetLossGraceState({
+      lostAt: 200,
+      now: 399,
+      lostGraceMs: 300,
+    })
+    const reacquiredWithinGrace = advanceTargetAcquisitionState?.({
+      ...firstFound,
+      event: 'found',
+      now: 399,
+    })
+    const confirmedLoss = getTargetLossGraceState({
+      lostAt: 200,
+      now: 501,
+      lostGraceMs: 300,
+    })
+    const endedCycle = advanceTargetAcquisitionState?.({
+      ...reacquiredWithinGrace,
+      event: 'confirmed_loss',
+      now: 501,
+    })
+    const nextFound = advanceTargetAcquisitionState?.({
+      ...endedCycle,
+      event: 'found',
+      now: 700,
+    })
+
+    expect(briefLoss.withinGrace).toBe(true)
+    expect(reacquiredWithinGrace).toEqual({ foundAt: 100, stable: false })
+    expect(confirmedLoss.confirmed).toBe(true)
+    expect(endedCycle).toEqual({ foundAt: null, stable: false })
+    expect(nextFound).toEqual({ foundAt: 700, stable: false })
+  })
+
+  it('resets acquisition state before deferring a confirmed locked participant loss', () => {
+    const advanceTargetAcquisitionState = Reflect.get(lifecycleModule, 'advanceTargetAcquisitionState')
+    const createInteractionTransaction = Reflect.get(lifecycleModule, 'createInteractionTransaction')
+    const classifyInteractionTargetLoss = Reflect.get(lifecycleModule, 'classifyInteractionTargetLoss')
+    const rule = normalizeInteractionRule({
+      tags: ['actorA', 'partnerB'],
+      target_order: ['actorA', 'partnerB'],
+      combo_id: 'actor-partner',
+    })
+    const transaction = createInteractionTransaction?.({
+      runId: 9,
+      rule,
+      lockedAt: 100,
+      watchdogAt: 1000,
+    })
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const processorStart = source.indexOf('function processPendingTargetLosses(now)')
+    const processorEnd = source.indexOf('function evaluateInteraction(now)', processorStart)
+    const processorSource = source.slice(processorStart, processorEnd)
+
+    expect(advanceTargetAcquisitionState).toBeTypeOf('function')
+    expect(classifyInteractionTargetLoss?.({
+      transaction,
+      targetName: 'actorA',
+      currentRunId: 9,
+    })).toMatchObject({ defer: true, role: 'actor' })
+    expect(advanceTargetAcquisitionState?.({
+      foundAt: 10,
+      stable: true,
+      event: 'confirmed_loss',
+      now: 500,
+    })).toEqual({ foundAt: null, stable: false })
+    expect(processorSource.indexOf("event: 'confirmed_loss'")).toBeGreaterThanOrEqual(0)
+    expect(processorSource.indexOf("event: 'confirmed_loss'")).toBeLessThan(
+      processorSource.indexOf('const lossDecision = getActiveTransactionLossDecision(targetName)'),
+    )
   })
 
   it('keeps rule actor ownership independent from the scanned entry target order', () => {
@@ -1152,7 +1325,7 @@ describe('AR interaction lifecycle contracts', () => {
     const oneShotStart = source.indexOf('function playCatOneShot')
     const oneShotEnd = source.indexOf('\n    function playCatMeow', oneShotStart)
     const oneShotSource = source.slice(oneShotStart, oneShotEnd)
-    const finishedDispatch = oneShotSource.indexOf('emitCatOneShotFinished(source, clip, generation)')
+    const finishedDispatch = oneShotSource.indexOf('emitCatOneShotFinished(source, clip, generation, catInst)')
     const idleRestore = oneShotSource.indexOf('restoreCatIdleAfterOneShot(catInst, action, source, clip.name)')
 
     expect(finishSource).toContain("sendARDebug('CAT_MEOW_FINISHED'")

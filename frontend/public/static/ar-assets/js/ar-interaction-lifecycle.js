@@ -90,6 +90,29 @@ export function getTargetLossGraceState({ lostAt, now, lostGraceMs }) {
   }
 }
 
+/**
+ * Keeps continuous-tracking stability separate from target-loss grace and
+ * interaction ownership. A brief loss leaves the acquisition untouched;
+ * only a confirmed loss starts a new acquisition cycle.
+ */
+export function advanceTargetAcquisitionState({ foundAt, stable, event, now }) {
+  if (event === 'confirmed_loss') {
+    return { foundAt: null, stable: false }
+  }
+
+  if (event === 'found') {
+    return {
+      foundAt: foundAt ?? now,
+      stable: Boolean(stable),
+    }
+  }
+
+  return {
+    foundAt: foundAt ?? null,
+    stable: Boolean(stable),
+  }
+}
+
 const PRESENTATION_MODE_AUTO = 'AUTO'
 const PRESENTATION_MODE_SCREEN = 'SCREEN'
 const PRESENTATION_MODE_TABLETOP = 'TABLETOP'
@@ -588,6 +611,36 @@ export function resolveInteractionAnimation({ rule, actorInstance }) {
 export function hasAnimationCapability(instanceLike, clipName) {
   if (!clipName || !Array.isArray(instanceLike?.animations)) return false
   return instanceLike.animations.some((clip) => clip?.name === clipName)
+}
+
+/**
+ * Selects a deterministically ordered target instance by declared model
+ * capability. It deliberately knows neither target names nor scene objects;
+ * callers provide the capability predicate and any interaction requirements.
+ */
+export function selectCapabilityTargetInstance({
+  targetInstances,
+  supportsCapability,
+  requireTracked = false,
+  requireVisible = false,
+  requireInteractionReady = false,
+}) {
+  if (!targetInstances?.entries || typeof supportsCapability !== 'function') return null
+
+  const entries = Array.from(targetInstances.entries())
+    .filter(([targetName, instance]) => typeof targetName === 'string' && instance)
+    .sort(([leftTargetName], [rightTargetName]) => leftTargetName.localeCompare(rightTargetName))
+
+  for (const [targetName, instance] of entries) {
+    if (!supportsCapability(instance)) continue
+    if (instance.modelState !== 'loaded' || !instance.model) continue
+    if (requireTracked && !instance.tracked) continue
+    if (requireVisible && !instance.model.visible) continue
+    if (requireInteractionReady && !instance.interactionReady) continue
+    return { targetName, instance }
+  }
+
+  return null
 }
 
 export function advanceComboProximityGate({ now, distance, enteredAt, comboConsumed, config }) {

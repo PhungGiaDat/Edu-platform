@@ -25,6 +25,15 @@ export function getTargetLossGraceState(args: {
   confirmed: boolean
   hide: boolean
 }
+export function advanceTargetAcquisitionState(args: {
+  foundAt: number | null
+  stable: boolean
+  event: 'found' | 'confirmed_loss'
+  now: number
+}): {
+  foundAt: number | null
+  stable: boolean
+}
 export function isCatOneShotCompletionOwner(args: Record<string, unknown>): boolean
 
 export function resolveModelPresentationProfile(profileName: unknown): {
@@ -180,6 +189,22 @@ export function hasAnimationCapability(
   instanceLike: { animations?: Array<{ name?: string }> } | null,
   clipName: string,
 ): boolean
+
+export function selectCapabilityTargetInstance<T extends {
+  modelState?: string
+  model?: { visible?: boolean } | null
+  tracked?: boolean
+  interactionReady?: boolean
+  }>(args: {
+  targetInstances?: Map<string, T> | null
+  supportsCapability: (instance: T) => boolean
+  requireTracked?: boolean
+  requireVisible?: boolean
+  requireInteractionReady?: boolean
+}): {
+  targetName: string
+  instance: T
+} | null
 
 export function resolveTargetModelAttachment(args: {
   targetName: string
