@@ -352,6 +352,27 @@ describe('AR interaction lifecycle contracts', () => {
       fallbackScale: 0.8,
     })).toMatchObject({ ok: false, finalScale: 0.8, reason: 'invalid_physical_width' })
     expect(calculateAutoFitScale?.({
+      boundingBoxWidth: Number.NaN,
+      physicalWidth: 0.1,
+      fitRatio: 1.25,
+      scaleMultiplier: 1,
+      fallbackScale: 0.8,
+    })).toMatchObject({ ok: false, finalScale: 0.8, reason: 'invalid_bounding_box_width' })
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 2,
+      physicalWidth: Number.POSITIVE_INFINITY,
+      fitRatio: 1.25,
+      scaleMultiplier: 1,
+      fallbackScale: 0.8,
+    })).toMatchObject({ ok: false, finalScale: 0.8, reason: 'invalid_physical_width' })
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 2,
+      physicalWidth: 0.1,
+      fitRatio: 1.25,
+      scaleMultiplier: Number.NaN,
+      fallbackScale: 0.8,
+    })).toMatchObject({ ok: false, finalScale: 0.8, reason: 'invalid_scale_multiplier' })
+    expect(calculateAutoFitScale?.({
       boundingBoxWidth: 0.01,
       physicalWidth: 10,
       fitRatio: 1.25,
@@ -445,6 +466,49 @@ describe('AR interaction lifecycle contracts', () => {
         finalScale: 0.0625,
       },
     })
+  })
+
+  it('normalizes raw GLB bounds before applying any persisted presentation transform', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const reparentStart = source.indexOf('function reparentModelToAnchor(instance)')
+    const reparentEnd = source.indexOf('// ========== POSE APPLICATION', reparentStart)
+    const reparentSource = source.slice(reparentStart, reparentEnd)
+    const profileBranch = reparentSource.indexOf('if (usesPresentationProfile)')
+    const firstBoundsMeasurement = reparentSource.indexOf('const box = new THREE.Box3().setFromObject(model)')
+    const offsetApplication = reparentSource.indexOf('instance.offsetGroup.position.set(x, y, z)')
+    const positionReset = reparentSource.indexOf('model.position.set(0, 0, 0);')
+    const rotationReset = reparentSource.indexOf('model.rotation.set(0, 0, 0);')
+    const scaleReset = reparentSource.indexOf('model.scale.setScalar(1);')
+
+    expect(reparentStart).toBeGreaterThanOrEqual(0)
+    expect(reparentEnd).toBeGreaterThan(reparentStart)
+    expect(profileBranch).toBeGreaterThanOrEqual(0)
+    expect(firstBoundsMeasurement).toBeGreaterThan(profileBranch)
+    expect(offsetApplication).toBeGreaterThan(firstBoundsMeasurement)
+    expect(positionReset).toBeGreaterThanOrEqual(0)
+    expect(rotationReset).toBeGreaterThanOrEqual(0)
+    expect(scaleReset).toBeGreaterThanOrEqual(0)
+    expect(positionReset).toBeLessThan(profileBranch)
+    expect(rotationReset).toBeLessThan(profileBranch)
+    expect(scaleReset).toBeLessThan(profileBranch)
+  })
+
+  it('normalizes a presentation pivot once while reapplying deterministic offsets after reacquisition', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const reparentStart = source.indexOf('function reparentModelToAnchor(instance)')
+    const normalizationEnd = source.indexOf('// Apply per-target config to offset group', reparentStart)
+    const reparentEnd = source.indexOf('// ========== POSE APPLICATION', normalizationEnd)
+    const normalizationSource = source.slice(reparentStart, normalizationEnd)
+    const reacquireSource = source.slice(normalizationEnd, reparentEnd)
+
+    expect(reparentStart).toBeGreaterThanOrEqual(0)
+    expect(normalizationEnd).toBeGreaterThan(reparentStart)
+    expect(reparentEnd).toBeGreaterThan(normalizationEnd)
+    expect(normalizationSource).toContain('if (!instance.pivotNormalized)')
+    expect(normalizationSource).toContain('instance.pivotNormalized = true')
+    expect(reacquireSource).toContain('instance.offsetGroup.position.set(x, y, z)')
+    expect(reacquireSource).toContain('instance.offsetGroup.rotation.set(rx, ry, rz)')
+    expect(reacquireSource).toContain('instance.offsetGroup.scale.setScalar(presentation.finalScale)')
   })
 
   it('keeps generic presentation helpers free of animal identities', () => {

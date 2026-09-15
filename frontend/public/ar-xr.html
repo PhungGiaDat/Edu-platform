@@ -1497,12 +1497,17 @@
         // A profile owns local asset orientation. Legacy transforms remain
         // on model-offset below, preserving every record without a profile.
         const usesPresentationProfile = initialPresentation.mode === 'profile';
+
+        // Measure the raw asset before any persisted transform is applied to
+        // model-offset. Otherwise legacy position/rotation/scale would affect
+        // the pivot correction and then be applied again by offsetGroup.
+        model.position.set(0, 0, 0);
+        model.rotation.set(0, 0, 0);
+        model.scale.setScalar(1);
+
         let autoFitBounds = null;
         if (usesPresentationProfile) {
           const forwardAxis = initialPresentation.forwardAxis || resolveForwardAxis('+Z');
-          model.position.set(0, 0, 0);
-          model.rotation.set(0, 0, 0);
-          model.scale.setScalar(1);
           const assetBox = new THREE.Box3().setFromObject(model);
           const assetSize = new THREE.Vector3();
           assetBox.getSize(assetSize);
