@@ -27,7 +27,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     id: 'warmup',
     labelEn: 'Warm-up',
     labelVi: 'Khởi động',
-    shortLabelEn: 'Warm-up',
+    shortLabelEn: 'Khởi động',
     shortLabelVi: 'Khởi động',
     icon: '👋',
     backendStepId: 'intro',
@@ -35,7 +35,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
   {
     id: 'video',
     labelEn: 'Video Lesson',
-    labelVi: 'Video bài học',
+    labelVi: 'Xem video',
     shortLabelEn: 'Video',
     shortLabelVi: 'Xem video',
     icon: '🎬',
@@ -45,7 +45,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     id: 'vocabulary',
     labelEn: 'Learn Words',
     labelVi: 'Học từ vựng',
-    shortLabelEn: 'Words',
+    shortLabelEn: 'Từ mới',
     shortLabelVi: 'Từ mới',
     icon: '🔤',
     backendStepId: 'words',
@@ -54,7 +54,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     id: 'listen_choose',
     labelEn: 'Listen & Choose',
     labelVi: 'Nghe & Chọn',
-    shortLabelEn: 'Listen',
+    shortLabelEn: 'Nghe chọn',
     shortLabelVi: 'Nghe chọn',
     icon: '👂',
     backendStepId: 'words',
@@ -63,7 +63,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     id: 'match',
     labelEn: 'Word Match',
     labelVi: 'Nối từ & hình',
-    shortLabelEn: 'Match',
+    shortLabelEn: 'Nối từ',
     shortLabelVi: 'Nối từ',
     icon: '🧩',
     backendStepId: 'words',
@@ -72,7 +72,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     id: 'ar_flashcards',
     labelEn: '3D AR Cards',
     labelVi: 'Thẻ AR 3D',
-    shortLabelEn: 'AR Cards',
+    shortLabelEn: 'Thẻ AR',
     shortLabelVi: 'Thẻ AR',
     icon: '📱',
   },
@@ -80,7 +80,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     id: 'mini_game',
     labelEn: 'Mini Games',
     labelVi: 'Trò chơi nhỏ',
-    shortLabelEn: 'Games',
+    shortLabelEn: 'Trò chơi',
     shortLabelVi: 'Trò chơi',
     icon: '🎮',
     backendStepId: 'game',
@@ -98,7 +98,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     id: 'reward',
     labelEn: 'Reward & Trophy',
     labelVi: 'Nhận phần thưởng',
-    shortLabelEn: 'Reward',
+    shortLabelEn: 'Thưởng',
     shortLabelVi: 'Thưởng',
     icon: '🎁',
     backendStepId: 'finish',
@@ -123,14 +123,13 @@ export const LessonJourney: React.FC<LessonJourneyProps> = ({
   return (
     <nav
       aria-label="Lesson Journey Stepper"
-      className="w-full overflow-x-auto py-1 scrollbar-none"
+      className="w-full overflow-x-auto py-1 scrollbar-none no-scrollbar"
     >
-      <ol className="flex items-center gap-2 min-w-max px-1">
+      <ol className="flex items-center gap-1.5 min-w-max px-1">
         {JOURNEY_STEPS.map((step, idx) => {
           const isActive = idx === currentStepIndex;
           const isCompleted = completedSteps.has(step.id);
           const isAccessible = idx <= currentStepIndex || isCompleted;
-
           const label = locale === 'vi' ? step.shortLabelVi : step.shortLabelEn;
 
           return (
@@ -140,13 +139,13 @@ export const LessonJourney: React.FC<LessonJourneyProps> = ({
                 onClick={() => isAccessible && onSelectStep(idx)}
                 disabled={!isAccessible}
                 aria-current={isActive ? 'step' : undefined}
-                className={`group flex items-center gap-2 rounded-2xl px-3 py-2 text-xs font-black transition-all border-2 ${
+                className={`group flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-black transition-all border-2 ${
                   isActive
-                    ? 'border-white text-slate-900 shadow-md scale-105'
+                    ? 'border-white text-slate-900 shadow-sm scale-105'
                     : isCompleted
                       ? 'border-emerald-200 bg-emerald-50/90 text-emerald-800 hover:bg-emerald-100'
                       : 'border-slate-200 bg-white/70 text-slate-400 hover:bg-white hover:text-slate-600'
-                } ${!isAccessible ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                } ${!isAccessible ? 'cursor-not-allowed opacity-40' : 'cursor-pointer active:scale-95'}`}
                 style={
                   isActive
                     ? {
@@ -157,22 +156,22 @@ export const LessonJourney: React.FC<LessonJourneyProps> = ({
                     : undefined
                 }
               >
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-sm shadow-sm">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs shadow-xs">
                   {isCompleted && !isActive ? (
                     <span className="text-xs font-black text-emerald-600">✓</span>
                   ) : (
                     step.icon
                   )}
                 </span>
-                <span className="whitespace-nowrap font-bold">
+                <span className="whitespace-nowrap font-bold text-[11px]">
                   {idx + 1}. {label}
                 </span>
               </button>
 
               {idx < JOURNEY_STEPS.length - 1 && (
                 <div
-                  className={`mx-1.5 h-1 w-3 rounded-full transition-colors ${
-                    isCompleted ? 'bg-emerald-300' : 'bg-slate-200'
+                  className={`mx-1 h-0.5 w-2 rounded-full transition-colors ${
+                    isCompleted ? 'bg-emerald-400' : 'bg-slate-200'
                   }`}
                   aria-hidden="true"
                 />

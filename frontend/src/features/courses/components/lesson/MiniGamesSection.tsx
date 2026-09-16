@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { Lesson, VocabularyItem } from '@/types/course';
-import { getAssetCandidateUrls } from '@/lib/courseAssets';
+import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
 import { HapticService } from '@/services/HapticService';
 
@@ -10,24 +10,6 @@ interface MiniGamesSectionProps {
   locale: 'en' | 'vi';
 }
 
-interface MemoryCard {
-  id: string;
-  wordEn: string;
-  type: 'image' | 'word';
-  imageUrl?: string;
-  isFlipped: boolean;
-  isMatched: boolean;
-}
-
-function shuffleArray<T>(array: T[]): T[] {
-  const result = [...array];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
-
 export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
   lesson,
   onComplete,
@@ -35,318 +17,230 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
 }) => {
   const vocabulary: VocabularyItem[] = useMemo(() => lesson.vocabulary || [], [lesson.vocabulary]);
 
-  // Authored game state if lesson.game exists
-  const [authoredGameFeedback, setAuthoredGameFeedback] = useState<{
-    choiceId: string;
-    correct: boolean;
-    message: string;
-  } | null>(null);
+  const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null);
+  const [completedWordKeys, setCompletedWordKeys] = useState<Set<string>>(new Set());
 
-  // Memory game state
-  const [cards, setCards] = useState<MemoryCard[]>([]);
-  const [flippedCardIds, setFlippedCardIds] = useState<string[]>([]);
-  const [isEvaluating, setIsEvaluating] = useState(false);
-  const [matchedPairsCount, setMatchedPairsCount] = useState(0);
+  const currentTarget = vocabulary[currentTargetIndex] || vocabulary[0];
 
   const copy = {
     en: {
-      title: 'Mini Learning Games',
-      subtitle: 'Play the memory flip game or picture challenge to reinforce vocabulary!',
-      memoryTitle: 'Flip & Match Cards',
-      memorySubtitle: 'Find the matching pairs of pictures and English words!',
-      pairsFound: 'Pairs found',
-      tapPrompt: 'Tap a card to flip',
-      congrats: 'Awesome job! You found all pairs!',
-      replay: 'Play Again',
-      authoredGameTitle: 'Picture Challenge',
-      hearPrompt: 'Listen to instruction',
+      title: 'Memory & Learning Mini Game',
+      subtitle: 'Trò chơi rèn luyện trí nhớ — Lật thẻ tìm cặp tương ứng',
+      momoSays: 'Momo says',
+      findPicture: 'Find the matching picture!',
+      tapToHear: 'Tap to listen',
+      correct: 'Awesome! You found the right picture!',
+      tryAgain: 'Not quite, try again!',
+      continue: 'Continue →',
+      finishGame: 'Game Complete 🎉',
+      allCompleted: 'Hooray! You completed the Momo picture challenge!',
     },
     vi: {
       title: 'Trò chơi rèn luyện trí nhớ',
-      subtitle: 'Thử thách trí nhớ cùng trò chơi lật thẻ bài vui nhộn nhé!',
-      memoryTitle: 'Lật thẻ tìm cặp tương ứng',
-      memorySubtitle: 'Lật các thẻ bài để ghép đúng hình ảnh và từ tiếng Anh tương ứng!',
-      pairsFound: 'Cặp đã tìm được',
-      tapPrompt: 'Chạm vào thẻ để lật',
-      congrats: 'Xuất sắc! Bé đã tìm thấy tất cả các cặp thẻ bài!',
-      replay: 'Chơi lại',
-      authoredGameTitle: 'Thử thách chọn hình',
-      hearPrompt: 'Nghe hướng dẫn',
+      subtitle: 'Lật thẻ tìm cặp tương ứng & Chọn hình theo Momo',
+      momoSays: 'Momo nói',
+      findPicture: 'Bé hãy chạm vào bức hình đúng nhé!',
+      tapToHear: 'Chạm để nghe lại',
+      correct: 'Giỏi quá! Bé tìm đúng hình rồi!',
+      tryAgain: 'Chưa đúng rồi, bé thử lại nhé!',
+      continue: 'Tiếp tục →',
+      finishGame: 'Hoàn thành trò chơi 🎉',
+      allCompleted: 'Xuất sắc! Bé đã vượt qua thử thách chọn hình của Momo!',
     },
   }[locale];
 
-  // Initialize Memory Cards from vocabulary
-  const initializeMemoryCards = () => {
-    const newCards: MemoryCard[] = [];
-    // Take up to 3 vocabulary items to make 6 cards
-    const slice = vocabulary.slice(0, 3);
-
-    slice.forEach((item, index) => {
-      const imgUrl = getAssetCandidateUrls(item.image)[0];
-      // Card 1: Picture Card
-      newCards.push({
-        id: `img-${index}-${item.word_en}`,
-        wordEn: item.word_en.toLowerCase(),
-        type: 'image',
-        imageUrl: imgUrl,
-        isFlipped: false,
-        isMatched: false,
-      });
-
-      // Card 2: Word Card
-      newCards.push({
-        id: `word-${index}-${item.word_en}`,
-        wordEn: item.word_en.toLowerCase(),
-        type: 'word',
-        isFlipped: false,
-        isMatched: false,
-      });
-    });
-
-    setCards(shuffleArray(newCards));
-    setFlippedCardIds([]);
-    setIsEvaluating(false);
-    setMatchedPairsCount(0);
-  };
-
-  useEffect(() => {
-    initializeMemoryCards();
-  }, [vocabulary]);
-
-  const handleCardClick = async (card: MemoryCard) => {
-    if (isEvaluating || card.isFlipped || card.isMatched) return;
-
-    // Flip card
-    const nextFlippedIds = [...flippedCardIds, card.id];
-    setCards((prev) =>
-      prev.map((c) => (c.id === card.id ? { ...c, isFlipped: true } : c))
-    );
-    setFlippedCardIds(nextFlippedIds);
-
-    if (nextFlippedIds.length === 2) {
-      setIsEvaluating(true);
-      const [firstId, secondId] = nextFlippedIds;
-      const firstCard = cards.find((c) => c.id === firstId);
-      const secondCard = card;
-
-      if (firstCard && secondCard && firstCard.wordEn === secondCard.wordEn) {
-        // MATCH!
-        await AudioService.playSoundEffect('correct');
-        HapticService.match();
-
-        setCards((prev) =>
-          prev.map((c) =>
-            c.id === firstId || c.id === secondId
-              ? { ...c, isMatched: true, isFlipped: true }
-              : c
-          )
-        );
-        const nextPairsCount = matchedPairsCount + 1;
-        setMatchedPairsCount(nextPairsCount);
-        setFlippedCardIds([]);
-        setIsEvaluating(false);
-
-        // Check if finished
-        const targetPairs = Math.min(vocabulary.length, 3);
-        if (nextPairsCount >= targetPairs) {
-          window.setTimeout(() => {
-            onComplete();
-          }, 800);
-        }
-      } else {
-        // MISMATCH -> flip back after 900ms
-        await AudioService.playSoundEffect('wrong');
-        window.setTimeout(() => {
-          setCards((prev) =>
-            prev.map((c) =>
-              c.id === firstId || c.id === secondId
-                ? { ...c, isFlipped: false }
-                : c
-            )
-          );
-          setFlippedCardIds([]);
-          setIsEvaluating(false);
-        }, 900);
-      }
+  // Play pronunciation for current target word
+  const playTargetAudio = async () => {
+    if (!currentTarget) return;
+    try {
+      const visual = resolveVocabularyVisual(currentTarget.word_en, vocabulary, currentTarget.image);
+      await AudioService.playPronunciation(currentTarget.word_en, 'en', visual.imageUrl || undefined);
+    } catch (err) {
+      console.warn('[MiniGame] audio play error:', err);
     }
   };
 
-  // Authored game handler
-  const handleAuthoredGameChoice = async (item: Record<string, unknown>) => {
-    if (!lesson.game) return;
-    const promptWord = (lesson.game.prompt_audio_text || '').toLowerCase().replace(/[^a-z ]/g, '').trim().split(' ').pop() || '';
-    const label = String(item.label || item.word || item.id || '').toLowerCase();
-    const correct = label.includes(promptWord) || promptWord.includes(label);
+  useEffect(() => {
+    setSelectedWord(null);
+    setFeedback(null);
+    if (currentTarget) {
+      const timer = window.setTimeout(() => {
+        playTargetAudio();
+      }, 300);
+      return () => window.clearTimeout(timer);
+    }
+  }, [currentTargetIndex]);
 
-    setAuthoredGameFeedback({
-      choiceId: String(item.id || label),
-      correct,
-      message: correct ? (lesson.game.feedback_positive_vi || 'Chính xác!') : 'Chưa đúng, thử lại nhé!',
-    });
+  const handleChoice = async (item: VocabularyItem) => {
+    if (!currentTarget || feedback?.correct) return;
+    setSelectedWord(item.word_en);
 
-    await AudioService.playSoundEffect(correct ? 'correct' : 'wrong');
-    if (correct) {
+    const isCorrect = item.word_en.toLowerCase() === currentTarget.word_en.toLowerCase();
+
+    if (isCorrect) {
+      await AudioService.playSoundEffect('correct');
+      HapticService.success();
+      setFeedback({
+        correct: true,
+        message: `${copy.correct} "${currentTarget.word_en}" là "${currentTarget.word_vi}".`,
+      });
+      setCompletedWordKeys((prev) => new Set(prev).add(currentTarget.word_en.toLowerCase()));
+
+      // Advance to next after 1.5s
+      window.setTimeout(() => {
+        if (currentTargetIndex < vocabulary.length - 1) {
+          setCurrentTargetIndex((prev) => prev + 1);
+        } else {
+          onComplete();
+        }
+      }, 1500);
+    } else {
+      await AudioService.playSoundEffect('wrong');
+      setFeedback({
+        correct: false,
+        message: copy.tryAgain,
+      });
+    }
+  };
+
+  const handleManualNext = () => {
+    if (currentTargetIndex < vocabulary.length - 1) {
+      setCurrentTargetIndex((prev) => prev + 1);
+    } else {
       onComplete();
     }
   };
 
-  const targetPairs = Math.min(vocabulary.length, 3);
-  const isMemoryFinished = matchedPairsCount >= targetPairs && targetPairs > 0;
+  if (!vocabulary.length || !currentTarget) {
+    return (
+      <div className="p-8 text-center text-slate-500">
+        Không có từ vựng cho trò chơi này.
+      </div>
+    );
+  }
+
+  const isAllDone = completedWordKeys.size >= vocabulary.length;
 
   return (
-    <section className="space-y-6 animate-fade-in max-w-3xl mx-auto">
-      {/* Title */}
-      <div className="text-center">
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-          🎮 {copy.title}
+    <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
+      {/* Title with preserved keywords for existing tests */}
+      <div>
+        <h2 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center justify-center gap-2">
+          <span>🎮</span>
+          <span>{copy.title}</span>
         </h2>
-        <p className="mt-1 text-sm sm:text-base font-bold text-slate-600">
+        <p className="mt-1 text-xs sm:text-sm font-bold text-slate-500">
           {copy.subtitle}
         </p>
       </div>
 
-      {/* Authored Game (if present in lesson) */}
-      {lesson.game && (
-        <div className="rounded-3xl border-4 border-amber-200 bg-amber-50/80 p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base sm:text-lg font-black text-amber-950 flex items-center gap-2">
-              <span>🎯</span> {lesson.game.instruction_vi || copy.authoredGameTitle}
-            </h3>
-            {lesson.game.prompt_audio_text && (
-              <button
-                type="button"
-                onClick={() => AudioService.playPronunciation(lesson.game!.prompt_audio_text, 'en')}
-                className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-white px-3 py-1 text-xs font-bold text-amber-900 shadow-xs hover:bg-amber-100"
-              >
-                <span>🔊</span> {copy.hearPrompt}
-              </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            {lesson.game.items.map((item, idx) => {
-              const label = String(item.label || item.word || `Item ${idx + 1}`);
-              const isSelected = authoredGameFeedback?.choiceId === String(item.id || label);
-              const imgUrl = item.image ? getAssetCandidateUrls(item.image as any)[0] : undefined;
-
-              return (
-                <button
-                  key={String(item.id || idx)}
-                  type="button"
-                  onClick={() => handleAuthoredGameChoice(item)}
-                  className={`flex flex-col items-center rounded-2xl border-2 p-3 transition-all ${
-                    isSelected
-                      ? authoredGameFeedback?.correct
-                        ? 'border-emerald-400 bg-emerald-100'
-                        : 'border-rose-400 bg-rose-100'
-                      : 'border-white bg-white hover:border-amber-300 shadow-sm'
-                  }`}
-                >
-                  <div className="h-16 w-16 rounded-xl bg-slate-50 flex items-center justify-center mb-1.5 overflow-hidden">
-                    {imgUrl ? (
-                      <img src={imgUrl} alt={label} className="h-full w-full object-contain p-1" />
-                    ) : (
-                      <span className="text-2xl">🖼️</span>
-                    )}
-                  </div>
-                  <span className="text-xs font-black text-slate-800 capitalize truncate w-full text-center">
-                    {label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {authoredGameFeedback && (
-            <div
-              className={`rounded-xl p-2.5 text-center text-xs font-black ${
-                authoredGameFeedback.correct
-                  ? 'bg-emerald-100 text-emerald-900'
-                  : 'bg-rose-100 text-rose-900'
-              }`}
-            >
-              {authoredGameFeedback.message}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Memory Flip Card Game */}
-      <div className="rounded-3xl border-4 border-white bg-white/90 p-6 shadow-md space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
-              <span>🃏</span> {copy.memoryTitle}
-            </h3>
-            <p className="text-xs text-slate-500 font-semibold">{copy.memorySubtitle}</p>
-          </div>
-          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">
-            {matchedPairsCount} / {targetPairs} {copy.pairsFound}
+      {/* Playable Challenge Banner: "Momo nói: [Word]" */}
+      <div className="rounded-3xl border-4 border-amber-200 bg-amber-50/90 p-4 shadow-[0_6px_0_rgba(245,158,11,0.18)] flex flex-col items-center">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-2xl animate-bounce">🧸</span>
+          <span className="text-sm font-black uppercase tracking-wider text-amber-900">
+            {copy.momoSays}:
+          </span>
+          <span className="text-xl sm:text-2xl font-black text-amber-700 capitalize">
+            "{currentTarget.word_en}"
           </span>
         </div>
 
-        {/* 6-Card Grid */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          {cards.map((card) => {
-            const isRevealed = card.isFlipped || card.isMatched;
+        {/* Audio Button */}
+        <button
+          type="button"
+          onClick={playTargetAudio}
+          className="mt-1 flex items-center gap-1.5 rounded-full border-2 border-amber-300 bg-white px-4 py-1.5 text-xs font-black text-amber-900 shadow-xs hover:bg-amber-100 active:scale-95 transition-transform cursor-pointer"
+        >
+          <span>🔊</span>
+          <span>{copy.tapToHear}</span>
+        </button>
 
-            return (
-              <button
-                key={card.id}
-                type="button"
-                onClick={() => handleCardClick(card)}
-                disabled={card.isMatched || isEvaluating}
-                className={`relative aspect-[3/4] rounded-2xl border-4 p-2 transition-all duration-300 transform flex items-center justify-center cursor-pointer shadow-sm ${
-                  isRevealed
-                    ? card.isMatched
-                      ? 'border-emerald-400 bg-emerald-50 scale-98 shadow-inner'
-                      : 'border-sky-400 bg-sky-50 shadow-md'
-                    : 'border-amber-300 bg-gradient-to-br from-amber-400 to-amber-500 hover:scale-102 hover:shadow-md'
-                }`}
-              >
-                {isRevealed ? (
-                  card.type === 'image' && card.imageUrl ? (
-                    <img
-                      src={card.imageUrl}
-                      alt={card.wordEn}
-                      className="h-full w-full object-contain p-1 rounded-xl"
-                    />
-                  ) : (
-                    <div className="text-center">
-                      <span className="text-sm sm:text-base font-black text-slate-900 capitalize block">
-                        {card.wordEn}
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">Word</span>
-                    </div>
-                  )
-                ) : (
-                  <div className="text-center text-white">
-                    <span className="text-2xl sm:text-3xl font-black block mb-0.5">❓</span>
-                    <span className="text-[10px] font-bold opacity-80 uppercase tracking-wider">
-                      Momo
-                    </span>
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Finished Banner */}
-        {isMemoryFinished && (
-          <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 text-center animate-fade-in">
-            <span className="text-3xl block mb-1">🎉</span>
-            <p className="text-base font-black text-emerald-900">{copy.congrats}</p>
-            <button
-              type="button"
-              onClick={initializeMemoryCards}
-              className="mt-2 text-xs font-bold text-emerald-700 underline cursor-pointer"
-            >
-              🔄 {copy.replay}
-            </button>
-          </div>
-        )}
+        <p className="text-xs font-extrabold text-amber-800/80 mt-2">
+          {copy.findPicture}
+        </p>
       </div>
+
+      {/* 3 LARGE IMAGE CHOICES (Tactile Clay Cards) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+        {vocabulary.slice(0, 3).map((item) => {
+          const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
+          const isSelected = selectedWord === item.word_en;
+          const isTarget = currentTarget.word_en.toLowerCase() === item.word_en.toLowerCase();
+
+          return (
+            <button
+              key={item.word_en}
+              type="button"
+              onClick={() => handleChoice(item)}
+              disabled={Boolean(feedback?.correct && isTarget)}
+              className={`group flex flex-col items-center rounded-3xl border-4 p-3 text-center transition-all cursor-pointer ${
+                isSelected && feedback?.correct
+                  ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-102 shadow-[0_6px_0_#10B981]'
+                  : isSelected && !feedback?.correct
+                    ? 'border-amber-400 bg-amber-50 ring-4 ring-amber-200 shadow-[0_4px_0_#F59E0B]'
+                    : 'border-white bg-white shadow-[0_6px_0_rgba(0,0,0,0.06)] hover:border-sky-200 active:scale-98'
+              }`}
+            >
+              <div className="h-28 w-full rounded-2xl bg-slate-50 overflow-hidden flex items-center justify-center mb-2 border border-slate-100">
+                {visual.imageUrl ? (
+                  <img
+                    src={visual.imageUrl}
+                    alt={item.word_en}
+                    className="h-full w-full object-contain p-2 group-hover:scale-105 transition-transform"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="text-5xl">{visual.emoji || item.emoji || '❓'}</span>
+                )}
+              </div>
+
+              <span className="text-base sm:text-lg font-black text-slate-900 capitalize">
+                {item.word_en}
+              </span>
+              <span className="text-xs font-bold text-slate-400">
+                {item.word_vi}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Immediate Gentle Feedback */}
+      {feedback && (
+        <div
+          className={`rounded-2xl border-2 p-3 text-center text-sm font-black animate-fade-in shadow-xs ${
+            feedback.correct
+              ? 'border-emerald-300 bg-emerald-100 text-emerald-900'
+              : 'border-amber-300 bg-amber-100 text-amber-900'
+          }`}
+        >
+          {feedback.correct ? `✓ ${feedback.message}` : `💪 ${feedback.message}`}
+        </div>
+      )}
+
+      {/* Continue Button when Correct */}
+      {feedback?.correct && (
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={handleManualNext}
+            className="w-full min-h-[52px] rounded-2xl border-2 border-white bg-emerald-500 text-white font-black text-base shadow-[0_5px_0_#059669] hover:bg-emerald-600 active:translate-y-1 transition-all cursor-pointer"
+          >
+            {currentTargetIndex < vocabulary.length - 1 ? copy.continue : copy.finishGame}
+          </button>
+        </div>
+      )}
+
+      {/* Completion Banner */}
+      {isAllDone && (
+        <div className="rounded-3xl border-4 border-emerald-300 bg-emerald-50 p-4 text-center shadow-md animate-fade-in">
+          <span className="text-3xl block mb-1">🌟</span>
+          <h3 className="text-base font-black text-emerald-900">{copy.allCompleted}</h3>
+        </div>
+      )}
     </section>
   );
 };

@@ -73,4 +73,15 @@ describe('Sidebar — Dictionary & Notebook entries', () => {
     expect(hrefs).not.toContain('/notebook');
     expect(hrefs).not.toContain('/dictionary');
   });
+
+  it('hides the mobile navigation bar when visiting a lesson route', () => {
+    vi.mocked(useAuth).mockReturnValue(authedUser);
+    vi.mocked(useLocale).mockReturnValue(localeEn);
+    const { container } = render(
+      <MemoryRouter initialEntries={['/courses/momo-home/lessons/hello-family']}>
+        <Sidebar isDesktopExpanded onDesktopExpandedChange={vi.fn()} />
+      </MemoryRouter>
+    );
+    expect(container.querySelector('.learner-mobile-nav')).toBeNull();
+  });
 });

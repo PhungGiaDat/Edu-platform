@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { Lesson, VocabularyItem } from '@/types/course';
-import { getAssetCandidateUrls } from '@/lib/courseAssets';
+import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
 import { HapticService } from '@/services/HapticService';
 
@@ -25,37 +25,35 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
 
   const copy = {
     en: {
-      title: 'Listen & Choose',
-      subtitle: 'Listen to the word and tap the matching picture!',
-      tapToHear: 'Tap to Hear Word',
+      title: 'Listen & Choose the Right Picture',
+      instruction: 'Listen carefully & tap the right picture!',
       replay: 'Listen Again',
-      correct: 'Splendid! That is correct!',
-      tryAgain: 'Not quite, try another picture!',
-      completedAll: 'All words completed! Great ear!',
-      progress: 'Round',
-      nextWord: 'Next Word',
-      finishPractice: 'Next Activity',
+      tapToHear: 'Tap to listen',
+      correctPrefix: 'Splendid! Exactly right!',
+      tryAgain: 'Not quite right yet. Listen again & try!',
+      progress: 'Question',
+      continue: 'Continue →',
+      completedAll: 'Awesome! You got all the pictures right!',
     },
     vi: {
       title: 'Lắng nghe & Chọn hình đúng',
-      subtitle: 'Bé hãy lắng nghe từ vựng và chọn bức tranh tương ứng nhé!',
-      tapToHear: 'Bấm để nghe từ vựng',
+      instruction: 'Nghe và chọn hình đúng',
       replay: 'Nghe lại',
-      correct: 'Chính xác! Bé giỏi quá!',
-      tryAgain: 'Chưa đúng rồi, bé thử lại nhé!',
-      completedAll: 'Bé đã hoàn thành xuất sắc bài luyện nghe!',
-      progress: 'Câu hỏi',
-      nextWord: 'Câu tiếp theo',
-      finishPractice: 'Bước tiếp theo',
+      tapToHear: 'Chạm loa để nghe',
+      correctPrefix: 'Chính xác! Giỏi lắm!',
+      tryAgain: 'Chưa đúng rồi. Nghe lại nhé!',
+      progress: 'Câu',
+      continue: 'Tiếp tục →',
+      completedAll: 'Xuất sắc! Bé đã nghe và chọn đúng tất cả các hình!',
     },
   }[locale];
 
-  // Play audio when target changes
+  // Play audio when target changes or on user click
   const playTargetAudio = async () => {
     if (!currentItem) return;
     try {
-      const audioUrl = getAssetCandidateUrls(currentItem.audio)[0];
-      await AudioService.playPronunciation(currentItem.word_en, 'en', audioUrl);
+      const visual = resolveVocabularyVisual(currentItem.word_en, vocabulary, currentItem.image);
+      await AudioService.playPronunciation(currentItem.word_en, 'en', visual.imageUrl || undefined);
     } catch (err) {
       console.warn('[ListenChoose] audio play error:', err);
     }
@@ -73,7 +71,7 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
   }, [currentTargetIndex]);
 
   const handleChoice = async (item: VocabularyItem) => {
-    if (!currentItem || isCorrect) return;
+    if (!currentItem || (isCorrect && selectedWord === currentItem.word_en)) return;
     setSelectedWord(item.word_en);
 
     const matches = item.word_en.toLowerCase() === currentItem.word_en.toLowerCase();
@@ -84,23 +82,31 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
       HapticService.success();
       setCompletedWordKeys((prev) => new Set(prev).add(currentItem.word_en.toLowerCase()));
 
-      // Auto advance to next question after 1.2s or complete
+      // Auto advance to next question after 1.5s
       window.setTimeout(() => {
         if (currentTargetIndex < vocabulary.length - 1) {
           setCurrentTargetIndex((prev) => prev + 1);
         } else {
           onComplete();
         }
-      }, 1200);
+      }, 1500);
     } else {
       await AudioService.playSoundEffect('wrong');
     }
   };
 
-  if (!vocabulary.length) {
+  const handleManualNext = () => {
+    if (currentTargetIndex < vocabulary.length - 1) {
+      setCurrentTargetIndex((prev) => prev + 1);
+    } else {
+      onComplete();
+    }
+  };
+
+  if (!vocabulary.length || !currentItem) {
     return (
       <div className="p-8 text-center text-slate-500">
-        No vocabulary items available for this activity.
+        Không có từ vựng cho bài tập này.
       </div>
     );
   }
@@ -108,64 +114,39 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
   const isAllFinished = completedWordKeys.size >= vocabulary.length;
 
   return (
-    <section className="space-y-6 animate-fade-in max-w-3xl mx-auto">
-      {/* Title */}
-      <div className="text-center">
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-          👂 {copy.title}
-        </h2>
-        <p className="mt-1 text-sm sm:text-base font-bold text-slate-600">
-          {copy.subtitle}
-        </p>
-      </div>
-
-      {/* Progress Counter */}
+    <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
+      {/* Title & Progress */}
       <div className="flex items-center justify-between px-2">
+        <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-1.5">
+          <span>👂</span>
+          <span>{copy.title}</span>
+        </h2>
         <span className="text-xs font-black text-slate-500 uppercase tracking-wider">
           {copy.progress} {currentTargetIndex + 1} / {vocabulary.length}
         </span>
-        <div className="flex gap-1.5">
-          {vocabulary.map((v, i) => (
-            <div
-              key={v.word_en}
-              className={`h-2.5 w-6 rounded-full transition-all ${
-                completedWordKeys.has(v.word_en.toLowerCase())
-                  ? 'bg-emerald-500'
-                  : i === currentTargetIndex
-                    ? 'bg-sky-500 ring-2 ring-sky-200'
-                    : 'bg-slate-200'
-              }`}
-            />
-          ))}
-        </div>
       </div>
 
-      {/* Audio Prompt Card */}
-      <div className="rounded-3xl border-4 border-white bg-white/90 p-6 text-center shadow-md">
-        <p className="text-xs font-black uppercase tracking-wider text-slate-400 mb-3">
-          {copy.tapToHear}
-        </p>
-
+      {/* Large Tactile Audio Button */}
+      <div className="flex flex-col items-center py-2">
         <button
           type="button"
           onClick={playTargetAudio}
-          className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl border-4 border-white bg-gradient-to-br from-amber-300 to-amber-500 text-5xl shadow-xl hover:scale-105 active:scale-95 transition-transform"
+          className="flex h-24 w-24 items-center justify-center rounded-3xl border-4 border-white bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-5xl shadow-[0_8px_0_#D97706] hover:scale-105 active:scale-95 active:shadow-xs transition-all cursor-pointer"
           aria-label={copy.replay}
         >
           🔊
         </button>
-
-        <p className="mt-3 text-sm font-bold text-amber-700">
-          {copy.replay}
+        <p className="mt-2 text-xs font-extrabold text-amber-800">
+          {copy.tapToHear}
         </p>
       </div>
 
-      {/* 3 Choices Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* 2–3 LARGE IMAGE CHOICES */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
         {vocabulary.map((item) => {
+          const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
           const isSelected = selectedWord === item.word_en;
-          const isTarget = currentItem?.word_en.toLowerCase() === item.word_en.toLowerCase();
-          const imgUrl = getAssetCandidateUrls(item.image)[0];
+          const isTarget = currentItem.word_en.toLowerCase() === item.word_en.toLowerCase();
 
           return (
             <button
@@ -173,30 +154,33 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
               type="button"
               onClick={() => handleChoice(item)}
               disabled={Boolean(isCorrect && isTarget)}
-              className={`group flex flex-col items-center rounded-3xl border-4 p-4 text-center transition-all active:scale-95 shadow-md ${
+              className={`group flex flex-col items-center rounded-3xl border-4 p-3 text-center transition-all cursor-pointer ${
                 isSelected && isCorrect
-                  ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-105'
+                  ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-102 shadow-[0_6px_0_#10B981]'
                   : isSelected && !isCorrect
-                    ? 'border-rose-400 bg-rose-50 ring-4 ring-rose-200'
-                    : 'border-white bg-white hover:border-slate-200 hover:shadow-lg'
+                    ? 'border-amber-400 bg-amber-50 ring-4 ring-amber-200 shadow-[0_4px_0_#F59E0B]'
+                    : 'border-white bg-white shadow-[0_6px_0_rgba(0,0,0,0.06)] hover:border-sky-200 active:scale-98'
               }`}
             >
-              <div className="h-28 w-28 rounded-2xl bg-slate-50 overflow-hidden flex items-center justify-center mb-3 border-2 border-slate-100">
-                {imgUrl ? (
+              {/* Large Canonical Image */}
+              <div className="h-28 w-full rounded-2xl bg-slate-50 overflow-hidden flex items-center justify-center mb-2 border border-slate-100">
+                {visual.imageUrl ? (
                   <img
-                    src={imgUrl}
+                    src={visual.imageUrl}
                     alt={item.word_en}
                     className="h-full w-full object-contain p-2 group-hover:scale-105 transition-transform"
                     loading="lazy"
                   />
                 ) : (
-                  <span className="text-4xl">{item.emoji || '❓'}</span>
+                  <span className="text-5xl">{visual.emoji || item.emoji || '❓'}</span>
                 )}
               </div>
-              <span className="text-lg font-black text-slate-800 capitalize">
+
+              {/* English Word & Vietnamese meaning */}
+              <span className="text-lg font-black text-slate-900 capitalize">
                 {item.word_en}
               </span>
-              <span className="text-xs font-bold text-slate-400">
+              <span className="text-xs font-bold text-slate-500">
                 {item.word_vi}
               </span>
             </button>
@@ -204,24 +188,43 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
         })}
       </div>
 
-      {/* Feedback Message Banner */}
+      {/* Immediate Gentle Feedback Banner */}
       {isCorrect !== null && (
         <div
-          className={`rounded-2xl border-2 p-4 text-center text-sm sm:text-base font-black animate-fade-in shadow-sm ${
+          className={`rounded-2xl border-2 p-3.5 text-center text-sm font-black animate-fade-in shadow-xs ${
             isCorrect
               ? 'border-emerald-300 bg-emerald-100 text-emerald-900'
-              : 'border-rose-300 bg-rose-100 text-rose-900'
+              : 'border-amber-300 bg-amber-100 text-amber-900'
           }`}
         >
-          {isCorrect ? `🎉 ${copy.correct}` : `💪 ${copy.tryAgain}`}
+          {isCorrect ? (
+            <span>
+              ✓ {copy.correctPrefix} "{currentItem.word_en}" là "{currentItem.word_vi}".
+            </span>
+          ) : (
+            <span>💪 {copy.tryAgain}</span>
+          )}
+        </div>
+      )}
+
+      {/* Manual Continue Button when answered */}
+      {isCorrect && (
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={handleManualNext}
+            className="w-full min-h-[52px] rounded-2xl border-2 border-white bg-emerald-500 text-white font-black text-base shadow-[0_5px_0_#059669] hover:bg-emerald-600 active:translate-y-1 transition-all cursor-pointer"
+          >
+            {copy.continue}
+          </button>
         </div>
       )}
 
       {/* Completion Banner */}
       {isAllFinished && (
-        <div className="rounded-3xl border-4 border-emerald-300 bg-emerald-50 p-6 text-center shadow-lg">
-          <div className="text-4xl mb-2">🌟</div>
-          <h3 className="text-xl font-black text-emerald-900">{copy.completedAll}</h3>
+        <div className="rounded-3xl border-4 border-emerald-300 bg-emerald-50 p-4 text-center shadow-md animate-fade-in">
+          <span className="text-3xl block mb-1">🌟</span>
+          <h3 className="text-base font-black text-emerald-900">{copy.completedAll}</h3>
         </div>
       )}
     </section>

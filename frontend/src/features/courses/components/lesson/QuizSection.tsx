@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import type { Lesson, QuizSubmitResult } from '@/types/course';
-import { getAssetCandidateUrls } from '@/lib/courseAssets';
+import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
+import { HapticService } from '@/services/HapticService';
 
 interface QuizSectionProps {
   lesson: Lesson;
@@ -23,38 +24,48 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
   locale,
 }) => {
   const quizQuestions = lesson.quiz || [];
+  const vocabulary = lesson.vocabulary || [];
+
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [feedbackState, setFeedbackState] = useState<{
+    optionId: string;
+    isCorrect: boolean;
+  } | null>(null);
 
   const copy = {
     en: {
-      title: 'Lesson Quiz Challenge',
-      subtitle: 'Answer all questions correctly to earn your stars and XP trophy!',
+      title: 'Quiz Challenge',
       question: 'Question',
-      submitQuiz: 'Submit Answers',
-      submitting: 'Grading your quiz...',
-      passed: 'Awesome job! You passed the quiz with flying colors!',
-      tryAgain: 'Good effort! Try again to achieve a passing score of 70% or higher.',
-      unansweredWarning: 'Please answer all questions before submitting.',
-      score: 'Your Score',
       listenPrompt: 'Listen to Question',
+      submitQuiz: 'Submit Quiz 📝',
+      continue: 'Continue →',
+      submitting: 'Checking answers...',
+      passed: 'Awesome job! You passed the quiz!',
+      tryAgain: 'Good effort! Try again to earn all stars!',
+      correctFeedback: 'Correct! Great job!',
+      incorrectFeedback: 'Not quite right yet. Keep going!',
+      score: 'Quiz Score',
     },
     vi: {
       title: 'Thử thách Quiz bài học',
-      subtitle: 'Trả lời đúng các câu hỏi để nhận sao và phần thưởng cúp XP nhé!',
-      question: 'Câu hỏi',
-      submitQuiz: 'Nộp bài kiểm tra',
-      submitting: 'Đang chấm điểm...',
-      passed: 'Xuất sắc! Bé đã vượt qua bài kiểm tra với điểm số tuyệt vời!',
-      tryAgain: 'Cố gắng lên nhé! Bé hãy thử lại để đạt từ 70% điểm trở lên để nhận thưởng nha.',
-      unansweredWarning: 'Bé hãy chọn đáp án cho tất cả câu hỏi trước khi nộp bài nhé.',
-      score: 'Điểm số của bé',
+      question: 'Câu',
       listenPrompt: 'Nghe câu hỏi',
+      submitQuiz: 'Nộp bài Quiz 📝',
+      continue: 'Tiếp tục →',
+      submitting: 'Đang chấm điểm...',
+      passed: 'Xuất sắc! Bé đã vượt qua bài kiểm tra!',
+      tryAgain: 'Cố gắng lên nhé! Bé hãy thử lại để nhận sao nha.',
+      correctFeedback: 'Chính xác! Giỏi quá!',
+      incorrectFeedback: 'Chưa đúng rồi. Cố lên nhé!',
+      score: 'Điểm kiểm tra',
     },
   }[locale];
 
-  const allAnswered =
-    quizQuestions.length > 0 &&
-    quizQuestions.every((q) => Boolean(answers[q.question_id]));
+  const currentQuestion = quizQuestions[activeQuestionIndex] || quizQuestions[0];
+  const selectedOptionId =
+    (currentQuestion ? answers[currentQuestion.question_id] : undefined) ||
+    feedbackState?.optionId;
 
   const handlePlayAudio = async (questionId: string, text?: string) => {
     if (!text) return;
@@ -66,28 +77,44 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
     }
   };
 
-  if (!quizQuestions.length) {
+  const handleSelectOption = async (optionId: string) => {
+    if (!currentQuestion) return;
+
+    onAnswerChange(currentQuestion.question_id, optionId);
+
+    const isCorrect = optionId === currentQuestion.correctOptionId;
+    setFeedbackState({ optionId, isCorrect });
+
+    if (isCorrect) {
+      await AudioService.playSoundEffect('correct');
+      HapticService.success();
+    } else {
+      await AudioService.playSoundEffect('wrong');
+      HapticService.tap();
+    }
+  };
+
+  const handleAdvance = () => {
+    setFeedbackState(null);
+    if (activeQuestionIndex < quizQuestions.length - 1) {
+      setActiveQuestionIndex((prev) => prev + 1);
+    } else {
+      onSubmit();
+    }
+  };
+
+  if (!quizQuestions.length || !currentQuestion) {
     return (
       <div className="rounded-3xl border-4 border-white bg-white/90 p-8 text-center text-slate-500 shadow-md">
-        No quiz questions found for this lesson.
+        Không có câu hỏi kiểm tra cho bài học này.
       </div>
     );
   }
 
-  return (
-    <section className="space-y-6 animate-fade-in max-w-3xl mx-auto">
-      {/* Title */}
-      <div className="text-center">
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-          📝 {copy.title}
-        </h2>
-        <p className="mt-1 text-sm sm:text-base font-bold text-slate-600">
-          {copy.subtitle}
-        </p>
-      </div>
-
-      {/* Result Banner if already submitted */}
-      {result && (
+  // If submitted and result is showing
+  if (result) {
+    return (
+      <div className="space-y-4 animate-fade-in w-full text-center max-w-md mx-auto">
         <div
           className={`rounded-3xl border-4 p-6 text-center shadow-lg animate-fade-in ${
             result.passed
@@ -95,7 +122,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
               : 'border-amber-300 bg-amber-50 text-amber-950'
           }`}
         >
-          <span className="text-4xl block mb-2">{result.passed ? '🏆' : '💪'}</span>
+          <span className="text-5xl block mb-2">{result.passed ? '🏆' : '💪'}</span>
           <p className="text-xs font-black uppercase tracking-wider opacity-70 mb-1">
             {copy.score}
           </p>
@@ -106,109 +133,131 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
             {result.passed ? copy.passed : copy.tryAgain}
           </p>
         </div>
+      </div>
+    );
+  }
+
+  const promptText = currentQuestion.prompt_vi || currentQuestion.questionAudioText;
+  const isLastQuestion = activeQuestionIndex === quizQuestions.length - 1;
+
+  return (
+    <section className="space-y-4 animate-fade-in w-full text-center max-w-md mx-auto">
+      {/* Quiz Stepper & Progress (One Question at a Time) */}
+      <div className="flex items-center justify-between px-2">
+        <span className="text-xs font-black uppercase tracking-wider text-sky-600">
+          📝 {copy.question} {activeQuestionIndex + 1} / {quizQuestions.length}
+        </span>
+        <div className="flex gap-1.5">
+          {quizQuestions.map((q, idx) => (
+            <div
+              key={q.question_id || idx}
+              className={`h-2 rounded-full transition-all ${
+                idx === activeQuestionIndex
+                  ? 'w-6 bg-sky-500 shadow-xs'
+                  : answers[q.question_id]
+                    ? 'w-2 bg-emerald-400'
+                    : 'w-2 bg-slate-200'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Main Question Surface */}
+      <div className="rounded-3xl border-4 border-white bg-white/95 p-5 shadow-[0_8px_0_rgba(0,0,0,0.06)] flex flex-col items-center">
+        {/* Audio question trigger if available */}
+        {currentQuestion.questionAudioText && (
+          <button
+            type="button"
+            onClick={() =>
+              handlePlayAudio(currentQuestion.question_id, currentQuestion.questionAudioText)
+            }
+            className="mb-3 flex items-center gap-1.5 rounded-full border-2 border-sky-200 bg-sky-50 px-4 py-1.5 text-xs font-black text-sky-800 shadow-xs hover:bg-sky-100 active:scale-95 transition-transform cursor-pointer"
+          >
+            <span>{playingAudioId === currentQuestion.question_id ? '🔊' : '🔈'}</span>
+            <span>{copy.listenPrompt}</span>
+          </button>
+        )}
+
+        {/* Large Prominent Vietnamese Question */}
+        <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
+          {promptText}
+        </h3>
+
+        {/* Interactive Choices Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mt-5">
+          {currentQuestion.options.map((opt) => {
+            const isSelected = selectedOptionId === opt.option_id;
+            const visual = resolveVocabularyVisual(opt.label, vocabulary, opt.image);
+            const hasVisualImage = Boolean(visual.imageUrl);
+
+            return (
+              <button
+                key={opt.option_id}
+                type="button"
+                onClick={() => handleSelectOption(opt.option_id)}
+                className={`group flex flex-col items-center justify-center rounded-2xl border-4 p-3.5 text-center transition-all cursor-pointer ${
+                  isSelected
+                    ? feedbackState?.isCorrect
+                      ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-102 shadow-[0_5px_0_#10B981]'
+                      : 'border-amber-400 bg-amber-50 ring-4 ring-amber-200 shadow-[0_4px_0_#F59E0B]'
+                    : 'border-white bg-white shadow-[0_5px_0_rgba(0,0,0,0.06)] hover:border-sky-200 active:scale-95'
+                }`}
+              >
+                {/* Large visual image if option has image */}
+                {hasVisualImage && (
+                  <div className="h-20 w-20 rounded-xl bg-slate-50 flex items-center justify-center mb-2 overflow-hidden border border-slate-100">
+                    <img
+                      src={visual.imageUrl!}
+                      alt={opt.label}
+                      className="h-full w-full object-contain p-1 group-hover:scale-105 transition-transform"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
+
+                <span className="text-base sm:text-lg font-black text-slate-900">
+                  {opt.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Duolingo-style Bottom Feedback Panel */}
+      {feedbackState && (
+        <div
+          className={`rounded-2xl border-2 p-3.5 text-center animate-fade-in shadow-xs ${
+            feedbackState.isCorrect
+              ? 'border-emerald-300 bg-emerald-100 text-emerald-950'
+              : 'border-amber-300 bg-amber-100 text-amber-950'
+          }`}
+        >
+          <div className="flex items-center justify-center gap-2 text-sm sm:text-base font-black">
+            <span>{feedbackState.isCorrect ? '✓' : '💪'}</span>
+            <span>
+              {feedbackState.isCorrect
+                ? currentQuestion.feedbackCorrect || copy.correctFeedback
+                : currentQuestion.feedbackIncorrect || copy.incorrectFeedback}
+            </span>
+          </div>
+        </div>
       )}
 
-      {/* Questions list */}
-      <div className="space-y-6">
-        {quizQuestions.map((q, qIndex) => {
-          const selectedOptionId = answers[q.question_id];
-
-          return (
-            <article
-              key={q.question_id || qIndex}
-              className="rounded-3xl border-4 border-white bg-white/95 p-5 sm:p-6 shadow-md"
-            >
-              {/* Question Header */}
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div>
-                  <span className="text-xs font-black uppercase tracking-wider text-sky-600">
-                    {copy.question} {qIndex + 1} / {quizQuestions.length}
-                  </span>
-                  <h3 className="text-lg sm:text-xl font-black text-slate-900 mt-1">
-                    {q.prompt_vi || q.questionAudioText}
-                  </h3>
-                </div>
-
-                {q.questionAudioText && (
-                  <button
-                    type="button"
-                    onClick={() => handlePlayAudio(q.question_id, q.questionAudioText)}
-                    className="flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-bold text-sky-800 hover:bg-sky-100 shadow-xs"
-                    title={copy.listenPrompt}
-                  >
-                    <span>{playingAudioId === q.question_id ? '🔊' : '🔈'}</span>
-                    <span className="hidden sm:inline">{copy.listenPrompt}</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Options Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {q.options.map((opt) => {
-                  const isSelected = selectedOptionId === opt.option_id;
-                  const imgUrl = opt.image ? getAssetCandidateUrls(opt.image)[0] : undefined;
-
-                  return (
-                    <button
-                      key={opt.option_id}
-                      type="button"
-                      onClick={() => onAnswerChange(q.question_id, opt.option_id)}
-                      className={`flex items-center gap-3 p-3.5 rounded-2xl border-4 text-left transition-all active:scale-98 cursor-pointer ${
-                        isSelected
-                          ? 'border-sky-500 bg-sky-50 ring-4 ring-sky-200 shadow-md scale-102'
-                          : 'border-slate-100 bg-slate-50 hover:border-slate-300 hover:bg-white'
-                      }`}
-                    >
-                      <div
-                        className={`h-7 w-7 rounded-full flex items-center justify-center font-black text-xs shrink-0 border-2 ${
-                          isSelected
-                            ? 'border-sky-500 bg-sky-500 text-white'
-                            : 'border-slate-300 bg-white text-slate-500'
-                        }`}
-                      >
-                        {isSelected ? '✓' : ''}
-                      </div>
-
-                      {imgUrl && (
-                        <div className="h-12 w-12 rounded-xl bg-white overflow-hidden flex items-center justify-center shrink-0 border border-slate-200">
-                          <img
-                            src={imgUrl}
-                            alt={opt.label}
-                            className="h-full w-full object-contain p-1"
-                            loading="lazy"
-                          />
-                        </div>
-                      )}
-
-                      <span className="text-base font-black text-slate-800 capitalize">
-                        {opt.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </article>
-          );
-        })}
-      </div>
-
-      {/* Submit Button */}
-      <div className="text-center pt-2">
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={!allAnswered || isSubmitting}
-          className="min-h-14 w-full sm:w-auto sm:min-w-[260px] rounded-3xl border-4 border-white bg-gradient-to-r from-amber-400 to-amber-500 px-8 py-4 text-base sm:text-lg font-black text-slate-900 shadow-xl hover:brightness-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-        >
-          {isSubmitting ? `⏳ ${copy.submitting}` : `🚀 ${copy.submitQuiz}`}
-        </button>
-
-        {!allAnswered && (
-          <p className="text-xs font-semibold text-slate-500 mt-2">
-            {copy.unansweredWarning}
-          </p>
-        )}
-      </div>
+      {/* Continue / Advance Action Button */}
+      {selectedOptionId && (
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={handleAdvance}
+            disabled={isSubmitting}
+            className="w-full min-h-[56px] rounded-2xl border-2 border-white bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-base sm:text-lg shadow-[0_6px_0_#0D9488] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <span>{isSubmitting ? copy.submitting : isLastQuestion ? copy.submitQuiz : copy.continue}</span>
+          </button>
+        </div>
+      )}
     </section>
   );
 };

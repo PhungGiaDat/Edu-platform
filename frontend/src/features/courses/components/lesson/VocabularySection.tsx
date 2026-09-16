@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Lesson, VocabularyItem } from '@/types/course';
-import { getAssetCandidateUrls } from '@/lib/courseAssets';
+import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
 import { getPronunciationService, type PronunciationResult } from '@/services/PronunciationService';
 import { eventBus } from '@/runtime/EventBus';
@@ -25,42 +25,43 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
   practicedWords,
   locale,
 }) => {
+  const vocabulary = lesson.vocabulary || [];
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [activeWordKey, setActiveWordKey] = useState<string | null>(null);
   const [isListeningKey, setIsListeningKey] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const copy = {
     en: {
-      title: 'Vocabulary Cards',
-      subtitle: 'Tap the speaker to hear the word. Tap the microphone to practice speaking!',
-      listen: 'Listen',
-      speak: 'Speak',
-      listening: 'Listening...',
-      passed: 'Awesome!',
-      tryAgain: 'Try Again',
-      score: 'Score',
-      example: 'Example sentence',
-      done: 'Mastered',
-    },
-    vi: {
-      title: 'Thẻ từ vựng sinh động',
-      subtitle: 'Bấm vào chiếc loa để nghe phát âm chuẩn. Bấm micro để luyện nói cùng Momo nhé!',
+      instruction: 'Listen carefully & repeat after Momo',
       listen: 'Nghe mẫu',
       speak: 'Luyện nói',
-      listening: 'Đang lắng nghe...',
-      passed: 'Xuất sắc!',
-      tryAgain: 'Thử lại nhé',
-      score: 'Điểm',
-      example: 'Câu ví dụ',
-      done: 'Đã hoàn thành',
+      listening: 'Listening to you...',
+      passed: 'Awesome!',
+      tryAgain: 'Try Again',
+      nextWord: 'Continue →',
+      finishVocab: 'Complete Words 🎉',
+      allDone: `You've learned all ${vocabulary.length} words!`,
+    },
+    vi: {
+      instruction: 'Bé hãy nghe và đọc theo Momo nhé',
+      listen: 'Nghe mẫu',
+      speak: 'Luyện nói',
+      listening: 'Đang lắng nghe bé nói...',
+      passed: 'Giỏi lắm!',
+      tryAgain: 'Bé thử lại nhé',
+      nextWord: 'Tiếp tục →',
+      finishVocab: 'Hoàn thành từ mới 🎉',
+      allDone: `Con đã học xong ${vocabulary.length} từ mới!`,
     },
   }[locale];
 
   const handlePlayAudio = async (item: VocabularyItem) => {
     setActiveWordKey(item.word_en);
     try {
-      const audioUrl = getAssetCandidateUrls(item.audio)[0];
-      await AudioService.playPronunciation(item.word_en, 'en', audioUrl);
+      const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
+      await AudioService.playPronunciation(item.word_en, 'en', visual?.imageUrl || undefined);
     } catch (err) {
       console.warn('[VocabularySection] audio play error:', err);
     } finally {
@@ -80,13 +81,26 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
         const timeoutId = window.setTimeout(() => {
           eventBus.off('PRONUNCIATION_ERROR', handleError);
           service.stopListening();
-          reject(new Error(locale === 'vi' ? 'Chưa nghe thấy giọng của bé, hãy thử lại nhé!' : 'No speech heard, please try again!'));
+          reject(
+            new Error(
+              locale === 'vi'
+                ? 'Chưa nghe thấy giọng của bé, hãy thử lại nhé!'
+                : 'No speech heard, please try again!'
+            )
+          );
         }, 8000);
 
         const handleError = (payload: { error?: string }) => {
           window.clearTimeout(timeoutId);
           eventBus.off('PRONUNCIATION_ERROR', handleError);
-          reject(new Error(payload?.error || (locale === 'vi' ? 'Không thể nhận diện giọng nói.' : 'Speech recognition error.')));
+          reject(
+            new Error(
+              payload?.error ||
+                (locale === 'vi'
+                  ? 'Không thể nhận diện giọng nói.'
+                  : 'Speech recognition error.')
+            )
+          );
         };
 
         eventBus.on('PRONUNCIATION_ERROR', handleError);
@@ -124,142 +138,196 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
     }
   };
 
-  const vocabulary = lesson.vocabulary || [];
+  const handleNextWord = () => {
+    if (currentIndex < vocabulary.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+    } else {
+      setShowCelebration(true);
+      const lastItem = vocabulary[vocabulary.length - 1];
+      if (lastItem) {
+        onWordPracticed(lastItem.word_en, {
+          transcript: lastItem.word_en,
+          score: 100,
+          passed: true,
+          feedback: copy.passed,
+        });
+      }
+    }
+  };
+
+  if (!vocabulary.length) {
+    return (
+      <div className="p-8 text-center text-slate-500">
+        Không có từ vựng cho bài học này.
+      </div>
+    );
+  }
 
   return (
-    <section className="space-y-6 animate-fade-in max-w-4xl mx-auto">
-      {/* Title */}
-      <div className="text-center">
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-          🔤 {copy.title}
-        </h2>
-        <p className="mt-1 text-sm sm:text-base font-bold text-slate-600">
-          {copy.subtitle}
-        </p>
+    <section className="space-y-3 animate-fade-in w-full text-center max-w-md mx-auto">
+      {/* Friendly Vietnamese Instruction & Dots Indicator */}
+      <div className="flex items-center justify-between px-2">
+        <span className="text-xs sm:text-sm font-black text-slate-700 flex items-center gap-1.5">
+          <span>🗣️</span>
+          <span>{copy.instruction}</span>
+        </span>
+        {/* Dot Stepper Indicator: ● ○ ○ */}
+        <div className="flex items-center gap-1.5">
+          {vocabulary.map((item, idx) => (
+            <button
+              key={`dot-${item.word_en}`}
+              type="button"
+              onClick={() => setCurrentIndex(idx)}
+              aria-label={`Từ số ${idx + 1}`}
+              className={`h-3 rounded-full transition-all cursor-pointer ${
+                idx === currentIndex
+                  ? 'w-7 bg-sky-500 shadow-xs'
+                  : practicedWords[item.word_en.toLowerCase()]?.passed
+                    ? 'w-3 bg-emerald-400'
+                    : 'w-3 bg-slate-200'
+              }`}
+            />
+          ))}
+        </div>
       </div>
 
+      {/* Error notification if any */}
       {errorMessage && (
-        <div className="rounded-2xl border-2 border-rose-200 bg-rose-50 p-3 text-center text-xs sm:text-sm font-bold text-rose-700">
+        <div className="rounded-2xl border-2 border-rose-200 bg-rose-50 p-2.5 text-xs font-bold text-rose-700">
           ⚠️ {errorMessage}
         </div>
       )}
 
-      {/* Vocabulary Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {vocabulary.map((item, idx) => {
-          const wordKey = item.word_en.toLowerCase();
-          const practice = practicedWords[wordKey];
-          const imgUrl = getAssetCandidateUrls(item.image)[0];
-          const isListening = isListeningKey === wordKey;
-          const isPlaying = activeWordKey === item.word_en;
+      {/* Single-Word Focused Carousel Container */}
+      <div className="relative overflow-hidden w-full rounded-3xl">
+        <div
+          className="flex w-full transition-transform duration-400 ease-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {vocabulary.map((item) => {
+            const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
+            const practicedStatus = practicedWords[item.word_en.toLowerCase()];
 
-          return (
-            <article
-              key={item.word_en || idx}
-              className={`flex flex-col justify-between rounded-3xl border-4 bg-white p-5 shadow-md transition-all hover:shadow-xl ${
-                practice?.passed
-                  ? 'border-emerald-300 ring-2 ring-emerald-100'
-                  : 'border-slate-100'
-              }`}
-            >
-              <div>
-                {/* Header status */}
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
-                    #{idx + 1}
-                  </span>
-                  {practice?.passed && (
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700 flex items-center gap-1">
-                      <span>✓</span> {copy.done}
-                    </span>
-                  )}
-                </div>
+            return (
+              <div
+                key={item.word_en}
+                className="w-full shrink-0 px-0.5"
+              >
+                <div className="rounded-3xl border-4 border-white bg-white/95 p-4 sm:p-5 shadow-[0_8px_0_rgba(0,0,0,0.06)] flex flex-col items-center">
+                  {/* Large Image (40-55% of content area) */}
+                  <div className="relative w-full aspect-square max-h-[240px] sm:max-h-[280px] rounded-2xl bg-slate-50 border-2 border-slate-100 flex items-center justify-center overflow-hidden mb-3">
+                    {visual.imageUrl ? (
+                      <img
+                        src={visual.imageUrl}
+                        alt={item.word_en}
+                        className="h-full w-full object-contain p-2 transition-transform hover:scale-105"
+                      />
+                    ) : (
+                      <span className="text-7xl">{visual.emoji || item.emoji || '🔤'}</span>
+                    )}
 
-                {/* Card Image */}
-                <div className="relative mb-4 aspect-square w-full overflow-hidden rounded-2xl bg-slate-50 flex items-center justify-center border-2 border-slate-100">
-                  {imgUrl ? (
-                    <img
-                      src={imgUrl}
-                      alt={item.word_en}
-                      className="h-full w-full object-contain p-2 transition-transform duration-300 hover:scale-105"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <span className="text-6xl">{item.emoji || '✨'}</span>
-                  )}
-                </div>
+                    {/* Quick audio tap button */}
+                    <button
+                      type="button"
+                      onClick={() => handlePlayAudio(item)}
+                      className="absolute bottom-2 right-2 h-11 w-11 rounded-2xl bg-white/95 shadow-md border-2 border-slate-100 flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                      aria-label={`Nghe ${item.word_en}`}
+                    >
+                      🔊
+                    </button>
+                  </div>
 
-                {/* English Word & Vietnamese meaning */}
-                <div className="text-center mb-3">
-                  <h3 className="text-2xl sm:text-3xl font-black text-slate-900 capitalize">
+                  {/* English Word */}
+                  <h3 className="text-3xl sm:text-4xl font-black text-slate-900 capitalize tracking-tight">
                     {item.word_en}
                   </h3>
-                  <p className="mt-1 text-sm sm:text-base font-bold text-slate-600">
+
+                  {/* Vietnamese Translation */}
+                  <p className="text-lg sm:text-xl font-black text-amber-600 mt-0.5">
                     {item.word_vi}
                   </p>
-                </div>
 
-                {/* Example sentence */}
-                {item.simple_sentence && (
-                  <div className="rounded-xl bg-slate-50 p-2.5 text-center text-xs sm:text-sm font-semibold text-slate-600 mb-4 border border-slate-100">
-                    <span className="text-slate-400 block text-[10px] uppercase font-black tracking-wider mb-0.5">
-                      {copy.example}
-                    </span>
-                    <p className="italic text-sky-800 font-bold">"{item.simple_sentence}"</p>
+                  {/* Example Sentence */}
+                  {item.simple_sentence && (
+                    <p className="mt-2 text-xs sm:text-sm font-semibold text-slate-500 bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-100 italic">
+                      "{item.simple_sentence}"
+                    </p>
+                  )}
+
+                  {/* Listen & Speak Actions (Clay buttons) */}
+                  <div className="grid grid-cols-2 gap-2.5 w-full mt-4">
+                    <button
+                      type="button"
+                      onClick={() => handlePlayAudio(item)}
+                      disabled={activeWordKey === item.word_en}
+                      className="min-h-12 rounded-2xl border-2 border-white bg-gradient-to-r from-[#6EB9FF] to-[#3A8FD1] text-white font-black text-sm shadow-[0_4px_0_#2B76B3] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <span className="text-base">🔊</span>
+                      <span>{copy.listen}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handlePracticeSpeaking(item)}
+                      disabled={isListeningKey === item.word_en.toLowerCase()}
+                      className={`min-h-12 rounded-2xl border-2 border-white font-black text-sm shadow-[0_4px_0_rgba(0,0,0,0.15)] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        isListeningKey === item.word_en.toLowerCase()
+                          ? 'bg-amber-400 text-slate-900 animate-pulse'
+                          : practicedStatus?.passed
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-[#FFD93D] text-slate-900'
+                      }`}
+                    >
+                      <span className="text-base">
+                        {isListeningKey === item.word_en.toLowerCase() ? '👂' : '🎤'}
+                      </span>
+                      <span>
+                        {isListeningKey === item.word_en.toLowerCase()
+                          ? copy.listening
+                          : copy.speak}
+                      </span>
+                    </button>
                   </div>
-                )}
-              </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-2 pt-2 border-t border-slate-100">
-                <div className="grid grid-cols-2 gap-2">
-                  {/* Listen Button */}
-                  <button
-                    type="button"
-                    onClick={() => handlePlayAudio(item)}
-                    disabled={isPlaying}
-                    className="min-h-11 flex items-center justify-center gap-1.5 rounded-xl border-2 border-sky-200 bg-sky-50 px-3 py-2 text-xs sm:text-sm font-black text-sky-800 hover:bg-sky-100 active:scale-95 transition-all"
-                  >
-                    <span>{isPlaying ? '🔊' : '🔈'}</span>
-                    <span>{copy.listen}</span>
-                  </button>
-
-                  {/* Speak Button */}
-                  <button
-                    type="button"
-                    onClick={() => handlePracticeSpeaking(item)}
-                    disabled={isListening}
-                    className={`min-h-11 flex items-center justify-center gap-1.5 rounded-xl border-2 px-3 py-2 text-xs sm:text-sm font-black active:scale-95 transition-all ${
-                      isListening
-                        ? 'border-rose-400 bg-rose-100 text-rose-800 animate-pulse'
-                        : 'border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
-                    }`}
-                  >
-                    <span>{isListening ? '🔴' : '🎤'}</span>
-                    <span>{isListening ? copy.listening : copy.speak}</span>
-                  </button>
+                  {/* Practice Feedback Badge */}
+                  {practicedStatus && (
+                    <div
+                      className={`mt-2 text-xs font-black px-3 py-1 rounded-full ${
+                        practicedStatus.passed
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-amber-100 text-amber-800'
+                      }`}
+                    >
+                      {practicedStatus.passed ? `✓ ${copy.passed}` : copy.tryAgain}
+                    </div>
+                  )}
                 </div>
-
-                {/* Practice score pill if attempted */}
-                {practice && (
-                  <div
-                    className={`rounded-xl p-2 text-center text-xs font-black flex items-center justify-between px-3 ${
-                      practice.passed
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                        : 'bg-amber-50 text-amber-800 border border-amber-200'
-                    }`}
-                  >
-                    <span>{practice.feedback}</span>
-                    <span className="rounded-md bg-white px-2 py-0.5 shadow-xs">
-                      {practice.score}%
-                    </span>
-                  </div>
-                )}
               </div>
-            </article>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
+
+      {/* Primary Continue Button */}
+      <div className="pt-2">
+        <button
+          type="button"
+          onClick={handleNextWord}
+          className="w-full min-h-[56px] rounded-2xl border-2 border-white bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-base sm:text-lg shadow-[0_6px_0_#0D9488] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <span>
+            {currentIndex < vocabulary.length - 1 ? copy.nextWord : copy.finishVocab}
+          </span>
+        </button>
+      </div>
+
+      {/* Completion Banner */}
+      {showCelebration && (
+        <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 text-center shadow-md animate-fade-in mt-3">
+          <span className="text-3xl block mb-1">🎉</span>
+          <p className="text-base font-black text-emerald-900">{copy.allDone}</p>
+        </div>
+      )}
     </section>
   );
 };

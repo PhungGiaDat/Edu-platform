@@ -526,6 +526,17 @@
   isolation: isolate;
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
+  transition: transform 320ms cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+
+.learner-mobile-nav--hidden {
+  transform: translateY(calc(100% + 24px)) !important;
+  pointer-events: none !important;
+}
+
+.learner-mobile-nav--hidden .learner-mobile-nav__bar {
+  pointer-events: none !important;
 }
 
 /* Give the mobile dock a readable clay surface while the active item remains the raised focal point. */
@@ -609,6 +620,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .learner-mobile-nav {
+    transition: none !important;
+  }
   .learner-mobile-nav__item--active {
     transform: none;
   }

@@ -300,4 +300,154 @@ describe('LessonPlayer Journey Architecture', () => {
     fireEvent.click(finishBtn);
     expect(onFinish).toHaveBeenCalledTimes(1);
   });
+
+  it('renders Vietnamese prompt_vi in QuizSection', () => {
+    render(
+      <QuizSection
+        lesson={{
+          ...mockLesson,
+          quiz: [
+            {
+              question_id: 'q-trunk',
+              type: 'word_choice',
+              prompt_vi: 'Cái vòi là từ nào?',
+              questionAudioText: 'Find trunk.',
+              options: [
+                { option_id: 'opt1', label: 'Trunk' },
+                { option_id: 'opt2', label: 'Ear' },
+              ],
+              correctOptionId: 'opt1',
+              feedbackCorrect: 'Giỏi quá! Con chọn đúng rồi.',
+              feedbackIncorrect: 'Bé hãy thử lại nhé.',
+            },
+          ],
+        }}
+        answers={{}}
+        onAnswerChange={vi.fn()}
+        onSubmit={vi.fn()}
+        isSubmitting={false}
+        result={null}
+        locale="vi"
+      />
+    );
+
+    expect(screen.getByText('Cái vòi là từ nào?')).toBeDefined();
+  });
+
+  it('renders word_vi translations in VocabularySection', () => {
+    render(
+      <VocabularySection
+        lesson={mockLesson}
+        onWordPracticed={vi.fn()}
+        practicedWords={{}}
+        locale="vi"
+      />
+    );
+
+    expect(screen.getByText('Mẹ')).toBeDefined();
+  });
+
+  it('shows only one active quiz question at a time and advances on Continue', () => {
+    const onAnswerChange = vi.fn();
+    const onSubmit = vi.fn();
+    const multiQuestionLesson: Lesson = {
+      ...mockLesson,
+      quiz: [
+        {
+          question_id: 'q1',
+          type: 'word_choice',
+          prompt_vi: 'Trunk nghĩa là gì?',
+          questionAudioText: 'Trunk.',
+          options: [
+            { option_id: 'opt1-1', label: 'Vòi voi' },
+            { option_id: 'opt1-2', label: 'Cái tai' },
+          ],
+          correctOptionId: 'opt1-1',
+          feedbackCorrect: 'Chính xác!',
+          feedbackIncorrect: 'Thử lại nhé!',
+        },
+        {
+          question_id: 'q2',
+          type: 'word_choice',
+          prompt_vi: 'Big nghĩa là gì?',
+          questionAudioText: 'Big.',
+          options: [
+            { option_id: 'opt2-1', label: 'To lớn' },
+            { option_id: 'opt2-2', label: 'Bé nhỏ' },
+          ],
+          correctOptionId: 'opt2-1',
+          feedbackCorrect: 'Tuyệt vời!',
+          feedbackIncorrect: 'Thử lại nhé!',
+        },
+      ],
+    };
+
+    render(
+      <QuizSection
+        lesson={multiQuestionLesson}
+        answers={{}}
+        onAnswerChange={onAnswerChange}
+        onSubmit={onSubmit}
+        isSubmitting={false}
+        result={null}
+        locale="vi"
+      />
+    );
+
+    // Only Question 1 is visible
+    expect(screen.getByText('Trunk nghĩa là gì?')).toBeDefined();
+    expect(screen.queryByText('Big nghĩa là gì?')).toBeNull();
+
+    // Select option for Question 1
+    const optBtn = screen.getByRole('button', { name: /Vòi voi/i });
+    fireEvent.click(optBtn);
+    expect(onAnswerChange).toHaveBeenCalledWith('q1', 'opt1-1');
+
+    // Continue button appears and advances to Question 2
+    const continueBtn = screen.getByRole('button', { name: /Tiếp tục/i });
+    fireEvent.click(continueBtn);
+
+    // Question 2 is now active
+    expect(screen.getByText('Big nghĩa là gì?')).toBeDefined();
+    expect(screen.queryByText('Trunk nghĩa là gì?')).toBeNull();
+  });
+
+  it('never displays sticker.svg or pending filenames on the Reward screen', () => {
+    render(
+      <MemoryRouter>
+        <RewardSection
+          lesson={{
+            ...mockLesson,
+            reward: {
+              xp: 80,
+              badgeTitle: 'Elephant Star',
+              message_vi: 'Con đã hoàn thành bài học!',
+              sticker: {
+                bucket: 'learnar-assets',
+                path: 'courses/momo-nature/lessons/meet-the-elephant/stickers/sticker.svg',
+                type: 'sticker',
+                status: 'pending',
+              },
+            },
+          }}
+          courseId="momo-nature-english-5-7"
+          quizResult={{ score: 100, passed: true, correct: 3, total: 3, feedback: [] }}
+          onFinishLesson={vi.fn()}
+          isSubmitting={false}
+          isCompleted={false}
+          onReplayLesson={vi.fn()}
+          locale="vi"
+        />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Con làm rất tốt!')).toBeDefined();
+    expect(screen.getByText('Elephant Star')).toBeDefined();
+    expect(screen.getByText('+80 XP')).toBeDefined();
+
+    // Technical filenames and statuses must NEVER render
+    expect(screen.queryByText(/sticker\.svg/i)).toBeNull();
+    expect(screen.queryByText(/pending/i)).toBeNull();
+    expect(screen.queryByText(/đang chờ/i)).toBeNull();
+  });
 });

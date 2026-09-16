@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 
 interface LayoutProps {
@@ -6,6 +7,8 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
+    const location = useLocation();
+    const isLessonRoute = /^\/courses\/[^/]+\/lessons\/[^/]+/.test(location.pathname);
     const [isSidebarExpanded, setIsSidebarExpanded] = useState(() => {
         if (typeof window === 'undefined') return true;
 
@@ -47,7 +50,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 isDesktopExpanded={isSidebarExpanded}
                 onDesktopExpandedChange={setSidebarExpanded}
             />
-            <main className="learner-main w-full max-w-[100vw] min-w-0 flex-1 overflow-x-hidden pb-[calc(76px+env(safe-area-inset-bottom,0px)+0.75rem)] transition-[margin,max-width] duration-300 md:pb-0 motion-reduce:transition-none">
+            <main className={`learner-main w-full max-w-[100vw] min-w-0 flex-1 overflow-x-hidden ${
+                isLessonRoute ? 'pb-0' : 'pb-[calc(76px+env(safe-area-inset-bottom,0px)+0.75rem)]'
+            } transition-[margin,max-width] duration-300 md:pb-0 motion-reduce:transition-none`}>
                 {children}
             </main>
         </div>

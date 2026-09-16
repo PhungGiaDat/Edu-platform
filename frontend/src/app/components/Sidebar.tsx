@@ -571,13 +571,72 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
     const [courses, setCourses] = useState<Course[]>([]);
     const [progress, setProgress] = useState<UserProgress[]>([]);
     const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
+    const [isMobileNavVisible, setIsMobileNavVisible] = useState(true);
+    const lastScrollYRef = useRef(0);
+    const tickingRef = useRef(false);
     const moreButtonRef = useRef<HTMLButtonElement>(null);
     const mobileSheetRef = useRef<HTMLDivElement>(null);
     const previousPathRef = useRef(location.pathname);
+    const isLessonRoute = /^\/courses\/[^/]+\/lessons\/[^/]+/.test(location.pathname);
 
     const navItems = isGuest
         ? fullNavItems.filter((item) => item.path === '/courses' || item.path === '/learn-ar-xr')
         : fullNavItems;
+
+    useEffect(() => {
+        setIsMobileNavVisible(true);
+        lastScrollYRef.current = typeof window !== 'undefined' ? Math.max(0, window.scrollY || 0) : 0;
+    }, [location.pathname]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const handleScroll = () => {
+            if (tickingRef.current) return;
+
+            tickingRef.current = true;
+            window.requestAnimationFrame(() => {
+                tickingRef.current = false;
+
+                if (isMobileMoreOpen) {
+                    setIsMobileNavVisible(true);
+                    return;
+                }
+
+                const currentScrollY = Math.max(0, window.scrollY || document.documentElement.scrollTop || 0);
+                const lastScrollY = lastScrollYRef.current;
+                const diff = currentScrollY - lastScrollY;
+
+                // Deadband threshold to eliminate jitter from micro finger movements (iPhone touch)
+                const SCROLL_THRESHOLD = 10;
+
+                // Always reveal near top of page (including iOS bounce rubber-band)
+                if (currentScrollY <= 20) {
+                    setIsMobileNavVisible(true);
+                } else if (Math.abs(diff) >= SCROLL_THRESHOLD) {
+                    const maxScrollY = document.documentElement.scrollHeight - window.innerHeight;
+                    const isNearBottom = currentScrollY >= maxScrollY - 24;
+
+                    if (isNearBottom) {
+                        setIsMobileNavVisible(true);
+                    } else if (diff > 0) {
+                        // Scrolling DOWN -> hide navbar (Facebook-style)
+                        setIsMobileNavVisible(false);
+                    } else {
+                        // Scrolling UP -> reveal navbar
+                        setIsMobileNavVisible(true);
+                    }
+                }
+
+                lastScrollYRef.current = currentScrollY;
+            });
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, [isMobileMoreOpen]);
 
     useEffect(() => {
         let cancelled = false;
@@ -793,24 +852,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
                 )}
             </aside>
 
-            <nav aria-label={t('primaryNavigation')} className="learner-mobile-nav pointer-events-none fixed bottom-0 left-0 right-0 z-[var(--z-nav)] md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-                <div className="learner-mobile-nav__bar pointer-events-auto mx-2 mb-2.5 flex min-h-[72px] items-stretch justify-around gap-0.5 rounded-[28px] p-1">
-                    {navItems.filter((item) => item.showInMobileBar !== false).map((item) => {
-                        const Icon = iconComponents[item.iconKey];
-                        const active = isRouteActive(location.pathname, item.path);
-                        return (
-                            <Link key={item.path} to={item.path} aria-current={active ? 'page' : undefined} title={t(item.labelKey)} className={`learner-mobile-nav__item relative z-[1] flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[22px] px-0.5 transition-[transform,background,box-shadow,color] duration-200 motion-reduce:transition-none ${active ? 'learner-mobile-nav__item--active z-[2]' : 'text-[#3F6FCB]'}`}>
-                                <Icon className="h-5 w-5 shrink-0" />
-                                <span className="mt-0.5 w-full truncate text-center text-[9px] font-black leading-none tracking-tight sm:text-[10px]">{t(item.shortLabelKey)}</span>
-                            </Link>
-                        );
-                    })}
-                    <button ref={moreButtonRef} type="button" onClick={() => setIsMobileMoreOpen(true)} aria-expanded={isMobileMoreOpen} aria-controls="mobile-more-sheet" title={t('navMore')} className={`learner-mobile-nav__item learner-mobile-nav__more-button relative z-[1] flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[22px] px-0.5 transition-[transform,background,box-shadow,color] duration-200 motion-reduce:transition-none ${isMobileMoreOpen ? 'learner-mobile-nav__item--active z-[2]' : 'text-[#3F6FCB]'}`}>
-                        <MoreIcon className="h-5 w-5 shrink-0" />
-                        <span className="mt-0.5 w-full truncate text-center text-[9px] font-black leading-none tracking-tight sm:text-[10px]">{t('navMore')}</span>
-                    </button>
-                </div>
-            </nav>
+            {!isLessonRoute && (
+                <nav
+                    aria-label={t('primaryNavigation')}
+                    className={`learner-mobile-nav pointer-events-none fixed bottom-0 left-0 right-0 z-[var(--z-nav)] md:hidden ${
+                        !isMobileNavVisible ? 'learner-mobile-nav--hidden' : ''
+                    }`}
+                    style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+                >
+                    <div className="learner-mobile-nav__bar pointer-events-auto mx-2 mb-2.5 flex min-h-[72px] items-stretch justify-around gap-0.5 rounded-[28px] p-1">
+                        {navItems.filter((item) => item.showInMobileBar !== false).map((item) => {
+                            const Icon = iconComponents[item.iconKey];
+                            const active = isRouteActive(location.pathname, item.path);
+                            return (
+                                <Link key={item.path} to={item.path} aria-current={active ? 'page' : undefined} title={t(item.labelKey)} className={`learner-mobile-nav__item relative z-[1] flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[22px] px-0.5 transition-[transform,background,box-shadow,color] duration-200 motion-reduce:transition-none ${active ? 'learner-mobile-nav__item--active z-[2]' : 'text-[#3F6FCB]'}`}>
+                                    <Icon className="h-5 w-5 shrink-0" />
+                                    <span className="mt-0.5 w-full truncate text-center text-[9px] font-black leading-none tracking-tight sm:text-[10px]">{t(item.shortLabelKey)}</span>
+                                </Link>
+                            );
+                        })}
+                        <button ref={moreButtonRef} type="button" onClick={() => setIsMobileMoreOpen(true)} aria-expanded={isMobileMoreOpen} aria-controls="mobile-more-sheet" title={t('navMore')} className={`learner-mobile-nav__item learner-mobile-nav__more-button relative z-[1] flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[22px] px-0.5 transition-[transform,background,box-shadow,color] duration-200 motion-reduce:transition-none ${isMobileMoreOpen ? 'learner-mobile-nav__item--active z-[2]' : 'text-[#3F6FCB]'}`}>
+                            <MoreIcon className="h-5 w-5 shrink-0" />
+                            <span className="mt-0.5 w-full truncate text-center text-[9px] font-black leading-none tracking-tight sm:text-[10px]">{t('navMore')}</span>
+                        </button>
+                    </div>
+                </nav>
+            )}
 
             {isMobileMoreOpen && (
                 <div className="fixed inset-0 z-[var(--z-modal)] md:hidden" role="presentation">

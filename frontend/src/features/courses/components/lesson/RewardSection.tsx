@@ -5,6 +5,7 @@ import { getCourseTheme, type CourseThemeConfig } from '@/features/courses/cours
 import { getAssetCandidateUrls } from '@/lib/courseAssets';
 import { SoundEffectService } from '@/services/SoundEffectService';
 import { HapticService } from '@/services/HapticService';
+import { isReadyAsset, sanitizeChildLabel } from '@/features/courses/lib/visualResolver';
 
 interface RewardSectionProps {
   course?: Course | null;
@@ -33,36 +34,35 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
   const theme: CourseThemeConfig = getCourseTheme(course);
 
   const score = quizResult?.score ?? 100;
-  const starsCount = score >= 90 ? 3 : score >= 75 ? 2 : 1;
+  const starsCount = score >= 90 ? 3 : score >= 70 ? 2 : 1;
   const xp = lesson.reward?.xp || quizResult?.reward?.xp || 25;
-  const stickerUrl = lesson.reward?.sticker
-    ? getAssetCandidateUrls(lesson.reward.sticker)[0]
-    : undefined;
+
+  // Verify sticker is actually ready and not a pending SVG or filename
+  const isStickerUsable = isReadyAsset(lesson.reward?.sticker);
+  const rawStickerUrls = isStickerUsable && lesson.reward?.sticker
+    ? getAssetCandidateUrls(lesson.reward.sticker)
+    : [];
+  const stickerUrl = rawStickerUrls.find((u) => !u.toLowerCase().endsWith('.svg')) || null;
+
+  const rawBadgeTitle = lesson.reward?.badgeTitle || (lesson.title_vi ? `${lesson.title_vi} Star` : 'Ngôi sao bài học');
+  const badgeTitle = sanitizeChildLabel(rawBadgeTitle, 'Ngôi sao bài học');
 
   const copy = {
     en: {
-      congrats: 'Lesson Complete!',
-      subtitle: `Congratulations! You have mastered Lesson ${lesson.order}!`,
-      badgeTitle: lesson.reward?.badgeTitle || 'Explorer Badge',
-      xpEarned: 'XP Points Earned',
-      score: 'Quiz Score',
-      stars: 'Stars Earned',
-      finishButton: 'Save Progress & Complete',
-      finishedBadge: 'Lesson Officially Completed ✓',
-      reviewLesson: 'Review Lesson',
+      congrats: 'You did a great job!',
+      subtitle: 'Congratulations! You have completed the lesson!',
+      finishCta: 'Lưu tiến độ & Hoàn tất',
+      reviewCta: 'Review Lesson 🔄',
       backToCourse: 'Back to Course Map',
+      completedSentence: 'You have mastered all activities in this lesson!',
     },
     vi: {
-      congrats: 'Chúc mừng bé đã hoàn thành bài học!',
-      subtitle: `Bé thật tuyệt vời! Đã hoàn thành xuất sắc Bài học ${lesson.order}!`,
-      badgeTitle: lesson.reward?.badgeTitle || 'Huy hiệu Khám phá',
-      xpEarned: 'Điểm kinh nghiệm XP',
-      score: 'Điểm kiểm tra',
-      stars: 'Sao đạt được',
-      finishButton: 'Lưu tiến độ & Hoàn tất',
-      finishedBadge: 'Đã hoàn tất bài học thành công ✓',
-      reviewLesson: 'Học lại bài này',
+      congrats: 'Con làm rất tốt!',
+      subtitle: 'Chúc mừng bé đã hoàn thành bài học!',
+      finishCta: 'Lưu tiến độ & Hoàn tất',
+      reviewCta: 'Xem lại bài học 🔄',
       backToCourse: 'Về danh sách bài học',
+      completedSentence: 'Con đã hoàn thành bài học xuất sắc!',
     },
   }[locale];
 
@@ -72,34 +72,34 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
   }, []);
 
   return (
-    <section className="space-y-6 animate-fade-in max-w-2xl mx-auto text-center">
-      {/* Celebration Trophy Card */}
+    <section className="space-y-4 animate-fade-in w-full text-center max-w-md mx-auto">
+      {/* Large Celebratory Trophy Card (Tactile Clay) */}
       <div
-        className="rounded-3xl border-4 p-8 shadow-2xl relative overflow-hidden"
+        className="rounded-3xl border-4 p-6 sm:p-7 shadow-[0_12px_0_rgba(0,0,0,0.08)] relative overflow-hidden flex flex-col items-center"
         style={{
           backgroundColor: theme.cardBg,
           borderColor: theme.cardBorder,
         }}
       >
-        {/* Glow */}
+        {/* Playful Glow Background */}
         <div
-          className="absolute -top-20 -right-20 w-60 h-60 rounded-full opacity-40 blur-3xl pointer-events-none"
+          className="absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-30 blur-2xl pointer-events-none"
           style={{ background: theme.primaryAccent }}
         />
 
-        {/* Mascot / Trophy Icon */}
-        <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-3xl border-4 border-white bg-gradient-to-br from-amber-300 to-amber-500 text-5xl shadow-xl animate-bounce">
-          {theme.mascotEmoji}
+        {/* Celebration Mascot Avatar */}
+        <div className="mx-auto mb-3 flex h-24 w-24 items-center justify-center rounded-3xl border-4 border-white bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-5xl shadow-lg animate-bounce">
+          🎉
         </div>
 
-        {/* Stars */}
-        <div className="flex justify-center gap-2 mb-3">
+        {/* Big 3 Stars */}
+        <div className="flex justify-center gap-2 mb-2">
           {[1, 2, 3].map((starIdx) => (
             <span
               key={starIdx}
-              className={`text-3xl sm:text-4xl transition-all duration-300 ${
+              className={`text-4xl sm:text-5xl transition-all duration-300 ${
                 starIdx <= starsCount
-                  ? 'text-amber-400 drop-shadow-md scale-110'
+                  ? 'text-amber-400 drop-shadow-[0_4px_8px_rgba(251,191,36,0.6)] scale-110'
                   : 'text-slate-200'
               }`}
             >
@@ -108,79 +108,62 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
           ))}
         </div>
 
-        {/* Title */}
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-          🎉 {copy.congrats}
+        {/* Celebratory Headings */}
+        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          {copy.congrats}
         </h2>
         <p className="mt-1 text-sm sm:text-base font-bold text-slate-600">
           {copy.subtitle}
         </p>
 
-        {/* Reward Badge / Sticker */}
-        <div className="my-6 inline-flex flex-col items-center rounded-3xl border-4 border-white bg-white/90 p-5 shadow-md">
+        {/* Badge & XP Trophy Pill */}
+        <div className="my-4 w-full flex flex-col items-center rounded-2xl border-2 border-white bg-white/95 p-4 shadow-sm">
           {stickerUrl ? (
             <img
               src={stickerUrl}
-              alt={copy.badgeTitle}
-              className="h-24 w-24 object-contain mb-2"
+              alt={badgeTitle}
+              className="h-20 w-20 object-contain mb-1.5"
+              onError={(e) => {
+                // Graceful fallback to icon if sticker fails to load
+                (e.currentTarget as HTMLElement).style.display = 'none';
+              }}
             />
           ) : (
-            <span className="text-5xl mb-2">🏅</span>
+            <span className="text-5xl mb-1.5 animate-pulse">🌟</span>
           )}
-          <span className="text-base font-black text-slate-900">
-            {copy.badgeTitle}
+
+          <span className="text-lg font-black text-slate-900">
+            {badgeTitle}
           </span>
-          <span className="text-xs font-bold text-amber-600">
-            +{xp} {copy.xpEarned}
+          <span className="mt-1 rounded-full bg-amber-100 px-3 py-1 text-sm font-black text-amber-800 border border-amber-200">
+            +{xp} XP
           </span>
         </div>
 
-        {/* Score & XP Highlights */}
-        <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
-          <div className="rounded-2xl border-2 border-slate-100 bg-white p-3 shadow-xs">
-            <span className="text-xs font-bold text-slate-400 block">{copy.score}</span>
-            <span className="text-2xl font-black text-slate-900">{score}%</span>
-          </div>
-          <div className="rounded-2xl border-2 border-slate-100 bg-white p-3 shadow-xs">
-            <span className="text-xs font-bold text-slate-400 block">{copy.xpEarned}</span>
-            <span className="text-2xl font-black text-amber-600">+{xp} XP</span>
-          </div>
-        </div>
+        <p className="text-xs sm:text-sm font-extrabold text-slate-500">
+          {copy.completedSentence}
+        </p>
 
-        {/* Save & Complete Action Button */}
-        <div className="mt-8 space-y-3">
-          {!isCompleted ? (
-            <button
-              type="button"
-              onClick={onFinishLesson}
-              disabled={isSubmitting}
-              className="min-h-14 w-full sm:w-auto sm:min-w-[280px] rounded-3xl border-4 border-white px-8 py-4 text-base sm:text-lg font-black text-white shadow-xl hover:brightness-105 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
-              style={{ background: theme.accentGradient }}
-            >
-              {isSubmitting ? '⏳ ...' : `⭐ ${copy.finishButton}`}
-            </button>
-          ) : (
-            <div className="inline-flex items-center gap-2 rounded-2xl bg-emerald-100 px-5 py-3 text-sm font-black text-emerald-800 border-2 border-emerald-300">
-              <span>✓</span> {copy.finishedBadge}
-            </div>
-          )}
+        {/* Primary Finish CTA Button */}
+        <div className="w-full pt-3 space-y-2.5">
+          <button
+            type="button"
+            onClick={isCompleted ? () => navigate(`/courses/${courseId}`) : onFinishLesson}
+            disabled={isSubmitting}
+            className="w-full min-h-[56px] rounded-2xl border-2 border-white bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-base sm:text-lg shadow-[0_6px_0_#0D9488] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <span>{isCompleted ? copy.backToCourse : copy.finishCta}</span>
+            <span>🚀</span>
+          </button>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onReplayLesson}
-              className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-2.5 text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer"
-            >
-              🔄 {copy.reviewLesson}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate(`/courses/${courseId}`)}
-              className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-2.5 text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer"
-            >
-              🗺️ {copy.backToCourse}
-            </button>
-          </div>
+          {/* Secondary Replay Button */}
+          <button
+            type="button"
+            onClick={onReplayLesson}
+            className="w-full min-h-[48px] rounded-2xl border-2 border-slate-200 bg-white text-slate-700 font-black text-sm shadow-xs hover:bg-slate-50 active:translate-y-0.5 transition-all cursor-pointer"
+          >
+            {copy.reviewCta}
+          </button>
         </div>
       </div>
     </section>
