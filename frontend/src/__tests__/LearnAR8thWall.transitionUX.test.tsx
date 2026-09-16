@@ -44,6 +44,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 
 import {
   canUseAROperatorControls,
+  isARDebugRequested,
   LearnAR8thWall,
 } from '@/pages/LearnAR8thWall';
 
@@ -241,10 +242,8 @@ describe('LearnAR8thWall transition UX', () => {
 
     const overlay = screen.getByTestId('ar-transition-overlay');
     for (const className of [
-      'ar-transition-mesh',
-      'ar-transition-shade',
-      'ar-transition-blob--one',
-      'ar-transition-blob--two',
+      'ar-transition-backdrop',
+      'ar-transition-ambient',
       'ar-transition-visual',
     ]) {
       expect(overlay.querySelector(`.${className}`)).toHaveAttribute('aria-hidden', 'true');
@@ -419,19 +418,58 @@ describe('LearnAR8thWall transition UX', () => {
     expect(learnerViewerUrl.searchParams.get('debug')).toBeNull();
   });
 
-  it('keeps AR operator controls available to teacher and admin roles', async () => {
+  it('keeps an authorized admin on the normal URL in the learner experience', async () => {
     authState.user = {
-      id: 'teacher-001',
-      email: 'teacher@example.test',
-      username: 'teacher',
-      role: 'teacher',
-      roles: ['teacher'],
+      id: 'admin-001',
+      email: 'admin@example.test',
+      username: 'admin',
+      role: 'admin',
+      roles: ['admin'],
+      is_superuser: false,
+    };
+
+    renderPage('/learn-ar-xr/claymorphic-animals-001');
+
+    expect(screen.getByRole('button', { name: 'Quay lại' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Khám phá AR' })).toBeInTheDocument();
+    expect(screen.queryByText('MindAR')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /send scanning ar logs to telegram/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Phase:/)).not.toBeInTheDocument();
+    expect(screen.queryByText('8th Wall XR')).not.toBeInTheDocument();
+    expect(screen.queryByText(/cards? scanned/i)).not.toBeInTheDocument();
+
+    await act(async () => {
+      await getQRScannerProps().onDetected('cat001');
+    });
+
+    expect(screen.getByTestId('ar-transition-lexi')).toBeInTheDocument();
+    expect(screen.queryByText('Scanned')).not.toBeInTheDocument();
+    const viewerUrl = new URL(
+      screen.getByTitle('AR Viewer').getAttribute('src') || '',
+      window.location.origin,
+    );
+    expect(viewerUrl.searchParams.get('debug')).toBeNull();
+
+    act(() => {
+      postViewerMessage('XR_CAMERA_HAS_VIDEO');
+    });
+    expect(screen.getByText('Đưa thẻ vào khung để khám phá ✨')).toBeInTheDocument();
+  });
+
+  it('keeps AR operator controls available to an authorized admin only when debug is requested', async () => {
+    authState.user = {
+      id: 'admin-001',
+      email: 'admin@example.test',
+      username: 'admin',
+      role: 'admin',
+      roles: ['admin'],
       is_superuser: false,
     };
 
     renderPage('/learn-ar-xr/claymorphic-animals-001?debug=true');
 
     expect(document.querySelector('.ar-xr-header')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '8th Wall XR' })).toBeInTheDocument();
     expect(screen.getByText('MindAR')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /send scanning ar logs to telegram/i })).toBeInTheDocument();
     expect(screen.getByText(/Phase:/)).toBeInTheDocument();
@@ -443,11 +481,39 @@ describe('LearnAR8thWall transition UX', () => {
       await getQRScannerProps().onDetected('cat001');
     });
 
-    const teacherViewerUrl = new URL(
+    expect(screen.getByText('Scanned')).toBeInTheDocument();
+    expect(screen.getByText('1 card scanned')).toBeInTheDocument();
+
+    const adminViewerUrl = new URL(
       screen.getByTitle('AR Viewer').getAttribute('src') || '',
       window.location.origin,
     );
-    expect(teacherViewerUrl.searchParams.get('debug')).toBe('true');
+    expect(adminViewerUrl.searchParams.get('debug')).toBe('true');
+  });
+
+  it('uses the warm Lexi story-stage contract instead of the rejected lavender mesh', async () => {
+    await startPreparing();
+
+    expect(screen.getByTestId('ar-transition-overlay')).toHaveClass(
+      'ar-transition-overlay--lexi',
+      'ar-transition-overlay--story',
+    );
+    expect(screen.getByTestId('ar-transition-lexi')).toBeInTheDocument();
+
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/pages/LearnAR8thWall.tsx'),
+      'utf8',
+    );
+    const css = readFileSync(
+      resolve(process.cwd(), 'src/styles/LearnAR8thWall.css'),
+      'utf8',
+    );
+
+    expect(source).not.toContain('ar-transition-mesh');
+    expect(source).not.toContain('ar-transition-blob');
+    expect(css).toContain('.ar-transition-overlay--story');
+    expect(css).not.toContain('linear-gradient(148deg, #3f47a7');
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*\.ar-transition-lexi/);
   });
 
   it('matches the backend elevated-role contract for AR operator controls', () => {
@@ -456,5 +522,11 @@ describe('LearnAR8thWall transition UX', () => {
     expect(canUseAROperatorControls({ role: 'teacher' }, true)).toBe(true);
     expect(canUseAROperatorControls({ role: 'learner', roles: ['admin'] }, true)).toBe(true);
     expect(canUseAROperatorControls({ role: 'learner', is_superuser: true }, true)).toBe(true);
+  });
+
+  it('recognizes only an explicit true debug query as an AR debug request', () => {
+    expect(isARDebugRequested('')).toBe(false);
+    expect(isARDebugRequested('?debug=false')).toBe(false);
+    expect(isARDebugRequested('?debug=true')).toBe(true);
   });
 });

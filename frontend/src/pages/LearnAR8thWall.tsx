@@ -75,6 +75,10 @@ export function canUseAROperatorControls(
     || user.roles?.some(role => role === 'teacher' || role === 'admin') === true;
 }
 
+export function isARDebugRequested(search: string): boolean {
+  return new URLSearchParams(search).get('debug') === 'true';
+}
+
 /** XR target data for one flashcard, fetched after QR scan */
 export interface XRTarget {
   qr_id: string;
@@ -244,6 +248,8 @@ export const LearnAR8thWall: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const canUseOperatorControls = canUseAROperatorControls(user, isAuthenticated);
+  const debugRequested = isARDebugRequested(window.location.search);
+  const showOperatorTools = canUseOperatorControls && debugRequested;
 
   const deckIdRef = useRef(deckId || 'claymorphic-animals-001');
   // Backend deck metadata is the session tracking catalogue source. It is
@@ -394,14 +400,14 @@ export const LearnAR8thWall: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!canUseOperatorControls || parentBuildFingerprintEmittedRef.current) return;
+    if (!showOperatorTools || parentBuildFingerprintEmittedRef.current) return;
 
     parentBuildFingerprintEmittedRef.current = true;
     trace('AR_PARENT_BUILD', JSON.stringify({
       version: AR_DIAGNOSTICS_VERSION,
       diagnosticsVersion: AR_DIAGNOSTICS_VERSION,
     }));
-  }, [canUseOperatorControls, trace]);
+  }, [showOperatorTools, trace]);
 
   const clearCameraHandoffTimer = useCallback(() => {
     if (cameraHandoffTimerRef.current !== null) {
@@ -498,7 +504,7 @@ export const LearnAR8thWall: React.FC = () => {
   const { syncTelegram, syncStatus, iframeLogs } = useTelegramSync({
     iframeRef: viewerRef,
     flashcardCount: foundCards.size || 1,
-    enabled: canUseOperatorControls,
+    enabled: showOperatorTools,
     getParentLogs: () => {
       const arDebug = arDebugBufferRef.current.join('\n') || 'No AR_DEBUG logs';
       const traces = parentTraceLogs.join('\n') || 'No parent traces';
@@ -510,14 +516,14 @@ export const LearnAR8thWall: React.FC = () => {
   // Keyboard shortcut for Telegram sync (Ctrl+Shift+S)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (canUseOperatorControls && e.ctrlKey && e.shiftKey && e.key === 'S') {
+      if (showOperatorTools && e.ctrlKey && e.shiftKey && e.key === 'S') {
         e.preventDefault();
         syncTelegram();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [canUseOperatorControls, syncTelegram]);
+  }, [showOperatorTools, syncTelegram]);
 
   // Debug: log phase changes
   useEffect(() => {
@@ -847,7 +853,7 @@ export const LearnAR8thWall: React.FC = () => {
     if (xrTargets.length > 0) {
       params.set('xr_targets', serializeXRTargets(xrTargets));
     }
-    if (canUseOperatorControls) {
+    if (showOperatorTools) {
       params.set('debug', 'true');
       params.set('ar_diagnostics_version', AR_DIAGNOSTICS_VERSION);
     }
@@ -881,8 +887,7 @@ export const LearnAR8thWall: React.FC = () => {
   // ========================================================================
   // RENDER
   // ========================================================================
-  const isDebugMode = canUseOperatorControls
-    && new URLSearchParams(window.location.search).get('debug') === 'true';
+  const isDebugMode = showOperatorTools;
 
   return (
     <div className={`ar-xr-page ${transitionMounted ? 'ar-xr-page--transitioning' : ''}`}>
@@ -897,21 +902,21 @@ export const LearnAR8thWall: React.FC = () => {
       )}
 
       {/* Learners retain navigation, while engine and scan diagnostics stay operator-only. */}
-      <div className={`ar-xr-header ${canUseOperatorControls ? 'ar-xr-header--operator' : 'ar-xr-header--student'}`}>
+      <div className={`ar-xr-header ${showOperatorTools ? 'ar-xr-header--operator' : 'ar-xr-header--student'}`}>
           <button className="back-btn" onClick={handleBack} aria-label="Quay lại">
             <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
           <div className="header-title">
-            <h1>{canUseOperatorControls ? currentTarget?.word || '8th Wall XR' : 'Khám phá AR'}</h1>
-            {canUseOperatorControls && (
+            <h1>{showOperatorTools ? currentTarget?.word || '8th Wall XR' : 'Khám phá AR'}</h1>
+            {showOperatorTools && (
               <span className="card-count">
                 {foundCards.size} card{foundCards.size !== 1 ? 's' : ''} scanned
               </span>
             )}
           </div>
-          {canUseOperatorControls ? (
+          {showOperatorTools ? (
             <button className="engine-switch" onClick={handleSwitchToMindAR}>
               MindAR
             </button>
@@ -967,21 +972,20 @@ export const LearnAR8thWall: React.FC = () => {
 
         {transitionMounted && (
           <div
-            className={`ar-transition-overlay ar-transition-overlay--lexi ${transitionVisible ? 'is-visible' : 'is-leaving'}`}
+            className={`ar-transition-overlay ar-transition-overlay--lexi ar-transition-overlay--story ${transitionVisible ? 'is-visible' : 'is-leaving'}`}
             data-testid="ar-transition-overlay"
             data-visible={transitionVisible ? 'true' : 'false'}
             role="status"
             aria-live="polite"
           >
-            <div className="ar-transition-mesh" aria-hidden="true" />
-            <div className="ar-transition-shade" aria-hidden="true" />
-            <div className="ar-transition-blob ar-transition-blob--one" aria-hidden="true" />
-            <div className="ar-transition-blob ar-transition-blob--two" aria-hidden="true" />
+            <div className="ar-transition-backdrop" aria-hidden="true" />
+            <div className="ar-transition-ambient" aria-hidden="true" />
 
             <div className="ar-transition-content">
               <div className="ar-transition-visual" aria-hidden="true">
                 <div className="ar-transition-lexi-halo" />
                 <div className="ar-transition-lexi-stage">
+                  <div className="ar-transition-lexi-ground" />
                   <img
                     className="ar-transition-lexi"
                     data-testid="ar-transition-lexi"
@@ -1042,7 +1046,7 @@ export const LearnAR8thWall: React.FC = () => {
       </div>
 
       {/* Operator-only diagnostics: the backend separately enforces this role gate. */}
-      {canUseOperatorControls && (
+      {showOperatorTools && (
         <button
           type="button"
           className={`telegram-sync-btn ${syncStatus}`}
@@ -1056,7 +1060,7 @@ export const LearnAR8thWall: React.FC = () => {
       )}
 
       {/* Operator-only scan telemetry */}
-      {canUseOperatorControls && foundCards.size > 0 && (
+      {showOperatorTools && foundCards.size > 0 && (
         <div className="found-cards-overlay">
           <div className="found-cards-title">Scanned</div>
           <div className="found-cards-list">
