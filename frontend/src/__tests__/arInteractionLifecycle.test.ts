@@ -21,7 +21,16 @@ import {
 } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 const EXPECTED_LIFECYCLE_MODULE_URL =
-  './static/ar-assets/js/ar-interaction-lifecycle.js?v=acquisition-state-v1'
+  './static/ar-assets/js/ar-interaction-lifecycle.js?v=visual-pose-v1'
+
+function requireVisualPose(
+  result: ReturnType<typeof lifecycleModule.advanceVisualPose>,
+) {
+  if (!result.visualPose) {
+    throw new Error('Expected a valid visual pose for this fixture')
+  }
+  return result.visualPose
+}
 
 describe('AR interaction lifecycle contracts', () => {
   it('plans target-local attachment for every eligible tracked instance without semantic target names', () => {
@@ -270,7 +279,7 @@ describe('AR interaction lifecycle contracts', () => {
     expect(attachSource).toContain('resolveTargetModelAttachment')
     expect(attachSource).toContain('ensureTargetModelLoaded(targetName)')
     expect(attachSource).toContain('reparentModelToAnchor(instance)')
-    expect(attachSource).toContain('applyTargetPose(instance, pose)')
+    expect(attachSource).toContain('applyVisualTargetPose(instance, pose)')
     expect(attachSource).toContain('instance.interactionReady = true')
     expect(attachSource).not.toMatch(/cat001|fish001|CAT_EAT/)
     expect(foundSource).toContain('void attachTrackedTargetModel(detail.name)')
@@ -471,7 +480,7 @@ describe('AR interaction lifecycle contracts', () => {
   it('normalizes raw GLB bounds before applying any persisted presentation transform', () => {
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
     const reparentStart = source.indexOf('function reparentModelToAnchor(instance)')
-    const reparentEnd = source.indexOf('// ========== POSE APPLICATION', reparentStart)
+    const reparentEnd = source.indexOf('// ========== VISUAL POSE APPLICATION', reparentStart)
     const reparentSource = source.slice(reparentStart, reparentEnd)
     const profileBranch = reparentSource.indexOf('if (usesPresentationProfile)')
     const firstBoundsMeasurement = reparentSource.indexOf('const box = new THREE.Box3().setFromObject(model)')
@@ -497,7 +506,7 @@ describe('AR interaction lifecycle contracts', () => {
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
     const reparentStart = source.indexOf('function reparentModelToAnchor(instance)')
     const normalizationEnd = source.indexOf('// Apply per-target config to offset group', reparentStart)
-    const reparentEnd = source.indexOf('// ========== POSE APPLICATION', normalizationEnd)
+    const reparentEnd = source.indexOf('// ========== VISUAL POSE APPLICATION', normalizationEnd)
     const normalizationSource = source.slice(reparentStart, normalizationEnd)
     const reacquireSource = source.slice(normalizationEnd, reparentEnd)
 
@@ -509,6 +518,222 @@ describe('AR interaction lifecycle contracts', () => {
     expect(reacquireSource).toContain('instance.offsetGroup.position.set(x, y, z)')
     expect(reacquireSource).toContain('instance.offsetGroup.rotation.set(rx, ry, rz)')
     expect(reacquireSource).toContain('instance.offsetGroup.scale.setScalar(presentation.finalScale)')
+  })
+
+  it('snaps the first valid visual pose without mutating its raw tracking pose', () => {
+    const { advanceVisualPose } = lifecycleModule
+    const rawPose = {
+      position: { x: 1, y: 2, z: 3 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: 1.25,
+    }
+    const rawPoseBefore = structuredClone(rawPose)
+
+    expect(advanceVisualPose).toBeTypeOf('function')
+    const result = advanceVisualPose({
+      visualPose: null,
+      visualPoseInitialized: false,
+      rawPose,
+      dtMs: 16,
+      tauMs: 80,
+    })
+
+    expect(result).toMatchObject({
+      visualPoseInitialized: true,
+      snapped: true,
+      smoothingAlpha: 1,
+      visualPose: rawPose,
+    })
+    expect(rawPose).toEqual(rawPoseBefore)
+  })
+
+  it('moves a visual position toward the raw pose without overshooting', () => {
+    const { advanceVisualPose } = lifecycleModule
+
+    expect(advanceVisualPose).toBeTypeOf('function')
+    const result = advanceVisualPose({
+      visualPose: {
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      visualPoseInitialized: true,
+      rawPose: {
+        position: { x: 10, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      dtMs: 80,
+      tauMs: 80,
+    })
+
+    const visualPose = requireVisualPose(result)
+    expect(result.snapped).toBe(false)
+    expect(result.smoothingAlpha).toBeCloseTo(0.63212056, 7)
+    expect(visualPose.position.x).toBeCloseTo(6.3212056, 6)
+    expect(visualPose.position.x).toBeGreaterThan(0)
+    expect(visualPose.position.x).toBeLessThan(10)
+  })
+
+  it('slerps visual quaternion rotation on the shortest normalized path', () => {
+    const { advanceVisualPose } = lifecycleModule
+
+    expect(advanceVisualPose).toBeTypeOf('function')
+    const result = advanceVisualPose({
+      visualPose: {
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      visualPoseInitialized: true,
+      rawPose: {
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: -1 },
+        scale: 1,
+      },
+      dtMs: 40,
+      tauMs: 80,
+    })
+    const rotation = requireVisualPose(result).rotation
+    const length = Math.hypot(rotation?.x ?? 0, rotation?.y ?? 0, rotation?.z ?? 0, rotation?.w ?? 0)
+
+    expect(length).toBeCloseTo(1, 10)
+    expect(rotation).toEqual({ x: 0, y: 0, z: 0, w: 1 })
+  })
+
+  it('produces equivalent visual position over equivalent elapsed time at different update rates', () => {
+    const { advanceVisualPose } = lifecycleModule
+    const rawPose = {
+      position: { x: 10, y: 0, z: 0 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: 1,
+    }
+
+    expect(advanceVisualPose).toBeTypeOf('function')
+    let manyFrames = {
+      position: { x: 0, y: 0, z: 0 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: 1,
+    }
+    for (let frame = 0; frame < 4; frame += 1) {
+      manyFrames = requireVisualPose(advanceVisualPose({
+        visualPose: manyFrames,
+        visualPoseInitialized: true,
+        rawPose,
+        dtMs: 20,
+        tauMs: 80,
+      }))
+    }
+    const oneFrame = requireVisualPose(advanceVisualPose({
+      visualPose: {
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      visualPoseInitialized: true,
+      rawPose,
+      dtMs: 80,
+      tauMs: 80,
+    }))
+
+    expect(manyFrames.position.x).toBeCloseTo(oneFrame.position.x, 10)
+  })
+
+  it('resets a confirmed-loss visual pose so the next acquisition snaps', () => {
+    const { advanceVisualPose } = lifecycleModule
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const confirmedLossStart = source.indexOf('function hideConfirmedTargetLoss(targetName, lostForMs)')
+    const confirmedLossEnd = source.indexOf('function processPendingTargetLosses(now)', confirmedLossStart)
+    const confirmedLossSource = source.slice(confirmedLossStart, confirmedLossEnd)
+
+    expect(advanceVisualPose).toBeTypeOf('function')
+    expect(confirmedLossStart).toBeGreaterThanOrEqual(0)
+    expect(confirmedLossEnd).toBeGreaterThan(confirmedLossStart)
+    expect(confirmedLossSource).toContain('resetVisualPose(instance)')
+    const result = advanceVisualPose({
+      visualPose: null,
+      visualPoseInitialized: false,
+      rawPose: {
+        position: { x: 9, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      dtMs: 16,
+      tauMs: 80,
+    })
+
+    expect(result).toMatchObject({
+      snapped: true,
+      visualPose: expect.objectContaining({ position: { x: 9, y: 0, z: 0 } }),
+    })
+  })
+
+  it('keeps a visual pose continuous when tracking reacquires within grace', () => {
+    const { advanceVisualPose } = lifecycleModule
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const lostStart = source.indexOf('function onTargetLost(name)')
+    const lostEnd = source.indexOf('// ========== COMBO DETECTION', lostStart)
+    const graceLossSource = source.slice(lostStart, lostEnd)
+
+    expect(advanceVisualPose).toBeTypeOf('function')
+    expect(lostStart).toBeGreaterThanOrEqual(0)
+    expect(lostEnd).toBeGreaterThan(lostStart)
+    expect(graceLossSource).not.toContain('resetVisualPose(instance)')
+    const result = advanceVisualPose({
+      visualPose: {
+        position: { x: 2, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      visualPoseInitialized: true,
+      rawPose: {
+        position: { x: 10, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      dtMs: 40,
+      tauMs: 80,
+    })
+
+    const visualPose = requireVisualPose(result)
+    expect(result.snapped).toBe(false)
+    expect(visualPose.position.x).toBeGreaterThan(2)
+    expect(visualPose.position.x).toBeLessThan(10)
+  })
+
+  it('keeps proximity geometry on raw target poses rather than visual presentation state', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const start = source.indexOf('function getAnchorWorldPosition(instance)')
+    const end = source.indexOf('function computeTargetPairDistance(actorInst, partnerInst)', start)
+    const rawPoseSource = source.slice(start, end)
+
+    expect(start).toBeGreaterThanOrEqual(0)
+    expect(end).toBeGreaterThan(start)
+    expect(rawPoseSource).toContain('trackedTargets.get(instance.config.qr_id)')
+    expect(rawPoseSource).not.toContain('visualPosition')
+    expect(rawPoseSource).not.toContain('visualQuaternion')
+  })
+
+  it('does not update a transaction-owned visual participant', () => {
+    const shouldUpdateVisualPose = Reflect.get(lifecycleModule, 'shouldUpdateVisualPose')
+    const createInteractionTransaction = Reflect.get(lifecycleModule, 'createInteractionTransaction')
+    const rule = normalizeInteractionRule({
+      tags: ['actorA', 'partnerB'],
+      target_order: ['actorA', 'partnerB'],
+      combo_id: 'actor-partner',
+    })
+    const transaction = createInteractionTransaction?.({
+      runId: 14,
+      rule,
+      lockedAt: 100,
+      watchdogAt: 1000,
+    })
+
+    expect(shouldUpdateVisualPose).toBeTypeOf('function')
+    expect(shouldUpdateVisualPose?.({ transaction, targetName: 'actorA', currentRunId: 14 })).toBe(false)
+    expect(shouldUpdateVisualPose?.({ transaction, targetName: 'partnerB', currentRunId: 14 })).toBe(false)
+    expect(shouldUpdateVisualPose?.({ transaction, targetName: 'observerC', currentRunId: 14 })).toBe(true)
+    expect(shouldUpdateVisualPose?.({ transaction, targetName: 'actorA', currentRunId: 15 })).toBe(true)
   })
 
   it('keeps generic presentation helpers free of animal identities', () => {

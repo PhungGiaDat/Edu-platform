@@ -34,6 +34,38 @@ export function advanceTargetAcquisitionState(args: {
   foundAt: number | null
   stable: boolean
 }
+
+export function calculateVisualPoseSmoothingAlpha(args: {
+  dtMs?: number | null
+  tauMs?: number | null
+}): number
+
+export function advanceVisualPose(args: {
+  visualPose?: {
+    position?: { x?: number; y?: number; z?: number }
+    rotation?: { x?: number; y?: number; z?: number; w?: number }
+    scale?: number | null
+  } | null
+  visualPoseInitialized?: boolean
+  rawPose?: {
+    position?: { x?: number; y?: number; z?: number }
+    rotation?: { x?: number; y?: number; z?: number; w?: number }
+    scale?: number | null
+  } | null
+  dtMs?: number | null
+  tauMs?: number | null
+}): {
+  visualPose: {
+    position: { x: number; y: number; z: number }
+    rotation: { x: number; y: number; z: number; w: number }
+    scale: number
+  } | null
+  visualPoseInitialized: boolean
+  snapped: boolean
+  smoothingAlpha: number
+  positionDelta: number | null
+  rotationDeltaDeg: number | null
+}
 export function isCatOneShotCompletionOwner(args: Record<string, unknown>): boolean
 
 export function resolveModelPresentationProfile(profileName: unknown): {
@@ -163,6 +195,16 @@ export function getInteractionParticipantTargets(
 export function getConsumablePartnerTargets(
   rule: ReturnType<typeof normalizeInteractionRule>,
 ): string[]
+
+export function shouldUpdateVisualPose(args: {
+  transaction?: {
+    runId?: number | null
+    actorTarget?: string | null
+    partnerTargets?: string[] | null
+  } | null
+  targetName?: string | null
+  currentRunId?: number | null
+}): boolean
 
 export function setInteractionPartnerVisibility(args: {
   rule: ReturnType<typeof normalizeInteractionRule>

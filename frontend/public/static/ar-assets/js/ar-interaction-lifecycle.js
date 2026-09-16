@@ -113,6 +113,149 @@ export function advanceTargetAcquisitionState({ foundAt, stable, event, now }) {
   }
 }
 
+const DEFAULT_VISUAL_POSE_TAU_MS = 80
+
+function clampUnit(value) {
+  return Math.min(1, Math.max(0, value))
+}
+
+function normalizeVisualQuaternion(quaternion) {
+  const values = [quaternion?.x, quaternion?.y, quaternion?.z, quaternion?.w]
+  if (!values.every(Number.isFinite)) return null
+  const length = Math.hypot(...values)
+  if (length === 0) return null
+  return {
+    x: quaternion.x / length,
+    y: quaternion.y / length,
+    z: quaternion.z / length,
+    w: quaternion.w / length,
+  }
+}
+
+function normalizeVisualPose(pose) {
+  const position = pose?.position
+  const positionValues = [position?.x, position?.y, position?.z]
+  const rotation = normalizeVisualQuaternion(pose?.rotation)
+  if (!positionValues.every(Number.isFinite) || !rotation) return null
+  return {
+    position: { x: position.x, y: position.y, z: position.z },
+    rotation,
+    // XR target scale remains direct. It is not a noisy visual offset and
+    // must preserve the current anchor-scale contract.
+    scale: Number.isFinite(pose?.scale) ? pose.scale : 1,
+  }
+}
+
+function slerpVisualQuaternion(from, to, alpha) {
+  let target = { ...to }
+  let dot = from.x * target.x + from.y * target.y + from.z * target.z + from.w * target.w
+  if (dot < 0) {
+    dot = -dot
+    target = { x: -target.x, y: -target.y, z: -target.z, w: -target.w }
+  }
+  dot = clampUnit(dot)
+
+  if (dot > 0.9995) {
+    return normalizeVisualQuaternion({
+      x: from.x + (target.x - from.x) * alpha,
+      y: from.y + (target.y - from.y) * alpha,
+      z: from.z + (target.z - from.z) * alpha,
+      w: from.w + (target.w - from.w) * alpha,
+    })
+  }
+
+  const theta = Math.acos(dot)
+  const sinTheta = Math.sin(theta)
+  const fromWeight = Math.sin((1 - alpha) * theta) / sinTheta
+  const targetWeight = Math.sin(alpha * theta) / sinTheta
+  return normalizeVisualQuaternion({
+    x: from.x * fromWeight + target.x * targetWeight,
+    y: from.y * fromWeight + target.y * targetWeight,
+    z: from.z * fromWeight + target.z * targetWeight,
+    w: from.w * fromWeight + target.w * targetWeight,
+  })
+}
+
+function getVisualPositionDelta(from, to) {
+  return Math.hypot(
+    to.position.x - from.position.x,
+    to.position.y - from.position.y,
+    to.position.z - from.position.z,
+  )
+}
+
+function getVisualRotationDeltaDeg(from, to) {
+  const dot = Math.abs(
+    from.rotation.x * to.rotation.x
+    + from.rotation.y * to.rotation.y
+    + from.rotation.z * to.rotation.z
+    + from.rotation.w * to.rotation.w,
+  )
+  return 2 * Math.acos(clampUnit(dot)) * 180 / Math.PI
+}
+
+export function calculateVisualPoseSmoothingAlpha({ dtMs, tauMs = DEFAULT_VISUAL_POSE_TAU_MS }) {
+  if (!Number.isFinite(dtMs) || dtMs <= 0) return 0
+  if (!Number.isFinite(tauMs) || tauMs <= 0) return 1
+  return clampUnit(1 - Math.exp(-dtMs / tauMs))
+}
+
+/**
+ * Produces a presentation-only pose without mutating the raw tracking pose.
+ * Raw pose remains the authority for proximity, interaction, and latching.
+ */
+export function advanceVisualPose({
+  visualPose,
+  visualPoseInitialized,
+  rawPose,
+  dtMs,
+  tauMs = DEFAULT_VISUAL_POSE_TAU_MS,
+}) {
+  const target = normalizeVisualPose(rawPose)
+  const current = normalizeVisualPose(visualPose)
+  if (!target) {
+    return {
+      visualPose: current,
+      visualPoseInitialized: Boolean(visualPoseInitialized && current),
+      snapped: false,
+      smoothingAlpha: 0,
+      positionDelta: null,
+      rotationDeltaDeg: null,
+    }
+  }
+
+  if (!visualPoseInitialized || !current) {
+    return {
+      visualPose: target,
+      visualPoseInitialized: true,
+      snapped: true,
+      smoothingAlpha: 1,
+      positionDelta: 0,
+      rotationDeltaDeg: 0,
+    }
+  }
+
+  const smoothingAlpha = calculateVisualPoseSmoothingAlpha({ dtMs, tauMs })
+  const next = {
+    position: {
+      x: current.position.x + (target.position.x - current.position.x) * smoothingAlpha,
+      y: current.position.y + (target.position.y - current.position.y) * smoothingAlpha,
+      z: current.position.z + (target.position.z - current.position.z) * smoothingAlpha,
+    },
+    rotation: slerpVisualQuaternion(current.rotation, target.rotation, smoothingAlpha),
+    scale: target.scale,
+  }
+
+  return {
+    visualPose: next,
+    visualPoseInitialized: true,
+    snapped: false,
+    smoothingAlpha,
+    positionDelta: getVisualPositionDelta(next, target),
+    rotationDeltaDeg: getVisualRotationDeltaDeg(next, target),
+  }
+}
+
 const PRESENTATION_MODE_AUTO = 'AUTO'
 const PRESENTATION_MODE_SCREEN = 'SCREEN'
 const PRESENTATION_MODE_TABLETOP = 'TABLETOP'
@@ -536,6 +679,12 @@ export function classifyInteractionTargetLoss({ transaction, targetName, current
     return { defer: true, role: 'partner', runId: transaction.runId }
   }
   return { defer: false, role: null, runId: transaction.runId }
+}
+
+// Presentation follows the same ownership boundary as tracked-anchor updates:
+// a committed interaction owns its participant anchor pose until release.
+export function shouldUpdateVisualPose({ transaction, targetName, currentRunId }) {
+  return !classifyInteractionTargetLoss({ transaction, targetName, currentRunId }).defer
 }
 
 export function reconcileInteractionParticipantTracking({

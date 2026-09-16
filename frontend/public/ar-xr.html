@@ -192,6 +192,7 @@
       'advanceCatReturnTween',
       'advanceComboProximityGate',
       'advanceTargetAcquisitionState',
+      'advanceVisualPose',
       'canPlayCatMeow',
       'classifyCatGesture',
       'classifyCatTap',
@@ -223,12 +224,13 @@
       'selectActiveInteractionRule',
       'setInteractionPartnerVisibility',
       'shouldReplaceCatAnimation',
+      'shouldUpdateVisualPose',
       'shouldRevealAR',
       'smoothstep',
     ];
 
     try {
-      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=acquisition-state-v1');
+      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=visual-pose-v1');
       const missingExports = expectedLifecycleExports.filter((name) => !(name in lifecycleModule));
       if (missingExports.length > 0) {
         debug('MODULE_PROBE_LIFECYCLE_FAIL', {
@@ -254,6 +256,7 @@
       advanceCatReturnTween,
       advanceComboProximityGate,
       advanceTargetAcquisitionState,
+      advanceVisualPose,
       canPlayCatMeow,
       classifyCatGesture,
       classifyCatTap,
@@ -285,9 +288,10 @@
       selectActiveInteractionRule,
       setInteractionPartnerVisibility,
       shouldReplaceCatAnimation,
+      shouldUpdateVisualPose,
       shouldRevealAR,
       smoothstep,
-    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=acquisition-state-v1';
+    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=visual-pose-v1';
     window.THREE = THREE;
 
     // ========== RUNTIME DIAGNOSTICS ==========
@@ -397,6 +401,10 @@
     };
     const INTERACTION_TRANSACTION_CONFIG = {
       safetyBufferMs: 750,
+    };
+    const VISUAL_POSE_CONFIG = {
+      tauMs: 80,
+      telemetryIntervalMs: 1000,
     };
 
     // Boot gate state
@@ -527,6 +535,11 @@
         pivotNormalized: false, // normalize pivot only once per model
         modelPresentation: null,
         presentationBounds: null,
+        visualPosition: null,
+        visualQuaternion: null,
+        visualPoseInitialized: false,
+        lastVisualPoseAt: null,
+        lastVisualPoseTelemetryAt: Number.NEGATIVE_INFINITY,
         catInteractionProxy: null,
         // Interaction fields
         foundAt: null,
@@ -1628,12 +1641,82 @@
       });
     }
 
-    // ========== POSE APPLICATION (instance-aware) ==========
-    function applyTargetPose(instance, pose) {
-      if (!instance?.anchor || !pose) return;
-      instance.anchor.position.set(pose.position.x, pose.position.y, pose.position.z);
-      instance.anchor.quaternion.set(pose.rotation.x, pose.rotation.y, pose.rotation.z, pose.rotation.w);
-      instance.anchor.scale.setScalar(pose.scale ?? 1);
+    // ========== VISUAL POSE APPLICATION (instance-aware) ==========
+    // Raw target pose remains in trackedTargets for interaction geometry.
+    // This layer owns only the rendered target-anchor transform.
+    function resetVisualPose(instance) {
+      if (!instance) return;
+      instance.visualPosition = null;
+      instance.visualQuaternion = null;
+      instance.visualPoseInitialized = false;
+      instance.lastVisualPoseAt = null;
+    }
+
+    function applyVisualTargetPose(instance, rawPose, now = performance.now()) {
+      if (!instance?.anchor || !rawPose) return false;
+
+      const visualPose = instance.visualPoseInitialized
+        ? {
+          position: instance.visualPosition,
+          rotation: instance.visualQuaternion,
+          scale: rawPose.scale ?? 1,
+        }
+        : null;
+      const dtMs = instance.lastVisualPoseAt == null
+        ? 0
+        : Math.max(0, now - instance.lastVisualPoseAt);
+      const next = advanceVisualPose({
+        visualPose,
+        visualPoseInitialized: instance.visualPoseInitialized,
+        rawPose,
+        dtMs,
+        tauMs: VISUAL_POSE_CONFIG.tauMs,
+      });
+      if (!next.visualPose) return false;
+
+      instance.visualPosition = next.visualPose.position;
+      instance.visualQuaternion = next.visualPose.rotation;
+      instance.visualPoseInitialized = next.visualPoseInitialized;
+      instance.lastVisualPoseAt = now;
+
+      instance.anchor.position.set(
+        next.visualPose.position.x,
+        next.visualPose.position.y,
+        next.visualPose.position.z,
+      );
+      instance.anchor.quaternion.set(
+        next.visualPose.rotation.x,
+        next.visualPose.rotation.y,
+        next.visualPose.rotation.z,
+        next.visualPose.rotation.w,
+      );
+      // Target scale is direct by design; only noisy position/orientation are smoothed.
+      instance.anchor.scale.setScalar(next.visualPose.scale);
+
+      if (now - instance.lastVisualPoseTelemetryAt >= VISUAL_POSE_CONFIG.telemetryIntervalMs) {
+        instance.lastVisualPoseTelemetryAt = now;
+        sendDebugOnly('VISUAL_POSE_SAMPLE', {
+          targetName: instance.config.qr_id,
+          positionDelta: next.positionDelta,
+          rotationDeltaDeg: next.rotationDeltaDeg,
+          smoothingAlpha: next.smoothingAlpha,
+          dtMs,
+        });
+      }
+      return true;
+    }
+
+    function updateVisualTargetPoses(now) {
+      for (const [targetName, instance] of targetInstances) {
+        const rawPose = trackedTargets.get(targetName);
+        if (!rawPose || !instance.tracked || !instance.anchor) continue;
+        if (!shouldUpdateVisualPose({
+          transaction: interactionState.transaction,
+          targetName,
+          currentRunId: interactionState.comboRunId,
+        })) continue;
+        applyVisualTargetPose(instance, rawPose, now);
+      }
     }
 
     // ========== MODEL ATTACHMENT (target-instance owned) ==========
@@ -1677,7 +1760,11 @@
 
         const expectedParent = getExistingInteractionRoot(instance) || getPresentationParent(instance);
         if (instance.model.parent !== expectedParent) reparentModelToAnchor(instance);
-        if (!getActiveTransactionLossDecision(targetName).defer) applyTargetPose(instance, pose);
+        if (shouldUpdateVisualPose({
+          transaction: interactionState.transaction,
+          targetName,
+          currentRunId: interactionState.comboRunId,
+        })) applyVisualTargetPose(instance, pose);
 
         instance.model.visible = true;
         instance.modelAttached = true;
@@ -1886,11 +1973,12 @@
         onStart: ({ canvas: c }) => { updateDebug('Camera active'); sendARDebug('CAMERA_START', { canvasWidth: c?.width, canvasHeight: c?.height }); },
         onUpdate: () => {
           renderCheckFrame++;
+          const now = performance.now();
+          updateVisualTargetPoses(now);
           // Update all active mixers
           for (const [name, inst] of targetInstances) {
             if (inst.mixer) inst.mixer.update(0.016);
           }
-          const now = performance.now();
           if (now - lastInteractionEvalMs >= 100) {
             lastInteractionEvalMs = now;
             processPendingTargetLosses(now);
@@ -1922,16 +2010,6 @@
           { event: 'reality.imageupdated', process: ({detail}) => {
             if (!detail?.name) return;
             saveTargetPose(detail);
-
-            const instance = targetInstances.get(detail.name);
-            const pose = trackedTargets.get(detail.name);
-            if (instance && instance.anchor && pose) {
-              // A committed interaction freezes only its participant poses.
-              const transactionOwnsTarget = getActiveTransactionLossDecision(detail.name).defer;
-              if (!transactionOwnsTarget) {
-                applyTargetPose(instance, pose);
-              }
-            }
 
             const now = Date.now();
             if (!realityImageUpdated._lastLog || now - realityImageUpdated._lastLog > 2000) {
@@ -2544,7 +2622,12 @@
       const wasTargetModelVisible = !!instance?.model?.visible;
 
       if (instance?.model) instance.model.visible = false;
-      if (instance) instance.modelAttached = false;
+      if (instance) {
+        instance.modelAttached = false;
+        // A confirmed loss ends this visual acquisition. The next true find
+        // snaps rather than interpolating from a stale world-space pose.
+        resetVisualPose(instance);
+      }
 
       sendARDebug('MODEL_HIDDEN_TARGET_LOST', {
         targetName,
