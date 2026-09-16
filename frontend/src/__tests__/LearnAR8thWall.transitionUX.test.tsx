@@ -21,6 +21,11 @@ const authState = vi.hoisted(() => ({
   } as Record<string, unknown> | null,
   isAuthenticated: true,
 }));
+const telegramState = vi.hoisted(() => ({
+  syncTelegram: vi.fn(),
+  syncStatus: 'idle',
+  iframeLogs: [],
+}));
 
 vi.mock('@/features/ar/components/QRScanner', () => ({
   QRScanner: (props: MockQRScannerProps) => {
@@ -30,11 +35,7 @@ vi.mock('@/features/ar/components/QRScanner', () => ({
 }));
 
 vi.mock('@/hooks/useTelegramSync', () => ({
-  useTelegramSync: () => ({
-    syncTelegram: vi.fn(),
-    syncStatus: 'idle',
-    iframeLogs: [],
-  }),
+  useTelegramSync: () => telegramState,
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -165,6 +166,9 @@ describe('LearnAR8thWall transition UX', () => {
       is_superuser: false,
     };
     authState.isAuthenticated = true;
+    telegramState.syncTelegram.mockReset();
+    telegramState.syncStatus = 'idle';
+    telegramState.iframeLogs = [];
     installARFetchMock();
   });
 
@@ -392,13 +396,16 @@ describe('LearnAR8thWall transition UX', () => {
     );
   });
 
-  it('hides AR operator overlays and controls from a learner even when debug is requested', async () => {
+  it('keeps only child-facing navigation while hiding AR operator controls from a learner', async () => {
     renderPage('/learn-ar-xr/claymorphic-animals-001?debug=true');
 
-    expect(document.querySelector('.ar-xr-header')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Quay lại' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Khám phá AR' })).toBeInTheDocument();
     expect(screen.queryByText('MindAR')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /send scanning ar logs to telegram/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/Phase:/)).not.toBeInTheDocument();
+    expect(screen.queryByText('8th Wall XR')).not.toBeInTheDocument();
+    expect(screen.queryByText(/cards? scanned/i)).not.toBeInTheDocument();
 
     await act(async () => {
       await getQRScannerProps().onDetected('cat001');
@@ -428,6 +435,9 @@ describe('LearnAR8thWall transition UX', () => {
     expect(screen.getByText('MindAR')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /send scanning ar logs to telegram/i })).toBeInTheDocument();
     expect(screen.getByText(/Phase:/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /send scanning ar logs to telegram/i }));
+    expect(telegramState.syncTelegram).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       await getQRScannerProps().onDetected('cat001');

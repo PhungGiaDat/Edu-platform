@@ -896,25 +896,29 @@ export const LearnAR8thWall: React.FC = () => {
         </div>
       )}
 
-      {/* Operator-only header and engine switch. Learners stay in the immersive AR viewport. */}
-      {canUseOperatorControls && (
-        <div className="ar-xr-header">
-          <button className="back-btn" onClick={handleBack}>
+      {/* Learners retain navigation, while engine and scan diagnostics stay operator-only. */}
+      <div className={`ar-xr-header ${canUseOperatorControls ? 'ar-xr-header--operator' : 'ar-xr-header--student'}`}>
+          <button className="back-btn" onClick={handleBack} aria-label="Quay lại">
             <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
           <div className="header-title">
-            <h1>{currentTarget?.word || '8th Wall XR'}</h1>
-            <span className="card-count">
-              {foundCards.size} card{foundCards.size !== 1 ? 's' : ''} scanned
-            </span>
+            <h1>{canUseOperatorControls ? currentTarget?.word || '8th Wall XR' : 'Khám phá AR'}</h1>
+            {canUseOperatorControls && (
+              <span className="card-count">
+                {foundCards.size} card{foundCards.size !== 1 ? 's' : ''} scanned
+              </span>
+            )}
           </div>
-          <button className="engine-switch" onClick={handleSwitchToMindAR}>
-            MindAR
-          </button>
-        </div>
-      )}
+          {canUseOperatorControls ? (
+            <button className="engine-switch" onClick={handleSwitchToMindAR}>
+              MindAR
+            </button>
+          ) : (
+            <span className="header-balance" aria-hidden="true" />
+          )}
+      </div>
 
       {/* AR Viewport */}
       <div className="ar-viewport">
