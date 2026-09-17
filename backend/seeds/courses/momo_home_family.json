@@ -11,9 +11,27 @@
   "thumbnail_url": null,
   "thumbnail": {
     "bucket": "learnar-assets",
-    "path": "courses/momo-home-family-english-5-7/images/course-cover.svg",
+    "path": "courses/momo-home-family-english-5-7/images/course-cover.png",
     "type": "image",
     "status": "pending"
+  },
+  "courseTrailer": {
+    "title": "Cùng Lexi khám phá ngôi nhà",
+    "duration_seconds": 45,
+    "asset": {
+      "bucket": "AR_models",
+      "path": "course/momo-home-family-english-5-7/videos/course-trailer.mp4",
+      "type": "video",
+      "status": "ready"
+    },
+    "poster": {
+      "bucket": "learnar-assets",
+      "path": "courses/momo-home-family-english-5-7/images/course-cover.png",
+      "type": "image",
+      "status": "pending"
+    },
+    "captions_vi": "Cùng Lexi khám phá ngôi nhà nhé!",
+    "autoplay": false
   },
   "is_published": true,
   "lessons": [
@@ -44,7 +62,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-home-family-english-5-7/lessons/hello-family/thumb.svg",
+          "path": "courses/momo-home-family-english-5-7/lessons/hello-family/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -58,7 +76,7 @@
             "audio_text_en": "Look! Mom!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-1.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -72,7 +90,7 @@
             "audio_text_en": "Say Dad with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-2.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -86,7 +104,7 @@
             "audio_text_en": "Good job! Baby!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-3.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -100,7 +118,7 @@
           "emoji": "mom",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
             "type": "image",
             "status": "pending"
           },
@@ -112,11 +130,11 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/stickers/mom.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/stickers/mom.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "Mom is kind."
+          "simple_sentence": "This is my mom."
         },
         {
           "word_en": "Dad",
@@ -124,7 +142,7 @@
           "emoji": "dad",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
             "type": "image",
             "status": "pending"
           },
@@ -136,11 +154,11 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/stickers/dad.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/stickers/dad.png",
             "type": "sticker",
             "status": "pending"
           },
-          "simple_sentence": "Dad is happy."
+          "simple_sentence": "I love my dad."
         },
         {
           "word_en": "Baby",
@@ -148,7 +166,7 @@
           "emoji": "baby",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
             "type": "image",
             "status": "pending"
           },
@@ -160,7 +178,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/stickers/baby.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/stickers/baby.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -170,41 +188,95 @@
       "game": {
         "game_id": "hello-family-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
-        "prompt_audio_text": "Tap mom.",
+        "instruction_vi": "Momo nói: Chạm vào Mom thật nhanh nào!",
+        "prompt_audio_text": "Tap Mom",
         "items": [
           {
             "id": "game-1",
+            "round": 1,
             "label": "Mom",
+            "instruction_vi": "Momo nói: Chạm vào Mom thật nhanh nào!",
+            "prompt_audio_text": "Tap Mom",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/games/mom.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
               "type": "image",
               "status": "pending"
-            }
+            },
+            "feedback_vi": "Tuyệt cú mèo! Bé chạm đúng Mẹ Mom rồi!"
           },
           {
             "id": "game-2",
+            "round": 2,
             "label": "Dad",
+            "instruction_vi": "Momo nói: Tìm Dad đang mỉm cười chào bé!",
+            "prompt_audio_text": "Tap Dad",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/games/dad.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
               "type": "image",
               "status": "pending"
-            }
+            },
+            "feedback_vi": "Quá siêu! Ba Dad đang cười vui cùng bé đấy!"
           },
           {
             "id": "game-3",
+            "round": 3,
             "label": "Baby",
+            "instruction_vi": "Momo nói: Chạm vào Baby để em bé không khóc nhé!",
+            "prompt_audio_text": "Tap Baby",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/games/baby.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
               "type": "image",
               "status": "pending"
-            }
+            },
+            "feedback_vi": "Bé ngoan lắm! Baby cười toe toét rồi kìa!"
+          },
+          {
+            "id": "game-4",
+            "round": 4,
+            "label": "Dad",
+            "instruction_vi": "Bong bóng chữ rơi xuống! Bé hãy bắt bong bóng mang chữ 'Mom'!",
+            "prompt_audio_text": "Catch Mom",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
+              "type": "image",
+              "status": "pending"
+            },
+            "feedback_vi": "Tay bé nhanh như sóc! Bé bắt trúng chữ Mom rồi!"
+          },
+          {
+            "id": "game-5",
+            "round": 5,
+            "label": "Mom",
+            "instruction_vi": "Momo đố bé: Ai vừa đi làm về? Chạm vào Dad nhé!",
+            "prompt_audio_text": "Find Dad",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
+              "type": "image",
+              "status": "pending"
+            },
+            "feedback_vi": "Chính xác! Ba Dad đã về đến nhà rồi!"
+          },
+          {
+            "id": "game-6",
+            "round": 6,
+            "label": "Baby",
+            "instruction_vi": "Momo nói: Cả nhà vỗ tay khen Baby bé bỏng nào!",
+            "prompt_audio_text": "Clap for Baby",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
+              "type": "image",
+              "status": "pending"
+            },
+            "feedback_vi": "Hoan hô! Bé đã hoàn thành xuất sắc trò chơi gia đình!"
           }
         ],
-        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
+        "feedback_positive_vi": "Tuyệt cú mèo! Bé chạm đúng Mẹ Mom rồi!"
       },
       "pronunciation": {
         "task_id": "hello-family-say",
@@ -227,172 +299,402 @@
       "activity": {
         "activity_id": "hello-family-activity",
         "type": "match_picture",
-        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
-        "prompt_audio_text": "Find Mom and Dad.",
+        "instruction_vi": "Bé hãy chạm vào từ tiếng Anh ở bên trái, rồi chạm vào nghĩa tiếng Việt tương ứng ở bên phải nhé!",
+        "prompt_audio_text": "Find Mom.",
         "items": [
           {
-            "id": "activity-1",
-            "label": "Mom",
-            "image": {
-              "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/activities/mom.svg",
-              "type": "image",
-              "status": "pending"
-            }
+            "id": "match-1",
+            "left_id": "Mom",
+            "left_text": "Mom",
+            "right_id": "Me",
+            "right_text": "Mẹ",
+            "vocabulary_id": "hello-family:mom"
           },
           {
-            "id": "activity-2",
-            "label": "Dad",
-            "image": {
-              "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/activities/dad.svg",
-              "type": "image",
-              "status": "pending"
-            }
+            "id": "match-2",
+            "left_id": "Dad",
+            "left_text": "Dad",
+            "right_id": "Ba",
+            "right_text": "Ba (Bố)",
+            "vocabulary_id": "hello-family:dad"
           },
           {
-            "id": "activity-3",
-            "label": "Baby",
-            "image": {
-              "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/activities/baby.svg",
-              "type": "image",
-              "status": "pending"
-            }
+            "id": "match-3",
+            "left_id": "Baby",
+            "left_text": "Baby",
+            "right_id": "Embe",
+            "right_text": "Em bé",
+            "vocabulary_id": "hello-family:baby"
+          },
+          {
+            "id": "match-4",
+            "left_id": "audio_mom",
+            "left_text": "🔊 Mom",
+            "right_id": "img_mom",
+            "right_text": "Hình Mẹ",
+            "vocabulary_id": "hello-family:mom"
+          },
+          {
+            "id": "match-5",
+            "left_id": "audio_dad",
+            "left_text": "🔊 Dad",
+            "right_id": "img_dad",
+            "right_text": "Hình Ba",
+            "vocabulary_id": "hello-family:dad"
+          },
+          {
+            "id": "match-6",
+            "left_id": "audio_baby",
+            "left_text": "🔊 Baby",
+            "right_id": "img_baby",
+            "right_text": "Hình Em bé",
+            "vocabulary_id": "hello-family:baby"
           }
         ],
-        "feedback_positive_vi": "Con ghép hình rất tốt!"
+        "feedback_positive_vi": "Tuyệt vời! Bé đã ghép đúng tất cả các từ trong gia đình!"
       },
       "quiz": [
         {
           "question_id": "hello-family-q1",
           "type": "image_choice",
-          "prompt_vi": "Con chọn mom.",
-          "questionAudioText": "Tap mom.",
+          "prompt_vi": "Đâu là hình của Mẹ - Mom?",
+          "questionAudioText": "Mom",
           "options": [
             {
               "option_id": "hello-family-q1-1",
               "label": "Mom",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q1-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "hello-family-q1-2",
-              "label": "Dog",
+              "label": "Dad",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q1-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "hello-family-q1-3",
-              "label": "Cup",
+              "label": "Baby",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q1-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
           "correctOptionId": "hello-family-q1-1",
-          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
-          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+          "feedbackCorrect": "Giỏi lắm! Đây là Mẹ - Mom dịu dàng.",
+          "feedbackIncorrect": "Chưa đúng rồi. Con nhìn kỹ lại hình Mẹ nhé!"
         },
         {
           "question_id": "hello-family-q2",
           "type": "image_choice",
-          "prompt_vi": "Dad là ai?",
-          "questionAudioText": "Dad.",
+          "prompt_vi": "Đâu là hình của Ba - Dad?",
+          "questionAudioText": "Dad",
           "options": [
             {
               "option_id": "hello-family-q2-1",
-              "label": "ba",
+              "label": "Dad",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q2-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "hello-family-q2-2",
-              "label": "mẹ",
+              "label": "Mom",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q2-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "hello-family-q2-3",
-              "label": "bố",
+              "label": "Baby",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q2-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
           "correctOptionId": "hello-family-q2-1",
-          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
-          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+          "feedbackCorrect": "Đúng rồi! Đây là Ba - Dad thân yêu.",
+          "feedbackIncorrect": "Chưa chính xác. Ba Dad ở đâu con nhỉ?"
         },
         {
           "question_id": "hello-family-q3",
           "type": "image_choice",
-          "prompt_vi": "Baby nghĩa là gì?",
-          "questionAudioText": "Baby.",
+          "prompt_vi": "Đâu là hình của Em bé - Baby?",
+          "questionAudioText": "Baby",
           "options": [
             {
               "option_id": "hello-family-q3-1",
-              "label": "em bé",
+              "label": "Baby",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q3-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "hello-family-q3-2",
-              "label": "bạn",
+              "label": "Mom",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q3-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "hello-family-q3-3",
-              "label": "cửa",
+              "label": "Dad",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/quiz/hello-family-q3-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
           "correctOptionId": "hello-family-q3-1",
-          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
-          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+          "feedbackCorrect": "Xuất sắc! Em bé Baby nhỏ xíu xiu.",
+          "feedbackIncorrect": "Con chọn lại nha, đâu là em bé đáng yêu nào?"
+        },
+        {
+          "question_id": "hello-family-q4",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe Momo phát âm và chọn đúng hình nhé.",
+          "questionAudioText": "Mom",
+          "options": [
+            {
+              "option_id": "hello-family-q4-1",
+              "label": "Mom",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "hello-family-q4-2",
+              "label": "Dad",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "hello-family-q4-3",
+              "label": "Baby",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "hello-family-q4-1",
+          "feedbackCorrect": "Chuẩn xác! Con nghe thấy từ Mom rất rõ.",
+          "feedbackIncorrect": "Chưa đúng rồi. Bấm vào loa để nghe lại nhé!"
+        },
+        {
+          "question_id": "hello-family-q5",
+          "type": "sound_choice",
+          "prompt_vi": "Bé nghe xem từ phát ra là ai nhé.",
+          "questionAudioText": "Dad",
+          "options": [
+            {
+              "option_id": "hello-family-q5-1",
+              "label": "Dad",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "hello-family-q5-2",
+              "label": "Baby",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "hello-family-q5-3",
+              "label": "Mom",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "hello-family-q5-1",
+          "feedbackCorrect": "Thông minh lắm! Đó chính là Dad!",
+          "feedbackIncorrect": "Không sao, con bấm loa nghe lại giọng đọc nha."
+        },
+        {
+          "question_id": "hello-family-q6",
+          "type": "word_choice",
+          "prompt_vi": "Từ 'Mom' trong tiếng Anh nghĩa là gì?",
+          "questionAudioText": "Mom",
+          "options": [
+            {
+              "option_id": "hello-family-q6-1",
+              "label": "Mẹ",
+              "image": null
+            },
+            {
+              "option_id": "hello-family-q6-2",
+              "label": "Ba",
+              "image": null
+            },
+            {
+              "option_id": "hello-family-q6-3",
+              "label": "Em bé",
+              "image": null
+            }
+          ],
+          "correctOptionId": "hello-family-q6-1",
+          "feedbackCorrect": "Chính xác! Mom có nghĩa là Mẹ.",
+          "feedbackIncorrect": "Chưa đúng rồi. Mom là người phụ nữ yêu thương bé nhất đấy!"
+        },
+        {
+          "question_id": "hello-family-q7",
+          "type": "word_choice",
+          "prompt_vi": "Từ nào có nghĩa là 'Ba' hoặc 'Bố'?",
+          "questionAudioText": "Dad",
+          "options": [
+            {
+              "option_id": "hello-family-q7-1",
+              "label": "Dad",
+              "image": null
+            },
+            {
+              "option_id": "hello-family-q7-2",
+              "label": "Mom",
+              "image": null
+            },
+            {
+              "option_id": "hello-family-q7-3",
+              "label": "Baby",
+              "image": null
+            }
+          ],
+          "correctOptionId": "hello-family-q7-1",
+          "feedbackCorrect": "Giỏi quá! Dad nghĩa là Ba (Bố).",
+          "feedbackIncorrect": "Thử lại nào bé ơi, từ chỉ Ba bắt đầu bằng chữ D nhé!"
+        },
+        {
+          "question_id": "hello-family-q8",
+          "type": "word_choice",
+          "prompt_vi": "Từ 'Baby' trong tiếng Anh có nghĩa là gì?",
+          "questionAudioText": "Baby",
+          "options": [
+            {
+              "option_id": "hello-family-q8-1",
+              "label": "Em bé",
+              "image": null
+            },
+            {
+              "option_id": "hello-family-q8-2",
+              "label": "Ông nội",
+              "image": null
+            },
+            {
+              "option_id": "hello-family-q8-3",
+              "label": "Ba",
+              "image": null
+            }
+          ],
+          "correctOptionId": "hello-family-q8-1",
+          "feedbackCorrect": "Rất đúng! Baby là em bé.",
+          "feedbackIncorrect": "Chưa đúng rồi. Baby là thành viên nhỏ nhất trong nhà đó con."
+        },
+        {
+          "question_id": "hello-family-q9",
+          "type": "word_choice",
+          "prompt_vi": "Ai trong nhà thường uống bình sữa và ngủ ngoan trong nôi?",
+          "questionAudioText": "Baby",
+          "options": [
+            {
+              "option_id": "hello-family-q9-1",
+              "label": "Baby",
+              "image": null
+            },
+            {
+              "option_id": "hello-family-q9-2",
+              "label": "Dad",
+              "image": null
+            },
+            {
+              "option_id": "hello-family-q9-3",
+              "label": "Mom",
+              "image": null
+            }
+          ],
+          "correctOptionId": "hello-family-q9-1",
+          "feedbackCorrect": "Đúng rồi! Em bé Baby thích bú sữa và ngủ nôi!",
+          "feedbackIncorrect": "Nghĩ thử xem nào, ai còn nhỏ xíu chưa biết ăn cơm?"
+        },
+        {
+          "question_id": "hello-family-q10",
+          "type": "word_choice",
+          "prompt_vi": "Bé hoàn thành câu nhé: 'This is my ___.' (Nhìn hình Mẹ đang cười)",
+          "questionAudioText": "This is my mom.",
+          "options": [
+            {
+              "option_id": "hello-family-q10-1",
+              "label": "Mom",
+              "image": null
+            },
+            {
+              "option_id": "hello-family-q10-2",
+              "label": "Dad",
+              "image": null
+            },
+            {
+              "option_id": "hello-family-q10-3",
+              "label": "Baby",
+              "image": null
+            }
+          ],
+          "correctOptionId": "hello-family-q10-1",
+          "feedbackCorrect": "Xuất sắc! 'This is my mom.' - Đây là mẹ của con!",
+          "feedbackIncorrect": "Con nhìn lại hình xem đây là Mẹ Mom hay ai nhé!"
         }
       ],
       "reward": {
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-home-family-english-5-7/lessons/hello-family/rewards/sticker.svg",
+          "path": "courses/momo-home-family-english-5-7/lessons/hello-family/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -415,7 +717,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/read/page-1.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -437,7 +739,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/read/page-2.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/hello-family/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -455,7 +757,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-1.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -465,7 +767,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-2.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -475,7 +777,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-3.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -485,7 +787,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/read/page-1.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -505,7 +807,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/read/page-2.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -535,7 +837,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/thumb.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/hello-family/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -571,7 +873,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-home-family-english-5-7/lessons/my-room/thumb.svg",
+          "path": "courses/momo-home-family-english-5-7/lessons/my-room/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -585,7 +887,7 @@
             "audio_text_en": "Look! Bed!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-1.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -599,7 +901,7 @@
             "audio_text_en": "Say Chair with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-2.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -613,7 +915,7 @@
             "audio_text_en": "Good job! Toy!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-3.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -627,7 +929,7 @@
           "emoji": "bed",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/bed.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/bed.png",
             "type": "image",
             "status": "pending"
           },
@@ -639,7 +941,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/my-room/stickers/bed.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/stickers/bed.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -651,7 +953,7 @@
           "emoji": "chair",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/chair.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/chair.png",
             "type": "image",
             "status": "pending"
           },
@@ -663,7 +965,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/my-room/stickers/chair.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/stickers/chair.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -675,7 +977,7 @@
           "emoji": "toy",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/toy.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/toy.png",
             "type": "image",
             "status": "pending"
           },
@@ -687,7 +989,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/my-room/stickers/toy.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/stickers/toy.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -705,7 +1007,7 @@
             "label": "Bed",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/my-room/games/bed.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/games/bed.png",
               "type": "image",
               "status": "pending"
             }
@@ -715,7 +1017,7 @@
             "label": "Chair",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/my-room/games/chair.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/games/chair.png",
               "type": "image",
               "status": "pending"
             }
@@ -725,7 +1027,7 @@
             "label": "Toy",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/my-room/games/toy.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/games/toy.png",
               "type": "image",
               "status": "pending"
             }
@@ -762,7 +1064,7 @@
             "label": "Bed",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/my-room/activities/bed.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/activities/bed.png",
               "type": "image",
               "status": "pending"
             }
@@ -772,7 +1074,7 @@
             "label": "Chair",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/my-room/activities/chair.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/activities/chair.png",
               "type": "image",
               "status": "pending"
             }
@@ -782,7 +1084,7 @@
             "label": "Toy",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/my-room/activities/toy.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/activities/toy.png",
               "type": "image",
               "status": "pending"
             }
@@ -802,7 +1104,7 @@
               "label": "Bed",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q1-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -812,7 +1114,7 @@
               "label": "Tree",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q1-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -822,7 +1124,7 @@
               "label": "Sun",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q1-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -843,7 +1145,7 @@
               "label": "ghế",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q2-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -853,7 +1155,7 @@
               "label": "bóng",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q2-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -863,7 +1165,7 @@
               "label": "mèo",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q2-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -884,7 +1186,7 @@
               "label": "đồ chơi",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q3-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -894,7 +1196,7 @@
               "label": "cây",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q3-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -904,7 +1206,7 @@
               "label": "nước",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q3-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/my-room/quiz/my-room-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -919,7 +1221,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-home-family-english-5-7/lessons/my-room/rewards/sticker.svg",
+          "path": "courses/momo-home-family-english-5-7/lessons/my-room/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -942,7 +1244,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/my-room/read/page-1.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -964,7 +1266,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/my-room/read/page-2.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/my-room/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -982,7 +1284,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-1.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -992,7 +1294,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-2.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -1002,7 +1304,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-3.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -1012,7 +1314,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/my-room/read/page-1.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -1032,7 +1334,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/my-room/read/page-2.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -1062,7 +1364,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/my-room/thumb.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/my-room/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -1098,7 +1400,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-home-family-english-5-7/lessons/snack-time/thumb.svg",
+          "path": "courses/momo-home-family-english-5-7/lessons/snack-time/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -1112,7 +1414,7 @@
             "audio_text_en": "Look! Apple!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-1.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -1126,7 +1428,7 @@
             "audio_text_en": "Say Milk with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-2.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -1140,7 +1442,7 @@
             "audio_text_en": "Good job! Cookie!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-3.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -1154,7 +1456,7 @@
           "emoji": "apple",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/apple.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/apple.png",
             "type": "image",
             "status": "pending"
           },
@@ -1166,7 +1468,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/stickers/apple.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/stickers/apple.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1178,7 +1480,7 @@
           "emoji": "milk",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/milk.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/milk.png",
             "type": "image",
             "status": "pending"
           },
@@ -1190,7 +1492,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/stickers/milk.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/stickers/milk.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1202,7 +1504,7 @@
           "emoji": "cookie",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/cookie.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/cookie.png",
             "type": "image",
             "status": "pending"
           },
@@ -1214,7 +1516,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/stickers/cookie.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/stickers/cookie.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1232,7 +1534,7 @@
             "label": "Apple",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/games/apple.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/games/apple.png",
               "type": "image",
               "status": "pending"
             }
@@ -1242,7 +1544,7 @@
             "label": "Milk",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/games/milk.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/games/milk.png",
               "type": "image",
               "status": "pending"
             }
@@ -1252,7 +1554,7 @@
             "label": "Cookie",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/games/cookie.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/games/cookie.png",
               "type": "image",
               "status": "pending"
             }
@@ -1289,7 +1591,7 @@
             "label": "Apple",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/activities/apple.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/activities/apple.png",
               "type": "image",
               "status": "pending"
             }
@@ -1299,7 +1601,7 @@
             "label": "Milk",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/activities/milk.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/activities/milk.png",
               "type": "image",
               "status": "pending"
             }
@@ -1309,7 +1611,7 @@
             "label": "Cookie",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/activities/cookie.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/activities/cookie.png",
               "type": "image",
               "status": "pending"
             }
@@ -1329,7 +1631,7 @@
               "label": "Apple",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q1-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1339,7 +1641,7 @@
               "label": "Chair",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q1-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1349,7 +1651,7 @@
               "label": "Bird",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q1-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1370,7 +1672,7 @@
               "label": "sữa",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q2-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1380,7 +1682,7 @@
               "label": "nước",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q2-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1390,7 +1692,7 @@
               "label": "lá",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q2-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1411,7 +1713,7 @@
               "label": "bánh quy",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q3-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1421,7 +1723,7 @@
               "label": "mặt trời",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q3-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1431,7 +1733,7 @@
               "label": "giường",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q3-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/snack-time/quiz/snack-time-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1446,7 +1748,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-home-family-english-5-7/lessons/snack-time/rewards/sticker.svg",
+          "path": "courses/momo-home-family-english-5-7/lessons/snack-time/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -1469,7 +1771,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/read/page-1.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -1491,7 +1793,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/read/page-2.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/snack-time/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -1509,7 +1811,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-1.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -1519,7 +1821,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-2.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -1529,7 +1831,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-3.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -1539,7 +1841,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/read/page-1.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -1559,7 +1861,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/read/page-2.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -1589,7 +1891,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/thumb.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/snack-time/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -1625,7 +1927,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/thumb.svg",
+          "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -1639,7 +1941,7 @@
             "audio_text_en": "Look! Hand!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-1.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -1653,7 +1955,7 @@
             "audio_text_en": "Say Soap with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-2.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -1667,7 +1969,7 @@
             "audio_text_en": "Good job! Clean!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-3.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -1681,7 +1983,7 @@
           "emoji": "hand",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/hand.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/hand.png",
             "type": "image",
             "status": "pending"
           },
@@ -1693,7 +1995,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/stickers/hand.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/stickers/hand.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1705,7 +2007,7 @@
           "emoji": "soap",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/soap.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/soap.png",
             "type": "image",
             "status": "pending"
           },
@@ -1717,7 +2019,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/stickers/soap.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/stickers/soap.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1729,7 +2031,7 @@
           "emoji": "clean",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/clean.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/clean.png",
             "type": "image",
             "status": "pending"
           },
@@ -1741,7 +2043,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/stickers/clean.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/stickers/clean.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1759,7 +2061,7 @@
             "label": "Hand",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/games/hand.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/games/hand.png",
               "type": "image",
               "status": "pending"
             }
@@ -1769,7 +2071,7 @@
             "label": "Soap",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/games/soap.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/games/soap.png",
               "type": "image",
               "status": "pending"
             }
@@ -1779,7 +2081,7 @@
             "label": "Clean",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/games/clean.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/games/clean.png",
               "type": "image",
               "status": "pending"
             }
@@ -1816,7 +2118,7 @@
             "label": "Hand",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/activities/hand.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/activities/hand.png",
               "type": "image",
               "status": "pending"
             }
@@ -1826,7 +2128,7 @@
             "label": "Soap",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/activities/soap.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/activities/soap.png",
               "type": "image",
               "status": "pending"
             }
@@ -1836,7 +2138,7 @@
             "label": "Clean",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/activities/clean.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/activities/clean.png",
               "type": "image",
               "status": "pending"
             }
@@ -1856,7 +2158,7 @@
               "label": "Soap",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q1-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1866,7 +2168,7 @@
               "label": "Toy",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q1-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1876,7 +2178,7 @@
               "label": "Sun",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q1-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1897,7 +2199,7 @@
               "label": "bàn tay",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q2-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1907,7 +2209,7 @@
               "label": "cái ghế",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q2-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1917,7 +2219,7 @@
               "label": "em bé",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q2-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1938,7 +2240,7 @@
               "label": "sạch",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q3-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1948,7 +2250,7 @@
               "label": "bẩn",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q3-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1958,7 +2260,7 @@
               "label": "to",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q3-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/quiz/clean-hands-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1973,7 +2275,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/rewards/sticker.svg",
+          "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -1996,7 +2298,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/read/page-1.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -2018,7 +2320,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/read/page-2.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -2036,7 +2338,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-1.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -2046,7 +2348,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-2.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -2056,7 +2358,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-3.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -2066,7 +2368,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/read/page-1.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -2086,7 +2388,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/read/page-2.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -2116,7 +2418,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/thumb.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -2152,7 +2454,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/thumb.svg",
+          "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -2166,7 +2468,7 @@
             "audio_text_en": "Look! Happy!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-1.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -2180,7 +2482,7 @@
             "audio_text_en": "Say Sad with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-2.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -2194,7 +2496,7 @@
             "audio_text_en": "Good job! Smile!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-3.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -2208,7 +2510,7 @@
           "emoji": "happy",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/happy.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/happy.png",
             "type": "image",
             "status": "pending"
           },
@@ -2220,7 +2522,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/stickers/happy.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/stickers/happy.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2232,7 +2534,7 @@
           "emoji": "sad",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/sad.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/sad.png",
             "type": "image",
             "status": "pending"
           },
@@ -2244,7 +2546,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/stickers/sad.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/stickers/sad.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2256,7 +2558,7 @@
           "emoji": "smile",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/smile.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/smile.png",
             "type": "image",
             "status": "pending"
           },
@@ -2268,7 +2570,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/stickers/smile.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/stickers/smile.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2286,7 +2588,7 @@
             "label": "Happy",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/games/happy.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/games/happy.png",
               "type": "image",
               "status": "pending"
             }
@@ -2296,7 +2598,7 @@
             "label": "Sad",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/games/sad.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/games/sad.png",
               "type": "image",
               "status": "pending"
             }
@@ -2306,7 +2608,7 @@
             "label": "Smile",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/games/smile.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/games/smile.png",
               "type": "image",
               "status": "pending"
             }
@@ -2343,7 +2645,7 @@
             "label": "Happy",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/activities/happy.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/activities/happy.png",
               "type": "image",
               "status": "pending"
             }
@@ -2353,7 +2655,7 @@
             "label": "Sad",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/activities/sad.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/activities/sad.png",
               "type": "image",
               "status": "pending"
             }
@@ -2363,7 +2665,7 @@
             "label": "Smile",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/activities/smile.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/activities/smile.png",
               "type": "image",
               "status": "pending"
             }
@@ -2383,7 +2685,7 @@
               "label": "Happy",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q1-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2393,7 +2695,7 @@
               "label": "Bed",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q1-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2403,7 +2705,7 @@
               "label": "Milk",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q1-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2424,7 +2726,7 @@
               "label": "buồn",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q2-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2434,7 +2736,7 @@
               "label": "vui",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q2-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2444,7 +2746,7 @@
               "label": "sạch",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q2-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2465,7 +2767,7 @@
               "label": "mỉm cười",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q3-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2475,7 +2777,7 @@
               "label": "bay",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q3-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2485,7 +2787,7 @@
               "label": "ngủ",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q3-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/quiz/happy-feelings-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2500,7 +2802,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/rewards/sticker.svg",
+          "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -2523,7 +2825,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/read/page-1.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -2545,7 +2847,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/read/page-2.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -2563,7 +2865,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-1.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -2573,7 +2875,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-2.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -2583,7 +2885,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-3.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -2593,7 +2895,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/read/page-1.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -2613,7 +2915,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/read/page-2.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -2643,7 +2945,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/thumb.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -2679,7 +2981,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-home-family-english-5-7/lessons/home-review/thumb.svg",
+          "path": "courses/momo-home-family-english-5-7/lessons/home-review/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -2693,7 +2995,7 @@
             "audio_text_en": "Look! Mom!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-1.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -2707,7 +3009,7 @@
             "audio_text_en": "Say Bed with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-2.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -2721,7 +3023,7 @@
             "audio_text_en": "Good job! Apple!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-3.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -2735,7 +3037,7 @@
           "emoji": "mom",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/vocabulary/mom.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/vocabulary/mom.png",
             "type": "image",
             "status": "pending"
           },
@@ -2747,7 +3049,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/stickers/mom.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/stickers/mom.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2759,7 +3061,7 @@
           "emoji": "bed",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/vocabulary/bed.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/vocabulary/bed.png",
             "type": "image",
             "status": "pending"
           },
@@ -2771,7 +3073,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/stickers/bed.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/stickers/bed.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2783,7 +3085,7 @@
           "emoji": "apple",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/vocabulary/apple.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/vocabulary/apple.png",
             "type": "image",
             "status": "pending"
           },
@@ -2795,7 +3097,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/stickers/apple.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/stickers/apple.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2807,7 +3109,7 @@
           "emoji": "happy",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/vocabulary/happy.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/vocabulary/happy.png",
             "type": "image",
             "status": "pending"
           },
@@ -2819,7 +3121,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/stickers/happy.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/stickers/happy.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2837,7 +3139,7 @@
             "label": "Mom",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/home-review/games/mom.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/games/mom.png",
               "type": "image",
               "status": "pending"
             }
@@ -2847,7 +3149,7 @@
             "label": "Bed",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/home-review/games/bed.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/games/bed.png",
               "type": "image",
               "status": "pending"
             }
@@ -2857,7 +3159,7 @@
             "label": "Apple",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/home-review/games/apple.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/games/apple.png",
               "type": "image",
               "status": "pending"
             }
@@ -2867,7 +3169,7 @@
             "label": "Happy",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/home-review/games/happy.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/games/happy.png",
               "type": "image",
               "status": "pending"
             }
@@ -2904,7 +3206,7 @@
             "label": "Mom",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/home-review/activities/mom.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/activities/mom.png",
               "type": "image",
               "status": "pending"
             }
@@ -2914,7 +3216,7 @@
             "label": "Bed",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/home-review/activities/bed.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/activities/bed.png",
               "type": "image",
               "status": "pending"
             }
@@ -2924,7 +3226,7 @@
             "label": "Apple",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/home-review/activities/apple.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/activities/apple.png",
               "type": "image",
               "status": "pending"
             }
@@ -2934,7 +3236,7 @@
             "label": "Happy",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/home-review/activities/happy.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/activities/happy.png",
               "type": "image",
               "status": "pending"
             }
@@ -2954,7 +3256,7 @@
               "label": "Mom",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q1-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2964,7 +3266,7 @@
               "label": "Chair",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q1-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2974,7 +3276,7 @@
               "label": "Soap",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q1-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2995,7 +3297,7 @@
               "label": "Toy",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q2-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3005,7 +3307,7 @@
               "label": "Apple",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q2-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3015,7 +3317,7 @@
               "label": "Bed",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q2-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3036,7 +3338,7 @@
               "label": "vui",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q3-1.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3046,7 +3348,7 @@
               "label": "buồn",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q3-2.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3056,7 +3358,7 @@
               "label": "sạch",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q3-3.svg",
+                "path": "courses/momo-home-family-english-5-7/lessons/home-review/quiz/home-review-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3071,7 +3373,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-home-family-english-5-7/lessons/home-review/rewards/sticker.svg",
+          "path": "courses/momo-home-family-english-5-7/lessons/home-review/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -3094,7 +3396,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/home-review/read/page-1.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -3116,7 +3418,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-home-family-english-5-7/lessons/home-review/read/page-2.svg",
+              "path": "courses/momo-home-family-english-5-7/lessons/home-review/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -3134,7 +3436,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-1.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -3144,7 +3446,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-2.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -3154,7 +3456,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-3.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -3164,7 +3466,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/read/page-1.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -3184,7 +3486,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/read/page-2.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -3214,7 +3516,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-home-family-english-5-7/lessons/home-review/thumb.svg",
+            "path": "courses/momo-home-family-english-5-7/lessons/home-review/thumb.png",
             "type": "image",
             "status": "pending"
           },

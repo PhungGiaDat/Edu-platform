@@ -11,9 +11,27 @@
   "thumbnail_url": null,
   "thumbnail": {
     "bucket": "learnar-assets",
-    "path": "courses/momo-nature-english-5-7/images/course-cover.svg",
+    "path": "courses/momo-nature-english-5-7/images/course-cover.png",
     "type": "image",
     "status": "pending"
+  },
+  "courseTrailer": {
+    "title": "Cùng Lexi khám phá thiên nhiên",
+    "duration_seconds": 45,
+    "asset": {
+      "bucket": "AR_models",
+      "path": "course/momo-nature-english-5-7/videos/course-trailer.mp4",
+      "type": "video",
+      "status": "ready"
+    },
+    "poster": {
+      "bucket": "learnar-assets",
+      "path": "courses/momo-nature-english-5-7/images/course-cover.png",
+      "type": "image",
+      "status": "pending"
+    },
+    "captions_vi": "Cùng Lexi khám phá thiên nhiên nhé!",
+    "autoplay": false
   },
   "is_published": true,
   "lessons": [
@@ -44,7 +62,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/thumb.svg",
+          "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -58,7 +76,7 @@
             "audio_text_en": "Look! Elephant!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-1.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -72,7 +90,7 @@
             "audio_text_en": "Say Big with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-2.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -86,7 +104,7 @@
             "audio_text_en": "Good job! Trunk!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-3.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -100,7 +118,7 @@
           "emoji": "elephant",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
             "type": "image",
             "status": "pending"
           },
@@ -112,7 +130,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/stickers/elephant.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/stickers/elephant.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -120,11 +138,11 @@
         },
         {
           "word_en": "Big",
-          "word_vi": "to",
+          "word_vi": "to lớn",
           "emoji": "big",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
             "type": "image",
             "status": "pending"
           },
@@ -136,7 +154,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/stickers/big.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/stickers/big.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -148,7 +166,7 @@
           "emoji": "trunk",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
             "type": "image",
             "status": "pending"
           },
@@ -160,7 +178,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/stickers/trunk.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/stickers/trunk.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -170,41 +188,95 @@
       "game": {
         "game_id": "meet-the-elephant-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
-        "prompt_audio_text": "Tap elephant.",
+        "instruction_vi": "Momo nói: Chạm vào chú voi Elephant thật nhanh nào!",
+        "prompt_audio_text": "Tap Elephant",
         "items": [
           {
             "id": "game-1",
+            "round": 1,
             "label": "Elephant",
+            "instruction_vi": "Momo nói: Chạm vào chú voi Elephant thật nhanh nào!",
+            "prompt_audio_text": "Tap Elephant",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/games/elephant.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
               "type": "image",
               "status": "pending"
-            }
+            },
+            "feedback_vi": "Bé nhanh tay quá! Bạn voi Elephant vẫy tai cảm ơn bé kìa!"
           },
           {
             "id": "game-2",
+            "round": 2,
             "label": "Big",
+            "instruction_vi": "Momo nói: Tìm biểu tượng to lớn Big!",
+            "prompt_audio_text": "Tap Big",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/games/big.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
               "type": "image",
               "status": "pending"
-            }
+            },
+            "feedback_vi": "Chính xác! Big là to lớn khổng lồ!"
           },
           {
             "id": "game-3",
+            "round": 3,
             "label": "Trunk",
+            "instruction_vi": "Momo nói: Chạm vào chiếc vòi Trunk đang vung vẩy!",
+            "prompt_audio_text": "Tap Trunk",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/games/trunk.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
               "type": "image",
               "status": "pending"
-            }
+            },
+            "feedback_vi": "Giỏi quá! Trunk phun nước mát rượi luôn!"
+          },
+          {
+            "id": "game-4",
+            "round": 4,
+            "label": "Trunk",
+            "instruction_vi": "Bé hãy đón lấy chiếc lá có chữ 'Elephant' nhé!",
+            "prompt_audio_text": "Catch Elephant",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+              "type": "image",
+              "status": "pending"
+            },
+            "feedback_vi": "Bé đón trúng chiếc lá Elephant rồi! Xuất sắc!"
+          },
+          {
+            "id": "game-5",
+            "round": 5,
+            "label": "Elephant",
+            "instruction_vi": "Momo đố bé: Bạn voi có chiếc vòi dài tên là gì? Chạm vào Trunk!",
+            "prompt_audio_text": "Find Trunk",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
+              "type": "image",
+              "status": "pending"
+            },
+            "feedback_vi": "Đúng rồi! Chiếc vòi dài xinh xắn chính là Trunk!"
+          },
+          {
+            "id": "game-6",
+            "round": 6,
+            "label": "Big",
+            "instruction_vi": "Momo nói: Khen bạn voi to lớn nào! Chạm vào Big!",
+            "prompt_audio_text": "Tap Big",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
+              "type": "image",
+              "status": "pending"
+            },
+            "feedback_vi": "Hoan hô! Bé đã hoàn thành tất cả thử thách cùng chú voi!"
           }
         ],
-        "feedback_positive_vi": "Tuyệt vời! Con đã chơi rất nhanh."
+        "feedback_positive_vi": "Bé nhanh tay quá! Bạn voi Elephant vẫy tai cảm ơn bé kìa!"
       },
       "pronunciation": {
         "task_id": "meet-the-elephant-say",
@@ -227,172 +299,402 @@
       "activity": {
         "activity_id": "meet-the-elephant-activity",
         "type": "match_picture",
-        "instruction_vi": "Kéo hoặc chọn hình giống từ tiếng Anh.",
-        "prompt_audio_text": "Find Elephant and Big.",
+        "instruction_vi": "Bé hãy chạm vào từ tiếng Anh ở bên trái, rồi chạm vào nghĩa tiếng Việt tương ứng ở bên phải nhé!",
+        "prompt_audio_text": "Find Elephant.",
         "items": [
           {
-            "id": "activity-1",
-            "label": "Elephant",
-            "image": {
-              "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/activities/elephant.svg",
-              "type": "image",
-              "status": "pending"
-            }
+            "id": "match-1",
+            "left_id": "Elephant",
+            "left_text": "Elephant",
+            "right_id": "Convoi",
+            "right_text": "Con voi",
+            "vocabulary_id": "meet-the-elephant:elephant"
           },
           {
-            "id": "activity-2",
-            "label": "Big",
-            "image": {
-              "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/activities/big.svg",
-              "type": "image",
-              "status": "pending"
-            }
+            "id": "match-2",
+            "left_id": "Big",
+            "left_text": "Big",
+            "right_id": "Tolon",
+            "right_text": "To lớn",
+            "vocabulary_id": "meet-the-elephant:big"
           },
           {
-            "id": "activity-3",
-            "label": "Trunk",
-            "image": {
-              "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/activities/trunk.svg",
-              "type": "image",
-              "status": "pending"
-            }
+            "id": "match-3",
+            "left_id": "Trunk",
+            "left_text": "Trunk",
+            "right_id": "Caivoi",
+            "right_text": "Cái vòi",
+            "vocabulary_id": "meet-the-elephant:trunk"
+          },
+          {
+            "id": "match-4",
+            "left_id": "audio_elephant",
+            "left_text": "🔊 Elephant",
+            "right_id": "img_elephant",
+            "right_text": "Hình Chú voi",
+            "vocabulary_id": "meet-the-elephant:elephant"
+          },
+          {
+            "id": "match-5",
+            "left_id": "audio_big",
+            "left_text": "🔊 Big",
+            "right_id": "img_big",
+            "right_text": "Kích thước To lớn",
+            "vocabulary_id": "meet-the-elephant:big"
+          },
+          {
+            "id": "match-6",
+            "left_id": "audio_trunk",
+            "left_text": "🔊 Trunk",
+            "right_id": "img_trunk",
+            "right_text": "Hình Chiếc vòi",
+            "vocabulary_id": "meet-the-elephant:trunk"
           }
         ],
-        "feedback_positive_vi": "Con ghép hình rất tốt!"
+        "feedback_positive_vi": "Tuyệt vời! Bé đã nối đúng tất cả các từ của bạn voi!"
       },
       "quiz": [
         {
           "question_id": "meet-the-elephant-q1",
           "type": "image_choice",
-          "prompt_vi": "Con nghe từ nào?",
-          "questionAudioText": "Tap elephant.",
+          "prompt_vi": "Đâu là chú voi - Elephant?",
+          "questionAudioText": "Elephant",
           "options": [
             {
               "option_id": "meet-the-elephant-q1-1",
               "label": "Elephant",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q1-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "meet-the-elephant-q1-2",
-              "label": "Tree",
+              "label": "Big",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q1-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "meet-the-elephant-q1-3",
-              "label": "Sun",
+              "label": "Trunk",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q1-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
           "correctOptionId": "meet-the-elephant-q1-1",
-          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
-          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+          "feedbackCorrect": "Giỏi lắm! Đây chính là chú voi Elephant.",
+          "feedbackIncorrect": "Chưa đúng rồi. Con nhìn kỹ chú voi to lớn nhé!"
         },
         {
           "question_id": "meet-the-elephant-q2",
           "type": "image_choice",
-          "prompt_vi": "Cái vòi là từ nào?",
-          "questionAudioText": "Find trunk.",
+          "prompt_vi": "Đâu là chiếc vòi voi - Trunk?",
+          "questionAudioText": "Trunk",
           "options": [
             {
               "option_id": "meet-the-elephant-q2-1",
-              "label": "Ear",
+              "label": "Trunk",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q2-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "meet-the-elephant-q2-2",
-              "label": "Trunk",
+              "label": "Elephant",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q2-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "meet-the-elephant-q2-3",
-              "label": "Leaf",
+              "label": "Big",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q2-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "meet-the-elephant-q2-2",
-          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
-          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+          "correctOptionId": "meet-the-elephant-q2-1",
+          "feedbackCorrect": "Đúng rồi! Đây là chiếc vòi Trunk dài cong cong.",
+          "feedbackIncorrect": "Chưa chính xác. Cái vòi dài của bạn voi ở đâu nào?"
         },
         {
           "question_id": "meet-the-elephant-q3",
           "type": "image_choice",
-          "prompt_vi": "Big nghĩa là gì?",
-          "questionAudioText": "Big.",
+          "prompt_vi": "Hình nào thể hiện sự to lớn - Big?",
+          "questionAudioText": "Big",
           "options": [
             {
               "option_id": "meet-the-elephant-q3-1",
-              "label": "nhỏ",
+              "label": "Big",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q3-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "meet-the-elephant-q3-2",
-              "label": "to",
+              "label": "Trunk",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q3-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "meet-the-elephant-q3-3",
-              "label": "xanh",
+              "label": "Elephant",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/quiz/meet-the-elephant-q3-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "meet-the-elephant-q3-2",
-          "feedbackCorrect": "Giỏi quá! Con chọn đúng rồi.",
-          "feedbackIncorrect": "Không sao, mình nghe lại và thử thêm một lần nhé."
+          "correctOptionId": "meet-the-elephant-q3-1",
+          "feedbackCorrect": "Xuất sắc! Big là to lớn khổng lồ.",
+          "feedbackIncorrect": "Con chọn lại nha, hình nào chỉ sự to lớn nhỉ?"
+        },
+        {
+          "question_id": "meet-the-elephant-q4",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe Momo phát âm và chọn đúng hình nhé.",
+          "questionAudioText": "Elephant",
+          "options": [
+            {
+              "option_id": "meet-the-elephant-q4-1",
+              "label": "Elephant",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "meet-the-elephant-q4-2",
+              "label": "Big",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "meet-the-elephant-q4-3",
+              "label": "Trunk",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "meet-the-elephant-q4-1",
+          "feedbackCorrect": "Chuẩn xác! Con nghe thấy từ Elephant rất rõ.",
+          "feedbackIncorrect": "Chưa đúng rồi. Bấm vào loa để nghe lại nhé!"
+        },
+        {
+          "question_id": "meet-the-elephant-q5",
+          "type": "sound_choice",
+          "prompt_vi": "Bé nghe xem từ phát ra là gì nhé.",
+          "questionAudioText": "Trunk",
+          "options": [
+            {
+              "option_id": "meet-the-elephant-q5-1",
+              "label": "Trunk",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "meet-the-elephant-q5-2",
+              "label": "Big",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "meet-the-elephant-q5-3",
+              "label": "Elephant",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "meet-the-elephant-q5-1",
+          "feedbackCorrect": "Thông minh lắm! Đó chính là Trunk - cái vòi!",
+          "feedbackIncorrect": "Không sao, con bấm loa nghe lại giọng đọc nha."
+        },
+        {
+          "question_id": "meet-the-elephant-q6",
+          "type": "word_choice",
+          "prompt_vi": "Từ 'Elephant' trong tiếng Anh nghĩa là gì?",
+          "questionAudioText": "Elephant",
+          "options": [
+            {
+              "option_id": "meet-the-elephant-q6-1",
+              "label": "Con voi",
+              "image": null
+            },
+            {
+              "option_id": "meet-the-elephant-q6-2",
+              "label": "Con mèo",
+              "image": null
+            },
+            {
+              "option_id": "meet-the-elephant-q6-3",
+              "label": "Con chim",
+              "image": null
+            }
+          ],
+          "correctOptionId": "meet-the-elephant-q6-1",
+          "feedbackCorrect": "Chính xác! Elephant có nghĩa là Con voi.",
+          "feedbackIncorrect": "Chưa đúng rồi. Elephant là bạn động vật to lớn có vòi dài đó con!"
+        },
+        {
+          "question_id": "meet-the-elephant-q7",
+          "type": "word_choice",
+          "prompt_vi": "Từ nào có nghĩa là 'cái vòi' của chú voi?",
+          "questionAudioText": "Trunk",
+          "options": [
+            {
+              "option_id": "meet-the-elephant-q7-1",
+              "label": "Trunk",
+              "image": null
+            },
+            {
+              "option_id": "meet-the-elephant-q7-2",
+              "label": "Big",
+              "image": null
+            },
+            {
+              "option_id": "meet-the-elephant-q7-3",
+              "label": "Elephant",
+              "image": null
+            }
+          ],
+          "correctOptionId": "meet-the-elephant-q7-1",
+          "feedbackCorrect": "Giỏi quá! Trunk nghĩa là cái vòi voi.",
+          "feedbackIncorrect": "Thử lại nào bé ơi, từ chỉ cái vòi bắt đầu bằng chữ T nhé!"
+        },
+        {
+          "question_id": "meet-the-elephant-q8",
+          "type": "word_choice",
+          "prompt_vi": "Từ 'Big' trong tiếng Anh có nghĩa là gì?",
+          "questionAudioText": "Big",
+          "options": [
+            {
+              "option_id": "meet-the-elephant-q8-1",
+              "label": "To lớn",
+              "image": null
+            },
+            {
+              "option_id": "meet-the-elephant-q8-2",
+              "label": "Nhỏ bé",
+              "image": null
+            },
+            {
+              "option_id": "meet-the-elephant-q8-3",
+              "label": "Ngắn cũn",
+              "image": null
+            }
+          ],
+          "correctOptionId": "meet-the-elephant-q8-1",
+          "feedbackCorrect": "Rất đúng! Big là to lớn khổng lồ.",
+          "feedbackIncorrect": "Chưa đúng rồi. Bạn voi rất bự nên được gọi là Big đấy!"
+        },
+        {
+          "question_id": "meet-the-elephant-q9",
+          "type": "word_choice",
+          "prompt_vi": "Con vật nào có chiếc vòi dài và đôi tai to như cái quạt?",
+          "questionAudioText": "Elephant",
+          "options": [
+            {
+              "option_id": "meet-the-elephant-q9-1",
+              "label": "Elephant",
+              "image": null
+            },
+            {
+              "option_id": "meet-the-elephant-q9-2",
+              "label": "Big",
+              "image": null
+            },
+            {
+              "option_id": "meet-the-elephant-q9-3",
+              "label": "Trunk",
+              "image": null
+            }
+          ],
+          "correctOptionId": "meet-the-elephant-q9-1",
+          "feedbackCorrect": "Đúng rồi! Bạn voi Elephant có chiếc vòi dài và đôi tai rất to!",
+          "feedbackIncorrect": "Nghĩ thử xem nào, con vật nào to lớn bước đi bình bịch?"
+        },
+        {
+          "question_id": "meet-the-elephant-q10",
+          "type": "word_choice",
+          "prompt_vi": "Bé hoàn thành câu nhé: 'The elephant is ___.' (Chú voi rất to lớn)",
+          "questionAudioText": "The elephant is big.",
+          "options": [
+            {
+              "option_id": "meet-the-elephant-q10-1",
+              "label": "Big",
+              "image": null
+            },
+            {
+              "option_id": "meet-the-elephant-q10-2",
+              "label": "Trunk",
+              "image": null
+            },
+            {
+              "option_id": "meet-the-elephant-q10-3",
+              "label": "Elephant",
+              "image": null
+            }
+          ],
+          "correctOptionId": "meet-the-elephant-q10-1",
+          "feedbackCorrect": "Xuất sắc! 'The elephant is big.' - Chú voi thật to lớn!",
+          "feedbackIncorrect": "Con nhìn lại xem, từ chỉ kích thước to lớn là Big hay từ nào nha!"
         }
       ],
       "reward": {
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/rewards/sticker.svg",
+          "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -415,7 +717,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/read/page-1.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -437,7 +739,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/read/page-2.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -455,7 +757,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-1.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -465,7 +767,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-2.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -475,7 +777,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-3.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -485,7 +787,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/read/page-1.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -505,7 +807,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/read/page-2.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -535,7 +837,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/thumb.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -571,7 +873,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/thumb.svg",
+          "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -585,7 +887,7 @@
             "audio_text_en": "Look! Tree!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-1.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -599,7 +901,7 @@
             "audio_text_en": "Say Leaf with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-2.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -613,7 +915,7 @@
             "audio_text_en": "Good job! Green!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-3.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -627,7 +929,7 @@
           "emoji": "tree",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/tree.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/tree.png",
             "type": "image",
             "status": "pending"
           },
@@ -639,7 +941,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/stickers/tree.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/stickers/tree.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -651,7 +953,7 @@
           "emoji": "leaf",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/leaf.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/leaf.png",
             "type": "image",
             "status": "pending"
           },
@@ -663,7 +965,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/stickers/leaf.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/stickers/leaf.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -675,7 +977,7 @@
           "emoji": "green",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/green.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/green.png",
             "type": "image",
             "status": "pending"
           },
@@ -687,7 +989,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/stickers/green.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/stickers/green.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -705,7 +1007,7 @@
             "label": "Tree",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/games/tree.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/games/tree.png",
               "type": "image",
               "status": "pending"
             }
@@ -715,7 +1017,7 @@
             "label": "Leaf",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/games/leaf.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/games/leaf.png",
               "type": "image",
               "status": "pending"
             }
@@ -725,7 +1027,7 @@
             "label": "Green",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/games/green.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/games/green.png",
               "type": "image",
               "status": "pending"
             }
@@ -762,7 +1064,7 @@
             "label": "Tree",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/activities/tree.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/activities/tree.png",
               "type": "image",
               "status": "pending"
             }
@@ -772,7 +1074,7 @@
             "label": "Leaf",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/activities/leaf.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/activities/leaf.png",
               "type": "image",
               "status": "pending"
             }
@@ -782,7 +1084,7 @@
             "label": "Green",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/activities/green.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/activities/green.png",
               "type": "image",
               "status": "pending"
             }
@@ -802,7 +1104,7 @@
               "label": "Tree",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q1-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -812,7 +1114,7 @@
               "label": "Elephant",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q1-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -822,7 +1124,7 @@
               "label": "River",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q1-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -843,7 +1145,7 @@
               "label": "đỏ",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q2-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -853,7 +1155,7 @@
               "label": "xanh lá",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q2-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -863,7 +1165,7 @@
               "label": "vàng",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q2-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -884,7 +1186,7 @@
               "label": "lá",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q3-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -894,7 +1196,7 @@
               "label": "voi",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q3-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -904,7 +1206,7 @@
               "label": "nước",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q3-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/quiz/the-green-tree-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -919,7 +1221,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/rewards/sticker.svg",
+          "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -942,7 +1244,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-1.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -964,7 +1266,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-2.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -982,7 +1284,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-1.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -992,7 +1294,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-2.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -1002,7 +1304,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-3.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -1012,7 +1314,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-1.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -1032,7 +1334,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-2.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -1062,7 +1364,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/thumb.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -1098,7 +1400,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/splashing-river/thumb.svg",
+          "path": "courses/momo-nature-english-5-7/lessons/splashing-river/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -1112,7 +1414,7 @@
             "audio_text_en": "Look! River!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-1.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -1126,7 +1428,7 @@
             "audio_text_en": "Say Water with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-2.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -1140,7 +1442,7 @@
             "audio_text_en": "Good job! Blue!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-3.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -1154,7 +1456,7 @@
           "emoji": "river",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/river.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/river.png",
             "type": "image",
             "status": "pending"
           },
@@ -1166,7 +1468,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/stickers/river.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/stickers/river.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1178,7 +1480,7 @@
           "emoji": "water",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/water.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/water.png",
             "type": "image",
             "status": "pending"
           },
@@ -1190,7 +1492,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/stickers/water.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/stickers/water.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1202,7 +1504,7 @@
           "emoji": "blue",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/blue.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/blue.png",
             "type": "image",
             "status": "pending"
           },
@@ -1214,7 +1516,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/stickers/blue.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/stickers/blue.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1232,7 +1534,7 @@
             "label": "River",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/games/river.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/games/river.png",
               "type": "image",
               "status": "pending"
             }
@@ -1242,7 +1544,7 @@
             "label": "Water",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/games/water.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/games/water.png",
               "type": "image",
               "status": "pending"
             }
@@ -1252,7 +1554,7 @@
             "label": "Blue",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/games/blue.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/games/blue.png",
               "type": "image",
               "status": "pending"
             }
@@ -1289,7 +1591,7 @@
             "label": "River",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/activities/river.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/activities/river.png",
               "type": "image",
               "status": "pending"
             }
@@ -1299,7 +1601,7 @@
             "label": "Water",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/activities/water.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/activities/water.png",
               "type": "image",
               "status": "pending"
             }
@@ -1309,7 +1611,7 @@
             "label": "Blue",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/activities/blue.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/activities/blue.png",
               "type": "image",
               "status": "pending"
             }
@@ -1329,7 +1631,7 @@
               "label": "Tree",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q1-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1339,7 +1641,7 @@
               "label": "River",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q1-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1349,7 +1651,7 @@
               "label": "Bird",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q1-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1370,7 +1672,7 @@
               "label": "nước",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1380,7 +1682,7 @@
               "label": "lá",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1390,7 +1692,7 @@
               "label": "mây",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1411,7 +1713,7 @@
               "label": "xanh dương",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1421,7 +1723,7 @@
               "label": "xanh lá",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1431,7 +1733,7 @@
               "label": "hồng",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/splashing-river/quiz/splashing-river-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1446,7 +1748,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/splashing-river/rewards/sticker.svg",
+          "path": "courses/momo-nature-english-5-7/lessons/splashing-river/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -1469,7 +1771,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-1.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -1491,7 +1793,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-2.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -1509,7 +1811,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-1.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -1519,7 +1821,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-2.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -1529,7 +1831,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-3.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -1539,7 +1841,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-1.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -1559,7 +1861,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-2.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -1589,7 +1891,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/thumb.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/splashing-river/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -1625,7 +1927,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/little-bird/thumb.svg",
+          "path": "courses/momo-nature-english-5-7/lessons/little-bird/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -1639,7 +1941,7 @@
             "audio_text_en": "Look! Bird!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-1.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -1653,7 +1955,7 @@
             "audio_text_en": "Say Fly with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-2.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -1667,7 +1969,7 @@
             "audio_text_en": "Good job! Small!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-3.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -1681,7 +1983,7 @@
           "emoji": "bird",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/bird.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/bird.png",
             "type": "image",
             "status": "pending"
           },
@@ -1693,7 +1995,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/stickers/bird.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/stickers/bird.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1705,7 +2007,7 @@
           "emoji": "fly",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/fly.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/fly.png",
             "type": "image",
             "status": "pending"
           },
@@ -1717,7 +2019,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/stickers/fly.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/stickers/fly.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1729,7 +2031,7 @@
           "emoji": "small",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/small.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/small.png",
             "type": "image",
             "status": "pending"
           },
@@ -1741,7 +2043,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/stickers/small.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/stickers/small.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1759,7 +2061,7 @@
             "label": "Bird",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/games/bird.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/games/bird.png",
               "type": "image",
               "status": "pending"
             }
@@ -1769,7 +2071,7 @@
             "label": "Fly",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/games/fly.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/games/fly.png",
               "type": "image",
               "status": "pending"
             }
@@ -1779,7 +2081,7 @@
             "label": "Small",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/games/small.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/games/small.png",
               "type": "image",
               "status": "pending"
             }
@@ -1816,7 +2118,7 @@
             "label": "Bird",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/activities/bird.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/activities/bird.png",
               "type": "image",
               "status": "pending"
             }
@@ -1826,7 +2128,7 @@
             "label": "Fly",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/activities/fly.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/activities/fly.png",
               "type": "image",
               "status": "pending"
             }
@@ -1836,7 +2138,7 @@
             "label": "Small",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/activities/small.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/activities/small.png",
               "type": "image",
               "status": "pending"
             }
@@ -1856,7 +2158,7 @@
               "label": "Bird",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q1-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1866,7 +2168,7 @@
               "label": "Tree",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q1-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1876,7 +2178,7 @@
               "label": "Water",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q1-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1897,7 +2199,7 @@
               "label": "ngủ",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1907,7 +2209,7 @@
               "label": "bay",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1917,7 +2219,7 @@
               "label": "ăn",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1938,7 +2240,7 @@
               "label": "nhỏ",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q3-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1948,7 +2250,7 @@
               "label": "to",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q3-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1958,7 +2260,7 @@
               "label": "cao",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q3-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/little-bird/quiz/little-bird-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1973,7 +2275,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/little-bird/rewards/sticker.svg",
+          "path": "courses/momo-nature-english-5-7/lessons/little-bird/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -1996,7 +2298,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-1.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -2018,7 +2320,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-2.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -2036,7 +2338,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-1.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -2046,7 +2348,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-2.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -2056,7 +2358,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-3.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -2066,7 +2368,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-1.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -2086,7 +2388,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-2.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -2116,7 +2418,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/little-bird/thumb.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/little-bird/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -2152,7 +2454,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/thumb.svg",
+          "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -2166,7 +2468,7 @@
             "audio_text_en": "Look! Sun!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-1.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -2180,7 +2482,7 @@
             "audio_text_en": "Say Sky with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-2.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -2194,7 +2496,7 @@
             "audio_text_en": "Good job! Yellow!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-3.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -2208,7 +2510,7 @@
           "emoji": "sun",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/sun.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/sun.png",
             "type": "image",
             "status": "pending"
           },
@@ -2220,7 +2522,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/stickers/sun.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/stickers/sun.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2232,7 +2534,7 @@
           "emoji": "sky",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/sky.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/sky.png",
             "type": "image",
             "status": "pending"
           },
@@ -2244,7 +2546,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/stickers/sky.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/stickers/sky.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2256,7 +2558,7 @@
           "emoji": "yellow",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/yellow.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/yellow.png",
             "type": "image",
             "status": "pending"
           },
@@ -2268,7 +2570,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/stickers/yellow.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/stickers/yellow.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2286,7 +2588,7 @@
             "label": "Sun",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/games/sun.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/games/sun.png",
               "type": "image",
               "status": "pending"
             }
@@ -2296,7 +2598,7 @@
             "label": "Sky",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/games/sky.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/games/sky.png",
               "type": "image",
               "status": "pending"
             }
@@ -2306,7 +2608,7 @@
             "label": "Yellow",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/games/yellow.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/games/yellow.png",
               "type": "image",
               "status": "pending"
             }
@@ -2343,7 +2645,7 @@
             "label": "Sun",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/activities/sun.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/activities/sun.png",
               "type": "image",
               "status": "pending"
             }
@@ -2353,7 +2655,7 @@
             "label": "Sky",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/activities/sky.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/activities/sky.png",
               "type": "image",
               "status": "pending"
             }
@@ -2363,7 +2665,7 @@
             "label": "Yellow",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/activities/yellow.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/activities/yellow.png",
               "type": "image",
               "status": "pending"
             }
@@ -2383,7 +2685,7 @@
               "label": "Sun",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q1-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2393,7 +2695,7 @@
               "label": "Bird",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q1-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2403,7 +2705,7 @@
               "label": "Leaf",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q1-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2424,7 +2726,7 @@
               "label": "bầu trời",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2434,7 +2736,7 @@
               "label": "dòng sông",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2444,7 +2746,7 @@
               "label": "cây",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2465,7 +2767,7 @@
               "label": "vàng",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2475,7 +2777,7 @@
               "label": "xanh",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2485,7 +2787,7 @@
               "label": "đen",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/quiz/sunny-sky-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2500,7 +2802,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/rewards/sticker.svg",
+          "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -2523,7 +2825,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-1.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -2545,7 +2847,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-2.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -2563,7 +2865,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-1.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -2573,7 +2875,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-2.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -2583,7 +2885,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-3.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -2593,7 +2895,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-1.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -2613,7 +2915,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-2.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -2643,7 +2945,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/thumb.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -2679,7 +2981,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/nature-review/thumb.svg",
+          "path": "courses/momo-nature-english-5-7/lessons/nature-review/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -2693,7 +2995,7 @@
             "audio_text_en": "Look! Elephant!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-1.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -2707,7 +3009,7 @@
             "audio_text_en": "Say Tree with Momo.",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-2.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -2721,7 +3023,7 @@
             "audio_text_en": "Good job! Bird!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-3.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -2735,7 +3037,7 @@
           "emoji": "elephant",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/elephant.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/elephant.png",
             "type": "image",
             "status": "pending"
           },
@@ -2747,7 +3049,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/elephant.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/elephant.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2759,7 +3061,7 @@
           "emoji": "tree",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/tree.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/tree.png",
             "type": "image",
             "status": "pending"
           },
@@ -2771,7 +3073,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/tree.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/tree.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2783,7 +3085,7 @@
           "emoji": "bird",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/bird.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/bird.png",
             "type": "image",
             "status": "pending"
           },
@@ -2795,7 +3097,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/bird.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/bird.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2807,7 +3109,7 @@
           "emoji": "sun",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/sun.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/vocabulary/sun.png",
             "type": "image",
             "status": "pending"
           },
@@ -2819,7 +3121,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/sun.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/stickers/sun.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2837,7 +3139,7 @@
             "label": "Elephant",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/elephant.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/elephant.png",
               "type": "image",
               "status": "pending"
             }
@@ -2847,7 +3149,7 @@
             "label": "Tree",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/tree.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/tree.png",
               "type": "image",
               "status": "pending"
             }
@@ -2857,7 +3159,7 @@
             "label": "Bird",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/bird.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/bird.png",
               "type": "image",
               "status": "pending"
             }
@@ -2867,7 +3169,7 @@
             "label": "Sun",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/sun.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/games/sun.png",
               "type": "image",
               "status": "pending"
             }
@@ -2904,7 +3206,7 @@
             "label": "Elephant",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/elephant.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/elephant.png",
               "type": "image",
               "status": "pending"
             }
@@ -2914,7 +3216,7 @@
             "label": "Tree",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/tree.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/tree.png",
               "type": "image",
               "status": "pending"
             }
@@ -2924,7 +3226,7 @@
             "label": "Bird",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/bird.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/bird.png",
               "type": "image",
               "status": "pending"
             }
@@ -2934,7 +3236,7 @@
             "label": "Sun",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/sun.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/activities/sun.png",
               "type": "image",
               "status": "pending"
             }
@@ -2954,7 +3256,7 @@
               "label": "Elephant",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q1-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2964,7 +3266,7 @@
               "label": "Sun",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q1-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2974,7 +3276,7 @@
               "label": "Leaf",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q1-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2995,7 +3297,7 @@
               "label": "Water",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q2-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3005,7 +3307,7 @@
               "label": "Tree",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q2-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3015,7 +3317,7 @@
               "label": "Bird",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q2-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3036,7 +3338,7 @@
               "label": "fly",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q3-1.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3046,7 +3348,7 @@
               "label": "swim",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q3-2.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3056,7 +3358,7 @@
               "label": "sleep",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q3-3.svg",
+                "path": "courses/momo-nature-english-5-7/lessons/nature-review/quiz/nature-review-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3071,7 +3373,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-nature-english-5-7/lessons/nature-review/rewards/sticker.svg",
+          "path": "courses/momo-nature-english-5-7/lessons/nature-review/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -3094,7 +3396,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-1.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -3116,7 +3418,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-2.svg",
+              "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -3134,7 +3436,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-1.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -3144,7 +3446,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-2.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -3154,7 +3456,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-3.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -3164,7 +3466,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-1.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -3184,7 +3486,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-2.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -3214,7 +3516,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-nature-english-5-7/lessons/nature-review/thumb.svg",
+            "path": "courses/momo-nature-english-5-7/lessons/nature-review/thumb.png",
             "type": "image",
             "status": "pending"
           },

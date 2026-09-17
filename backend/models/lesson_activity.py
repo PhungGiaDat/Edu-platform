@@ -217,6 +217,7 @@ class LessonLearningBlocks(StrictModel):
     pronunciation: Optional[Dict[str, Any]] = None
     quiz: Optional[List[Dict[str, Any]]] = None
     readAloudStory: Optional[Dict[str, Any]] = None
+    vocabulary_items: Optional[List[Dict[str, Any]]] = None
 
     @model_validator(mode="after")
     def validate_envelope(self) -> "LessonLearningBlocks":

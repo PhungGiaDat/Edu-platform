@@ -33,11 +33,14 @@ def _lesson_payload(lesson: LessonORM) -> dict[str, Any]:
     value = {column.name: getattr(lesson, column.name) for column in lesson.__table__.columns}
     blocks = normalize_learning_blocks(value.pop("learning_blocks") or {})
     value["learning_blocks"] = blocks.model_dump(mode="json")
-    if blocks.schema_version == 1:
-        for key in ("vocabulary", "game", "activity", "readAloudStory", "pronunciation", "quiz"):
-            legacy_value = getattr(blocks, key)
-            if legacy_value is not None:
-                value[key] = legacy_value
+    for key in ("game", "activity", "readAloudStory", "pronunciation", "quiz"):
+        legacy_value = getattr(blocks, key, None)
+        if legacy_value is not None:
+            value[key] = legacy_value
+    if blocks.schema_version == 1 and blocks.vocabulary:
+        value["vocabulary"] = blocks.vocabulary
+    elif blocks.vocabulary_items:
+        value["vocabulary"] = blocks.vocabulary_items
     value["order"] = value.pop("lesson_order")
     value["lesson_media"] = value.pop("media", None)
     value["generatedMedia"] = value.pop("generated_media", []) or []
@@ -163,4 +166,4 @@ class CourseRepository:
 
     async def get_media_assets(self, course_id: str, lesson_id: str) -> list[dict[str, Any]]:
         result = await self.session.execute(select(MediaAssetORM).where(and_(MediaAssetORM.course_id == course_id, MediaAssetORM.lesson_id == lesson_id)).order_by(MediaAssetORM.section_id, MediaAssetORM.asset_key))
-        return [{column.name: getattr(item, column.name) for column in item.__table__.columns} for item in result.scalars()]
+        return [{column.name: getattr(item, "metadata_" if column.name == "metadata" else column.name) for column in item.__table__.columns} for item in result.scalars()]

@@ -14,9 +14,27 @@
   "thumbnail_url": null,
   "thumbnail": {
     "bucket": "learnar-assets",
-    "path": "courses/momo-school-food-english-5-7/images/course-cover.svg",
+    "path": "courses/momo-school-food-english-5-7/images/course-cover.png",
     "type": "image",
     "status": "pending"
+  },
+  "courseTrailer": {
+    "title": "Cùng Lexi đến trường",
+    "duration_seconds": 45,
+    "asset": {
+      "bucket": "AR_models",
+      "path": "course/momo-school-food-english-5-7/videos/course-trailer.mp4",
+      "type": "video",
+      "status": "ready"
+    },
+    "poster": {
+      "bucket": "learnar-assets",
+      "path": "courses/momo-school-food-english-5-7/images/course-cover.png",
+      "type": "image",
+      "status": "pending"
+    },
+    "captions_vi": "Cùng Lexi đến trường nhé!",
+    "autoplay": false
   },
   "catalogPreview": [
     {
@@ -88,7 +106,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/thumb.svg",
+          "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -102,7 +120,7 @@
             "audio_text_en": "Look! Book!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/scenes/scene-1.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -116,7 +134,7 @@
             "audio_text_en": "Say Pencil!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/scenes/scene-2.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -130,7 +148,7 @@
             "audio_text_en": "Great! Bag!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/scenes/scene-3.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -144,7 +162,7 @@
           "emoji": "book",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
             "type": "image",
             "status": "pending"
           },
@@ -156,7 +174,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/stickers/book.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/stickers/book.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -168,7 +186,7 @@
           "emoji": "pencil",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
             "type": "image",
             "status": "pending"
           },
@@ -180,7 +198,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/stickers/pencil.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/stickers/pencil.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -192,7 +210,7 @@
           "emoji": "bag",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
             "type": "image",
             "status": "pending"
           },
@@ -204,7 +222,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/stickers/bag.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/stickers/bag.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -214,41 +232,95 @@
       "game": {
         "game_id": "my-classroom-quick-game",
         "type": "listen_and_tap",
-        "instruction_vi": "Nghe Momo nói rồi chạm vào hình đúng.",
+        "instruction_vi": "Momo nói: Chạm vào quyển sách Book thật nhanh nào!",
         "prompt_audio_text": "Tap Book",
         "items": [
           {
             "id": "game-1",
+            "round": 1,
             "label": "Book",
+            "instruction_vi": "Momo nói: Chạm vào quyển sách Book thật nhanh nào!",
+            "prompt_audio_text": "Tap Book",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/games/book.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
               "type": "image",
               "status": "pending"
-            }
+            },
+            "feedback_vi": "Nhanh như chớp! Bé tìm trúng quyển sách Book rồi!"
           },
           {
             "id": "game-2",
+            "round": 2,
             "label": "Pencil",
+            "instruction_vi": "Momo nói: Tìm chiếc bút chì Pencil để tô màu nào!",
+            "prompt_audio_text": "Tap Pencil",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/games/pencil.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
               "type": "image",
               "status": "pending"
-            }
+            },
+            "feedback_vi": "Chính xác! Chiếc bút chì Pencil đã sẵn sàng vẽ tranh!"
           },
           {
             "id": "game-3",
+            "round": 3,
             "label": "Bag",
+            "instruction_vi": "Momo nói: Chạm vào chiếc cặp Bag để cất đồ nhé!",
+            "prompt_audio_text": "Tap Bag",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/games/bag.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
               "type": "image",
               "status": "pending"
-            }
+            },
+            "feedback_vi": "Giỏi quá! Chiếc cặp Bag đã được cất gọn gàng!"
+          },
+          {
+            "id": "game-4",
+            "round": 4,
+            "label": "Pencil",
+            "instruction_vi": "Bé hãy đón ngôi sao có chữ 'Book' đang bay đến!",
+            "prompt_audio_text": "Catch Book",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
+              "type": "image",
+              "status": "pending"
+            },
+            "feedback_vi": "Bé chụp trúng ngôi sao Book rồi! Rất khéo léo!"
+          },
+          {
+            "id": "game-5",
+            "round": 5,
+            "label": "Bag",
+            "instruction_vi": "Momo đố bé: Đồ dùng nào viết chữ được? Chạm vào Pencil!",
+            "prompt_audio_text": "Find Pencil",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
+              "type": "image",
+              "status": "pending"
+            },
+            "feedback_vi": "Đúng rồi! Bút chì Pencil viết chữ và vẽ tranh rất đẹp!"
+          },
+          {
+            "id": "game-6",
+            "round": 6,
+            "label": "Bag",
+            "instruction_vi": "Momo nói: Đeo cặp lên vai đi học nào! Chạm vào Bag!",
+            "prompt_audio_text": "Tap Bag",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
+              "type": "image",
+              "status": "pending"
+            },
+            "feedback_vi": "Hoan hô! Bé đã hoàn thành tất cả thử thách trong lớp học!"
           }
         ],
-        "feedback_positive_vi": "Nhanh quá! Con chọn rất giỏi."
+        "feedback_positive_vi": "Nhanh như chớp! Bé tìm trúng quyển sách Book rồi!"
       },
       "pronunciation": {
         "task_id": "my-classroom-say",
@@ -271,55 +343,73 @@
       "activity": {
         "activity_id": "my-classroom-activity",
         "type": "match_picture",
-        "instruction_vi": "Ghép từ với hình đúng.",
-        "prompt_audio_text": "Find Book and Pencil.",
+        "instruction_vi": "Bé hãy chạm vào từ tiếng Anh ở bên trái, rồi chạm vào nghĩa tiếng Việt tương ứng ở bên phải nhé!",
+        "prompt_audio_text": "Find Book.",
         "items": [
           {
-            "id": "activity-1",
-            "label": "Book",
-            "image": {
-              "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/activities/book.svg",
-              "type": "image",
-              "status": "pending"
-            }
+            "id": "match-1",
+            "left_id": "Book",
+            "left_text": "Book",
+            "right_id": "Quyensach",
+            "right_text": "Quyển sách",
+            "vocabulary_id": "my-classroom:book"
           },
           {
-            "id": "activity-2",
-            "label": "Pencil",
-            "image": {
-              "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/activities/pencil.svg",
-              "type": "image",
-              "status": "pending"
-            }
+            "id": "match-2",
+            "left_id": "Pencil",
+            "left_text": "Pencil",
+            "right_id": "Butchi",
+            "right_text": "Bút chì",
+            "vocabulary_id": "my-classroom:pencil"
           },
           {
-            "id": "activity-3",
-            "label": "Bag",
-            "image": {
-              "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/activities/bag.svg",
-              "type": "image",
-              "status": "pending"
-            }
+            "id": "match-3",
+            "left_id": "Bag",
+            "left_text": "Bag",
+            "right_id": "Capsach",
+            "right_text": "Cặp sách",
+            "vocabulary_id": "my-classroom:bag"
+          },
+          {
+            "id": "match-4",
+            "left_id": "audio_book",
+            "left_text": "🔊 Book",
+            "right_id": "img_book",
+            "right_text": "Hình Quyển sách",
+            "vocabulary_id": "my-classroom:book"
+          },
+          {
+            "id": "match-5",
+            "left_id": "audio_pencil",
+            "left_text": "🔊 Pencil",
+            "right_id": "img_pencil",
+            "right_text": "Hình Bút chì",
+            "vocabulary_id": "my-classroom:pencil"
+          },
+          {
+            "id": "match-6",
+            "left_id": "audio_bag",
+            "left_text": "🔊 Bag",
+            "right_id": "img_bag",
+            "right_text": "Hình Cặp sách",
+            "vocabulary_id": "my-classroom:bag"
           }
         ],
-        "feedback_positive_vi": "Con ghép hình rất tốt!"
+        "feedback_positive_vi": "Tuyệt vời! Bé đã nối đúng tất cả đồ dùng học tập!"
       },
       "quiz": [
         {
           "question_id": "my-classroom-q1",
           "type": "image_choice",
-          "prompt_vi": "Con chọn Book nhé.",
-          "questionAudioText": "Tap Book.",
+          "prompt_vi": "Đâu là quyển sách - Book?",
+          "questionAudioText": "Book",
           "options": [
             {
               "option_id": "my-classroom-q1-1",
               "label": "Book",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/quiz/my-classroom-q1-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -329,7 +419,7 @@
               "label": "Pencil",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/quiz/my-classroom-q1-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -339,79 +429,79 @@
               "label": "Bag",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/quiz/my-classroom-q1-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
           "correctOptionId": "my-classroom-q1-1",
-          "feedbackCorrect": "Chính xác! Con làm tốt lắm.",
-          "feedbackIncorrect": "Mình nghe lại rồi chọn thêm lần nữa nhé."
+          "feedbackCorrect": "Giỏi lắm! Đây là quyển sách Book với nhiều trang truyện hay.",
+          "feedbackIncorrect": "Chưa đúng rồi. Con nhìn kỹ quyển sách mở ra nhé!"
         },
         {
           "question_id": "my-classroom-q2",
           "type": "image_choice",
-          "prompt_vi": "Pencil nghĩa là gì?",
+          "prompt_vi": "Đâu là chiếc bút chì - Pencil?",
           "questionAudioText": "Pencil",
           "options": [
             {
               "option_id": "my-classroom-q2-1",
-              "label": "bút chì",
+              "label": "Pencil",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/quiz/my-classroom-q2-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "my-classroom-q2-2",
-              "label": "quyển sách",
+              "label": "Book",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/quiz/my-classroom-q2-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "my-classroom-q2-3",
-              "label": "cặp sách",
+              "label": "Bag",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/quiz/my-classroom-q2-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
           "correctOptionId": "my-classroom-q2-1",
-          "feedbackCorrect": "Chính xác! Con làm tốt lắm.",
-          "feedbackIncorrect": "Mình nghe lại rồi chọn thêm lần nữa nhé."
+          "feedbackCorrect": "Đúng rồi! Đây là chiếc bút chì Pencil thon dài.",
+          "feedbackIncorrect": "Chưa chính xác. Cây bút chì nhọn đầu ở đâu con nhỉ?"
         },
         {
           "question_id": "my-classroom-q3",
           "type": "image_choice",
-          "prompt_vi": "Con nghe từ nào?",
-          "questionAudioText": "Say Bag.",
+          "prompt_vi": "Đâu là chiếc cặp sách - Bag?",
+          "questionAudioText": "Bag",
           "options": [
             {
               "option_id": "my-classroom-q3-1",
-              "label": "Book",
+              "label": "Bag",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/quiz/my-classroom-q3-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
                 "type": "image",
                 "status": "pending"
               }
             },
             {
               "option_id": "my-classroom-q3-2",
-              "label": "Bag",
+              "label": "Book",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/quiz/my-classroom-q3-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -421,22 +511,234 @@
               "label": "Pencil",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/quiz/my-classroom-q3-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
                 "type": "image",
                 "status": "pending"
               }
             }
           ],
-          "correctOptionId": "my-classroom-q3-2",
-          "feedbackCorrect": "Chính xác! Con làm tốt lắm.",
-          "feedbackIncorrect": "Mình nghe lại rồi chọn thêm lần nữa nhé."
+          "correctOptionId": "my-classroom-q3-1",
+          "feedbackCorrect": "Xuất sắc! Chiếc cặp sách Bag đồng hành cùng bé đến lớp.",
+          "feedbackIncorrect": "Con chọn lại nha, chiếc cặp có quai đeo ở đâu nhỉ?"
+        },
+        {
+          "question_id": "my-classroom-q4",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe Momo phát âm và chọn đúng hình nhé.",
+          "questionAudioText": "Book",
+          "options": [
+            {
+              "option_id": "my-classroom-q4-1",
+              "label": "Book",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "my-classroom-q4-2",
+              "label": "Bag",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "my-classroom-q4-3",
+              "label": "Pencil",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "my-classroom-q4-1",
+          "feedbackCorrect": "Chuẩn xác! Con nghe thấy từ Book rất rõ ràng.",
+          "feedbackIncorrect": "Chưa đúng rồi. Bấm vào loa để nghe lại nhé!"
+        },
+        {
+          "question_id": "my-classroom-q5",
+          "type": "sound_choice",
+          "prompt_vi": "Bé nghe xem từ phát ra là đồ dùng nào nhé.",
+          "questionAudioText": "Pencil",
+          "options": [
+            {
+              "option_id": "my-classroom-q5-1",
+              "label": "Pencil",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "my-classroom-q5-2",
+              "label": "Book",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
+                "type": "image",
+                "status": "pending"
+              }
+            },
+            {
+              "option_id": "my-classroom-q5-3",
+              "label": "Bag",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
+                "type": "image",
+                "status": "pending"
+              }
+            }
+          ],
+          "correctOptionId": "my-classroom-q5-1",
+          "feedbackCorrect": "Thông minh lắm! Đó chính là Pencil - cây bút chì!",
+          "feedbackIncorrect": "Không sao, con bấm loa nghe lại giọng đọc nha."
+        },
+        {
+          "question_id": "my-classroom-q6",
+          "type": "word_choice",
+          "prompt_vi": "Từ 'Book' trong tiếng Anh nghĩa là gì?",
+          "questionAudioText": "Book",
+          "options": [
+            {
+              "option_id": "my-classroom-q6-1",
+              "label": "Quyển sách",
+              "image": null
+            },
+            {
+              "option_id": "my-classroom-q6-2",
+              "label": "Cái bàn",
+              "image": null
+            },
+            {
+              "option_id": "my-classroom-q6-3",
+              "label": "Cái ghế",
+              "image": null
+            }
+          ],
+          "correctOptionId": "my-classroom-q6-1",
+          "feedbackCorrect": "Chính xác! Book có nghĩa là Quyển sách.",
+          "feedbackIncorrect": "Chưa đúng rồi. Book là vật bé mở ra đọc truyện tranh đấy!"
+        },
+        {
+          "question_id": "my-classroom-q7",
+          "type": "word_choice",
+          "prompt_vi": "Từ nào có nghĩa là 'bút chì'?",
+          "questionAudioText": "Pencil",
+          "options": [
+            {
+              "option_id": "my-classroom-q7-1",
+              "label": "Pencil",
+              "image": null
+            },
+            {
+              "option_id": "my-classroom-q7-2",
+              "label": "Bag",
+              "image": null
+            },
+            {
+              "option_id": "my-classroom-q7-3",
+              "label": "Book",
+              "image": null
+            }
+          ],
+          "correctOptionId": "my-classroom-q7-1",
+          "feedbackCorrect": "Giỏi quá! Pencil nghĩa là chiếc bút chì.",
+          "feedbackIncorrect": "Thử lại nào bé ơi, từ chỉ cây bút chì bắt đầu bằng chữ P nhé!"
+        },
+        {
+          "question_id": "my-classroom-q8",
+          "type": "word_choice",
+          "prompt_vi": "Từ 'Bag' trong tiếng Anh có nghĩa là gì?",
+          "questionAudioText": "Bag",
+          "options": [
+            {
+              "option_id": "my-classroom-q8-1",
+              "label": "Cặp sách",
+              "image": null
+            },
+            {
+              "option_id": "my-classroom-q8-2",
+              "label": "Thước kẻ",
+              "image": null
+            },
+            {
+              "option_id": "my-classroom-q8-3",
+              "label": "Cục tẩy",
+              "image": null
+            }
+          ],
+          "correctOptionId": "my-classroom-q8-1",
+          "feedbackCorrect": "Rất đúng! Bag là chiếc cặp sách (ba lô).",
+          "feedbackIncorrect": "Chưa đúng rồi. Bag dùng để đựng sách vở đến trường đó con."
+        },
+        {
+          "question_id": "my-classroom-q9",
+          "type": "word_choice",
+          "prompt_vi": "Đồ dùng nào bé cầm trên tay để tô màu và vẽ những bông hoa xinh xắn?",
+          "questionAudioText": "Pencil",
+          "options": [
+            {
+              "option_id": "my-classroom-q9-1",
+              "label": "Pencil",
+              "image": null
+            },
+            {
+              "option_id": "my-classroom-q9-2",
+              "label": "Bag",
+              "image": null
+            },
+            {
+              "option_id": "my-classroom-q9-3",
+              "label": "Book",
+              "image": null
+            }
+          ],
+          "correctOptionId": "my-classroom-q9-1",
+          "feedbackCorrect": "Đúng rồi! Chiếc bút chì Pencil giúp bé vẽ nên những bức tranh tuyệt đẹp!",
+          "feedbackIncorrect": "Nghĩ thử xem nào, đồ vật nào có ngòi nhọn để vẽ tranh?"
+        },
+        {
+          "question_id": "my-classroom-q10",
+          "type": "word_choice",
+          "prompt_vi": "Bé hoàn thành câu nhé: 'This is a ___.' (Nhìn hình quyển sách mở ra)",
+          "questionAudioText": "This is a book.",
+          "options": [
+            {
+              "option_id": "my-classroom-q10-1",
+              "label": "Book",
+              "image": null
+            },
+            {
+              "option_id": "my-classroom-q10-2",
+              "label": "Pencil",
+              "image": null
+            },
+            {
+              "option_id": "my-classroom-q10-3",
+              "label": "Bag",
+              "image": null
+            }
+          ],
+          "correctOptionId": "my-classroom-q10-1",
+          "feedbackCorrect": "Xuất sắc! 'This is a book.' - Đây là một quyển sách!",
+          "feedbackIncorrect": "Con nhìn lại hình xem đây là quyển sách Book hay chiếc cặp Bag nhé!"
         }
       ],
       "reward": {
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/rewards/sticker.svg",
+          "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -459,7 +761,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/read/page-1.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -481,7 +783,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/read/page-2.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -499,7 +801,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/scenes/scene-1.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -509,7 +811,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/scenes/scene-2.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -519,7 +821,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/scenes/scene-3.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -529,7 +831,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/read/page-1.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -549,7 +851,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/read/page-2.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -579,7 +881,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/thumb.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -615,7 +917,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/thumb.svg",
+          "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -629,7 +931,7 @@
             "audio_text_en": "Look! Red!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/scenes/scene-1.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -643,7 +945,7 @@
             "audio_text_en": "Say Blue!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/scenes/scene-2.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -657,7 +959,7 @@
             "audio_text_en": "Great! Yellow!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/scenes/scene-3.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -671,7 +973,7 @@
           "emoji": "red",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/vocabulary/red.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/vocabulary/red.png",
             "type": "image",
             "status": "pending"
           },
@@ -683,7 +985,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/stickers/red.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/stickers/red.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -695,7 +997,7 @@
           "emoji": "blue",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/vocabulary/blue.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/vocabulary/blue.png",
             "type": "image",
             "status": "pending"
           },
@@ -707,7 +1009,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/stickers/blue.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/stickers/blue.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -719,7 +1021,7 @@
           "emoji": "yellow",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/vocabulary/yellow.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/vocabulary/yellow.png",
             "type": "image",
             "status": "pending"
           },
@@ -731,7 +1033,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/stickers/yellow.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/stickers/yellow.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -749,7 +1051,7 @@
             "label": "Red",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/games/red.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/games/red.png",
               "type": "image",
               "status": "pending"
             }
@@ -759,7 +1061,7 @@
             "label": "Blue",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/games/blue.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/games/blue.png",
               "type": "image",
               "status": "pending"
             }
@@ -769,7 +1071,7 @@
             "label": "Yellow",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/games/yellow.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/games/yellow.png",
               "type": "image",
               "status": "pending"
             }
@@ -806,7 +1108,7 @@
             "label": "Red",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/activities/red.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/activities/red.png",
               "type": "image",
               "status": "pending"
             }
@@ -816,7 +1118,7 @@
             "label": "Blue",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/activities/blue.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/activities/blue.png",
               "type": "image",
               "status": "pending"
             }
@@ -826,7 +1128,7 @@
             "label": "Yellow",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/activities/yellow.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/activities/yellow.png",
               "type": "image",
               "status": "pending"
             }
@@ -846,7 +1148,7 @@
               "label": "Red",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q1-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -856,7 +1158,7 @@
               "label": "Blue",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q1-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -866,7 +1168,7 @@
               "label": "Yellow",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q1-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -887,7 +1189,7 @@
               "label": "màu xanh dương",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q2-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -897,7 +1199,7 @@
               "label": "màu đỏ",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q2-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -907,7 +1209,7 @@
               "label": "màu vàng",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q2-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -928,7 +1230,7 @@
               "label": "Red",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q3-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -938,7 +1240,7 @@
               "label": "Yellow",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q3-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -948,7 +1250,7 @@
               "label": "Blue",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q3-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/quiz/color-hunt-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -963,7 +1265,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/rewards/sticker.svg",
+          "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -986,7 +1288,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/read/page-1.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -1008,7 +1310,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/read/page-2.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -1026,7 +1328,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/scenes/scene-1.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -1036,7 +1338,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/scenes/scene-2.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -1046,7 +1348,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/scenes/scene-3.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -1056,7 +1358,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/read/page-1.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -1076,7 +1378,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/read/page-2.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -1106,7 +1408,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/thumb.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -1142,7 +1444,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-school-food-english-5-7/lessons/number-play/thumb.svg",
+          "path": "courses/momo-school-food-english-5-7/lessons/number-play/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -1156,7 +1458,7 @@
             "audio_text_en": "Look! One!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/number-play/scenes/scene-1.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/number-play/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -1170,7 +1472,7 @@
             "audio_text_en": "Say Two!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/number-play/scenes/scene-2.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/number-play/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -1184,7 +1486,7 @@
             "audio_text_en": "Great! Three!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/number-play/scenes/scene-3.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/number-play/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -1198,7 +1500,7 @@
           "emoji": "one",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/number-play/vocabulary/one.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/number-play/vocabulary/one.png",
             "type": "image",
             "status": "pending"
           },
@@ -1210,7 +1512,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/number-play/stickers/one.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/number-play/stickers/one.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1222,7 +1524,7 @@
           "emoji": "two",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/number-play/vocabulary/two.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/number-play/vocabulary/two.png",
             "type": "image",
             "status": "pending"
           },
@@ -1234,7 +1536,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/number-play/stickers/two.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/number-play/stickers/two.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1246,7 +1548,7 @@
           "emoji": "three",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/number-play/vocabulary/three.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/number-play/vocabulary/three.png",
             "type": "image",
             "status": "pending"
           },
@@ -1258,7 +1560,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/number-play/stickers/three.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/number-play/stickers/three.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1276,7 +1578,7 @@
             "label": "One",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/number-play/games/one.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/number-play/games/one.png",
               "type": "image",
               "status": "pending"
             }
@@ -1286,7 +1588,7 @@
             "label": "Two",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/number-play/games/two.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/number-play/games/two.png",
               "type": "image",
               "status": "pending"
             }
@@ -1296,7 +1598,7 @@
             "label": "Three",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/number-play/games/three.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/number-play/games/three.png",
               "type": "image",
               "status": "pending"
             }
@@ -1333,7 +1635,7 @@
             "label": "One",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/number-play/activities/one.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/number-play/activities/one.png",
               "type": "image",
               "status": "pending"
             }
@@ -1343,7 +1645,7 @@
             "label": "Two",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/number-play/activities/two.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/number-play/activities/two.png",
               "type": "image",
               "status": "pending"
             }
@@ -1353,7 +1655,7 @@
             "label": "Three",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/number-play/activities/three.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/number-play/activities/three.png",
               "type": "image",
               "status": "pending"
             }
@@ -1373,7 +1675,7 @@
               "label": "One",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q1-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1383,7 +1685,7 @@
               "label": "Two",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q1-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1393,7 +1695,7 @@
               "label": "Three",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q1-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1414,7 +1716,7 @@
               "label": "số hai",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q2-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1424,7 +1726,7 @@
               "label": "số một",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q2-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1434,7 +1736,7 @@
               "label": "số ba",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q2-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1455,7 +1757,7 @@
               "label": "One",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q3-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1465,7 +1767,7 @@
               "label": "Three",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q3-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1475,7 +1777,7 @@
               "label": "Two",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q3-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/number-play/quiz/number-play-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1490,7 +1792,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-school-food-english-5-7/lessons/number-play/rewards/sticker.svg",
+          "path": "courses/momo-school-food-english-5-7/lessons/number-play/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -1513,7 +1815,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/number-play/read/page-1.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/number-play/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -1535,7 +1837,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/number-play/read/page-2.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/number-play/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -1553,7 +1855,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/number-play/scenes/scene-1.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/number-play/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -1563,7 +1865,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/number-play/scenes/scene-2.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/number-play/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -1573,7 +1875,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/number-play/scenes/scene-3.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/number-play/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -1583,7 +1885,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/number-play/read/page-1.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/number-play/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -1603,7 +1905,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/number-play/read/page-2.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/number-play/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -1633,7 +1935,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/number-play/thumb.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/number-play/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -1669,7 +1971,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/thumb.svg",
+          "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -1683,7 +1985,7 @@
             "audio_text_en": "Look! Rice!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/scenes/scene-1.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -1697,7 +1999,7 @@
             "audio_text_en": "Say Egg!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/scenes/scene-2.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -1711,7 +2013,7 @@
             "audio_text_en": "Great! Juice!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/scenes/scene-3.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -1725,7 +2027,7 @@
           "emoji": "rice",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/vocabulary/rice.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/vocabulary/rice.png",
             "type": "image",
             "status": "pending"
           },
@@ -1737,7 +2039,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/stickers/rice.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/stickers/rice.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1749,7 +2051,7 @@
           "emoji": "egg",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/vocabulary/egg.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/vocabulary/egg.png",
             "type": "image",
             "status": "pending"
           },
@@ -1761,7 +2063,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/stickers/egg.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/stickers/egg.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1773,7 +2075,7 @@
           "emoji": "juice",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/vocabulary/juice.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/vocabulary/juice.png",
             "type": "image",
             "status": "pending"
           },
@@ -1785,7 +2087,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/stickers/juice.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/stickers/juice.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -1803,7 +2105,7 @@
             "label": "Rice",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/games/rice.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/games/rice.png",
               "type": "image",
               "status": "pending"
             }
@@ -1813,7 +2115,7 @@
             "label": "Egg",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/games/egg.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/games/egg.png",
               "type": "image",
               "status": "pending"
             }
@@ -1823,7 +2125,7 @@
             "label": "Juice",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/games/juice.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/games/juice.png",
               "type": "image",
               "status": "pending"
             }
@@ -1860,7 +2162,7 @@
             "label": "Rice",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/activities/rice.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/activities/rice.png",
               "type": "image",
               "status": "pending"
             }
@@ -1870,7 +2172,7 @@
             "label": "Egg",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/activities/egg.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/activities/egg.png",
               "type": "image",
               "status": "pending"
             }
@@ -1880,7 +2182,7 @@
             "label": "Juice",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/activities/juice.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/activities/juice.png",
               "type": "image",
               "status": "pending"
             }
@@ -1900,7 +2202,7 @@
               "label": "Rice",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q1-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1910,7 +2212,7 @@
               "label": "Egg",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q1-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1920,7 +2222,7 @@
               "label": "Juice",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q1-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1941,7 +2243,7 @@
               "label": "trứng",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q2-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1951,7 +2253,7 @@
               "label": "cơm",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q2-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1961,7 +2263,7 @@
               "label": "nước ép",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q2-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1982,7 +2284,7 @@
               "label": "Rice",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q3-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -1992,7 +2294,7 @@
               "label": "Juice",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q3-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2002,7 +2304,7 @@
               "label": "Egg",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q3-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/quiz/lunch-box-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2017,7 +2319,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/rewards/sticker.svg",
+          "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -2040,7 +2342,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/read/page-1.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -2062,7 +2364,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/read/page-2.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -2080,7 +2382,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/scenes/scene-1.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -2090,7 +2392,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/scenes/scene-2.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -2100,7 +2402,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/scenes/scene-3.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -2110,7 +2412,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/read/page-1.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -2130,7 +2432,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/read/page-2.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -2160,7 +2462,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/thumb.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -2196,7 +2498,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-school-food-english-5-7/lessons/action-time/thumb.svg",
+          "path": "courses/momo-school-food-english-5-7/lessons/action-time/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -2210,7 +2512,7 @@
             "audio_text_en": "Look! Run!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/action-time/scenes/scene-1.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/action-time/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -2224,7 +2526,7 @@
             "audio_text_en": "Say Jump!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/action-time/scenes/scene-2.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/action-time/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -2238,7 +2540,7 @@
             "audio_text_en": "Great! Clap!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/action-time/scenes/scene-3.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/action-time/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -2252,7 +2554,7 @@
           "emoji": "run",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/action-time/vocabulary/run.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/action-time/vocabulary/run.png",
             "type": "image",
             "status": "pending"
           },
@@ -2264,7 +2566,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/action-time/stickers/run.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/action-time/stickers/run.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2276,7 +2578,7 @@
           "emoji": "jump",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/action-time/vocabulary/jump.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/action-time/vocabulary/jump.png",
             "type": "image",
             "status": "pending"
           },
@@ -2288,7 +2590,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/action-time/stickers/jump.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/action-time/stickers/jump.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2300,7 +2602,7 @@
           "emoji": "clap",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/action-time/vocabulary/clap.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/action-time/vocabulary/clap.png",
             "type": "image",
             "status": "pending"
           },
@@ -2312,7 +2614,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/action-time/stickers/clap.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/action-time/stickers/clap.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2330,7 +2632,7 @@
             "label": "Run",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/action-time/games/run.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/action-time/games/run.png",
               "type": "image",
               "status": "pending"
             }
@@ -2340,7 +2642,7 @@
             "label": "Jump",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/action-time/games/jump.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/action-time/games/jump.png",
               "type": "image",
               "status": "pending"
             }
@@ -2350,7 +2652,7 @@
             "label": "Clap",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/action-time/games/clap.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/action-time/games/clap.png",
               "type": "image",
               "status": "pending"
             }
@@ -2387,7 +2689,7 @@
             "label": "Run",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/action-time/activities/run.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/action-time/activities/run.png",
               "type": "image",
               "status": "pending"
             }
@@ -2397,7 +2699,7 @@
             "label": "Jump",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/action-time/activities/jump.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/action-time/activities/jump.png",
               "type": "image",
               "status": "pending"
             }
@@ -2407,7 +2709,7 @@
             "label": "Clap",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/action-time/activities/clap.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/action-time/activities/clap.png",
               "type": "image",
               "status": "pending"
             }
@@ -2427,7 +2729,7 @@
               "label": "Run",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q1-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2437,7 +2739,7 @@
               "label": "Jump",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q1-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2447,7 +2749,7 @@
               "label": "Clap",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q1-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2468,7 +2770,7 @@
               "label": "nhảy",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q2-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2478,7 +2780,7 @@
               "label": "chạy",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q2-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2488,7 +2790,7 @@
               "label": "vỗ tay",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q2-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2509,7 +2811,7 @@
               "label": "Run",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q3-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2519,7 +2821,7 @@
               "label": "Clap",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q3-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2529,7 +2831,7 @@
               "label": "Jump",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q3-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/action-time/quiz/action-time-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -2544,7 +2846,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-school-food-english-5-7/lessons/action-time/rewards/sticker.svg",
+          "path": "courses/momo-school-food-english-5-7/lessons/action-time/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -2567,7 +2869,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/action-time/read/page-1.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/action-time/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -2589,7 +2891,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/action-time/read/page-2.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/action-time/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -2607,7 +2909,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/action-time/scenes/scene-1.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/action-time/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -2617,7 +2919,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/action-time/scenes/scene-2.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/action-time/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -2627,7 +2929,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/action-time/scenes/scene-3.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/action-time/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -2637,7 +2939,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/action-time/read/page-1.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/action-time/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -2657,7 +2959,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/action-time/read/page-2.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/action-time/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -2687,7 +2989,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/action-time/thumb.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/action-time/thumb.png",
             "type": "image",
             "status": "pending"
           },
@@ -2723,7 +3025,7 @@
         },
         "thumbnail": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-school-food-english-5-7/lessons/school-review/thumb.svg",
+          "path": "courses/momo-school-food-english-5-7/lessons/school-review/thumb.png",
           "type": "image",
           "status": "pending"
         },
@@ -2737,7 +3039,7 @@
             "audio_text_en": "Look! Book!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/school-review/scenes/scene-1.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/school-review/scenes/scene-1.png",
               "type": "image",
               "status": "pending"
             }
@@ -2751,7 +3053,7 @@
             "audio_text_en": "Say Red!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/school-review/scenes/scene-2.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/school-review/scenes/scene-2.png",
               "type": "image",
               "status": "pending"
             }
@@ -2765,7 +3067,7 @@
             "audio_text_en": "Great! Three!",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/school-review/scenes/scene-3.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/school-review/scenes/scene-3.png",
               "type": "image",
               "status": "pending"
             }
@@ -2779,7 +3081,7 @@
           "emoji": "book",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/vocabulary/book.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/vocabulary/book.png",
             "type": "image",
             "status": "pending"
           },
@@ -2791,7 +3093,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/stickers/book.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/stickers/book.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2803,7 +3105,7 @@
           "emoji": "red",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/vocabulary/red.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/vocabulary/red.png",
             "type": "image",
             "status": "pending"
           },
@@ -2815,7 +3117,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/stickers/red.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/stickers/red.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2827,7 +3129,7 @@
           "emoji": "three",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/vocabulary/three.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/vocabulary/three.png",
             "type": "image",
             "status": "pending"
           },
@@ -2839,7 +3141,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/stickers/three.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/stickers/three.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2851,7 +3153,7 @@
           "emoji": "run",
           "image": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/vocabulary/run.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/vocabulary/run.png",
             "type": "image",
             "status": "pending"
           },
@@ -2863,7 +3165,7 @@
           },
           "sticker": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/stickers/run.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/stickers/run.png",
             "type": "sticker",
             "status": "pending"
           },
@@ -2881,7 +3183,7 @@
             "label": "Book",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/school-review/games/book.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/school-review/games/book.png",
               "type": "image",
               "status": "pending"
             }
@@ -2891,7 +3193,7 @@
             "label": "Red",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/school-review/games/red.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/school-review/games/red.png",
               "type": "image",
               "status": "pending"
             }
@@ -2901,7 +3203,7 @@
             "label": "Three",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/school-review/games/three.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/school-review/games/three.png",
               "type": "image",
               "status": "pending"
             }
@@ -2911,7 +3213,7 @@
             "label": "Run",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/school-review/games/run.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/school-review/games/run.png",
               "type": "image",
               "status": "pending"
             }
@@ -2948,7 +3250,7 @@
             "label": "Book",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/school-review/activities/book.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/school-review/activities/book.png",
               "type": "image",
               "status": "pending"
             }
@@ -2958,7 +3260,7 @@
             "label": "Red",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/school-review/activities/red.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/school-review/activities/red.png",
               "type": "image",
               "status": "pending"
             }
@@ -2968,7 +3270,7 @@
             "label": "Three",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/school-review/activities/three.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/school-review/activities/three.png",
               "type": "image",
               "status": "pending"
             }
@@ -2978,7 +3280,7 @@
             "label": "Run",
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/school-review/activities/run.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/school-review/activities/run.png",
               "type": "image",
               "status": "pending"
             }
@@ -2998,7 +3300,7 @@
               "label": "Book",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q1-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q1-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3008,7 +3310,7 @@
               "label": "Red",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q1-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q1-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3018,7 +3320,7 @@
               "label": "Three",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q1-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q1-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3039,7 +3341,7 @@
               "label": "màu đỏ",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q2-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q2-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3049,7 +3351,7 @@
               "label": "quyển sách",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q2-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q2-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3059,7 +3361,7 @@
               "label": "số ba",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q2-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q2-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3080,7 +3382,7 @@
               "label": "Book",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q3-1.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q3-1.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3090,7 +3392,7 @@
               "label": "Three",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q3-2.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q3-2.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3100,7 +3402,7 @@
               "label": "Red",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q3-3.svg",
+                "path": "courses/momo-school-food-english-5-7/lessons/school-review/quiz/school-review-q3-3.png",
                 "type": "image",
                 "status": "pending"
               }
@@ -3115,7 +3417,7 @@
         "xp": 80,
         "sticker": {
           "bucket": "learnar-assets",
-          "path": "courses/momo-school-food-english-5-7/lessons/school-review/rewards/sticker.svg",
+          "path": "courses/momo-school-food-english-5-7/lessons/school-review/rewards/sticker.png",
           "type": "sticker",
           "status": "pending"
         },
@@ -3138,7 +3440,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/school-review/read/page-1.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/school-review/read/page-1.png",
               "type": "image",
               "status": "pending"
             },
@@ -3160,7 +3462,7 @@
             ],
             "image": {
               "bucket": "learnar-assets",
-              "path": "courses/momo-school-food-english-5-7/lessons/school-review/read/page-2.svg",
+              "path": "courses/momo-school-food-english-5-7/lessons/school-review/read/page-2.png",
               "type": "image",
               "status": "pending"
             },
@@ -3178,7 +3480,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/scenes/scene-1.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/scenes/scene-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -3188,7 +3490,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/scenes/scene-2.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/scenes/scene-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -3198,7 +3500,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/scenes/scene-3.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/scenes/scene-3.png",
             "type": "image",
             "status": "pending"
           },
@@ -3208,7 +3510,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/read/page-1.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/read/page-1.png",
             "type": "image",
             "status": "pending"
           },
@@ -3228,7 +3530,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/read/page-2.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/read/page-2.png",
             "type": "image",
             "status": "pending"
           },
@@ -3258,7 +3560,7 @@
         {
           "asset": {
             "bucket": "learnar-assets",
-            "path": "courses/momo-school-food-english-5-7/lessons/school-review/thumb.svg",
+            "path": "courses/momo-school-food-english-5-7/lessons/school-review/thumb.png",
             "type": "image",
             "status": "pending"
           },
