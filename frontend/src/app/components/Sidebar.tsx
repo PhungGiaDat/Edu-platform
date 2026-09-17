@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { DailyGoal } from '@/features/gamification/components/DailyGoal';
@@ -33,6 +33,8 @@ interface TrackerStats {
     totalXp: number;
     percent: number;
 }
+
+const MOBILE_NAV_IDLE_MS = 1200;
 
 const BookIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' }) => (
     <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -572,8 +574,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
     const [progress, setProgress] = useState<UserProgress[]>([]);
     const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
     const [isMobileNavVisible, setIsMobileNavVisible] = useState(true);
-    const lastScrollYRef = useRef(0);
-    const tickingRef = useRef(false);
+    const mobileNavIdleTimerRef = useRef<number | null>(null);
     const moreButtonRef = useRef<HTMLButtonElement>(null);
     const mobileSheetRef = useRef<HTMLDivElement>(null);
     const previousPathRef = useRef(location.pathname);
@@ -583,60 +584,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
         ? fullNavItems.filter((item) => item.path === '/courses' || item.path === '/learn-ar-xr')
         : fullNavItems;
 
+    const clearMobileNavIdleTimer = useCallback(() => {
+        if (mobileNavIdleTimerRef.current === null) return;
+        window.clearTimeout(mobileNavIdleTimerRef.current);
+        mobileNavIdleTimerRef.current = null;
+    }, []);
+
+    const scheduleMobileNavHide = useCallback(() => {
+        clearMobileNavIdleTimer();
+        mobileNavIdleTimerRef.current = window.setTimeout(() => {
+            mobileNavIdleTimerRef.current = null;
+            setIsMobileNavVisible(false);
+        }, MOBILE_NAV_IDLE_MS);
+    }, [clearMobileNavIdleTimer]);
+
     useEffect(() => {
         setIsMobileNavVisible(true);
-        lastScrollYRef.current = typeof window !== 'undefined' ? Math.max(0, window.scrollY || 0) : 0;
-    }, [location.pathname]);
+        if (!isMobileMoreOpen) scheduleMobileNavHide();
+
+        return clearMobileNavIdleTimer;
+    }, [clearMobileNavIdleTimer, isMobileMoreOpen, location.pathname, scheduleMobileNavHide]);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
         const handleScroll = () => {
-            if (tickingRef.current) return;
-
-            tickingRef.current = true;
-            window.requestAnimationFrame(() => {
-                tickingRef.current = false;
-
-                if (isMobileMoreOpen) {
-                    setIsMobileNavVisible(true);
-                    return;
-                }
-
-                const currentScrollY = Math.max(0, window.scrollY || document.documentElement.scrollTop || 0);
-                const lastScrollY = lastScrollYRef.current;
-                const diff = currentScrollY - lastScrollY;
-
-                // Deadband threshold to eliminate jitter from micro finger movements (iPhone touch)
-                const SCROLL_THRESHOLD = 10;
-
-                // Always reveal near top of page (including iOS bounce rubber-band)
-                if (currentScrollY <= 20) {
-                    setIsMobileNavVisible(true);
-                } else if (Math.abs(diff) >= SCROLL_THRESHOLD) {
-                    const maxScrollY = document.documentElement.scrollHeight - window.innerHeight;
-                    const isNearBottom = currentScrollY >= maxScrollY - 24;
-
-                    if (isNearBottom) {
-                        setIsMobileNavVisible(true);
-                    } else if (diff > 0) {
-                        // Scrolling DOWN -> hide navbar (Facebook-style)
-                        setIsMobileNavVisible(false);
-                    } else {
-                        // Scrolling UP -> reveal navbar
-                        setIsMobileNavVisible(true);
-                    }
-                }
-
-                lastScrollYRef.current = currentScrollY;
-            });
+            if (isMobileMoreOpen) return;
+            setIsMobileNavVisible(true);
+            scheduleMobileNavHide();
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => {
             window.removeEventListener('scroll', handleScroll);
         };
-    }, [isMobileMoreOpen]);
+    }, [isMobileMoreOpen, scheduleMobileNavHide]);
 
     useEffect(() => {
         let cancelled = false;

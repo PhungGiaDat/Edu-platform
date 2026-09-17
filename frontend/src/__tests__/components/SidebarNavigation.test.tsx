@@ -6,7 +6,7 @@
  * provisioning the whole app context stack.
  */
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
@@ -83,5 +83,41 @@ describe('Sidebar — Dictionary & Notebook entries', () => {
       </MemoryRouter>
     );
     expect(container.querySelector('.learner-mobile-nav')).toBeNull();
+  });
+
+  it('shows while scrolling and hides 1200ms after the last scroll event', () => {
+    vi.useFakeTimers();
+    try {
+      vi.mocked(useAuth).mockReturnValue(authedUser);
+      vi.mocked(useLocale).mockReturnValue(localeEn);
+      const { container } = renderSidebar();
+      const mobileNav = container.querySelector('.learner-mobile-nav');
+
+      expect(mobileNav).not.toHaveClass('learner-mobile-nav--hidden');
+
+      act(() => {
+        vi.advanceTimersByTime(1200);
+      });
+      expect(mobileNav).toHaveClass('learner-mobile-nav--hidden');
+
+      act(() => {
+        window.dispatchEvent(new Event('scroll'));
+      });
+      expect(mobileNav).not.toHaveClass('learner-mobile-nav--hidden');
+
+      act(() => {
+        vi.advanceTimersByTime(900);
+        window.dispatchEvent(new Event('scroll'));
+        vi.advanceTimersByTime(900);
+      });
+      expect(mobileNav).not.toHaveClass('learner-mobile-nav--hidden');
+
+      act(() => {
+        vi.advanceTimersByTime(300);
+      });
+      expect(mobileNav).toHaveClass('learner-mobile-nav--hidden');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
