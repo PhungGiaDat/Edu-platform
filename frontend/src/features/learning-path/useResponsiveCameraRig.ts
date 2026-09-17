@@ -8,15 +8,16 @@ export interface CameraRig {
   heightOffset: number;
 }
 
-const WIDE: CameraRig = { fov: 50, backDistance: 6, heightOffset: 4 };
+const WIDE: CameraRig = { fov: 50, backDistance: 5.4, heightOffset: 3.4 };
 /**
  * Mobile is NOT just "wider fov" — a wide fov alone shrinks every object in
  * frame. A narrow viewport instead gets a noticeably CLOSER camera (smaller
  * backDistance/heightOffset) with only a modest fov bump, so the current
  * node and its neighbors read as large, legible landmarks instead of tiny
- * dots on a wide establishing shot.
+ * dots on a wide establishing shot. Pulled in further than the first pass —
+ * screenshots still showed too much empty ground around a small world.
  */
-const NARROW: CameraRig = { fov: 58, backDistance: 4.2, heightOffset: 3 };
+const NARROW: CameraRig = { fov: 56, backDistance: 3.7, heightOffset: 2.5 };
 
 /**
  * Tracks whether the viewport is narrower than `breakpointPx` and returns the

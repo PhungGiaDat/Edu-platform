@@ -8,6 +8,7 @@
 import React, { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 import { getCategoryPreset, type CategoryPreset } from '../categoryPresets';
 
 // ========== Component ==========
@@ -200,7 +201,7 @@ const Props: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
       return <SimpleProps preset={preset} />;
     case 'tree':
     default:
-      return <Trees preset={preset} />;
+      return <NatureClusters preset={preset} />;
   }
 };
 
@@ -293,130 +294,134 @@ const SimpleProps: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
   );
 };
 
-const Trees: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
-  const trunkRef = useRef<THREE.InstancedMesh>(null);
-  const leaves1Ref = useRef<THREE.InstancedMesh>(null);
-  const leaves2Ref = useRef<THREE.InstancedMesh>(null);
-  const leaves3Ref = useRef<THREE.InstancedMesh>(null);
+/**
+ * NatureClusters — the "nature" world (also the fallback for any unmapped
+ * category). Real Kenney low-poly nature-kit GLBs already ship in
+ * frontend/public/assets/models/ (tiny files, a few KB each); a procedural
+ * cream cone-tree read as generic-Three.js-demo. Foreground (flowers near
+ * the path edge) / midground (mushroom clusters, procedural rocks) /
+ * background (oak tree clusters) layering, plus a shallow stream, is what
+ * makes this a "nature world" rather than scattered props on flat ground.
+ */
+const TREE_MODEL_URL = '/assets/models/tree_oak.glb';
+const MUSHROOM_MODEL_URL = '/assets/models/mushroom_red.glb';
+const FLOWER_MODEL_URL = '/assets/models/flower_redA.glb';
 
-  const treePositions = PROP_POSITIONS;
+function useClonedInstances(url: string, count: number) {
+  const { scene } = useGLTF(url);
+  return useMemo(() => Array.from({ length: count }, () => scene.clone()), [scene, count]);
+}
 
-  // Generate random scales for each tree
-  const treeScales = useMemo(() => {
-    return treePositions.map(() => 0.8 + Math.random() * 0.4);
-  }, [treePositions]);
+const NatureClusters: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
+  const treeClones = useClonedInstances(TREE_MODEL_URL, PROP_POSITIONS.length);
+  const mushroomClones = useClonedInstances(MUSHROOM_MODEL_URL, 6);
+  const flowerClones = useClonedInstances(FLOWER_MODEL_URL, 10);
 
-  // Materials for instanced meshes
-  const trunkMaterial = useMemo(() => {
-    return new THREE.MeshToonMaterial({
-      color: new THREE.Color(preset.propColor),
-    });
-  }, [preset.propColor]);
+  const treeScales = useMemo(() => PROP_POSITIONS.map(() => 1.1 + Math.random() * 0.6), []);
+  const treeRotations = useMemo(() => PROP_POSITIONS.map(() => Math.random() * Math.PI * 2), []);
 
-  const leavesMaterial = useMemo(() => {
-    return new THREE.MeshToonMaterial({
-      color: new THREE.Color(preset.propAccent),
-    });
-  }, [preset.propAccent]);
+  // Midground: a small mushroom cluster tucked just inside the tree line.
+  const mushroomPositions = useMemo<Array<[number, number, number]>>(
+    () => [
+      [-1.6, 0, -1],
+      [-1.4, 0, 5],
+      [-1.7, 0, 11],
+      [1.6, 0, 2],
+      [1.5, 0, 8],
+      [1.8, 0, 14],
+    ],
+    [],
+  );
 
-  // Update instance matrices when positions change
-  useMemo(() => {
-    const matrix = new THREE.Matrix4();
-    const position = new THREE.Vector3();
-    const quaternion = new THREE.Quaternion();
-    const scale = new THREE.Vector3();
+  // Foreground: flowers hugging the path edge, closer in than the trees.
+  const flowerPositions = useMemo<Array<[number, number, number]>>(() => {
+    const positions: Array<[number, number, number]> = [];
+    for (let i = 0; i < 10; i++) {
+      const side = i % 2 === 0 ? -1 : 1;
+      positions.push([side * (0.9 + Math.random() * 0.3), 0, i * 2.2 - 2]);
+    }
+    return positions;
+  }, []);
 
-    treePositions.forEach((pos, i) => {
-      const s = treeScales[i];
-      const trunkHeight = 0.6 * s;
-      const trunkRadius = 0.12 * s;
+  // Rock material shared by every procedural rock instance.
+  const rockMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: '#9C9186', roughness: 0.95 }),
+    [],
+  );
+  const rockPositions = useMemo<Array<[number, number, number]>>(
+    () => [
+      [-2.6, 0, 2],
+      [2.7, 0, -1],
+      [-2.4, 0, 9],
+      [2.5, 0, 12],
+      [-2.8, 0, 17],
+    ],
+    [],
+  );
 
-      // Trunk instance
-      position.set(pos[0], pos[1] + trunkHeight / 2, pos[2]);
-      scale.set(trunkRadius * 0.7, trunkHeight, trunkRadius * 0.7);
-      matrix.compose(position, quaternion, scale);
-      if (trunkRef.current) {
-        trunkRef.current.setMatrixAt(i, matrix);
-      }
-
-      // Leaves layer 1
-      const leavesRadius = 0.5 * s;
-      const leavesHeight = 0.8 * s;
-      position.set(pos[0], pos[1] + trunkHeight + leavesHeight * 0.3, pos[2]);
-      scale.set(leavesRadius, leavesHeight * 0.6, leavesRadius);
-      matrix.compose(position, quaternion, scale);
-      if (leaves1Ref.current) {
-        leaves1Ref.current.setMatrixAt(i, matrix);
-      }
-
-      // Leaves layer 2
-      position.set(pos[0], pos[1] + trunkHeight + leavesHeight * 0.6, pos[2]);
-      scale.set(leavesRadius * 0.7, leavesHeight * 0.5, leavesRadius * 0.7);
-      matrix.compose(position, quaternion, scale);
-      if (leaves2Ref.current) {
-        leaves2Ref.current.setMatrixAt(i, matrix);
-      }
-
-      // Leaves layer 3
-      position.set(pos[0], pos[1] + trunkHeight + leavesHeight * 0.85, pos[2]);
-      scale.set(leavesRadius * 0.4, leavesHeight * 0.35, leavesRadius * 0.4);
-      matrix.compose(position, quaternion, scale);
-      if (leaves3Ref.current) {
-        leaves3Ref.current.setMatrixAt(i, matrix);
-      }
-    });
-
-    // Mark all instanced meshes as needing update
-    if (trunkRef.current) trunkRef.current.instanceMatrix.needsUpdate = true;
-    if (leaves1Ref.current) leaves1Ref.current.instanceMatrix.needsUpdate = true;
-    if (leaves2Ref.current) leaves2Ref.current.instanceMatrix.needsUpdate = true;
-    if (leaves3Ref.current) leaves3Ref.current.instanceMatrix.needsUpdate = true;
-  }, [treePositions, treeScales]);
+  const streamMaterial = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: '#6FB8D9',
+        roughness: 0.25,
+        metalness: 0.1,
+        transparent: true,
+        opacity: 0.75,
+      }),
+    [],
+  );
 
   return (
     <group>
-      {/* Trunk instanced mesh */}
-      <instancedMesh
-        ref={trunkRef}
-        args={[undefined, undefined, treePositions.length]}
-        castShadow
-      >
-        <cylinderGeometry args={[1, 1, 1, 8]} />
-        <primitive object={trunkMaterial} attach="material" />
-      </instancedMesh>
+      {/* Background: oak tree clusters along both edges of the corridor. */}
+      {treeClones.map((clone, i) => (
+        <primitive
+          key={`tree-${i}`}
+          object={clone}
+          position={PROP_POSITIONS[i]}
+          scale={treeScales[i]}
+          rotation={[0, treeRotations[i], 0]}
+        />
+      ))}
 
-      {/* Leaves layer 1 instanced mesh */}
-      <instancedMesh
-        ref={leaves1Ref}
-        args={[undefined, undefined, treePositions.length]}
-        castShadow
-      >
-        <coneGeometry args={[1, 1, 8]} />
-        <primitive object={leavesMaterial} attach="material" />
-      </instancedMesh>
+      {/* Midground: mushroom clusters + low procedural rocks. */}
+      {mushroomClones.map((clone, i) => (
+        <primitive key={`mushroom-${i}`} object={clone} position={mushroomPositions[i]} scale={0.6} />
+      ))}
+      {rockPositions.map((pos, i) => (
+        <mesh key={`rock-${i}`} position={[pos[0], 0.14, pos[2]]} scale={[0.35, 0.28, 0.3]} receiveShadow>
+          <icosahedronGeometry args={[1, 0]} />
+          <primitive object={rockMaterial} attach="material" />
+        </mesh>
+      ))}
 
-      {/* Leaves layer 2 instanced mesh */}
-      <instancedMesh
-        ref={leaves2Ref}
-        args={[undefined, undefined, treePositions.length]}
-        castShadow
-      >
-        <coneGeometry args={[1, 1, 8]} />
-        <primitive object={leavesMaterial} attach="material" />
-      </instancedMesh>
+      {/* Foreground: flowers hugging the path edge. */}
+      {flowerClones.map((clone, i) => (
+        <primitive key={`flower-${i}`} object={clone} position={flowerPositions[i]} scale={0.5} />
+      ))}
 
-      {/* Leaves layer 3 instanced mesh */}
-      <instancedMesh
-        ref={leaves3Ref}
-        args={[undefined, undefined, treePositions.length]}
-        castShadow
-      >
-        <coneGeometry args={[1, 1, 8]} />
-        <primitive object={leavesMaterial} attach="material" />
-      </instancedMesh>
+      {/* A shallow stream running alongside the corridor — lightweight
+          "river" visual idea, a single tinted plane rather than a
+          simulated water surface. */}
+      <mesh position={[-4.6, 0.02, 9]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[1.1, 24]} />
+        <primitive object={streamMaterial} attach="material" />
+      </mesh>
+
+      {/* Keep the prop-color/accent from the preset visible too, via the
+          grass-edge accent underlining the corridor (ties this category
+          system to the shared preset contract, not just hardcoded assets). */}
+      <mesh position={[0, 0.005, 9]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[7, 26]} />
+        <meshBasicMaterial color={preset.grassDark} transparent opacity={0.15} />
+      </mesh>
     </group>
   );
 };
+
+useGLTF.preload(TREE_MODEL_URL);
+useGLTF.preload(MUSHROOM_MODEL_URL);
+useGLTF.preload(FLOWER_MODEL_URL);
 
 // ========== Clouds ==========
 

@@ -34,16 +34,16 @@ describe('useResponsiveCameraRig', () => {
   it('returns a farther/wider rig on desktop widths', () => {
     mockMatchMedia(false);
     const { result } = renderHook(() => useResponsiveCameraRig(640));
-    expect(result.current).toEqual({ fov: 50, backDistance: 6, heightOffset: 4 });
+    expect(result.current).toEqual({ fov: 50, backDistance: 5.4, heightOffset: 3.4 });
   });
 
   it('returns a closer, only-modestly-wider rig on mobile widths (not fov alone)', () => {
     mockMatchMedia(true);
     const { result } = renderHook(() => useResponsiveCameraRig(640));
-    expect(result.current).toEqual({ fov: 58, backDistance: 4.2, heightOffset: 3 });
+    expect(result.current).toEqual({ fov: 56, backDistance: 3.7, heightOffset: 2.5 });
     // Mobile must be closer, not just wider-fov-at-the-same-distance.
-    expect(result.current.backDistance).toBeLessThan(6);
-    expect(result.current.heightOffset).toBeLessThan(4);
+    expect(result.current.backDistance).toBeLessThan(5.4);
+    expect(result.current.heightOffset).toBeLessThan(3.4);
   });
 
   it('updates live when the viewport crosses the breakpoint (resize/orientation change)', () => {
@@ -52,8 +52,8 @@ describe('useResponsiveCameraRig', () => {
     expect(result.current.fov).toBe(50);
 
     act(() => media.setMatches(true));
-    expect(result.current.fov).toBe(58);
-    expect(result.current.backDistance).toBe(4.2);
+    expect(result.current.fov).toBe(56);
+    expect(result.current.backDistance).toBe(3.7);
 
     act(() => media.setMatches(false));
     expect(result.current.fov).toBe(50);

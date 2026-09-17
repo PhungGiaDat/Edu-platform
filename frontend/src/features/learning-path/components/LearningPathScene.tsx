@@ -136,8 +136,8 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
           enablePan={false}
           enableZoom={true}
           enableRotate={true}
-          minDistance={3}
-          maxDistance={11}
+          minDistance={2.5}
+          maxDistance={9}
           minPolarAngle={0.4}
           maxPolarAngle={Math.PI / 2.15}
           makeDefault

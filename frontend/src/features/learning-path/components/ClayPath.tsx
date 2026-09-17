@@ -1,8 +1,10 @@
 /**
  * ClayPath.tsx
  *
- * Renders an extruded clay brick path along the learning journey spline.
- * Bricks are positioned along a CatmullRomCurve3 spline with a warm cream clay material.
+ * Renders a stepping-stone path along the learning journey spline.
+ * Sharp-edged staggered box "bricks" read as rough wooden planks; rounded
+ * stone discs with a playful side-to-side rhythm read as an intentional,
+ * child-friendly path instead.
  */
 
 import React, { useMemo } from 'react';
@@ -12,17 +14,17 @@ import type { LessonNode } from '@/types/learning-path';
 
 // ========== Constants ==========
 
-// A pale cream path on pale-green grass used to visually merge into the
-// terrain. Terracotta/stone reads as "road" against any of the category
-// grass tones and gives the layered contrast (terrain < path < node) the
-// composition needs.
-const CLAY_COLOR = '#D98A4E';
+// Warm stone tones — two shades lerped per-stone for organic variation
+// instead of one flat, obviously-repeated material.
+const STONE_COLOR_A = '#D98A4E';
+const STONE_COLOR_B = '#C77A3E';
 const CLAY_ACCENT = '#FFB347';
-const BRICK_WIDTH = 0.85;
-const BRICK_HEIGHT = 0.18;
-const BRICK_DEPTH = 0.55;
-const BRICK_SPACING = 0.42;
-const BRICK_ROWS = 2; // Number of parallel brick rows
+const STONE_RADIUS = 0.55;
+const STONE_HEIGHT = 0.16;
+const STONE_SPACING = 0.62;
+/** Alternating left/right offset so stones read as a playful stepping
+ * path rather than a single straight paved strip. */
+const SWAY_AMOUNT = 0.32;
 
 // ========== Component Props ==========
 
@@ -36,99 +38,84 @@ export interface ClayPathProps {
 // ========== Component ==========
 
 export const ClayPath: React.FC<ClayPathProps> = ({ nodes, currentProgress }) => {
-  // Generate brick data along the spline
-  const { bricks } = useMemo(() => {
+  // Generate stone data along the spline
+  const { stones } = useMemo(() => {
     const spline = createPathSpline();
     const length = spline.getLength();
 
-    const brickData: Array<{
+    const stoneData: Array<{
       position: THREE.Vector3;
       quaternion: THREE.Quaternion;
-      progress: number;
+      scale: number;
+      colorMix: number;
+      spin: number;
     }> = [];
 
-    // Calculate number of bricks needed
-    const numBricks = Math.floor(length / BRICK_SPACING);
+    const numStones = Math.floor(length / STONE_SPACING);
 
-    for (let i = 0; i < numBricks; i++) {
-      const progress = i / numBricks;
+    for (let i = 0; i < numStones; i++) {
+      const progress = i / numStones;
       const point = spline.getPointAt(progress);
       const tangent = spline.getTangentAt(progress);
 
-      // Create quaternion to orient brick along path
-      const quaternion = new THREE.Quaternion();
       const up = new THREE.Vector3(0, 1, 0);
+      const perpendicular = new THREE.Vector3().crossVectors(up, tangent).normalize();
+      const sway = Math.sin(i * 1.7) * SWAY_AMOUNT;
+      const position = point.clone().addScaledVector(perpendicular, sway);
+      position.y -= STONE_HEIGHT / 2 + 0.01;
+
+      const quaternion = new THREE.Quaternion();
       const axis = new THREE.Vector3().crossVectors(up, tangent).normalize();
-      const angle = Math.acos(up.dot(tangent));
+      const angle = Math.acos(Math.max(-1, Math.min(1, up.dot(tangent))));
       if (axis.length() > 0.001) {
         quaternion.setFromAxisAngle(axis, angle);
       }
 
-      brickData.push({
-        position: point.clone(),
+      stoneData.push({
+        position,
         quaternion,
-        progress,
+        scale: 0.85 + Math.abs(Math.sin(i * 2.3)) * 0.3,
+        colorMix: (i % 3) / 3,
+        spin: (i * 0.6) % (Math.PI * 2),
       });
     }
 
-    return { bricks: brickData, totalLength: length };
+    return { stones: stoneData };
   }, [nodes]);
 
-  // Create clay material
-  const clayMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: new THREE.Color(CLAY_COLOR),
-      roughness: 0.75,
-      metalness: 0,
-    });
+  const stoneGeometry = useMemo(() => new THREE.CylinderGeometry(STONE_RADIUS, STONE_RADIUS * 0.92, STONE_HEIGHT, 14), []);
+
+  const stoneMaterials = useMemo(() => {
+    const colorA = new THREE.Color(STONE_COLOR_A);
+    const colorB = new THREE.Color(STONE_COLOR_B);
+    // Precompute a small palette instead of allocating a material per stone.
+    return [0, 0.5, 1].map(
+      (t) =>
+        new THREE.MeshStandardMaterial({
+          color: colorA.clone().lerp(colorB, t),
+          roughness: 0.85,
+          metalness: 0,
+        }),
+    );
   }, []);
-
-  // Create brick geometry
-  const brickGeometry = useMemo(() => {
-    return new THREE.BoxGeometry(BRICK_WIDTH, BRICK_HEIGHT, BRICK_DEPTH);
-  }, []);
-
-  // Offset positions for multiple brick rows (staggered)
-  const getRowOffsets = (row: number): THREE.Vector3 => {
-    const offset = (row - (BRICK_ROWS - 1) / 2) * BRICK_WIDTH * 0.6;
-    return new THREE.Vector3(offset, 0, 0);
-  };
-
-  // Stagger pattern for natural clay look
-  const getStagger = (index: number): number => {
-    return (index % 2) * 0.15; // Alternate slight offset
-  };
 
   return (
     <group>
-      {bricks.map((brick, index) => (
-        <React.Fragment key={index}>
-          {Array.from({ length: BRICK_ROWS }).map((_, row) => {
-            const rowOffset = getRowOffsets(row);
-            rowOffset.applyQuaternion(brick.quaternion);
-
-            const position = brick.position.clone().add(rowOffset);
-            position.y -= BRICK_HEIGHT / 2 + 0.01; // Slight offset below surface
-
-            const stagger = getStagger(index);
-            const staggerOffset = new THREE.Vector3(stagger, 0, 0);
-            staggerOffset.applyQuaternion(brick.quaternion);
-            position.add(staggerOffset);
-
-            return (
-              <mesh
-                key={`${index}-${row}`}
-                geometry={brickGeometry}
-                material={clayMaterial}
-                position={[position.x, position.y, position.z]}
-                quaternion={brick.quaternion}
-                castShadow
-                receiveShadow
-              />
-            );
-          })}
-        </React.Fragment>
-      ))}
+      {stones.map((stone, index) => {
+        const rotation = new THREE.Euler().setFromQuaternion(stone.quaternion);
+        return (
+          <mesh
+            key={index}
+            geometry={stoneGeometry}
+            material={stoneMaterials[Math.round(stone.colorMix * 2)]}
+            position={[stone.position.x, stone.position.y, stone.position.z]}
+            rotation={[rotation.x, rotation.y + stone.spin * 0.15, rotation.z]}
+            scale={[stone.scale, 1, stone.scale]}
+            castShadow
+            receiveShadow
+          />
+        );
+      })}
 
       {/* Golden progress trail - shows completed portion of path */}
       {currentProgress > 0 && (
@@ -171,7 +158,7 @@ const ProgressTrail: React.FC<ProgressTrailProps> = ({ nodes, progress }) => {
 
     // Create spline from points
     const trailSpline = new THREE.CatmullRomCurve3(points);
-    return new THREE.TubeGeometry(trailSpline, 100, 0.25, 8, false);
+    return new THREE.TubeGeometry(trailSpline, 100, 0.2, 8, false);
   }, [nodes, progress]);
 
   const trailMaterial = useMemo(() => {
@@ -187,7 +174,7 @@ const ProgressTrail: React.FC<ProgressTrailProps> = ({ nodes, progress }) => {
   }, []);
 
   return (
-    <mesh geometry={trailGeometry}>
+    <mesh geometry={trailGeometry} position={[0, 0.02, 0]}>
       <primitive object={trailMaterial} />
     </mesh>
   );

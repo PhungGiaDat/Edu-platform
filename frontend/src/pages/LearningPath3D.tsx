@@ -171,32 +171,31 @@ export const LearningPath3D: React.FC = () => {
           Deliberately small: the previous version's tall single card ate
           35-40% of the mobile viewport and made the world read as secondary. */}
       <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-3">
-        <div className="pointer-events-auto mx-auto max-w-md rounded-xl bg-white/85 px-3 py-2 shadow-md backdrop-blur-sm">
-          <div className="flex items-center justify-between gap-2">
-            <h1 className="truncate text-xs font-extrabold text-gray-800">Learning Path</h1>
+        <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-2 rounded-xl bg-white/70 px-2.5 py-1.5 shadow-sm backdrop-blur-sm">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <h1 className="truncate text-[11px] font-extrabold text-gray-700">Learning Path</h1>
+              {path && (
+                <span className="shrink-0 text-[11px] font-bold text-amber-600">
+                  {path.completed_count}/{path.total_count}
+                </span>
+              )}
+            </div>
             {path && (
-              <span className="shrink-0 text-xs font-bold text-amber-600">
-                {path.completed_count}/{path.total_count}
-              </span>
+              <div className="mt-0.5 h-1 overflow-hidden rounded-full bg-gray-200/80">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
+                  style={{ width: `${Math.round(path.progress * 100)}%` }}
+                />
+              </div>
             )}
           </div>
 
-          {path && (
-            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-200">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
-                style={{ width: `${Math.round(path.progress * 100)}%` }}
-              />
-            </div>
-          )}
-
-          <div className="mt-1.5">
-            <CourseSelector
-              courses={joinedCourses}
-              selectedCourseId={selectedCourseId}
-              onSelect={handleCourseSwitch}
-            />
-          </div>
+          <CourseSelector
+            courses={joinedCourses}
+            selectedCourseId={selectedCourseId}
+            onSelect={handleCourseSwitch}
+          />
         </div>
       </div>
 

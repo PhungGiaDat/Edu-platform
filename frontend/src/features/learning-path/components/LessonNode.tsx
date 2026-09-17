@@ -196,13 +196,21 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
 
   return (
     <group position={[position.x, position.y, position.z]} quaternion={quaternion}>
-      {/* Raised platform — only the current node stands on one, so it reads
-          as a landmark stop on the journey rather than just a floating ball. */}
+      {/* Raised two-tier platform — only the current node stands on one, so
+          it reads as a landmark stop rather than a floating ball. A colored
+          rim band ties the stand to the node's own state color instead of
+          being a plain unrelated tan disc. */}
       {isCurrent && (
-        <mesh position={[0, -NODE_RADIUS - 0.12, 0]} receiveShadow>
-          <cylinderGeometry args={[NODE_RADIUS * 1.4, NODE_RADIUS * 1.55, 0.22, 16]} />
-          <meshStandardMaterial color="#FFE8B8" roughness={0.8} />
-        </mesh>
+        <group position={[0, -NODE_RADIUS - 0.06, 0]}>
+          <mesh position={[0, -0.14, 0]} receiveShadow castShadow>
+            <cylinderGeometry args={[NODE_RADIUS * 1.6, NODE_RADIUS * 1.75, 0.16, 20]} />
+            <meshStandardMaterial color="#FFE8B8" roughness={0.85} />
+          </mesh>
+          <mesh position={[0, -0.02, 0]} receiveShadow castShadow>
+            <cylinderGeometry args={[NODE_RADIUS * 1.15, NODE_RADIUS * 1.3, 0.16, 20]} />
+            <meshStandardMaterial color={STATE_COLORS.current} roughness={0.6} />
+          </mesh>
+        </group>
       )}
 
       {/* Vertical light beacon — visible from far away, even when the node
@@ -280,12 +288,21 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
         )}
       </Html>
 
+      {/* Thin signpost stem connecting the node to its label — without it
+          the label reads as pasted-on text floating disconnected in space. */}
+      {isCurrent && (
+        <mesh position={[0, NODE_RADIUS + 0.32, 0]}>
+          <cylinderGeometry args={[0.025, 0.025, 0.64, 6]} />
+          <meshStandardMaterial color="#FFFFFF" roughness={0.6} />
+        </mesh>
+      )}
+
       {/* Title + XP — CURRENT node only. Progressive disclosure: everything
           else stays a clean icon; full details live in LessonModal. */}
       {isCurrent && (
         <Html
           center
-          position={[0, NODE_RADIUS * 1.4 + 1.1, 0]}
+          position={[0, NODE_RADIUS + 0.7, 0]}
           style={{ pointerEvents: 'none', userSelect: 'none' }}
           distanceFactor={8}
         >

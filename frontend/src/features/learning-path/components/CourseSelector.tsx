@@ -34,26 +34,26 @@ export const CourseSelector: React.FC<CourseSelectorProps> = ({ courses, selecte
   const emoji = CATEGORY_EMOJI[selected.category_key] ?? '📚';
 
   return (
-    <div className="pointer-events-auto relative">
+    <div className="pointer-events-auto relative shrink-0">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-2 rounded-xl bg-white/90 px-3 py-1.5 text-left shadow-sm"
+        className="flex max-w-[9.5rem] items-center gap-1 rounded-lg bg-white px-2 py-1 text-left shadow-sm"
       >
-        <span className="flex min-w-0 items-center gap-1.5 text-xs font-bold text-gray-700">
+        <span className="flex min-w-0 items-center gap-1 text-[11px] font-bold text-gray-700">
           <span aria-hidden="true">{emoji}</span>
           <span className="truncate">{selected.category_label || selected.title_vi || selected.title}</span>
         </span>
-        <span className={`shrink-0 text-[10px] text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`}>▼</span>
+        <span className={`shrink-0 text-[9px] text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`}>▼</span>
       </button>
 
       {open && (
         <ul
           role="listbox"
           aria-label="Joined courses"
-          className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-xl bg-white p-1 shadow-lg"
+          className="absolute right-0 top-full z-20 mt-1 w-48 max-h-56 overflow-y-auto rounded-xl bg-white p-1 shadow-lg"
         >
           {courses.map((course) => {
             const isSelected = course.course_id === selectedCourseId;

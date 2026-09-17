@@ -8,12 +8,24 @@
 
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Float, useGLTF } from '@react-three/drei';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { createPathSpline, getPointOnSpline, getTangentOnSpline } from '@/lib/pathSpline';
 import type { Pet } from '@/hooks/usePets';
 
 // ========== Constants ==========
+
+/**
+ * A real, textured elephant asset already ships in the project
+ * (frontend/public/assets/models/elephant.glb — the same nature-kit family
+ * as the environment props). Most pets currently have no `model_url` set,
+ * which fell through to a plain white clay sphere — the "unfinished
+ * placeholder" the screenshot showed. Using this shipped asset as the
+ * default mascot means PetGuide is never that placeholder again.
+ */
+const DEFAULT_MASCOT_MODEL_URL = '/assets/models/elephant.glb';
+/** Unverified without a rendered frame — tune once visual QA is possible. */
+const MASCOT_SCALE = 0.55;
 
 const PET_HEIGHT_OFFSET = 0.55;
 const BOB_AMPLITUDE = 0.15;
@@ -104,12 +116,11 @@ export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, isCelebrating
     }
   });
 
-  // Use model if available, otherwise fallback to clay blob
-  if (pet.model_url) {
-    return <PetModel position={position} modelUrl={pet.model_url} groupRef={groupRef} isCelebrating={isCelebrating} />;
-  }
+  // A user's chosen pet always wins when it has a real model; otherwise the
+  // shipped elephant mascot replaces the old plain clay-sphere placeholder.
+  const modelUrl = pet.model_url || DEFAULT_MASCOT_MODEL_URL;
 
-  return <PetFallback position={position} groupRef={groupRef} isCelebrating={isCelebrating} />;
+  return <PetModel position={position} modelUrl={modelUrl} groupRef={groupRef} isCelebrating={isCelebrating} />;
 };
 
 // ========== Pet Model Component ==========
@@ -131,100 +142,18 @@ const PetModel: React.FC<{ position: THREE.Vector3; modelUrl: string; groupRef: 
 
   return (
     <group ref={groupRef} position={[position.x, position.y, position.z]}>
-      <primitive object={clonedScene} />
-      {/* Celebration particles */}
-      {isCelebrating && <CelebrationParticles position={[0, 0, 0]} />}
-    </group>
-  );
-};
-
-// ========== Pet Fallback Component (Claymorphic) ==========
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const PetFallback: React.FC<{ position: THREE.Vector3; groupRef: any; isCelebrating?: boolean }> = ({ position, groupRef, isCelebrating }) => {
-  return (
-    <group ref={groupRef} position={[position.x, position.y, position.z]}>
-      {/* Contact shadow — a flat dark disc grounds the pet on the terrain
+      {/* Contact shadow — a flat dark disc grounds the mascot on the terrain
           instead of it reading as floating. */}
       <mesh position={[0, -PET_HEIGHT_OFFSET + 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.4, 16]} />
+        <circleGeometry args={[0.45, 16]} />
         <meshBasicMaterial color="#000000" transparent opacity={0.18} />
       </mesh>
 
-      {/* Main body - clay blob */}
-      <mesh castShadow>
-        <sphereGeometry args={[0.6, 16, 16]} />
-        <meshStandardMaterial color="#FFB347" roughness={0.8} metalness={0} />
-      </mesh>
-
-      {/* Eyes for character */}
-      <Eyes />
-
-      {/* Float wrapper for idle animation */}
-      <Float speed={2} rotationIntensity={0} floatIntensity={0.3}>
-        <group />
-      </Float>
+      <primitive object={clonedScene} scale={MASCOT_SCALE} />
 
       {/* Celebration particles */}
       {isCelebrating && <CelebrationParticles position={[0, 0, 0]} />}
     </group>
-  );
-};
-
-// ========== Eyes Component ==========
-
-const Eyes: React.FC = () => {
-  const eyeMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: '#2D1B00',
-        roughness: 0.3,
-        metalness: 0.1,
-      }),
-    []
-  );
-
-  return (
-    <group position={[0, 0.18, 0.42]}>
-      {/* Left eye */}
-      <mesh position={[-0.15, 0, 0]} material={eyeMaterial}>
-        <sphereGeometry args={[0.08, 12, 12]} />
-      </mesh>
-
-      {/* Right eye */}
-      <mesh position={[0.15, 0, 0]} material={eyeMaterial}>
-        <sphereGeometry args={[0.08, 12, 12]} />
-      </mesh>
-
-      {/* Eye highlights */}
-      <EyeHighlight position={[-0.12, 0.02, 0.06]} />
-      <EyeHighlight position={[0.18, 0.02, 0.06]} />
-    </group>
-  );
-};
-
-// ========== Eye Highlight Component ==========
-
-interface EyeHighlightProps {
-  position: [number, number, number];
-}
-
-const EyeHighlight: React.FC<EyeHighlightProps> = ({ position }) => {
-  const highlightMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: '#FFFFFF',
-        emissive: '#FFFFFF',
-        emissiveIntensity: 0.5,
-        roughness: 0.1,
-      }),
-    []
-  );
-
-  return (
-    <mesh position={position} material={highlightMaterial}>
-      <sphereGeometry args={[0.025, 8, 8]} />
-    </mesh>
   );
 };
 
