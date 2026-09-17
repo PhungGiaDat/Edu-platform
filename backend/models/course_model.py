@@ -343,7 +343,7 @@ class LessonSessionStepState(BaseModel):
     best_score: int = 0
     passed: bool = False
     last_response: Dict[str, Any] = Field(default_factory=dict)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
 
