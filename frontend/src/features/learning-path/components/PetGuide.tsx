@@ -6,7 +6,7 @@
  * Pet faces the direction of travel and has walking bob animation.
  */
 
-import React, { useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -54,6 +54,16 @@ export interface PetGuideProps {
 // ========== Component ==========
 
 export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, isCelebrating = false }) => {
+  // /learning-path-3d is NOT code-split (App.tsx statically imports every
+  // route, this module included) — a module-level useGLTF.preload() here
+  // would start downloading the elephant for every visitor at app startup,
+  // not just Learning Path users. Preloading on mount instead still starts
+  // the fetch before PetModel's own useGLTF() suspends, but only once this
+  // component actually renders.
+  useEffect(() => {
+    useGLTF.preload(DEFAULT_MASCOT_MODEL_URL);
+  }, []);
+
   const groupRef = useRef<THREE.Group | null>(null);
   const targetRotation = useRef(0);
   const lastProgress = useRef(progress);
@@ -188,11 +198,6 @@ const CelebrationParticles: React.FC<CelebrationParticlesProps> = ({ position })
     </group>
   );
 };
-
-// Kick off the default mascot download as soon as this route's code loads,
-// in parallel with the rest of the scene setup, instead of only starting
-// once PetGuide first suspends.
-useGLTF.preload(DEFAULT_MASCOT_MODEL_URL);
 
 // ========== Export ==========
 
