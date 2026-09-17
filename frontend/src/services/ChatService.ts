@@ -83,6 +83,7 @@ export const ChatService = {
      */
     async streamChatMessage(
         question: string,
+        lessonContext: { courseId?: string; lessonId: string } | null,
         onToken: (token: string) => void,
         onComplete: () => void,
         onError: (kind: ChatErrorKind) => void,
@@ -103,6 +104,7 @@ export const ChatService = {
                 body: JSON.stringify({
                     question,
                     session_id: this.getSessionId(),
+                    lesson_context: lessonContext,
                 }),
             });
 

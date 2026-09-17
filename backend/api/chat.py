@@ -15,7 +15,7 @@ from core.security import get_current_user
 from repositories.postgres_user_repository import PostgresUser
 from services.ai_service import AIService, get_ai_service
 from services.agentic_rag_service import AgenticRAGService, get_agentic_rag_service
-from services.openrouter_chat_service import stream_chat_with_fallback
+from services.openrouter_chat_service import KID_SAFE_FALLBACK
 from repositories.postgres_chat_log_repository import (
     PostgresChatLogRepository,
     get_postgres_chat_log_repository,
@@ -48,6 +48,7 @@ class RAGChatRequest(BaseModel):
     question: str
     session_id: Optional[str] = None
     user_id: Optional[str] = None
+    lesson_context: Optional[Any] = None
     # Per-stage model overrides (optional — defaults from settings used if omitted)
     planner_model: Optional[str] = None
     generator_model: Optional[str] = None
@@ -116,58 +117,61 @@ async def get_chat_models():
 @router.post("/chat/stream")
 async def chat_stream(
     request: ChatStreamRequest,
+    agentic_rag: AgenticRAGService = Depends(get_agentic_rag_service),
     chat_repo: PostgresChatLogRepository = Depends(get_postgres_chat_log_repository),
     current_user: PostgresUser = Depends(get_current_user),
 ):
     """
-    Stream chat tokens via OpenRouter with 2-model failover.
-    Yields real-time Server-Sent Events (text/event-stream).
-    Saves user question and AI full reply to PostgresChatLogRepository upon stream completion.
+    SSE wrapper around the Planner -> Generator -> Validator agentic RAG pipeline.
+    The pipeline itself is non-streaming (one LLM call per stage); the final
+    validated response is chunked word-by-word so the frontend keeps its
+    existing token-by-token contract (data: {"token": ...} ... data: [DONE]).
+    Chat logging is handled inside agentic_rag.run()'s caller below, matching
+    /chat/rag (skipped on cache hit to avoid duplicate log rows).
     """
     session_id = request.session_id or str(uuid.uuid4())
     user_id = str(current_user.id)
 
-    recent_history: List[Dict[str, Any]] = []
-    try:
-        recent_history = await chat_repo.get_session_history(session_id=session_id, limit=4)
-    except Exception as e:
-        logger.debug(f"[LexiChat] Could not load session history: {e}")
-
     async def event_generator():
-        accumulated_tokens: List[str] = []
         try:
-            async for chunk in stream_chat_with_fallback(
+            result = await agentic_rag.run(
                 question=request.question,
-                recent_history=recent_history,
+                user_id=user_id,
+                session_id=session_id,
                 lesson_context=request.lesson_context,
-            ):
-                if chunk.startswith("data: ") and not chunk.startswith("data: ["):
-                    try:
-                        data = json.loads(chunk[6:].strip())
-                        token = data.get("token")
-                        if token:
-                            accumulated_tokens.append(token)
-                    except Exception:
-                        pass
-                yield chunk
-        finally:
-            full_reply = "".join(accumulated_tokens).strip()
-            if full_reply:
-                try:
-                    await chat_repo.log_message(
-                        session_id=session_id,
-                        user_id=user_id,
-                        message=request.question,
-                        sender="user",
-                    )
-                    await chat_repo.log_message(
-                        session_id=session_id,
-                        user_id=user_id,
-                        message=full_reply,
-                        sender="ai",
-                    )
-                except Exception as e:
-                    logger.warning(f"[LexiChat] Failed to log chat: {e}")
+            )
+            full_reply = result.get("response") or KID_SAFE_FALLBACK
+            if result.get("agent_trace"):
+                logger.info(f"[LexiChat] agent_trace={result['agent_trace']}")
+        except Exception as e:
+            logger.error(f"[LexiChat] AgenticRAG pipeline failed: {type(e).__name__}: {e}")
+            yield f"data: {json.dumps({'token': KID_SAFE_FALLBACK})}\n\n"
+            yield "data: [DONE]\n\n"
+            return
+
+        for word in full_reply.split(" "):
+            yield f"data: {json.dumps({'token': word + ' '})}\n\n"
+        yield "data: [DONE]\n\n"
+
+        if not result.get("cached"):
+            try:
+                await chat_repo.log_message(
+                    session_id=session_id,
+                    user_id=user_id,
+                    message=request.question,
+                    sender="user",
+                )
+                await chat_repo.log_message(
+                    session_id=session_id,
+                    user_id=user_id,
+                    message=full_reply,
+                    sender="ai",
+                    context_flashcard_ids=[
+                        s.get("word") for s in result.get("sources", []) if s.get("word")
+                    ],
+                )
+            except Exception as e:
+                logger.warning(f"[LexiChat] Failed to log chat: {e}")
 
     return StreamingResponse(
         event_generator(),
@@ -211,6 +215,7 @@ async def rag_chat(
         planner_model=request.planner_model,
         generator_model=request.generator_model,
         validator_model=request.validator_model,
+        lesson_context=request.lesson_context,
     )
 
     # Log conversation (skip if served from cache)

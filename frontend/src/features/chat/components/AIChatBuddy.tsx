@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { CodexPetSprite } from '@/features/pets/components/CodexPetSprite';
 import { ChatService, type ChatErrorKind } from '@/services/ChatService';
 
@@ -44,12 +44,33 @@ function AgentTrace({ trace }: { trace: string[] }) {
     );
 }
 
+// Lesson routes as declared in App.tsx — checked in order, first match wins.
+const LESSON_ROUTE_PATTERNS = [
+    '/courses/animals-adventure/lessons/:id',
+    '/courses/animals/lessons/:lessonId',
+    '/courses/:courseId/lessons/:lessonId',
+];
+
+function useLessonContext(): { courseId?: string; lessonId: string } | null {
+    const location = useLocation();
+    for (const pattern of LESSON_ROUTE_PATTERNS) {
+        const match = matchPath(pattern, location.pathname);
+        if (match) {
+            const lessonId = match.params.lessonId ?? match.params.id;
+            if (!lessonId) continue;
+            return { courseId: match.params.courseId, lessonId };
+        }
+    }
+    return null;
+}
+
 // ─── Main component ────────────────────────────────────────────────────────────
 export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
     initialOpen = false,
     show3DPet = true,
 }) => {
     const navigate = useNavigate();
+    const lessonContext = useLessonContext();
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [messages, setMessages] = useState<Message[]>([
         {
@@ -99,6 +120,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
         try {
             await ChatService.streamChatMessage(
                 text,
+                lessonContext,
                 (token: string) => {
                     setMessages((prev) =>
                         prev.map((msg) =>

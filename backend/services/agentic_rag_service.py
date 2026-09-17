@@ -268,6 +268,7 @@ class AgenticRAGService:
         user_id: Optional[str],
         model_override: Optional[str],
         agent_trace: List[str],
+        lesson_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Planner Agent: Analyse the question + user progress.
@@ -278,6 +279,9 @@ class AgenticRAGService:
         agent_trace.append("planner:start")
 
         progress_summary = await self._get_progress_summary(user_id)
+        lesson_id = (lesson_context or {}).get("lessonId")
+        if lesson_id:
+            progress_summary += f"\nĐang mở bài học: {lesson_id} (ưu tiên chủ đề này nếu câu hỏi liên quan)."
 
         async def do_call(llm: "BaseChatModel", inputs: Dict[str, Any]) -> str:
             chain = self.PLANNER_PROMPT | llm | self._parser
@@ -457,6 +461,7 @@ class AgenticRAGService:
         planner_model: Optional[str] = None,
         generator_model: Optional[str] = None,
         validator_model: Optional[str] = None,
+        lesson_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Run the full Planner → Generator → Validator pipeline.
@@ -499,7 +504,9 @@ class AgenticRAGService:
 
             # ── 2. PLANNER ────────────────────────────────────────────────────
             _t0 = time.perf_counter()
-            plan = await self._planner(question, user_id, planner_model, agent_trace)
+            plan = await self._planner(
+                question, user_id, planner_model, agent_trace, lesson_context
+            )
             mark_stage("planner", time.perf_counter() - _t0)
             await asyncio.sleep(INTER_AGENT_DELAY)
 
