@@ -458,6 +458,39 @@ describe('LearnAR8thWall transition UX', () => {
     expect(screen.getByText('Hold a card in the camera view.')).toBeInTheDocument();
   });
 
+  it('keeps capture mode learner-clean even when an authorized admin requests debug', async () => {
+    authState.user = {
+      id: 'admin-001',
+      email: 'admin@example.test',
+      username: 'admin',
+      role: 'admin',
+      roles: ['admin'],
+      is_superuser: false,
+    };
+
+    renderPage('/learn-ar-xr/claymorphic-animals-001?capture=true&debug=true');
+
+    expect(screen.getByRole('button', { name: /quay/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /AR/i })).toBeInTheDocument();
+    expect(screen.queryByText('MindAR')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /send scanning ar logs to telegram/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Phase:/)).not.toBeInTheDocument();
+
+    await act(async () => {
+      await getQRScannerProps().onDetected('cat001');
+    });
+
+    expect(screen.queryByText('Scanned')).not.toBeInTheDocument();
+    expect(screen.queryByText('1 card scanned')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('learner-ar-overlay')).not.toBeInTheDocument();
+
+    const viewerUrl = new URL(
+      screen.getByTitle('AR Viewer').getAttribute('src') || '',
+      window.location.origin,
+    );
+    expect(viewerUrl.searchParams.get('debug')).toBeNull();
+  });
+
   it('keeps AR operator controls available to an authorized admin only when debug is requested', async () => {
     authState.user = {
       id: 'admin-001',

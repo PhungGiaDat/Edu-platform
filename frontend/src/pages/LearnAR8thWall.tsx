@@ -30,6 +30,8 @@ import { AudioService } from '@/services/AudioService';
 import '../styles/LearnAR8thWall.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://edu-platform-api-do20.onrender.com';
+// Keep the learner HUD enabled by default; capture mode is the screenshot switch.
+const SHOW_LEARNER_AR_OVERLAY = true;
 const TRANSITION_FADE_MS = 250;
 const LEXI_TRANSITION_ASSETS = {
   preparing: '/assets/pets/lexi/ar-transition/lexi-waving.png',
@@ -288,7 +290,8 @@ export const LearnAR8thWall: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const canUseOperatorControls = canUseAROperatorControls(user, isAuthenticated);
   const debugRequested = isARDebugRequested(window.location.search);
-  const showOperatorTools = canUseOperatorControls && debugRequested;
+  const captureMode = new URLSearchParams(window.location.search).get('capture') === 'true';
+  const showOperatorTools = !captureMode && canUseOperatorControls && debugRequested;
 
   const deckIdRef = useRef(deckId || 'claymorphic-animals-001');
   // Backend deck metadata is the session tracking catalogue source. It is
@@ -966,7 +969,7 @@ export const LearnAR8thWall: React.FC = () => {
     if (xrTargets.length > 0) {
       params.set('xr_targets', serializeXRTargets(xrTargets));
     }
-    if (showOperatorTools) {
+    if (!captureMode && showOperatorTools) {
       params.set('debug', 'true');
       params.set('ar_diagnostics_version', AR_DIAGNOSTICS_VERSION);
     }
@@ -1083,7 +1086,7 @@ export const LearnAR8thWall: React.FC = () => {
           />
         )}
 
-        {phase === 'VIEWING' && (
+        {SHOW_LEARNER_AR_OVERLAY && !captureMode && phase === 'VIEWING' && (
           <LearnerAROverlay
             activeTargets={learnerOverlayTargets}
             featuredTargetName={featuredTargetName}
