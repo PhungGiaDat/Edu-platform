@@ -108,6 +108,28 @@ def get_bai_llm(
     return get_openrouter_llm(settings.CHAT_PRIMARY_MODEL, temperature, timeout)
 
 
+def get_justwoker_llm(
+    model: str,
+    temperature: float = 0.4,
+    timeout: Optional[float] = None,
+) -> ChatOpenAI:
+    """Return a ChatOpenAI client routed through the Justwoker gateway."""
+    api_key = (
+        settings.JUSTWOKER_API_KEY.get_secret_value()
+        if settings.JUSTWOKER_API_KEY
+        else ""
+    )
+    return ChatOpenAI(
+        model=model,
+        api_key=api_key,
+        base_url=settings.JUSTWOKER_BASE_URL,
+        timeout=timeout or settings.AI_CONTENT_TIMEOUT_SECONDS,
+        max_retries=0,
+        temperature=temperature,
+        callbacks=[TRACE_HANDLER],
+    )
+
+
 def get_google_llm(
     model: str,
     temperature: float = 0.4,
@@ -132,7 +154,7 @@ def get_google_llm(
 # 1b. Provider-prefixed model routing
 # ──────────────────────────────────────────────
 
-_PROVIDER_PREFIXES = ("openrouter/", "google/", "bai/")
+_PROVIDER_PREFIXES = ("openrouter/", "google/", "bai/", "justwoker/")
 
 
 def parse_provider_model(model: str) -> tuple[str, str]:
@@ -143,6 +165,8 @@ def parse_provider_model(model: str) -> tuple[str, str]:
         return "openrouter", model[len("openrouter/"):]
     if model.startswith("google/gemini"):
         return "google", model[len("google/"):]
+    if model.startswith("justwoker/"):
+        return "justwoker", model[len("justwoker/"):]
     # Default to openrouter for gemma, nemotron, and other models
     return "openrouter", model
 
@@ -156,6 +180,8 @@ def build_llm_for_model(
     provider, bare = parse_provider_model(model)
     if provider == "google" and _has_configured_key(settings.GOOGLE_API_KEY):
         return get_google_llm(bare, temperature, timeout)
+    if provider == "justwoker" and _has_configured_key(settings.JUSTWOKER_API_KEY):
+        return get_justwoker_llm(bare, temperature, timeout)
     return get_openrouter_llm(model, temperature, timeout)
 
 
@@ -401,6 +427,7 @@ class ModelRouter:
         provider_keys = {
             "openrouter": settings.OPENROUTER_API_KEY,
             "google": settings.GOOGLE_API_KEY,
+            "justwoker": settings.JUSTWOKER_API_KEY,
             "bai": None,
             "tokenrouter": None,
         }

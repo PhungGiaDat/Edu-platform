@@ -164,6 +164,13 @@ class Settings(BaseSettings):
     BAI_BASE_URL: str = "https://api.b.ai/v1"
     BAI_GENERATION_MODEL: str = "glm-5.3-flash"
 
+    # Justwoker provider (OpenAI-compatible gateway; extra cascade fallback on
+    # timeout/5xx from the primary providers). Only participates in the cascade
+    # once a model is added under this prefix to MODEL_FALLBACKS, e.g.
+    # MODEL_FALLBACKS="justwoker/<model_id>,nvidia/nemotron-3-super-120b-a12b:free"
+    JUSTWOKER_API_KEY: Optional[SecretStr] = None
+    JUSTWOKER_BASE_URL: str = "https://api.justwoker.icu/v1"
+
     # Google Gemini provider (OpenAI-compatible endpoint; reuses GOOGLE_API_KEY).
     # Model slugs prefixed "google/" in MODEL_* route here via llm_clients.
     GOOGLE_LLM_BASE_URL: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
