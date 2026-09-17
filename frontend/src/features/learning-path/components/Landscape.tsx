@@ -195,8 +195,9 @@ const PROP_POSITIONS: Array<[number, number, number]> = [
 
 const Props: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
   switch (preset.propShape) {
-    case 'house':
     case 'schoolBlock':
+      return <SchoolWorld />;
+    case 'house':
     case 'flower':
       return <SimpleProps preset={preset} />;
     case 'tree':
@@ -205,8 +206,111 @@ const Props: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
   }
 };
 
-/** Two-instanced-mesh prop (base + accent) — covers house/schoolBlock/flower
- * without a bespoke geometry system per category. */
+/**
+ * school_food used to route through the same generic box+sphere
+ * SimpleProps system as every other category — a "school" that's really
+ * just a differently-colored version of "home" isn't a distinct world.
+ * This is real school/classroom silhouette language: alphabet blocks
+ * (foreground, path edge), book stacks (midground), pencils (background
+ * landmarks) and a lunchbox apple accent — all primitives, no new assets.
+ */
+const ALPHABET_BLOCK_COLORS = ['#E85D5D', '#4C9AE8', '#F2C94C', '#6FCF7A'];
+const ALPHABET_BLOCK_POSITIONS: Array<[number, number, number]> = [
+  [-1.6, 0, -1],
+  [1.5, 0, 2],
+  [-1.5, 0, 8],
+  [1.6, 0, 13],
+];
+
+const BOOK_STACK_POSITIONS: Array<[number, number, number]> = [
+  [-2.6, 0, 4],
+  [2.7, 0, 9],
+  [-2.5, 0, 17],
+];
+
+const PENCIL_POSITIONS: Array<[number, number, number]> = [
+  [-6, 0, -2],
+  [6, 0, 6],
+  [-6.5, 0, 15],
+];
+
+const LUNCHBOX_POSITIONS: Array<[number, number, number]> = [
+  [1.1, 0, -1],
+  [-1.2, 0, 10],
+];
+
+const SchoolWorld: React.FC = () => {
+  const blockRotations = useMemo(() => ALPHABET_BLOCK_POSITIONS.map(() => Math.random() * Math.PI * 2), []);
+
+  return (
+    <group>
+      {/* Foreground: alphabet blocks hugging the path edge. */}
+      {ALPHABET_BLOCK_POSITIONS.map((pos, i) => (
+        <mesh key={`block-${i}`} position={[pos[0], 0.22, pos[2]]} rotation={[0, blockRotations[i], 0]} castShadow receiveShadow>
+          <boxGeometry args={[0.42, 0.42, 0.42]} />
+          <meshStandardMaterial color={ALPHABET_BLOCK_COLORS[i % ALPHABET_BLOCK_COLORS.length]} roughness={0.7} />
+        </mesh>
+      ))}
+
+      {/* Midground: stacked books, slightly rotated per layer for a
+          "just set down" feel instead of a perfect stack. */}
+      {BOOK_STACK_POSITIONS.map((pos, i) => (
+        <group key={`books-${i}`} position={pos}>
+          {[0, 1, 2].map((layer) => (
+            <mesh
+              key={layer}
+              position={[0, 0.08 + layer * 0.16, 0]}
+              rotation={[0, layer * 0.25, 0]}
+              castShadow
+              receiveShadow
+            >
+              <boxGeometry args={[0.7, 0.14, 0.5]} />
+              <meshStandardMaterial color={ALPHABET_BLOCK_COLORS[(i + layer) % ALPHABET_BLOCK_COLORS.length]} roughness={0.75} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+
+      {/* Background: tall pencils as landmarks, visible from a distance. */}
+      {PENCIL_POSITIONS.map((pos, i) => (
+        <group key={`pencil-${i}`} position={pos}>
+          <mesh position={[0, 1, 0]} castShadow>
+            <cylinderGeometry args={[0.16, 0.16, 2, 6]} />
+            <meshStandardMaterial color={i % 2 === 0 ? '#F2C94C' : '#6FCF7A'} roughness={0.6} />
+          </mesh>
+          <mesh position={[0, 2.15, 0]} castShadow>
+            <coneGeometry args={[0.16, 0.3, 6]} />
+            <meshStandardMaterial color="#EED9B6" roughness={0.7} />
+          </mesh>
+          <mesh position={[0, 2.35, 0]} castShadow>
+            <coneGeometry args={[0.05, 0.12, 6]} />
+            <meshStandardMaterial color="#3A3A3A" roughness={0.5} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* A small lunchbox-apple accent near the path — the "food" half of
+          school_food. */}
+      {LUNCHBOX_POSITIONS.map((pos, i) => (
+        <group key={`apple-${i}`} position={[pos[0], 0.18, pos[2]]}>
+          <mesh castShadow>
+            <sphereGeometry args={[0.18, 10, 10]} />
+            <meshStandardMaterial color="#E85D5D" roughness={0.5} />
+          </mesh>
+          <mesh position={[0, 0.2, 0]}>
+            <cylinderGeometry args={[0.02, 0.02, 0.12, 5]} />
+            <meshStandardMaterial color="#6FA85C" roughness={0.6} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+};
+
+/** Two-instanced-mesh prop (base + accent) — covers house/flower without a
+ * bespoke geometry system per category. (school_food has its own SchoolWorld
+ * now — a real classroom/schoolyard silhouette needed more than a
+ * recolored box+sphere.) */
 const SimpleProps: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
   const baseRef = useRef<THREE.InstancedMesh>(null);
   const accentRef = useRef<THREE.InstancedMesh>(null);
@@ -242,17 +346,6 @@ const SimpleProps: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
 
         position.set(pos[0], pos[1] + bodyHeight + 0.25 * s, pos[2]);
         scale.set(0.55 * s, 0.5 * s, 0.55 * s);
-        matrix.compose(position, quaternion, scale);
-        accentRef.current?.setMatrixAt(i, matrix);
-      } else if (shape === 'schoolBlock') {
-        const bodyHeight = 0.9 * s;
-        position.set(pos[0], pos[1] + bodyHeight / 2, pos[2]);
-        scale.set(0.55 * s, bodyHeight, 0.55 * s);
-        matrix.compose(position, quaternion, scale);
-        baseRef.current?.setMatrixAt(i, matrix);
-
-        position.set(pos[0], pos[1] + bodyHeight + 0.15 * s, pos[2]);
-        scale.set(0.3 * s, 0.3 * s, 0.3 * s);
         matrix.compose(position, quaternion, scale);
         accentRef.current?.setMatrixAt(i, matrix);
       } else {

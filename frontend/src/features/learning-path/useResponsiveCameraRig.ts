@@ -8,16 +8,18 @@ export interface CameraRig {
   heightOffset: number;
 }
 
-const WIDE: CameraRig = { fov: 50, backDistance: 5.4, heightOffset: 3.4 };
 /**
- * Mobile is NOT just "wider fov" — a wide fov alone shrinks every object in
- * frame. A narrow viewport instead gets a noticeably CLOSER camera (smaller
- * backDistance/heightOffset) with only a modest fov bump, so the current
- * node and its neighbors read as large, legible landmarks instead of tiny
- * dots on a wide establishing shot. Pulled in further than the first pass —
- * screenshots still showed too much empty ground around a small world.
+ * Reversal: earlier passes kept tightening this (down to backDistance 3.7 /
+ * heightOffset 2.5 on mobile) chasing "nodes too small", but the real
+ * screenshot showed the OPPOSITE failure — the camera sitting almost at
+ * ground level with one giant foreground object and empty background. A
+ * controlled 2.5D map composition needs a farther, higher camera showing
+ * current + a few neighbors, not a close-up on one node. Node/platform
+ * *scale* (LessonNode3D) is now the lever for "nodes readable on mobile",
+ * not camera proximity.
  */
-const NARROW: CameraRig = { fov: 56, backDistance: 3.7, heightOffset: 2.5 };
+const WIDE: CameraRig = { fov: 48, backDistance: 8, heightOffset: 5.5 };
+const NARROW: CameraRig = { fov: 50, backDistance: 6, heightOffset: 4.2 };
 
 /**
  * Tracks whether the viewport is narrower than `breakpointPx` and returns the

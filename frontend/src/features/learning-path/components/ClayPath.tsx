@@ -14,17 +14,26 @@ import type { LessonNode } from '@/types/learning-path';
 
 // ========== Constants ==========
 
-// Warm stone tones — two shades lerped per-stone for organic variation
-// instead of one flat, obviously-repeated material.
-const STONE_COLOR_A = '#D98A4E';
-const STONE_COLOR_B = '#C77A3E';
-const CLAY_ACCENT = '#FFB347';
-const STONE_RADIUS = 0.55;
-const STONE_HEIGHT = 0.16;
-const STONE_SPACING = 0.62;
+// Softer, less saturated warm stone tones — two shades lerped per-stone for
+// organic variation instead of one flat, obviously-repeated material. The
+// LESSON NODES must be the visually loudest thing in the scene, so the path
+// stays quiet: muted tan, small, and sparse.
+const STONE_COLOR_A = '#C9A27C';
+const STONE_COLOR_B = '#B8916C';
+const STONE_RADIUS = 0.2;
+const STONE_HEIGHT = 0.1;
+/** A handful of stones BETWEEN each pair of lesson nodes, not a fixed
+ * spacing over the whole spline length — a long path with many lessons
+ * should not get proportionally more stones than a short one; each segment
+ * gets the same small count regardless of its length. This is what fixes
+ * the "caterpillar" look of 40+ closely-packed stones. */
+const STONES_PER_SEGMENT = 4;
+/** Fallback density (stones per unit progress) when there are fewer than 2
+ * nodes to interpolate between. */
+const FALLBACK_STONE_COUNT = 6;
 /** Alternating left/right offset so stones read as a playful stepping
  * path rather than a single straight paved strip. */
-const SWAY_AMOUNT = 0.32;
+const SWAY_AMOUNT = 0.16;
 
 // ========== Component Props ==========
 
@@ -38,10 +47,34 @@ export interface ClayPathProps {
 // ========== Component ==========
 
 export const ClayPath: React.FC<ClayPathProps> = ({ nodes, currentProgress }) => {
-  // Generate stone data along the spline
+  // Generate stone data BETWEEN consecutive lesson nodes (not over the raw
+  // spline length) — a fixed small count per segment regardless of course
+  // length or how far apart the nodes happen to sit.
   const { stones } = useMemo(() => {
     const spline = createPathSpline();
-    const length = spline.getLength();
+
+    // Progress values to place stones at: interior points of each
+    // [node[i].position, node[i+1].position] segment, excluding the
+    // endpoints themselves (the nodes are their own markers).
+    const segmentBoundaries =
+      nodes.length >= 2
+        ? nodes.map((n) => n.position).sort((a, b) => a - b)
+        : [0, 1];
+
+    const stoneProgress: number[] = [];
+    if (nodes.length >= 2) {
+      for (let s = 0; s < segmentBoundaries.length - 1; s++) {
+        const start = segmentBoundaries[s];
+        const end = segmentBoundaries[s + 1];
+        for (let k = 1; k <= STONES_PER_SEGMENT; k++) {
+          stoneProgress.push(start + ((end - start) * k) / (STONES_PER_SEGMENT + 1));
+        }
+      }
+    } else {
+      for (let k = 1; k <= FALLBACK_STONE_COUNT; k++) {
+        stoneProgress.push(k / (FALLBACK_STONE_COUNT + 1));
+      }
+    }
 
     const stoneData: Array<{
       position: THREE.Vector3;
@@ -51,12 +84,9 @@ export const ClayPath: React.FC<ClayPathProps> = ({ nodes, currentProgress }) =>
       spin: number;
     }> = [];
 
-    const numStones = Math.floor(length / STONE_SPACING);
-
-    for (let i = 0; i < numStones; i++) {
-      const progress = i / numStones;
-      const point = spline.getPointAt(progress);
-      const tangent = spline.getTangentAt(progress);
+    stoneProgress.forEach((progress, i) => {
+      const point = spline.getPointAt(Math.max(0, Math.min(1, progress)));
+      const tangent = spline.getTangentAt(Math.max(0, Math.min(1, progress)));
 
       const up = new THREE.Vector3(0, 1, 0);
       const perpendicular = new THREE.Vector3().crossVectors(up, tangent).normalize();
@@ -74,11 +104,11 @@ export const ClayPath: React.FC<ClayPathProps> = ({ nodes, currentProgress }) =>
       stoneData.push({
         position,
         quaternion,
-        scale: 0.85 + Math.abs(Math.sin(i * 2.3)) * 0.3,
+        scale: 0.8 + Math.abs(Math.sin(i * 2.3)) * 0.25,
         colorMix: (i % 3) / 3,
         spin: (i * 0.6) % (Math.PI * 2),
       });
-    }
+    });
 
     return { stones: stoneData };
   }, [nodes]);
@@ -117,18 +147,12 @@ export const ClayPath: React.FC<ClayPathProps> = ({ nodes, currentProgress }) =>
         );
       })}
 
-      {/* Golden progress trail - shows completed portion of path */}
+      {/* Golden progress trail - shows completed portion of path. No
+          separate "progress marker" sphere here anymore — LessonNode3D's
+          own current-node halo/platform/beacon already marks that spot;
+          a second glowing ball on top of it was redundant clutter. */}
       {currentProgress > 0 && (
         <ProgressTrail nodes={nodes} progress={currentProgress} />
-      )}
-
-      {/* Progress indicator - brighter accent color at current position */}
-      {currentProgress > 0 && (
-        <ProgressMarker
-          nodes={nodes}
-          progress={currentProgress}
-          accentColor={CLAY_ACCENT}
-        />
       )}
     </group>
   );
@@ -176,53 +200,6 @@ const ProgressTrail: React.FC<ProgressTrailProps> = ({ nodes, progress }) => {
   return (
     <mesh geometry={trailGeometry} position={[0, 0.02, 0]}>
       <primitive object={trailMaterial} />
-    </mesh>
-  );
-};
-
-// ========== Progress Marker ==========
-
-interface ProgressMarkerProps {
-  nodes: LessonNode[];
-  progress: number;
-  accentColor: string;
-}
-
-const ProgressMarker: React.FC<ProgressMarkerProps> = ({ nodes, progress, accentColor }) => {
-  const { position, quaternion } = useMemo(() => {
-    const spline = createPathSpline();
-    const point = spline.getPointAt(progress);
-    const tangent = spline.getTangentAt(progress);
-
-    const quat = new THREE.Quaternion();
-    const up = new THREE.Vector3(0, 1, 0);
-    const axis = new THREE.Vector3().crossVectors(up, tangent).normalize();
-    const angle = Math.acos(up.dot(tangent));
-    if (axis.length() > 0.001) {
-      quat.setFromAxisAngle(axis, angle);
-    }
-
-    return { position: point, quaternion: quat };
-  }, [nodes, progress]);
-
-  const accentMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: new THREE.Color(accentColor),
-      roughness: 0.7,
-      metalness: 0.1,
-      emissive: new THREE.Color(accentColor),
-      emissiveIntensity: 0.3,
-    });
-  }, [accentColor]);
-
-  return (
-    <mesh
-      position={[position.x, position.y + 0.1, position.z]}
-      quaternion={quaternion}
-      castShadow
-    >
-      <sphereGeometry args={[0.25, 16, 16]} />
-      <primitive object={accentMaterial} />
     </mesh>
   );
 };

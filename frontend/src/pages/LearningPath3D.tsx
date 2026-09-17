@@ -95,9 +95,18 @@ export const LearningPath3D: React.FC = () => {
 
   // Pet position: the current lesson's spot on the path, or overall progress
   // if nothing is "current" yet (e.g. a freshly-completed course).
-  const petProgress = path
-    ? path.nodes.find((n) => n.state === 'current')?.position ?? path.progress
-    : 0;
+  const currentNode = path?.nodes.find((n) => n.state === 'current') ?? null;
+  const petProgress = currentNode?.position ?? path?.progress ?? 0;
+
+  // Camera LOOK-AT target sits a bit ahead of the current node (toward the
+  // next lesson), not exactly on it — the composition should show where the
+  // journey goes next, not just where the learner is standing right now.
+  const currentNodeIndex = currentNode ? (path?.nodes.findIndex((n) => n.lesson_id === currentNode.lesson_id) ?? -1) : -1;
+  const nextNode = path && currentNodeIndex >= 0 ? path.nodes[currentNodeIndex + 1] : undefined;
+  const lookAheadProgress =
+    currentNode && nextNode
+      ? currentNode.position + (nextNode.position - currentNode.position) * 0.32
+      : petProgress;
 
   // ========== Loading ==========
   if (loading) {
@@ -161,41 +170,44 @@ export const LearningPath3D: React.FC = () => {
       <LearningPathScene
         nodes={path?.nodes ?? []}
         currentProgress={petProgress}
+        lookAheadProgress={lookAheadProgress}
         activePet={activePet}
         onNodeSelect={handleNodeSelect}
         categoryKey={selectedCourse?.category_key}
         courseKey={selectedCourseId}
       />
 
-      {/* Compact header — title/counter, thin progress bar, course switcher.
-          Deliberately small: the previous version's tall single card ate
-          35-40% of the mobile viewport and made the world read as secondary. */}
+      {/* Compact header — two rows, never one row fighting for width.
+          Row 1 is ONLY the title + counter (nothing to truncate "Learning
+          Path" against — that's what caused "Learni..." on a 390px phone).
+          Row 2 is the progress bar + course switcher, which can compete for
+          space with each other without touching the title. */}
       <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-3">
-        <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-2 rounded-xl bg-white/70 px-2.5 py-1.5 shadow-sm backdrop-blur-sm">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between gap-2">
-              <h1 className="truncate text-[11px] font-extrabold text-gray-700">Learning Path</h1>
-              {path && (
-                <span className="shrink-0 text-[11px] font-bold text-amber-600">
-                  {path.completed_count}/{path.total_count}
-                </span>
-              )}
-            </div>
+        <div className="pointer-events-auto mx-auto max-w-md rounded-xl bg-white/75 px-2.5 py-1.5 shadow-sm backdrop-blur-sm">
+          <div className="flex items-baseline justify-between gap-2">
+            <h1 className="text-xs font-extrabold text-gray-700">Learning Path</h1>
             {path && (
-              <div className="mt-0.5 h-1 overflow-hidden rounded-full bg-gray-200/80">
+              <span className="shrink-0 text-[11px] font-bold text-amber-600">
+                {path.completed_count}/{path.total_count}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-1 flex items-center gap-2">
+            {path && (
+              <div className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-200/80">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
                   style={{ width: `${Math.round(path.progress * 100)}%` }}
                 />
               </div>
             )}
+            <CourseSelector
+              courses={joinedCourses}
+              selectedCourseId={selectedCourseId}
+              onSelect={handleCourseSwitch}
+            />
           </div>
-
-          <CourseSelector
-            courses={joinedCourses}
-            selectedCourseId={selectedCourseId}
-            onSelect={handleCourseSwitch}
-          />
         </div>
       </div>
 

@@ -11,6 +11,7 @@ import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { createPathSpline, getPointOnSpline, getTangentOnSpline } from '@/lib/pathSpline';
+import { computeGroundedOffset, computeNormalizationScale } from '../modelNormalization';
 import type { Pet } from '@/hooks/usePets';
 
 // ========== Constants ==========
@@ -27,18 +28,44 @@ import type { Pet } from '@/hooks/usePets';
  * "unfinished placeholder" problem this replaces.
  */
 const DEFAULT_MASCOT_MODEL_URL = '/assets/models/elephant-learning-path.glb';
-/** Unverified without a rendered frame — tune once visual QA is possible. */
-const MASCOT_SCALE = 0.55;
 
-const PET_HEIGHT_OFFSET = 0.55;
-const BOB_AMPLITUDE = 0.15;
+/**
+ * The pet is a GUIDE beside the lesson, not the lesson marker itself — it
+ * must never be large enough to cover the current node. Height is a world
+ * unit sized relative to the lesson-node platform (LessonNode3D's raised
+ * platform radius is ~NODE_RADIUS*1.75 ≈ 0.96, so a companion a little
+ * taller than that platform's diameter reads as "standing beside", not
+ * "towering over"). The model's AUTHORED scale is never trusted — see
+ * modelNormalization.ts.
+ */
+const PET_TARGET_HEIGHT = 1.35;
+
+/** Small lift so the (now bottom-grounded) model doesn't z-fight the
+ * ground plane / stepping stones; grounding itself is handled by
+ * computeGroundedOffset, this is just clearance. */
+const PET_HEIGHT_OFFSET = 0.03;
+const BOB_AMPLITUDE = 0.1;
 const BOB_SPEED = 4;
 const ROTATION_SMOOTHING = 0.1;
-/** Standing exactly on top of the lesson node's own point made pet and node
- * fight for the same spot (and hid the pet behind the bigger node mesh).
- * Offset the pet sideways off the path centerline so both read as one
- * cluster — node ahead, pet standing beside it looking forward. */
-const LATERAL_OFFSET = 0.75;
+
+/**
+ * Standing exactly on top of the lesson node's own point made pet and node
+ * fight for the same spot. The pet now stands beside AND slightly behind
+ * the node — a supporting character next to the landmark, not overlapping
+ * its footprint (which reaches ~0.96 units from center on the current
+ * node's raised platform).
+ */
+const LATERAL_OFFSET = 1.15;
+const BEHIND_OFFSET = 0.4;
+
+/**
+ * The GLB's authored "forward" axis is unknown/unverified — this rotates
+ * the model relative to whatever forward the artist used, kept deliberately
+ * separate from the path-tangent facing computed below so the two concerns
+ * (path direction vs. model-authoring quirk) don't get tangled into one
+ * magic number. 0 until visually confirmed in a browser.
+ */
+const MODEL_ROTATION_OFFSET = 0;
 
 // ========== Component Props ==========
 
@@ -77,11 +104,11 @@ export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, isCelebrating
     const point = getPointOnSpline(spline, progress);
     const tan = getTangentOnSpline(spline, progress);
 
-    // Sideways offset (perpendicular to the direction of travel) so the pet
-    // stands beside the lesson node instead of coinciding with it.
+    // Sideways + behind offset so the pet reads as a companion beside the
+    // lesson node instead of coinciding with (or hiding) it.
     const up = new THREE.Vector3(0, 1, 0);
     const perpendicular = new THREE.Vector3().crossVectors(up, tan).normalize();
-    const anchored = point.clone().addScaledVector(perpendicular, LATERAL_OFFSET);
+    const anchored = point.clone().addScaledVector(perpendicular, LATERAL_OFFSET).addScaledVector(tan, -BEHIND_OFFSET);
 
     return {
       position: new THREE.Vector3(anchored.x, anchored.y + PET_HEIGHT_OFFSET, anchored.z),
@@ -143,6 +170,27 @@ const PetModel: React.FC<{ position: THREE.Vector3; modelUrl: string; groupRef: 
   const { scene } = useGLTF(modelUrl);
   const clonedScene = useMemo(() => scene.clone(), [scene]);
 
+  // Bounding-box normalization: never trust the model's authored scale.
+  // Measure once raw to find the scale that hits PET_TARGET_HEIGHT, apply
+  // it directly to the clone, then measure AGAIN (now already scaled) to
+  // get the exact grounding offset — this avoids hand-deriving how the
+  // offset itself needs to be scaled.
+  const groundedOffset = useMemo(() => {
+    const rawBox = new THREE.Box3().setFromObject(clonedScene);
+    const rawSize = new THREE.Vector3();
+    rawBox.getSize(rawSize);
+    const scale = computeNormalizationScale(rawSize.y, PET_TARGET_HEIGHT);
+
+    clonedScene.scale.setScalar(scale);
+    clonedScene.updateMatrixWorld(true);
+
+    const scaledBox = new THREE.Box3().setFromObject(clonedScene);
+    const center = new THREE.Vector3();
+    scaledBox.getCenter(center);
+
+    return computeGroundedOffset(center.x, scaledBox.min.y, center.z);
+  }, [clonedScene]);
+
   // Apply cloned scene materials
   React.useEffect(() => {
     clonedScene.traverse((child) => {
@@ -157,15 +205,21 @@ const PetModel: React.FC<{ position: THREE.Vector3; modelUrl: string; groupRef: 
     <group ref={groupRef} position={[position.x, position.y, position.z]}>
       {/* Contact shadow — a flat dark disc grounds the mascot on the terrain
           instead of it reading as floating. */}
-      <mesh position={[0, -PET_HEIGHT_OFFSET + 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.45, 16]} />
+      <mesh position={[0, -PET_HEIGHT_OFFSET + 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[PET_TARGET_HEIGHT * 0.3, 16]} />
         <meshBasicMaterial color="#000000" transparent opacity={0.18} />
       </mesh>
 
-      <primitive object={clonedScene} scale={MASCOT_SCALE} />
+      {/* Grounded + rotation-corrected: `clonedScene` already carries its
+          normalized scale (applied above); this group only translates it to
+          local origin and applies the authoring-forward-axis correction,
+          kept separate from the outer group's path-tangent facing. */}
+      <group position={[groundedOffset.x, groundedOffset.y, groundedOffset.z]} rotation={[0, MODEL_ROTATION_OFFSET, 0]}>
+        <primitive object={clonedScene} />
+      </group>
 
       {/* Celebration particles */}
-      {isCelebrating && <CelebrationParticles position={[0, 0, 0]} />}
+      {isCelebrating && <CelebrationParticles position={[0, PET_TARGET_HEIGHT * 0.5, 0]} />}
     </group>
   );
 };

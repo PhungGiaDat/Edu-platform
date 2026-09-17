@@ -46,6 +46,10 @@ export interface LearningPathSceneProps {
   nodes: LessonNode[];
   /** Current progress (0-1) along the path */
   currentProgress: number;
+  /** Progress (0-1) further along the path the camera should look toward —
+   * a forward-looking composition instead of centering tightly on the
+   * current node. Defaults to currentProgress when not provided. */
+  lookAheadProgress?: number;
   /** Currently active pet companion */
   activePet: Pet | null;
   /** Callback when a node is selected */
@@ -62,6 +66,7 @@ export interface LearningPathSceneProps {
 export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
   nodes,
   currentProgress,
+  lookAheadProgress,
   activePet,
   onNodeSelect,
   categoryKey,
@@ -128,12 +133,19 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
             <PathCamera
               spline={spline}
               petProgress={currentProgress}
+              lookAheadProgress={lookAheadProgress}
               backDistance={rig.backDistance}
               heightOffset={rig.heightOffset}
             />
           )}
         </Suspense>
         {/*
+          Controlled 2.5D map camera, not a free-orbit 3D explorer — a child
+          should never be able to spin the camera into an empty-sky or
+          top-down view and lose "where am I". Rotation is disabled entirely;
+          a narrow zoom range is kept only as a minor accessibility nicety,
+          not a way to re-frame the scene.
+
           PathCamera owns `target` (primed + followed each frame). No static
           `target` prop here — a hardcoded value would only be visible for a
           single frame before PathCamera overwrites it, and would be wrong
@@ -142,11 +154,9 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
         <OrbitControls
           enablePan={false}
           enableZoom={true}
-          enableRotate={true}
-          minDistance={2.5}
-          maxDistance={9}
-          minPolarAngle={0.4}
-          maxPolarAngle={Math.PI / 2.15}
+          enableRotate={false}
+          minDistance={6}
+          maxDistance={10}
           makeDefault
         />
       </Canvas>

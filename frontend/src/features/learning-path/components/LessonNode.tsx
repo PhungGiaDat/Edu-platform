@@ -5,6 +5,10 @@
  * backend-owned states (completed/current/available/locked) — this
  * component never computes state itself, it only visualizes node.state.
  *
+ * Every node stands on a small toy platform — a bare floating sphere reads
+ * as a debug placeholder; a platform reads as a deliberate level marker,
+ * even for locked/distant nodes.
+ *
  * Progressive disclosure: only the CURRENT node shows title+XP text. Other
  * states show a single compact glyph (number/check/lock) — a permanent wall
  * of HTML labels over every node was the "visual clutter" failure; the
@@ -20,9 +24,9 @@ import { getPointOnSpline, getTangentOnSpline } from '@/lib/pathSpline';
 
 // ========== Constants ==========
 
-/** Base sphere radius before per-state scale is applied. Small nodes on a
- * mobile screen were unreadable — this is deliberately large. */
-const NODE_RADIUS = 0.55;
+/** Base "head" radius before per-state scale — smaller than earlier passes
+ * because the platform now carries the marker's visual footprint. */
+const NODE_RADIUS = 0.4;
 
 // State colors — saturated so nodes read as the brightest thing in the
 // scene, clearly above the more desaturated terrain/props behind them.
@@ -47,7 +51,7 @@ const STATE_SCALE = {
   current: 1.35,
   available: 1.0,
   completed: 0.95,
-  locked: 0.85,
+  locked: 0.75,
 } as const;
 
 // Clay material properties
@@ -57,6 +61,8 @@ const CLAY_METALNESS = 0;
 
 // Hover scale bump, applied on top of the state's base scale.
 const HOVER_SCALE_BUMP = 1.12;
+
+const PLATFORM_HEIGHT = 0.16;
 
 // ========== Component Props ==========
 
@@ -102,6 +108,7 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
   const isCurrent = node.state === 'current';
   const isCompleted = node.state === 'completed';
   const baseScale = STATE_SCALE[node.state] ?? 1;
+  const platformRadius = NODE_RADIUS * baseScale * 1.5;
 
   // Get state color
   const stateColor = STATE_COLORS[node.state] || STATE_COLORS.locked;
@@ -124,8 +131,16 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
       emissiveIntensity: glowIntensity * 0.5,
     });
 
-    return { main: mainMaterial };
-  }, [stateColor, glowIntensity]);
+    // Every node's platform — a quieter tint of the same state color, so
+    // even locked/available nodes look like a designed marker, not a bare
+    // sphere floating in space.
+    const platformMaterial = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(CLAY_COLOR).lerp(stateColorObj, isLocked ? 0.15 : 0.3),
+      roughness: 0.85,
+    });
+
+    return { main: mainMaterial, platform: platformMaterial };
+  }, [stateColor, glowIntensity, isLocked]);
 
   const haloMaterial = useMemo(
     () =>
@@ -196,28 +211,28 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
 
   return (
     <group position={[position.x, position.y, position.z]} quaternion={quaternion}>
-      {/* Raised two-tier platform — only the current node stands on one, so
-          it reads as a landmark stop rather than a floating ball. A colored
-          rim band ties the stand to the node's own state color instead of
-          being a plain unrelated tan disc. */}
+      {/* Toy platform — every node stands on one, sized by state. This is
+          what turns a "gray placeholder sphere" into a deliberate level
+          marker even when it's small/distant/locked. */}
+      <mesh position={[0, -NODE_RADIUS * baseScale - PLATFORM_HEIGHT / 2, 0]} receiveShadow castShadow>
+        <cylinderGeometry args={[platformRadius, platformRadius * 1.08, PLATFORM_HEIGHT, 16]} />
+        <primitive object={materials.platform} attach="material" />
+      </mesh>
+
+      {/* Current node gets a second, brighter inner rim on its platform —
+          the strongest focal point in the scene. */}
       {isCurrent && (
-        <group position={[0, -NODE_RADIUS - 0.06, 0]}>
-          <mesh position={[0, -0.14, 0]} receiveShadow castShadow>
-            <cylinderGeometry args={[NODE_RADIUS * 1.6, NODE_RADIUS * 1.75, 0.16, 20]} />
-            <meshStandardMaterial color="#FFE8B8" roughness={0.85} />
-          </mesh>
-          <mesh position={[0, -0.02, 0]} receiveShadow castShadow>
-            <cylinderGeometry args={[NODE_RADIUS * 1.15, NODE_RADIUS * 1.3, 0.16, 20]} />
-            <meshStandardMaterial color={STATE_COLORS.current} roughness={0.6} />
-          </mesh>
-        </group>
+        <mesh position={[0, -NODE_RADIUS * baseScale + PLATFORM_HEIGHT / 2 - 0.01, 0]} receiveShadow castShadow>
+          <cylinderGeometry args={[platformRadius * 0.72, platformRadius * 0.82, PLATFORM_HEIGHT, 16]} />
+          <meshStandardMaterial color={STATE_COLORS.current} roughness={0.6} />
+        </mesh>
       )}
 
       {/* Vertical light beacon — visible from far away, even when the node
           itself is small on screen or its label is hidden. */}
       {isCurrent && (
-        <mesh ref={beaconRef} position={[0, 1.6, 0]}>
-          <cylinderGeometry args={[0.05, 0.12, 3.2, 8, 1, true]} />
+        <mesh ref={beaconRef} position={[0, 1.4, 0]}>
+          <cylinderGeometry args={[0.04, 0.1, 2.8, 8, 1, true]} />
           <primitive object={beaconMaterial} attach="material" />
         </mesh>
       )}
@@ -231,7 +246,7 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
         </mesh>
       )}
 
-      {/* Main node sphere */}
+      {/* Main node "head" */}
       <mesh
         ref={meshRef}
         onClick={(e) => {
@@ -272,11 +287,11 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
         distanceFactor={8}
       >
         {isLocked ? (
-          <div style={{ fontSize: '18px', opacity: 0.7 }}>{'\u{1F512}'}</div>
+          <div style={{ fontSize: '16px', opacity: 0.7 }}>{'\u{1F512}'}</div>
         ) : (
           <div
             style={{
-              fontSize: '20px',
+              fontSize: '18px',
               fontWeight: 700,
               lineHeight: 1,
               color: '#1a1a2e',
@@ -291,8 +306,8 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
       {/* Thin signpost stem connecting the node to its label — without it
           the label reads as pasted-on text floating disconnected in space. */}
       {isCurrent && (
-        <mesh position={[0, NODE_RADIUS + 0.32, 0]}>
-          <cylinderGeometry args={[0.025, 0.025, 0.64, 6]} />
+        <mesh position={[0, NODE_RADIUS + 0.26, 0]}>
+          <cylinderGeometry args={[0.022, 0.022, 0.52, 6]} />
           <meshStandardMaterial color="#FFFFFF" roughness={0.6} />
         </mesh>
       )}
@@ -302,7 +317,7 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
       {isCurrent && (
         <Html
           center
-          position={[0, NODE_RADIUS + 0.7, 0]}
+          position={[0, NODE_RADIUS + 0.6, 0]}
           style={{ pointerEvents: 'none', userSelect: 'none' }}
           distanceFactor={8}
         >
