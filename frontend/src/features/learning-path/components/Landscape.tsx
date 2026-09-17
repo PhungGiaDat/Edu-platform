@@ -8,35 +8,31 @@
 import React, { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-
-// ========== Constants ==========
-
-const COLORS = {
-  grassHill: '#B8E6B8',
-  grassDark: '#8FBC8F',
-  skyTop: '#87CEEB',
-  skyBottom: '#E0F4FF',
-  cloud: '#FFFFFF',
-  treeTrunk: '#8B4513',
-  treeLeaves: '#228B22',
-};
+import { getCategoryPreset, type CategoryPreset } from '../categoryPresets';
 
 // ========== Component ==========
 
-export const Landscape: React.FC = () => {
+export interface LandscapeProps {
+  /** selectedCourse.category_key — presentation only, never a business rule. */
+  categoryKey?: string | null;
+}
+
+export const Landscape: React.FC<LandscapeProps> = ({ categoryKey }) => {
+  const preset = useMemo(() => getCategoryPreset(categoryKey), [categoryKey]);
+
   return (
     <group>
       {/* Sky gradient sphere */}
-      <Sky />
+      <Sky preset={preset} />
 
       {/* Ground plane with hills */}
-      <GroundWithHills />
+      <GroundWithHills preset={preset} />
 
       {/* Background hills */}
-      <BackgroundHills />
+      <BackgroundHills preset={preset} />
 
-      {/* Trees along path edges */}
-      <Trees />
+      {/* Category-themed props along path edges */}
+      <Props preset={preset} />
 
       {/* Floating clouds */}
       <CloudGroup />
@@ -46,12 +42,12 @@ export const Landscape: React.FC = () => {
 
 // ========== Sky ==========
 
-const Sky: React.FC = () => {
+const Sky: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
   const material = useMemo(() => {
     return new THREE.ShaderMaterial({
       uniforms: {
-        topColor: { value: new THREE.Color(COLORS.skyTop) },
-        bottomColor: { value: new THREE.Color(COLORS.skyBottom) },
+        topColor: { value: new THREE.Color(preset.skyTop) },
+        bottomColor: { value: new THREE.Color(preset.skyBottom) },
       },
       vertexShader: `
         varying vec3 vWorldPosition;
@@ -72,7 +68,7 @@ const Sky: React.FC = () => {
       `,
       side: THREE.BackSide,
     });
-  }, []);
+  }, [preset.skyTop, preset.skyBottom]);
 
   return (
     <mesh scale={[100, 100, 100]}>
@@ -84,18 +80,18 @@ const Sky: React.FC = () => {
 
 // ========== Ground with Hills ==========
 
-const GroundWithHills: React.FC = () => {
+const GroundWithHills: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
   const groundMaterial = useMemo(() => {
     return new THREE.MeshToonMaterial({
-      color: new THREE.Color(COLORS.grassHill),
+      color: new THREE.Color(preset.grassHill),
     });
-  }, []);
+  }, [preset.grassHill]);
 
   const hillMaterial = useMemo(() => {
     return new THREE.MeshToonMaterial({
-      color: new THREE.Color(COLORS.grassHill),
+      color: new THREE.Color(preset.grassHill),
     });
-  }, []);
+  }, [preset.grassHill]);
 
   return (
     <group>
@@ -135,12 +131,12 @@ const GroundWithHills: React.FC = () => {
 
 // ========== Background Hills ==========
 
-const BackgroundHills: React.FC = () => {
+const BackgroundHills: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
   const hillMaterial = useMemo(() => {
     return new THREE.MeshToonMaterial({
-      color: new THREE.Color(COLORS.grassDark),
+      color: new THREE.Color(preset.grassDark),
     });
-  }, []);
+  }, [preset.grassDark]);
 
   const hills = [
     { pos: [-20, 0, -15], scale: [8, 5, 8] },
@@ -171,53 +167,157 @@ const BackgroundHills: React.FC = () => {
   );
 };
 
-// ========== Trees ==========
+// ========== Props (category-themed, along path edges) ==========
 
-const Trees: React.FC = () => {
+/** Shared placement for every prop shape so category switching feels like a
+ * re-skin, not a re-arranged scene. */
+const PROP_POSITIONS: Array<[number, number, number]> = [
+  // Left side
+  [-2, 0, -2],
+  [-3.5, 0, 1],
+  [-2, 0, 4],
+  [-3, 0, 7],
+  [-2.5, 0, 10],
+  [-3, 0, 13],
+  [-2, 0, 16],
+  [-3.5, 0, 19],
+  // Right side
+  [2, 0, 0],
+  [3, 0, 3],
+  [2.5, 0, 6],
+  [3, 0, 9],
+  [2, 0, 12],
+  [3.5, 0, 15],
+  [2, 0, 18],
+  [3, 0, 21],
+];
+
+const Props: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
+  switch (preset.propShape) {
+    case 'house':
+    case 'schoolBlock':
+    case 'flower':
+      return <SimpleProps preset={preset} />;
+    case 'tree':
+    default:
+      return <Trees preset={preset} />;
+  }
+};
+
+/** Two-instanced-mesh prop (base + accent) — covers house/schoolBlock/flower
+ * without a bespoke geometry system per category. */
+const SimpleProps: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
+  const baseRef = useRef<THREE.InstancedMesh>(null);
+  const accentRef = useRef<THREE.InstancedMesh>(null);
+
+  const scales = useMemo(() => PROP_POSITIONS.map(() => 0.8 + Math.random() * 0.4), []);
+
+  const baseMaterial = useMemo(
+    () => new THREE.MeshToonMaterial({ color: new THREE.Color(preset.propColor) }),
+    [preset.propColor],
+  );
+  const accentMaterial = useMemo(
+    () => new THREE.MeshToonMaterial({ color: new THREE.Color(preset.propAccent) }),
+    [preset.propAccent],
+  );
+
+  const shape = preset.propShape;
+
+  useMemo(() => {
+    const matrix = new THREE.Matrix4();
+    const position = new THREE.Vector3();
+    const quaternion = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+
+    PROP_POSITIONS.forEach((pos, i) => {
+      const s = scales[i];
+
+      if (shape === 'house') {
+        const bodyHeight = 0.7 * s;
+        position.set(pos[0], pos[1] + bodyHeight / 2, pos[2]);
+        scale.set(0.7 * s, bodyHeight, 0.6 * s);
+        matrix.compose(position, quaternion, scale);
+        baseRef.current?.setMatrixAt(i, matrix);
+
+        position.set(pos[0], pos[1] + bodyHeight + 0.25 * s, pos[2]);
+        scale.set(0.55 * s, 0.5 * s, 0.55 * s);
+        matrix.compose(position, quaternion, scale);
+        accentRef.current?.setMatrixAt(i, matrix);
+      } else if (shape === 'schoolBlock') {
+        const bodyHeight = 0.9 * s;
+        position.set(pos[0], pos[1] + bodyHeight / 2, pos[2]);
+        scale.set(0.55 * s, bodyHeight, 0.55 * s);
+        matrix.compose(position, quaternion, scale);
+        baseRef.current?.setMatrixAt(i, matrix);
+
+        position.set(pos[0], pos[1] + bodyHeight + 0.15 * s, pos[2]);
+        scale.set(0.3 * s, 0.3 * s, 0.3 * s);
+        matrix.compose(position, quaternion, scale);
+        accentRef.current?.setMatrixAt(i, matrix);
+      } else {
+        // flower
+        const stemHeight = 0.4 * s;
+        position.set(pos[0], pos[1] + stemHeight / 2, pos[2]);
+        scale.set(0.06 * s, stemHeight, 0.06 * s);
+        matrix.compose(position, quaternion, scale);
+        baseRef.current?.setMatrixAt(i, matrix);
+
+        position.set(pos[0], pos[1] + stemHeight + 0.12 * s, pos[2]);
+        scale.set(0.22 * s, 0.22 * s, 0.22 * s);
+        matrix.compose(position, quaternion, scale);
+        accentRef.current?.setMatrixAt(i, matrix);
+      }
+    });
+
+    if (baseRef.current) baseRef.current.instanceMatrix.needsUpdate = true;
+    if (accentRef.current) accentRef.current.instanceMatrix.needsUpdate = true;
+  }, [scales, shape]);
+
+  return (
+    <group>
+      <instancedMesh ref={baseRef} args={[undefined, undefined, PROP_POSITIONS.length]} castShadow>
+        {shape === 'flower' ? <cylinderGeometry args={[1, 1, 1, 6]} /> : <boxGeometry args={[1, 1, 1]} />}
+        <primitive object={baseMaterial} attach="material" />
+      </instancedMesh>
+      <instancedMesh ref={accentRef} args={[undefined, undefined, PROP_POSITIONS.length]} castShadow>
+        {shape === 'flower' ? (
+          <sphereGeometry args={[1, 8, 8]} />
+        ) : shape === 'house' ? (
+          <coneGeometry args={[1, 1, 4]} />
+        ) : (
+          <sphereGeometry args={[1, 8, 8]} />
+        )}
+        <primitive object={accentMaterial} attach="material" />
+      </instancedMesh>
+    </group>
+  );
+};
+
+const Trees: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
   const trunkRef = useRef<THREE.InstancedMesh>(null);
   const leaves1Ref = useRef<THREE.InstancedMesh>(null);
   const leaves2Ref = useRef<THREE.InstancedMesh>(null);
   const leaves3Ref = useRef<THREE.InstancedMesh>(null);
 
-  // Position trees along the sides of the path area
-  const treePositions: Array<[number, number, number]> = [
-    // Left side
-    [-2, 0, -2],
-    [-3.5, 0, 1],
-    [-2, 0, 4],
-    [-3, 0, 7],
-    [-2.5, 0, 10],
-    [-3, 0, 13],
-    [-2, 0, 16],
-    [-3.5, 0, 19],
-    // Right side
-    [2, 0, 0],
-    [3, 0, 3],
-    [2.5, 0, 6],
-    [3, 0, 9],
-    [2, 0, 12],
-    [3.5, 0, 15],
-    [2, 0, 18],
-    [3, 0, 21],
-  ];
+  const treePositions = PROP_POSITIONS;
 
   // Generate random scales for each tree
   const treeScales = useMemo(() => {
     return treePositions.map(() => 0.8 + Math.random() * 0.4);
-  }, []);
+  }, [treePositions]);
 
   // Materials for instanced meshes
   const trunkMaterial = useMemo(() => {
     return new THREE.MeshToonMaterial({
-      color: new THREE.Color(COLORS.treeTrunk),
+      color: new THREE.Color(preset.propColor),
     });
-  }, []);
+  }, [preset.propColor]);
 
   const leavesMaterial = useMemo(() => {
     return new THREE.MeshToonMaterial({
-      color: new THREE.Color(COLORS.treeLeaves),
+      color: new THREE.Color(preset.propAccent),
     });
-  }, []);
+  }, [preset.propAccent]);
 
   // Update instance matrices when positions change
   useMemo(() => {
@@ -355,7 +455,7 @@ const Cloud: React.FC<CloudProps> = ({ position, speed = 0.01 }) => {
 
   const cloudMaterial = useMemo(() => {
     return new THREE.MeshToonMaterial({
-      color: new THREE.Color(COLORS.cloud),
+      color: new THREE.Color('#FFFFFF'),
     });
   }, []);
 
