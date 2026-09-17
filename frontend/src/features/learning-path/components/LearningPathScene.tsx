@@ -91,8 +91,12 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
           <directionalLight position={[8, 14, 6]} intensity={1.25} />
           <hemisphereLight args={['#87CEEB', '#B8E6B8', 0.45]} />
 
-          {/* Landscape background */}
-          <Landscape categoryKey={categoryKey} />
+          {/* Landscape background — its own Suspense boundary so its GLTF
+              props (trees/mushrooms/flowers) loading doesn't delay the path
+              and lesson nodes below from appearing. */}
+          <Suspense fallback={null}>
+            <Landscape categoryKey={categoryKey} />
+          </Suspense>
 
           {/* Learning path */}
           <ClayPath nodes={nodes} currentProgress={currentProgress} />
@@ -107,13 +111,16 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
             />
           ))}
 
-          {/* Pet guide */}
+          {/* Pet guide — own Suspense boundary: the path/nodes/camera must
+              not wait on the mascot GLB (preloaded, but still async). */}
           {activePet && (
-            <PetGuide
-              key={courseKey ?? undefined}
-              progress={currentProgress}
-              pet={activePet}
-            />
+            <Suspense fallback={null}>
+              <PetGuide
+                key={courseKey ?? undefined}
+                progress={currentProgress}
+                pet={activePet}
+              />
+            </Suspense>
           )}
 
           {/* Follow camera (only when there are nodes) */}

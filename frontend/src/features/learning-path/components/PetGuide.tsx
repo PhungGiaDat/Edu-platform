@@ -16,14 +16,17 @@ import type { Pet } from '@/hooks/usePets';
 // ========== Constants ==========
 
 /**
- * A real, textured elephant asset already ships in the project
- * (frontend/public/assets/models/elephant.glb — the same nature-kit family
- * as the environment props). Most pets currently have no `model_url` set,
- * which fell through to a plain white clay sphere — the "unfinished
- * placeholder" the screenshot showed. Using this shipped asset as the
- * default mascot means PetGuide is never that placeholder again.
+ * A real, textured elephant asset ships in the project, but the SOURCE file
+ * (frontend/public/assets/models/elephant.glb, ~21 MB / ~526k triangles, a
+ * Sketchfab export) is far too heavy for a mobile-first page. This points at
+ * a derivative optimized specifically for Learning Path's small on-screen
+ * size — see frontend/public/assets/models/README-elephant-optimization.md
+ * for the exact gltf-transform pipeline. The original elephant.glb is left
+ * untouched for any other consumer. Most pets currently have no
+ * `model_url` set, which fell through to a plain white clay sphere — the
+ * "unfinished placeholder" problem this replaces.
  */
-const DEFAULT_MASCOT_MODEL_URL = '/assets/models/elephant.glb';
+const DEFAULT_MASCOT_MODEL_URL = '/assets/models/elephant-learning-path.glb';
 /** Unverified without a rendered frame — tune once visual QA is possible. */
 const MASCOT_SCALE = 0.55;
 
@@ -185,6 +188,11 @@ const CelebrationParticles: React.FC<CelebrationParticlesProps> = ({ position })
     </group>
   );
 };
+
+// Kick off the default mascot download as soon as this route's code loads,
+// in parallel with the rest of the scene setup, instead of only starting
+// once PetGuide first suspends.
+useGLTF.preload(DEFAULT_MASCOT_MODEL_URL);
 
 // ========== Export ==========
 
