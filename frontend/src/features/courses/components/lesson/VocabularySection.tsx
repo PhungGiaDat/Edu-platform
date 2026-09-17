@@ -4,7 +4,7 @@ import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
 import { getPronunciationService, type PronunciationResult } from '@/services/PronunciationService';
 import { eventBus } from '@/runtime/EventBus';
-import { FeedbackMascot } from './FeedbackMascot';
+import { ClayButton, ClayStage, ClayPill } from './clayComponents';
 
 export interface PracticeResult {
   transcript: string;
@@ -19,6 +19,31 @@ interface VocabularySectionProps {
   practicedWords: Record<string, PracticeResult>;
   locale: 'en' | 'vi';
   onComplete?: () => void;
+}
+
+function mapSpeechError(error?: string | null, locale: 'en' | 'vi' = 'vi'): string {
+  if (!error) {
+    return locale === 'vi' ? 'Không thể nhận diện giọng nói.' : 'Speech recognition error.';
+  }
+  const clean = error.toLowerCase();
+  if (clean.includes('service-not-allowed') || clean.includes('not-allowed') || clean.includes('service')) {
+    return locale === 'vi'
+      ? '🎤 Luyện nói chưa khả dụng trên thiết bị này. Bé vẫn có thể nghe mẫu và tiếp tục bài học nhé.'
+      : '🎤 Speech practice is not available on this device. You can still listen and continue the lesson!';
+  }
+  if (clean.includes('no-speech')) {
+    return locale === 'vi'
+      ? 'Chưa nghe thấy giọng của bé, hãy thử lại nhé!'
+      : 'No speech heard, please try again!';
+  }
+  if (clean.includes('network')) {
+    return locale === 'vi'
+      ? 'Lỗi kết nối mạng khi luyện nói. Bé hãy thử lại sau nhé.'
+      : 'Network error during speech practice. Please try again later.';
+  }
+  return locale === 'vi'
+    ? 'Có lỗi khi ghi âm. Bé hãy thử lại hoặc tiếp tục bài học nhé.'
+    : 'Audio recording error. Please try again or continue!';
 }
 
 export const VocabularySection: React.FC<VocabularySectionProps> = ({
@@ -38,13 +63,13 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
   const copy = {
     en: {
       instruction: 'Listen carefully & repeat after Momo',
-      listen: 'Nghe mẫu',
-      speak: 'Luyện nói',
+      listen: 'Listen',
+      speak: 'Speak',
       listening: 'Listening to you...',
       passed: 'Awesome!',
       tryAgain: 'Try Again',
-      nextWord: 'Tiếp tục →',
-      finishVocab: 'Hoàn thành từ mới 🎉',
+      nextWord: 'Next Word →',
+      finishVocab: 'Complete Words 🎉',
       allDone: `You've learned all ${vocabulary.length} words!`,
     },
     vi: {
@@ -84,26 +109,13 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
         const timeoutId = window.setTimeout(() => {
           eventBus.off('PRONUNCIATION_ERROR', handleError);
           service.stopListening();
-          reject(
-            new Error(
-              locale === 'vi'
-                ? 'Chưa nghe thấy giọng của bé, hãy thử lại nhé!'
-                : 'No speech heard, please try again!'
-            )
-          );
+          reject(new Error(mapSpeechError('no-speech', locale)));
         }, 8000);
 
         const handleError = (payload: { error?: string }) => {
           window.clearTimeout(timeoutId);
           eventBus.off('PRONUNCIATION_ERROR', handleError);
-          reject(
-            new Error(
-              payload?.error ||
-                (locale === 'vi'
-                  ? 'Không thể nhận diện giọng nói.'
-                  : 'Speech recognition error.')
-            )
-          );
+          reject(new Error(mapSpeechError(payload?.error, locale)));
         };
 
         eventBus.on('PRONUNCIATION_ERROR', handleError);
@@ -130,11 +142,12 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
           .catch((err: unknown) => {
             window.clearTimeout(timeoutId);
             eventBus.off('PRONUNCIATION_ERROR', handleError);
-            reject(err);
+            const rawMsg = err instanceof Error ? err.message : String(err);
+            reject(new Error(mapSpeechError(rawMsg, locale)));
           });
       });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Có lỗi khi ghi âm.';
+      const msg = err instanceof Error ? err.message : mapSpeechError(null, locale);
       setErrorMessage(msg);
     } finally {
       setIsListeningKey(null);
@@ -144,6 +157,7 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
   const handleNextWord = () => {
     if (currentIndex < vocabulary.length - 1) {
       setCurrentIndex((prev) => prev + 1);
+      setErrorMessage(null);
     } else {
       setShowCelebration(true);
       if (onComplete) {
@@ -156,20 +170,19 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
 
   if (!vocabulary.length) {
     return (
-      <div className="rounded-3xl border-4 border-white bg-white/90 p-8 text-center text-slate-500 shadow-md">
+      <ClayStage color="yellow" className="p-8 text-center text-slate-700">
         Không có từ vựng cho bài học này.
-      </div>
+      </ClayStage>
     );
   }
 
   return (
     <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
-      {/* Header & Page Dots */}
+      {/* Header: Clay Step Indicator Pill + Interactive Page Dots */}
       <div className="flex items-center justify-between px-1">
-        <FeedbackMascot
-          mode="companion"
-          message={`Từ ${currentIndex + 1} / ${vocabulary.length}`}
-        />
+        <ClayPill color="cyan">
+          Từ {currentIndex + 1} / {vocabulary.length}
+        </ClayPill>
 
         {/* Interactive Page Dots: ● ○ ○ */}
         <div className="flex items-center gap-2">
@@ -177,29 +190,35 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
             <button
               key={item.word_en || idx}
               type="button"
-              onClick={() => setCurrentIndex(idx)}
+              onClick={() => {
+                setCurrentIndex(idx);
+                setErrorMessage(null);
+              }}
               aria-label={`Từ số ${idx + 1}`}
-              className={`h-3 rounded-full transition-all cursor-pointer ${
+              className={`h-3.5 rounded-full transition-all cursor-pointer ${
                 idx === currentIndex
-                  ? 'w-7 bg-sky-500 shadow-xs'
+                  ? 'w-8 bg-[#20BCEB] shadow-[0_2px_0_#0284C7]'
                   : practicedWords[item.word_en.toLowerCase()]?.passed
-                    ? 'w-3 bg-emerald-400'
-                    : 'w-3 bg-slate-200'
+                    ? 'w-3.5 bg-[#20D6A4] shadow-[0_2px_0_#059669]'
+                    : 'w-3.5 bg-slate-200'
               }`}
             />
           ))}
         </div>
       </div>
 
-      {/* Error notification if any */}
+      {/* Child-friendly speech error notice if any */}
       {errorMessage && (
-        <div className="rounded-2xl border-2 border-rose-200 bg-rose-50 p-2.5 text-xs font-bold text-rose-700">
-          ⚠️ {errorMessage}
-        </div>
+        <ClayStage
+          color="yellow"
+          className="p-3 text-xs font-black text-amber-950 border-2 border-amber-300 text-left animate-fade-in"
+        >
+          {errorMessage}
+        </ClayStage>
       )}
 
       {/* ONE WORD AT A TIME: Horizontal Carousel Container */}
-      <div className="relative overflow-hidden w-full rounded-3xl">
+      <div className="relative overflow-hidden w-full rounded-[28px]">
         <div
           className="flex w-full transition-transform duration-400 ease-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -213,71 +232,65 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
                 key={item.word_en}
                 className="w-full shrink-0 px-0.5"
               >
-                <div className="rounded-3xl border-4 border-white bg-white/95 p-4 sm:p-5 shadow-[0_8px_0_rgba(0,0,0,0.06)] flex flex-col items-center">
-                  {/* Large Clay Image Card (Roughly square, visual hero) */}
-                  <div className="relative w-full aspect-square max-h-[220px] sm:max-h-[250px] rounded-2xl bg-slate-50 border-2 border-slate-100 flex items-center justify-center overflow-hidden mb-2.5">
+                {/* Real Clay Hero Stage: Cyan tinted with 3D bottom extrusion */}
+                <ClayStage
+                  color="cyan"
+                  className="flex flex-col items-center border-4 border-white p-4 sm:p-5"
+                >
+                  {/* Large Square Clay Image Box (No duplicate speaker button inside!) */}
+                  <div className="relative w-full aspect-square max-h-[220px] sm:max-h-[240px] rounded-2xl bg-white border-3 border-[#B9E7F6] shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] flex items-center justify-center overflow-hidden mb-3">
                     {visual.imageUrl ? (
                       <img
                         src={visual.imageUrl}
                         alt={item.word_en}
-                        className="h-full w-full object-contain p-2 transition-transform hover:scale-105 duration-300"
+                        className="h-full w-full object-contain p-2.5 transition-transform hover:scale-105 duration-300"
                         loading="lazy"
                       />
                     ) : (
-                      <span className="text-7xl">{visual.emoji || item.emoji || '🔤'}</span>
+                      <span className="text-7xl select-none">{visual.emoji || item.emoji || '🔤'}</span>
                     )}
-
-                    {/* Quick audio speaker button inside image */}
-                    <button
-                      type="button"
-                      onClick={() => handlePlayAudio(item)}
-                      className="absolute bottom-2.5 right-2.5 h-11 w-11 rounded-2xl bg-white/95 shadow-md border-2 border-slate-100 flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                      aria-label={`Nghe ${item.word_en}`}
-                    >
-                      🔊
-                    </button>
                   </div>
 
-                  {/* English Word (Prominent) */}
+                  {/* English Word (Prominent & Playful) */}
                   <h3 className="text-3xl sm:text-4xl font-black text-slate-900 capitalize tracking-tight">
                     {item.word_en}
                   </h3>
 
                   {/* Vietnamese Translation */}
-                  <p className="text-lg sm:text-xl font-black text-amber-600 mt-0.5">
+                  <p className="text-lg sm:text-xl font-black text-[#D97706] mt-0.5">
                     {item.word_vi}
                   </p>
 
                   {/* Example Sentence */}
                   {item.simple_sentence && (
-                    <p className="mt-1.5 text-xs sm:text-sm font-semibold text-slate-500 bg-slate-50 px-3 py-1 rounded-xl border border-slate-100 italic max-w-xs">
+                    <p className="mt-1.5 text-xs sm:text-sm font-semibold text-slate-600 bg-white/80 px-3.5 py-1 rounded-xl border border-sky-100 italic max-w-xs">
                       "{item.simple_sentence}"
                     </p>
                   )}
 
-                  {/* Listen & Speak Actions (Clay buttons) */}
+                  {/* Secondary Learning Actions: [🔊 Nghe mẫu] and [🎤 Luyện nói] */}
                   <div className="grid grid-cols-2 gap-2.5 w-full mt-3.5">
-                    <button
-                      type="button"
+                    <ClayButton
+                      variant="blue"
+                      size="md"
                       onClick={() => handlePlayAudio(item)}
                       disabled={activeWordKey === item.word_en}
-                      className="min-h-12 rounded-2xl border-2 border-white bg-gradient-to-r from-[#6EB9FF] to-[#3A8FD1] text-white font-black text-sm shadow-[0_4px_0_#2B76B3] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <span className="text-base">🔊</span>
                       <span>{copy.listen}</span>
-                    </button>
+                    </ClayButton>
 
-                    <button
-                      type="button"
+                    <ClayButton
+                      variant={
+                        isListeningKey === item.word_en.toLowerCase()
+                          ? 'coral'
+                          : practicedStatus?.passed
+                            ? 'emerald'
+                            : 'yellow'
+                      }
+                      size="md"
                       onClick={() => handlePracticeSpeaking(item)}
                       disabled={isListeningKey === item.word_en.toLowerCase()}
-                      className={`min-h-12 rounded-2xl border-2 border-white font-black text-sm shadow-[0_4px_0_rgba(0,0,0,0.15)] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                        isListeningKey === item.word_en.toLowerCase()
-                          ? 'bg-amber-400 text-slate-900 animate-pulse'
-                          : practicedStatus?.passed
-                            ? 'bg-emerald-500 text-white shadow-[0_4px_0_#059669]'
-                            : 'bg-[#FFD93D] text-slate-900 shadow-[0_4px_0_#EAB308]'
-                      }`}
                     >
                       <span className="text-base">
                         {isListeningKey === item.word_en.toLowerCase() ? '👂' : '🎤'}
@@ -287,22 +300,18 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
                           ? copy.listening
                           : copy.speak}
                       </span>
-                    </button>
+                    </ClayButton>
                   </div>
 
                   {/* Practice Feedback Badge */}
                   {practicedStatus && (
-                    <div
-                      className={`mt-2 text-xs font-black px-3 py-1 rounded-full ${
-                        practicedStatus.passed
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-amber-100 text-amber-800'
-                      }`}
-                    >
-                      {practicedStatus.passed ? `✓ ${copy.passed}` : copy.tryAgain}
+                    <div className="mt-2">
+                      <ClayPill color={practicedStatus.passed ? 'emerald' : 'yellow'}>
+                        {practicedStatus.passed ? `✓ ${copy.passed}` : copy.tryAgain}
+                      </ClayPill>
                     </div>
                   )}
-                </div>
+                </ClayStage>
               </div>
             );
           })}
@@ -310,33 +319,34 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
       </div>
 
       {/* Primary Continue Button */}
-      <div className="pt-2">
-        <button
-          type="button"
+      <div className="pt-1">
+        <ClayButton
+          variant="emerald"
           onClick={handleNextWord}
-          className="w-full min-h-[56px] rounded-2xl border-2 border-white bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-base sm:text-lg shadow-[0_6px_0_#0D9488] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+          size="lg"
         >
-          <span>
-            {currentIndex < vocabulary.length - 1 ? copy.nextWord : copy.finishVocab}
-          </span>
-        </button>
+          {currentIndex < vocabulary.length - 1 ? copy.nextWord : copy.finishVocab}
+        </ClayButton>
       </div>
 
       {/* Completion Banner */}
       {showCelebration && (
-        <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-3.5 text-center shadow-md animate-fade-in mt-2">
+        <ClayStage
+          color="emerald"
+          className="p-3.5 text-center animate-fade-in mt-2 border-2 border-emerald-300"
+        >
           <span className="text-2xl block mb-0.5">🎉</span>
-          <p className="text-sm font-black text-emerald-900">{copy.allDone}</p>
+          <p className="text-sm font-black text-emerald-950">{copy.allDone}</p>
           {onComplete && (
             <button
               type="button"
               onClick={onComplete}
-              className="mt-2 text-xs font-black text-emerald-700 underline cursor-pointer"
+              className="mt-2 text-xs font-black text-emerald-800 underline cursor-pointer hover:text-emerald-950"
             >
               Tiếp tục ngay →
             </button>
           )}
-        </div>
+        </ClayStage>
       )}
     </section>
   );

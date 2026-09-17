@@ -4,6 +4,7 @@ import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
 import { HapticService } from '@/services/HapticService';
 import { FeedbackMascot } from './FeedbackMascot';
+import { ClayStage } from './clayComponents';
 
 interface QuizSectionProps {
   lesson: Lesson;
@@ -177,8 +178,8 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
         </div>
       </div>
 
-      {/* Main Question Surface */}
-      <div className="rounded-3xl border-4 border-white bg-white/95 p-4 sm:p-5 shadow-[0_8px_0_rgba(0,0,0,0.06)] flex flex-col items-center">
+      {/* Main Question Surface with Cyan ClayStage */}
+      <ClayStage color="cyan" className="p-4 sm:p-5 flex flex-col items-center">
         {/* Audio question trigger if available */}
         {currentQuestion.questionAudioText && (
           <button
@@ -186,7 +187,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
             onClick={() =>
               handlePlayAudio(currentQuestion.question_id, currentQuestion.questionAudioText)
             }
-            className="mb-2.5 flex items-center gap-1.5 rounded-full border-2 border-sky-200 bg-sky-50 px-3.5 py-1 text-xs font-black text-sky-800 shadow-2xs hover:bg-sky-100 active:scale-95 transition-transform cursor-pointer"
+            className="mb-2.5 flex items-center gap-1.5 rounded-full border-2 border-sky-200 bg-white px-3.5 py-1 text-xs font-black text-sky-800 shadow-2xs hover:bg-sky-50 active:scale-95 transition-transform cursor-pointer"
           >
             <span>{playingAudioId === currentQuestion.question_id ? '🔊' : '🔈'}</span>
             <span>{copy.listenPrompt}</span>
@@ -210,17 +211,17 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
                 key={opt.option_id}
                 type="button"
                 onClick={() => handleSelectOption(opt.option_id)}
-                className={`group flex flex-col items-center justify-center rounded-2xl border-4 p-3 text-center transition-all cursor-pointer ${
+                className={`group flex flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition-all cursor-pointer ${
                   isSelected
                     ? feedbackState?.isCorrect
-                      ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-102 shadow-[0_5px_0_#10B981]'
+                      ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-[1.02] shadow-[0_5px_0_#10B981]'
                       : 'border-rose-400 bg-rose-50 ring-4 ring-rose-200 animate-shake shadow-[0_4px_0_#F43F5E]'
-                    : 'border-white bg-white shadow-[0_5px_0_rgba(0,0,0,0.06)] hover:border-sky-200 active:scale-95'
+                    : 'border-sky-200 bg-white hover:border-sky-300 hover:bg-sky-50/50 shadow-[0_4px_0_#BAE6FD] active:translate-y-1 active:shadow-[0_2px_0_#BAE6FD]'
                 }`}
               >
                 {/* Visual image if option has image */}
                 {hasVisualImage && (
-                  <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl bg-slate-50 flex items-center justify-center mb-1.5 overflow-hidden border border-slate-100">
+                  <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl bg-sky-50/50 flex items-center justify-center mb-1.5 overflow-hidden border border-sky-100">
                     <img
                       src={visual.imageUrl!}
                       alt={opt.label}
@@ -237,7 +238,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
             );
           })}
         </div>
-      </div>
+      </ClayStage>
 
       {/* Mascot Feedback (Appears only during feedback moments, never covers content) */}
       {feedbackState && (

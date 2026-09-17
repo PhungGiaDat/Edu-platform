@@ -20,9 +20,15 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [, setCompletedWordKeys] = useState<Set<string>>(new Set());
 
   const currentItem: VocabularyItem | undefined = vocabulary[currentTargetIndex];
+
+  // Ensure currentItem is always included in the choices, even if vocabulary has > 4 items
+  const displayChoices = React.useMemo(() => {
+    if (!currentItem || vocabulary.length <= 4) return vocabulary;
+    const others = vocabulary.filter((v) => v.word_en.toLowerCase() !== currentItem.word_en.toLowerCase());
+    return [currentItem, ...others.slice(0, 3)].sort((a, b) => a.word_en.localeCompare(b.word_en));
+  }, [currentItem, vocabulary]);
 
   const copy = {
     en: {
@@ -79,7 +85,6 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
     if (matches) {
       await AudioService.playSoundEffect('correct');
       HapticService.success();
-      setCompletedWordKeys((prev) => new Set(prev).add(currentItem.word_en.toLowerCase()));
 
       // Auto advance to next question after 1.5s
       window.setTimeout(() => {
@@ -143,7 +148,7 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
 
       {/* 2-Column Responsive Visual Answer Cards */}
       <div className="grid grid-cols-2 gap-3 w-full">
-        {vocabulary.slice(0, 4).map((item) => {
+        {displayChoices.map((item) => {
           const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
           const isSelected = selectedWord === item.word_en;
           const isTarget = currentItem.word_en.toLowerCase() === item.word_en.toLowerCase();
@@ -154,16 +159,16 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
               type="button"
               onClick={() => handleChoice(item)}
               disabled={Boolean(isCorrect && isTarget)}
-              className={`group flex flex-col items-center rounded-3xl border-4 p-3 text-center transition-all cursor-pointer ${
+              className={`group flex flex-col items-center rounded-3xl border-3 p-3 text-center transition-all cursor-pointer ${
                 isSelected && isCorrect
-                  ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-102 shadow-[0_6px_0_#10B981]'
+                  ? 'border-emerald-400 bg-[#ECFDF5] ring-4 ring-emerald-200 scale-[1.02] shadow-[0_6px_0_#10B981]'
                   : isSelected && !isCorrect
-                    ? 'border-rose-400 bg-rose-50 ring-4 ring-rose-200 animate-shake shadow-[0_4px_0_#F43F5E]'
-                    : 'border-white bg-white shadow-[0_6px_0_rgba(0,0,0,0.06)] hover:border-sky-200 active:scale-98'
+                    ? 'border-rose-400 bg-[#FFF1F2] ring-4 ring-rose-200 animate-shake shadow-[0_4px_0_#F43F5E]'
+                    : 'border-sky-200 bg-[#F0F9FF] shadow-[0_6px_0_#BAE6FD] hover:border-sky-300 hover:bg-[#E0F2FE] active:translate-y-1 active:shadow-[0_2px_0_#BAE6FD]'
               }`}
             >
               {/* Large Canonical Image */}
-              <div className="h-24 sm:h-28 w-full rounded-2xl bg-slate-50 overflow-hidden flex items-center justify-center mb-1.5 border border-slate-100">
+              <div className="h-24 sm:h-28 w-full rounded-2xl bg-white overflow-hidden flex items-center justify-center mb-1.5 border-2 border-sky-100/80 shadow-inner">
                 {visual.imageUrl ? (
                   <img
                     src={visual.imageUrl}
@@ -180,7 +185,7 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
               <span className="text-base sm:text-lg font-black text-slate-900 capitalize">
                 {item.word_en}
               </span>
-              <span className="text-xs font-bold text-slate-400">
+              <span className="text-xs font-bold text-sky-700/80">
                 {item.word_vi}
               </span>
             </button>
@@ -201,8 +206,8 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
         />
       )}
 
-      {/* Manual Continue Button when answered */}
-      {isCorrect && (
+      {/* Manual Continue Button when answered (intermediate questions only, preventing duplicate footer CTA) */}
+      {isCorrect && currentTargetIndex < vocabulary.length - 1 && (
         <div className="pt-1">
           <button
             type="button"

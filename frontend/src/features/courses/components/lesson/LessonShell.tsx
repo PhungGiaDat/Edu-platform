@@ -46,6 +46,20 @@ export const LessonShell: React.FC<LessonShellProps> = ({
       100
   );
 
+  const [visibleNotice, setVisibleNotice] = React.useState<string | null>(notice ?? null);
+
+  React.useEffect(() => {
+    if (!notice) {
+      setVisibleNotice(null);
+      return;
+    }
+    setVisibleNotice(notice);
+    const timer = setTimeout(() => {
+      setVisibleNotice(null);
+    }, 2800);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
   const copy = {
     en: {
       back: 'Exit',
@@ -81,6 +95,7 @@ export const LessonShell: React.FC<LessonShellProps> = ({
       className="min-h-screen w-full flex flex-col transition-colors duration-300 overflow-x-hidden"
       style={{
         background: theme.heroBgGradient,
+        ['--lesson-bottom-action-height' as any]: '4.5rem',
       }}
     >
       {/* Top Mobile App Header with iOS Safe Area */}
@@ -128,8 +143,8 @@ export const LessonShell: React.FC<LessonShellProps> = ({
           </div>
         </div>
 
-        {/* Compact Stepper Track */}
-        <div className="mx-auto max-w-lg mt-1.5 pt-1 border-t border-slate-100/80">
+        {/* Desktop Stepper Track - Hidden on Mobile to avoid screen clutter */}
+        <div className="hidden sm:block mx-auto max-w-lg mt-1.5 pt-1 border-t border-slate-100/80">
           <LessonJourney
             currentStepIndex={currentStepIndex}
             completedSteps={completedSteps}
@@ -140,17 +155,20 @@ export const LessonShell: React.FC<LessonShellProps> = ({
         </div>
       </header>
 
+      {/* Floating Save Progress Notification Toast */}
+      {visibleNotice && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm rounded-2xl border-2 border-amber-300 bg-amber-50/95 backdrop-blur-md px-4 py-2.5 text-xs font-black text-amber-900 shadow-lg animate-fade-in flex items-center gap-2 pointer-events-none"
+        >
+          <span className="text-sm">🔔</span>
+          <span className="truncate">{visibleNotice}</span>
+        </div>
+      )}
+
       {/* Main Learning Task Area */}
       <main className="flex-1 w-full max-w-md sm:max-w-lg mx-auto px-4 pt-3 pb-[calc(88px+env(safe-area-inset-bottom,12px))] sm:pb-32 flex flex-col justify-start min-h-0">
-        {notice && (
-          <aside
-            aria-live="polite"
-            className="mb-3 rounded-2xl border-2 border-amber-300 bg-amber-50 px-3.5 py-2.5 text-xs font-black text-amber-900 shadow-xs animate-fade-in flex items-center gap-2"
-          >
-            <span className="text-sm">🔔</span>
-            <span>{notice}</span>
-          </aside>
-        )}
 
         {/* Child Interactive Section */}
         <div className="w-full min-w-0">{children}</div>

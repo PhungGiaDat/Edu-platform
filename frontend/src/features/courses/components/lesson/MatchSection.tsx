@@ -155,14 +155,14 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
                 type="button"
                 onClick={() => handleSelectWord(item.word_en)}
                 disabled={isMatched}
-                className={`w-full min-h-[60px] sm:min-h-[68px] flex flex-col justify-center items-center p-2 rounded-2xl border-4 text-center transition-all cursor-pointer ${
+                className={`w-full min-h-[60px] sm:min-h-[68px] flex flex-col justify-center items-center p-2 rounded-2xl border-2 text-center transition-all cursor-pointer ${
                   isMatched
                     ? 'border-emerald-300 bg-emerald-50/70 opacity-50 scale-95 cursor-default'
                     : isSelected
-                      ? 'border-sky-500 bg-sky-50 ring-4 ring-sky-200 scale-102 shadow-[0_5px_0_#0284C7]'
+                      ? 'border-purple-500 bg-purple-50 ring-4 ring-purple-200 scale-[1.02] shadow-[0_5px_0_#9333EA] -translate-y-0.5'
                       : isShaking
                         ? 'border-rose-400 bg-rose-50 ring-4 ring-rose-200 animate-shake'
-                        : 'border-white bg-white hover:border-slate-200 shadow-[0_4px_0_rgba(0,0,0,0.06)] active:scale-95'
+                        : 'border-sky-200 bg-[#F0F9FF] hover:border-sky-300 hover:bg-[#E0F2FE] shadow-[0_4px_0_#BAE6FD] active:scale-95'
                 }`}
               >
                 <span className="text-base sm:text-lg font-black text-slate-900 capitalize leading-tight">
@@ -173,7 +173,7 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
                     ✓ Đã ghép
                   </span>
                 ) : (
-                  <span className="text-[10px] font-bold text-slate-400">
+                  <span className="text-[10px] font-bold text-sky-700/80">
                     {item.word_vi}
                   </span>
                 )}
@@ -200,17 +200,17 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
                 type="button"
                 onClick={() => handleSelectImage(item.word_en)}
                 disabled={isMatched}
-                className={`w-full min-h-[60px] sm:min-h-[68px] flex items-center justify-center p-1.5 rounded-2xl border-4 transition-all cursor-pointer ${
+                className={`w-full min-h-[60px] sm:min-h-[68px] flex items-center justify-center p-1.5 rounded-2xl border-2 transition-all cursor-pointer ${
                   isMatched
                     ? 'border-emerald-300 bg-emerald-50/70 opacity-50 scale-95 cursor-default'
                     : isSelected
-                      ? 'border-sky-500 bg-sky-50 ring-4 ring-sky-200 scale-102 shadow-[0_5px_0_#0284C7]'
+                      ? 'border-purple-500 bg-purple-50 ring-4 ring-purple-200 scale-[1.02] shadow-[0_5px_0_#9333EA] -translate-y-0.5'
                       : isShaking
                         ? 'border-rose-400 bg-rose-50 ring-4 ring-rose-200 animate-shake'
-                        : 'border-white bg-white hover:border-slate-200 shadow-[0_4px_0_rgba(0,0,0,0.06)] active:scale-95'
+                        : 'border-amber-200 bg-[#FFFBEB] hover:border-amber-300 hover:bg-[#FEF3C7] shadow-[0_4px_0_#FDE68A] active:scale-95'
                 }`}
               >
-                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-slate-50 overflow-hidden flex items-center justify-center">
+                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-white border border-amber-200/70 shadow-inner overflow-hidden flex items-center justify-center">
                   {visual.imageUrl ? (
                     <img
                       src={visual.imageUrl}

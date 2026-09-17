@@ -10,3 +10,4 @@ export * from './MiniGamesSection';
 export * from './QuizSection';
 export * from './RewardSection';
 export * from './FeedbackMascot';
+export * from './clayComponents';

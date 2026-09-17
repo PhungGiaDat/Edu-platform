@@ -21,9 +21,15 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null);
-  const [, setCompletedWordKeys] = useState<Set<string>>(new Set());
 
   const currentTarget = vocabulary[currentTargetIndex] || vocabulary[0];
+
+  // Ensure currentTarget is always included in choices if vocabulary has > 3 items
+  const displayChoices = useMemo(() => {
+    if (!currentTarget || vocabulary.length <= 3) return vocabulary.slice(0, 3);
+    const others = vocabulary.filter((v) => v.word_en.toLowerCase() !== currentTarget.word_en.toLowerCase());
+    return [currentTarget, ...others.slice(0, 2)].sort((a, b) => a.word_en.localeCompare(b.word_en));
+  }, [currentTarget, vocabulary]);
 
   const copy = {
     en: {
@@ -85,7 +91,6 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
         correct: true,
         message: `${copy.correct} "${currentTarget.word_en}" là "${currentTarget.word_vi}".`,
       });
-      setCompletedWordKeys((prev) => new Set(prev).add(currentTarget.word_en.toLowerCase()));
 
       window.setTimeout(() => {
         if (currentTargetIndex < vocabulary.length - 1) {
@@ -164,7 +169,7 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
 
       {/* 3 LARGE IMAGE CHOICES (Tactile Clay Cards) */}
       <div className="grid grid-cols-3 gap-2.5 w-full">
-        {vocabulary.slice(0, 3).map((item) => {
+        {displayChoices.map((item) => {
           const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
           const isSelected = selectedWord === item.word_en;
           const isTarget = currentTarget.word_en.toLowerCase() === item.word_en.toLowerCase();
@@ -175,15 +180,15 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
               type="button"
               onClick={() => handleChoice(item)}
               disabled={Boolean(feedback?.correct && isTarget)}
-              className={`group flex flex-col items-center rounded-2xl border-4 p-2 text-center transition-all cursor-pointer ${
+              className={`group flex flex-col items-center rounded-2xl border-2 p-2 text-center transition-all cursor-pointer ${
                 isSelected && feedback?.correct
-                  ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-102 shadow-[0_5px_0_#10B981]'
+                  ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-[1.02] shadow-[0_5px_0_#10B981]'
                   : isSelected && !feedback?.correct
                     ? 'border-rose-400 bg-rose-50 ring-4 ring-rose-200 animate-shake shadow-[0_4px_0_#F43F5E]'
-                    : 'border-white bg-white shadow-[0_5px_0_rgba(0,0,0,0.06)] hover:border-amber-200 active:scale-95'
+                    : 'border-amber-200 bg-[#FFFBEB] hover:border-amber-300 hover:bg-[#FEF3C7] shadow-[0_5px_0_#FDE68A] active:translate-y-1 active:shadow-[0_2px_0_#FDE68A]'
               }`}
             >
-              <div className="h-20 w-full sm:h-24 rounded-xl bg-slate-50 overflow-hidden flex items-center justify-center mb-1.5 border border-slate-100">
+              <div className="h-20 w-full sm:h-24 rounded-xl bg-white overflow-hidden flex items-center justify-center mb-1.5 border border-amber-200/70 shadow-inner">
                 {visual.imageUrl ? (
                   <img
                     src={visual.imageUrl}

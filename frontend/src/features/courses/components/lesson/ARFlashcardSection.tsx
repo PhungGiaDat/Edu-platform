@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Lesson } from '@/types/course';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
+import { ClayStage } from './clayComponents';
 
 interface ARFlashcardSectionProps {
   lesson: Lesson;
@@ -57,12 +58,12 @@ export const ARFlashcardSection: React.FC<ARFlashcardSectionProps> = ({
         </p>
       </div>
 
-      {/* One Prominent Flat AR Launch Card (No nested cards) */}
-      <div className="rounded-3xl border-4 border-white bg-gradient-to-b from-purple-50/70 to-indigo-50/70 p-4 shadow-[0_8px_0_rgba(147,51,234,0.12)]">
+      {/* One Prominent Flat AR Launch Card with Purple ClayStage */}
+      <ClayStage color="purple" className="p-4">
         {/* 3 Tiny Vocabulary Previews */}
         {vocabulary.length > 0 && (
           <div className="mb-4">
-            <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
+            <p className="text-[11px] font-black uppercase tracking-wider text-purple-900/70 mb-2">
               {copy.preview}
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -72,9 +73,9 @@ export const ARFlashcardSection: React.FC<ARFlashcardSectionProps> = ({
                 return (
                   <div
                     key={item.word_en}
-                    className="flex flex-col items-center rounded-xl bg-white/90 border border-purple-100 p-2 shadow-2xs"
+                    className="flex flex-col items-center rounded-2xl bg-white border-2 border-purple-100 p-2 shadow-[0_3px_0_#E9D5FF]"
                   >
-                    <div className="h-10 w-10 rounded-lg bg-slate-50 overflow-hidden flex items-center justify-center mb-1 border border-slate-100">
+                    <div className="h-10 w-10 rounded-xl bg-purple-50/50 overflow-hidden flex items-center justify-center mb-1 border border-purple-100/70">
                       {visual.imageUrl ? (
                         <img
                           src={visual.imageUrl}
@@ -104,11 +105,11 @@ export const ARFlashcardSection: React.FC<ARFlashcardSectionProps> = ({
           type="button"
           onClick={handleLaunchAR}
           aria-label={copy.accessibleAr}
-          className="w-full min-h-[54px] rounded-2xl border-2 border-white bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-base shadow-[0_6px_0_#6B21A8] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+          className="w-full min-h-[54px] rounded-2xl border-2 border-white bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-base shadow-[0_6px_0_#6B21A8] hover:brightness-105 active:translate-y-1 active:shadow-[0_2px_0_#6B21A8] transition-all cursor-pointer flex items-center justify-center gap-2"
         >
           <span>{copy.launchAr}</span>
         </button>
-      </div>
+      </ClayStage>
 
       {/* Non-blocking Secondary Continue Button */}
       <div className="pt-1">

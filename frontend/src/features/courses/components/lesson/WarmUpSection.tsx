@@ -3,6 +3,7 @@ import type { Course, Lesson } from '@/types/course';
 import { getCourseTheme, type CourseThemeConfig } from '@/features/courses/courseThemes';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { FeedbackMascot } from './FeedbackMascot';
+import { ClayStage } from './clayComponents';
 
 interface WarmUpSectionProps {
   lesson: Lesson;
@@ -86,9 +87,9 @@ export const WarmUpSection: React.FC<WarmUpSectionProps> = ({
       {/* VISUAL FIRST: One Prominent Visual Panel + 3 Preview Chips */}
       {vocabulary.length > 0 && activeItem && (
         <div className="w-full">
-          {/* Prominent Visual Hero Panel */}
-          <div className="rounded-3xl border-4 border-white bg-white/95 p-4 shadow-[0_8px_0_rgba(0,0,0,0.06)] flex flex-col items-center">
-            <div className="relative w-full aspect-[4/3] max-h-[190px] rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden mb-2">
+          {/* Prominent Visual Hero Panel with Mint ClayStage */}
+          <ClayStage color="mint" className="p-4 flex flex-col items-center">
+            <div className="relative w-full aspect-[4/3] max-h-[190px] rounded-2xl bg-white border-2 border-emerald-100 flex items-center justify-center overflow-hidden mb-2 shadow-inner">
               {activeVisual?.imageUrl ? (
                 <img
                   src={activeVisual.imageUrl}
@@ -102,14 +103,14 @@ export const WarmUpSection: React.FC<WarmUpSectionProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-lg font-black text-amber-600">
+              <span className="text-lg font-black text-emerald-800">
                 {activeItem.word_vi}
               </span>
-              <span className="text-xs font-bold text-slate-400">
+              <span className="text-xs font-bold text-emerald-600/80">
                 • {theme.mascotName} đố bé biết từ này!
               </span>
             </div>
-          </div>
+          </ClayStage>
 
           {/* 3 Small Word Chips / Preview Thumbnails (Tappable to switch preview) */}
           <div className="grid grid-cols-3 gap-2 mt-2.5">
@@ -122,13 +123,13 @@ export const WarmUpSection: React.FC<WarmUpSectionProps> = ({
                   key={item.word_en || idx}
                   type="button"
                   onClick={() => setSelectedVocabIndex(idx)}
-                  className={`flex items-center gap-1.5 rounded-xl border-2 p-1.5 transition-all text-left cursor-pointer ${
+                  className={`flex items-center gap-1.5 rounded-2xl border-2 p-1.5 transition-all text-left cursor-pointer ${
                     isSelected
-                      ? 'border-sky-400 bg-sky-50 shadow-xs ring-2 ring-sky-200 scale-102'
-                      : 'border-white bg-white/90 hover:bg-white text-slate-600 shadow-2xs'
+                      ? 'border-emerald-400 bg-white shadow-[0_4px_0_#10B981] ring-2 ring-emerald-200 scale-[1.02] -translate-y-0.5'
+                      : 'border-emerald-100 bg-[#E6FAF4]/80 hover:bg-white text-slate-700 shadow-[0_2px_0_#A7F3D0]'
                   }`}
                 >
-                  <div className="h-8 w-8 shrink-0 rounded-lg bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-100">
+                  <div className="h-8 w-8 shrink-0 rounded-xl bg-white flex items-center justify-center overflow-hidden border border-emerald-100">
                     {visual.imageUrl ? (
                       <img
                         src={visual.imageUrl}
