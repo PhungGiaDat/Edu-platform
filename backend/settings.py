@@ -129,11 +129,11 @@ class Settings(BaseSettings):
     TOKENROUTER_API_KEY: Optional[SecretStr] = None
     TOKENROUTER_BASE_URL: str = "https://api.tokenrouter.com/v1"
     # Default models per pipeline stage (can override per-request)
-    MODEL_PLANNER: str = "qwen/qwen3.8-max-free"
-    MODEL_GENERATOR: str = "deepseek/deepseek-v4-pro-0813-free"
-    MODEL_VALIDATOR: str = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+    MODEL_PLANNER: str = "google/gemma-4-26b-a4b-it:free"
+    MODEL_GENERATOR: str = "google/gemma-4-26b-a4b-it:free"
+    MODEL_VALIDATOR: str = "nvidia/nemotron-3-super-120b-a12b:free"
     # Fallback cascade — comma-separated model list, tried in order on failure
-    MODEL_FALLBACKS: str = "qwen/qwen3.8-max-free,deepseek/deepseek-v4-pro-0813-free,nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+    MODEL_FALLBACKS: str = "nvidia/nemotron-3-super-120b-a12b:free"
     # Circuit breaker: fail_max consecutive failures before skipping a model (60s reset)
     LLM_CIRCUIT_BREAKER_FAIL_MAX: int = 5
     LLM_CIRCUIT_BREAKER_RESET_SECONDS: int = 60
@@ -343,11 +343,10 @@ if __name__ != "__main__":
     print(f"[CONFIG] Redis configured: {settings.is_redis_configured}", file=sys.stderr)
     print(f"[CONFIG] Static dir: {settings.STATIC_DIR}", file=sys.stderr)
 
-    # Warn if TokenRouter API key is missing (chat endpoint will 503)
-    if not settings.TOKENROUTER_API_KEY:
+    # Warn if OpenRouter API key is missing
+    if not settings.OPENROUTER_API_KEY:
         import logging
 
         logging.getLogger("settings").warning(
-            "[CONFIG] TOKENROUTER_API_KEY is not set — /api/v1/chat/rag will return 503. "
-            "Set TOKENROUTER_API_KEY in .env to enable Lexi Agentic RAG."
+            "[CONFIG] OPENROUTER_API_KEY is not set — /api/v1/chat endpoints require OPENROUTER_API_KEY."
         )

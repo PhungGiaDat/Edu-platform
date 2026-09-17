@@ -85,13 +85,13 @@ def configured_providers() -> list[dict]:
         return default
 
     providers: list[dict] = []
-    if _has_configured_key(settings.TOKENROUTER_API_KEY):
+    if _has_configured_key(settings.OPENROUTER_API_KEY):
         providers.append(
             {
-                "name": "tokenrouter",
-                "base_url": settings.TOKENROUTER_BASE_URL,
-                "api_key": settings.TOKENROUTER_API_KEY.get_secret_value(),
-                "default_model": _bare_for("tokenrouter", settings.MODEL_GENERATOR),
+                "name": "openrouter",
+                "base_url": settings.OPENROUTER_BASE_URL,
+                "api_key": settings.OPENROUTER_API_KEY.get_secret_value(),
+                "default_model": settings.CHAT_PRIMARY_MODEL,
             }
         )
     if _has_configured_key(settings.GOOGLE_API_KEY):
@@ -103,15 +103,6 @@ def configured_providers() -> list[dict]:
                 "base_url": settings.GOOGLE_LLM_BASE_URL,
                 "api_key": settings.GOOGLE_API_KEY or "",
                 "default_model": google_default,
-            }
-        )
-    if _has_configured_key(settings.BAI_API_KEY):
-        providers.append(
-            {
-                "name": "bai",
-                "base_url": settings.BAI_BASE_URL,
-                "api_key": settings.BAI_API_KEY.get_secret_value(),
-                "default_model": settings.BAI_GENERATION_MODEL,
             }
         )
     return providers

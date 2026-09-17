@@ -80,19 +80,19 @@ async def chat_message(
 
 MODELS_CATALOG: list[ModelInfo] = [
     ModelInfo(
-        id="google/gemini-flash-lite-latest",
+        id="google/gemma-4-26b-a4b-it:free",
         role="planner",
-        description="Fast structured extraction — good for JSON plan output",
+        description="Fast MoE structured extraction via OpenRouter",
     ),
     ModelInfo(
-        id="google/gemini-flash-latest",
+        id="google/gemma-4-26b-a4b-it:free",
         role="generator",
-        description="Best for creative, kid-friendly narrative responses",
+        description="Best for kid-friendly narrative responses via OpenRouter",
     ),
     ModelInfo(
-        id="google/gemini-flash-lite-latest",
+        id="nvidia/nemotron-3-super-120b-a12b:free",
         role="validator",
-        description="Quality + age-appropriateness check",
+        description="Quality + safety check via OpenRouter",
     ),
 ]
 

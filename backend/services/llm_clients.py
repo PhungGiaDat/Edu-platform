@@ -50,27 +50,49 @@ def _has_configured_key(key: Any) -> bool:
         return bool(key)
 
 
+def get_openrouter_llm(
+    model: str,
+    temperature: float = 0.4,
+    timeout: Optional[float] = None,
+) -> ChatOpenAI:
+    """Return a ChatOpenAI client routed through OpenRouter."""
+    api_key = (
+        settings.OPENROUTER_API_KEY.get_secret_value()
+        if settings.OPENROUTER_API_KEY
+        else ""
+    )
+    return ChatOpenAI(
+        model=model,
+        api_key=api_key,
+        base_url=settings.OPENROUTER_BASE_URL,
+        timeout=timeout or settings.AI_CONTENT_TIMEOUT_SECONDS,
+        max_retries=0,
+        temperature=temperature,
+        callbacks=[TRACE_HANDLER],
+        default_headers={
+            "HTTP-Referer": "https://eduplatform.app",
+            "X-Title": "EduPlatform Lexi Chatbot",
+        },
+    )
+
+
 def get_tokenrouter_llm(
     model: str,
     temperature: float = 0.4,
     timeout: Optional[float] = None,
 ) -> ChatOpenAI:
     """
-    Return a ChatOpenAI client routed through TokenRouter.
-
-    Uses max_retries=0 so the central retry wrapper controls all backoff.
+    Fallback TokenRouter client if configured, otherwise routes to OpenRouter.
     """
+    if not _has_configured_key(settings.TOKENROUTER_API_KEY):
+        return get_openrouter_llm(model, temperature, timeout)
     return ChatOpenAI(
         model=model,
-        api_key=settings.TOKENROUTER_API_KEY.get_secret_value()
-        if settings.TOKENROUTER_API_KEY
-        else "",
+        api_key=settings.TOKENROUTER_API_KEY.get_secret_value(),
         base_url=settings.TOKENROUTER_BASE_URL,
         timeout=timeout or settings.AI_CONTENT_TIMEOUT_SECONDS,
         max_retries=0,
         temperature=temperature,
-        # Ops monitoring: forwards usage into the active per-request TraceSink
-        # (no-op when no sink is bound — see services/rag_trace_context.py).
         callbacks=[TRACE_HANDLER],
     )
 
@@ -81,18 +103,9 @@ def get_bai_llm(
     timeout: Optional[float] = None,
 ) -> ChatOpenAI:
     """
-    Return a ChatOpenAI client routed through B.AI (OpenAI-compatible).
-    Used as the health-checked fallback provider when TokenRouter is down.
+    B.AI deprecated/disabled — routed safely to OpenRouter.
     """
-    return ChatOpenAI(
-        model=model,
-        api_key=settings.BAI_API_KEY.get_secret_value() if settings.BAI_API_KEY else "",
-        base_url=settings.BAI_BASE_URL,
-        timeout=timeout or settings.AI_CONTENT_TIMEOUT_SECONDS,
-        max_retries=0,
-        temperature=temperature,
-        callbacks=[TRACE_HANDLER],
-    )
+    return get_openrouter_llm(settings.CHAT_PRIMARY_MODEL, temperature, timeout)
 
 
 def get_google_llm(
@@ -119,22 +132,19 @@ def get_google_llm(
 # 1b. Provider-prefixed model routing
 # ──────────────────────────────────────────────
 
-_PROVIDER_PREFIXES = ("google/", "bai/")
+_PROVIDER_PREFIXES = ("openrouter/", "google/", "bai/")
 
 
 def parse_provider_model(model: str) -> tuple[str, str]:
     """
     Split a possibly provider-prefixed model id into (provider, bare_model).
-
-    Convention: "google/gemini-flash-latest" → ("google", "gemini-flash-latest"),
-    "bai/glm-5.3-flash" → ("bai", "glm-5.3-flash"), "qwen/..." (bare) →
-    ("tokenrouter", "qwen/..."). Bare ids keep the historical TokenRouter
-    behavior, so existing env values remain valid.
     """
-    for prefix in _PROVIDER_PREFIXES:
-        if model.startswith(prefix):
-            return prefix.rstrip("/"), model[len(prefix):]
-    return "tokenrouter", model
+    if model.startswith("openrouter/"):
+        return "openrouter", model[len("openrouter/"):]
+    if model.startswith("google/gemini"):
+        return "google", model[len("google/"):]
+    # Default to openrouter for gemma, nemotron, and other models
+    return "openrouter", model
 
 
 def build_llm_for_model(
@@ -144,11 +154,9 @@ def build_llm_for_model(
 ) -> ChatOpenAI:
     """Factory dispatch for provider-prefixed model ids."""
     provider, bare = parse_provider_model(model)
-    if provider == "google":
+    if provider == "google" and _has_configured_key(settings.GOOGLE_API_KEY):
         return get_google_llm(bare, temperature, timeout)
-    if provider == "bai":
-        return get_bai_llm(bare, temperature, timeout)
-    return get_tokenrouter_llm(model, temperature, timeout)
+    return get_openrouter_llm(model, temperature, timeout)
 
 
 # ──────────────────────────────────────────────
@@ -252,6 +260,9 @@ def _is_retryable(exc: Exception) -> bool:
         "no available channel",
         "error code: 401",
         "error code: 403",
+        "insufficient balance",
+        "insufficient_user_quota",
+        "balance=0",
     )
     if any(marker in msg for marker in permanent_markers):
         return False
@@ -388,16 +399,17 @@ class ModelRouter:
         from services import llm_health
 
         provider_keys = {
+            "openrouter": settings.OPENROUTER_API_KEY,
             "google": settings.GOOGLE_API_KEY,
-            "bai": settings.BAI_API_KEY,
-            "tokenrouter": settings.TOKENROUTER_API_KEY,
+            "bai": None,
+            "tokenrouter": None,
         }
         entries: list[tuple[str, ChatOpenAI, str]] = []
         seen: set[str] = set()
 
         def add(model: str) -> None:
             provider, _bare = parse_provider_model(model)
-            if not _has_configured_key(provider_keys[provider]) or model in seen:
+            if not _has_configured_key(provider_keys.get(provider)) or model in seen:
                 return
             seen.add(model)
             entries.append((provider, build_llm_for_model(model), model))
@@ -405,8 +417,8 @@ class ModelRouter:
         add(self.primary_model)
         for model in self.fallback_models:
             add(model)
-        if _has_configured_key(settings.BAI_API_KEY):
-            add(f"bai/{settings.BAI_GENERATION_MODEL}")
+        add(settings.CHAT_PRIMARY_MODEL)
+        add(settings.CHAT_FALLBACK_MODEL)
 
         preferred = llm_health.preferred_provider()
 
