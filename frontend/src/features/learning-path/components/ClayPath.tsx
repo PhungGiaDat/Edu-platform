@@ -12,12 +12,16 @@ import type { LessonNode } from '@/types/learning-path';
 
 // ========== Constants ==========
 
-const CLAY_COLOR = '#FFF0D9';
+// A pale cream path on pale-green grass used to visually merge into the
+// terrain. Terracotta/stone reads as "road" against any of the category
+// grass tones and gives the layered contrast (terrain < path < node) the
+// composition needs.
+const CLAY_COLOR = '#D98A4E';
 const CLAY_ACCENT = '#FFB347';
-const BRICK_WIDTH = 0.6;
-const BRICK_HEIGHT = 0.15;
-const BRICK_DEPTH = 0.4;
-const BRICK_SPACING = 0.5;
+const BRICK_WIDTH = 0.85;
+const BRICK_HEIGHT = 0.18;
+const BRICK_DEPTH = 0.55;
+const BRICK_SPACING = 0.42;
 const BRICK_ROWS = 2; // Number of parallel brick rows
 
 // ========== Component Props ==========

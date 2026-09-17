@@ -4,6 +4,11 @@
  * Interactive 3D lesson node for the learning path. Renders the four
  * backend-owned states (completed/current/available/locked) — this
  * component never computes state itself, it only visualizes node.state.
+ *
+ * Progressive disclosure: only the CURRENT node shows title+XP text. Other
+ * states show a single compact glyph (number/check/lock) — a permanent wall
+ * of HTML labels over every node was the "visual clutter" failure; the
+ * detailed information belongs in LessonModal.
  */
 
 import React, { useRef, useState, useMemo } from 'react';
@@ -15,22 +20,34 @@ import { getPointOnSpline, getTangentOnSpline } from '@/lib/pathSpline';
 
 // ========== Constants ==========
 
-const NODE_RADIUS = 0.4;
+/** Base sphere radius before per-state scale is applied. Small nodes on a
+ * mobile screen were unreadable — this is deliberately large. */
+const NODE_RADIUS = 0.55;
 
-// State colors
+// State colors — saturated so nodes read as the brightest thing in the
+// scene, clearly above the more desaturated terrain/props behind them.
 const STATE_COLORS = {
-  current: '#5B8DEF',
-  available: '#8FB4F5',
-  completed: '#FFD700',
+  current: '#3D6FE0',
+  available: '#7FB0FF',
+  completed: '#FFCF33',
   locked: '#9CA3AF',
 } as const;
 
 // Glow intensities
 const GLOW_INTENSITIES = {
-  current: 0.65,
+  current: 0.7,
   available: 0.3,
-  completed: 0.5,
+  completed: 0.45,
   locked: 0,
+} as const;
+
+/** Relative size hierarchy: current is the unmistakable landmark; locked is
+ * visibly the least important. Understandable even with all text hidden. */
+const STATE_SCALE = {
+  current: 1.35,
+  available: 1.0,
+  completed: 0.95,
+  locked: 0.85,
 } as const;
 
 // Clay material properties
@@ -38,14 +55,8 @@ const CLAY_COLOR = '#FFF0D9';
 const CLAY_ROUGHNESS = 0.75;
 const CLAY_METALNESS = 0;
 
-// Hover scale factor
-const HOVER_SCALE = 1.2;
-/** The current node reads as the strongest focal point — slightly larger
- * even before any hover, per the requested visual hierarchy. */
-const CURRENT_BASE_SCALE = 1.12;
-
-// XP badge offset
-const XP_BADGE_Y_OFFSET = 0.8;
+// Hover scale bump, applied on top of the state's base scale.
+const HOVER_SCALE_BUMP = 1.12;
 
 // ========== Component Props ==========
 
@@ -63,6 +74,7 @@ export interface LessonNode3DProps {
 export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, spline }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const haloRef = useRef<THREE.Mesh>(null);
+  const beaconRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
   // Calculate position and orientation from spline
@@ -72,7 +84,7 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
 
     // Position node slightly above the path
     const pos = point.clone();
-    pos.y += NODE_RADIUS + 0.1;
+    pos.y += NODE_RADIUS + 0.15;
 
     // Create quaternion to orient node to face along path
     const quat = new THREE.Quaternion();
@@ -89,6 +101,7 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
   const isLocked = node.state === 'locked';
   const isCurrent = node.state === 'current';
   const isCompleted = node.state === 'completed';
+  const baseScale = STATE_SCALE[node.state] ?? 1;
 
   // Get state color
   const stateColor = STATE_COLORS[node.state] || STATE_COLORS.locked;
@@ -100,7 +113,7 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
     const stateColorObj = new THREE.Color(stateColor);
 
     // Blend clay color with state color
-    const blendedColor = baseColor.lerp(stateColorObj, 0.4);
+    const blendedColor = baseColor.lerp(stateColorObj, 0.55);
 
     // Main clay material
     const mainMaterial = new THREE.MeshStandardMaterial({
@@ -124,11 +137,20 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
     [],
   );
 
+  const beaconMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color(STATE_COLORS.current),
+        transparent: true,
+        opacity: 0.35,
+      }),
+    [],
+  );
+
   // Animate hover, current-node pulse and shimmer effects
   useFrame((state) => {
     if (meshRef.current) {
-      const baseScale = isCurrent ? CURRENT_BASE_SCALE : 1;
-      const targetScale = hovered && !isLocked ? HOVER_SCALE : baseScale;
+      const targetScale = hovered && !isLocked ? baseScale * HOVER_SCALE_BUMP : baseScale;
       const currentScale = meshRef.current.scale.x;
       const newScale = THREE.MathUtils.lerp(currentScale, targetScale, 0.15);
       meshRef.current.scale.setScalar(newScale);
@@ -146,11 +168,16 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
       meshRef.current.position.y = position.y + float;
     }
 
-    // Restrained pulse ring for the current node — the strongest focal point.
-    if (isCurrent && haloRef.current) {
-      const pulse = 1.25 + Math.sin(state.clock.elapsedTime * 1.6) * 0.06;
-      haloRef.current.scale.setScalar(pulse);
-      haloMaterial.opacity = 0.35 + Math.sin(state.clock.elapsedTime * 1.6) * 0.1;
+    // Restrained pulse ring + light beacon for the current node — the single
+    // strongest landmark, understandable even with labels hidden.
+    if (isCurrent) {
+      const t = state.clock.elapsedTime;
+      const pulse = 1.25 + Math.sin(t * 1.6) * 0.06;
+      if (haloRef.current) haloRef.current.scale.setScalar(pulse);
+      haloMaterial.opacity = 0.35 + Math.sin(t * 1.6) * 0.1;
+      if (beaconRef.current) {
+        beaconMaterial.opacity = 0.22 + Math.sin(t * 1.6) * 0.08;
+      }
     }
   });
 
@@ -169,6 +196,24 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
 
   return (
     <group position={[position.x, position.y, position.z]} quaternion={quaternion}>
+      {/* Raised platform — only the current node stands on one, so it reads
+          as a landmark stop on the journey rather than just a floating ball. */}
+      {isCurrent && (
+        <mesh position={[0, -NODE_RADIUS - 0.12, 0]} receiveShadow>
+          <cylinderGeometry args={[NODE_RADIUS * 1.4, NODE_RADIUS * 1.55, 0.22, 16]} />
+          <meshStandardMaterial color="#FFE8B8" roughness={0.8} />
+        </mesh>
+      )}
+
+      {/* Vertical light beacon — visible from far away, even when the node
+          itself is small on screen or its label is hidden. */}
+      {isCurrent && (
+        <mesh ref={beaconRef} position={[0, 1.6, 0]}>
+          <cylinderGeometry args={[0.05, 0.12, 3.2, 8, 1, true]} />
+          <primitive object={beaconMaterial} attach="material" />
+        </mesh>
+      )}
+
       {/* Current-node halo ring — the single strongest visual cue that this
           is where the child should go next. */}
       {isCurrent && (
@@ -210,7 +255,7 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
         </mesh>
       )}
 
-      {/* Center badge: order number, or a lock mark when locked — never both,
+      {/* Center badge: order number, check, or lock — never more than one,
           they occupy the same spot. */}
       <Html
         center
@@ -219,11 +264,11 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
         distanceFactor={8}
       >
         {isLocked ? (
-          <div style={{ fontSize: '16px', opacity: 0.7 }}>{'\u{1F512}'}</div>
+          <div style={{ fontSize: '18px', opacity: 0.7 }}>{'\u{1F512}'}</div>
         ) : (
           <div
             style={{
-              fontSize: '18px',
+              fontSize: '20px',
               fontWeight: 700,
               lineHeight: 1,
               color: '#1a1a2e',
@@ -235,29 +280,56 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
         )}
       </Html>
 
-      {/* XP badge — skipped for locked nodes (nothing to act on yet). */}
-      {!isLocked && (
+      {/* Title + XP — CURRENT node only. Progressive disclosure: everything
+          else stays a clean icon; full details live in LessonModal. */}
+      {isCurrent && (
         <Html
           center
-          position={[0, XP_BADGE_Y_OFFSET, 0]}
+          position={[0, NODE_RADIUS * 1.4 + 1.1, 0]}
           style={{ pointerEvents: 'none', userSelect: 'none' }}
           distanceFactor={8}
         >
           <div
             style={{
-              background: 'linear-gradient(135deg, #FFB347 0%, #FFD700 100%)',
-              color: '#1a1a2e',
-              padding: '2px 8px',
-              borderRadius: '10px',
-              fontSize: '11px',
-              fontWeight: 700,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '2px',
               fontFamily: 'system-ui, -apple-system, sans-serif',
-              boxShadow: '0 2px 8px rgba(255, 179, 71, 0.4)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              whiteSpace: 'nowrap',
             }}
           >
-            +{node.xp_reward} XP
+            <div
+              style={{
+                background: '#FFFFFF',
+                color: '#1a1a2e',
+                padding: '2px 10px',
+                borderRadius: '10px',
+                fontSize: '12px',
+                fontWeight: 800,
+                whiteSpace: 'nowrap',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                maxWidth: '140px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {node.title}
+            </div>
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #FFB347 0%, #FFD700 100%)',
+                color: '#1a1a2e',
+                padding: '2px 8px',
+                borderRadius: '10px',
+                fontSize: '11px',
+                fontWeight: 700,
+                boxShadow: '0 2px 8px rgba(255, 179, 71, 0.4)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              +{node.xp_reward} XP
+            </div>
           </div>
         </Html>
       )}

@@ -25,8 +25,8 @@ export const CATEGORY_PRESETS: Record<string, CategoryPreset> = {
   animals: {
     skyTop: '#8FD3FF',
     skyBottom: '#F2FBE8',
-    grassHill: '#C8EAA0',
-    grassDark: '#9FCB6E',
+    grassHill: '#A8DE72',
+    grassDark: '#7CB84A',
     propColor: '#FF9F6B',
     propAccent: '#FFD166',
     propShape: 'flower',
@@ -34,8 +34,8 @@ export const CATEGORY_PRESETS: Record<string, CategoryPreset> = {
   home_family: {
     skyTop: '#FBD9A5',
     skyBottom: '#FFF3DE',
-    grassHill: '#CFE4A8',
-    grassDark: '#A9C97F',
+    grassHill: '#B9D97E',
+    grassDark: '#8FAE5C',
     propColor: '#E8927C',
     propAccent: '#F6C87A',
     propShape: 'house',
@@ -43,8 +43,8 @@ export const CATEGORY_PRESETS: Record<string, CategoryPreset> = {
   nature: {
     skyTop: '#87CEEB',
     skyBottom: '#E0F4FF',
-    grassHill: '#B8E6B8',
-    grassDark: '#8FBC8F',
+    grassHill: '#8FD494',
+    grassDark: '#5FA868',
     propColor: '#8B4513',
     propAccent: '#228B22',
     propShape: 'tree',
@@ -52,8 +52,8 @@ export const CATEGORY_PRESETS: Record<string, CategoryPreset> = {
   school_food: {
     skyTop: '#BFE3FF',
     skyBottom: '#FFF7E6',
-    grassHill: '#D7EAA6',
-    grassDark: '#AECB78',
+    grassHill: '#C3DE84',
+    grassDark: '#95B65C',
     propColor: '#6FA8DC',
     propAccent: '#FFB6C1',
     propShape: 'schoolBlock',

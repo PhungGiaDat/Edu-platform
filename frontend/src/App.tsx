@@ -225,8 +225,11 @@ const ConditionalAIChatBuddy: React.FC = () => {
   const isARPage =
     location.pathname === '/learn-ar' ||
     location.pathname.startsWith('/learn-ar-xr');
+  // Learning Path 3D has its own in-world PetGuide as the mascot/focal point;
+  // a second floating mascot bubble competes with it for attention.
+  const isLearningPath3D = location.pathname === '/learning-path-3d';
 
-  if (isARPage || isPublicRoute) return null;
+  if (isARPage || isPublicRoute || isLearningPath3D) return null;
   if (!isAuthenticated && !isGuest) return null;
 
   return <AIChatBuddy />;

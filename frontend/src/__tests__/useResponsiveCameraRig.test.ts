@@ -3,7 +3,7 @@
  */
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useResponsiveFov } from '@/features/learning-path/useResponsiveFov';
+import { useResponsiveCameraRig } from '@/features/learning-path/useResponsiveCameraRig';
 
 function mockMatchMedia(initialMatches: boolean) {
   let matches = initialMatches;
@@ -30,28 +30,32 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('useResponsiveFov', () => {
-  it('returns the wide-viewport fov on desktop widths', () => {
+describe('useResponsiveCameraRig', () => {
+  it('returns a farther/wider rig on desktop widths', () => {
     mockMatchMedia(false);
-    const { result } = renderHook(() => useResponsiveFov(640, 68, 55));
-    expect(result.current).toBe(55);
+    const { result } = renderHook(() => useResponsiveCameraRig(640));
+    expect(result.current).toEqual({ fov: 50, backDistance: 6, heightOffset: 4 });
   });
 
-  it('returns the narrow-viewport fov on mobile widths', () => {
+  it('returns a closer, only-modestly-wider rig on mobile widths (not fov alone)', () => {
     mockMatchMedia(true);
-    const { result } = renderHook(() => useResponsiveFov(640, 68, 55));
-    expect(result.current).toBe(68);
+    const { result } = renderHook(() => useResponsiveCameraRig(640));
+    expect(result.current).toEqual({ fov: 58, backDistance: 4.2, heightOffset: 3 });
+    // Mobile must be closer, not just wider-fov-at-the-same-distance.
+    expect(result.current.backDistance).toBeLessThan(6);
+    expect(result.current.heightOffset).toBeLessThan(4);
   });
 
   it('updates live when the viewport crosses the breakpoint (resize/orientation change)', () => {
     const media = mockMatchMedia(false);
-    const { result } = renderHook(() => useResponsiveFov(640, 68, 55));
-    expect(result.current).toBe(55);
+    const { result } = renderHook(() => useResponsiveCameraRig(640));
+    expect(result.current.fov).toBe(50);
 
     act(() => media.setMatches(true));
-    expect(result.current).toBe(68);
+    expect(result.current.fov).toBe(58);
+    expect(result.current.backDistance).toBe(4.2);
 
     act(() => media.setMatches(false));
-    expect(result.current).toBe(55);
+    expect(result.current.fov).toBe(50);
   });
 });

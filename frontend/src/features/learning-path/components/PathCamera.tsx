@@ -25,10 +25,7 @@ import type { CatmullRomCurve3 } from 'three';
 
 // ========== Constants ==========
 
-/** Behind (opposite direction of travel) and above the tracked point. */
-const BACK_DISTANCE = 7;
-const HEIGHT_OFFSET = 5;
-const LOOK_HEIGHT_OFFSET = 1;
+const LOOK_HEIGHT_RATIO = 0.2; // look-at height, relative to heightOffset
 /** How fast displayProgress catches up to petProgress (per frame, ~60fps). */
 const PROGRESS_LERP = 0.05;
 const SNAP_THRESHOLD = 0.0005;
@@ -40,27 +37,32 @@ export interface PathCameraProps {
   petProgress: number;
   /** The spline curve to follow */
   spline: CatmullRomCurve3;
+  /** Behind (opposite direction of travel) the tracked point. */
+  backDistance: number;
+  /** Above the tracked point. */
+  heightOffset: number;
 }
 
 // ========== Component ==========
 
-export const PathCamera: React.FC<PathCameraProps> = ({ petProgress, spline }) => {
+export const PathCamera: React.FC<PathCameraProps> = ({ petProgress, spline, backDistance, heightOffset }) => {
   const { controls, camera } = useThree() as any;
   const displayProgressRef = useRef(petProgress);
   const lastTrackedPointRef = useRef(new THREE.Vector3());
   const primedRef = useRef(false);
 
   useLayoutEffect(() => {
-    // Prime instantly (absolute set, no lerp) so the very first frame is
-    // already correctly framed — this is the one place we ARE allowed to
-    // assign camera.position directly, because we immediately resync
-    // OrbitControls' internal spherical state via controls.update().
+    // Prime instantly (absolute set, no lerp) so the very first frame — and
+    // any rig change from a live breakpoint crossing — is already correctly
+    // framed. This is the one place we ARE allowed to assign camera.position
+    // directly, because we immediately resync OrbitControls' internal
+    // spherical state via controls.update().
     displayProgressRef.current = petProgress;
     const point = getPointOnSpline(spline, petProgress);
     const tangent = getTangentOnSpline(spline, petProgress);
-    const position = point.clone().addScaledVector(tangent, -BACK_DISTANCE);
-    position.y = point.y + HEIGHT_OFFSET;
-    const target = new THREE.Vector3(point.x, point.y + LOOK_HEIGHT_OFFSET, point.z);
+    const position = point.clone().addScaledVector(tangent, -backDistance);
+    position.y = point.y + heightOffset;
+    const target = new THREE.Vector3(point.x, point.y + heightOffset * LOOK_HEIGHT_RATIO, point.z);
 
     camera.position.copy(position);
     lastTrackedPointRef.current.copy(point);
@@ -70,7 +72,7 @@ export const PathCamera: React.FC<PathCameraProps> = ({ petProgress, spline }) =
     }
     primedRef.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spline, controls, camera]);
+  }, [spline, controls, camera, backDistance, heightOffset]);
 
   useFrame(() => {
     if (!controls || !primedRef.current) return;

@@ -149,10 +149,15 @@ export const LearningPath3D: React.FC = () => {
   }
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
-      {/* 3D Scene — single reusable Canvas; course switches reframe/re-skin
-          in place (courseKey below only resets the PetGuide's transient
-          walk-animation refs, it does NOT remount the Canvas). */}
+    // h-full (not h-[100dvh]): the parent <main> shell already reserves the
+    // bottom-nav safe-area via padding-bottom. A hardcoded 100dvh here
+    // double-counted that space and pushed the bottom of the world (where
+    // the current node + PetGuide often sit) off-screen, behind the nav.
+    <div className="relative h-full w-full overflow-hidden bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
+      {/* 3D Scene is the hero — it fills the whole container behind this
+          compact header, not a small leftover strip beneath it. Single
+          reusable Canvas; course switches reframe/re-skin in place (courseKey
+          only resets PetGuide's transient walk-animation refs). */}
       <LearningPathScene
         nodes={path?.nodes ?? []}
         currentProgress={petProgress}
@@ -162,49 +167,36 @@ export const LearningPath3D: React.FC = () => {
         courseKey={selectedCourseId}
       />
 
-      {/* Header Overlay with Progress + Course Selector */}
-      <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 p-3 sm:p-4">
-        <div className="pointer-events-auto mx-auto max-w-md rounded-2xl bg-white/90 p-3 shadow-lg backdrop-blur-sm sm:p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <h1 className="text-base font-bold text-gray-800 sm:text-lg">Learning Path</h1>
+      {/* Compact header — title/counter, thin progress bar, course switcher.
+          Deliberately small: the previous version's tall single card ate
+          35-40% of the mobile viewport and made the world read as secondary. */}
+      <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-3">
+        <div className="pointer-events-auto mx-auto max-w-md rounded-xl bg-white/85 px-3 py-2 shadow-md backdrop-blur-sm">
+          <div className="flex items-center justify-between gap-2">
+            <h1 className="truncate text-xs font-extrabold text-gray-800">Learning Path</h1>
             {path && (
-              <span className="text-xs font-semibold text-amber-600 sm:text-sm">
-                {path.completed_count}/{path.total_count} Lessons
+              <span className="shrink-0 text-xs font-bold text-amber-600">
+                {path.completed_count}/{path.total_count}
               </span>
             )}
           </div>
 
           {path && (
-            <>
-              <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
-                  style={{ width: `${Math.round(path.progress * 100)}%` }}
-                />
-              </div>
-              <div className="mt-2 text-xs text-gray-600">
-                {Math.round(path.progress * 100)}% Complete
-              </div>
-            </>
-          )}
-
-          {joinedCourses.length > 1 && (
-            <div className="mt-3">
-              <CourseSelector
-                courses={joinedCourses}
-                selectedCourseId={selectedCourseId}
-                onSelect={handleCourseSwitch}
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-200">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
+                style={{ width: `${Math.round(path.progress * 100)}%` }}
               />
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Instructions hint */}
-      <div className="pointer-events-none absolute bottom-4 left-4 z-10">
-        <div className="rounded-lg bg-black/50 px-3 py-1.5 text-xs text-white">
-          <span className="mr-2">🖱️</span>
-          Drag to rotate · pinch to zoom
+          <div className="mt-1.5">
+            <CourseSelector
+              courses={joinedCourses}
+              selectedCourseId={selectedCourseId}
+              onSelect={handleCourseSwitch}
+            />
+          </div>
         </div>
       </div>
 

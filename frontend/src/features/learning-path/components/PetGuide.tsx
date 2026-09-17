@@ -15,10 +15,15 @@ import type { Pet } from '@/hooks/usePets';
 
 // ========== Constants ==========
 
-const PET_HEIGHT_OFFSET = 0.5;
+const PET_HEIGHT_OFFSET = 0.55;
 const BOB_AMPLITUDE = 0.15;
 const BOB_SPEED = 4;
 const ROTATION_SMOOTHING = 0.1;
+/** Standing exactly on top of the lesson node's own point made pet and node
+ * fight for the same spot (and hid the pet behind the bigger node mesh).
+ * Offset the pet sideways off the path centerline so both read as one
+ * cluster — node ahead, pet standing beside it looking forward. */
+const LATERAL_OFFSET = 0.75;
 
 // ========== Component Props ==========
 
@@ -47,8 +52,14 @@ export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, isCelebrating
     const point = getPointOnSpline(spline, progress);
     const tan = getTangentOnSpline(spline, progress);
 
+    // Sideways offset (perpendicular to the direction of travel) so the pet
+    // stands beside the lesson node instead of coinciding with it.
+    const up = new THREE.Vector3(0, 1, 0);
+    const perpendicular = new THREE.Vector3().crossVectors(up, tan).normalize();
+    const anchored = point.clone().addScaledVector(perpendicular, LATERAL_OFFSET);
+
     return {
-      position: new THREE.Vector3(point.x, point.y + PET_HEIGHT_OFFSET, point.z),
+      position: new THREE.Vector3(anchored.x, anchored.y + PET_HEIGHT_OFFSET, anchored.z),
       tangent: tan,
     };
   }, [spline, progress]);
@@ -133,9 +144,16 @@ const PetModel: React.FC<{ position: THREE.Vector3; modelUrl: string; groupRef: 
 const PetFallback: React.FC<{ position: THREE.Vector3; groupRef: any; isCelebrating?: boolean }> = ({ position, groupRef, isCelebrating }) => {
   return (
     <group ref={groupRef} position={[position.x, position.y, position.z]}>
+      {/* Contact shadow — a flat dark disc grounds the pet on the terrain
+          instead of it reading as floating. */}
+      <mesh position={[0, -PET_HEIGHT_OFFSET + 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.4, 16]} />
+        <meshBasicMaterial color="#000000" transparent opacity={0.18} />
+      </mesh>
+
       {/* Main body - clay blob */}
       <mesh castShadow>
-        <sphereGeometry args={[0.5, 16, 16]} />
+        <sphereGeometry args={[0.6, 16, 16]} />
         <meshStandardMaterial color="#FFB347" roughness={0.8} metalness={0} />
       </mesh>
 
@@ -167,7 +185,7 @@ const Eyes: React.FC = () => {
   );
 
   return (
-    <group position={[0, 0.15, 0.35]}>
+    <group position={[0, 0.18, 0.42]}>
       {/* Left eye */}
       <mesh position={[-0.15, 0, 0]} material={eyeMaterial}>
         <sphereGeometry args={[0.08, 12, 12]} />

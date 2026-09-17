@@ -12,7 +12,7 @@ import * as THREE from 'three';
 import type { LessonNode } from '@/types/learning-path';
 import type { Pet } from '@/hooks/usePets';
 import { createPathSpline } from '@/lib/pathSpline';
-import { useResponsiveFov } from '../useResponsiveFov';
+import { useResponsiveCameraRig } from '../useResponsiveCameraRig';
 import ClayPath from './ClayPath';
 import { LessonNode3D } from './LessonNode';
 import PetGuide from './PetGuide';
@@ -70,25 +70,26 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
   // Create path spline
   const spline = useMemo(() => createPathSpline(), []);
 
-  // A narrower viewport needs a wider field of view to keep the current
-  // lesson + a useful section of path in frame (a portrait phone otherwise
-  // sees a much narrower horizontal slice than the desktop tuning assumed).
-  // Responsive to live resize/orientation change, not just the value at mount.
-  const fov = useResponsiveFov();
+  // Mobile is not just "wider fov" — it's a closer, tighter camera rig as a
+  // whole (fov + follow distance + height together). Responsive to live
+  // resize/orientation change, not just the value at mount.
+  const rig = useResponsiveCameraRig();
 
   return (
     <div className="absolute inset-0 touch-none">
       <Canvas
-        camera={{ position: [0, 6, 12], fov }}
+        camera={{ position: [0, rig.heightOffset, rig.backDistance], fov: rig.fov }}
         gl={{ antialias: true, alpha: true }}
         dpr={[1, 2]}
       >
-        <FovSync fov={fov} />
+        <FovSync fov={rig.fov} />
         <Suspense fallback={null}>
-          {/* Lighting */}
-          <ambientLight intensity={0.7} />
-          <directionalLight position={[10, 20, 10]} intensity={0.9} />
-          <hemisphereLight args={['#87CEEB', '#B8E6B8', 0.5]} />
+          {/* Lighting — a stronger key light + lower ambient gives real
+              separation between node / path / terrain instead of the flat,
+              washed-out look a high flat ambient produces. */}
+          <ambientLight intensity={0.5} />
+          <directionalLight position={[8, 14, 6]} intensity={1.25} />
+          <hemisphereLight args={['#87CEEB', '#B8E6B8', 0.45]} />
 
           {/* Landscape background */}
           <Landscape categoryKey={categoryKey} />
@@ -117,7 +118,12 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
 
           {/* Follow camera (only when there are nodes) */}
           {nodes.length > 0 && (
-            <PathCamera spline={spline} petProgress={currentProgress} />
+            <PathCamera
+              spline={spline}
+              petProgress={currentProgress}
+              backDistance={rig.backDistance}
+              heightOffset={rig.heightOffset}
+            />
           )}
         </Suspense>
         {/*
@@ -130,9 +136,9 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
           enablePan={false}
           enableZoom={true}
           enableRotate={true}
-          minDistance={5}
-          maxDistance={16}
-          minPolarAngle={0.35}
+          minDistance={3}
+          maxDistance={11}
+          minPolarAngle={0.4}
           maxPolarAngle={Math.PI / 2.15}
           makeDefault
         />

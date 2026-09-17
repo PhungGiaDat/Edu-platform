@@ -192,7 +192,18 @@ describe('LearningPath3D', () => {
     expect(await screen.findByRole('button', { name: /review/i })).toBeTruthy();
   });
 
-  it('renders a course selector only when multiple courses are joined', async () => {
+  it('shows a compact course identity trigger even for a single joined course', async () => {
+    getLearningPathMe.mockResolvedValue(response());
+    renderPage();
+    await waitFor(() => screen.getByTestId('scene'));
+
+    const trigger = screen.getByRole('button', { name: /nature/i });
+    fireEvent.click(trigger);
+    // Exactly one option — still usable, just nothing else to switch to.
+    expect(screen.getAllByRole('option')).toHaveLength(1);
+  });
+
+  it('lists every joined course inside the expanded selector when there are multiple', async () => {
     const multi = response();
     multi.joined_courses.push({
       course_id: 'school-food',
@@ -209,16 +220,9 @@ describe('LearningPath3D', () => {
     renderPage();
 
     await waitFor(() => screen.getByTestId('scene'));
-    expect(screen.getByRole('tablist', { name: /joined courses/i })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: 'Nature' })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: 'School & Food' })).toBeTruthy();
-  });
-
-  it('does not render a course selector for a single joined course', async () => {
-    getLearningPathMe.mockResolvedValue(response());
-    renderPage();
-    await waitFor(() => screen.getByTestId('scene'));
-    expect(screen.queryByRole('tablist')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /nature/i }));
+    expect(screen.getByRole('option', { name: /nature/i })).toBeTruthy();
+    expect(screen.getByRole('option', { name: /school & food/i })).toBeTruthy();
   });
 
   it('refetches with the course_id query param when switching courses', async () => {
@@ -239,7 +243,8 @@ describe('LearningPath3D', () => {
     await waitFor(() => screen.getByTestId('scene'));
 
     getLearningPathMe.mockClear();
-    fireEvent.click(screen.getByRole('tab', { name: 'School & Food' }));
+    fireEvent.click(screen.getByRole('button', { name: /nature/i }));
+    fireEvent.click(screen.getByRole('option', { name: /school & food/i }));
 
     await waitFor(() => expect(getLearningPathMe).toHaveBeenCalledWith('school-food'));
   });
@@ -291,7 +296,8 @@ describe('LearningPath3D', () => {
     await screen.findByRole('button', { name: /continue/i });
 
     getLearningPathMe.mockResolvedValue(schoolFood);
-    fireEvent.click(screen.getByRole('tab', { name: 'School & Food' }));
+    fireEvent.click(screen.getByRole('button', { name: /nature/i }));
+    fireEvent.click(screen.getByRole('option', { name: /school & food/i }));
 
     await waitFor(() => expect(screen.getByTestId('scene').dataset.category).toBe('school_food'));
     expect(screen.queryByRole('button', { name: /continue/i })).toBeNull();

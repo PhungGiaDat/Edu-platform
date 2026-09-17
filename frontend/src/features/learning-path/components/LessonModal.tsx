@@ -57,7 +57,10 @@ export const LessonModal: React.FC<LessonModalProps> = ({
 
       {/* Modal */}
       {isOpen && lesson && (
-        <div className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-sm animate-modal-in rounded-[32px] border-4 border-white bg-white p-6 shadow-[0_12px_0_rgba(91,141,239,0.18),0_24px_48px_rgba(0,0,0,0.15)]">
+        <div
+          className="fixed inset-x-4 z-50 mx-auto max-w-sm animate-modal-in rounded-[32px] border-4 border-white bg-white p-6 shadow-[0_12px_0_rgba(91,141,239,0.18),0_24px_48px_rgba(0,0,0,0.15)]"
+          style={{ bottom: 'calc(76px + env(safe-area-inset-bottom, 0px) + 1rem)' }}
+        >
           {/* Close button */}
           <button
             onClick={onClose}
