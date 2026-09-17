@@ -140,11 +140,25 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
           )}
         </Suspense>
         {/*
-          Controlled 2.5D map camera, not a free-orbit 3D explorer — a child
-          should never be able to spin the camera into an empty-sky or
-          top-down view and lose "where am I". Rotation is disabled entirely;
-          a narrow zoom range is kept only as a minor accessibility nicety,
-          not a way to re-frame the scene.
+          Controlled 2.5D map camera — per 3dviz-pro-max
+          knowledge.camera-orbit-follow-rig, the fix for "free camera feel"
+          is a CLAMPED orbit with damping, not disabling rotation outright
+          (that record's own "never" list: "an unclamped polar angle that
+          lets the camera go under the floor" — the failure mode is missing
+          clamps, not the existence of orbit). A fully locked camera can
+          itself read as broken/unresponsive to touch. So: a narrow polar
+          band holds the fixed 3/4 map tilt, and damping (0.08, that
+          record's own default) smooths every nudge instead of snapping.
+
+          No azimuth clamp: PathCamera repositions the camera every frame by
+          a WORLD-space delta that follows the spline's local tangent, which
+          rotates as the S-curve bends. minAzimuthAngle/maxAzimuthAngle are
+          absolute-world bounds — clamping them would fight that placement
+          on curved sections (OrbitControls.update() would snap the camera
+          back inside the band, undoing PathCamera's follow). The polar
+          clamp is safe because backDistance/heightOffset are fixed
+          constants, so the vertical tilt stays roughly constant regardless
+          of path curvature.
 
           PathCamera owns `target` (primed + followed each frame). No static
           `target` prop here — a hardcoded value would only be visible for a
@@ -154,7 +168,11 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
         <OrbitControls
           enablePan={false}
           enableZoom={true}
-          enableRotate={false}
+          enableRotate={true}
+          enableDamping={true}
+          dampingFactor={0.08}
+          minPolarAngle={THREE.MathUtils.degToRad(30)}
+          maxPolarAngle={THREE.MathUtils.degToRad(65)}
           minDistance={6}
           maxDistance={10}
           makeDefault
