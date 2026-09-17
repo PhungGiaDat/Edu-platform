@@ -289,7 +289,8 @@ describe('LearnAR8thWall transition UX', () => {
     });
 
     expect(screen.getByTestId('ar-transition-overlay')).toHaveAttribute('data-visible', 'false');
-    expect(screen.getByText('Đưa thẻ vào khung để khám phá ✨')).toBeInTheDocument();
+    expect(screen.getByTestId('learner-ar-overlay')).toHaveAttribute('data-mode', 'compact');
+    expect(screen.getByText('Hold a card in the camera view.')).toBeInTheDocument();
   });
 
   it('keeps the overlay visible for iframe, model, target, camera, and XR started events before camera video', async () => {
@@ -453,7 +454,8 @@ describe('LearnAR8thWall transition UX', () => {
     act(() => {
       postViewerMessage('XR_CAMERA_HAS_VIDEO');
     });
-    expect(screen.getByText('Đưa thẻ vào khung để khám phá ✨')).toBeInTheDocument();
+    expect(screen.getByTestId('learner-ar-overlay')).toHaveAttribute('data-mode', 'compact');
+    expect(screen.getByText('Hold a card in the camera view.')).toBeInTheDocument();
   });
 
   it('keeps AR operator controls available to an authorized admin only when debug is requested', async () => {

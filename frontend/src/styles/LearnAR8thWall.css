@@ -754,3 +754,227 @@
 .debug-phase-indicator strong {
   color: #ff0;
 }
+
+/* Learner-facing AR HUD. The outer layer remains transparent to XR input. */
+.learner-ar-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 150;
+  pointer-events: none;
+  color: #483522;
+  font-family: inherit;
+}
+
+.learner-ar-overlay__panel,
+.learner-ar-overlay__reopen {
+  border: 1px solid rgba(151, 99, 55, 0.2);
+  background:
+    linear-gradient(145deg, rgba(255, 251, 242, 0.95), rgba(248, 229, 199, 0.91));
+  box-shadow:
+    0 12px 30px rgba(78, 48, 24, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.learner-ar-overlay__panel {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 22px;
+}
+
+.learner-ar-overlay__panel--compact {
+  right: 16px;
+  bottom: max(16px, calc(env(safe-area-inset-bottom) + 10px));
+  left: 16px;
+  width: auto;
+  max-width: 380px;
+  padding: 12px;
+  pointer-events: none;
+}
+
+.learner-ar-overlay__panel--expanded {
+  top: max(76px, calc(env(safe-area-inset-top) + 60px));
+  right: 16px;
+  bottom: max(16px, calc(env(safe-area-inset-bottom) + 10px));
+  left: 16px;
+  width: auto;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  overflow: auto;
+  pointer-events: auto;
+}
+
+.learner-ar-overlay__topline,
+.learner-ar-overlay__footer,
+.learner-ar-overlay__controls {
+  display: flex;
+  align-items: center;
+}
+
+.learner-ar-overlay__topline,
+.learner-ar-overlay__footer {
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.learner-ar-overlay__controls {
+  gap: 6px;
+}
+
+.learner-ar-overlay__count {
+  color: #89633e;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.learner-ar-overlay__target-list {
+  display: grid;
+  gap: 8px;
+}
+
+.learner-ar-overlay__target {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid rgba(163, 102, 50, 0.15);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.learner-ar-overlay__target.is-featured {
+  border-color: rgba(211, 119, 48, 0.42);
+  background: linear-gradient(135deg, rgba(255, 239, 207, 0.95), rgba(255, 248, 235, 0.88));
+}
+
+.learner-ar-overlay__target-label {
+  overflow: hidden;
+  color: #4d3020;
+  font-size: clamp(19px, 5.2vw, 23px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.learner-ar-overlay__reopen,
+.learner-ar-overlay__control,
+.learner-ar-overlay__speaker {
+  pointer-events: auto;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  touch-action: manipulation;
+}
+
+.learner-ar-overlay__reopen {
+  position: absolute;
+  right: 16px;
+  bottom: max(16px, calc(env(safe-area-inset-bottom) + 10px));
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: #5b3a22;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.learner-ar-overlay__control {
+  min-height: 32px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(116, 77, 44, 0.1);
+  color: #795234;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.learner-ar-overlay__speaker {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: #b96732;
+  box-shadow: 0 4px 10px rgba(142, 72, 32, 0.24);
+  color: #fffaf2;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.learner-ar-overlay__control:hover,
+.learner-ar-overlay__control:focus-visible {
+  background: rgba(116, 77, 44, 0.18);
+}
+
+.learner-ar-overlay__speaker:hover,
+.learner-ar-overlay__speaker:focus-visible {
+  background: #9e5227;
+}
+
+.learner-ar-overlay__reopen:focus-visible,
+.learner-ar-overlay__control:focus-visible,
+.learner-ar-overlay__speaker:focus-visible {
+  outline: 3px solid rgba(246, 178, 101, 0.86);
+  outline-offset: 2px;
+}
+
+.learner-ar-overlay__instruction,
+.learner-ar-overlay__empty,
+.learner-ar-overlay__feedback {
+  margin: 0;
+  line-height: 1.35;
+}
+
+.learner-ar-overlay__instruction,
+.learner-ar-overlay__empty {
+  color: #755b46;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.learner-ar-overlay__feedback {
+  margin-top: 10px;
+  color: #9a4e23;
+  font-size: 13px;
+  font-weight: 800;
+  animation: learner-ar-feedback-pop 280ms ease-out both;
+}
+
+@keyframes learner-ar-feedback-pop {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 560px) {
+  .learner-ar-overlay__panel--compact,
+  .learner-ar-overlay__panel--expanded {
+    left: max(24px, calc((100% - 560px) / 2));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learner-ar-overlay__feedback {
+    animation: none;
+  }
+
+  .learner-ar-overlay__reopen,
+  .learner-ar-overlay__control,
+  .learner-ar-overlay__speaker {
+    transition: none;
+  }
+}

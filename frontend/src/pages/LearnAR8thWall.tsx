@@ -21,6 +21,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth, type User } from '@/contexts/AuthContext';
 import { useTelegramSync } from '@/hooks/useTelegramSync';
 import { QRScanner } from '@/features/ar/components/QRScanner';
+import {
+  LearnerAROverlay,
+  type LearnerOverlayFeedback,
+  type LearnerOverlayTarget,
+} from '@/features/ar/components/LearnerAROverlay';
+import { AudioService } from '@/services/AudioService';
 import '../styles/LearnAR8thWall.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://edu-platform-api-do20.onrender.com';
@@ -83,6 +89,7 @@ export function isARDebugRequested(search: string): boolean {
 export interface XRTarget {
   qr_id: string;
   word: string;
+  audio_url?: string;
   xr_target_json_url?: string;
   xr_target_image_url?: string;
   model_3d_url?: string;
@@ -102,6 +109,7 @@ export interface XRTarget {
 
 type XRTargetResponse = {
   word?: string;
+  audio_url?: string;
   xr_target_json_url?: string;
   xr_target_image_url?: string;
   model_3d_url?: string;
@@ -125,6 +133,7 @@ export function normalizeXRTarget(targetQrId: string, raw: XRTargetResponse): XR
   return {
     qr_id: targetQrId,
     word: raw.word || targetQrId.replace('001', ''),
+    audio_url: raw.target?.audio_url || raw.audio_url,
     xr_target_json_url: raw.tracking_target?.xr_target_json_url || raw.xr_target_json_url,
     xr_target_image_url: raw.tracking_target?.xr_target_image_url || raw.xr_target_image_url,
     model_3d_url: raw.target?.model_3d_url || raw.model_3d_url,
@@ -144,6 +153,36 @@ export function normalizeXRTarget(targetQrId: string, raw: XRTargetResponse): XR
     presentation_forward_axis:
       raw.target?.presentation_forward_axis ?? raw.presentation_forward_axis,
   };
+}
+
+type LearnerTarget = LearnerOverlayTarget;
+
+type LearnerStableFoundPayload = {
+  targetName: string;
+  word: string;
+  acquiredAt: number;
+};
+
+type LearnerStableLostPayload = {
+  targetName: string;
+  lostAt: number;
+};
+
+function isLearnerStableFoundPayload(payload: unknown): payload is LearnerStableFoundPayload {
+  if (!payload || typeof payload !== 'object') return false;
+  const candidate = payload as Partial<LearnerStableFoundPayload>;
+  return typeof candidate.targetName === 'string'
+    && candidate.targetName.length > 0
+    && typeof candidate.word === 'string'
+    && Number.isFinite(candidate.acquiredAt);
+}
+
+function isLearnerStableLostPayload(payload: unknown): payload is LearnerStableLostPayload {
+  if (!payload || typeof payload !== 'object') return false;
+  const candidate = payload as Partial<LearnerStableLostPayload>;
+  return typeof candidate.targetName === 'string'
+    && candidate.targetName.length > 0
+    && Number.isFinite(candidate.lostAt);
 }
 
 export function normalizeScannedQrId(qrId: unknown): string | null {
@@ -381,6 +420,13 @@ export const LearnAR8thWall: React.FC = () => {
   // All XR targets to track in this session (may include non-scanned co-targets)
   const [xrTargets, setXrTargets] = useState<XRTarget[]>([]);
 
+  // Learner-facing state is populated only from stable iframe events.
+  const [learnerTargets, setLearnerTargets] = useState<Map<string, LearnerTarget>>(
+    () => new Map(),
+  );
+  const [featuredTargetName, setFeaturedTargetName] = useState<string | undefined>();
+  const [learnerFeedback, setLearnerFeedback] = useState<LearnerOverlayFeedback | null>(null);
+
   // Buffer AR_DEBUG messages from viewer iframe for Telegram sync
   const arDebugBufferRef = useRef<string[]>([]);
 
@@ -398,6 +444,26 @@ export const LearnAR8thWall: React.FC = () => {
     // Dual sink: also write to persistent ARControlTrace ring buffer (survives reload, immune to drop_console)
     window.ARControlTrace?.(`AR_${label}`, { detail, phase });
   };
+
+  useEffect(() => {
+    if (featuredTargetName && learnerTargets.has(featuredTargetName)) return;
+    const fallbackTargetName = learnerTargets.keys().next().value as string | undefined;
+    if (featuredTargetName !== fallbackTargetName) {
+      setFeaturedTargetName(fallbackTargetName);
+    }
+  }, [featuredTargetName, learnerTargets]);
+
+  const handleLearnerSpeak = useCallback((targetName: string) => {
+    const target = learnerTargets.get(targetName);
+    if (!target) return;
+
+    void AudioService.playPronunciation(target.word, 'en', target.audioUrl);
+  }, [learnerTargets]);
+
+  const learnerOverlayTargets = Array.from(learnerTargets.values());
+  const learnerInstruction = learnerOverlayTargets.length > 0
+    ? 'Tap Hear it to listen again.'
+    : 'Hold a card in the camera view.';
 
   useEffect(() => {
     if (!showOperatorTools || parentBuildFingerprintEmittedRef.current) return;
@@ -640,6 +706,9 @@ export const LearnAR8thWall: React.FC = () => {
     armCameraHandoffGate(debugHandoffDelayMs);
     setCurrentTarget(null);
     setXrTargets([]);
+    setLearnerTargets(new Map());
+    setFeaturedTargetName(undefined);
+    setLearnerFeedback(null);
     setScanError(null);
     lastIframeMountSrcRef.current = null;
 
@@ -794,6 +863,47 @@ export const LearnAR8thWall: React.FC = () => {
           setPhase('ERROR');
           break;
 
+        case 'AR_LEARNER_TARGET_STABLE_FOUND': {
+          if (event.source !== viewerRef.current?.contentWindow) return;
+          if (!isLearnerStableFoundPayload(data.payload)) return;
+
+          const catalogueTarget = xrTargets.find(
+            target => target.qr_id === data.payload.targetName,
+          );
+          if (!catalogueTarget) return;
+
+          const learnerTarget: LearnerTarget = {
+            targetName: catalogueTarget.qr_id,
+            word: catalogueTarget.word,
+            acquiredAt: data.payload.acquiredAt,
+            audioUrl: catalogueTarget.audio_url,
+          };
+          setLearnerTargets(previous => {
+            const next = new Map(previous);
+            next.set(learnerTarget.targetName, learnerTarget);
+            return next;
+          });
+          setFeaturedTargetName(learnerTarget.targetName);
+          setLearnerFeedback({
+            id: `${learnerTarget.targetName}:${learnerTarget.acquiredAt}`,
+            message: `Card found: ${learnerTarget.word}`,
+          });
+          break;
+        }
+
+        case 'AR_LEARNER_TARGET_STABLE_LOST': {
+          if (event.source !== viewerRef.current?.contentWindow) return;
+          if (!isLearnerStableLostPayload(data.payload)) return;
+
+          setLearnerTargets(previous => {
+            if (!previous.has(data.payload.targetName)) return previous;
+            const next = new Map(previous);
+            next.delete(data.payload.targetName);
+            return next;
+          });
+          break;
+        }
+
         case 'TARGET_FOUND':
           console.log('[LearnAR8thWall] Target found in viewer:', data.payload);
           break;
@@ -806,7 +916,7 @@ export const LearnAR8thWall: React.FC = () => {
 
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, [clearTransitionPresentation, dismissTransition]);
+  }, [clearTransitionPresentation, dismissTransition, xrTargets]);
 
   // ========================================================================
   // NAVIGATION
@@ -821,6 +931,9 @@ export const LearnAR8thWall: React.FC = () => {
     setPhase('SCANNING');
     setScanError(null);
     setCurrentTarget(null);
+    setLearnerTargets(new Map());
+    setFeaturedTargetName(undefined);
+    setLearnerFeedback(null);
     setCameraReleased(false);
     setCameraHandoffGateReady(false);
     setTargetReady(false);
@@ -970,6 +1083,16 @@ export const LearnAR8thWall: React.FC = () => {
           />
         )}
 
+        {phase === 'VIEWING' && (
+          <LearnerAROverlay
+            activeTargets={learnerOverlayTargets}
+            featuredTargetName={featuredTargetName}
+            instruction={learnerInstruction}
+            feedback={learnerFeedback}
+            onSpeak={handleLearnerSpeak}
+          />
+        )}
+
         {transitionMounted && (
           <div
             className={`ar-transition-overlay ar-transition-overlay--lexi ar-transition-overlay--story ${transitionVisible ? 'is-visible' : 'is-leaving'}`}
@@ -1071,18 +1194,12 @@ export const LearnAR8thWall: React.FC = () => {
         </div>
       )}
 
-      {/* Instructions */}
+      {/* Scanner instruction */}
       {phase === 'SCANNING' && (
         <div className="ar-instructions">
           <p>Point camera at flashcard QR code</p>
         </div>
       )}
-
-        {phase === 'VIEWING' && (
-          <div className="ar-instructions ar-viewing-hint">
-            <p>Đưa thẻ vào khung để khám phá ✨</p>
-          </div>
-        )}
 
     </div>
   );

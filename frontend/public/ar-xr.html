@@ -292,6 +292,10 @@
       shouldRevealAR,
       smoothstep,
     } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=visual-pose-v1';
+    import {
+      createLearnerTargetGate,
+      LEARNER_TARGET_STABLE_DWELL_MS,
+    } from './static/ar-assets/js/learner-target-gate.js';
     window.THREE = THREE;
 
     // ========== RUNTIME DIAGNOSTICS ==========
@@ -677,6 +681,16 @@
     function sendMessage(type, payload = {}) {
       window.parent.postMessage({ type, payload, timestamp: Date.now() }, '*');
     }
+
+    const learnerTargetGate = createLearnerTargetGate({
+      dwellMs: LEARNER_TARGET_STABLE_DWELL_MS,
+      onStableFound: ({ targetName, word, acquiredAt }) => {
+        sendMessage('AR_LEARNER_TARGET_STABLE_FOUND', { targetName, word, acquiredAt });
+      },
+      onStableLost: ({ targetName, lostAt }) => {
+        sendMessage('AR_LEARNER_TARGET_STABLE_LOST', { targetName, lostAt });
+      },
+    });
 
     // ========== AR_DEBUG MESSAGE ==========
     function sendARDebug(label, details = {}) {
@@ -2662,6 +2676,10 @@
           targetName,
           lostForMs: Math.round(lossGrace.lostForMs),
         });
+        learnerTargetGate.onConfirmedLoss({
+          targetName,
+          lostAt: performance.timeOrigin + graceStart,
+        });
 
         const lossDecision = getActiveTransactionLossDecision(targetName);
         if (lossDecision.defer) {
@@ -3102,6 +3120,11 @@
 
       const config = targetConfigByName.get(detail.name);
       const targetWord = config?.word || detail.name;
+      learnerTargetGate.onFound({
+        targetName: detail.name,
+        word: targetWord,
+        acquiredAt: performance.timeOrigin + now,
+      });
 
       sendARDebug('TARGET_FOUND', {
         qrId: detail.name,
@@ -3121,6 +3144,7 @@
     function onTargetLost(name) {
       const instance = targetInstances.get(name);
       const now = performance.now();
+      learnerTargetGate.onRawLost(name);
 
       // Track loss immediately
       trackedTargets.delete(name);
