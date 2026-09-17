@@ -85,8 +85,8 @@ describe('Sidebar — Dictionary & Notebook entries', () => {
     expect(container.querySelector('.learner-mobile-nav')).toBeNull();
   });
 
-  it('shows while scrolling and hides 1200ms after the last scroll event', () => {
-    vi.useFakeTimers();
+  it('hides after scrolling down and returns after scrolling up', () => {
+    const initialScrollY = window.scrollY;
     try {
       vi.mocked(useAuth).mockReturnValue(authedUser);
       vi.mocked(useLocale).mockReturnValue(localeEn);
@@ -95,29 +95,19 @@ describe('Sidebar — Dictionary & Notebook entries', () => {
 
       expect(mobileNav).not.toHaveClass('learner-mobile-nav--hidden');
 
+      Object.defineProperty(window, 'scrollY', { configurable: true, value: 120 });
       act(() => {
-        vi.advanceTimersByTime(1200);
+        document.dispatchEvent(new Event('scroll'));
       });
       expect(mobileNav).toHaveClass('learner-mobile-nav--hidden');
 
+      Object.defineProperty(window, 'scrollY', { configurable: true, value: 40 });
       act(() => {
         document.dispatchEvent(new Event('scroll'));
       });
       expect(mobileNav).not.toHaveClass('learner-mobile-nav--hidden');
-
-      act(() => {
-        vi.advanceTimersByTime(900);
-        document.dispatchEvent(new Event('scroll'));
-        vi.advanceTimersByTime(900);
-      });
-      expect(mobileNav).not.toHaveClass('learner-mobile-nav--hidden');
-
-      act(() => {
-        vi.advanceTimersByTime(300);
-      });
-      expect(mobileNav).toHaveClass('learner-mobile-nav--hidden');
     } finally {
-      vi.useRealTimers();
+      Object.defineProperty(window, 'scrollY', { configurable: true, value: initialScrollY });
     }
   });
 });

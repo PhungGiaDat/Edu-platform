@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { DailyGoal } from '@/features/gamification/components/DailyGoal';
@@ -33,8 +33,6 @@ interface TrackerStats {
     totalXp: number;
     percent: number;
 }
-
-const MOBILE_NAV_IDLE_MS = 1200;
 
 const BookIcon: React.FC<{ className?: string }> = ({ className = 'h-6 w-6' }) => (
     <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -574,7 +572,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
     const [progress, setProgress] = useState<UserProgress[]>([]);
     const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
     const [isMobileNavVisible, setIsMobileNavVisible] = useState(true);
-    const mobileNavIdleTimerRef = useRef<number | null>(null);
+    const lastScrollYRef = useRef(0);
     const moreButtonRef = useRef<HTMLButtonElement>(null);
     const mobileSheetRef = useRef<HTMLDivElement>(null);
     const previousPathRef = useRef(location.pathname);
@@ -584,41 +582,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
         ? fullNavItems.filter((item) => item.path === '/courses' || item.path === '/learn-ar-xr')
         : fullNavItems;
 
-    const clearMobileNavIdleTimer = useCallback(() => {
-        if (mobileNavIdleTimerRef.current === null) return;
-        window.clearTimeout(mobileNavIdleTimerRef.current);
-        mobileNavIdleTimerRef.current = null;
-    }, []);
-
-    const scheduleMobileNavHide = useCallback(() => {
-        clearMobileNavIdleTimer();
-        mobileNavIdleTimerRef.current = window.setTimeout(() => {
-            mobileNavIdleTimerRef.current = null;
-            setIsMobileNavVisible(false);
-        }, MOBILE_NAV_IDLE_MS);
-    }, [clearMobileNavIdleTimer]);
-
     useEffect(() => {
         setIsMobileNavVisible(true);
-        if (!isMobileMoreOpen) scheduleMobileNavHide();
-
-        return clearMobileNavIdleTimer;
-    }, [clearMobileNavIdleTimer, isMobileMoreOpen, location.pathname, scheduleMobileNavHide]);
+        lastScrollYRef.current = Math.max(0, window.scrollY || document.documentElement.scrollTop || 0);
+    }, [location.pathname]);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
         const handleScroll = () => {
-            if (isMobileMoreOpen) return;
-            setIsMobileNavVisible(true);
-            scheduleMobileNavHide();
+            if (isMobileMoreOpen) {
+                setIsMobileNavVisible(true);
+                return;
+            }
+
+            const currentScrollY = Math.max(0, window.scrollY || document.documentElement.scrollTop || 0);
+            if (currentScrollY <= 20 || currentScrollY < lastScrollYRef.current) {
+                setIsMobileNavVisible(true);
+            } else if (currentScrollY > lastScrollYRef.current) {
+                setIsMobileNavVisible(false);
+            }
+            lastScrollYRef.current = currentScrollY;
         };
 
         document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
         return () => {
             document.removeEventListener('scroll', handleScroll, true);
         };
-    }, [isMobileMoreOpen, scheduleMobileNavHide]);
+    }, [isMobileMoreOpen]);
 
     useEffect(() => {
         let cancelled = false;
