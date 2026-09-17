@@ -3,9 +3,11 @@
 Chat API Endpoints with Agentic RAG (Retrieval-Augmented Generation) support
 """
 from fastapi import APIRouter, Depends, Body
+from fastapi.responses import StreamingResponse
 from typing import List, Any, Dict, Optional
 from pydantic import BaseModel
 import uuid
+import json
 from datetime import datetime
 import logging
 
@@ -13,6 +15,7 @@ from core.security import get_current_user
 from repositories.postgres_user_repository import PostgresUser
 from services.ai_service import AIService, get_ai_service
 from services.agentic_rag_service import AgenticRAGService, get_agentic_rag_service
+from services.openrouter_chat_service import stream_chat_with_fallback
 from repositories.postgres_chat_log_repository import (
     PostgresChatLogRepository,
     get_postgres_chat_log_repository,
@@ -33,6 +36,12 @@ class ModelInfo(BaseModel):
 class ChatModelsResponse(BaseModel):
     models: List[ModelInfo]
     defaults: Dict[str, str]
+
+
+class ChatStreamRequest(BaseModel):
+    question: str
+    session_id: Optional[str] = None
+    lesson_context: Optional[Any] = None
 
 
 class RAGChatRequest(BaseModel):
@@ -102,6 +111,76 @@ async def get_chat_models():
 
 
 # ──────────────────────────────────────────────
+# POST /chat/stream — OpenRouter SSE Streaming
+# ──────────────────────────────────────────────
+@router.post("/chat/stream")
+async def chat_stream(
+    request: ChatStreamRequest,
+    chat_repo: PostgresChatLogRepository = Depends(get_postgres_chat_log_repository),
+    current_user: PostgresUser = Depends(get_current_user),
+):
+    """
+    Stream chat tokens via OpenRouter with 2-model failover.
+    Yields real-time Server-Sent Events (text/event-stream).
+    Saves user question and AI full reply to PostgresChatLogRepository upon stream completion.
+    """
+    session_id = request.session_id or str(uuid.uuid4())
+    user_id = str(current_user.id)
+
+    recent_history: List[Dict[str, Any]] = []
+    try:
+        recent_history = await chat_repo.get_session_history(session_id=session_id, limit=4)
+    except Exception as e:
+        logger.debug(f"[LexiChat] Could not load session history: {e}")
+
+    async def event_generator():
+        accumulated_tokens: List[str] = []
+        try:
+            async for chunk in stream_chat_with_fallback(
+                question=request.question,
+                recent_history=recent_history,
+                lesson_context=request.lesson_context,
+            ):
+                if chunk.startswith("data: ") and not chunk.startswith("data: ["):
+                    try:
+                        data = json.loads(chunk[6:].strip())
+                        token = data.get("token")
+                        if token:
+                            accumulated_tokens.append(token)
+                    except Exception:
+                        pass
+                yield chunk
+        finally:
+            full_reply = "".join(accumulated_tokens).strip()
+            if full_reply:
+                try:
+                    await chat_repo.log_message(
+                        session_id=session_id,
+                        user_id=user_id,
+                        message=request.question,
+                        sender="user",
+                    )
+                    await chat_repo.log_message(
+                        session_id=session_id,
+                        user_id=user_id,
+                        message=full_reply,
+                        sender="ai",
+                    )
+                except Exception as e:
+                    logger.warning(f"[LexiChat] Failed to log chat: {e}")
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+# ──────────────────────────────────────────────
 # POST /chat/rag
 # ──────────────────────────────────────────────
 
@@ -123,7 +202,7 @@ async def rag_chat(
     """
     session_id = request.session_id or str(uuid.uuid4())
     user_id = str(current_user.id)
-    logger.info(f"[RAG] Processing question: {request.question[:60]}...")
+    logger.info("[LegacyChat] route=/api/v1/chat/rag")
 
     result = await agentic_rag.run(
         question=request.question,
@@ -132,12 +211,6 @@ async def rag_chat(
         planner_model=request.planner_model,
         generator_model=request.generator_model,
         validator_model=request.validator_model,
-    )
-
-    logger.info(
-        f"[RAG] Done. cached={result.get('cached')} "
-        f"sources={len(result.get('sources', []))} "
-        f"trace={result.get('agent_trace', [])}"
     )
 
     # Log conversation (skip if served from cache)

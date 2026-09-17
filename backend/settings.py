@@ -116,6 +116,14 @@ class Settings(BaseSettings):
     AI_CONTENT_TIMEOUT_SECONDS: float = 30.0
     AI_CONTENT_RETRIES: int = 3
 
+    # ========== OpenRouter Lexi Chatbot (Isolated) ==========
+    OPENROUTER_API_KEY: Optional[SecretStr] = None
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    CHAT_PRIMARY_MODEL: str = "google/gemma-4-26b-a4b-it:free"
+    CHAT_FALLBACK_MODEL: str = "nvidia/nemotron-3-super-120b-a12b:free"
+    CHAT_PRIMARY_START_TIMEOUT_MS: int = 5000
+    CHAT_FALLBACK_START_TIMEOUT_MS: int = 8000
+
     # ========== TokenRouter Multi-Model LLM ==========
     # OpenAI-compatible endpoint for Lexi Agentic RAG (Planner / Generator / Validator routing)
     TOKENROUTER_API_KEY: Optional[SecretStr] = None

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CodexPetSprite } from '@/features/pets/components/CodexPetSprite';
-import { useAuth } from '@/contexts/AuthContext';
 import { ChatService, type ChatErrorKind } from '@/services/ChatService';
 
 interface Message {
@@ -47,13 +46,10 @@ function AgentTrace({ trace }: { trace: string[] }) {
 
 // ─── Main component ────────────────────────────────────────────────────────────
 export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
-    userId,
     initialOpen = false,
     show3DPet = true,
 }) => {
-    const { user } = useAuth();
     const navigate = useNavigate();
-    const effectiveUserId = user?.id || userId;
     const [isOpen, setIsOpen] = useState(initialOpen);
     const [messages, setMessages] = useState<Message[]>([
         {
@@ -91,32 +87,75 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
         setLastQuestion(text);
         setIsLoading(true);
 
+        const aiMsgId = (Date.now() + 1).toString();
+        // Append initial AI message bubble
+        const initialAiMsg: Message = {
+            id: aiMsgId,
+            role: 'ai',
+            content: '',
+        };
+        setMessages((prev) => [...prev, initialAiMsg]);
+
         try {
-            const response = await ChatService.sendRAGMessage(text, effectiveUserId);
-            const aiMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'ai',
-                content: response.response,
-                sources: response.sources,
-                agentTrace: response.agent_trace,
-                errorKind: response.error_kind,
-                retryable: response.retryable,
-                requiresLogin: response.requires_login,
-            };
-            setMessages((prev) => [...prev, aiMsg]);
-        } catch {
-            // Safety net: sendRAGMessage classifies errors itself, but never
-            // let a throw escape into an unmounted/loading dead-end.
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: (Date.now() + 1).toString(),
-                    role: 'ai',
-                    content: 'Có gì đó không ổn, Lexi chưa trả lời được câu này. Bạn thử lại nhé! 🙏',
-                    errorKind: 'unknown',
-                    retryable: true,
+            await ChatService.streamChatMessage(
+                text,
+                (token: string) => {
+                    setMessages((prev) =>
+                        prev.map((msg) =>
+                            msg.id === aiMsgId ? { ...msg, content: msg.content + token } : msg,
+                        ),
+                    );
                 },
-            ]);
+                () => {
+                    setIsLoading(false);
+                    setMessages((prev) =>
+                        prev.map((msg) =>
+                            msg.id === aiMsgId && !msg.content
+                                ? {
+                                      ...msg,
+                                      content: 'Lexi đang bận một chút. Bé thử lại sau nhé!',
+                                      errorKind: 'server',
+                                      retryable: true,
+                                  }
+                                : msg,
+                        ),
+                    );
+                },
+                (kind: ChatErrorKind) => {
+                    setIsLoading(false);
+                    const isAuth = kind === 'auth';
+                    const errorText = isAuth
+                        ? 'Bạn ơi, hãy đăng nhập để trò chuyện với Lexi nhé! 🔑'
+                        : 'Lexi đang bận một chút. Bé thử lại sau nhé!';
+                    setMessages((prev) =>
+                        prev.map((msg) =>
+                            msg.id === aiMsgId
+                                ? {
+                                      ...msg,
+                                      content: errorText,
+                                      errorKind: kind,
+                                      retryable: !isAuth,
+                                      requiresLogin: isAuth,
+                                  }
+                                : msg,
+                        ),
+                    );
+                },
+            );
+        } catch {
+            setIsLoading(false);
+            setMessages((prev) =>
+                prev.map((msg) =>
+                    msg.id === aiMsgId
+                        ? {
+                              ...msg,
+                              content: 'Lexi đang bận một chút. Bé thử lại sau nhé!',
+                              errorKind: 'unknown',
+                              retryable: true,
+                          }
+                        : msg,
+                ),
+            );
         } finally {
             setIsLoading(false);
         }
@@ -261,7 +300,13 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                                                 : 'rounded-bl-sm border-2 border-yellow-100 bg-white text-slate-700 shadow-[0_4px_0_rgba(251,191,36,0.12)]'
                                         }`}
                                     >
-                                        {msg.content}
+                                        {msg.content || (
+                                            <span className="inline-flex items-center gap-1 text-slate-400 py-1">
+                                                <span className="h-2 w-2 animate-bounce rounded-full bg-sky-400" style={{ animationDelay: '0ms' }} />
+                                                <span className="h-2 w-2 animate-bounce rounded-full bg-sky-400" style={{ animationDelay: '150ms' }} />
+                                                <span className="h-2 w-2 animate-bounce rounded-full bg-sky-400" style={{ animationDelay: '300ms' }} />
+                                            </span>
+                                        )}
                                     </div>
 
                                     {/* Error actions: retry the question / go log in */}
@@ -308,7 +353,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                             </div>
                         ))}
 
-                        {isLoading && (
+                        {isLoading && messages[messages.length - 1]?.role !== 'ai' && (
                             <div className="flex justify-start">
                                 <div className="rounded-2xl rounded-bl-sm border-2 border-yellow-100 bg-white p-3 shadow-sm">
                                     <div className="flex gap-1.5">
