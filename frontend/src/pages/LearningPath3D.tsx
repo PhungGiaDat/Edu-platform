@@ -2,59 +2,21 @@
  * LearningPath3D.tsx
  *
  * Main page component for the 3D learning path experience.
- * Combines the 3D scene with modal UI and state management.
+ * Shows only courses the authenticated user has joined; the 3D scene is a
+ * pure presentation layer over the LearningPathViewModel returned by
+ * GET /api/v1/learning-path/me. No demo/fallback curriculum data.
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useCallback, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LearningPathScene } from '@/features/learning-path/components/LearningPathScene';
 import { LessonModal } from '@/features/learning-path/components/LessonModal';
+import { CourseSelector } from '@/features/learning-path/components/CourseSelector';
 import { useLearningPath3DStore } from '@/hooks/useLearningPath3D';
 import { usePets } from '@/hooks/usePets';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
-import type { LessonNode } from '@/types/learning-path';
-
-// ========== Demo Data ==========
-
-const DEMO_NODES: LessonNode[] = [
-  { lesson_id: 'l1', title: 'Hello!', status: 'completed', type: 'flashcard', xp_reward: 50, icon: '👋', position: 0.1 },
-  { lesson_id: 'l2', title: 'Colors', status: 'completed', type: 'flashcard', xp_reward: 50, icon: '🎨', position: 0.2 },
-  { lesson_id: 'l3', title: 'Numbers', status: 'available', type: 'quiz', xp_reward: 75, icon: '🔢', position: 0.35 },
-  { lesson_id: 'l4', title: 'Animals', status: 'available', type: 'ar_session', xp_reward: 100, icon: '🐱', position: 0.5 },
-  { lesson_id: 'l5', title: 'Food', status: 'locked', type: 'flashcard', xp_reward: 50, icon: '🍎', position: 0.65 },
-];
-
-// ========== Transform Functions ==========
-
-interface ApiLearningPathItem {
-  lesson_id: string;
-  title: string;
-  status?: 'completed' | 'available' | 'locked';
-  type?: 'flashcard' | 'quiz' | 'ar_session' | 'lesson';
-  xp_reward?: number;
-  xp?: number;
-  icon?: string;
-  emoji?: string;
-  position?: number;
-  order?: number;
-}
-
-function transformLearningPathData(data: ApiLearningPathItem[]): LessonNode[] {
-  if (!Array.isArray(data) || data.length === 0) {
-    return DEMO_NODES;
-  }
-
-  return data.map((item, index) => ({
-    lesson_id: item.lesson_id || `lesson-${index}`,
-    title: item.title || `Lesson ${index + 1}`,
-    status: item.status || (index < 2 ? 'completed' : index === 2 ? 'available' : 'locked'),
-    type: item.type || 'lesson',
-    xp_reward: item.xp_reward || item.xp || 50,
-    icon: item.icon || item.emoji || '📚',
-    position: item.position ?? item.order ?? ((index + 1) / (data.length + 1)),
-  }));
-}
+import type { LessonNode, LearningPathMeResponse } from '@/types/learning-path';
 
 // ========== Component ==========
 
@@ -62,102 +24,82 @@ export const LearningPath3D: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { activePet } = usePets(user?.id || null);
-  const [loading, setLoading] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const courseIdParam = searchParams.get('course_id');
 
-  // Store state and actions
   const {
-    nodes,
-    currentProgress,
-    selectedNode,
-    isModalOpen,
-    setNodes,
-    setCurrentProgress,
-    setSelectedNode,
-    openModal,
-    closeModal,
+    joinedCourses,
+    selectedCourseId,
+    path,
+    selectedNodeId,
+    loading,
+    error,
+    setJoinedCourses,
+    setSelectedCourse,
+    setPath,
+    selectNode,
+    clearSelectedNode,
+    setLoading,
+    setError,
   } = useLearningPath3DStore();
 
-  // Fetch learning path data on mount
-  useEffect(() => {
-    const fetchLearningPath = async () => {
-      setLoading(true);
-      try {
-        const data = await apiClient.get('/api/v1/learning-path/user');
-        const transformed = transformLearningPathData(data);
-        setNodes(transformed);
-
-        // Set progress to first available node
-        const firstAvailable = transformed.find(n => n.status === 'available');
-        if (firstAvailable) {
-          setCurrentProgress(firstAvailable.position);
-        } else {
-          // If all completed, show last completed
-          const lastCompleted = [...transformed].reverse().find(n => n.status === 'completed');
-          if (lastCompleted) {
-            setCurrentProgress(lastCompleted.position);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load learning path:', error);
-        // Fallback to demo data
-        setNodes(DEMO_NODES);
-        const firstAvailable = DEMO_NODES.find(n => n.status === 'available');
-        if (firstAvailable) {
-          setCurrentProgress(firstAvailable.position);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLearningPath();
-  }, [setNodes, setCurrentProgress]);
-
-  // Calculate progress stats
-  const progressStats = useMemo(() => {
-    const total = nodes.length;
-    const completed = nodes.filter(n => n.status === 'completed').length;
-    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-    const totalXP = nodes.reduce((sum, n) => sum + n.xp_reward, 0);
-    const earnedXP = nodes.filter(n => n.status === 'completed').reduce((sum, n) => sum + n.xp_reward, 0);
-    return { total, completed, percent, totalXP, earnedXP };
-  }, [nodes]);
-
-  // Handle node selection
-  const handleNodeSelect = (node: LessonNode) => {
-    setSelectedNode(node);
-    openModal(node);
-  };
-
-  // Handle lesson start - navigate to appropriate page
-  const handleStartLesson = (lesson: LessonNode) => {
-    closeModal();
-
-    // Navigate based on lesson type
-    switch (lesson.type) {
-      case 'ar_session':
-        navigate('/learn-ar-xr');
-        break;
-      case 'flashcard':
-        navigate('/flashcards');
-        break;
-      case 'quiz':
-        navigate('/courses');
-        break;
-      case 'lesson':
-        navigate('/courses');
-        break;
-      default:
-        navigate('/courses');
+  const fetchPath = useCallback(async (courseId: string | null) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = (await apiClient.getLearningPathMe(courseId || undefined)) as LearningPathMeResponse;
+      setJoinedCourses(data.joined_courses);
+      setSelectedCourse(data.selected_course?.course_id ?? null);
+      setPath(data.path);
+    } catch (err) {
+      console.error('[LearningPath3D] Failed to load learning path:', err);
+      setError('Unable to load your learning path.');
+    } finally {
+      setLoading(false);
     }
+  }, [setJoinedCourses, setSelectedCourse, setPath, setLoading, setError]);
+
+  useEffect(() => {
+    fetchPath(courseIdParam);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseIdParam]);
+
+  const handleRetry = () => {
+    fetchPath(courseIdParam);
   };
 
-  // Handle modal close
+  const handleCourseSwitch = (courseId: string) => {
+    clearSelectedNode();
+    setSearchParams({ course_id: courseId }, { replace: true });
+  };
+
+  // Node click
+  const handleNodeSelect = (node: LessonNode) => {
+    if (node.state === 'locked') return;
+    selectNode(node.lesson_id);
+  };
+
   const handleCloseModal = () => {
-    closeModal();
+    clearSelectedNode();
   };
 
-  // Loading state
+  // Launch the canonical lesson runner. Learning Path never decides which
+  // activity implementation to open — that belongs to LessonPlayer.
+  const handleStartLesson = (lesson: LessonNode) => {
+    clearSelectedNode();
+    navigate(lesson.launch_path);
+  };
+
+  const selectedNode = path?.nodes.find((n) => n.lesson_id === selectedNodeId) ?? null;
+  const selectedCourse = joinedCourses.find((c) => c.course_id === selectedCourseId) ?? null;
+
+  // Pet position: the current lesson's spot on the path, or overall progress
+  // if nothing is "current" yet (e.g. a freshly-completed course).
+  const petProgress = path
+    ? path.nodes.find((n) => n.state === 'current')?.position ?? path.progress
+    : 0;
+
+  // ========== Loading ==========
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
@@ -169,41 +111,92 @@ export const LearningPath3D: React.FC = () => {
     );
   }
 
+  // ========== Error ==========
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50 px-4">
+        <div className="max-w-sm rounded-3xl bg-white/90 p-6 text-center shadow-lg">
+          <p className="mb-4 font-bold text-slate-700">{error}</p>
+          <button
+            onClick={handleRetry}
+            className="rounded-2xl bg-amber-500 px-6 py-3 font-bold text-white shadow-md hover:bg-amber-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ========== Empty state ==========
+  if (joinedCourses.length === 0) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50 px-4">
+        <div className="max-w-sm rounded-3xl bg-white/90 p-6 text-center shadow-lg">
+          <div className="mb-3 text-5xl">📚</div>
+          <p className="mb-4 font-bold text-slate-700">
+            You haven&apos;t joined any courses yet.
+          </p>
+          <button
+            onClick={() => navigate('/courses')}
+            className="rounded-2xl bg-amber-500 px-6 py-3 font-bold text-white shadow-md hover:bg-amber-600"
+          >
+            Explore Courses
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
-      {/* 3D Scene */}
+      {/* 3D Scene — single reusable Canvas; course switches reframe/re-skin
+          in place (courseKey below only resets the PetGuide's transient
+          walk-animation refs, it does NOT remount the Canvas). */}
       <LearningPathScene
-        nodes={nodes}
-        currentProgress={currentProgress}
+        nodes={path?.nodes ?? []}
+        currentProgress={petProgress}
         activePet={activePet}
         onNodeSelect={handleNodeSelect}
+        categoryKey={selectedCourse?.category_key}
+        courseKey={selectedCourseId}
       />
 
-      {/* Header Overlay with Progress */}
+      {/* Header Overlay with Progress + Course Selector */}
       <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 p-3 sm:p-4">
         <div className="pointer-events-auto mx-auto max-w-md rounded-2xl bg-white/90 p-3 shadow-lg backdrop-blur-sm sm:p-4">
           <div className="mb-2 flex items-center justify-between">
             <h1 className="text-base font-bold text-gray-800 sm:text-lg">Learning Path</h1>
-            <span className="text-xs font-semibold text-amber-600 sm:text-sm">
-              {progressStats.completed}/{progressStats.total} Lessons
-            </span>
+            {path && (
+              <span className="text-xs font-semibold text-amber-600 sm:text-sm">
+                {path.completed_count}/{path.total_count} Lessons
+              </span>
+            )}
           </div>
 
-          {/* Progress bar */}
-          <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
-              style={{ width: `${progressStats.percent}%` }}
-            />
-          </div>
+          {path && (
+            <>
+              <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
+                  style={{ width: `${Math.round(path.progress * 100)}%` }}
+                />
+              </div>
+              <div className="mt-2 text-xs text-gray-600">
+                {Math.round(path.progress * 100)}% Complete
+              </div>
+            </>
+          )}
 
-          {/* XP display */}
-          <div className="mt-2 flex items-center justify-between text-xs text-gray-600">
-            <span>{progressStats.percent}% Complete</span>
-            <span className="font-semibold text-amber-600">
-              {progressStats.earnedXP}/{progressStats.totalXP} XP
-            </span>
-          </div>
+          {joinedCourses.length > 1 && (
+            <div className="mt-3">
+              <CourseSelector
+                courses={joinedCourses}
+                selectedCourseId={selectedCourseId}
+                onSelect={handleCourseSwitch}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -218,7 +211,8 @@ export const LearningPath3D: React.FC = () => {
       {/* Lesson Modal */}
       <LessonModal
         lesson={selectedNode}
-        isOpen={isModalOpen}
+        courseTitle={selectedCourse?.title_vi || selectedCourse?.title}
+        isOpen={!!selectedNode}
         onClose={handleCloseModal}
         onStart={handleStartLesson}
       />

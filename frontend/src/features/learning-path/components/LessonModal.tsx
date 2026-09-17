@@ -1,11 +1,10 @@
 /**
  * LessonModal.tsx
  *
- * Claymorphic modal for displaying lesson details and starting a lesson.
+ * Claymorphic modal for displaying lesson details and launching a lesson.
  * Features:
  * - CSS animations (no framer-motion)
  * - Claymorphic styling with border, shadow, rounded corners
- * - Lesson type labels
  * - XP reward display
  * - Status indicators
  */
@@ -16,32 +15,26 @@ import type { LessonNode } from '@/types/learning-path';
 export interface LessonModalProps {
   /** The selected lesson node */
   lesson: LessonNode | null;
+  /** Name of the course this lesson belongs to */
+  courseTitle?: string;
   /** Whether the modal is open */
   isOpen: boolean;
   /** Callback when modal is closed */
   onClose: () => void;
-  /** Callback when lesson is started */
+  /** Callback when the lesson CTA is pressed */
   onStart: (lesson: LessonNode) => void;
 }
 
-// Lesson type to display label mapping
-const LESSON_TYPE_LABELS: Record<LessonNode['type'], string> = {
-  flashcard: 'Flashcard',
-  quiz: 'Quiz',
-  ar_session: 'AR Lesson',
-  lesson: 'Lesson',
-};
-
-// Lesson type to icon mapping
-const LESSON_TYPE_ICONS: Record<LessonNode['type'], string> = {
-  flashcard: '📇',
-  quiz: '❓',
-  ar_session: '📱',
-  lesson: '📚',
+const CTA_LABEL: Record<LessonNode['state'], string> = {
+  completed: 'Review',
+  current: 'Continue',
+  available: 'Start',
+  locked: 'Locked',
 };
 
 export const LessonModal: React.FC<LessonModalProps> = ({
   lesson,
+  courseTitle,
   isOpen,
   onClose,
   onStart,
@@ -73,9 +66,9 @@ export const LessonModal: React.FC<LessonModalProps> = ({
             <span className="text-2xl leading-none">×</span>
           </button>
 
-          {/* Lesson icon */}
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-4xl shadow-lg">
-            {lesson.icon || LESSON_TYPE_ICONS[lesson.type] || '📚'}
+          {/* Lesson order badge */}
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-2xl font-black text-white shadow-lg">
+            {lesson.order}
           </div>
 
           {/* Lesson title */}
@@ -83,12 +76,14 @@ export const LessonModal: React.FC<LessonModalProps> = ({
             {lesson.title}
           </h2>
 
-          {/* Lesson type badge */}
-          <div className="mb-3 text-center">
-            <span className="inline-block rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold uppercase text-cyan-700">
-              {LESSON_TYPE_LABELS[lesson.type] || lesson.type}
-            </span>
-          </div>
+          {/* Course badge */}
+          {courseTitle && (
+            <div className="mb-3 text-center">
+              <span className="inline-block rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold uppercase text-cyan-700">
+                {courseTitle}
+              </span>
+            </div>
+          )}
 
           {/* XP reward */}
           <div className="mb-4 text-center text-lg font-bold text-amber-500">
@@ -97,29 +92,32 @@ export const LessonModal: React.FC<LessonModalProps> = ({
 
           {/* Status indicator */}
           <div className="mb-6 text-center">
-            {lesson.status === 'completed' && (
+            {lesson.state === 'completed' && (
               <span className="text-sm font-semibold text-green-600">✓ Completed</span>
             )}
-            {lesson.status === 'available' && (
+            {lesson.state === 'current' && (
+              <span className="text-sm font-semibold text-cyan-600">In progress</span>
+            )}
+            {lesson.state === 'available' && (
               <span className="text-sm font-semibold text-cyan-600">Ready to start!</span>
             )}
-            {lesson.status === 'locked' && (
+            {lesson.state === 'locked' && (
               <span className="text-sm font-semibold text-gray-500">🔒 Locked</span>
             )}
           </div>
 
-          {/* Start button */}
-          {lesson.status !== 'locked' && (
+          {/* CTA */}
+          {lesson.state !== 'locked' && (
             <button
               onClick={handleStart}
               className="min-h-[48px] w-full rounded-2xl border-b-4 border-orange-600 bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-3 font-bold text-white shadow-lg shadow-amber-500/30 transition-all duration-200 hover:from-amber-500 hover:to-orange-600 active:translate-y-1 active:border-b-0"
             >
-              Start Lesson
+              {CTA_LABEL[lesson.state]}
             </button>
           )}
 
           {/* Locked message */}
-          {lesson.status === 'locked' && lesson.unlock_condition && (
+          {lesson.state === 'locked' && (
             <div className="text-center text-sm text-gray-500">
               Complete more lessons to unlock
             </div>

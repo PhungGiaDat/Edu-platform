@@ -2,3 +2,4 @@
 
 export { LearningPathScene } from './LearningPathScene';
 export { LessonModal } from './LessonModal';
+export { CourseSelector } from './CourseSelector';

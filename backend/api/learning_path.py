@@ -15,6 +15,9 @@ from repositories.learning_path_repository import (
 )
 from repositories.postgres_user_repository import PostgresUser
 from core.security import get_current_user
+from models.learning_path_view import LearningPathMeResponse
+from services.course_service import CourseService, get_course_service
+from services.learning_path_view_service import build_learning_path_view
 
 router = APIRouter(prefix="/learning-path", tags=["Learning Path"])
 logger = logging.getLogger(__name__)
@@ -81,6 +84,17 @@ async def _today_progress(user_id: str, progress_repo: DailyProgressRepository) 
 
 def get_daily_progress_repo() -> DailyProgressRepository:
     return DailyProgressRepository()
+
+
+@router.get("/me", response_model=LearningPathMeResponse)
+async def get_my_learning_path(
+    course_id: Optional[str] = None,
+    current_user: PostgresUser = Depends(get_current_user),
+    service: CourseService = Depends(get_course_service),
+):
+    """Authenticated Learning Path 3D facade: joined+published courses only,
+    real lesson ordering/progress, no client-supplied user_id."""
+    return await build_learning_path_view(current_user.id, course_id, service)
 
 
 @router.get("/{user_id}")

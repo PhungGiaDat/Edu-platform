@@ -442,7 +442,16 @@ export const apiClient = {
     request(`/api/v1/gamification/award-badge?badge_id=${badgeId}`, { method: 'POST' }),
 
   // ========== LEARNING PATH ==========
-  
+
+  /**
+   * Get the authenticated user's Learning Path 3D view (joined courses + selected course path).
+   */
+  getLearningPathMe: (courseId?: string) =>
+    request('/api/v1/learning-path/me', {
+      method: 'GET',
+      params: courseId ? { course_id: courseId } : undefined,
+    }),
+
   /**
    * Track daily progress
    */

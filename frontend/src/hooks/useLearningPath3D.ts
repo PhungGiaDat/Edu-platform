@@ -1,41 +1,50 @@
 import { create } from 'zustand';
-import { LessonNode } from '@/types/learning-path';
+import type { JoinedCourseSummary, LearningPathData } from '@/types/learning-path';
 
 interface LearningPath3DState {
-  nodes: LessonNode[];
-  currentProgress: number; // 0-1 position on path
-  selectedNode: LessonNode | null;
-  isModalOpen: boolean;
+  joinedCourses: JoinedCourseSummary[];
+  selectedCourseId: string | null;
+  path: LearningPathData | null;
+  selectedNodeId: string | null;
+  loading: boolean;
+  error: string | null;
 
   // Actions
-  setNodes: (nodes: LessonNode[]) => void;
-  setCurrentProgress: (progress: number) => void;
-  setSelectedNode: (node: LessonNode | null) => void;
-  openModal: (node: LessonNode) => void;
-  closeModal: () => void;
-  completeLesson: (lessonId: string) => void;
+  setJoinedCourses: (courses: JoinedCourseSummary[]) => void;
+  setSelectedCourse: (courseId: string | null) => void;
+  setPath: (path: LearningPathData | null) => void;
+  selectNode: (nodeId: string) => void;
+  clearSelectedNode: () => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  reset: () => void;
 }
 
+const initialState = {
+  joinedCourses: [] as JoinedCourseSummary[],
+  selectedCourseId: null as string | null,
+  path: null as LearningPathData | null,
+  selectedNodeId: null as string | null,
+  loading: true,
+  error: null as string | null,
+};
+
 export const useLearningPath3DStore = create<LearningPath3DState>((set) => ({
-  nodes: [],
-  currentProgress: 0,
-  selectedNode: null,
-  isModalOpen: false,
+  ...initialState,
 
-  setNodes: (nodes) => set({ nodes }),
+  setJoinedCourses: (joinedCourses) => set({ joinedCourses }),
 
-  setCurrentProgress: (progress) => set({ currentProgress: progress }),
+  setSelectedCourse: (selectedCourseId) => set({ selectedCourseId }),
 
-  setSelectedNode: (node) => set({ selectedNode: node }),
+  setPath: (path) => set({ path }),
 
-  openModal: (node) => set({ selectedNode: node, isModalOpen: true }),
+  selectNode: (selectedNodeId) => set({ selectedNodeId }),
 
-  closeModal: () => set({ selectedNode: null, isModalOpen: false }),
+  clearSelectedNode: () => set({ selectedNodeId: null }),
 
-  completeLesson: (lessonId) =>
-    set((state) => ({
-      nodes: state.nodes.map((node) =>
-        node.lesson_id === lessonId ? { ...node, status: 'completed' as const } : node
-      ),
-    })),
+  setLoading: (loading) => set({ loading }),
+
+  setError: (error) => set({ error }),
+
+  reset: () => set({ ...initialState }),
 }));
