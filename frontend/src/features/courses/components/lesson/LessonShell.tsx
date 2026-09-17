@@ -15,6 +15,7 @@ interface LessonShellProps {
   onNext: () => void;
   isSubmitting?: boolean;
   canGoNext?: boolean;
+  showFooterNext?: boolean;
   notice?: string | null;
   locale: 'en' | 'vi';
   children: React.ReactNode;
@@ -31,6 +32,7 @@ export const LessonShell: React.FC<LessonShellProps> = ({
   onNext,
   isSubmitting = false,
   canGoNext = true,
+  showFooterNext = true,
   notice,
   locale,
   children,
@@ -139,7 +141,7 @@ export const LessonShell: React.FC<LessonShellProps> = ({
       </header>
 
       {/* Main Learning Task Area */}
-      <main className="flex-1 w-full max-w-lg mx-auto px-4 py-4 flex flex-col justify-center min-h-0">
+      <main className="flex-1 w-full max-w-md sm:max-w-lg mx-auto px-4 pt-3 pb-[calc(88px+env(safe-area-inset-bottom,12px))] sm:pb-32 flex flex-col justify-start min-h-0">
         {notice && (
           <aside
             aria-live="polite"
@@ -155,34 +157,38 @@ export const LessonShell: React.FC<LessonShellProps> = ({
       </main>
 
       {/* Sticky Bottom Action Bar with iOS Safe Area */}
-      <footer className="sticky bottom-0 z-30 border-t-2 border-white/90 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,calc(env(safe-area-inset-bottom)+0.5rem))] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        <div className="mx-auto flex max-w-lg items-center gap-3">
-          {currentStepIndex > 0 && (
-            <button
-              type="button"
-              onClick={onPrevious}
-              disabled={isSubmitting}
-              className="flex h-13 px-4 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white text-sm font-black text-slate-700 shadow-xs hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
-              aria-label={copy.previous}
-            >
-              ←
-            </button>
-          )}
+      {(currentStepIndex > 0 || showFooterNext) && (
+        <footer className="sticky bottom-0 z-30 border-t-2 border-white/90 bg-white/95 backdrop-blur-md px-4 pt-2.5 pb-[calc(12px+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+          <div className="mx-auto flex w-full max-w-[448px] items-center gap-3">
+            {currentStepIndex > 0 && (
+              <button
+                type="button"
+                onClick={onPrevious}
+                disabled={isSubmitting}
+                className="flex h-13 px-4 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white text-sm font-black text-slate-700 shadow-xs hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
+                aria-label={copy.previous}
+              >
+                ←
+              </button>
+            )}
 
-          <button
-            type="button"
-            onClick={onNext}
-            disabled={isSubmitting || !canGoNext}
-            className="flex-1 min-h-[52px] h-13 rounded-2xl border-2 border-white px-6 text-base sm:text-lg font-black text-white shadow-[0_5px_0_rgba(0,0,0,0.15)] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-            style={{
-              background: theme.accentGradient,
-            }}
-          >
-            <span>{getNextButtonLabel()}</span>
-            <span>→</span>
-          </button>
-        </div>
-      </footer>
+            {showFooterNext && (
+              <button
+                type="button"
+                onClick={onNext}
+                disabled={isSubmitting || !canGoNext}
+                className="flex-1 min-h-[52px] h-13 rounded-2xl border-2 border-white px-6 text-base sm:text-lg font-black text-white shadow-[0_5px_0_rgba(0,0,0,0.15)] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                style={{
+                  background: theme.accentGradient,
+                }}
+              >
+                <span>{getNextButtonLabel()}</span>
+                <span>→</span>
+              </button>
+            )}
+          </div>
+        </footer>
+      )}
     </div>
   );
 };

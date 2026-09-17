@@ -50,9 +50,9 @@ export const LessonVideoSection: React.FC<LessonVideoSectionProps> = ({
     en: {
       title: 'Watch & Discover',
       subtitle: 'Watch carefully to discover new words with Momo!',
-      markWatched: 'I watched it! Continue →',
-      watchedDone: 'Watched ✓ Continue →',
-      promptVi: 'Watch where the characters appear in the video!',
+      markWatched: 'Con đã xem xong! Tiếp tục →',
+      watchedDone: 'Đã xem xong ✓ Tiếp tục →',
+      completionFeedback: 'Great job! You finished watching the video lesson.',
       noVideo: 'Video Lesson',
     },
     vi: {
@@ -60,29 +60,29 @@ export const LessonVideoSection: React.FC<LessonVideoSectionProps> = ({
       subtitle: 'Bé hãy chăm chú theo dõi video để khám phá các từ vựng mới nhé!',
       markWatched: 'Con đã xem xong! Tiếp tục →',
       watchedDone: 'Đã xem xong ✓ Tiếp tục →',
-      promptVi: 'Hãy xem các bạn nhỏ xuất hiện ở đâu nhé!',
+      completionFeedback: 'Bé giỏi lắm! Đã theo dõi xong video bài học.',
       noVideo: 'Video bài học',
     },
   }[locale];
 
   return (
-    <section className="space-y-4 animate-fade-in w-full text-center">
-      {/* Top Header */}
+    <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
+      {/* Heading + One Helper Line Only */}
       <div>
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center justify-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center justify-center gap-2">
           <span>🎬</span>
           <span>{copy.title}</span>
         </h2>
-        <p className="mt-1 text-sm sm:text-base font-bold text-slate-600">
+        <p className="mt-1 text-xs sm:text-sm font-bold text-slate-600">
           {copy.subtitle}
         </p>
       </div>
 
-      {/* Large 16:9 Video (Clean border, no nested cards) */}
-      <div className="relative overflow-hidden rounded-3xl border-4 border-white bg-slate-950 shadow-xl aspect-video w-full flex items-center justify-center">
+      {/* 16:9 Video Card rounded 24-28px with play affordance */}
+      <div className="relative overflow-hidden rounded-[26px] border-4 border-white bg-slate-900 shadow-[0_8px_0_rgba(0,0,0,0.08)] aspect-video w-full flex items-center justify-center">
         {youtubeId ? (
           <iframe
-            className="h-full w-full border-0"
+            className="h-full w-full border-0 rounded-[22px]"
             src={`https://www.youtube-nocookie.com/embed/${youtubeId}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1`}
             title={lesson.title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -91,7 +91,7 @@ export const LessonVideoSection: React.FC<LessonVideoSectionProps> = ({
         ) : rawVideoUrl && !videoError ? (
           <video
             key={rawVideoUrl}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover rounded-[22px]"
             controls
             playsInline
             preload="metadata"
@@ -103,41 +103,44 @@ export const LessonVideoSection: React.FC<LessonVideoSectionProps> = ({
             Your browser does not support the video tag.
           </video>
         ) : posterUrl ? (
-          <div className="relative h-full w-full">
+          <div className="relative h-full w-full flex items-center justify-center">
             <img
               src={posterUrl}
               alt={lesson.title}
               className="h-full w-full object-cover opacity-90"
             />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-              <span className="rounded-full bg-white/90 p-4 text-3xl shadow-lg">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/35">
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/95 text-2xl shadow-lg hover:scale-105 active:scale-95 transition-transform cursor-pointer">
                 ▶️
               </span>
             </div>
           </div>
         ) : (
           <div className="p-6 text-center text-white">
-            <div className="text-4xl mb-2">📺</div>
-            <p className="text-base font-black">{copy.noVideo}</p>
-            <p className="text-xs text-slate-400 mt-1">{lesson.title}</p>
+            <div className="text-3xl mb-1.5">📺</div>
+            <p className="text-sm font-black">{copy.noVideo}</p>
+            <p className="text-xs text-slate-400 mt-0.5">{lesson.title}</p>
           </div>
         )}
       </div>
 
-      {/* Short Vietnamese Prompt */}
-      <p className="text-sm sm:text-base font-bold text-slate-700 bg-white/80 rounded-2xl py-2 px-4 shadow-xs border border-white max-w-md mx-auto">
-        💡 {copy.promptVi}
-      </p>
+      {/* Small Completion Feedback after playback */}
+      {isWatched && (
+        <div className="flex items-center justify-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3.5 py-1 text-xs font-black text-emerald-800 shadow-2xs animate-fade-in">
+          <span>✓</span>
+          <span>{copy.completionFeedback}</span>
+        </div>
+      )}
 
-      {/* Primary Continue Button */}
+      {/* Dominant Watch / Continue Button */}
       <div className="pt-2">
         <button
           type="button"
           onClick={onWatched}
-          className={`w-full min-h-[56px] rounded-2xl border-2 border-white px-6 text-lg font-black transition-all active:translate-y-1 shadow-[0_6px_0_rgba(0,0,0,0.15)] cursor-pointer flex items-center justify-center gap-2 ${
+          className={`w-full min-h-[56px] rounded-2xl border-2 border-white px-6 text-base sm:text-lg font-black transition-all active:translate-y-1 shadow-[0_6px_0_rgba(0,0,0,0.15)] cursor-pointer flex items-center justify-center gap-2 ${
             isWatched
-              ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-              : 'bg-[#FFD93D] text-slate-900 hover:bg-[#FACC15]'
+              ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-[0_6px_0_#059669]'
+              : 'bg-[#FFD93D] text-slate-900 hover:bg-[#FACC15] shadow-[0_6px_0_#EAB308]'
           }`}
         >
           {isWatched ? `✓ ${copy.watchedDone}` : `👀 ${copy.markWatched}`}

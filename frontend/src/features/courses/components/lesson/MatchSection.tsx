@@ -43,22 +43,20 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
 
   const copy = {
     en: {
-      title: 'Word & Picture Match',
-      instruction: 'Match words with the correct pictures',
+      title: 'Nối từ & Ghép hình',
+      pairsCount: `${vocabulary.length || 3} pairs`,
       subtitle: 'Tap a word on the left, then tap its picture on the right!',
       matchedAll: 'Hooray! All pairs matched perfectly!',
-      replay: 'Play Again',
-      reset: 'Reset',
-      pairsRemaining: 'pairs to match',
+      wordsCol: 'TỪ VỰNG',
+      imagesCol: 'HÌNH ẢNH',
     },
     vi: {
       title: 'Nối từ & Ghép hình',
-      instruction: 'Hãy ghép từ với hình đúng',
-      subtitle: 'Bé chạm vào từ ở bên trái, rồi chạm vào hình tương ứng ở bên phải nhé!',
+      pairsCount: `${vocabulary.length || 3} cặp`,
+      subtitle: 'Bé chạm từ ở bên trái, rồi chạm hình đúng ở bên phải nhé!',
       matchedAll: 'Tuyệt vời! Bé đã nối đúng tất cả các cặp từ!',
-      replay: 'Chơi lại',
-      reset: 'Làm lại',
-      pairsRemaining: 'cặp cần nối',
+      wordsCol: 'TỪ VỰNG',
+      imagesCol: 'HÌNH ẢNH',
     },
   }[locale];
 
@@ -66,7 +64,6 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
     if (matchedWords.has(wordEn.toLowerCase())) return;
     setSelectedWordPill(wordEn);
 
-    // If image was already selected, check match
     if (selectedImageWord) {
       checkMatch(wordEn, selectedImageWord);
     }
@@ -76,35 +73,34 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
     if (matchedWords.has(wordEn.toLowerCase())) return;
     setSelectedImageWord(wordEn);
 
-    // If word pill was already selected, check match
     if (selectedWordPill) {
       checkMatch(selectedWordPill, wordEn);
     }
   };
 
-  const checkMatch = async (textWord: string, imageWord: string) => {
-    if (textWord.toLowerCase() === imageWord.toLowerCase()) {
-      // Match!
-      await AudioService.playSoundEffect('correct');
-      HapticService.match();
+  const checkMatch = async (word: string, imageWord: string) => {
+    const isMatch = word.toLowerCase() === imageWord.toLowerCase();
 
+    if (isMatch) {
       const nextMatched = new Set(matchedWords);
-      nextMatched.add(textWord.toLowerCase());
+      nextMatched.add(word.toLowerCase());
       setMatchedWords(nextMatched);
-
       setSelectedWordPill(null);
       setSelectedImageWord(null);
 
-      // Complete when all matched
-      if (nextMatched.size >= vocabulary.length) {
+      await AudioService.playSoundEffect('correct');
+      HapticService.success();
+
+      if (nextMatched.size === vocabulary.length) {
         window.setTimeout(() => {
           onComplete();
         }, 1200);
       }
     } else {
-      // Mismatch
+      setShakeKey(`${word}-${imageWord}`);
       await AudioService.playSoundEffect('wrong');
-      setShakeKey(`${textWord}-${imageWord}`);
+      HapticService.tap();
+
       window.setTimeout(() => {
         setShakeKey(null);
         setSelectedWordPill(null);
@@ -113,48 +109,39 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
     }
   };
 
-  const handleReset = () => {
-    setMatchedWords(new Set());
-    setSelectedWordPill(null);
-    setSelectedImageWord(null);
-    setShuffledImages(shuffleArray(vocabulary));
-  };
+  if (!vocabulary.length) {
+    return (
+      <div className="rounded-3xl border-4 border-white bg-white/90 p-8 text-center text-slate-500 shadow-md">
+        Không có dữ liệu bài tập nối từ.
+      </div>
+    );
+  }
 
-  const isAllMatched = matchedWords.size >= vocabulary.length && vocabulary.length > 0;
+  const isAllMatched = matchedWords.size === vocabulary.length;
 
   return (
-    <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
-      {/* Title & Instructions */}
-      <div>
-        <h2 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center justify-center gap-2">
+    <section className="space-y-3.5 animate-fade-in w-full max-w-md mx-auto">
+      {/* Compact Heading with Pair Count */}
+      <div className="flex items-center justify-between px-1">
+        <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5">
           <span>🧩</span>
           <span>{copy.title}</span>
         </h2>
-        <p className="mt-1 text-xs sm:text-sm font-bold text-slate-600">
-          {copy.instruction}
-        </p>
-      </div>
-
-      {/* Progress & Reset Bar */}
-      <div className="flex items-center justify-between px-2 text-xs font-black text-slate-500">
-        <span className="uppercase tracking-wider">
-          {vocabulary.length - matchedWords.size} {copy.pairsRemaining}
+        <span className="text-xs font-black text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200">
+          {copy.pairsCount}
         </span>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="text-xs font-bold text-slate-500 hover:text-slate-800 underline cursor-pointer"
-        >
-          {copy.reset}
-        </button>
       </div>
 
-      {/* 2-Column Tap-to-Match Grid (Left: Words, Right: Large Visual Images) */}
+      <p className="text-xs font-bold text-slate-500 px-1 text-center">
+        {copy.subtitle}
+      </p>
+
+      {/* Two Balanced Columns: WORDS | IMAGES */}
       <div className="grid grid-cols-2 gap-3 w-full">
-        {/* Left Column: English Words */}
+        {/* Left Column: WORDS (Chunky 56-72px tappable cards) */}
         <div className="space-y-2.5">
-          <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-            🔤 Từ tiếng Anh
+          <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center">
+            🔤 {copy.wordsCol}
           </p>
           {vocabulary.map((item) => {
             const wordKey = item.word_en.toLowerCase();
@@ -168,25 +155,25 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
                 type="button"
                 onClick={() => handleSelectWord(item.word_en)}
                 disabled={isMatched}
-                className={`w-full min-h-[72px] sm:min-h-[84px] flex flex-col justify-center items-center p-3 rounded-2xl border-4 text-center transition-all cursor-pointer ${
+                className={`w-full min-h-[60px] sm:min-h-[68px] flex flex-col justify-center items-center p-2 rounded-2xl border-4 text-center transition-all cursor-pointer ${
                   isMatched
-                    ? 'border-emerald-400 bg-emerald-50 opacity-80 cursor-default shadow-[0_3px_0_#10B981]'
+                    ? 'border-emerald-300 bg-emerald-50/70 opacity-50 scale-95 cursor-default'
                     : isSelected
                       ? 'border-sky-500 bg-sky-50 ring-4 ring-sky-200 scale-102 shadow-[0_5px_0_#0284C7]'
                       : isShaking
-                        ? 'border-rose-400 bg-rose-50 animate-shake'
+                        ? 'border-rose-400 bg-rose-50 ring-4 ring-rose-200 animate-shake'
                         : 'border-white bg-white hover:border-slate-200 shadow-[0_4px_0_rgba(0,0,0,0.06)] active:scale-95'
                 }`}
               >
-                <span className="text-base sm:text-lg font-black text-slate-900 capitalize">
+                <span className="text-base sm:text-lg font-black text-slate-900 capitalize leading-tight">
                   {item.word_en}
                 </span>
                 {isMatched ? (
-                  <span className="text-[11px] font-black text-emerald-700 mt-0.5">
-                    ✓ Đã nối
+                  <span className="text-[10px] font-black text-emerald-700">
+                    ✓ Đã ghép
                   </span>
                 ) : (
-                  <span className="text-[10px] font-bold text-slate-400 mt-0.5">
+                  <span className="text-[10px] font-bold text-slate-400">
                     {item.word_vi}
                   </span>
                 )}
@@ -195,10 +182,10 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
           })}
         </div>
 
-        {/* Right Column: Large Visual Picture Cards */}
+        {/* Right Column: IMAGES (Chunky 56-72px tappable visual cards) */}
         <div className="space-y-2.5">
-          <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-            🖼️ Hình ảnh
+          <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center">
+            🖼️ {copy.imagesCol}
           </p>
           {shuffledImages.map((item) => {
             const wordKey = item.word_en.toLowerCase();
@@ -213,17 +200,17 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
                 type="button"
                 onClick={() => handleSelectImage(item.word_en)}
                 disabled={isMatched}
-                className={`w-full min-h-[72px] sm:min-h-[84px] flex items-center justify-center p-2 rounded-2xl border-4 transition-all cursor-pointer ${
+                className={`w-full min-h-[60px] sm:min-h-[68px] flex items-center justify-center p-1.5 rounded-2xl border-4 transition-all cursor-pointer ${
                   isMatched
-                    ? 'border-emerald-400 bg-emerald-50 opacity-80 cursor-default shadow-[0_3px_0_#10B981]'
+                    ? 'border-emerald-300 bg-emerald-50/70 opacity-50 scale-95 cursor-default'
                     : isSelected
                       ? 'border-sky-500 bg-sky-50 ring-4 ring-sky-200 scale-102 shadow-[0_5px_0_#0284C7]'
                       : isShaking
-                        ? 'border-rose-400 bg-rose-50 animate-shake'
+                        ? 'border-rose-400 bg-rose-50 ring-4 ring-rose-200 animate-shake'
                         : 'border-white bg-white hover:border-slate-200 shadow-[0_4px_0_rgba(0,0,0,0.06)] active:scale-95'
                 }`}
               >
-                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl bg-slate-50 overflow-hidden flex items-center justify-center">
+                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-slate-50 overflow-hidden flex items-center justify-center">
                   {visual.imageUrl ? (
                     <img
                       src={visual.imageUrl}
@@ -232,7 +219,7 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
                       loading="lazy"
                     />
                   ) : (
-                    <span className="text-3xl">{visual.emoji || item.emoji || '✨'}</span>
+                    <span className="text-2xl">{visual.emoji || item.emoji || '✨'}</span>
                   )}
                 </div>
               </button>
@@ -243,9 +230,9 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
 
       {/* Completion Celebration Banner */}
       {isAllMatched && (
-        <div className="rounded-3xl border-4 border-emerald-300 bg-emerald-50 p-5 text-center shadow-md animate-fade-in">
-          <span className="text-3xl block mb-1">🎉</span>
-          <h3 className="text-base font-black text-emerald-900">{copy.matchedAll}</h3>
+        <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-3.5 text-center shadow-md animate-fade-in">
+          <span className="text-2xl block mb-0.5">🎉</span>
+          <h3 className="text-sm font-black text-emerald-900">{copy.matchedAll}</h3>
         </div>
       )}
     </section>

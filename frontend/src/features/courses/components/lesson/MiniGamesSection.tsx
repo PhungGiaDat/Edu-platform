@@ -3,6 +3,7 @@ import type { Lesson, VocabularyItem } from '@/types/course';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
 import { HapticService } from '@/services/HapticService';
+import { FeedbackMascot } from './FeedbackMascot';
 
 interface MiniGamesSectionProps {
   lesson: Lesson;
@@ -20,29 +21,27 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null);
-  const [completedWordKeys, setCompletedWordKeys] = useState<Set<string>>(new Set());
+  const [, setCompletedWordKeys] = useState<Set<string>>(new Set());
 
   const currentTarget = vocabulary[currentTargetIndex] || vocabulary[0];
 
   const copy = {
     en: {
-      title: 'Memory & Learning Mini Game',
-      subtitle: 'Trò chơi rèn luyện trí nhớ — Lật thẻ tìm cặp tương ứng',
-      momoSays: 'Momo says',
-      findPicture: 'Find the matching picture!',
-      tapToHear: 'Tap to listen',
-      correct: 'Awesome! You found the right picture!',
-      tryAgain: 'Not quite, try again!',
-      continue: 'Continue →',
-      finishGame: 'Game Complete 🎉',
-      allCompleted: 'Hooray! You completed the Momo picture challenge!',
+      title: 'Trò chơi rèn luyện trí nhớ',
+      subtitle: 'Lật thẻ tìm cặp tương ứng',
+      tapToHear: 'Chạm để nghe lại',
+      findPicture: 'Chạm vào hình đúng nhé!',
+      correct: 'Giỏi quá! Bé tìm đúng hình rồi!',
+      tryAgain: 'Chưa đúng rồi, bé thử lại nhé!',
+      continue: 'Tiếp tục →',
+      finishGame: 'Hoàn thành trò chơi 🎉',
+      allCompleted: 'Xuất sắc! Bé đã vượt qua thử thách chọn hình của Momo!',
     },
     vi: {
       title: 'Trò chơi rèn luyện trí nhớ',
-      subtitle: 'Lật thẻ tìm cặp tương ứng & Chọn hình theo Momo',
-      momoSays: 'Momo nói',
-      findPicture: 'Bé hãy chạm vào bức hình đúng nhé!',
+      subtitle: 'Lật thẻ tìm cặp tương ứng',
       tapToHear: 'Chạm để nghe lại',
+      findPicture: 'Chạm vào hình đúng nhé!',
       correct: 'Giỏi quá! Bé tìm đúng hình rồi!',
       tryAgain: 'Chưa đúng rồi, bé thử lại nhé!',
       continue: 'Tiếp tục →',
@@ -88,7 +87,6 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
       });
       setCompletedWordKeys((prev) => new Set(prev).add(currentTarget.word_en.toLowerCase()));
 
-      // Advance to next after 1.5s
       window.setTimeout(() => {
         if (currentTargetIndex < vocabulary.length - 1) {
           setCurrentTargetIndex((prev) => prev + 1);
@@ -98,6 +96,7 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
       }, 1500);
     } else {
       await AudioService.playSoundEffect('wrong');
+      HapticService.tap();
       setFeedback({
         correct: false,
         message: copy.tryAgain,
@@ -115,56 +114,56 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
 
   if (!vocabulary.length || !currentTarget) {
     return (
-      <div className="p-8 text-center text-slate-500">
-        Không có từ vựng cho trò chơi này.
+      <div className="rounded-3xl border-4 border-white bg-white/90 p-8 text-center text-slate-500 shadow-md">
+        Không có dữ liệu trò chơi.
       </div>
     );
   }
 
-  const isAllDone = completedWordKeys.size >= vocabulary.length;
+  const isAllDone = currentTargetIndex === vocabulary.length - 1 && feedback?.correct;
 
   return (
     <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
-      {/* Title with preserved keywords for existing tests */}
-      <div>
-        <h2 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center justify-center gap-2">
-          <span>🎮</span>
-          <span>{copy.title}</span>
-        </h2>
-        <p className="mt-1 text-xs sm:text-sm font-bold text-slate-500">
-          {copy.subtitle}
-        </p>
+      {/* Compact Header & Round Indicator */}
+      <div className="flex items-center justify-between px-1">
+        <div className="text-left">
+          <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+            <span>🎮</span>
+            <span>{copy.title}</span>
+          </h2>
+          <p className="text-xs font-bold text-slate-500">{copy.subtitle}</p>
+        </div>
+        <span className="text-xs font-black text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200">
+          Vòng {currentTargetIndex + 1} / {vocabulary.length}
+        </span>
       </div>
 
-      {/* Playable Challenge Banner: "Momo nói: [Word]" */}
-      <div className="rounded-3xl border-4 border-amber-200 bg-amber-50/90 p-4 shadow-[0_6px_0_rgba(245,158,11,0.18)] flex flex-col items-center">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-2xl animate-bounce">🧸</span>
-          <span className="text-sm font-black uppercase tracking-wider text-amber-900">
-            {copy.momoSays}:
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-amber-700 capitalize">
-            "{currentTarget.word_en}"
-          </span>
+      {/* Target Prompt Card (Image First, Little Text) */}
+      <div className="rounded-2xl border-2 border-amber-200 bg-amber-50/80 p-3 shadow-xs flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={playTargetAudio}
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white border-2 border-amber-200 text-lg shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            aria-label={copy.tapToHear}
+          >
+            🔊
+          </button>
+          <div className="text-left">
+            <span className="text-lg font-black text-slate-900 capitalize leading-tight block">
+              {currentTarget.word_en}
+            </span>
+            <span className="text-xs font-bold text-amber-800">
+              {copy.findPicture}
+            </span>
+          </div>
         </div>
 
-        {/* Audio Button */}
-        <button
-          type="button"
-          onClick={playTargetAudio}
-          className="mt-1 flex items-center gap-1.5 rounded-full border-2 border-amber-300 bg-white px-4 py-1.5 text-xs font-black text-amber-900 shadow-xs hover:bg-amber-100 active:scale-95 transition-transform cursor-pointer"
-        >
-          <span>🔊</span>
-          <span>{copy.tapToHear}</span>
-        </button>
-
-        <p className="text-xs font-extrabold text-amber-800/80 mt-2">
-          {copy.findPicture}
-        </p>
+        <span className="text-2xl">🎯</span>
       </div>
 
       {/* 3 LARGE IMAGE CHOICES (Tactile Clay Cards) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+      <div className="grid grid-cols-3 gap-2.5 w-full">
         {vocabulary.slice(0, 3).map((item) => {
           const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
           const isSelected = selectedWord === item.word_en;
@@ -176,49 +175,42 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
               type="button"
               onClick={() => handleChoice(item)}
               disabled={Boolean(feedback?.correct && isTarget)}
-              className={`group flex flex-col items-center rounded-3xl border-4 p-3 text-center transition-all cursor-pointer ${
+              className={`group flex flex-col items-center rounded-2xl border-4 p-2 text-center transition-all cursor-pointer ${
                 isSelected && feedback?.correct
-                  ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-102 shadow-[0_6px_0_#10B981]'
+                  ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-102 shadow-[0_5px_0_#10B981]'
                   : isSelected && !feedback?.correct
-                    ? 'border-amber-400 bg-amber-50 ring-4 ring-amber-200 shadow-[0_4px_0_#F59E0B]'
-                    : 'border-white bg-white shadow-[0_6px_0_rgba(0,0,0,0.06)] hover:border-sky-200 active:scale-98'
+                    ? 'border-rose-400 bg-rose-50 ring-4 ring-rose-200 animate-shake shadow-[0_4px_0_#F43F5E]'
+                    : 'border-white bg-white shadow-[0_5px_0_rgba(0,0,0,0.06)] hover:border-amber-200 active:scale-95'
               }`}
             >
-              <div className="h-28 w-full rounded-2xl bg-slate-50 overflow-hidden flex items-center justify-center mb-2 border border-slate-100">
+              <div className="h-20 w-full sm:h-24 rounded-xl bg-slate-50 overflow-hidden flex items-center justify-center mb-1.5 border border-slate-100">
                 {visual.imageUrl ? (
                   <img
                     src={visual.imageUrl}
                     alt={item.word_en}
-                    className="h-full w-full object-contain p-2 group-hover:scale-105 transition-transform"
+                    className="h-full w-full object-contain p-1 group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
                   />
                 ) : (
-                  <span className="text-5xl">{visual.emoji || item.emoji || '❓'}</span>
+                  <span className="text-3xl">{visual.emoji || item.emoji || '❓'}</span>
                 )}
               </div>
 
-              <span className="text-base sm:text-lg font-black text-slate-900 capitalize">
+              <span className="text-sm font-black text-slate-900 capitalize truncate w-full">
                 {item.word_en}
-              </span>
-              <span className="text-xs font-bold text-slate-400">
-                {item.word_vi}
               </span>
             </button>
           );
         })}
       </div>
 
-      {/* Immediate Gentle Feedback */}
+      {/* Mascot Feedback Reaction (Supports task, never covers content) */}
       {feedback && (
-        <div
-          className={`rounded-2xl border-2 p-3 text-center text-sm font-black animate-fade-in shadow-xs ${
-            feedback.correct
-              ? 'border-emerald-300 bg-emerald-100 text-emerald-900'
-              : 'border-amber-300 bg-amber-100 text-amber-900'
-          }`}
-        >
-          {feedback.correct ? `✓ ${feedback.message}` : `💪 ${feedback.message}`}
-        </div>
+        <FeedbackMascot
+          mode="feedback"
+          state={feedback.correct ? 'correct' : 'incorrect'}
+          message={feedback.message}
+        />
       )}
 
       {/* Continue Button when Correct */}
@@ -236,9 +228,9 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
 
       {/* Completion Banner */}
       {isAllDone && (
-        <div className="rounded-3xl border-4 border-emerald-300 bg-emerald-50 p-4 text-center shadow-md animate-fade-in">
-          <span className="text-3xl block mb-1">🌟</span>
-          <h3 className="text-base font-black text-emerald-900">{copy.allCompleted}</h3>
+        <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-3.5 text-center shadow-md animate-fade-in">
+          <span className="text-2xl block mb-0.5">🌟</span>
+          <h3 className="text-sm font-black text-emerald-900">{copy.allCompleted}</h3>
         </div>
       )}
     </section>

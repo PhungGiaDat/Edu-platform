@@ -4,6 +4,7 @@ import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
 import { getPronunciationService, type PronunciationResult } from '@/services/PronunciationService';
 import { eventBus } from '@/runtime/EventBus';
+import { FeedbackMascot } from './FeedbackMascot';
 
 export interface PracticeResult {
   transcript: string;
@@ -17,6 +18,7 @@ interface VocabularySectionProps {
   onWordPracticed: (wordEn: string, result: PracticeResult) => void;
   practicedWords: Record<string, PracticeResult>;
   locale: 'en' | 'vi';
+  onComplete?: () => void;
 }
 
 export const VocabularySection: React.FC<VocabularySectionProps> = ({
@@ -24,6 +26,7 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
   onWordPracticed,
   practicedWords,
   locale,
+  onComplete,
 }) => {
   const vocabulary = lesson.vocabulary || [];
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -40,8 +43,8 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
       listening: 'Listening to you...',
       passed: 'Awesome!',
       tryAgain: 'Try Again',
-      nextWord: 'Continue →',
-      finishVocab: 'Complete Words 🎉',
+      nextWord: 'Tiếp tục →',
+      finishVocab: 'Hoàn thành từ mới 🎉',
       allDone: `You've learned all ${vocabulary.length} words!`,
     },
     vi: {
@@ -124,14 +127,14 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
             onWordPracticed(item.word_en, summary);
             resolve();
           })
-          .catch((err) => {
+          .catch((err: unknown) => {
             window.clearTimeout(timeoutId);
             eventBus.off('PRONUNCIATION_ERROR', handleError);
             reject(err);
           });
       });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Có lỗi khi ghi âm.';
       setErrorMessage(msg);
     } finally {
       setIsListeningKey(null);
@@ -143,39 +146,36 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
       setCurrentIndex((prev) => prev + 1);
     } else {
       setShowCelebration(true);
-      const lastItem = vocabulary[vocabulary.length - 1];
-      if (lastItem) {
-        onWordPracticed(lastItem.word_en, {
-          transcript: lastItem.word_en,
-          score: 100,
-          passed: true,
-          feedback: copy.passed,
-        });
+      if (onComplete) {
+        window.setTimeout(() => {
+          onComplete();
+        }, 800);
       }
     }
   };
 
   if (!vocabulary.length) {
     return (
-      <div className="p-8 text-center text-slate-500">
+      <div className="rounded-3xl border-4 border-white bg-white/90 p-8 text-center text-slate-500 shadow-md">
         Không có từ vựng cho bài học này.
       </div>
     );
   }
 
   return (
-    <section className="space-y-3 animate-fade-in w-full text-center max-w-md mx-auto">
-      {/* Friendly Vietnamese Instruction & Dots Indicator */}
-      <div className="flex items-center justify-between px-2">
-        <span className="text-xs sm:text-sm font-black text-slate-700 flex items-center gap-1.5">
-          <span>🗣️</span>
-          <span>{copy.instruction}</span>
-        </span>
-        {/* Dot Stepper Indicator: ● ○ ○ */}
-        <div className="flex items-center gap-1.5">
+    <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
+      {/* Header & Page Dots */}
+      <div className="flex items-center justify-between px-1">
+        <FeedbackMascot
+          mode="companion"
+          message={`Từ ${currentIndex + 1} / ${vocabulary.length}`}
+        />
+
+        {/* Interactive Page Dots: ● ○ ○ */}
+        <div className="flex items-center gap-2">
           {vocabulary.map((item, idx) => (
             <button
-              key={`dot-${item.word_en}`}
+              key={item.word_en || idx}
               type="button"
               onClick={() => setCurrentIndex(idx)}
               aria-label={`Từ số ${idx + 1}`}
@@ -198,7 +198,7 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
         </div>
       )}
 
-      {/* Single-Word Focused Carousel Container */}
+      {/* ONE WORD AT A TIME: Horizontal Carousel Container */}
       <div className="relative overflow-hidden w-full rounded-3xl">
         <div
           className="flex w-full transition-transform duration-400 ease-out"
@@ -214,30 +214,31 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
                 className="w-full shrink-0 px-0.5"
               >
                 <div className="rounded-3xl border-4 border-white bg-white/95 p-4 sm:p-5 shadow-[0_8px_0_rgba(0,0,0,0.06)] flex flex-col items-center">
-                  {/* Large Image (40-55% of content area) */}
-                  <div className="relative w-full aspect-square max-h-[240px] sm:max-h-[280px] rounded-2xl bg-slate-50 border-2 border-slate-100 flex items-center justify-center overflow-hidden mb-3">
+                  {/* Large Clay Image Card (Roughly square, visual hero) */}
+                  <div className="relative w-full aspect-square max-h-[220px] sm:max-h-[250px] rounded-2xl bg-slate-50 border-2 border-slate-100 flex items-center justify-center overflow-hidden mb-2.5">
                     {visual.imageUrl ? (
                       <img
                         src={visual.imageUrl}
                         alt={item.word_en}
-                        className="h-full w-full object-contain p-2 transition-transform hover:scale-105"
+                        className="h-full w-full object-contain p-2 transition-transform hover:scale-105 duration-300"
+                        loading="lazy"
                       />
                     ) : (
                       <span className="text-7xl">{visual.emoji || item.emoji || '🔤'}</span>
                     )}
 
-                    {/* Quick audio tap button */}
+                    {/* Quick audio speaker button inside image */}
                     <button
                       type="button"
                       onClick={() => handlePlayAudio(item)}
-                      className="absolute bottom-2 right-2 h-11 w-11 rounded-2xl bg-white/95 shadow-md border-2 border-slate-100 flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                      className="absolute bottom-2.5 right-2.5 h-11 w-11 rounded-2xl bg-white/95 shadow-md border-2 border-slate-100 flex items-center justify-center text-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
                       aria-label={`Nghe ${item.word_en}`}
                     >
                       🔊
                     </button>
                   </div>
 
-                  {/* English Word */}
+                  {/* English Word (Prominent) */}
                   <h3 className="text-3xl sm:text-4xl font-black text-slate-900 capitalize tracking-tight">
                     {item.word_en}
                   </h3>
@@ -249,13 +250,13 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
 
                   {/* Example Sentence */}
                   {item.simple_sentence && (
-                    <p className="mt-2 text-xs sm:text-sm font-semibold text-slate-500 bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-100 italic">
+                    <p className="mt-1.5 text-xs sm:text-sm font-semibold text-slate-500 bg-slate-50 px-3 py-1 rounded-xl border border-slate-100 italic max-w-xs">
                       "{item.simple_sentence}"
                     </p>
                   )}
 
                   {/* Listen & Speak Actions (Clay buttons) */}
-                  <div className="grid grid-cols-2 gap-2.5 w-full mt-4">
+                  <div className="grid grid-cols-2 gap-2.5 w-full mt-3.5">
                     <button
                       type="button"
                       onClick={() => handlePlayAudio(item)}
@@ -274,8 +275,8 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
                         isListeningKey === item.word_en.toLowerCase()
                           ? 'bg-amber-400 text-slate-900 animate-pulse'
                           : practicedStatus?.passed
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-[#FFD93D] text-slate-900'
+                            ? 'bg-emerald-500 text-white shadow-[0_4px_0_#059669]'
+                            : 'bg-[#FFD93D] text-slate-900 shadow-[0_4px_0_#EAB308]'
                       }`}
                     >
                       <span className="text-base">
@@ -323,9 +324,18 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
 
       {/* Completion Banner */}
       {showCelebration && (
-        <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4 text-center shadow-md animate-fade-in mt-3">
-          <span className="text-3xl block mb-1">🎉</span>
-          <p className="text-base font-black text-emerald-900">{copy.allDone}</p>
+        <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-3.5 text-center shadow-md animate-fade-in mt-2">
+          <span className="text-2xl block mb-0.5">🎉</span>
+          <p className="text-sm font-black text-emerald-900">{copy.allDone}</p>
+          {onComplete && (
+            <button
+              type="button"
+              onClick={onComplete}
+              className="mt-2 text-xs font-black text-emerald-700 underline cursor-pointer"
+            >
+              Tiếp tục ngay →
+            </button>
+          )}
         </div>
       )}
     </section>

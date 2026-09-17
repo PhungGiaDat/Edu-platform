@@ -3,6 +3,7 @@ import type { Lesson, QuizSubmitResult } from '@/types/course';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
 import { HapticService } from '@/services/HapticService';
+import { FeedbackMascot } from './FeedbackMascot';
 
 interface QuizSectionProps {
   lesson: Lesson;
@@ -12,6 +13,7 @@ interface QuizSectionProps {
   isSubmitting: boolean;
   result: QuizSubmitResult | null;
   locale: 'en' | 'vi';
+  onRetry?: () => void;
 }
 
 export const QuizSection: React.FC<QuizSectionProps> = ({
@@ -22,6 +24,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
   isSubmitting,
   result,
   locale,
+  onRetry,
 }) => {
   const quizQuestions = lesson.quiz || [];
   const vocabulary = lesson.vocabulary || [];
@@ -36,16 +39,16 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
   const copy = {
     en: {
       title: 'Quiz Challenge',
-      question: 'Question',
-      listenPrompt: 'Listen to Question',
-      submitQuiz: 'Submit Quiz 📝',
-      continue: 'Continue →',
-      submitting: 'Checking answers...',
-      passed: 'Awesome job! You passed the quiz!',
-      tryAgain: 'Good effort! Try again to earn all stars!',
-      correctFeedback: 'Correct! Great job!',
-      incorrectFeedback: 'Not quite right yet. Keep going!',
-      score: 'Quiz Score',
+      question: 'Câu',
+      listenPrompt: 'Nghe câu hỏi',
+      submitQuiz: 'Nộp bài Quiz 📝',
+      continue: 'Tiếp tục →',
+      submitting: 'Đang chấm điểm...',
+      passed: 'Xuất sắc! Bé đã vượt qua bài kiểm tra!',
+      tryAgain: 'Cố gắng lên nhé! Bé hãy thử lại để nhận sao nha.',
+      correctFeedback: 'Chính xác! Giỏi quá!',
+      incorrectFeedback: 'Chưa đúng rồi. Cố lên nhé!',
+      score: 'Điểm kiểm tra',
     },
     vi: {
       title: 'Thử thách Quiz bài học',
@@ -111,7 +114,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
     );
   }
 
-  // If submitted and result is showing
+  // Result screen only shown after actual quiz completion
   if (result) {
     return (
       <div className="space-y-4 animate-fade-in w-full text-center max-w-md mx-auto">
@@ -129,9 +132,20 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
           <div className="text-4xl sm:text-5xl font-black mb-2">
             {result.score}%
           </div>
-          <p className="text-base font-bold max-w-md mx-auto">
+          <p className="text-base font-bold max-w-md mx-auto mb-4">
             {result.passed ? copy.passed : copy.tryAgain}
           </p>
+
+          {!result.passed && onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="w-full min-h-[52px] rounded-2xl border-2 border-white bg-amber-500 hover:bg-amber-600 text-white font-black text-base shadow-[0_5px_0_#B45309] active:translate-y-1 active:shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>🔄</span>
+              <span>Làm lại bài kiểm tra</span>
+            </button>
+          )}
         </div>
       </div>
     );
@@ -141,10 +155,10 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
   const isLastQuestion = activeQuestionIndex === quizQuestions.length - 1;
 
   return (
-    <section className="space-y-4 animate-fade-in w-full text-center max-w-md mx-auto">
-      {/* Quiz Stepper & Progress (One Question at a Time) */}
-      <div className="flex items-center justify-between px-2">
-        <span className="text-xs font-black uppercase tracking-wider text-sky-600">
+    <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
+      {/* Header: Câu N / 10 + Compact Progress Bar */}
+      <div className="flex items-center justify-between px-1">
+        <span className="text-xs font-black uppercase tracking-wider text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-200">
           📝 {copy.question} {activeQuestionIndex + 1} / {quizQuestions.length}
         </span>
         <div className="flex gap-1.5">
@@ -164,7 +178,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
       </div>
 
       {/* Main Question Surface */}
-      <div className="rounded-3xl border-4 border-white bg-white/95 p-5 shadow-[0_8px_0_rgba(0,0,0,0.06)] flex flex-col items-center">
+      <div className="rounded-3xl border-4 border-white bg-white/95 p-4 sm:p-5 shadow-[0_8px_0_rgba(0,0,0,0.06)] flex flex-col items-center">
         {/* Audio question trigger if available */}
         {currentQuestion.questionAudioText && (
           <button
@@ -172,20 +186,20 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
             onClick={() =>
               handlePlayAudio(currentQuestion.question_id, currentQuestion.questionAudioText)
             }
-            className="mb-3 flex items-center gap-1.5 rounded-full border-2 border-sky-200 bg-sky-50 px-4 py-1.5 text-xs font-black text-sky-800 shadow-xs hover:bg-sky-100 active:scale-95 transition-transform cursor-pointer"
+            className="mb-2.5 flex items-center gap-1.5 rounded-full border-2 border-sky-200 bg-sky-50 px-3.5 py-1 text-xs font-black text-sky-800 shadow-2xs hover:bg-sky-100 active:scale-95 transition-transform cursor-pointer"
           >
             <span>{playingAudioId === currentQuestion.question_id ? '🔊' : '🔈'}</span>
             <span>{copy.listenPrompt}</span>
           </button>
         )}
 
-        {/* Large Prominent Vietnamese Question */}
+        {/* Question Title */}
         <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
           {promptText}
         </h3>
 
-        {/* Interactive Choices Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mt-5">
+        {/* Visual/Text Choices Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full mt-4">
           {currentQuestion.options.map((opt) => {
             const isSelected = selectedOptionId === opt.option_id;
             const visual = resolveVocabularyVisual(opt.label, vocabulary, opt.image);
@@ -196,17 +210,17 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
                 key={opt.option_id}
                 type="button"
                 onClick={() => handleSelectOption(opt.option_id)}
-                className={`group flex flex-col items-center justify-center rounded-2xl border-4 p-3.5 text-center transition-all cursor-pointer ${
+                className={`group flex flex-col items-center justify-center rounded-2xl border-4 p-3 text-center transition-all cursor-pointer ${
                   isSelected
                     ? feedbackState?.isCorrect
                       ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-102 shadow-[0_5px_0_#10B981]'
-                      : 'border-amber-400 bg-amber-50 ring-4 ring-amber-200 shadow-[0_4px_0_#F59E0B]'
+                      : 'border-rose-400 bg-rose-50 ring-4 ring-rose-200 animate-shake shadow-[0_4px_0_#F43F5E]'
                     : 'border-white bg-white shadow-[0_5px_0_rgba(0,0,0,0.06)] hover:border-sky-200 active:scale-95'
                 }`}
               >
-                {/* Large visual image if option has image */}
+                {/* Visual image if option has image */}
                 {hasVisualImage && (
-                  <div className="h-20 w-20 rounded-xl bg-slate-50 flex items-center justify-center mb-2 overflow-hidden border border-slate-100">
+                  <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl bg-slate-50 flex items-center justify-center mb-1.5 overflow-hidden border border-slate-100">
                     <img
                       src={visual.imageUrl!}
                       alt={opt.label}
@@ -225,27 +239,20 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
         </div>
       </div>
 
-      {/* Duolingo-style Bottom Feedback Panel */}
+      {/* Mascot Feedback (Appears only during feedback moments, never covers content) */}
       {feedbackState && (
-        <div
-          className={`rounded-2xl border-2 p-3.5 text-center animate-fade-in shadow-xs ${
+        <FeedbackMascot
+          mode="feedback"
+          state={feedbackState.isCorrect ? 'correct' : 'incorrect'}
+          message={
             feedbackState.isCorrect
-              ? 'border-emerald-300 bg-emerald-100 text-emerald-950'
-              : 'border-amber-300 bg-amber-100 text-amber-950'
-          }`}
-        >
-          <div className="flex items-center justify-center gap-2 text-sm sm:text-base font-black">
-            <span>{feedbackState.isCorrect ? '✓' : '💪'}</span>
-            <span>
-              {feedbackState.isCorrect
-                ? currentQuestion.feedbackCorrect || copy.correctFeedback
-                : currentQuestion.feedbackIncorrect || copy.incorrectFeedback}
-            </span>
-          </div>
-        </div>
+              ? currentQuestion.feedbackCorrect || copy.correctFeedback
+              : currentQuestion.feedbackIncorrect || copy.incorrectFeedback
+          }
+        />
       )}
 
-      {/* Continue / Advance Action Button */}
+      {/* Submit / Check CTA */}
       {selectedOptionId && (
         <div className="pt-1">
           <button

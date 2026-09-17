@@ -19,24 +19,22 @@ export const ARFlashcardSection: React.FC<ARFlashcardSectionProps> = ({
 
   const copy = {
     en: {
-      tag: 'Interactive 3D AR',
-      title: '3D AR Flashcards Experience',
-      instruction: 'Scan your flashcard to bring vocabulary to life in 3D!',
-      cardTitle: 'Augmented Reality Flashcards',
-      cardDesc: 'Point camera at flashcards to view interactive 3D models and hear native pronunciation.',
-      launchAr: 'Explore with AR Camera 📸',
-      skipAr: 'Continue to Mini Games →',
-      targets: '3D Flashcards in this lesson:',
+      badge: 'AR 3D',
+      title: 'Trải nghiệm Thẻ AR 3D sống động',
+      helper: 'Point your camera to see interactive 3D models!',
+      launchAr: 'Mở Camera AR 📸',
+      accessibleAr: 'Khám phá cùng Camera AR',
+      continue: 'Tiếp tục sang Trò chơi nhỏ →',
+      preview: 'Vocabulary models in this lesson:',
     },
     vi: {
-      tag: 'Công nghệ AR 3D',
+      badge: 'AR 3D',
       title: 'Trải nghiệm Thẻ AR 3D sống động',
-      instruction: 'Quét thẻ học để xem từ vựng sống động!',
-      cardTitle: 'Bộ thẻ học Flashcard AR 3D',
-      cardDesc: 'Hướng camera vào thẻ học để xem mô hình 3D tương tác và nghe giọng phát âm chuẩn nhé!',
-      launchAr: 'Khám phá cùng Camera AR (8th Wall) 📸',
-      skipAr: 'Tiếp tục sang Trò chơi nhỏ →',
-      targets: 'Thẻ AR trong bài học này:',
+      helper: 'Hướng camera vào thẻ học để xem mô hình 3D tương tác nhé!',
+      launchAr: 'Mở Camera AR 📸',
+      accessibleAr: 'Khám phá cùng Camera AR',
+      continue: 'Tiếp tục sang Trò chơi nhỏ →',
+      preview: 'Mô hình trong bài học:',
     },
   }[locale];
 
@@ -45,39 +43,27 @@ export const ARFlashcardSection: React.FC<ARFlashcardSectionProps> = ({
   };
 
   return (
-    <section className="space-y-4 animate-fade-in w-full text-center max-w-md mx-auto">
-      {/* Title & Instruction */}
+    <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
+      {/* Small Badge + Heading + Short Helper */}
       <div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-xs font-black text-indigo-700 shadow-xs border border-white mb-2">
-          ✨ {copy.tag}
+        <span className="inline-block rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-black text-purple-700 shadow-2xs border border-white mb-1.5">
+          ✨ {copy.badge}
         </span>
         <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
           📱 {copy.title}
         </h2>
-        <p className="mt-1 text-sm sm:text-base font-bold text-slate-600">
-          {copy.instruction}
+        <p className="mt-1 text-xs sm:text-sm font-bold text-slate-600">
+          {copy.helper}
         </p>
       </div>
 
-      {/* Hero AR Showcase Card (Tactile Clay) */}
-      <div className="rounded-3xl border-4 border-white bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 p-5 shadow-[0_8px_0_rgba(99,102,241,0.12)]">
-        {/* Playful Camera Mascot */}
-        <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-3xl border-4 border-white bg-gradient-to-br from-indigo-500 to-purple-600 text-4xl shadow-md text-white">
-          📸
-        </div>
-
-        <h3 className="text-lg font-black text-slate-900">
-          {copy.cardTitle}
-        </h3>
-        <p className="mt-1.5 text-xs sm:text-sm font-medium text-slate-600 leading-relaxed">
-          {copy.cardDesc}
-        </p>
-
-        {/* Available 3D Flashcards Preview */}
+      {/* One Prominent Flat AR Launch Card (No nested cards) */}
+      <div className="rounded-3xl border-4 border-white bg-gradient-to-b from-purple-50/70 to-indigo-50/70 p-4 shadow-[0_8px_0_rgba(147,51,234,0.12)]">
+        {/* 3 Tiny Vocabulary Previews */}
         {vocabulary.length > 0 && (
-          <div className="mt-4 rounded-2xl border-2 border-indigo-100 bg-white/95 p-3">
+          <div className="mb-4">
             <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
-              {copy.targets}
+              {copy.preview}
             </p>
             <div className="grid grid-cols-3 gap-2">
               {vocabulary.slice(0, 3).map((item) => {
@@ -86,25 +72,25 @@ export const ARFlashcardSection: React.FC<ARFlashcardSectionProps> = ({
                 return (
                   <div
                     key={item.word_en}
-                    className="flex flex-col items-center rounded-xl bg-slate-50 border border-slate-100 p-2 shadow-xs"
+                    className="flex flex-col items-center rounded-xl bg-white/90 border border-purple-100 p-2 shadow-2xs"
                   >
-                    <div className="h-12 w-12 rounded-lg bg-white overflow-hidden flex items-center justify-center mb-1 border border-slate-200">
+                    <div className="h-10 w-10 rounded-lg bg-slate-50 overflow-hidden flex items-center justify-center mb-1 border border-slate-100">
                       {visual.imageUrl ? (
                         <img
                           src={visual.imageUrl}
                           alt={item.word_en}
-                          className="h-full w-full object-contain p-1"
+                          className="h-full w-full object-contain p-0.5"
                           loading="lazy"
                         />
                       ) : (
-                        <span className="text-xl">{visual.emoji || item.emoji || '🔤'}</span>
+                        <span className="text-lg">{visual.emoji || item.emoji || '🔤'}</span>
                       )}
                     </div>
-                    <span className="text-[11px] font-black text-slate-900 capitalize truncate w-full">
+                    <span className="text-[11px] font-black text-slate-800 capitalize truncate w-full">
                       {item.word_en}
                     </span>
-                    <span className="text-[9px] font-bold text-indigo-600">
-                      3D Model
+                    <span className="text-[9px] font-black text-purple-600">
+                      3D
                     </span>
                   </div>
                 );
@@ -113,26 +99,25 @@ export const ARFlashcardSection: React.FC<ARFlashcardSectionProps> = ({
           </div>
         )}
 
-        {/* Launch AR Button */}
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={handleLaunchAR}
-            className="w-full min-h-[52px] rounded-2xl border-2 border-white bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-black text-base shadow-[0_5px_0_#4338CA] hover:brightness-105 active:translate-y-1 transition-all cursor-pointer flex items-center justify-center gap-2"
-          >
-            {copy.launchAr}
-          </button>
-        </div>
+        {/* Single Strong Purple CTA */}
+        <button
+          type="button"
+          onClick={handleLaunchAR}
+          aria-label={copy.accessibleAr}
+          className="w-full min-h-[54px] rounded-2xl border-2 border-white bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black text-base shadow-[0_6px_0_#6B21A8] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+        >
+          <span>{copy.launchAr}</span>
+        </button>
       </div>
 
-      {/* Non-blocking Continue button */}
+      {/* Non-blocking Secondary Continue Button */}
       <div className="pt-1">
         <button
           type="button"
           onClick={onContinue}
-          className="w-full min-h-[52px] rounded-2xl border-2 border-slate-200 bg-white text-slate-700 font-black text-base shadow-xs hover:bg-slate-50 active:translate-y-1 transition-all cursor-pointer"
+          className="w-full min-h-[48px] rounded-2xl border-2 border-slate-200 bg-white text-slate-700 font-black text-sm shadow-xs hover:bg-slate-50 active:translate-y-0.5 transition-all cursor-pointer"
         >
-          {copy.skipAr}
+          {copy.continue}
         </button>
       </div>
     </section>

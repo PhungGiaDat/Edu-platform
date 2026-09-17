@@ -49,12 +49,11 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
 
   const copy = {
     en: {
-      congrats: 'You did a great job!',
-      subtitle: 'Congratulations! You have completed the lesson!',
+      congrats: 'Con làm rất tốt!',
+      subtitle: 'Chúc mừng bé đã hoàn thành bài học!',
       finishCta: 'Lưu tiến độ & Hoàn tất',
-      reviewCta: 'Review Lesson 🔄',
-      backToCourse: 'Back to Course Map',
-      completedSentence: 'You have mastered all activities in this lesson!',
+      reviewCta: 'Xem lại bài học 🔄',
+      backToCourse: 'Về danh sách bài học',
     },
     vi: {
       congrats: 'Con làm rất tốt!',
@@ -62,7 +61,6 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
       finishCta: 'Lưu tiến độ & Hoàn tất',
       reviewCta: 'Xem lại bài học 🔄',
       backToCourse: 'Về danh sách bài học',
-      completedSentence: 'Con đã hoàn thành bài học xuất sắc!',
     },
   }[locale];
 
@@ -72,10 +70,10 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
   }, []);
 
   return (
-    <section className="space-y-4 animate-fade-in w-full text-center max-w-md mx-auto">
+    <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
       {/* Large Celebratory Trophy Card (Tactile Clay) */}
       <div
-        className="rounded-3xl border-4 p-6 sm:p-7 shadow-[0_12px_0_rgba(0,0,0,0.08)] relative overflow-hidden flex flex-col items-center"
+        className="rounded-3xl border-4 p-5 sm:p-6 shadow-[0_10px_0_rgba(0,0,0,0.08)] relative overflow-hidden flex flex-col items-center"
         style={{
           backgroundColor: theme.cardBg,
           borderColor: theme.cardBorder,
@@ -83,23 +81,23 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
       >
         {/* Playful Glow Background */}
         <div
-          className="absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-30 blur-2xl pointer-events-none"
+          className="absolute -top-16 -right-16 w-44 h-44 rounded-full opacity-25 blur-2xl pointer-events-none"
           style={{ background: theme.primaryAccent }}
         />
 
-        {/* Celebration Mascot Avatar */}
-        <div className="mx-auto mb-3 flex h-24 w-24 items-center justify-center rounded-3xl border-4 border-white bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-5xl shadow-lg animate-bounce">
-          🎉
+        {/* Celebration Trophy Avatar */}
+        <div className="mx-auto mb-2 flex h-20 w-20 items-center justify-center rounded-3xl border-4 border-white bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-4xl shadow-md animate-bounce">
+          🏆
         </div>
 
         {/* Big 3 Stars */}
-        <div className="flex justify-center gap-2 mb-2">
+        <div className="flex justify-center gap-2 mb-1.5">
           {[1, 2, 3].map((starIdx) => (
             <span
               key={starIdx}
               className={`text-4xl sm:text-5xl transition-all duration-300 ${
                 starIdx <= starsCount
-                  ? 'text-amber-400 drop-shadow-[0_4px_8px_rgba(251,191,36,0.6)] scale-110'
+                  ? 'text-amber-400 drop-shadow-[0_4px_8px_rgba(251,191,36,0.6)] scale-105'
                   : 'text-slate-200'
               }`}
             >
@@ -112,40 +110,35 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
         <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
           {copy.congrats}
         </h2>
-        <p className="mt-1 text-sm sm:text-base font-bold text-slate-600">
+        <p className="mt-0.5 text-xs sm:text-sm font-bold text-slate-600">
           {copy.subtitle}
         </p>
 
-        {/* Badge & XP Trophy Pill */}
-        <div className="my-4 w-full flex flex-col items-center rounded-2xl border-2 border-white bg-white/95 p-4 shadow-sm">
+        {/* Badge & XP Prominently */}
+        <div className="my-3.5 w-full flex flex-col items-center rounded-2xl border-2 border-white bg-white/95 p-3.5 shadow-2xs">
           {stickerUrl ? (
             <img
               src={stickerUrl}
               alt={badgeTitle}
-              className="h-20 w-20 object-contain mb-1.5"
+              className="h-16 w-16 object-contain mb-1"
               onError={(e) => {
-                // Graceful fallback to icon if sticker fails to load
                 (e.currentTarget as HTMLElement).style.display = 'none';
               }}
             />
           ) : (
-            <span className="text-5xl mb-1.5 animate-pulse">🌟</span>
+            <span className="text-4xl mb-1 animate-pulse">🌟</span>
           )}
 
-          <span className="text-lg font-black text-slate-900">
+          <span className="text-base sm:text-lg font-black text-slate-900">
             {badgeTitle}
           </span>
-          <span className="mt-1 rounded-full bg-amber-100 px-3 py-1 text-sm font-black text-amber-800 border border-amber-200">
+          <span className="mt-1 rounded-full bg-amber-100 px-3 py-0.5 text-sm font-black text-amber-800 border border-amber-200">
             +{xp} XP
           </span>
         </div>
 
-        <p className="text-xs sm:text-sm font-extrabold text-slate-500">
-          {copy.completedSentence}
-        </p>
-
         {/* Primary Finish CTA Button */}
-        <div className="w-full pt-3 space-y-2.5">
+        <div className="w-full pt-1 space-y-2">
           <button
             type="button"
             onClick={isCompleted ? () => navigate(`/courses/${courseId}`) : onFinishLesson}
@@ -160,7 +153,7 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
           <button
             type="button"
             onClick={onReplayLesson}
-            className="w-full min-h-[48px] rounded-2xl border-2 border-slate-200 bg-white text-slate-700 font-black text-sm shadow-xs hover:bg-slate-50 active:translate-y-0.5 transition-all cursor-pointer"
+            className="w-full min-h-[46px] rounded-2xl border-2 border-slate-200 bg-white text-slate-700 font-black text-sm shadow-xs hover:bg-slate-50 active:translate-y-0.5 transition-all cursor-pointer"
           >
             {copy.reviewCta}
           </button>

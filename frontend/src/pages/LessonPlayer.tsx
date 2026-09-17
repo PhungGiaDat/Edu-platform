@@ -222,6 +222,12 @@ export const LessonPlayer: React.FC = () => {
       responseData: { watched: true },
     });
     setNotice(copy.stepSaved);
+    handleNext();
+  };
+
+  const handleQuizRetry = () => {
+    setQuizResult(null);
+    setQuizAnswers({});
   };
 
   // Step 3: Vocabulary word practiced
@@ -457,6 +463,7 @@ export const LessonPlayer: React.FC = () => {
             onWordPracticed={handleWordPracticed}
             practicedWords={practicedWords}
             locale={locale}
+            onComplete={handleNext}
           />
         );
 
@@ -508,6 +515,7 @@ export const LessonPlayer: React.FC = () => {
             isSubmitting={isSubmitting}
             result={quizResult}
             locale={locale}
+            onRetry={handleQuizRetry}
           />
         );
 
@@ -551,6 +559,9 @@ export const LessonPlayer: React.FC = () => {
     );
   }
 
+  const currentStepId = JOURNEY_STEPS[currentStepIndex]?.id;
+  const hasStepOwnCta = ['warmup', 'video', 'vocabulary', 'ar_flashcards', 'quiz', 'reward'].includes(currentStepId);
+
   return (
     <>
       <LessonShell
@@ -564,6 +575,7 @@ export const LessonPlayer: React.FC = () => {
         onNext={handleNext}
         isSubmitting={isSubmitting}
         canGoNext={true}
+        showFooterNext={!hasStepOwnCta}
         notice={notice}
         locale={locale}
       >
