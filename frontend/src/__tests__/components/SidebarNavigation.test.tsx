@@ -101,13 +101,13 @@ describe('Sidebar — Dictionary & Notebook entries', () => {
       expect(mobileNav).toHaveClass('learner-mobile-nav--hidden');
 
       act(() => {
-        window.dispatchEvent(new Event('scroll'));
+        document.dispatchEvent(new Event('scroll'));
       });
       expect(mobileNav).not.toHaveClass('learner-mobile-nav--hidden');
 
       act(() => {
         vi.advanceTimersByTime(900);
-        window.dispatchEvent(new Event('scroll'));
+        document.dispatchEvent(new Event('scroll'));
         vi.advanceTimersByTime(900);
       });
       expect(mobileNav).not.toHaveClass('learner-mobile-nav--hidden');

@@ -614,9 +614,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
             scheduleMobileNavHide();
         };
 
-        window.addEventListener('scroll', handleScroll, { passive: true });
+        document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
         return () => {
-            window.removeEventListener('scroll', handleScroll);
+            document.removeEventListener('scroll', handleScroll, true);
         };
     }, [isMobileMoreOpen, scheduleMobileNavHide]);
 
