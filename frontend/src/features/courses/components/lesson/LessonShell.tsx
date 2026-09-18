@@ -92,20 +92,27 @@ export const LessonShell: React.FC<LessonShellProps> = ({
 
   return (
     <div
-      className="min-h-screen w-full flex flex-col transition-colors duration-300 overflow-x-hidden"
+      className="relative min-h-screen w-full flex flex-col transition-colors duration-300 overflow-x-hidden"
       style={{
         background: theme.heroBgGradient,
         ['--lesson-bottom-action-height' as any]: '4.5rem',
       }}
     >
+      {/* Faint radial color blobs for a soft claymorphic backdrop (no illustrations, no glass blur) */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden -z-10">
+        <div className="absolute -top-16 -left-10 h-56 w-56 rounded-full bg-[#20D6A4]/15 blur-3xl" />
+        <div className="absolute top-1/3 -right-16 h-64 w-64 rounded-full bg-[#20BCEB]/15 blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 h-48 w-48 rounded-full bg-[#8B5CF6]/10 blur-3xl" />
+      </div>
+
       {/* Top Mobile App Header with iOS Safe Area */}
-      <header className="sticky top-0 z-30 border-b-2 border-white/80 bg-white/95 backdrop-blur-md px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 shadow-xs">
+      <header className="sticky top-0 z-30 border-b-4 border-white bg-[#F2FBF8] px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 shadow-[0_4px_0_rgba(32,214,164,0.12)]">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-2">
           {/* Back button */}
           <button
             type="button"
             onClick={() => navigate(`/courses/${courseId}`)}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white text-base font-black text-slate-700 shadow-xs hover:bg-slate-50 transition-all active:scale-95 cursor-pointer"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-2 border-white bg-[#FFC4BE] text-base font-black text-rose-950 shadow-[0_4px_0_#F24E42] hover:brightness-105 transition-all active:translate-y-1 active:shadow-[0_1px_0_#F24E42] cursor-pointer"
             aria-label={copy.back}
           >
             ✕
@@ -160,7 +167,7 @@ export const LessonShell: React.FC<LessonShellProps> = ({
         <div
           role="status"
           aria-live="polite"
-          className="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm rounded-2xl border-2 border-amber-300 bg-amber-50/95 backdrop-blur-md px-4 py-2.5 text-xs font-black text-amber-900 shadow-lg animate-fade-in flex items-center gap-2 pointer-events-none"
+          className="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm rounded-2xl border-2 border-white bg-[#FBD65C] px-4 py-2.5 text-xs font-black text-amber-950 shadow-[0_4px_0_#F0B72B] animate-fade-in flex items-center gap-2 pointer-events-none"
         >
           <span className="text-sm">🔔</span>
           <span className="truncate">{visibleNotice}</span>
@@ -176,14 +183,14 @@ export const LessonShell: React.FC<LessonShellProps> = ({
 
       {/* Sticky Bottom Action Bar with iOS Safe Area */}
       {(currentStepIndex > 0 || showFooterNext) && (
-        <footer className="sticky bottom-0 z-30 border-t-2 border-white/90 bg-white/95 backdrop-blur-md px-4 pt-2.5 pb-[calc(12px+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+        <footer className="sticky bottom-0 z-30 border-t-4 border-white bg-[#F2FBF8] px-4 pt-2.5 pb-[calc(12px+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_0_rgba(32,214,164,0.1)]">
           <div className="mx-auto flex w-full max-w-[448px] items-center gap-3">
             {currentStepIndex > 0 && (
               <button
                 type="button"
                 onClick={onPrevious}
                 disabled={isSubmitting}
-                className="flex h-13 px-4 items-center justify-center rounded-2xl border-2 border-slate-200 bg-white text-sm font-black text-slate-700 shadow-xs hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-40 cursor-pointer"
+                className="flex h-13 px-4 items-center justify-center rounded-2xl border-2 border-white bg-[#BBD9FE] text-sm font-black text-blue-950 shadow-[0_4px_0_#5B96EE] hover:brightness-105 transition-all active:translate-y-1 active:shadow-[0_1px_0_#5B96EE] disabled:opacity-40 cursor-pointer"
                 aria-label={copy.previous}
               >
                 ←

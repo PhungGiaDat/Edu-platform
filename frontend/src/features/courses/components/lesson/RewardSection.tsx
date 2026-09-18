@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Course, Lesson, QuizSubmitResult } from '@/types/course';
-import { getCourseTheme, type CourseThemeConfig } from '@/features/courses/courseThemes';
 import { getAssetCandidateUrls } from '@/lib/courseAssets';
 import { SoundEffectService } from '@/services/SoundEffectService';
 import { HapticService } from '@/services/HapticService';
@@ -20,7 +19,6 @@ interface RewardSectionProps {
 }
 
 export const RewardSection: React.FC<RewardSectionProps> = ({
-  course,
   lesson,
   courseId,
   quizResult,
@@ -31,7 +29,6 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
   locale,
 }) => {
   const navigate = useNavigate();
-  const theme: CourseThemeConfig = getCourseTheme(course);
 
   const score = quizResult?.score ?? 100;
   const starsCount = score >= 90 ? 3 : score >= 70 ? 2 : 1;
@@ -71,19 +68,13 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
 
   return (
     <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
-      {/* Large Celebratory Trophy Card (Tactile Clay) */}
-      <div
-        className="rounded-3xl border-4 p-5 sm:p-6 shadow-[0_10px_0_rgba(0,0,0,0.08)] relative overflow-hidden flex flex-col items-center"
-        style={{
-          backgroundColor: theme.cardBg,
-          borderColor: theme.cardBorder,
-        }}
-      >
-        {/* Playful Glow Background */}
-        <div
-          className="absolute -top-16 -right-16 w-44 h-44 rounded-full opacity-25 blur-2xl pointer-events-none"
-          style={{ background: theme.primaryAccent }}
-        />
+      {/* Large Celebratory Trophy Card (Tactile Clay, vibrant yellow surface) */}
+      <div className="rounded-[28px] border-4 border-white bg-[#FEF8E7] p-5 sm:p-6 shadow-[0_10px_0_#FDE08B,0_16px_32px_rgba(255,211,78,0.2)] relative overflow-hidden flex flex-col items-center">
+        {/* Playful Glow + Confetti Shapes */}
+        <div className="absolute -top-16 -right-16 w-44 h-44 rounded-full bg-amber-300 opacity-30 blur-2xl pointer-events-none" />
+        <div className="absolute top-4 left-4 w-3 h-3 rounded-full bg-[#FF786E] opacity-70 pointer-events-none" />
+        <div className="absolute top-10 right-10 w-2.5 h-2.5 rounded-full bg-[#4A9FF5] opacity-70 pointer-events-none" />
+        <div className="absolute bottom-16 left-8 w-2 h-2 rounded-full bg-[#20D6A4] opacity-70 pointer-events-none" />
 
         {/* Celebration Trophy Avatar */}
         <div className="mx-auto mb-2 flex h-20 w-20 items-center justify-center rounded-3xl border-4 border-white bg-gradient-to-br from-amber-300 via-amber-400 to-amber-500 text-4xl shadow-md animate-bounce">

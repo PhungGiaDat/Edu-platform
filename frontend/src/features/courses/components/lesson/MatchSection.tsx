@@ -155,14 +155,14 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
                 type="button"
                 onClick={() => handleSelectWord(item.word_en)}
                 disabled={isMatched}
-                className={`w-full min-h-[60px] sm:min-h-[68px] flex flex-col justify-center items-center p-2 rounded-2xl border-2 text-center transition-all cursor-pointer ${
+                className={`appearance-none w-full min-h-[60px] sm:min-h-[68px] flex flex-col justify-center items-center p-2 rounded-[20px] !border-3 text-center transition-all cursor-pointer ${
                   isMatched
-                    ? 'border-emerald-300 bg-emerald-50/70 opacity-50 scale-95 cursor-default'
+                    ? '!border-white !bg-[#7BE8B8] opacity-60 scale-95 cursor-default shadow-[0_2px_0_#22C481]'
                     : isSelected
-                      ? 'border-purple-500 bg-purple-50 ring-4 ring-purple-200 scale-[1.02] shadow-[0_5px_0_#9333EA] -translate-y-0.5'
+                      ? '!border-white !bg-[#C79BF9] scale-[1.02] shadow-[0_6px_0_#9D5EF0] -translate-y-0.5'
                       : isShaking
-                        ? 'border-rose-400 bg-rose-50 ring-4 ring-rose-200 animate-shake'
-                        : 'border-sky-200 bg-[#F0F9FF] hover:border-sky-300 hover:bg-[#E0F2FE] shadow-[0_4px_0_#BAE6FD] active:scale-95'
+                        ? '!border-white !bg-[#FF9E94] animate-shake shadow-[0_4px_0_#F24E42]'
+                        : '!border-white !bg-[#7DD3EE] hover:brightness-105 shadow-[0_6px_0_#2B9DC4] active:translate-y-1 active:shadow-[0_2px_0_#2B9DC4]'
                 }`}
               >
                 <span className="text-base sm:text-lg font-black text-slate-900 capitalize leading-tight">
@@ -200,17 +200,21 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
                 type="button"
                 onClick={() => handleSelectImage(item.word_en)}
                 disabled={isMatched}
-                className={`w-full min-h-[60px] sm:min-h-[68px] flex items-center justify-center p-1.5 rounded-2xl border-2 transition-all cursor-pointer ${
+                className={`appearance-none w-full min-h-[60px] sm:min-h-[68px] flex items-center justify-center p-1.5 rounded-[20px] !border-3 transition-all cursor-pointer ${
                   isMatched
-                    ? 'border-emerald-300 bg-emerald-50/70 opacity-50 scale-95 cursor-default'
+                    ? '!border-white !bg-[#7BE8B8] opacity-60 scale-95 cursor-default shadow-[0_2px_0_#22C481]'
                     : isSelected
-                      ? 'border-purple-500 bg-purple-50 ring-4 ring-purple-200 scale-[1.02] shadow-[0_5px_0_#9333EA] -translate-y-0.5'
+                      ? '!border-white !bg-[#C79BF9] scale-[1.02] shadow-[0_6px_0_#9D5EF0] -translate-y-0.5'
                       : isShaking
-                        ? 'border-rose-400 bg-rose-50 ring-4 ring-rose-200 animate-shake'
-                        : 'border-amber-200 bg-[#FFFBEB] hover:border-amber-300 hover:bg-[#FEF3C7] shadow-[0_4px_0_#FDE68A] active:scale-95'
+                        ? '!border-white !bg-[#FF9E94] animate-shake shadow-[0_4px_0_#F24E42]'
+                        : '!border-white !bg-[#FCE59A] hover:brightness-105 shadow-[0_6px_0_#F0B72B] active:translate-y-1 active:shadow-[0_2px_0_#F0B72B]'
                 }`}
               >
-                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-white border border-amber-200/70 shadow-inner overflow-hidden flex items-center justify-center">
+                <div
+                  className={`h-12 w-12 sm:h-14 sm:w-14 rounded-xl border-2 shadow-inner overflow-hidden flex items-center justify-center ${
+                    isMatched ? 'bg-[#C6F5DE] border-white' : isSelected ? 'bg-[#EBDCFC] border-white' : isShaking ? 'bg-[#FFD3CD] border-white' : 'bg-[#FDF0C4] border-white'
+                  }`}
+                >
                   {visual.imageUrl ? (
                     <img
                       src={visual.imageUrl}
@@ -230,7 +234,7 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
 
       {/* Completion Celebration Banner */}
       {isAllMatched && (
-        <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-3.5 text-center shadow-md animate-fade-in">
+        <div className="rounded-2xl border-3 border-white bg-[#7BE8B8] p-3.5 text-center shadow-[0_6px_0_#22C481] animate-fade-in">
           <span className="text-2xl block mb-0.5">🎉</span>
           <h3 className="text-sm font-black text-emerald-900">{copy.matchedAll}</h3>
         </div>

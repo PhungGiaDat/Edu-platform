@@ -120,10 +120,10 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
     return (
       <div className="space-y-4 animate-fade-in w-full text-center max-w-md mx-auto">
         <div
-          className={`rounded-3xl border-4 p-6 text-center shadow-lg animate-fade-in ${
+          className={`rounded-[28px] border-4 border-white p-6 text-center animate-fade-in ${
             result.passed
-              ? 'border-emerald-300 bg-emerald-50 text-emerald-950'
-              : 'border-amber-300 bg-amber-50 text-amber-950'
+              ? 'bg-[#7BE8B8] text-emerald-950 shadow-[0_10px_0_#22C481,0_16px_28px_rgba(16,185,129,0.25)]'
+              : 'bg-[#FCE59A] text-amber-950 shadow-[0_10px_0_#F0B72B,0_16px_28px_rgba(245,158,11,0.25)]'
           }`}
         >
           <span className="text-5xl block mb-2">{result.passed ? '🏆' : '💪'}</span>
@@ -211,17 +211,17 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
                 key={opt.option_id}
                 type="button"
                 onClick={() => handleSelectOption(opt.option_id)}
-                className={`group flex flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition-all cursor-pointer ${
+                className={`group appearance-none flex flex-col items-center justify-center rounded-[20px] !border-3 p-3 text-center transition-all cursor-pointer ${
                   isSelected
                     ? feedbackState?.isCorrect
-                      ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-[1.02] shadow-[0_5px_0_#10B981]'
-                      : 'border-rose-400 bg-rose-50 ring-4 ring-rose-200 animate-shake shadow-[0_4px_0_#F43F5E]'
-                    : 'border-sky-200 bg-white hover:border-sky-300 hover:bg-sky-50/50 shadow-[0_4px_0_#BAE6FD] active:translate-y-1 active:shadow-[0_2px_0_#BAE6FD]'
+                      ? '!border-white !bg-[#5FDBA0] scale-[1.02] shadow-[0_6px_0_#1DA36E]'
+                      : '!border-white !bg-[#FF8A7E] animate-shake shadow-[0_5px_0_#DA3D2F]'
+                    : '!border-white !bg-[#D8F1FB] hover:brightness-105 shadow-[0_5px_0_#8BC9E4] active:translate-y-1 active:shadow-[0_2px_0_#8BC9E4]'
                 }`}
               >
                 {/* Visual image if option has image */}
                 {hasVisualImage && (
-                  <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl bg-sky-50/50 flex items-center justify-center mb-1.5 overflow-hidden border border-sky-100">
+                  <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl bg-white flex items-center justify-center mb-1.5 overflow-hidden border-2 border-white shadow-inner">
                     <img
                       src={visual.imageUrl!}
                       alt={opt.label}

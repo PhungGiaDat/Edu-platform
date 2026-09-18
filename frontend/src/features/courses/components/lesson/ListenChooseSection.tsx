@@ -159,16 +159,24 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
               type="button"
               onClick={() => handleChoice(item)}
               disabled={Boolean(isCorrect && isTarget)}
-              className={`group flex flex-col items-center rounded-3xl border-3 p-3 text-center transition-all cursor-pointer ${
+              className={`group appearance-none flex flex-col items-center rounded-[26px] !border-4 p-3.5 text-center transition-all cursor-pointer ${
                 isSelected && isCorrect
-                  ? 'border-emerald-400 bg-[#ECFDF5] ring-4 ring-emerald-200 scale-[1.02] shadow-[0_6px_0_#10B981]'
+                  ? '!border-white !bg-[#5FDBA0] scale-[1.02] shadow-[0_8px_0_#1DA36E]'
                   : isSelected && !isCorrect
-                    ? 'border-rose-400 bg-[#FFF1F2] ring-4 ring-rose-200 animate-shake shadow-[0_4px_0_#F43F5E]'
-                    : 'border-sky-200 bg-[#F0F9FF] shadow-[0_6px_0_#BAE6FD] hover:border-sky-300 hover:bg-[#E0F2FE] active:translate-y-1 active:shadow-[0_2px_0_#BAE6FD]'
+                    ? '!border-white !bg-[#FF8A7E] animate-shake shadow-[0_6px_0_#DA3D2F]'
+                    : '!border-white !bg-[#7DD3EE] shadow-[0_8px_0_#2B9DC4] hover:brightness-105 active:translate-y-1 active:shadow-[0_2px_0_#2B9DC4]'
               }`}
             >
-              {/* Large Canonical Image */}
-              <div className="h-24 sm:h-28 w-full rounded-2xl bg-white overflow-hidden flex items-center justify-center mb-1.5 border-2 border-sky-100/80 shadow-inner">
+              {/* Large Canonical Image — tinted stage, never pure white, so the outer clay collar stays visible on all sides */}
+              <div
+                className={`h-24 sm:h-28 w-full rounded-2xl overflow-hidden flex items-center justify-center mb-2 border-[3px] shadow-[inset_0_2px_4px_rgba(0,0,0,0.08)] ${
+                  isSelected && isCorrect
+                    ? 'bg-[#C6F5DE] border-white'
+                    : isSelected && !isCorrect
+                      ? 'bg-[#FFD3CD] border-white'
+                      : 'bg-[#DFF5FC] border-white'
+                }`}
+              >
                 {visual.imageUrl ? (
                   <img
                     src={visual.imageUrl}
@@ -221,7 +229,7 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
 
       {/* Completion Banner */}
       {isAllFinished && (
-        <div className="rounded-3xl border-4 border-emerald-300 bg-emerald-50 p-3.5 text-center shadow-md animate-fade-in">
+        <div className="rounded-3xl border-4 border-white bg-[#7BE8B8] p-3.5 text-center shadow-[0_6px_0_#22C481] animate-fade-in">
           <span className="text-2xl block mb-0.5">🌟</span>
           <h3 className="text-sm font-black text-emerald-900">{copy.completedAll}</h3>
         </div>

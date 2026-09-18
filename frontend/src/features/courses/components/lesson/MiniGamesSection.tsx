@@ -144,7 +144,7 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
       </div>
 
       {/* Target Prompt Card (Image First, Little Text) */}
-      <div className="rounded-2xl border-2 border-amber-200 bg-amber-50/80 p-3 shadow-xs flex items-center justify-between gap-2">
+      <div className="rounded-2xl border-3 border-white bg-[#FCE59A] p-3 shadow-[0_4px_0_#F0B72B] flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -180,15 +180,23 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
               type="button"
               onClick={() => handleChoice(item)}
               disabled={Boolean(feedback?.correct && isTarget)}
-              className={`group flex flex-col items-center rounded-2xl border-2 p-2 text-center transition-all cursor-pointer ${
+              className={`group appearance-none flex flex-col items-center rounded-[20px] !border-3 p-2 text-center transition-all cursor-pointer ${
                 isSelected && feedback?.correct
-                  ? 'border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 scale-[1.02] shadow-[0_5px_0_#10B981]'
+                  ? '!border-white !bg-[#5FDBA0] scale-[1.02] shadow-[0_6px_0_#1DA36E]'
                   : isSelected && !feedback?.correct
-                    ? 'border-rose-400 bg-rose-50 ring-4 ring-rose-200 animate-shake shadow-[0_4px_0_#F43F5E]'
-                    : 'border-amber-200 bg-[#FFFBEB] hover:border-amber-300 hover:bg-[#FEF3C7] shadow-[0_5px_0_#FDE68A] active:translate-y-1 active:shadow-[0_2px_0_#FDE68A]'
+                    ? '!border-white !bg-[#FF8A7E] animate-shake shadow-[0_5px_0_#DA3D2F]'
+                    : '!border-white !bg-[#FCE072] hover:brightness-105 shadow-[0_6px_0_#F0B72B] active:translate-y-1 active:shadow-[0_2px_0_#F0B72B]'
               }`}
             >
-              <div className="h-20 w-full sm:h-24 rounded-xl bg-white overflow-hidden flex items-center justify-center mb-1.5 border border-amber-200/70 shadow-inner">
+              <div
+                className={`h-20 w-full sm:h-24 rounded-xl overflow-hidden flex items-center justify-center mb-1.5 border-2 shadow-inner ${
+                  isSelected && feedback?.correct
+                    ? 'bg-[#C6F5DE] border-white'
+                    : isSelected && !feedback?.correct
+                      ? 'bg-[#FFD3CD] border-white'
+                      : 'bg-[#FDF0C4] border-white'
+                }`}
+              >
                 {visual.imageUrl ? (
                   <img
                     src={visual.imageUrl}
@@ -233,7 +241,7 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
 
       {/* Completion Banner */}
       {isAllDone && (
-        <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-3.5 text-center shadow-md animate-fade-in">
+        <div className="rounded-2xl border-3 border-white bg-[#7BE8B8] p-3.5 text-center shadow-[0_6px_0_#22C481] animate-fade-in">
           <span className="text-2xl block mb-0.5">🌟</span>
           <h3 className="text-sm font-black text-emerald-900">{copy.allCompleted}</h3>
         </div>

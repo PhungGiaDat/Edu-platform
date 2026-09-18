@@ -18,14 +18,14 @@ interface ClayStageProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const STAGE_COLOR_STYLES: Record<ClayColor, string> = {
-  mint: 'bg-[#E6F9F4] border-4 border-white shadow-[0_8px_0_#9FE6D4,0_12px_24px_rgba(32,214,164,0.15)] text-slate-900',
-  cyan: 'bg-[#E0F4FB] border-4 border-white shadow-[0_8px_0_#96DBF0,0_12px_24px_rgba(32,188,235,0.15)] text-slate-900',
-  blue: 'bg-[#E8F3FF] border-4 border-white shadow-[0_8px_0_#A8D0FD,0_12px_24px_rgba(74,159,245,0.15)] text-slate-900',
-  purple: 'bg-[#F3E8FF] border-4 border-white shadow-[0_8px_0_#D1B3FC,0_12px_24px_rgba(139,92,246,0.15)] text-slate-900',
-  yellow: 'bg-[#FEF8E7] border-4 border-white shadow-[0_8px_0_#FDE08B,0_12px_24px_rgba(255,211,78,0.18)] text-slate-900',
-  coral: 'bg-[#FFF0EF] border-4 border-white shadow-[0_8px_0_#FFB8B3,0_12px_24px_rgba(255,120,110,0.15)] text-slate-900',
-  emerald: 'bg-[#ECFDF5] border-4 border-white shadow-[0_8px_0_#A7F3D0,0_12px_24px_rgba(16,185,129,0.15)] text-slate-900',
-  white: 'bg-white/95 border-4 border-slate-100 shadow-[0_8px_0_#CBD5E1,0_12px_24px_rgba(0,0,0,0.06)] text-slate-900',
+  mint: 'bg-[#B8F0DD] border-4 border-white shadow-[0_10px_0_#4FCFA0,0_16px_28px_rgba(32,214,164,0.28)] text-slate-900',
+  cyan: 'bg-[#AEE6F7] border-4 border-white shadow-[0_10px_0_#2FAEDA,0_16px_28px_rgba(32,188,235,0.28)] text-slate-900',
+  blue: 'bg-[#BBD9FE] border-4 border-white shadow-[0_10px_0_#5B96EE,0_16px_28px_rgba(74,159,245,0.28)] text-slate-900',
+  purple: 'bg-[#DABCFB] border-4 border-white shadow-[0_10px_0_#9D5EF0,0_16px_28px_rgba(139,92,246,0.28)] text-slate-900',
+  yellow: 'bg-[#FCE59A] border-4 border-white shadow-[0_10px_0_#F0B72B,0_16px_28px_rgba(255,211,78,0.3)] text-slate-900',
+  coral: 'bg-[#FFC4BE] border-4 border-white shadow-[0_10px_0_#F24E42,0_16px_28px_rgba(255,120,110,0.28)] text-slate-900',
+  emerald: 'bg-[#A0F0CB] border-4 border-white shadow-[0_10px_0_#22C481,0_16px_28px_rgba(16,185,129,0.28)] text-slate-900',
+  white: 'bg-white border-4 border-slate-100 shadow-[0_10px_0_#CBD5E1,0_16px_28px_rgba(0,0,0,0.08)] text-slate-900',
 };
 
 export const ClayStage: React.FC<ClayStageProps> = ({
@@ -98,14 +98,14 @@ interface ClayPillProps {
 }
 
 const PILL_STYLES: Record<ClayColor, string> = {
-  mint: 'bg-[#E6F9F4] text-emerald-800 border border-emerald-300 shadow-[0_2px_0_#A7F3D0]',
-  cyan: 'bg-[#E0F4FB] text-sky-900 border border-sky-300 shadow-[0_2px_0_#96DBF0]',
-  blue: 'bg-[#E8F3FF] text-blue-900 border border-blue-300 shadow-[0_2px_0_#A8D0FD]',
-  purple: 'bg-[#F3E8FF] text-purple-900 border border-purple-300 shadow-[0_2px_0_#D1B3FC]',
-  yellow: 'bg-[#FEF8E7] text-amber-900 border border-amber-300 shadow-[0_2px_0_#FDE08B]',
-  coral: 'bg-[#FFF0EF] text-rose-900 border border-rose-300 shadow-[0_2px_0_#FFB8B3]',
-  emerald: 'bg-[#ECFDF5] text-emerald-900 border border-emerald-300 shadow-[0_2px_0_#A7F3D0]',
-  white: 'bg-white text-slate-700 border border-slate-200 shadow-[0_2px_0_#E2E8F0]',
+  mint: 'bg-[#8FE6C4] text-emerald-950 border-2 border-white shadow-[0_3px_0_#22C481]',
+  cyan: 'bg-[#83D9F2] text-sky-950 border-2 border-white shadow-[0_3px_0_#2FAEDA]',
+  blue: 'bg-[#9CC3FD] text-blue-950 border-2 border-white shadow-[0_3px_0_#5B96EE]',
+  purple: 'bg-[#C79BF9] text-purple-950 border-2 border-white shadow-[0_3px_0_#9D5EF0]',
+  yellow: 'bg-[#FBD65C] text-amber-950 border-2 border-white shadow-[0_3px_0_#F0B72B]',
+  coral: 'bg-[#FF9E94] text-rose-950 border-2 border-white shadow-[0_3px_0_#F24E42]',
+  emerald: 'bg-[#7BE8B8] text-emerald-950 border-2 border-white shadow-[0_3px_0_#22C481]',
+  white: 'bg-white text-slate-700 border-2 border-slate-200 shadow-[0_3px_0_#E2E8F0]',
 };
 
 export const ClayPill: React.FC<ClayPillProps> = ({
