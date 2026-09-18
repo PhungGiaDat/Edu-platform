@@ -228,22 +228,23 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
             const practicedStatus = practicedWords[item.word_en.toLowerCase()];
 
             return (
-              <div
-                key={item.word_en}
-                className="w-full shrink-0 px-0.5"
-              >
-                {/* Real Clay Hero Stage: Cyan tinted with 3D bottom extrusion */}
-                <ClayStage
-                  color="cyan"
-                  className="flex flex-col items-center border-4 border-white p-4 sm:p-5"
-                >
-                  {/* Large Square Clay Image Box (No duplicate speaker button inside!) */}
-                  <div className="relative w-full aspect-square max-h-[220px] sm:max-h-[240px] rounded-2xl bg-white border-3 border-[#B9E7F6] shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] flex items-center justify-center overflow-hidden mb-3">
+              <div key={item.word_en} className="w-full shrink-0 px-1">
+                {/* Layered flashcard-toy composition — image floats free on an organic platform */}
+                <div className="relative flex flex-col items-center pt-4 pb-2">
+                  {/* Organic blue platform behind the illustration */}
+                  <div
+                    className="absolute top-0 h-[210px] w-[230px] rounded-[45%_55%_58%_42%/50%_46%_54%_50%]"
+                    style={{ background: 'linear-gradient(155deg,#BEE9F9,#7DD3EE)' }}
+                  />
+                  <div className="absolute top-4 h-[170px] w-[190px] rounded-full bg-white/25" />
+
+                  {/* Freely floating word image, no rectangular frame */}
+                  <div className="relative z-10 h-[180px] w-[180px] flex items-center justify-center drop-shadow-[0_16px_12px_rgba(20,90,130,0.22)]">
                     {visual.imageUrl ? (
                       <img
                         src={visual.imageUrl}
                         alt={item.word_en}
-                        className="h-full w-full object-contain p-2.5 transition-transform hover:scale-105 duration-300"
+                        className="h-full w-full object-contain transition-transform hover:scale-105 duration-300"
                         loading="lazy"
                       />
                     ) : (
@@ -251,67 +252,68 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
                     )}
                   </div>
 
-                  {/* English Word (Prominent & Playful) */}
-                  <h3 className="text-3xl sm:text-4xl font-black text-slate-900 capitalize tracking-tight">
+                  {/* Word overlaps the platform's bottom edge */}
+                  <h3 className="relative z-10 -mt-1 text-3xl font-black text-slate-900 capitalize tracking-tight">
                     {item.word_en}
                   </h3>
-
-                  {/* Vietnamese Translation */}
-                  <p className="text-lg sm:text-xl font-black text-[#D97706] mt-0.5">
+                  <p className="relative z-10 text-lg font-black text-[#D97706]">
                     {item.word_vi}
                   </p>
 
-                  {/* Example Sentence */}
+                  {/* Example sentence as a small speech bubble */}
                   {item.simple_sentence && (
-                    <p className="mt-1.5 text-xs sm:text-sm font-semibold text-slate-600 bg-white/80 px-3.5 py-1 rounded-xl border border-sky-100 italic max-w-xs">
-                      "{item.simple_sentence}"
-                    </p>
+                    <div className="relative z-10 mt-2 max-w-[260px]">
+                      <p className="rounded-2xl rounded-bl-sm bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 italic shadow-[0_3px_0_#E2E8F0] border border-sky-100">
+                        "{item.simple_sentence}"
+                      </p>
+                    </div>
                   )}
 
-                  {/* Secondary Learning Actions: [🔊 Nghe mẫu] and [🎤 Luyện nói] */}
-                  <div className="grid grid-cols-2 gap-2.5 w-full mt-3.5">
-                    <ClayButton
-                      variant="blue"
-                      size="md"
+                  {/* Circular toy controls, not two equal rectangles */}
+                  <div className="relative z-10 mt-3.5 flex items-center justify-center gap-5">
+                    <button
+                      type="button"
                       onClick={() => handlePlayAudio(item)}
                       disabled={activeWordKey === item.word_en}
+                      className="flex flex-col items-center gap-1 cursor-pointer disabled:opacity-60"
                     >
-                      <span className="text-base">🔊</span>
-                      <span>{copy.listen}</span>
-                    </ClayButton>
+                      <span className="flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-[#4A9FF5] to-[#2563EB] text-xl text-white shadow-[0_5px_0_#1D4ED8] active:translate-y-1 active:shadow-[0_1px_0_#1D4ED8] transition-all">
+                        🔊
+                      </span>
+                      <span className="text-[10px] font-black text-slate-600">{copy.listen}</span>
+                    </button>
 
-                    <ClayButton
-                      variant={
-                        isListeningKey === item.word_en.toLowerCase()
-                          ? 'coral'
-                          : practicedStatus?.passed
-                            ? 'emerald'
-                            : 'yellow'
-                      }
-                      size="md"
+                    <button
+                      type="button"
                       onClick={() => handlePracticeSpeaking(item)}
                       disabled={isListeningKey === item.word_en.toLowerCase()}
+                      className="flex flex-col items-center gap-1 cursor-pointer disabled:opacity-60"
                     >
-                      <span className="text-base">
+                      <span
+                        className={`flex h-14 w-14 items-center justify-center rounded-full border-4 border-white text-xl text-white shadow-[0_5px_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-[0_1px_0_rgba(0,0,0,0.2)] transition-all ${
+                          isListeningKey === item.word_en.toLowerCase()
+                            ? 'bg-gradient-to-br from-[#FF786E] to-[#F43F5E]'
+                            : practicedStatus?.passed
+                              ? 'bg-gradient-to-br from-emerald-400 to-teal-500'
+                              : 'bg-gradient-to-br from-[#FFD34E] to-[#FBBF24]'
+                        }`}
+                      >
                         {isListeningKey === item.word_en.toLowerCase() ? '👂' : '🎤'}
                       </span>
-                      <span>
-                        {isListeningKey === item.word_en.toLowerCase()
-                          ? copy.listening
-                          : copy.speak}
+                      <span className="text-[10px] font-black text-slate-600">
+                        {isListeningKey === item.word_en.toLowerCase() ? copy.listening : copy.speak}
                       </span>
-                    </ClayButton>
+                    </button>
                   </div>
 
-                  {/* Practice Feedback Badge */}
                   {practicedStatus && (
-                    <div className="mt-2">
+                    <div className="relative z-10 mt-2">
                       <ClayPill color={practicedStatus.passed ? 'emerald' : 'yellow'}>
                         {practicedStatus.passed ? `✓ ${copy.passed}` : copy.tryAgain}
                       </ClayPill>
                     </div>
                   )}
-                </ClayStage>
+                </div>
               </div>
             );
           })}

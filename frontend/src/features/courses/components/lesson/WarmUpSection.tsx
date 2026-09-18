@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import type { Course, Lesson } from '@/types/course';
 import { getCourseTheme, type CourseThemeConfig } from '@/features/courses/courseThemes';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
-import { FeedbackMascot } from './FeedbackMascot';
-import { ClayStage } from './clayComponents';
 
 interface WarmUpSectionProps {
   lesson: Lesson;
@@ -52,103 +50,84 @@ export const WarmUpSection: React.FC<WarmUpSectionProps> = ({
     : null;
 
   return (
-    <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
-      {/* Friendly Header with Small Companion Bubble (No large floating mascot) */}
-      <div className="flex flex-col items-center">
-        {/* Small companion badge near heading */}
-        <div className="mb-1.5">
-          <FeedbackMascot
-            mode="companion"
-            mascotEmoji={theme.mascotEmoji}
-            mascotName={theme.mascotName}
-            message={`${theme.mascotName} cùng học với bé!`}
-          />
-        </div>
+    <section className="animate-fade-in w-full text-center max-w-md mx-auto">
+      {/* Small chapter ribbon */}
+      <span className="inline-block rounded-full bg-white/85 px-3 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-500 shadow-xs border border-white">
+        {locale === 'vi' ? theme.badgeLabelVi : theme.badgeLabelEn} • {copy.lessonSubtitle}
+      </span>
 
-        {/* Small lesson/chapter pill */}
-        <span className="inline-block rounded-full bg-white/90 px-3 py-0.5 text-[11px] font-black uppercase tracking-wider text-slate-500 shadow-xs border border-white">
-          {locale === 'vi' ? theme.badgeLabelVi : theme.badgeLabelEn} • {copy.lessonSubtitle}
-        </span>
-
-        {/* Large Playful Title */}
-        <h1 className="mt-1 text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
-          {locale === 'vi' ? titleVi : titleEn}
-        </h1>
-        {locale === 'vi' && titleEn !== titleVi && (
-          <p className="text-xs font-bold text-slate-500 mt-0.5">{titleEn}</p>
-        )}
-
-        {/* One short Vietnamese helper sentence */}
-        <p className="mt-1 text-xs sm:text-sm font-bold text-slate-600 max-w-sm mx-auto">
-          {copy.greeting}
-        </p>
-      </div>
-
-      {/* VISUAL FIRST: One Prominent Visual Panel + 3 Preview Chips */}
+      {/* HERO: illustration floats free on an organic blob island — not trapped in a rectangle */}
       {vocabulary.length > 0 && activeItem && (
-        <div className="w-full">
-          {/* Prominent Visual Hero Panel with Mint ClayStage */}
-          <ClayStage color="mint" className="p-4 flex flex-col items-center">
-            <div className="relative w-full aspect-[4/3] max-h-[190px] rounded-2xl bg-white border-2 border-emerald-100 flex items-center justify-center overflow-hidden mb-2 shadow-inner">
-              {activeVisual?.imageUrl ? (
-                <img
-                  src={activeVisual.imageUrl}
-                  alt={activeItem.word_en}
-                  className="h-full w-full object-contain p-2 transition-transform duration-300 hover:scale-105"
-                  loading="lazy"
-                />
-              ) : (
-                <span className="text-6xl">{activeVisual?.emoji || activeItem.emoji || '🔤'}</span>
-              )}
-            </div>
+        <div className="relative mt-2 flex flex-col items-center">
+          {/* Organic mint island behind the hero */}
+          <div
+            className="absolute top-1 h-[210px] w-[230px] rounded-[42%_58%_63%_37%/48%_44%_56%_52%]"
+            style={{ background: 'linear-gradient(155deg,#BFF3E1,#8FE6C4)' }}
+          />
+          <div
+            className="absolute top-6 h-[170px] w-[190px] rounded-[55%_45%_40%_60%/45%_55%_45%_55%] bg-white/30"
+          />
 
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-black text-emerald-800">
-                {activeItem.word_vi}
-              </span>
-              <span className="text-xs font-bold text-emerald-600/80">
-                • {theme.mascotName} đố bé biết từ này!
-              </span>
-            </div>
-          </ClayStage>
+          {/* Freely floating hero image, no card frame */}
+          <div className="relative z-10 h-[190px] w-[190px] flex items-center justify-center drop-shadow-[0_18px_14px_rgba(16,90,70,0.25)]">
+            {activeVisual?.imageUrl ? (
+              <img
+                src={activeVisual.imageUrl}
+                alt={activeItem.word_en}
+                className="h-full w-full object-contain animate-float"
+                loading="lazy"
+              />
+            ) : (
+              <span className="text-8xl">{activeVisual?.emoji || activeItem.emoji || '🔤'}</span>
+            )}
+          </div>
 
-          {/* 3 Small Word Chips / Preview Thumbnails (Tappable to switch preview) */}
-          <div className="grid grid-cols-3 gap-2 mt-2.5">
+          {/* "Guess the word" caption pill overlapping the island edge */}
+          <span className="relative z-10 -mt-1 inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-sm font-black text-emerald-800 shadow-[0_3px_0_#A7F3D0]">
+            {activeItem.word_vi}
+            <span className="text-[10px] font-bold text-emerald-600/80">• {theme.mascotName} đố bé!</span>
+          </span>
+
+          {/* Title overlaps the island bottom edge */}
+          <h1 className="relative z-10 -mt-2 text-3xl font-black text-slate-900 tracking-tight leading-tight">
+            {locale === 'vi' ? titleVi : titleEn}
+          </h1>
+          {locale === 'vi' && titleEn !== titleVi && (
+            <p className="relative z-10 text-[11px] font-bold text-slate-500">{titleEn}</p>
+          )}
+          <p className="relative z-10 mt-0.5 text-xs font-bold text-slate-600 max-w-[280px]">
+            {copy.greeting}
+          </p>
+
+          {/* Floating mini vocab toy chips, scattered around/below the hero */}
+          <div className="relative z-10 mt-3 flex items-end justify-center gap-3">
             {vocabulary.slice(0, 3).map((item, idx) => {
               const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
               const isSelected = idx === selectedVocabIndex;
+              const offsets = ['translate-y-1', '-translate-y-1', 'translate-y-1.5'];
 
               return (
                 <button
                   key={item.word_en || idx}
                   type="button"
                   onClick={() => setSelectedVocabIndex(idx)}
-                  className={`flex items-center gap-1.5 rounded-2xl border-2 p-1.5 transition-all text-left cursor-pointer ${
-                    isSelected
-                      ? 'border-emerald-400 bg-white shadow-[0_4px_0_#10B981] ring-2 ring-emerald-200 scale-[1.02] -translate-y-0.5'
-                      : 'border-emerald-100 bg-[#E6FAF4]/80 hover:bg-white text-slate-700 shadow-[0_2px_0_#A7F3D0]'
+                  className={`flex flex-col items-center gap-0.5 transition-all cursor-pointer ${offsets[idx % 3]} ${
+                    isSelected ? 'scale-110' : 'opacity-80 hover:opacity-100'
                   }`}
                 >
-                  <div className="h-8 w-8 shrink-0 rounded-xl bg-white flex items-center justify-center overflow-hidden border border-emerald-100">
+                  <div
+                    className={`h-12 w-12 rounded-full flex items-center justify-center overflow-hidden border-[3px] border-white ${
+                      isSelected ? 'shadow-[0_5px_0_#10B981]' : 'shadow-[0_3px_0_#A7F3D0]'
+                    }`}
+                    style={{ background: isSelected ? '#DCFCE7' : '#F0FDF9' }}
+                  >
                     {visual.imageUrl ? (
-                      <img
-                        src={visual.imageUrl}
-                        alt={item.word_en}
-                        className="h-full w-full object-contain p-0.5"
-                        loading="lazy"
-                      />
+                      <img src={visual.imageUrl} alt={item.word_en} className="h-full w-full object-contain p-1" loading="lazy" />
                     ) : (
-                      <span className="text-sm">{visual.emoji || item.emoji || '🔤'}</span>
+                      <span className="text-lg">{visual.emoji || item.emoji || '🔤'}</span>
                     )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-black text-slate-900 capitalize truncate">
-                      {item.word_en}
-                    </p>
-                    <p className="text-[10px] font-bold text-slate-400 truncate">
-                      {item.word_vi}
-                    </p>
-                  </div>
+                  <span className="text-[9px] font-black text-slate-600 capitalize">{item.word_en}</span>
                 </button>
               );
             })}
@@ -156,16 +135,14 @@ export const WarmUpSection: React.FC<WarmUpSectionProps> = ({
         </div>
       )}
 
-      {/* Subtle Compressed Metadata Row */}
-      <div className="flex items-center justify-center gap-2 text-xs font-black text-slate-500 py-0.5">
+      {/* Compact playful metadata row */}
+      <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-black text-slate-500">
         <span className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 border border-white shadow-2xs">
           ⏱️ {lesson.duration_minutes || 5} {copy.mins}
         </span>
-        <span className="text-slate-300">•</span>
         <span className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 border border-white shadow-2xs">
           🔤 {vocabulary.length || 3} {copy.wordsToLearn}
         </span>
-        <span className="text-slate-300">•</span>
         <span
           className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 border border-white shadow-2xs"
           style={{ background: theme.pillBg, color: theme.pillText }}
@@ -174,8 +151,8 @@ export const WarmUpSection: React.FC<WarmUpSectionProps> = ({
         </span>
       </div>
 
-      {/* Primary Dominant CTA */}
-      <div className="pt-2">
+      {/* Primary CTA */}
+      <div className="mt-3">
         <button
           type="button"
           onClick={onStart}

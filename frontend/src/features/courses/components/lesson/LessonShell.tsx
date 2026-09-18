@@ -23,7 +23,6 @@ interface LessonShellProps {
 
 export const LessonShell: React.FC<LessonShellProps> = ({
   course,
-  lesson,
   courseId,
   currentStepIndex,
   completedSteps,
@@ -40,11 +39,6 @@ export const LessonShell: React.FC<LessonShellProps> = ({
   const navigate = useNavigate();
   const theme: CourseThemeConfig = getCourseTheme(course);
   const currentStep = JOURNEY_STEPS[currentStepIndex] || JOURNEY_STEPS[0];
-  const progressPercent = Math.round(
-    ((completedSteps.size + (completedSteps.has(currentStep.id) ? 0 : 0.5)) /
-      JOURNEY_STEPS.length) *
-      100
-  );
 
   const [visibleNotice, setVisibleNotice] = React.useState<string | null>(notice ?? null);
 
@@ -98,51 +92,38 @@ export const LessonShell: React.FC<LessonShellProps> = ({
         ['--lesson-bottom-action-height' as any]: '4.5rem',
       }}
     >
-      {/* Faint radial color blobs for a soft claymorphic backdrop (no illustrations, no glass blur) */}
+      {/* Layered organic backdrop — soft floating blobs + tiny decorative motifs, no flat single gradient */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden -z-10">
-        <div className="absolute -top-16 -left-10 h-56 w-56 rounded-full bg-[#20D6A4]/15 blur-3xl" />
-        <div className="absolute top-1/3 -right-16 h-64 w-64 rounded-full bg-[#20BCEB]/15 blur-3xl" />
-        <div className="absolute bottom-0 left-1/4 h-48 w-48 rounded-full bg-[#8B5CF6]/10 blur-3xl" />
+        <div className="absolute -top-20 -left-16 h-64 w-64 rounded-[45%_55%_60%_40%/50%_45%_55%_50%] bg-[#20D6A4]/18 blur-3xl" />
+        <div className="absolute top-1/4 -right-20 h-72 w-72 rounded-[55%_45%_40%_60%/45%_55%_45%_55%] bg-[#20BCEB]/16 blur-3xl" />
+        <div className="absolute bottom-10 left-1/3 h-56 w-56 rounded-[50%_50%_60%_40%/55%_45%_50%_50%] bg-[#8B5CF6]/12 blur-3xl" />
+        <div className="absolute bottom-40 right-8 h-32 w-32 rounded-full bg-[#FFD34E]/14 blur-2xl" />
+        <span className="absolute top-24 right-10 text-2xl opacity-20 select-none">✦</span>
+        <span className="absolute top-52 left-6 text-lg opacity-15 select-none">✦</span>
+        <span className="absolute bottom-24 left-10 text-xl opacity-15 select-none">•</span>
       </div>
 
-      {/* Top Mobile App Header with iOS Safe Area */}
-      <header className="sticky top-0 z-30 border-b-4 border-white bg-[#F2FBF8] px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 shadow-[0_4px_0_rgba(32,214,164,0.12)]">
+      {/* Compact floating header — no rectangular chrome bar, blends with backdrop */}
+      <header className="sticky top-0 z-30 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1.5">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-2">
-          {/* Back button */}
+          {/* Small circular back/close */}
           <button
             type="button"
             onClick={() => navigate(`/courses/${courseId}`)}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-2 border-white bg-[#FFC4BE] text-base font-black text-rose-950 shadow-[0_4px_0_#F24E42] hover:brightness-105 transition-all active:translate-y-1 active:shadow-[0_1px_0_#F24E42] cursor-pointer"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#FFC4BE] text-sm font-black text-rose-950 shadow-[0_3px_0_#F24E42] hover:brightness-105 transition-all active:translate-y-1 active:shadow-[0_1px_0_#F24E42] cursor-pointer"
             aria-label={copy.back}
           >
             ✕
           </button>
 
-          {/* Center: Thin Progress Bar & Step Info */}
-          <div className="flex-1 min-w-0 px-2">
-            <div className="flex items-center justify-between mb-1 text-[11px] font-black text-slate-500">
-              <span className="truncate text-slate-800 font-extrabold">
-                {locale === 'vi' && lesson.title_vi ? lesson.title_vi : lesson.title} • {stepTitle}
-              </span>
-              <span className="shrink-0 font-black text-slate-600">
-                {currentStepIndex + 1} / {JOURNEY_STEPS.length}
-              </span>
-            </div>
-            {/* Thin clean progress bar */}
-            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 border border-slate-200/60 shadow-inner">
-              <div
-                className="h-full rounded-full transition-all duration-400 ease-out"
-                style={{
-                  width: `${progressPercent}%`,
-                  background: theme.accentGradient,
-                }}
-              />
-            </div>
-          </div>
+          {/* Center: compact label */}
+          <span className="min-w-0 flex-1 truncate text-center text-xs font-black text-slate-700">
+            {stepTitle}
+          </span>
 
-          {/* Theme Mascot Badge */}
+          {/* Small step icon chip */}
           <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-xl shadow-xs border-2 border-white"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base shadow-[0_3px_0_rgba(0,0,0,0.12)] border-2 border-white"
             style={{ background: theme.pillBg }}
             title={theme.mascotName}
           >
@@ -150,8 +131,27 @@ export const LessonShell: React.FC<LessonShellProps> = ({
           </div>
         </div>
 
+        {/* Segmented colorful progress path — dots, not a rectangular bar */}
+        <div className="mx-auto mt-1.5 flex max-w-lg items-center justify-center gap-1 px-1">
+          {JOURNEY_STEPS.map((step, idx) => {
+            const isDone = completedSteps.has(step.id) || idx < currentStepIndex;
+            const isCurrent = idx === currentStepIndex;
+            return (
+              <span
+                key={step.id}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  isCurrent ? 'w-5' : 'w-1.5'
+                }`}
+                style={{
+                  background: isDone || isCurrent ? theme.accentGradient : 'rgba(148,163,184,0.35)',
+                }}
+              />
+            );
+          })}
+        </div>
+
         {/* Desktop Stepper Track - Hidden on Mobile to avoid screen clutter */}
-        <div className="hidden sm:block mx-auto max-w-lg mt-1.5 pt-1 border-t border-slate-100/80">
+        <div className="hidden sm:block mx-auto max-w-lg mt-2 pt-1 border-t border-slate-200/50">
           <LessonJourney
             currentStepIndex={currentStepIndex}
             completedSteps={completedSteps}

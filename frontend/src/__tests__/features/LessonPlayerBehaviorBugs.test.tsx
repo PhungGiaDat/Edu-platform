@@ -184,8 +184,9 @@ describe('TDD: Lesson Player Behavioral Fixes', () => {
       expect(stepperContainer).toBeDefined();
       expect(stepperContainer?.className).toContain('hidden');
 
-      // Compact header info still renders
-      expect(screen.getByText(/2 \/ 9/i)).toBeDefined();
+      // Compact segmented progress path renders instead of a text "N / 9" counter
+      const progressDots = container.querySelectorAll('header span.rounded-full');
+      expect(progressDots.length).toBeGreaterThan(0);
     });
   });
 

@@ -131,27 +131,28 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
         </span>
       </div>
 
-      {/* Large Speaker Control at Top */}
-      <div className="flex flex-col items-center justify-center py-2">
+      {/* Audio bubble: pulsing rings, full circle, not a boxy rounded-rect */}
+      <div className="relative flex flex-col items-center justify-center py-3">
+        <span className="absolute h-24 w-24 rounded-full bg-sky-300/30 animate-ping" />
+        <span className="absolute h-20 w-20 rounded-full bg-sky-300/40" />
         <button
           type="button"
           onClick={playTargetAudio}
           aria-label={copy.replay}
-          className="flex h-20 w-20 items-center justify-center rounded-3xl border-4 border-white bg-gradient-to-br from-sky-400 to-blue-500 text-3xl text-white shadow-[0_8px_0_#0284C7] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all cursor-pointer"
+          className="relative flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-sky-400 to-blue-500 text-3xl text-white shadow-[0_8px_0_#0284C7] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all cursor-pointer"
         >
           🔊
         </button>
-        <p className="mt-2 text-xs font-extrabold text-slate-500">
-          {copy.tapToHear}
-        </p>
+        <p className="mt-2 text-xs font-extrabold text-slate-500">{copy.tapToHear}</p>
       </div>
 
-      {/* 2-Column Responsive Visual Answer Cards */}
-      <div className="grid grid-cols-2 gap-3 w-full">
-        {displayChoices.map((item) => {
+      {/* Game-tile choices: image protrudes above the tile as a floating badge */}
+      <div className="grid grid-cols-2 gap-x-3 gap-y-5 w-full pt-4">
+        {displayChoices.map((item, idx) => {
           const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
           const isSelected = selectedWord === item.word_en;
           const isTarget = currentItem.word_en.toLowerCase() === item.word_en.toLowerCase();
+          const isOffset = idx % 2 === 1;
 
           return (
             <button
@@ -159,7 +160,7 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
               type="button"
               onClick={() => handleChoice(item)}
               disabled={Boolean(isCorrect && isTarget)}
-              className={`group appearance-none flex flex-col items-center rounded-[26px] !border-4 p-3.5 text-center transition-all cursor-pointer ${
+              className={`group appearance-none relative pt-11 pb-3 px-2 flex flex-col items-center rounded-[22px] !border-4 text-center transition-all cursor-pointer ${isOffset ? 'translate-y-2' : ''} ${
                 isSelected && isCorrect
                   ? '!border-white !bg-[#5FDBA0] scale-[1.02] shadow-[0_8px_0_#1DA36E]'
                   : isSelected && !isCorrect
@@ -167,30 +168,29 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
                     : '!border-white !bg-[#7DD3EE] shadow-[0_8px_0_#2B9DC4] hover:brightness-105 active:translate-y-1 active:shadow-[0_2px_0_#2B9DC4]'
               }`}
             >
-              {/* Large Canonical Image — tinted stage, never pure white, so the outer clay collar stays visible on all sides */}
+              {/* Image floats as a circular badge protruding above the tile */}
               <div
-                className={`h-24 sm:h-28 w-full rounded-2xl overflow-hidden flex items-center justify-center mb-2 border-[3px] shadow-[inset_0_2px_4px_rgba(0,0,0,0.08)] ${
+                className={`absolute -top-7 h-14 w-14 rounded-full overflow-hidden flex items-center justify-center border-4 shadow-[0_4px_0_rgba(0,0,0,0.12)] ${
                   isSelected && isCorrect
                     ? 'bg-[#C6F5DE] border-white'
                     : isSelected && !isCorrect
                       ? 'bg-[#FFD3CD] border-white'
-                      : 'bg-[#DFF5FC] border-white'
+                      : 'bg-white border-white'
                 }`}
               >
                 {visual.imageUrl ? (
                   <img
                     src={visual.imageUrl}
                     alt={item.word_en}
-                    className="h-full w-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+                    className="h-full w-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
                   />
                 ) : (
-                  <span className="text-4xl">{visual.emoji || item.emoji || '❓'}</span>
+                  <span className="text-2xl">{visual.emoji || item.emoji || '❓'}</span>
                 )}
               </div>
 
-              {/* English Word */}
-              <span className="text-base sm:text-lg font-black text-slate-900 capitalize">
+              <span className="text-base font-black text-slate-900 capitalize">
                 {item.word_en}
               </span>
               <span className="text-xs font-bold text-sky-700/80">

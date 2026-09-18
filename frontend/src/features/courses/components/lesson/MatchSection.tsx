@@ -136,14 +136,17 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
         {copy.subtitle}
       </p>
 
-      {/* Two Balanced Columns: WORDS | IMAGES */}
-      <div className="grid grid-cols-2 gap-3 w-full">
-        {/* Left Column: WORDS (Chunky 56-72px tappable cards) */}
-        <div className="space-y-2.5">
-          <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center">
+      {/* Game board: two floating zones with a connector gutter, no table alignment */}
+      <div className="relative grid grid-cols-2 gap-x-5 gap-y-4 w-full">
+        {/* Dotted connector line down the middle, purely decorative */}
+        <div className="pointer-events-none absolute left-1/2 top-6 bottom-6 w-px -translate-x-1/2 border-l-2 border-dashed border-purple-200" />
+
+        {/* Left Zone: floating word tokens (pill-shaped) */}
+        <div className="space-y-3">
+          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-center">
             🔤 {copy.wordsCol}
           </p>
-          {vocabulary.map((item) => {
+          {vocabulary.map((item, idx) => {
             const wordKey = item.word_en.toLowerCase();
             const isMatched = matchedWords.has(wordKey);
             const isSelected = selectedWordPill === item.word_en;
@@ -155,39 +158,35 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
                 type="button"
                 onClick={() => handleSelectWord(item.word_en)}
                 disabled={isMatched}
-                className={`appearance-none w-full min-h-[60px] sm:min-h-[68px] flex flex-col justify-center items-center p-2 rounded-[20px] !border-3 text-center transition-all cursor-pointer ${
+                className={`appearance-none w-full min-h-[58px] flex flex-col justify-center items-center px-3 py-2 rounded-full !border-3 text-center transition-all cursor-pointer ${idx % 2 === 1 ? 'ml-2' : '-ml-2'} ${
                   isMatched
-                    ? '!border-white !bg-[#7BE8B8] opacity-60 scale-95 cursor-default shadow-[0_2px_0_#22C481]'
+                    ? '!border-white !bg-[#7BE8B8] opacity-50 scale-90 cursor-default shadow-[0_2px_0_#22C481]'
                     : isSelected
-                      ? '!border-white !bg-[#C79BF9] scale-[1.02] shadow-[0_6px_0_#9D5EF0] -translate-y-0.5'
+                      ? '!border-white !bg-[#C79BF9] scale-[1.05] shadow-[0_6px_0_#9D5EF0] -translate-y-0.5'
                       : isShaking
                         ? '!border-white !bg-[#FF9E94] animate-shake shadow-[0_4px_0_#F24E42]'
                         : '!border-white !bg-[#7DD3EE] hover:brightness-105 shadow-[0_6px_0_#2B9DC4] active:translate-y-1 active:shadow-[0_2px_0_#2B9DC4]'
                 }`}
               >
-                <span className="text-base sm:text-lg font-black text-slate-900 capitalize leading-tight">
+                <span className="text-base font-black text-slate-900 capitalize leading-tight">
                   {item.word_en}
                 </span>
                 {isMatched ? (
-                  <span className="text-[10px] font-black text-emerald-700">
-                    ✓ Đã ghép
-                  </span>
+                  <span className="text-[10px] font-black text-emerald-700">✓ Đã ghép</span>
                 ) : (
-                  <span className="text-[10px] font-bold text-sky-700/80">
-                    {item.word_vi}
-                  </span>
+                  <span className="text-[10px] font-bold text-sky-700/80">{item.word_vi}</span>
                 )}
               </button>
             );
           })}
         </div>
 
-        {/* Right Column: IMAGES (Chunky 56-72px tappable visual cards) */}
-        <div className="space-y-2.5">
-          <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center">
+        {/* Right Zone: floating image tokens (circular blobs) */}
+        <div className="space-y-3">
+          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-center">
             🖼️ {copy.imagesCol}
           </p>
-          {shuffledImages.map((item) => {
+          {shuffledImages.map((item, idx) => {
             const wordKey = item.word_en.toLowerCase();
             const isMatched = matchedWords.has(wordKey);
             const isSelected = selectedImageWord === item.word_en;
@@ -200,30 +199,25 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
                 type="button"
                 onClick={() => handleSelectImage(item.word_en)}
                 disabled={isMatched}
-                className={`appearance-none w-full min-h-[60px] sm:min-h-[68px] flex items-center justify-center p-1.5 rounded-[20px] !border-3 transition-all cursor-pointer ${
+                className={`appearance-none w-full min-h-[58px] flex items-center justify-center px-2 py-1.5 rounded-full !border-3 transition-all cursor-pointer ${idx % 2 === 1 ? '-mr-2' : 'mr-2'} ${
                   isMatched
-                    ? '!border-white !bg-[#7BE8B8] opacity-60 scale-95 cursor-default shadow-[0_2px_0_#22C481]'
+                    ? '!border-white !bg-[#7BE8B8] opacity-50 scale-90 cursor-default shadow-[0_2px_0_#22C481]'
                     : isSelected
-                      ? '!border-white !bg-[#C79BF9] scale-[1.02] shadow-[0_6px_0_#9D5EF0] -translate-y-0.5'
+                      ? '!border-white !bg-[#C79BF9] scale-[1.05] shadow-[0_6px_0_#9D5EF0] -translate-y-0.5'
                       : isShaking
                         ? '!border-white !bg-[#FF9E94] animate-shake shadow-[0_4px_0_#F24E42]'
                         : '!border-white !bg-[#FCE59A] hover:brightness-105 shadow-[0_6px_0_#F0B72B] active:translate-y-1 active:shadow-[0_2px_0_#F0B72B]'
                 }`}
               >
                 <div
-                  className={`h-12 w-12 sm:h-14 sm:w-14 rounded-xl border-2 shadow-inner overflow-hidden flex items-center justify-center ${
+                  className={`h-11 w-11 rounded-full border-2 shadow-inner overflow-hidden flex items-center justify-center ${
                     isMatched ? 'bg-[#C6F5DE] border-white' : isSelected ? 'bg-[#EBDCFC] border-white' : isShaking ? 'bg-[#FFD3CD] border-white' : 'bg-[#FDF0C4] border-white'
                   }`}
                 >
                   {visual.imageUrl ? (
-                    <img
-                      src={visual.imageUrl}
-                      alt={item.word_en}
-                      className="h-full w-full object-contain p-1"
-                      loading="lazy"
-                    />
+                    <img src={visual.imageUrl} alt={item.word_en} className="h-full w-full object-contain p-1" loading="lazy" />
                   ) : (
-                    <span className="text-2xl">{visual.emoji || item.emoji || '✨'}</span>
+                    <span className="text-xl">{visual.emoji || item.emoji || '✨'}</span>
                   )}
                 </div>
               </button>

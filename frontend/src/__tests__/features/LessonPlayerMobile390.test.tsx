@@ -175,10 +175,10 @@ describe('Mobile 390x844 Responsive Lesson Architecture', () => {
       // Heading + helper
       expect(screen.getByText(/Xem và khám phá/i)).toBeDefined();
 
-      // 16:9 video card with rounded-[26px]
+      // 16:9 video stage inset in a toy cinema frame
       const videoCard = container.querySelector('.aspect-video');
       expect(videoCard).toBeDefined();
-      expect(videoCard?.className).toContain('rounded-[26px]');
+      expect(videoCard?.className).toContain('rounded-[22px]');
 
       // Watch CTA
       expect(screen.getByRole('button', { name: /Con đã xem xong/i })).toBeDefined();
@@ -251,10 +251,10 @@ describe('Mobile 390x844 Responsive Lesson Architecture', () => {
       expect(screen.getByText(/TỪ VỰNG/i)).toBeDefined();
       expect(screen.getByText(/HÌNH ẢNH/i)).toBeDefined();
 
-      // Chunky buttons with minimum 60px height
+      // Chunky tappable tokens with roughly 56-60px min height
       const buttons = screen.getAllByRole('button');
       buttons.forEach((btn) => {
-        expect(btn.className).toContain('min-h-[60px]');
+        expect(btn.className).toContain('min-h-[58px]');
       });
     });
   });
@@ -275,10 +275,10 @@ describe('Mobile 390x844 Responsive Lesson Architecture', () => {
       // Small badge
       expect(screen.getByText(/✨ AR 3D/i)).toBeDefined();
 
-      // Strong purple CTA
+      // Strong purple portal CTA
       const arBtn = screen.getByRole('button', { name: /Khám phá cùng Camera AR/i });
       expect(arBtn).toBeDefined();
-      expect(arBtn.className).toContain('from-purple-600 to-indigo-600');
+      expect(arBtn.className).toContain('rounded-full');
 
       // Non-blocking continue
       expect(screen.getByRole('button', { name: /Tiếp tục sang Trò chơi nhỏ/i })).toBeDefined();

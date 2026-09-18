@@ -143,33 +143,26 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
         </span>
       </div>
 
-      {/* Target Prompt Card (Image First, Little Text) */}
-      <div className="rounded-2xl border-3 border-white bg-[#FCE59A] p-3 shadow-[0_4px_0_#F0B72B] flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={playTargetAudio}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white border-2 border-amber-200 text-lg shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            aria-label={copy.tapToHear}
-          >
-            🔊
-          </button>
-          <div className="text-left">
-            <span className="text-lg font-black text-slate-900 capitalize leading-tight block">
-              {currentTarget.word_en}
-            </span>
-            <span className="text-xs font-bold text-amber-800">
-              {copy.findPicture}
-            </span>
-          </div>
-        </div>
-
-        <span className="text-2xl">🎯</span>
+      {/* Large central target object — one focal circular badge, not a text bar */}
+      <div className="relative flex flex-col items-center py-3">
+        <span className="absolute -top-1 h-28 w-28 rounded-full bg-amber-300/25 blur-xl" />
+        <button
+          type="button"
+          onClick={playTargetAudio}
+          aria-label={copy.tapToHear}
+          className="relative flex h-24 w-24 flex-col items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-[#FCE072] to-[#F0B72B] shadow-[0_7px_0_#D9930F] active:translate-y-1 active:shadow-[0_2px_0_#D9930F] transition-all cursor-pointer"
+        >
+          <span className="text-xl">🔊</span>
+          <span className="text-[11px] font-black text-amber-950 capitalize leading-tight px-1">
+            {currentTarget.word_en}
+          </span>
+        </button>
+        <p className="mt-1.5 text-xs font-bold text-amber-800">{copy.findPicture}</p>
       </div>
 
-      {/* 3 LARGE IMAGE CHOICES (Tactile Clay Cards) */}
-      <div className="grid grid-cols-3 gap-2.5 w-full">
-        {displayChoices.map((item) => {
+      {/* 3 tactile toy choices, staggered spatial hierarchy */}
+      <div className="grid grid-cols-3 gap-2.5 w-full items-end">
+        {displayChoices.map((item, idx) => {
           const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
           const isSelected = selectedWord === item.word_en;
           const isTarget = currentTarget.word_en.toLowerCase() === item.word_en.toLowerCase();
@@ -180,7 +173,7 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
               type="button"
               onClick={() => handleChoice(item)}
               disabled={Boolean(feedback?.correct && isTarget)}
-              className={`group appearance-none flex flex-col items-center rounded-[20px] !border-3 p-2 text-center transition-all cursor-pointer ${
+              className={`group appearance-none flex flex-col items-center rounded-[20px] !border-3 p-2 text-center transition-all cursor-pointer ${idx === 1 ? '-translate-y-2' : ''} ${
                 isSelected && feedback?.correct
                   ? '!border-white !bg-[#5FDBA0] scale-[1.02] shadow-[0_6px_0_#1DA36E]'
                   : isSelected && !feedback?.correct
@@ -189,7 +182,7 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
               }`}
             >
               <div
-                className={`h-20 w-full sm:h-24 rounded-xl overflow-hidden flex items-center justify-center mb-1.5 border-2 shadow-inner ${
+                className={`h-20 w-full sm:h-24 rounded-full overflow-hidden flex items-center justify-center mb-1.5 border-2 shadow-inner ${
                   isSelected && feedback?.correct
                     ? 'bg-[#C6F5DE] border-white'
                     : isSelected && !feedback?.correct

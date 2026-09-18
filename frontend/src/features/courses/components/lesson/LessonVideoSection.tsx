@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import type { Lesson } from '@/types/course';
 import { getAssetCandidateUrls, resolveStoredMediaUrl } from '@/lib/courseAssets';
-import { ClayButton, ClayStage } from './clayComponents';
+import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
+import { ClayButton } from './clayComponents';
 
 interface LessonVideoSectionProps {
   lesson: Lesson;
@@ -77,86 +78,105 @@ export const LessonVideoSection: React.FC<LessonVideoSectionProps> = ({
   }[locale];
 
   const hasPlayableVideo = Boolean(youtubeId || (rawVideoUrl && !videoError));
+  const vocabulary = lesson.vocabulary || [];
 
   return (
-    <section className="space-y-4 animate-fade-in w-full text-center max-w-md mx-auto">
-      {/* Heading + One Helper Line */}
-      <div>
-        <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center justify-center gap-2">
-          <span>🎬</span>
-          <span>{copy.title}</span>
-        </h2>
-        <p className="mt-1 text-xs sm:text-sm font-bold text-slate-600">
-          {copy.subtitle}
-        </p>
-      </div>
+    <section className="animate-fade-in w-full text-center max-w-md mx-auto">
+      <h2 className="text-lg font-black text-slate-900 tracking-tight">
+        🎬 {copy.title}
+      </h2>
+      <p className="mt-0.5 text-xs font-bold text-slate-600">{copy.subtitle}</p>
 
-      {/* 16:9 Video Card rounded 26px with play affordance or friendly fallback */}
-      {hasPlayableVideo ? (
-        <div className="relative overflow-hidden rounded-[26px] border-4 border-white bg-slate-950 shadow-[0_8px_0_#94A3B8,0_12px_24px_rgba(0,0,0,0.15)] aspect-video w-full flex items-center justify-center">
-          {youtubeId ? (
-            <iframe
-              className="h-full w-full border-0 rounded-[22px]"
-              src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1`}
-              title={lesson.video?.title || lesson.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          ) : (
-            <video
-              key={rawVideoUrl || ''}
-              className="h-full w-full object-cover rounded-[22px]"
-              controls
-              playsInline
-              preload="metadata"
-              poster={posterUrl || undefined}
-              onError={() => setVideoError(true)}
-              onEnded={onWatched}
-            >
-              <source src={rawVideoUrl || ''} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          )}
-        </div>
-      ) : posterUrl ? (
-        <div className="relative overflow-hidden rounded-[26px] border-4 border-white shadow-[0_8px_0_#FDE08B,0_12px_24px_rgba(255,211,78,0.2)] aspect-video w-full flex items-center justify-center">
-          <img
-            src={posterUrl}
-            alt={lesson.title}
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/25">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-2xl shadow-[0_6px_0_#CBD5E1] hover:scale-105 active:scale-95 transition-transform cursor-pointer">
-              ▶️
-            </span>
+      {/* Toy cinema stage: tilted purple clay frame with decorative marquee shapes */}
+      <div className="relative mt-4 px-2">
+        <span className="absolute -top-3 left-3 text-xl -rotate-12 opacity-70 select-none">⭐</span>
+        <span className="absolute -top-2 right-6 text-base rotate-12 opacity-60 select-none">✨</span>
+        <span className="absolute -bottom-3 right-2 text-lg rotate-6 opacity-60 select-none">🎟️</span>
+
+        <div
+          className="relative rotate-[-1.2deg] rounded-[30px] border-[6px] border-white p-2 shadow-[0_10px_0_#6B21A8,0_18px_30px_rgba(107,33,168,0.25)]"
+          style={{ background: 'linear-gradient(155deg,#C79BF9,#9D5EF0)' }}
+        >
+          {/* Film-strip dots along the top edge */}
+          <div className="mb-1.5 flex justify-center gap-1.5">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <span key={i} className="h-1.5 w-1.5 rounded-full bg-white/70" />
+            ))}
+          </div>
+
+          <div className="rotate-[1.2deg]">
+            {hasPlayableVideo ? (
+              <div className="relative overflow-hidden rounded-[22px] bg-slate-950 aspect-video w-full flex items-center justify-center">
+                {youtubeId ? (
+                  <iframe
+                    className="h-full w-full border-0"
+                    src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1`}
+                    title={lesson.video?.title || lesson.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video
+                    key={rawVideoUrl || ''}
+                    className="h-full w-full object-cover"
+                    controls
+                    playsInline
+                    preload="metadata"
+                    poster={posterUrl || undefined}
+                    onError={() => setVideoError(true)}
+                    onEnded={onWatched}
+                  >
+                    <source src={rawVideoUrl || ''} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                )}
+              </div>
+            ) : posterUrl ? (
+              <div className="relative overflow-hidden rounded-[22px] aspect-video w-full flex items-center justify-center">
+                <img src={posterUrl} alt={lesson.title} className="h-full w-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-2xl shadow-[0_6px_0_#CBD5E1] hover:scale-105 active:scale-95 transition-transform cursor-pointer">
+                    ▶️
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="aspect-video w-full flex flex-col items-center justify-center text-center rounded-[22px] bg-white/90 p-5">
+                <div className="text-4xl sm:text-5xl mb-2 animate-bounce">🎬</div>
+                <h3 className="text-base font-black text-purple-950 mb-1">{copy.fallbackTitle}</h3>
+                <p className="text-xs font-bold text-purple-800/80 max-w-xs">{copy.fallbackDesc}</p>
+              </div>
+            )}
           </div>
         </div>
-      ) : (
-        /* Child-Friendly Fallback Card — Never a dead black screen! */
-        <ClayStage
-          color="yellow"
-          className="aspect-video w-full flex flex-col items-center justify-center text-center p-5 border-4 border-white"
-        >
-          <div className="text-4xl sm:text-5xl mb-2 animate-bounce">🎬</div>
-          <h3 className="text-base sm:text-lg font-black text-amber-950 mb-1">
-            {copy.fallbackTitle}
-          </h3>
-          <p className="text-xs sm:text-sm font-bold text-amber-800/90 max-w-xs">
-            {copy.fallbackDesc}
-          </p>
-        </ClayStage>
+      </div>
+
+      {/* Small vocabulary thumbnails below the stage, teasing what's coming */}
+      {vocabulary.length > 0 && (
+        <div className="mt-3 flex justify-center gap-2">
+          {vocabulary.slice(0, 3).map((item) => {
+            const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
+            return (
+              <div key={item.word_en} className="h-9 w-9 rounded-full overflow-hidden border-2 border-white bg-white shadow-[0_2px_0_#D1B3FC] flex items-center justify-center">
+                {visual.imageUrl ? (
+                  <img src={visual.imageUrl} alt={item.word_en} className="h-full w-full object-contain p-0.5" loading="lazy" />
+                ) : (
+                  <span className="text-sm">{visual.emoji || item.emoji || '🔤'}</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
 
-      {/* Small Completion Feedback after playback */}
       {isWatched && (
-        <div className="flex items-center justify-center gap-1.5 rounded-full bg-emerald-100 border border-emerald-300 px-3.5 py-1 text-xs font-black text-emerald-900 shadow-2xs animate-fade-in">
+        <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-100 border border-emerald-300 px-3.5 py-1 text-xs font-black text-emerald-900 shadow-2xs animate-fade-in">
           <span>✓</span>
           <span>{copy.completionFeedback}</span>
         </div>
       )}
 
-      {/* Dominant Watch / Continue Button */}
-      <div className="pt-1">
+      <div className="mt-3">
         <ClayButton
           variant={isWatched ? 'emerald' : 'yellow'}
           onClick={onWatched}

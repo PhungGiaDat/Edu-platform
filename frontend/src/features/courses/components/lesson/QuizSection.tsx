@@ -4,7 +4,6 @@ import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
 import { HapticService } from '@/services/HapticService';
 import { FeedbackMascot } from './FeedbackMascot';
-import { ClayStage } from './clayComponents';
 
 interface QuizSectionProps {
   lesson: Lesson;
@@ -178,67 +177,62 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
         </div>
       </div>
 
-      {/* Main Question Surface with Cyan ClayStage */}
-      <ClayStage color="cyan" className="p-4 sm:p-5 flex flex-col items-center">
-        {/* Audio question trigger if available */}
+      {/* Question as a floating speech-bubble cloud, not a giant card */}
+      <div className="relative mx-auto mt-2 max-w-[320px]">
         {currentQuestion.questionAudioText && (
           <button
             type="button"
-            onClick={() =>
-              handlePlayAudio(currentQuestion.question_id, currentQuestion.questionAudioText)
-            }
-            className="mb-2.5 flex items-center gap-1.5 rounded-full border-2 border-sky-200 bg-white px-3.5 py-1 text-xs font-black text-sky-800 shadow-2xs hover:bg-sky-50 active:scale-95 transition-transform cursor-pointer"
+            onClick={() => handlePlayAudio(currentQuestion.question_id, currentQuestion.questionAudioText)}
+            className="mb-2 flex items-center gap-1.5 mx-auto rounded-full border-2 border-sky-200 bg-white px-3.5 py-1 text-xs font-black text-sky-800 shadow-2xs hover:bg-sky-50 active:scale-95 transition-transform cursor-pointer"
           >
             <span>{playingAudioId === currentQuestion.question_id ? '🔊' : '🔈'}</span>
             <span>{copy.listenPrompt}</span>
           </button>
         )}
-
-        {/* Question Title */}
-        <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-          {promptText}
-        </h3>
-
-        {/* Visual/Text Choices Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full mt-4">
-          {currentQuestion.options.map((opt) => {
-            const isSelected = selectedOptionId === opt.option_id;
-            const visual = resolveVocabularyVisual(opt.label, vocabulary, opt.image);
-            const hasVisualImage = Boolean(visual.imageUrl);
-
-            return (
-              <button
-                key={opt.option_id}
-                type="button"
-                onClick={() => handleSelectOption(opt.option_id)}
-                className={`group appearance-none flex flex-col items-center justify-center rounded-[20px] !border-3 p-3 text-center transition-all cursor-pointer ${
-                  isSelected
-                    ? feedbackState?.isCorrect
-                      ? '!border-white !bg-[#5FDBA0] scale-[1.02] shadow-[0_6px_0_#1DA36E]'
-                      : '!border-white !bg-[#FF8A7E] animate-shake shadow-[0_5px_0_#DA3D2F]'
-                    : '!border-white !bg-[#D8F1FB] hover:brightness-105 shadow-[0_5px_0_#8BC9E4] active:translate-y-1 active:shadow-[0_2px_0_#8BC9E4]'
-                }`}
-              >
-                {/* Visual image if option has image */}
-                {hasVisualImage && (
-                  <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl bg-white flex items-center justify-center mb-1.5 overflow-hidden border-2 border-white shadow-inner">
-                    <img
-                      src={visual.imageUrl!}
-                      alt={opt.label}
-                      className="h-full w-full object-contain p-1 group-hover:scale-105 transition-transform"
-                      loading="lazy"
-                    />
-                  </div>
-                )}
-
-                <span className="text-base sm:text-lg font-black text-slate-900">
-                  {opt.label}
-                </span>
-              </button>
-            );
-          })}
+        <div className="relative rounded-[28px] bg-white px-5 py-4 shadow-[0_6px_0_#BAE6FD,0_10px_20px_rgba(2,132,199,0.1)] border-2 border-sky-100">
+          <h3 className="text-xl font-black text-slate-900 tracking-tight leading-snug">
+            {promptText}
+          </h3>
+          {/* Speech bubble tail */}
+          <div className="absolute left-1/2 -bottom-2.5 h-5 w-5 -translate-x-1/2 rotate-45 bg-white border-r-2 border-b-2 border-sky-100" />
         </div>
-      </ClayStage>
+      </div>
+
+      {/* Stacked tactile answer bars — a different rhythm than grid tiles elsewhere */}
+      <div className="flex flex-col gap-2.5 w-full mt-5">
+        {currentQuestion.options.map((opt) => {
+          const isSelected = selectedOptionId === opt.option_id;
+          const visual = resolveVocabularyVisual(opt.label, vocabulary, opt.image);
+          const hasVisualImage = Boolean(visual.imageUrl);
+
+          return (
+            <button
+              key={opt.option_id}
+              type="button"
+              onClick={() => handleSelectOption(opt.option_id)}
+              className={`group appearance-none flex items-center gap-3 rounded-full !border-3 pl-2 pr-5 py-2 text-left transition-all cursor-pointer ${
+                isSelected
+                  ? feedbackState?.isCorrect
+                    ? '!border-white !bg-[#5FDBA0] scale-[1.02] shadow-[0_6px_0_#1DA36E]'
+                    : '!border-white !bg-[#FF8A7E] animate-shake shadow-[0_5px_0_#DA3D2F]'
+                  : '!border-white !bg-[#D8F1FB] hover:brightness-105 shadow-[0_5px_0_#8BC9E4] active:translate-y-1 active:shadow-[0_2px_0_#8BC9E4]'
+              }`}
+            >
+              {hasVisualImage && (
+                <div className="h-12 w-12 shrink-0 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white shadow-inner">
+                  <img
+                    src={visual.imageUrl!}
+                    alt={opt.label}
+                    className="h-full w-full object-contain p-1 group-hover:scale-105 transition-transform"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+              <span className="text-base font-black text-slate-900">{opt.label}</span>
+            </button>
+          );
+        })}
+      </div>
 
       {/* Mascot Feedback (Appears only during feedback moments, never covers content) */}
       {feedbackState && (
