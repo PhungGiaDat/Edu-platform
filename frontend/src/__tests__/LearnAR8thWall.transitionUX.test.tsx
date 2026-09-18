@@ -396,6 +396,28 @@ describe('LearnAR8thWall transition UX', () => {
     );
   });
 
+  it('dismisses the internal XR loading surface at the XR_CAMERA_HAS_VIDEO readiness boundary', () => {
+    const viewerSource = readFileSync(
+      resolve(process.cwd(), 'public/ar-xr.html'),
+      'utf8',
+    );
+    const showOverlayStart = viewerSource.indexOf('function showOverlay(');
+    const showOverlayEnd = viewerSource.indexOf('// ========== CAT TAP / MEOW', showOverlayStart);
+    const showOverlayBlock = viewerSource.slice(showOverlayStart, showOverlayEnd);
+    const hasVideoStart = viewerSource.indexOf("if (status === 'hasVideo') {");
+    const hasVideoEnd = viewerSource.indexOf("if (status === 'failed')", hasVideoStart);
+    const hasVideoBlock = viewerSource.slice(hasVideoStart, hasVideoEnd);
+    const bootGateStart = viewerSource.indexOf('function maybeRevealAR(');
+    const bootGateEnd = viewerSource.indexOf('// Update overlay text based on boot state', bootGateStart);
+    const bootGateBlock = viewerSource.slice(bootGateStart, bootGateEnd);
+
+    expect(showOverlayBlock).toContain('if (bootState.cameraReady) return;');
+    expect(hasVideoBlock).toMatch(
+      /bootState\.cameraReady\s*=\s*true;[\s\S]*hideOverlay\(\);[\s\S]*sendMessage\('XR_CAMERA_HAS_VIDEO'/,
+    );
+    expect(bootGateBlock).not.toContain('hideOverlay()');
+  });
+
   it('keeps only child-facing navigation while hiding AR operator controls from a learner', async () => {
     renderPage('/learn-ar-xr/claymorphic-animals-001?debug=true');
 

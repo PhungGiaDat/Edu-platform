@@ -717,6 +717,7 @@
     }
 
     function showOverlay(text, hint = '') {
+      if (bootState.cameraReady) return;
       overlay.classList.remove('hidden');
       loadingText.textContent = text;
       hintText.textContent = hint;
@@ -1183,7 +1184,6 @@
         primaryReady: bootState.primaryReady,
         secondaryProgress: bootState.secondaryProgress,
       });
-      hideOverlay();
       setPhase('viewing');
     }
 
@@ -1906,15 +1906,15 @@
             elapsedSinceViewerBootMs: cameraStatusAt - viewerBootStartedAt,
           });
           if (status === 'hasVideo') {
+            const becameCameraReady = !bootState.cameraReady;
+            bootState.cameraReady = true;
+            if (becameCameraReady) hideOverlay();
             sendARDebug('XR_CAMERA_HAS_VIDEO', {});
             sendMessage('XR_CAMERA_HAS_VIDEO', {
               status: 'hasVideo',
             });
-            bootState.cameraReady = true;
             sendARDebug('BOOT_CAMERA_READY', {});
             sendMessage('XR_STARTED', { engine: '8th-wall-self-hosted', qrId, word, hasModel: !!modelUrl, hasModelLoaded: !!loadedModel });
-            // Don't reveal AR yet — boot gate controls when the experience becomes visible.
-            // Camera is live behind the loading overlay.
             maybeRevealAR({ trigger: 'cameraReady' });
           }
           if (status === 'failed') sendARDebug('XR_CAMERA_FAILED', { status });
