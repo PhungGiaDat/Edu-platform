@@ -55,6 +55,11 @@ export type QRScannerCameraHandoffTelemetry = {
 
 const JSQR_SRC = '/static/vendor/jsQR-1.4.0.min.js';
 
+export function normalizeQrDetectionPayload(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  return value.trim() || null;
+}
+
 function highResolutionTimestamp(): number {
   return typeof performance !== 'undefined'
     ? performance.timeOrigin + performance.now()
@@ -228,7 +233,8 @@ export const QRScanner: React.FC<QRScannerProps> = ({
         imageData.height,
       );
 
-      if (code && !isDetectedRef.current) {
+      const qrId = normalizeQrDetectionPayload(code?.data);
+      if (qrId && !isDetectedRef.current) {
         isDetectedRef.current = true;
 
         // Stop scan loop
@@ -262,7 +268,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({
         });
 
         emitCameraHandoffTelemetry('QR_HANDOFF_TO_PARENT');
-        callbacksRef.current.onDetected(code.data);
+        callbacksRef.current.onDetected(qrId);
         return;
       }
 

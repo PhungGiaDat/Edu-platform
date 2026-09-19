@@ -5,6 +5,7 @@ import {
   AR_DIAGNOSTICS_VERSION,
   resolveDebugCameraHandoffDelay,
 } from '../pages/LearnAR8thWall';
+import { normalizeQrDetectionPayload } from '../features/ar/components/QRScanner';
 
 const scannerSource = readFileSync(
   resolve(process.cwd(), 'src/features/ar/components/QRScanner.tsx'),
@@ -31,20 +32,36 @@ describe('AR camera handoff diagnostics', () => {
     expect(resolveDebugCameraHandoffDelay('?debug=true&camera_handoff_delay_ms=301')).toBe(0);
   });
 
-  it('records QR track stop, video release, and parent handoff in the actual shutdown order', () => {
-    const detectionStart = scannerSource.indexOf('if (code && !isDetectedRef.current)');
+  it('rejects invalid QR decode payloads and trims valid IDs', () => {
+    expect(normalizeQrDetectionPayload(null)).toBeNull();
+    expect(normalizeQrDetectionPayload(undefined)).toBeNull();
+    expect(normalizeQrDetectionPayload('')).toBeNull();
+    expect(normalizeQrDetectionPayload('   ')).toBeNull();
+    expect(normalizeQrDetectionPayload(' cat001 ')).toBe('cat001');
+  });
+
+  it('keeps invalid QR decodes on the scan loop and preserves valid shutdown order', () => {
+    const payloadNormalization = scannerSource.indexOf('const qrId = normalizeQrDetectionPayload(code?.data);');
+    const detectionStart = scannerSource.indexOf('if (qrId && !isDetectedRef.current)');
+    const latch = scannerSource.indexOf('isDetectedRef.current = true;', detectionStart);
+    const cancelFrame = scannerSource.indexOf('cancelAnimationFrame(animFrameRef.current);', detectionStart);
     const stopBegin = scannerSource.indexOf("QR_CAMERA_STOP_BEGIN", detectionStart);
     const stopCall = scannerSource.indexOf("QR_CAMERA_STOP_CALLED", detectionStart);
     const videoReleased = scannerSource.indexOf("QR_VIDEO_RELEASED", detectionStart);
     const handoff = scannerSource.indexOf("QR_HANDOFF_TO_PARENT", detectionStart);
-    const detected = scannerSource.indexOf('callbacksRef.current.onDetected(code.data)', detectionStart);
+    const detected = scannerSource.indexOf('callbacksRef.current.onDetected(qrId)', detectionStart);
+    const nextScanFrame = scannerSource.indexOf('animFrameRef.current = requestAnimationFrame(scan);', detected);
 
-    expect(detectionStart).toBeGreaterThanOrEqual(0);
-    expect(stopBegin).toBeGreaterThan(detectionStart);
+    expect(payloadNormalization).toBeGreaterThanOrEqual(0);
+    expect(detectionStart).toBeGreaterThan(payloadNormalization);
+    expect(latch).toBeGreaterThan(detectionStart);
+    expect(cancelFrame).toBeGreaterThan(latch);
+    expect(stopBegin).toBeGreaterThan(cancelFrame);
     expect(stopCall).toBeGreaterThan(stopBegin);
     expect(videoReleased).toBeGreaterThan(stopCall);
     expect(handoff).toBeGreaterThan(videoReleased);
     expect(detected).toBeGreaterThan(handoff);
+    expect(nextScanFrame).toBeGreaterThan(detected);
     expect(scannerSource).toContain('QR_SCANNER_UNMOUNT_CLEANUP');
     expect(scannerSource).toContain('streamRef.current = null;');
     expect(scannerSource).toContain('srcObject = null;');
