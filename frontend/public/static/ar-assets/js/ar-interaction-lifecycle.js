@@ -279,6 +279,77 @@ function normalizeVector3(vector) {
   return { x: x / length, y: y / length, z: z / length }
 }
 
+/**
+ * `accelerationIncludingGravity` uses device body axes: +X right, +Y top,
+ * +Z outward through the screen. This returns only the normalized candidate;
+ * browser/device calibration remains runtime diagnostic evidence.
+ */
+export function normalizeDeviceGravity(accelerationIncludingGravity, out = null) {
+  if (!accelerationIncludingGravity) return null
+  const { x, y, z } = accelerationIncludingGravity
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return null
+  const length = Math.hypot(x, y, z)
+  if (length === 0) return null
+  if (out) {
+    out.x = x / length
+    out.y = y / length
+    out.z = z / length
+    return out
+  }
+  return { x: x / length, y: y / length, z: z / length }
+}
+
+function normalizeScreenAngle(screenAngle) {
+  if (!Number.isFinite(screenAngle)) return null
+  const normalized = ((screenAngle % 360) + 360) % 360
+  return normalized === 0 || normalized === 90 || normalized === 180 || normalized === 270
+    ? normalized
+    : null
+}
+
+/**
+ * Rotates device-body axes into current screen/camera display axes. Angles
+ * follow ScreenOrientation.angle clockwise rotation from natural portrait.
+ */
+export function mapDeviceGravityToScreen({ vector, screenAngle, out = null }) {
+  const normalizedAngle = normalizeScreenAngle(screenAngle)
+  if (!vector || normalizedAngle == null) return null
+  const { x, y, z } = vector
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return null
+  if (Math.hypot(x, y, z) === 0) return null
+  const target = out || { x: 0, y: 0, z: 0 }
+  if (normalizedAngle === 0) {
+    target.x = x
+    target.y = y
+    target.z = z
+  } else if (normalizedAngle === 90) {
+    target.x = -y
+    target.y = x
+    target.z = z
+  } else if (normalizedAngle === 180) {
+    target.x = -x
+    target.y = -y
+    target.z = z
+  } else {
+    target.x = y
+    target.y = -x
+    target.z = z
+  }
+  return target
+}
+
+export function resolveDeviceMotionPermissionMode({
+  apiAvailable,
+  requestPermissionAvailable,
+  permissionResult,
+}) {
+  if (!apiAvailable) return 'unsupported'
+  if (!requestPermissionAvailable) return 'implicit'
+  if (permissionResult === 'granted') return 'granted'
+  if (permissionResult === 'denied') return 'denied'
+  return 'error'
+}
+
 export function getSurfaceFlatScore({ targetNormal, worldUp }) {
   const normalizedNormal = normalizeVector3(targetNormal)
   const normalizedWorldUp = normalizeVector3(worldUp)

@@ -68,6 +68,32 @@ export function advanceVisualPose(args: {
 }
 export function isCatOneShotCompletionOwner(args: Record<string, unknown>): boolean
 
+export function normalizeDeviceGravity(
+  vector: {
+    x?: number | null
+    y?: number | null
+    z?: number | null
+  } | null,
+  out?: { x: number; y: number; z: number } | null,
+): { x: number; y: number; z: number } | null
+
+export function mapDeviceGravityToScreen(args: {
+  vector: { x?: number | null; y?: number | null; z?: number | null } | null
+  screenAngle: number | null
+  out?: { x: number; y: number; z: number } | null
+}): { x: number; y: number; z: number } | null
+
+export function resolveDeviceMotionPermissionMode(args: {
+  apiAvailable: boolean
+  requestPermissionAvailable: boolean
+  permissionResult: string | null
+}): 'granted' | 'denied' | 'implicit' | 'unsupported' | 'error'
+
+export function getSurfaceFlatScore(args: {
+  targetNormal: { x?: number | null; y?: number | null; z?: number | null } | null
+  worldUp: { x?: number | null; y?: number | null; z?: number | null } | null
+}): number | null
+
 export function resolveModelPresentationProfile(profileName: unknown): {
   name: string
   fitRatio: number

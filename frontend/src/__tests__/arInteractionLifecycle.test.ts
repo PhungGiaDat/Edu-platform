@@ -752,6 +752,75 @@ describe('AR interaction lifecycle contracts', () => {
     )
   })
 
+  it('normalizes diagnostic gravity, maps screen axes, and preserves invalid-input fallback', () => {
+    const normalizeDeviceGravity = Reflect.get(lifecycleModule, 'normalizeDeviceGravity')
+    const mapDeviceGravityToScreen = Reflect.get(lifecycleModule, 'mapDeviceGravityToScreen')
+    const resolveDeviceMotionPermissionMode = Reflect.get(lifecycleModule, 'resolveDeviceMotionPermissionMode')
+
+    expect(normalizeDeviceGravity).toBeTypeOf('function')
+    expect(mapDeviceGravityToScreen).toBeTypeOf('function')
+    expect(resolveDeviceMotionPermissionMode).toBeTypeOf('function')
+
+    expect(normalizeDeviceGravity?.({ x: 0, y: 0, z: 9.81 })).toEqual({ x: 0, y: 0, z: 1 })
+    expect(normalizeDeviceGravity?.({ x: 3, y: 4, z: 0 })).toEqual({ x: 0.6, y: 0.8, z: 0 })
+    expect(normalizeDeviceGravity?.(null)).toBeNull()
+    expect(normalizeDeviceGravity?.({ x: 0, y: 0, z: 0 })).toBeNull()
+    expect(normalizeDeviceGravity?.({ x: Number.NaN, y: 0, z: 1 })).toBeNull()
+
+    const vector = { x: 1, y: 2, z: 3 }
+    expect(mapDeviceGravityToScreen?.({ vector, screenAngle: 0 })).toEqual(vector)
+    expect(mapDeviceGravityToScreen?.({ vector, screenAngle: 90 })).toEqual({ x: -2, y: 1, z: 3 })
+    expect(mapDeviceGravityToScreen?.({ vector, screenAngle: 180 })).toEqual({ x: -1, y: -2, z: 3 })
+    expect(mapDeviceGravityToScreen?.({ vector, screenAngle: 270 })).toEqual({ x: 2, y: -1, z: 3 })
+    expect(mapDeviceGravityToScreen?.({ vector, screenAngle: -90 })).toEqual({ x: 2, y: -1, z: 3 })
+    expect(mapDeviceGravityToScreen?.({ vector, screenAngle: 45 })).toBeNull()
+    expect(mapDeviceGravityToScreen?.({ vector: null, screenAngle: 0 })).toBeNull()
+
+    expect(resolveDeviceMotionPermissionMode?.({
+      apiAvailable: true,
+      requestPermissionAvailable: true,
+      permissionResult: 'granted',
+    })).toBe('granted')
+    expect(resolveDeviceMotionPermissionMode?.({
+      apiAvailable: true,
+      requestPermissionAvailable: true,
+      permissionResult: 'denied',
+    })).toBe('denied')
+    expect(resolveDeviceMotionPermissionMode?.({
+      apiAvailable: true,
+      requestPermissionAvailable: false,
+      permissionResult: null,
+    })).toBe('implicit')
+    expect(resolveDeviceMotionPermissionMode?.({
+      apiAvailable: false,
+      requestPermissionAvailable: false,
+      permissionResult: null,
+    })).toBe('unsupported')
+  })
+
+  it('keeps diagnostic gravity score separate from production surface world-up', () => {
+    const getSurfaceFlatScore = Reflect.get(lifecycleModule, 'getSurfaceFlatScore')
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const worldUpStart = source.indexOf('function getSurfaceWorldUp()')
+    const worldUpEnd = source.indexOf('\n    function getPresentationParent', worldUpStart)
+    const diagnosticStart = source.indexOf('function emitSurfaceGravityDiagnostics(')
+    const diagnosticEnd = source.indexOf('\n    // ========== MODEL REPARENTING', diagnosticStart)
+    const worldUpSource = source.slice(worldUpStart, worldUpEnd)
+    const diagnosticSource = source.slice(diagnosticStart, diagnosticEnd)
+
+    expect(getSurfaceFlatScore).toBeTypeOf('function')
+    expect(getSurfaceFlatScore?.({ targetNormal: { x: 0, y: 0, z: 5 }, worldUp: { x: 0, y: 0, z: -2 } })).toBe(1)
+    expect(getSurfaceFlatScore?.({ targetNormal: { x: 1, y: 0, z: 0 }, worldUp: { x: 0, y: 3, z: 0 } })).toBe(0)
+    expect(getSurfaceFlatScore?.({ targetNormal: null, worldUp: { x: 0, y: 1, z: 0 } })).toBeNull()
+    expect(worldUpSource).toContain("worldUp: null")
+    expect(worldUpSource).toContain("source: 'unavailable_disable_world_tracking'")
+    expect(diagnosticStart).toBeGreaterThanOrEqual(0)
+    expect(diagnosticSource).toContain('candidateOnly: true')
+    expect(diagnosticSource).not.toContain('classifySurfaceOrientation')
+    expect(diagnosticSource).not.toContain('getSurfaceAlignmentQuaternion')
+    expect(diagnosticSource).not.toContain('surfaceRoot.quaternion')
+  })
+
   it('resolves generic screen, tabletop, and auto presentation requests', () => {
     const resolvePresentationMode = Reflect.get(lifecycleModule, 'resolvePresentationMode')
 
