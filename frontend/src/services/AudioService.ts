@@ -8,6 +8,7 @@ const API_BASE = getApiBase();
 class AudioServiceClass {
     private audioContext: AudioContext | null = null;
     private currentAudio: HTMLAudioElement | null = null;
+    private currentPlaybackResolve: (() => void) | null = null;
     private isPlaying = false;
 
     /**
@@ -28,57 +29,86 @@ class AudioServiceClass {
     async playPronunciation(word: string, lang: 'en' | 'vi' = 'en', audioUrl?: string): Promise<void> {
         this.init();
 
-        const url = audioUrl || `${API_BASE}/api/v1/audio/pronounce?word=${encodeURIComponent(word)}&lang=${lang}`;
+        const urls = [
+            audioUrl,
+            `${API_BASE}/api/v1/pronunciation/tts/stream/${encodeURIComponent(word)}?language=${lang}`,
+        ].filter((url): url is string => Boolean(url));
 
-        try {
-            await this.playAudio(url);
-        } catch (error) {
-            console.warn('[AudioService] Fallback to speech synthesis');
-            this.speakWithSpeechSynthesis(word, lang);
+        let lastError: unknown;
+        for (const url of urls) {
+            try {
+                await this.playAudio(url);
+                return;
+            } catch (error) {
+                lastError = error;
+            }
         }
+
+        if (await this.speakWithSpeechSynthesis(word, lang)) return;
+        throw lastError || new Error('Pronunciation audio unavailable');
     }
 
     /**
      * Play audio from URL
      */
     async playAudio(url: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (this.currentAudio) {
-                this.currentAudio.pause();
-                this.currentAudio = null;
-            }
+        if (this.currentAudio) {
+            this.currentAudio.pause();
+            this.currentAudio = null;
+            this.currentPlaybackResolve?.();
+            this.currentPlaybackResolve = null;
+        }
 
+        return new Promise((resolve, reject) => {
             const audio = new Audio(url);
             this.currentAudio = audio;
+            this.currentPlaybackResolve = resolve;
 
             audio.onended = () => {
-                this.currentAudio = null;
+                if (this.currentAudio === audio) {
+                    this.currentAudio = null;
+                    this.currentPlaybackResolve = null;
+                }
                 resolve();
             };
 
             audio.onerror = (e) => {
-                this.currentAudio = null;
+                if (this.currentAudio === audio) {
+                    this.currentAudio = null;
+                    this.currentPlaybackResolve = null;
+                }
                 reject(e);
             };
 
-            audio.play().catch(reject);
+            audio.play().catch((error) => {
+                if (this.currentAudio === audio) {
+                    this.currentAudio = null;
+                    this.currentPlaybackResolve = null;
+                }
+                reject(error);
+            });
         });
     }
 
     /**
      * Fallback: Use Web Speech Synthesis API
      */
-    speakWithSpeechSynthesis(text: string, lang: 'en' | 'vi' = 'en'): void {
-        if (!('speechSynthesis' in window)) return;
+    speakWithSpeechSynthesis(text: string, lang: 'en' | 'vi' = 'en'): Promise<boolean> {
+        if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+            return Promise.resolve(false);
+        }
 
         window.speechSynthesis.cancel();
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = lang === 'vi' ? 'vi-VN' : 'en-US';
-        utterance.rate = 0.8;
-        utterance.pitch = 1.1;
-
-        window.speechSynthesis.speak(utterance);
+        return new Promise((resolve) => {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang === 'vi' ? 'vi-VN' : 'en-US';
+            utterance.rate = 0.8;
+            utterance.pitch = 1.1;
+            utterance.onend = () => resolve(true);
+            utterance.onerror = () => resolve(false);
+            window.speechSynthesis.speak(utterance);
+        });
     }
 
     /**
@@ -109,6 +139,8 @@ class AudioServiceClass {
         if (this.currentAudio) {
             this.currentAudio.pause();
             this.currentAudio = null;
+            this.currentPlaybackResolve?.();
+            this.currentPlaybackResolve = null;
         }
         window.speechSynthesis?.cancel();
     }

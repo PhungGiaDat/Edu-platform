@@ -146,7 +146,7 @@ describe('LessonPlayer Journey Architecture', () => {
     expect(onStart).toHaveBeenCalledTimes(1);
   });
 
-  it('renders LessonVideoSection with YouTube embed iframe and watch confirmation', () => {
+  it('renders LessonVideoSection poster before mounting YouTube iframe and watch confirmation', () => {
     const onWatched = vi.fn();
     render(
       <LessonVideoSection
@@ -157,12 +157,10 @@ describe('LessonPlayer Journey Architecture', () => {
       />
     );
 
-    // YouTube iframe should be rendered with embed URL
-    const iframe = document.querySelector('iframe');
-    expect(iframe).toBeDefined();
-    expect(iframe?.src).toContain('youtube-nocookie.com/embed/mjFcrv6Lfx8');
+    expect(document.querySelector('iframe')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Xem video/i }));
+    expect(document.querySelector('iframe')?.src).toContain('youtube-nocookie.com/embed/mjFcrv6Lfx8');
 
-    // Click watched button
     const watchBtn = screen.getByRole('button', { name: /Con đã xem xong/i });
     fireEvent.click(watchBtn);
     expect(onWatched).toHaveBeenCalledTimes(1);

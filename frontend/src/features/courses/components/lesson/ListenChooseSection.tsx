@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { Lesson, VocabularyItem } from '@/types/course';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
+import { getAssetCandidateUrls } from '@/lib/courseAssets';
 import { HapticService } from '@/services/HapticService';
 import { FeedbackMascot } from './FeedbackMascot';
 
@@ -20,6 +21,7 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const advanceTimerRef = useRef<number | null>(null);
 
   const currentItem: VocabularyItem | undefined = vocabulary[currentTargetIndex];
 
@@ -57,8 +59,7 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
   const playTargetAudio = async () => {
     if (!currentItem) return;
     try {
-      const visual = resolveVocabularyVisual(currentItem.word_en, vocabulary, currentItem.image);
-      await AudioService.playPronunciation(currentItem.word_en, 'en', visual.imageUrl || undefined);
+      await AudioService.playPronunciation(currentItem.word_en, 'en', getAssetCandidateUrls(currentItem.audio)[0]);
     } catch (err) {
       console.warn('[ListenChoose] audio play error:', err);
     }
@@ -75,6 +76,12 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
     }
   }, [currentTargetIndex]);
 
+  useEffect(() => () => {
+    if (advanceTimerRef.current !== null) {
+      window.clearTimeout(advanceTimerRef.current);
+    }
+  }, []);
+
   const handleChoice = async (item: VocabularyItem) => {
     if (!currentItem || (isCorrect && selectedWord === currentItem.word_en)) return;
     setSelectedWord(item.word_en);
@@ -83,17 +90,18 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
     setIsCorrect(matches);
 
     if (matches) {
-      await AudioService.playSoundEffect('correct');
-      HapticService.success();
-
       // Auto advance to next question after 1.5s
-      window.setTimeout(() => {
+      advanceTimerRef.current = window.setTimeout(() => {
+        advanceTimerRef.current = null;
         if (currentTargetIndex < vocabulary.length - 1) {
           setCurrentTargetIndex((prev) => prev + 1);
         } else {
           onComplete();
         }
       }, 1500);
+
+      await AudioService.playSoundEffect('correct');
+      HapticService.success();
     } else {
       await AudioService.playSoundEffect('wrong');
       HapticService.tap();
@@ -101,6 +109,10 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
   };
 
   const handleManualNext = () => {
+    if (advanceTimerRef.current !== null) {
+      window.clearTimeout(advanceTimerRef.current);
+      advanceTimerRef.current = null;
+    }
     if (currentTargetIndex < vocabulary.length - 1) {
       setCurrentTargetIndex((prev) => prev + 1);
     } else {

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { Lesson, VocabularyItem } from '@/types/course';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
+import { getAssetCandidateUrls } from '@/lib/courseAssets';
 import { getPronunciationService, type PronunciationResult } from '@/services/PronunciationService';
 import { eventBus } from '@/runtime/EventBus';
 import { ClayButton, ClayStage, ClayPill } from './clayComponents';
@@ -26,7 +27,12 @@ function mapSpeechError(error?: string | null, locale: 'en' | 'vi' = 'vi'): stri
     return locale === 'vi' ? 'Không thể nhận diện giọng nói.' : 'Speech recognition error.';
   }
   const clean = error.toLowerCase();
-  if (clean.includes('service-not-allowed') || clean.includes('not-allowed') || clean.includes('service')) {
+  if (
+    clean.includes('speech-recognition-unavailable')
+    || clean.includes('service-not-allowed')
+    || clean.includes('not-allowed')
+    || clean.includes('service')
+  ) {
     return locale === 'vi'
       ? '🎤 Luyện nói chưa khả dụng trên thiết bị này. Bé vẫn có thể nghe mẫu và tiếp tục bài học nhé.'
       : '🎤 Speech practice is not available on this device. You can still listen and continue the lesson!';
@@ -57,6 +63,10 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeWordKey, setActiveWordKey] = useState<string | null>(null);
   const [isListeningKey, setIsListeningKey] = useState<string | null>(null);
+  const [speechState, setSpeechState] = useState<'idle' | 'opening' | 'listening'>('idle');
+  const pronunciationAttemptRef = useRef(0);
+  const activeSpeechWordRef = useRef<string | null>(null);
+  const pronunciationCleanupRef = useRef<(() => void) | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
@@ -65,7 +75,9 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
       instruction: 'Listen carefully & repeat after Momo',
       listen: 'Listen',
       speak: 'Speak',
-      listening: 'Listening to you...',
+      listening: 'Listening...',
+      playing: 'Playing...',
+      openingMicrophone: 'Opening microphone...',
       passed: 'Awesome!',
       tryAgain: 'Try Again',
       nextWord: 'Next Word →',
@@ -76,7 +88,9 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
       instruction: 'Bé hãy nghe và đọc theo Momo nhé',
       listen: 'Nghe mẫu',
       speak: 'Luyện nói',
-      listening: 'Đang lắng nghe bé nói...',
+      listening: 'Đang nghe bé nói...',
+      playing: 'Đang phát...',
+      openingMicrophone: 'Đang mở micro...',
       passed: 'Giỏi lắm!',
       tryAgain: 'Bé thử lại nhé',
       nextWord: 'Tiếp tục →',
@@ -85,13 +99,39 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
     },
   }[locale];
 
+  useEffect(() => {
+    const handleStarted = (payload: { expectedWord?: string }) => {
+      if (
+        pronunciationAttemptRef.current > 0
+        && payload?.expectedWord?.toLowerCase() === activeSpeechWordRef.current
+      ) {
+        setSpeechState('listening');
+      }
+    };
+    eventBus.on('PRONUNCIATION_STARTED', handleStarted);
+    return () => eventBus.off('PRONUNCIATION_STARTED', handleStarted);
+  }, []);
+
+  useEffect(() => () => {
+    pronunciationAttemptRef.current += 1;
+    activeSpeechWordRef.current = null;
+    pronunciationCleanupRef.current?.();
+    pronunciationCleanupRef.current = null;
+    if (pronunciationAttemptRef.current > 1) {
+      getPronunciationService().stopListening();
+    }
+  }, []);
+
   const handlePlayAudio = async (item: VocabularyItem) => {
+    setErrorMessage(null);
     setActiveWordKey(item.word_en);
     try {
-      const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
-      await AudioService.playPronunciation(item.word_en, 'en', visual?.imageUrl || undefined);
+      await AudioService.playPronunciation(item.word_en, 'en', getAssetCandidateUrls(item.audio)[0]);
     } catch (err) {
       console.warn('[VocabularySection] audio play error:', err);
+      setErrorMessage(locale === 'vi'
+        ? 'Không thể phát âm thanh mẫu. Bé hãy thử lại nhé.'
+        : 'Unable to play the sample audio. Please try again.');
     } finally {
       setActiveWordKey(null);
     }
@@ -99,31 +139,46 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
 
   const handlePracticeSpeaking = async (item: VocabularyItem) => {
     const wordKey = item.word_en.toLowerCase();
+    const attemptId = ++pronunciationAttemptRef.current;
+    activeSpeechWordRef.current = wordKey;
     setIsListeningKey(wordKey);
+    setSpeechState('opening');
     setErrorMessage(null);
 
     const service = getPronunciationService();
 
     try {
       await new Promise<void>((resolve, reject) => {
-        const timeoutId = window.setTimeout(() => {
+        const handleError = (payload: { error?: string }) => {
+          cleanup();
+          reject(new Error(mapSpeechError(payload?.error, locale)));
+        };
+        const cleanup = () => {
+          window.clearTimeout(timeoutId);
           eventBus.off('PRONUNCIATION_ERROR', handleError);
+          if (pronunciationCleanupRef.current === cleanup) {
+            pronunciationCleanupRef.current = null;
+          }
+        };
+        const timeoutId = window.setTimeout(() => {
+          cleanup();
           service.stopListening();
           reject(new Error(mapSpeechError('no-speech', locale)));
         }, 8000);
 
-        const handleError = (payload: { error?: string }) => {
-          window.clearTimeout(timeoutId);
-          eventBus.off('PRONUNCIATION_ERROR', handleError);
-          reject(new Error(mapSpeechError(payload?.error, locale)));
+        pronunciationCleanupRef.current = () => {
+          cleanup();
+          resolve();
         };
-
         eventBus.on('PRONUNCIATION_ERROR', handleError);
 
         service
           .startListening(item.word_en, async (result: PronunciationResult) => {
-            window.clearTimeout(timeoutId);
-            eventBus.off('PRONUNCIATION_ERROR', handleError);
+            cleanup();
+            if (attemptId !== pronunciationAttemptRef.current) {
+              resolve();
+              return;
+            }
 
             const score = result.accuracy || Math.round((result.confidence || 0) * 100);
             const passed = Boolean(result.isCorrect || score >= 60);
@@ -140,17 +195,22 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
             resolve();
           })
           .catch((err: unknown) => {
-            window.clearTimeout(timeoutId);
-            eventBus.off('PRONUNCIATION_ERROR', handleError);
+            cleanup();
             const rawMsg = err instanceof Error ? err.message : String(err);
             reject(new Error(mapSpeechError(rawMsg, locale)));
           });
       });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : mapSpeechError(null, locale);
-      setErrorMessage(msg);
+      if (attemptId === pronunciationAttemptRef.current) {
+        const msg = err instanceof Error ? err.message : mapSpeechError(null, locale);
+        setErrorMessage(msg);
+      }
     } finally {
-      setIsListeningKey(null);
+      if (attemptId === pronunciationAttemptRef.current) {
+        activeSpeechWordRef.current = null;
+        setIsListeningKey(null);
+        setSpeechState('idle');
+      }
     }
   };
 
@@ -280,7 +340,9 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
                       <span className="flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-[#4A9FF5] to-[#2563EB] text-xl text-white shadow-[0_5px_0_#1D4ED8] active:translate-y-1 active:shadow-[0_1px_0_#1D4ED8] transition-all">
                         🔊
                       </span>
-                      <span className="text-[10px] font-black text-slate-600">{copy.listen}</span>
+                      <span className="text-[10px] font-black text-slate-600">
+                        {activeWordKey === item.word_en ? copy.playing : copy.listen}
+                      </span>
                     </button>
 
                     <button
@@ -301,7 +363,11 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
                         {isListeningKey === item.word_en.toLowerCase() ? '👂' : '🎤'}
                       </span>
                       <span className="text-[10px] font-black text-slate-600">
-                        {isListeningKey === item.word_en.toLowerCase() ? copy.listening : copy.speak}
+                        {isListeningKey === item.word_en.toLowerCase()
+                          ? speechState === 'opening'
+                            ? copy.openingMicrophone
+                            : copy.listening
+                          : copy.speak}
                       </span>
                     </button>
                   </div>

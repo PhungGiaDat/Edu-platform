@@ -218,7 +218,7 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
             {!isOpen && show3DPet && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="ai-chat-buddy__fab group fixed bottom-[calc(var(--lesson-bottom-action-height,4.5rem)+env(safe-area-inset-bottom,0px)+0.75rem)] right-3.5 flex h-[54px] w-[54px] cursor-pointer items-center justify-center rounded-full p-0 transition-transform duration-300 sm:right-4 sm:h-16 sm:w-16 md:bottom-6 md:right-6 md:h-20 md:w-20 lg:h-[92px] lg:w-[92px]"
+                    className={`ai-chat-buddy__fab group fixed right-3.5 flex h-[54px] w-[54px] cursor-pointer items-center justify-center rounded-full p-0 transition-transform duration-300 sm:right-4 sm:h-16 sm:w-16 md:bottom-6 md:right-6 md:h-20 md:w-20 lg:h-[92px] lg:w-[92px] ${lessonContext ? 'bottom-[calc(var(--lesson-bottom-action-height,4.5rem)+env(safe-area-inset-bottom,0px)+1.5rem)]' : 'bottom-4'}`}
                     style={{
                         zIndex: 'var(--z-chatbot)',
                         background: 'linear-gradient(145deg, rgba(255,255,255,0.99) 0%, rgba(255,248,213,0.99) 48%, rgba(219,244,255,0.99) 100%)',

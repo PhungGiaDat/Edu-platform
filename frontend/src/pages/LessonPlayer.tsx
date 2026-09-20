@@ -39,7 +39,7 @@ const getLearnerId = (userId?: string | null) => userId || 'guest-learner';
 export const LessonPlayer: React.FC = () => {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const { locale } = useLocale();
 
   const learnerId = getLearnerId(user?.id);
@@ -128,7 +128,9 @@ export const LessonPlayer: React.FC = () => {
     Promise.allSettled([
       courseService.getCourse(courseId),
       courseService.getLesson(courseId, lessonId),
-      courseService.startLessonSession(courseId, lessonId, learnerId),
+      isGuest
+        ? Promise.resolve(null)
+        : courseService.startLessonSession(courseId, lessonId, learnerId),
     ])
       .then(([courseRes, lessonRes, sessionRes]) => {
         if (courseRes.status === 'fulfilled') {
@@ -156,7 +158,7 @@ export const LessonPlayer: React.FC = () => {
         setError(copy.lessonNotFound);
       })
       .finally(() => setIsLoading(false));
-  }, [courseId, lessonId, learnerId]);
+  }, [courseId, lessonId, learnerId, isGuest]);
 
   // Submit Step Attempt to Backend Session
   const trySubmitBackendStep = async (

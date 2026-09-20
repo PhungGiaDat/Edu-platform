@@ -54,6 +54,7 @@ class PronunciationService {
     // Hybrid fallback state
     private mediaRecorder: MediaRecorder | null = null;
     private audioChunks: Blob[] = [];
+    private recordingFormat = { mimeType: 'audio/webm', extension: 'webm' };
     private useServerFallback = false;
     private serverAvailable: boolean | null = null; // null = not checked yet
 
@@ -84,15 +85,15 @@ class PronunciationService {
             this.handleResult(result.transcript, result.confidence, 'webspeech');
         };
 
-        this.recognition.onerror = (event: any) => {
+        this.recognition.onerror = async (event: any) => {
             console.error('[Pronunciation] Web Speech error:', event.error);
             this.isListening = false;
 
-            // On certain errors, try server fallback
             if (['network', 'service-not-allowed', 'not-allowed'].includes(event.error)) {
                 console.log('[Pronunciation] Trying server fallback due to error');
                 this.useServerFallback = true;
-                this.checkServerAvailability();
+                await this.startServerListening();
+                return;
             }
 
             eventBus.emit('PRONUNCIATION_ERROR' as any, {
@@ -191,7 +192,7 @@ class PronunciationService {
         if (!this.serverAvailable) {
             console.error('[Pronunciation] Server transcription not available');
             eventBus.emit('PRONUNCIATION_ERROR' as any, {
-                error: 'Speech recognition not available in this browser'
+                error: 'speech-recognition-unavailable'
             });
             return;
         }
@@ -200,8 +201,9 @@ class PronunciationService {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
             this.audioChunks = [];
+            this.recordingFormat = this.getSupportedRecordingFormat();
             this.mediaRecorder = new MediaRecorder(stream, {
-                mimeType: this.getSupportedMimeType()
+                mimeType: this.recordingFormat.mimeType
             });
 
             this.mediaRecorder.ondataavailable = (event) => {
@@ -244,23 +246,18 @@ class PronunciationService {
     }
 
     /**
-     * Get supported MIME type for audio recording
+     * Get supported browser recording format with matching upload extension.
      */
-    private getSupportedMimeType(): string {
-        const types = [
-            'audio/webm;codecs=opus',
-            'audio/webm',
-            'audio/ogg;codecs=opus',
-            'audio/mp4',
+    private getSupportedRecordingFormat(): { mimeType: string; extension: string } {
+        const formats = [
+            { mimeType: 'audio/webm;codecs=opus', extension: 'webm' },
+            { mimeType: 'audio/webm', extension: 'webm' },
+            { mimeType: 'audio/ogg;codecs=opus', extension: 'ogg' },
+            { mimeType: 'audio/mp4', extension: 'mp4' },
         ];
 
-        for (const type of types) {
-            if (MediaRecorder.isTypeSupported(type)) {
-                return type;
-            }
-        }
-
-        return 'audio/webm'; // Fallback
+        return formats.find(({ mimeType }) => MediaRecorder.isTypeSupported(mimeType))
+            || { mimeType: 'audio/webm', extension: 'webm' };
     }
 
     /**
@@ -272,9 +269,9 @@ class PronunciationService {
             return;
         }
 
-        const audioBlob = new Blob(this.audioChunks, { type: this.getSupportedMimeType() });
+        const audioBlob = new Blob(this.audioChunks, { type: this.recordingFormat.mimeType });
         const formData = new FormData();
-        formData.append('audio', audioBlob, 'recording.webm');
+        formData.append('audio', audioBlob, `recording.${this.recordingFormat.extension}`);
         formData.append('language', 'en');
 
         try {

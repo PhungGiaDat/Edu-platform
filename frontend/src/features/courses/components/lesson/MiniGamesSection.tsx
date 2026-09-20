@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { Lesson, VocabularyItem } from '@/types/course';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
+import { getAssetCandidateUrls } from '@/lib/courseAssets';
 import { HapticService } from '@/services/HapticService';
 import { FeedbackMascot } from './FeedbackMascot';
 
@@ -21,6 +22,7 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null);
+  const advanceTimerRef = useRef<number | null>(null);
 
   const currentTarget = vocabulary[currentTargetIndex] || vocabulary[0];
 
@@ -60,8 +62,7 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
   const playTargetAudio = async () => {
     if (!currentTarget) return;
     try {
-      const visual = resolveVocabularyVisual(currentTarget.word_en, vocabulary, currentTarget.image);
-      await AudioService.playPronunciation(currentTarget.word_en, 'en', visual.imageUrl || undefined);
+      await AudioService.playPronunciation(currentTarget.word_en, 'en', getAssetCandidateUrls(currentTarget.audio)[0]);
     } catch (err) {
       console.warn('[MiniGame] audio play error:', err);
     }
@@ -78,6 +79,12 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
     }
   }, [currentTargetIndex]);
 
+  useEffect(() => () => {
+    if (advanceTimerRef.current !== null) {
+      window.clearTimeout(advanceTimerRef.current);
+    }
+  }, []);
+
   const handleChoice = async (item: VocabularyItem) => {
     if (!currentTarget || feedback?.correct) return;
     setSelectedWord(item.word_en);
@@ -85,20 +92,22 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
     const isCorrect = item.word_en.toLowerCase() === currentTarget.word_en.toLowerCase();
 
     if (isCorrect) {
-      await AudioService.playSoundEffect('correct');
-      HapticService.success();
       setFeedback({
         correct: true,
         message: `${copy.correct} "${currentTarget.word_en}" là "${currentTarget.word_vi}".`,
       });
 
-      window.setTimeout(() => {
+      advanceTimerRef.current = window.setTimeout(() => {
+        advanceTimerRef.current = null;
         if (currentTargetIndex < vocabulary.length - 1) {
           setCurrentTargetIndex((prev) => prev + 1);
         } else {
           onComplete();
         }
       }, 1500);
+
+      await AudioService.playSoundEffect('correct');
+      HapticService.success();
     } else {
       await AudioService.playSoundEffect('wrong');
       HapticService.tap();
@@ -110,6 +119,10 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
   };
 
   const handleManualNext = () => {
+    if (advanceTimerRef.current !== null) {
+      window.clearTimeout(advanceTimerRef.current);
+      advanceTimerRef.current = null;
+    }
     if (currentTargetIndex < vocabulary.length - 1) {
       setCurrentTargetIndex((prev) => prev + 1);
     } else {
