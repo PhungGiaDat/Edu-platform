@@ -55,3 +55,33 @@ describe('Vercel AR iframe headers', () => {
     expect(cspValues[0]).toContain("media-src 'self' blob: data: https://*.supabase.co")
   })
 });
+
+describe('Normal app lesson CSP frame-src', () => {
+  const lessonPath = '/courses/momo-nature-english-5-7/lessons/meet-the-elephant';
+
+  it('permits the trusted YouTube embed origins for the lesson video player', () => {
+    const cspValues = matchingHeaderValues(lessonPath, 'Content-Security-Policy');
+
+    expect(cspValues).toHaveLength(1);
+    const frameSrc = cspValues[0]
+      .split(';')
+      .map(directive => directive.trim())
+      .find(directive => directive.startsWith('frame-src'));
+
+    expect(frameSrc).toBeDefined();
+    expect(frameSrc).toContain('https://www.youtube-nocookie.com');
+    expect(frameSrc).toContain('https://www.youtube.com');
+  });
+
+  it('preserves the existing self and Stripe frame-src restrictions', () => {
+    const cspValues = matchingHeaderValues(lessonPath, 'Content-Security-Policy');
+    const frameSrc = cspValues[0]
+      .split(';')
+      .map(directive => directive.trim())
+      .find(directive => directive.startsWith('frame-src'))!;
+
+    expect(frameSrc).toContain("'self'");
+    expect(frameSrc).toContain('https://js.stripe.com');
+    expect(frameSrc).not.toContain('*'); // no wildcard weakening
+  });
+});

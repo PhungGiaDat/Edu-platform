@@ -15,11 +15,19 @@ class AudioServiceClass {
      * Initialize Web Audio API context
      */
     init(): void {
-        if (!this.audioContext) {
-            this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        }
-        if (this.audioContext.state === 'suspended') {
-            this.audioContext.resume();
+        // AudioContext is optional: asset playback uses HTMLAudioElement and does
+        // not depend on it. Never let a missing/failing AudioContext block playback.
+        try {
+            const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+            if (!Ctx) return;
+            if (!this.audioContext) {
+                this.audioContext = new Ctx();
+            }
+            if (this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+            }
+        } catch {
+            this.audioContext = null;
         }
     }
 
