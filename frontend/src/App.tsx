@@ -330,6 +330,21 @@ const App = () => {
   const location = useLocation();
   const isARRoute = location.pathname.startsWith('/learn-ar-xr');
 
+  // Eruda mounts from index.html on ?debug/?eruda hard-load. SPA navigation never
+  // reloads that document, so a debug session would leak its console into every
+  // later route. Tear it down whenever the current route is not an explicit debug session.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const isDebugSession = params.get('debug') === 'true' || params.get('eruda') === 'true';
+    if (isDebugSession) return;
+    try {
+      (window as unknown as { eruda?: { destroy?: () => void } }).eruda?.destroy?.();
+    } catch {
+      /* eruda teardown is best-effort */
+    }
+    document.querySelectorAll('[data-eruda-root], #eruda').forEach(el => el.remove());
+  }, [location.pathname, location.search]);
+
   return (
     <>
       <SpeedInsights />

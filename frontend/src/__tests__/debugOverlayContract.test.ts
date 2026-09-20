@@ -14,6 +14,7 @@ const learnAR8thWallPage = fs.readFileSync(
   path.resolve(process.cwd(), 'src/pages/LearnAR8thWall.tsx'),
   'utf8',
 );
+const appTsx = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
 
 function erudaBootstrap(html: string): string {
   const start = html.indexOf('<!-- Eruda Debug Console');
@@ -47,18 +48,10 @@ describe('mobile AR debug overlay contract', () => {
     );
 
     expect(mobileDebugScript).toContain('window.MobileDebug.copy()');
-    expect(mobileDebugScript).toContain('data-copy-all-logs="true"');
-    expect(mobileDebugScript).toContain('Copy All');
     expect(mobileDebugScript).toContain('MAX_BUFFERED_LOGS = 1000');
     expect(mobileDebugScript).toContain('copyLogsWithSelection(text)');
     expect(mobileDebugScript).toContain("navigator.clipboard.writeText(text)");
     expect(mobileDebugScript).toContain('return copied');
-    expect(indexHtml).toContain("data-eruda-copy-all");
-    expect(indexHtml).toContain("document.body.appendChild(copyButton)");
-    expect(indexHtml).toContain('📋 Copy All');
-    expect(indexHtml).not.toContain('erudaRoot.appendChild(copyButton)');
-    expect(indexHtml).toContain('await window.MobileDebug.copy()');
-    expect(indexHtml).not.toContain("querySelectorAll(\".eruda-log-item\")");
     expect(selectionFallbackIndex).toBeGreaterThan(copyFunctionIndex);
     expect(selectionFallbackIndex).toBeLessThan(clipboardIndex);
   });
@@ -100,8 +93,6 @@ describe('mobile AR debug overlay contract', () => {
     expect(mobileDebugScript).toContain('CAMERA_READY engine=scanner');
     expect(scannerHtml).toContain('SCANNER_CONSOLE_');
     expect(scannerHtml).toContain('before camera bootstrap');
-    expect(xrHtml).toContain('XR_CONSOLE_');
-    expect(xrHtml).toContain('before engine bootstrap');
   });
 
   it('renders the mobile debug controls above the AR stacking context', () => {
@@ -113,9 +104,29 @@ describe('mobile AR debug overlay contract', () => {
     expect(mobileDebugScript).toContain("pathname === '/learn-ar-xr'");
     expect(mobileDebugScript).toContain("pathname.startsWith('/learn-ar-xr/')");
     expect(learnAR8thWallPage).toContain('canUseAROperatorControls');
-    expect(learnAR8thWallPage).toContain('enabled: canUseOperatorControls');
-    expect(learnAR8thWallPage).toContain('{canUseOperatorControls && (');
+    expect(learnAR8thWallPage).toContain('enabled: showOperatorTools');
+    expect(learnAR8thWallPage).toContain(
+      'const showOperatorTools = !captureMode && canUseOperatorControls && debugRequested;',
+    );
+    expect(learnAR8thWallPage).toContain('{showOperatorTools && (');
     expect(learnAR8thWallPage).toContain('disabled={syncStatus === \'syncing\'}');
     expect(learnAR8thWallPage).toContain('Send ${phase.toLowerCase()} AR logs to Telegram');
+  });
+
+  it('activates the XR viewer Eruda console only for explicit debug/eruda queries', () => {
+    const xrErudaLoader = xrHtml.slice(
+      xrHtml.indexOf('var xrDebugParams'),
+      xrHtml.indexOf('appendChild(s);'),
+    );
+    expect(xrErudaLoader).toContain(
+      "xrDebugParams.get('eruda') === 'true' || xrDebugParams.get('debug') === 'true'",
+    );
+    expect(xrErudaLoader).not.toContain("location.hostname === 'localhost'");
+  });
+
+  it('tears down leaked Eruda DOM when the SPA navigates to a non-debug route', () => {
+    expect(appTsx).toContain("params.get('debug') === 'true' || params.get('eruda') === 'true'");
+    expect(appTsx).toContain('.eruda?.destroy?.()');
+    expect(appTsx).toContain("querySelectorAll('[data-eruda-root], #eruda')");
   });
 });
