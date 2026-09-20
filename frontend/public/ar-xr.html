@@ -939,7 +939,6 @@
     }
 
     function showOverlay(text, hint = '') {
-      if (bootState.cameraReady) return;
       overlay.classList.remove('hidden');
       loadingText.textContent = text;
       hintText.textContent = hint;
@@ -1406,6 +1405,7 @@
         primaryReady: bootState.primaryReady,
         secondaryProgress: bootState.secondaryProgress,
       });
+      hideOverlay();
       setPhase('viewing');
     }
 
@@ -2191,9 +2191,7 @@
             elapsedSinceViewerBootMs: cameraStatusAt - viewerBootStartedAt,
           });
           if (status === 'hasVideo') {
-            const becameCameraReady = !bootState.cameraReady;
             bootState.cameraReady = true;
-            if (becameCameraReady) hideOverlay();
             sendARDebug('XR_CAMERA_HAS_VIDEO', {});
             sendMessage('XR_CAMERA_HAS_VIDEO', {
               status: 'hasVideo',

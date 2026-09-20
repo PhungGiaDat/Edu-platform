@@ -396,7 +396,7 @@ describe('LearnAR8thWall transition UX', () => {
     );
   });
 
-  it('dismisses the internal XR loading surface at the XR_CAMERA_HAS_VIDEO readiness boundary', () => {
+  it('keeps XR loading presentation until the dual boot gate reveals AR', () => {
     const viewerSource = readFileSync(
       resolve(process.cwd(), 'public/ar-xr.html'),
       'utf8',
@@ -411,11 +411,18 @@ describe('LearnAR8thWall transition UX', () => {
     const bootGateEnd = viewerSource.indexOf('// Update overlay text based on boot state', bootGateStart);
     const bootGateBlock = viewerSource.slice(bootGateStart, bootGateEnd);
 
-    expect(showOverlayBlock).toContain('if (bootState.cameraReady) return;');
-    expect(hasVideoBlock).toMatch(
-      /bootState\.cameraReady\s*=\s*true;[\s\S]*hideOverlay\(\);[\s\S]*sendMessage\('XR_CAMERA_HAS_VIDEO'/,
-    );
-    expect(bootGateBlock).not.toContain('hideOverlay()');
+    expect(showOverlayBlock).not.toContain('if (bootState.cameraReady) return;');
+    expect(showOverlayBlock).toContain("overlay.classList.remove('hidden');");
+    expect(viewerSource).toContain('updateOverlayForBoot(null);');
+    expect(viewerSource).toContain('function showError(msg)');
+    expect(hasVideoBlock).toContain('bootState.cameraReady = true;');
+    expect(hasVideoBlock).toContain("sendMessage('XR_CAMERA_HAS_VIDEO', {");
+    expect(hasVideoBlock).toContain("maybeRevealAR({ trigger: 'cameraReady' });");
+    expect(hasVideoBlock).not.toContain('hideOverlay()');
+    expect(bootGateBlock).toContain('shouldRevealAR({');
+    expect(bootGateBlock).toContain('cameraReady: bootState.cameraReady,');
+    expect(bootGateBlock).toContain('primaryReady: bootState.primaryReady,');
+    expect(bootGateBlock).toMatch(/hideOverlay\(\);[\s\S]*setPhase\('viewing'\)/);
   });
 
   it('keeps only child-facing navigation while hiding AR operator controls from a learner', async () => {
