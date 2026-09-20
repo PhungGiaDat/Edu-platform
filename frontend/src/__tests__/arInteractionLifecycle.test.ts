@@ -21,7 +21,7 @@ import {
 } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 const EXPECTED_LIFECYCLE_MODULE_URL =
-  './static/ar-assets/js/ar-interaction-lifecycle.js?v=visual-pose-v1'
+  './static/ar-assets/js/ar-interaction-lifecycle.js?v=device-gravity-v1'
 
 function requireVisualPose(
   result: ReturnType<typeof lifecycleModule.advanceVisualPose>,
@@ -1834,6 +1834,13 @@ describe('AR interaction lifecycle contracts', () => {
     expect(lifecycleModule.selectActiveInteractionRule).toBeTypeOf('function')
     expect(lifecycleModule.hasAnimationCapability).toBeTypeOf('function')
     expect(lifecycleModule.distanceBetweenPositions).toBeTypeOf('function')
+    // Gravity exports landed in 2d884503; the cache-bust version must cover them.
+    expect(probedNames).toContain('mapDeviceGravityToScreen')
+    expect(probedNames).toContain('normalizeDeviceGravity')
+    expect(probedNames).toContain('resolveDeviceMotionPermissionMode')
+    expect(lifecycleModule.mapDeviceGravityToScreen).toBeTypeOf('function')
+    expect(lifecycleModule.normalizeDeviceGravity).toBeTypeOf('function')
+    expect(lifecycleModule.resolveDeviceMotionPermissionMode).toBeTypeOf('function')
   })
 
   it('preserves the locked CAT plus FISH proximity through the ordinary rule contract', () => {
