@@ -107,6 +107,7 @@ export interface XRTarget {
   rotation?: string;
   scale?: string;
   physical_width_m?: number;
+  presentation_mode?: string;
   presentation_profile?: string;
   presentation_scale_multiplier?: number;
   presentation_position_offset?: string;
@@ -127,6 +128,7 @@ type XRTargetResponse = {
   rotation?: string;
   scale?: string;
   physical_width_m?: number;
+  presentation_mode?: string;
   presentation_profile?: string;
   presentation_scale_multiplier?: number;
   presentation_position_offset?: string;
@@ -151,6 +153,7 @@ export function normalizeXRTarget(targetQrId: string, raw: XRTargetResponse): XR
     rotation: raw.target?.rotation ?? raw.rotation ?? '0 0 0',
     scale: raw.target?.scale ?? raw.scale ?? '1 1 1',
     physical_width_m: raw.tracking_target?.physical_width_m ?? raw.physical_width_m,
+    presentation_mode: raw.target?.presentation_mode ?? raw.presentation_mode,
     presentation_profile: raw.target?.presentation_profile ?? raw.presentation_profile,
     presentation_scale_multiplier:
       raw.target?.presentation_scale_multiplier ?? raw.presentation_scale_multiplier,
@@ -281,6 +284,7 @@ export function serializeXRTargets(targets: XRTarget[]): string {
     rotation: target.rotation,
     scale: target.scale,
     physical_width_m: target.physical_width_m,
+    presentation_mode: target.presentation_mode,
     presentation_profile: target.presentation_profile,
     presentation_scale_multiplier: target.presentation_scale_multiplier,
     presentation_position_offset: target.presentation_position_offset,

@@ -107,6 +107,21 @@ export function resolveGravityWorldUpCandidate(args: {
   stabilityDot?: number
 }
 
+export function resolvePresentationMode(
+  requestedMode?: string | null,
+): 'AUTO' | 'SCREEN' | 'TABLETOP'
+
+export function resolveInstancePresentationMode(args: {
+  instance?: {
+    config?: {
+      qr_id?: string | null
+      presentation_mode?: string | null
+    } | null
+  } | null
+  primaryModelTargetName?: string | null
+  requestedPresentationMode?: string | null
+}): 'AUTO' | 'SCREEN' | 'TABLETOP'
+
 export function classifySurfaceOrientation(args: {
   requestedMode?: string | null
   flatScore: number | null

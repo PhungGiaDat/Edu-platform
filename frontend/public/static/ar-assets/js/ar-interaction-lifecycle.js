@@ -273,6 +273,19 @@ export function resolvePresentationMode(requestedMode) {
   return PRESENTATION_MODE_AUTO
 }
 
+export function resolveInstancePresentationMode({
+  instance,
+  primaryModelTargetName,
+  requestedPresentationMode,
+}) {
+  const explicit = instance?.config?.presentation_mode
+  if (explicit) return resolvePresentationMode(explicit)
+  if (instance?.config?.qr_id === primaryModelTargetName) {
+    return resolvePresentationMode(requestedPresentationMode)
+  }
+  return PRESENTATION_MODE_SCREEN
+}
+
 function normalizeVector3(vector) {
   if (!vector) return null
   const { x, y, z } = vector

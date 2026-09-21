@@ -226,6 +226,7 @@
       'reconcileInteractionParticipantTracking',
       'resolveInteractionAnimation',
       'resolveForwardAxis',
+      'resolveInstancePresentationMode',
       'resolveModelPresentation',
       'resolvePresentationMode',
       'resolveRuleProximityConfig',
@@ -239,7 +240,7 @@
     ];
 
     try {
-      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=target-admission-v1');
+      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=target-admission-v2');
       const missingExports = expectedLifecycleExports.filter((name) => !(name in lifecycleModule));
       if (missingExports.length > 0) {
         debug('MODULE_PROBE_LIFECYCLE_FAIL', {
@@ -295,6 +296,7 @@
       reconcileInteractionParticipantTracking,
       resolveInteractionAnimation,
       resolveForwardAxis,
+      resolveInstancePresentationMode,
       resolveModelPresentation,
       resolvePresentationMode,
       resolveRuleProximityConfig,
@@ -305,7 +307,7 @@
       shouldUpdateVisualPose,
       shouldRevealAR,
       smoothstep,
-    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=target-admission-v1';
+    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=target-admission-v2';
     import {
       createLearnerTargetGate,
       LEARNER_TARGET_STABLE_DWELL_MS,
@@ -776,6 +778,7 @@
         rotation: null,
         scale: null,
         physical_width_m: null,
+        presentation_mode: null,
         presentation_profile: null,
         presentation_scale_multiplier: null,
         presentation_position_offset: null,
@@ -828,6 +831,15 @@
 
     const targetConfigByName = new Map(xrTargetConfigs.map(c => [c.qr_id, c]));
     const primaryModelTargetName = qrId;
+
+    function getInstanceRequestedPresentationMode(instance) {
+      return resolveInstancePresentationMode({
+        instance,
+        primaryModelTargetName,
+        requestedPresentationMode,
+      });
+    }
+
     // Admission starts with the entry target; interaction rules expand it only after loading.
     let admittedTargetNames = new Set([primaryModelTargetName]);
     let sessionAdmissionLogEmitted = false;
@@ -841,8 +853,8 @@
       animation_trigger: 'CAT_EAT',
       priority: 100,
       proximity: {
-        enter_distance: 0.50,
-        exit_distance: 0.58,
+        enter_distance: 0.62,
+        exit_distance: 0.70,
         proximity_stable_ms: 300,
         smoothing_alpha: 0.25,
       },
@@ -1763,8 +1775,9 @@
         targetNormal: targetNormalWorld,
         worldUp: worldUpState.worldUp,
       });
+      const instanceRequestedPresentationMode = getInstanceRequestedPresentationMode(instance);
       const classification = classifySurfaceOrientation({
-        requestedMode: requestedPresentationMode,
+        requestedMode: instanceRequestedPresentationMode,
         flatScore,
         currentMode: instance.presentationMode,
         candidateMode: instance.presentationCandidateMode,
@@ -1808,7 +1821,7 @@
         sendDebugOnly('SURFACE_ORIENTATION_SAMPLE', {
           targetName: instance.config.qr_id,
           presentationMode: instance.presentationMode,
-          requestedMode: requestedPresentationMode,
+          requestedMode: instanceRequestedPresentationMode,
           targetNormalLocal,
           normal: {
             x: targetNormalWorld.x,
@@ -2346,7 +2359,7 @@
             sendARDebug('SURFACE_ROOT_CREATED', {
               targetName: name,
               surfaceRootName: inst.surfaceRoot.name,
-              requestedMode: requestedPresentationMode,
+              requestedMode: getInstanceRequestedPresentationMode(inst),
               targetNormalLocal: SURFACE_PRESENTATION_CONFIG.targetNormalLocal,
             });
           }

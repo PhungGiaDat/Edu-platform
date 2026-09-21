@@ -36,7 +36,7 @@ describe('LearnAR8thWall target visual configuration', () => {
     const fish = normalizeXRTarget('fish001', {
       target: {
         model_3d_url: 'https://assets.example/fish_mobile_v1.glb',
-        scale: '0.30 0.30 0.30',
+        scale: '0.36 0.36 0.36',
       },
     });
 
@@ -46,7 +46,7 @@ describe('LearnAR8thWall target visual configuration', () => {
       expect.objectContaining({
         qr_id: 'fish001',
         model_3d_url: 'https://assets.example/fish_mobile_v1.glb',
-        scale: '0.30 0.30 0.30',
+        scale: '0.36 0.36 0.36',
       }),
     ]);
   });
@@ -135,6 +135,7 @@ describe('LearnAR8thWall target visual configuration', () => {
         position: '0 0 0',
         rotation: '0 0 0',
         scale: '1 1 1',
+        presentation_mode: 'SCREEN',
         presentation_profile: 'pet',
         presentation_scale_multiplier: 1.25,
         presentation_position_offset: '0.01 0 0',
@@ -149,6 +150,7 @@ describe('LearnAR8thWall target visual configuration', () => {
         qr_id: 'petA',
         physical_width_m: 0.12,
         presentation_profile: 'pet',
+        presentation_mode: 'SCREEN',
         presentation_scale_multiplier: 1.25,
         presentation_position_offset: '0.01 0 0',
         presentation_forward_axis: '+Z',

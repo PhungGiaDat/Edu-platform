@@ -21,7 +21,7 @@ import {
 } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 const EXPECTED_LIFECYCLE_MODULE_URL =
-  './static/ar-assets/js/ar-interaction-lifecycle.js?v=target-admission-v1'
+  './static/ar-assets/js/ar-interaction-lifecycle.js?v=target-admission-v2'
 
 function requireVisualPose(
   result: ReturnType<typeof lifecycleModule.advanceVisualPose>,
@@ -893,6 +893,34 @@ describe('AR interaction lifecycle contracts', () => {
     expect(resolvePresentationMode?.('TABLETOP')).toBe('TABLETOP')
     expect(resolvePresentationMode?.('auto')).toBe('AUTO')
     expect(resolvePresentationMode?.('unknown')).toBe('AUTO')
+  })
+
+  it('resolves presentation mode per target instance', () => {
+    const resolveInstancePresentationMode = Reflect.get(lifecycleModule, 'resolveInstancePresentationMode')
+
+    expect(resolveInstancePresentationMode).toBeTypeOf('function')
+    expect(resolveInstancePresentationMode?.({
+      instance: { config: { qr_id: 'cat001' } },
+      primaryModelTargetName: 'cat001',
+      requestedPresentationMode: 'TABLETOP',
+    })).toBe('TABLETOP')
+    expect(resolveInstancePresentationMode?.({
+      instance: { config: { qr_id: 'fish001' } },
+      primaryModelTargetName: 'cat001',
+      requestedPresentationMode: 'TABLETOP',
+    })).toBe('SCREEN')
+    expect(resolveInstancePresentationMode?.({
+      instance: { config: { qr_id: 'fish001', presentation_mode: 'TABLETOP' } },
+      primaryModelTargetName: 'cat001',
+      requestedPresentationMode: 'SCREEN',
+    })).toBe('TABLETOP')
+
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const presentationStart = source.indexOf('function updateSurfacePresentation(')
+    const presentationEnd = source.indexOf('\n    function updateSurfacePresentations', presentationStart)
+    const presentationSource = source.slice(presentationStart, presentationEnd)
+    expect(presentationSource).toContain('getInstanceRequestedPresentationMode(instance)')
+    expect(presentationSource).toContain('requestedMode: instanceRequestedPresentationMode')
   })
 
   it('keeps screen identity and aligns model up with the configured tabletop normal', () => {
@@ -2121,8 +2149,8 @@ describe('AR interaction lifecycle contracts', () => {
       combo_id: 'cat-fish-backend',
       animation_trigger: 'CAT_EAT',
       proximity: {
-        enter_distance: 0.50,
-        exit_distance: 0.58,
+        enter_distance: 0.62,
+        exit_distance: 0.70,
         proximity_stable_ms: 300,
         smoothing_alpha: 0.25,
       },
@@ -2134,16 +2162,16 @@ describe('AR interaction lifecycle contracts', () => {
       animation_trigger: 'CAT_EAT',
       source: 'fallback',
       proximity: {
-        enter_distance: 0.50,
-        exit_distance: 0.58,
+        enter_distance: 0.62,
+        exit_distance: 0.70,
         proximity_stable_ms: 300,
         smoothing_alpha: 0.25,
       },
     })
 
     expect(resolveRuleProximityConfig?.(backend, null)).toEqual({
-      enterDistance: 0.50,
-      exitDistance: 0.58,
+      enterDistance: 0.62,
+      exitDistance: 0.70,
       stableMs: 300,
       smoothingAlpha: 0.25,
     })
@@ -2163,8 +2191,8 @@ describe('AR interaction lifecycle contracts', () => {
 
     expect(fallbackStart).toBeGreaterThanOrEqual(0)
     expect(fallbackEnd).toBeGreaterThan(fallbackStart)
-    expect(fallbackSource).toContain('enter_distance: 0.50')
-    expect(fallbackSource).toContain('exit_distance: 0.58')
+    expect(fallbackSource).toContain('enter_distance: 0.62')
+    expect(fallbackSource).toContain('exit_distance: 0.70')
     expect(fallbackSource).toContain('proximity_stable_ms: 300')
     expect(fallbackSource).toContain('smoothing_alpha: 0.25')
   })
@@ -2216,8 +2244,8 @@ describe('AR interaction lifecycle contracts', () => {
       tags: ['cat001', 'fish001'],
       combo_id: 'cat-fish',
       proximity: {
-        enter_distance: 0.50,
-        exit_distance: 0.58,
+        enter_distance: 0.62,
+        exit_distance: 0.70,
         proximity_stable_ms: 300,
         smoothing_alpha: 0.25,
       },
@@ -2233,7 +2261,7 @@ describe('AR interaction lifecycle contracts', () => {
 
     const outside = advanceComboProximityGate({
       now: 0,
-      distance: 0.51,
+      distance: 0.63,
       enteredAt: null,
       comboConsumed: false,
       config,
@@ -2243,14 +2271,14 @@ describe('AR interaction lifecycle contracts', () => {
 
     const entered = advanceComboProximityGate({
       now: 100,
-      distance: 0.50,
+      distance: 0.60,
       enteredAt: null,
       comboConsumed: false,
       config,
     })
     const stable = advanceComboProximityGate({
       now: 400,
-      distance: 0.50,
+      distance: 0.60,
       enteredAt: entered.enteredAt,
       comboConsumed: false,
       config,
@@ -2259,14 +2287,14 @@ describe('AR interaction lifecycle contracts', () => {
 
     const notRearmed = advanceComboProximityGate({
       now: 500,
-      distance: 0.55,
+      distance: 0.69,
       enteredAt: null,
       comboConsumed: true,
       config,
     })
     const rearmed = advanceComboProximityGate({
       now: 600,
-      distance: 0.58,
+      distance: 0.70,
       enteredAt: null,
       comboConsumed: true,
       config,
