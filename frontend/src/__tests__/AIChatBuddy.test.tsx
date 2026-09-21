@@ -27,6 +27,13 @@ vi.mock('../services/ChatService', () => ({
             sources: [],
             session_id: 'mock-session',
         })),
+        streamChatMessage: vi.fn(
+            (_q: string, _ctx: any, onToken: (t: string) => void, onComplete: () => void) => {
+                onToken('Mock AI response');
+                onComplete();
+                return Promise.resolve();
+            },
+        ),
         resetSession: vi.fn(),
     },
 }));
@@ -189,11 +196,16 @@ describe('AIChatBuddy — mobile viewport behavior', () => {
 
     it('input is disabled while a message is loading', async () => {
         const user = userEvent.setup();
-        let resolveResponse!: (response: Awaited<ReturnType<typeof ChatService.sendRAGMessage>>) => void;
-        const pendingResponse = new Promise<Awaited<ReturnType<typeof ChatService.sendRAGMessage>>>((resolve) => {
-            resolveResponse = resolve;
-        });
-        vi.mocked(ChatService.sendRAGMessage).mockReturnValueOnce(pendingResponse);
+        let finishStream!: () => void;
+        vi.mocked(ChatService.streamChatMessage).mockImplementationOnce(
+            (_q, _ctx, _onToken, onComplete) =>
+                new Promise<void>((resolve) => {
+                    finishStream = () => {
+                        onComplete();
+                        resolve();
+                    };
+                }),
+        );
         renderChatBuddy(true);
 
         const input = screen.getByPlaceholderText('Ask Lexi...');
@@ -208,12 +220,12 @@ describe('AIChatBuddy — mobile viewport behavior', () => {
         const loadingDots = document.querySelectorAll('[class*="animate-bounce"]');
         expect(loadingDots.length).toBeGreaterThan(0);
 
-        resolveResponse({ response: 'Mock AI response', sources: [], session_id: 'pending-session' });
+        finishStream();
         await waitFor(() => expect(input).not.toBeDisabled());
     });
 });
 
-// ── Error UX (sendRAGMessage failure classification surfaced in chat) ───────
+// ── Error UX (streamChatMessage failure classification surfaced in chat) ────
 
 describe('AIChatBuddy — error UX', () => {
     beforeEach(() => {
@@ -228,32 +240,29 @@ describe('AIChatBuddy — error UX', () => {
 
     it('shows a retryable error bubble and replays the question on "Thử lại"', async () => {
         const user = userEvent.setup();
-        const spy = vi.mocked(ChatService.sendRAGMessage);
+        const spy = vi.mocked(ChatService.streamChatMessage);
         spy
-            .mockResolvedValueOnce({
-                response: 'Lexi đang gặp chút trục trặc từ server. Đợi vài giây rồi thử lại nhé! 🤖',
-                sources: [],
-                session_id: 's1',
-                error_kind: 'server',
-                retryable: true,
+            .mockImplementationOnce((_q, _ctx, _onToken, _onComplete, onError) => {
+                onError('server');
+                return Promise.resolve();
             })
-            .mockResolvedValueOnce({
-                response: 'Apple là quả táo 🍎',
-                sources: [],
-                session_id: 's1',
+            .mockImplementationOnce((_q, _ctx, onToken, onComplete) => {
+                onToken('Apple là quả táo 🍎');
+                onComplete();
+                return Promise.resolve();
             });
 
         renderChatBuddy(true);
         await user.type(screen.getByPlaceholderText('Ask Lexi...'), 'what is apple?{Enter}');
 
         const retryBtn = await screen.findByRole('button', { name: /Thử lại/ });
-        expect(screen.getByText(/trục trặc từ server/)).toBeVisible();
+        expect(screen.getByText(/bận một chút/)).toBeVisible();
 
         await user.click(retryBtn);
 
         await waitFor(() => expect(spy).toHaveBeenCalledTimes(2));
         // Error bubble replaced by the successful answer…
-        expect(screen.queryByText(/trục trặc từ server/)).not.toBeInTheDocument();
+        expect(screen.queryByText(/bận một chút/)).not.toBeInTheDocument();
         expect(screen.getByText('Apple là quả táo 🍎')).toBeVisible();
         // …and the replayed question is NOT duplicated in the transcript.
         expect(screen.getAllByText('what is apple?')).toHaveLength(1);
@@ -261,14 +270,12 @@ describe('AIChatBuddy — error UX', () => {
 
     it('auth failure shows login prompt without a retry button', async () => {
         const user = userEvent.setup();
-        vi.mocked(ChatService.sendRAGMessage).mockResolvedValueOnce({
-            response: 'Bạn ơi, hãy đăng nhập để trò chuyện với Lexi nhé! 🔑',
-            sources: [],
-            session_id: 's1',
-            error_kind: 'auth',
-            retryable: false,
-            requires_login: true,
-        });
+        vi.mocked(ChatService.streamChatMessage).mockImplementationOnce(
+            (_q, _ctx, _onToken, _onComplete, onError) => {
+                onError('auth');
+                return Promise.resolve();
+            },
+        );
 
         renderChatBuddy(true);
         await user.type(screen.getByPlaceholderText('Ask Lexi...'), 'hi there{Enter}');
@@ -289,7 +296,37 @@ describe('AIChatBuddy — error UX', () => {
         await user.type(screen.getByPlaceholderText('Ask Lexi...'), 'hello lexi{Enter}');
 
         await waitFor(() =>
-            expect(ChatService.sendRAGMessage).toHaveBeenCalledWith('hello lexi', undefined),
+            expect(ChatService.streamChatMessage).toHaveBeenCalledWith(
+                'hello lexi',
+                null,
+                expect.any(Function),
+                expect.any(Function),
+                expect.any(Function),
+                expect.any(Function),
+            ),
         );
+    });
+
+    it('renders vocabulary source chips when metadata arrives via stream', async () => {
+        const user = userEvent.setup();
+        vi.mocked(ChatService.streamChatMessage).mockImplementationOnce(
+            (_q, _ctx, onToken, onComplete, _onError, onMetadata) => {
+                onToken('Elephant is a big animal');
+                onMetadata?.({
+                    sources: [
+                        { word: 'elephant', score: 0.95 },
+                        { word: 'animal', score: 0.8 },
+                    ],
+                });
+                onComplete();
+                return Promise.resolve();
+            },
+        );
+
+        renderChatBuddy(true);
+        await user.type(screen.getByPlaceholderText('Ask Lexi...'), 'what is elephant?{Enter}');
+
+        expect(await screen.findByText('elephant')).toBeVisible();
+        expect(screen.getByText('animal')).toBeVisible();
     });
 });

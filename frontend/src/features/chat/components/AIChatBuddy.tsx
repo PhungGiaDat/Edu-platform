@@ -163,6 +163,15 @@ export const AIChatBuddy: React.FC<AIChatBuddyProps> = ({
                         ),
                     );
                 },
+                (meta) => {
+                    setMessages((prev) =>
+                        prev.map((msg) =>
+                            msg.id === aiMsgId
+                                ? { ...msg, sources: meta.sources, agentTrace: meta.agent_trace }
+                                : msg,
+                        ),
+                    );
+                },
             );
         } catch {
             setIsLoading(false);

@@ -201,6 +201,78 @@ class TestRAGChatEndpoint:
 
 
 # ---------------------------------------------------------------------------
+# POST /api/v1/chat/stream
+# ---------------------------------------------------------------------------
+
+class TestStreamChatEndpoint:
+
+    def test_stream_emits_tokens_and_metadata_before_done(self, client):
+        """Streaming endpoint must emit tokens and metadata (sources + agent_trace) before [DONE]."""
+        import json
+        response = client.post(
+            "/api/v1/chat/stream",
+            json={"question": "What is an elephant?"},
+        )
+        assert response.status_code == 200
+        assert "text/event-stream" in response.headers.get("content-type", "")
+
+        events = []
+        for line in response.text.split("\n"):
+            line = line.strip()
+            if line.startswith("data:"):
+                events.append(line[len("data:"):].strip())
+
+        assert "[DONE]" in events
+        done_idx = events.index("[DONE]")
+
+        # Metadata event must be yielded before [DONE]
+        parsed_events = []
+        for ev in events[:done_idx]:
+            parsed = json.loads(ev)
+            parsed_events.append(parsed)
+
+        token_events = [ev for ev in parsed_events if "token" in ev]
+        metadata_events = [ev for ev in parsed_events if "sources" in ev or "agent_trace" in ev]
+
+        assert len(token_events) > 0
+        assert len(metadata_events) == 1
+        assert metadata_events[0]["sources"] == [
+            {"word": "elephant", "score": 0.95},
+            {"word": "animal", "score": 0.80},
+        ]
+        assert len(metadata_events[0]["agent_trace"]) >= 3
+
+
+
+class TestChatStreamEndpoint:
+
+    def test_stream_emits_tokens_and_metadata_before_done(self, client):
+        """Stream yields token chunks, sources + agent_trace metadata, then [DONE]."""
+        import json
+
+        response = client.post(
+            "/api/v1/chat/stream",
+            json={"question": "What is an elephant?"},
+        )
+        assert response.status_code == 200
+        assert "text/event-stream" in response.headers.get("content-type", "")
+
+        events = []
+        for line in response.iter_lines():
+            if line.startswith("data: "):
+                events.append(line[6:].strip())
+
+        assert events[-1] == "[DONE]"
+        # Second to last event should be metadata payload
+        meta_payload = json.loads(events[-2])
+        assert "sources" in meta_payload
+        assert "agent_trace" in meta_payload
+        assert len(meta_payload["sources"]) == 2
+        assert meta_payload["sources"][0]["word"] == "elephant"
+        assert len(meta_payload["agent_trace"]) == 3
+
+
+# ---------------------------------------------------------------------------
 # Model override passthrough
 # ---------------------------------------------------------------------------
 

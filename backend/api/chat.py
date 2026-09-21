@@ -151,6 +151,11 @@ async def chat_stream(
 
         for word in full_reply.split(" "):
             yield f"data: {json.dumps({'token': word + ' '})}\n\n"
+
+        sources = result.get("sources") or []
+        agent_trace = result.get("agent_trace") or []
+        if sources or agent_trace:
+            yield f"data: {json.dumps({'sources': sources, 'agent_trace': agent_trace})}\n\n"
         yield "data: [DONE]\n\n"
 
         if not result.get("cached"):

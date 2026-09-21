@@ -12,6 +12,16 @@ export interface ChatResponse {
 
 export type ChatErrorKind = 'auth' | 'offline' | 'timeout' | 'server' | 'unknown';
 
+export interface ChatStreamMetadata {
+    sources?: { word: string; score: number }[];
+    agent_trace?: string[];
+}
+
+export interface ChatStreamMetadata {
+    sources?: { word: string; score: number }[];
+    agent_trace?: string[];
+}
+
 export interface RAGChatResponse {
     response: string;
     sources: { word: string; score: number }[];
@@ -29,8 +39,9 @@ export interface RAGChatResponse {
  * RAG pipeline = up to 3 sequential LLM calls; observed 15–60s end-to-end on
  * Gemini flash. A 90s ceiling stops a hung request from freezing the chat
  * forever (fetch has no default timeout) while never cutting off a healthy call.
+ * Same ceiling guards the SSE stream: a stalled stream otherwise spins forever.
  */
-const RAG_TIMEOUT_MS = 90_000;
+const CHAT_TIMEOUT_MS = 90_000;
 
 export interface PronunciationResult {
     feedback: string;
@@ -61,11 +72,16 @@ export const ChatService = {
     },
 
     /**
-     * Get or create session ID for conversation tracking
+     * Get or create session ID for conversation tracking.
+     * crypto.randomUUID so the ID is unguessable — Math.random was predictable
+     * enough to replay or inject into another learner's session. Fallback covers
+     * insecure contexts (plain-HTTP LAN dev) where randomUUID is unavailable.
      */
     getSessionId(): string {
         if (!currentSessionId) {
-            currentSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            currentSessionId =
+                crypto.randomUUID?.() ??
+                `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
         }
         return currentSessionId;
     },
@@ -87,6 +103,7 @@ export const ChatService = {
         onToken: (token: string) => void,
         onComplete: () => void,
         onError: (kind: ChatErrorKind) => void,
+        onMetadata?: (meta: ChatStreamMetadata) => void,
     ): Promise<void> {
         const url = `${getApiBase()}/api/v1/chat/stream`;
         const token = localStorage.getItem('authToken');
@@ -106,6 +123,7 @@ export const ChatService = {
                     session_id: this.getSessionId(),
                     lesson_context: lessonContext,
                 }),
+                signal: AbortSignal.timeout(CHAT_TIMEOUT_MS),
             });
 
             if (!response.ok) {
@@ -155,6 +173,12 @@ export const ChatService = {
                         if (parsed.token) {
                             onToken(parsed.token);
                         }
+                        if (parsed.sources || parsed.agent_trace) {
+                            onMetadata?.({
+                                sources: parsed.sources,
+                                agent_trace: parsed.agent_trace,
+                            });
+                        }
                     } catch {
                         // ignore malformed lines
                     }
@@ -175,6 +199,12 @@ export const ChatService = {
                     const parsed = JSON.parse(dataStr);
                     if (parsed.token) {
                         onToken(parsed.token);
+                    }
+                    if (parsed.sources || parsed.agent_trace) {
+                        onMetadata?.({
+                            sources: parsed.sources,
+                            agent_trace: parsed.agent_trace,
+                        });
                     }
                 } catch {
                     // ignore
@@ -219,7 +249,7 @@ export const ChatService = {
                 },
                 // Chat degrades gracefully for guests instead of hard-redirecting;
                 // the signal bounds a hung pipeline (RequestInit passes through fetch).
-                { onUnauthorized: 'throw', signal: AbortSignal.timeout(RAG_TIMEOUT_MS) },
+                { onUnauthorized: 'throw', signal: AbortSignal.timeout(CHAT_TIMEOUT_MS) },
             );
 
             if (response.session_id) {
