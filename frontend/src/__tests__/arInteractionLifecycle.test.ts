@@ -21,7 +21,7 @@ import {
 } from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
 
 const EXPECTED_LIFECYCLE_MODULE_URL =
-  './static/ar-assets/js/ar-interaction-lifecycle.js?v=auto-tabletop-v1'
+  './static/ar-assets/js/ar-interaction-lifecycle.js?v=target-admission-v1'
 
 function requireVisualPose(
   result: ReturnType<typeof lifecycleModule.advanceVisualPose>,
@@ -1988,6 +1988,7 @@ describe('AR interaction lifecycle contracts', () => {
     expect(lifecycleTypesSource).toContain('export function calculateAutoFitScale')
     expect(lifecycleTypesSource).toContain('export function getGroundedCenterOffset')
     expect(lifecycleTypesSource).toContain('export function resolveForwardAxis')
+    expect(lifecycleTypesSource).toContain('export function resolveSessionTargetAdmission')
     expect(lifecycleTypesSource).toContain('primaryReady: boolean')
     expect(probeImport?.[1]).toBe(EXPECTED_LIFECYCLE_MODULE_URL)
     expect(namedImport?.[2]).toBe(EXPECTED_LIFECYCLE_MODULE_URL)
@@ -2005,10 +2006,111 @@ describe('AR interaction lifecycle contracts', () => {
     expect(probedNames).toContain('normalizeDeviceGravity')
     expect(probedNames).toContain('resolveDeviceMotionPermissionMode')
     expect(probedNames).toContain('resolveGravityWorldUpCandidate')
+    expect(probedNames).toContain('resolveSessionTargetAdmission')
     expect(lifecycleModule.mapDeviceGravityToScreen).toBeTypeOf('function')
     expect(lifecycleModule.normalizeDeviceGravity).toBeTypeOf('function')
     expect(lifecycleModule.resolveDeviceMotionPermissionMode).toBeTypeOf('function')
     expect(lifecycleModule.resolveGravityWorldUpCandidate).toBeTypeOf('function')
+    expect(lifecycleModule.resolveSessionTargetAdmission).toBeTypeOf('function')
+  })
+
+  it('always admits the primary target before interaction rules are loaded', () => {
+    const resolveSessionTargetAdmission = Reflect.get(lifecycleModule, 'resolveSessionTargetAdmission')
+
+    expect(resolveSessionTargetAdmission).toBeTypeOf('function')
+    expect(Array.from(resolveSessionTargetAdmission?.({ entryTarget: 'entryA', rules: [] }) || [])).toEqual(['entryA'])
+  })
+
+  it('expands admission from executable rules that contain the entry target', () => {
+    const resolveSessionTargetAdmission = Reflect.get(lifecycleModule, 'resolveSessionTargetAdmission')
+    const entryRule = normalizeInteractionRule({
+      tags: ['entryA', 'partnerB'],
+      target_order: ['entryA', 'partnerB'],
+      combo_id: 'entry-partner',
+    })
+
+    expect(resolveSessionTargetAdmission).toBeTypeOf('function')
+    expect(Array.from(resolveSessionTargetAdmission?.({ entryTarget: 'entryA', rules: [entryRule] }) || [])).toEqual([
+      'entryA',
+      'partnerB',
+    ])
+  })
+
+  it('ignores unrelated and non-executable rules when resolving session admission', () => {
+    const resolveSessionTargetAdmission = Reflect.get(lifecycleModule, 'resolveSessionTargetAdmission')
+    const relatedRule = normalizeInteractionRule({
+      tags: ['entryA', 'partnerB'],
+      target_order: ['entryA', 'partnerB'],
+      combo_id: 'entry-partner',
+    })
+    const unrelatedRule = normalizeInteractionRule({
+      tags: ['otherA', 'otherB'],
+      target_order: ['otherA', 'otherB'],
+      combo_id: 'other-pair',
+    })
+    const unsupportedRule = normalizeInteractionRule({
+      tags: ['entryA', 'unsupportedB', 'unsupportedC'],
+      target_order: ['entryA', 'unsupportedB', 'unsupportedC'],
+      combo_id: 'unsupported-triple',
+    })
+
+    expect(resolveSessionTargetAdmission).toBeTypeOf('function')
+    expect(Array.from(resolveSessionTargetAdmission?.({
+      entryTarget: 'entryA',
+      rules: [relatedRule, unrelatedRule, unsupportedRule],
+    }) || [])).toEqual(['entryA', 'partnerB'])
+  })
+
+  it('recomputes session admission after rules install and gates all raw image event paths', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const lifecycleSource = readFileSync(
+      resolve(process.cwd(), 'public/static/ar-assets/js/ar-interaction-lifecycle.js'),
+      'utf8',
+    )
+    const installStart = source.indexOf('function installInteractionRules(rawRules)')
+    const installEnd = source.indexOf('\n    if (isDebug)', installStart)
+    const installSource = source.slice(installStart, installEnd)
+    const admissionStart = source.indexOf('function refreshSessionTargetAdmission()')
+    const admissionEnd = source.indexOf('\n    function isRuntimeTargetAdmitted', admissionStart)
+    const admissionSource = source.slice(admissionStart, admissionEnd)
+    const eventsStart = source.indexOf('const imageTargetEvents = {')
+    const eventsEnd = source.indexOf('// Register pipeline modules', eventsStart)
+    const eventsSource = source.slice(eventsStart, eventsEnd)
+    const foundStart = eventsSource.indexOf("event: 'reality.imagefound'")
+    const foundEnd = eventsSource.indexOf("event: 'reality.imageupdated'", foundStart)
+    const foundSource = eventsSource.slice(foundStart, foundEnd)
+    const updatedStart = eventsSource.indexOf("event: 'reality.imageupdated'")
+    const updatedEnd = eventsSource.indexOf("event: 'reality.imagelost'", updatedStart)
+    const updatedSource = eventsSource.slice(updatedStart, updatedEnd)
+    const lostStart = eventsSource.indexOf("event: 'reality.imagelost'")
+    const lostSource = eventsSource.slice(lostStart)
+    const helperStart = lifecycleSource.indexOf('export function resolveSessionTargetAdmission')
+    const helperEnd = lifecycleSource.indexOf('\nexport function', helperStart + 1)
+    const helperSource = lifecycleSource.slice(helperStart, helperEnd)
+
+    expect(source).toContain('let admittedTargetNames = new Set([primaryModelTargetName])')
+    expect(installSource).toContain('refreshSessionTargetAdmission()')
+    expect(admissionSource).toContain('resolveSessionTargetAdmission')
+    expect(source).toContain('return targetInstances.has(targetName) && admittedTargetNames.has(targetName)')
+    expect(admissionSource).toContain("sendDebugOnly('SESSION_TARGET_ADMISSION'")
+    expect(admissionSource).toContain("source: 'entry-plus-interaction-rules'")
+
+    expect(foundSource).toContain("sendARDebug('IMAGE_FOUND'")
+    expect(foundSource).toContain('isRuntimeTargetAdmitted(detail.name)')
+    expect(foundSource).toContain("sendDebugOnly('TARGET_FOUND_REJECTED_SESSION'")
+    expect(foundSource).toContain("reason: 'not_session_relevant'")
+    expect(foundSource.indexOf('isRuntimeTargetAdmitted(detail.name)')).toBeLessThan(
+      foundSource.indexOf('onTargetFound(detail)'),
+    )
+    expect(updatedSource).toContain('isRuntimeTargetAdmitted(detail.name)')
+    expect(updatedSource.indexOf('isRuntimeTargetAdmitted(detail.name)')).toBeLessThan(
+      updatedSource.indexOf('saveTargetPose(detail)'),
+    )
+    expect(lostSource).toContain('isRuntimeTargetAdmitted(detail.name)')
+    expect(lostSource.indexOf('isRuntimeTargetAdmitted(detail.name)')).toBeLessThan(
+      lostSource.indexOf('onTargetLost(detail.name)'),
+    )
+    expect(helperSource).not.toMatch(/cat001|fish001|dog001|bone001|rabbit001/)
   })
 
   it('preserves the locked CAT plus FISH proximity through the ordinary rule contract', () => {

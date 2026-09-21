@@ -218,6 +218,11 @@ export function normalizeInteractionRule(rule: Record<string, unknown>): {
   executable: boolean
 }
 
+export function resolveSessionTargetAdmission(args: {
+  entryTarget: string
+  rules: Array<ReturnType<typeof normalizeInteractionRule>>
+}): Set<string>
+
 export function isInteractionRuleMatched(
   rule: ReturnType<typeof normalizeInteractionRule>,
   trackedTargetNames: string[] | Set<string>,

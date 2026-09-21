@@ -215,6 +215,7 @@
       'normalizeDeviceGravity',
       'resolveGravityWorldUpCandidate',
       'resolveDeviceMotionPermissionMode',
+      'resolveSessionTargetAdmission',
       'hasAnimationCapability',
       'selectCapabilityTargetInstance',
       'isCatOneShotCompletionOwner',
@@ -238,7 +239,7 @@
     ];
 
     try {
-      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=auto-tabletop-v1');
+      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=target-admission-v1');
       const missingExports = expectedLifecycleExports.filter((name) => !(name in lifecycleModule));
       if (missingExports.length > 0) {
         debug('MODULE_PROBE_LIFECYCLE_FAIL', {
@@ -283,6 +284,7 @@
       normalizeDeviceGravity,
       resolveGravityWorldUpCandidate,
       resolveDeviceMotionPermissionMode,
+      resolveSessionTargetAdmission,
       hasAnimationCapability,
       selectCapabilityTargetInstance,
       isCatOneShotCompletionOwner,
@@ -303,7 +305,7 @@
       shouldUpdateVisualPose,
       shouldRevealAR,
       smoothstep,
-    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=auto-tabletop-v1';
+    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=target-admission-v1';
     import {
       createLearnerTargetGate,
       LEARNER_TARGET_STABLE_DWELL_MS,
@@ -826,6 +828,9 @@
 
     const targetConfigByName = new Map(xrTargetConfigs.map(c => [c.qr_id, c]));
     const primaryModelTargetName = qrId;
+    // Admission starts with the entry target; interaction rules expand it only after loading.
+    let admittedTargetNames = new Set([primaryModelTargetName]);
+    let sessionAdmissionLogEmitted = false;
 
     // Demo resilience is declarative configuration only. Every fallback passes
     // through the same normalized rule matcher and executor as backend data.
@@ -919,6 +924,25 @@
           });
         }
       }
+      refreshSessionTargetAdmission();
+    }
+
+    function refreshSessionTargetAdmission() {
+      admittedTargetNames = resolveSessionTargetAdmission({
+        entryTarget: primaryModelTargetName,
+        rules: normalizedInteractionRules,
+      });
+      if (sessionAdmissionLogEmitted) return;
+      sessionAdmissionLogEmitted = true;
+      sendDebugOnly('SESSION_TARGET_ADMISSION', {
+        entryTarget: primaryModelTargetName,
+        admittedTargets: Array.from(admittedTargetNames),
+        source: 'entry-plus-interaction-rules',
+      });
+    }
+
+    function isRuntimeTargetAdmitted(targetName) {
+      return targetInstances.has(targetName) && admittedTargetNames.has(targetName);
     }
 
     if (isDebug) {
@@ -2385,18 +2409,34 @@
         listeners: [
           { event: 'reality.imageloading', process: ({detail}) => { sendARDebug('IMAGE_LOADING', { name: detail?.name }); } },
           { event: 'reality.imagescanning', process: ({detail}) => { sendARDebug('IMAGE_SCANNING', { name: detail?.name }); } },
-          { event: 'reality.imagefound', process: ({detail}) => { sendARDebug('IMAGE_FOUND', { name: detail?.name, position: detail?.position }); if (detail?.name) onTargetFound(detail); } },
+          { event: 'reality.imagefound', process: ({detail}) => {
+            sendARDebug('IMAGE_FOUND', { name: detail?.name, position: detail?.position });
+            if (!detail?.name) return;
+            if (!isRuntimeTargetAdmitted(detail.name)) {
+              sendDebugOnly('TARGET_FOUND_REJECTED_SESSION', {
+                targetName: detail.name,
+                entryTarget: primaryModelTargetName,
+                reason: 'not_session_relevant',
+              });
+              return;
+            }
+            onTargetFound(detail);
+          } },
           { event: 'reality.imageupdated', process: ({detail}) => {
             if (!detail?.name) return;
-            saveTargetPose(detail);
 
             const now = Date.now();
             if (!realityImageUpdated._lastLog || now - realityImageUpdated._lastLog > 2000) {
               realityImageUpdated._lastLog = now;
               sendARDebug('IMAGE_UPDATED', { name: detail?.name });
             }
+            if (!isRuntimeTargetAdmitted(detail.name)) return;
+            saveTargetPose(detail);
           }},
-          { event: 'reality.imagelost', process: ({detail}) => { sendARDebug('IMAGE_LOST', { name: detail?.name }); if (detail?.name) onTargetLost(detail.name); } },
+          { event: 'reality.imagelost', process: ({detail}) => {
+            sendARDebug('IMAGE_LOST', { name: detail?.name });
+            if (detail?.name && isRuntimeTargetAdmitted(detail.name)) onTargetLost(detail.name);
+          } },
         ],
       };
 

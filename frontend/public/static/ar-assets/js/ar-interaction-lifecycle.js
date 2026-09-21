@@ -724,6 +724,23 @@ export function normalizeInteractionRule(rule) {
   }
 }
 
+export function resolveSessionTargetAdmission({ entryTarget, rules }) {
+  const admittedTargets = new Set()
+  if (typeof entryTarget === 'string' && entryTarget.length > 0) {
+    admittedTargets.add(entryTarget)
+  }
+
+  for (const rule of Array.isArray(rules) ? rules : []) {
+    const requiredTargets = Array.isArray(rule?.requiredTargets) ? rule.requiredTargets : []
+    if (!rule?.executable || !requiredTargets.includes(entryTarget)) continue
+    for (const target of requiredTargets) {
+      if (typeof target === 'string' && target.length > 0) admittedTargets.add(target)
+    }
+  }
+
+  return admittedTargets
+}
+
 export function isInteractionRuleMatched(rule, trackedTargetNames) {
   if (!rule?.executable) return false
   const tracked = trackedTargetNames instanceof Set
