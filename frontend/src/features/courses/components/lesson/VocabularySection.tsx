@@ -63,7 +63,7 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeWordKey, setActiveWordKey] = useState<string | null>(null);
   const [isListeningKey, setIsListeningKey] = useState<string | null>(null);
-  const [speechState, setSpeechState] = useState<'idle' | 'opening' | 'listening'>('idle');
+  const [speechState, setSpeechState] = useState<'idle' | 'opening' | 'listening' | 'processing'>('idle');
   const pronunciationAttemptRef = useRef(0);
   const activeSpeechWordRef = useRef<string | null>(null);
   const pronunciationCleanupRef = useRef<(() => void) | null>(null);
@@ -78,6 +78,7 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
       listening: 'Listening...',
       playing: 'Playing...',
       openingMicrophone: 'Opening microphone...',
+      processing: 'Scoring...',
       passed: 'Awesome!',
       tryAgain: 'Try Again',
       nextWord: 'Next Word →',
@@ -91,6 +92,7 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
       listening: 'Đang nghe bé nói...',
       playing: 'Đang phát...',
       openingMicrophone: 'Đang mở micro...',
+      processing: 'Đang chấm điểm...',
       passed: 'Giỏi lắm!',
       tryAgain: 'Bé thử lại nhé',
       nextWord: 'Tiếp tục →',
@@ -179,6 +181,8 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
               resolve();
               return;
             }
+
+            setSpeechState('processing');
 
             const score = result.accuracy || Math.round((result.confidence || 0) * 100);
             const passed = Boolean(result.isCorrect || score >= 60);
@@ -366,7 +370,9 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
                         {isListeningKey === item.word_en.toLowerCase()
                           ? speechState === 'opening'
                             ? copy.openingMicrophone
-                            : copy.listening
+                            : speechState === 'processing'
+                              ? copy.processing
+                              : copy.listening
                           : copy.speak}
                       </span>
                     </button>
