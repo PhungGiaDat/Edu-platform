@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Msr } from '@/shared/components/Msr';
 
 export type LearnerOverlayMode = 'collapsed' | 'compact' | 'expanded';
 
@@ -49,7 +50,8 @@ function TargetCard({ target, featured = false, onSpeak }: TargetCardProps) {
         onClick={() => onSpeak(target.targetName)}
         aria-label={`Hear ${label}`}
       >
-        Hear it
+        <Msr icon="volume_up" size={18} />
+        <span>Hear it</span>
       </button>
     </article>
   );
@@ -97,7 +99,8 @@ export function LearnerAROverlay({
               onClick={() => setMode('collapsed')}
               aria-label="Collapse learner overlay"
             >
-              Hide
+              <Msr icon="close" size={16} />
+              <span>Hide</span>
             </button>
           </div>
 
@@ -115,7 +118,8 @@ export function LearnerAROverlay({
               onClick={() => setMode('expanded')}
               aria-label="Show all active cards"
             >
-              Details
+              <Msr icon="info" size={16} />
+              <span>Details</span>
             </button>
           </div>
 
@@ -144,7 +148,8 @@ export function LearnerAROverlay({
                 onClick={() => setMode('compact')}
                 aria-label="Use compact learner overlay"
               >
-                Compact
+                <Msr icon="expand_more" size={16} />
+                <span>Compact</span>
               </button>
               <button
                 type="button"
@@ -152,7 +157,8 @@ export function LearnerAROverlay({
                 onClick={() => setMode('collapsed')}
                 aria-label="Collapse learner overlay"
               >
-                Hide
+                <Msr icon="close" size={16} />
+                <span>Hide</span>
               </button>
             </div>
           </div>

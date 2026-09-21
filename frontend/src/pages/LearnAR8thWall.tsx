@@ -27,6 +27,7 @@ import {
   type LearnerOverlayTarget,
 } from '@/features/ar/components/LearnerAROverlay';
 import { AudioService } from '@/services/AudioService';
+import { Msr } from '@/shared/components/Msr';
 import '../styles/LearnAR8thWall.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://edu-platform-api-do20.onrender.com';
@@ -1028,9 +1029,7 @@ export const LearnAR8thWall: React.FC = () => {
       {/* Learners retain navigation, while engine and scan diagnostics stay operator-only. */}
       <div className={`ar-xr-header ${showOperatorTools ? 'ar-xr-header--operator' : 'ar-xr-header--student'}`}>
           <button className="back-btn" onClick={handleBack} aria-label="Quay lại">
-            <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
+            <Msr icon="arrow_back" size={24} />
           </button>
           <div className="header-title">
             <h1>{showOperatorTools ? currentTarget?.word || '8th Wall XR' : 'Khám phá AR'}</h1>
@@ -1162,17 +1161,19 @@ export const LearnAR8thWall: React.FC = () => {
         {phase === 'ERROR' && (
           <div className="ar-error">
             <div className="error-icon">
-              <svg width={64} height={64} viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth={2}>
-                <circle cx={12} cy={12} r={10} />
-                <line x1={15} y1={9} x2={9} y2={15} />
-                <line x1={9} y1={9} x2={15} y2={15} />
-              </svg>
+              <Msr icon="error" size={64} color="#FF6B6B" />
             </div>
             <h2>Could not load XR target</h2>
             <p>{scanError}</p>
             <div className="error-actions">
-              <button className="btn-primary" onClick={handleRetry}>Scan Again</button>
-              <button className="btn-secondary" onClick={handleBack}>Go Back</button>
+              <button className="btn-primary" onClick={handleRetry}>
+                <Msr icon="refresh" size={18} />
+                <span>Scan Again</span>
+              </button>
+              <button className="btn-secondary" onClick={handleBack}>
+                <Msr icon="arrow_back" size={18} />
+                <span>Go Back</span>
+              </button>
             </div>
           </div>
         )}
@@ -1186,10 +1187,13 @@ export const LearnAR8thWall: React.FC = () => {
           className={`telegram-sync-btn ${syncStatus}`}
           onClick={syncTelegram}
           disabled={syncStatus === 'syncing'}
-          aria-label={`Send ${phase.toLowerCase()} AR logs to Telegram`}
-          title={`Sync ${phase.toLowerCase()} logs to Telegram (Ctrl+Shift+S)`}
+          aria-label="Send diagnostics"
+          title={`Sync ${phase.toLowerCase()} logs (Ctrl+Shift+S)`}
         >
-          {syncStatus === 'syncing' ? '...' : syncStatus === 'success' ? 'OK' : syncStatus === 'error' ? 'ERR' : 'TG'}
+          <Msr
+            icon={syncStatus === 'success' ? 'check' : syncStatus === 'error' ? 'error' : 'send'}
+            size={20}
+          />
         </button>
       )}
 
