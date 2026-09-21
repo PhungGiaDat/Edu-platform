@@ -798,10 +798,11 @@ describe('AR interaction lifecycle contracts', () => {
     })).toBe('unsupported')
   })
 
-  it('keeps diagnostic gravity score separate from production surface world-up', () => {
+  it('promotes only a recent stable gravity candidate into production surface world-up', () => {
     const getSurfaceFlatScore = Reflect.get(lifecycleModule, 'getSurfaceFlatScore')
+    const resolveGravityWorldUpCandidate = Reflect.get(lifecycleModule, 'resolveGravityWorldUpCandidate')
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
-    const worldUpStart = source.indexOf('function getSurfaceWorldUp()')
+    const worldUpStart = source.indexOf('function getSurfaceWorldUp(')
     const worldUpEnd = source.indexOf('\n    function getPresentationParent', worldUpStart)
     const diagnosticStart = source.indexOf('function emitSurfaceGravityDiagnostics(')
     const diagnosticEnd = source.indexOf('\n    // ========== MODEL REPARENTING', diagnosticStart)
@@ -809,16 +810,79 @@ describe('AR interaction lifecycle contracts', () => {
     const diagnosticSource = source.slice(diagnosticStart, diagnosticEnd)
 
     expect(getSurfaceFlatScore).toBeTypeOf('function')
+    expect(resolveGravityWorldUpCandidate).toBeTypeOf('function')
     expect(getSurfaceFlatScore?.({ targetNormal: { x: 0, y: 0, z: 5 }, worldUp: { x: 0, y: 0, z: -2 } })).toBe(1)
     expect(getSurfaceFlatScore?.({ targetNormal: { x: 1, y: 0, z: 0 }, worldUp: { x: 0, y: 3, z: 0 } })).toBe(0)
     expect(getSurfaceFlatScore?.({ targetNormal: null, worldUp: { x: 0, y: 1, z: 0 } })).toBeNull()
-    expect(worldUpSource).toContain("worldUp: null")
-    expect(worldUpSource).toContain("source: 'unavailable_disable_world_tracking'")
+    expect(resolveGravityWorldUpCandidate?.({
+      worldUp: { x: 0, y: 0, z: 1 },
+      previousWorldUp: { x: 0, y: 0, z: 1 },
+      sampleAgeMs: 100,
+    })).toMatchObject({ available: true, reason: 'gravity_world_up' })
+    expect(resolveGravityWorldUpCandidate?.({
+      worldUp: { x: 0, y: 0, z: 1 },
+      previousWorldUp: { x: 0, y: 0, z: 1 },
+      sampleAgeMs: 800,
+    })).toMatchObject({ available: false, reason: 'gravity_sample_stale' })
+    expect(resolveGravityWorldUpCandidate?.({
+      worldUp: null,
+      previousWorldUp: null,
+      sampleAgeMs: 0,
+    })).toMatchObject({ available: false, reason: 'gravity_world_up_invalid' })
+    expect(resolveGravityWorldUpCandidate?.({
+      worldUp: { x: 1, y: 0, z: 0 },
+      previousWorldUp: { x: 0, y: 0, z: 1 },
+      sampleAgeMs: 0,
+    })).toMatchObject({ available: false, reason: 'gravity_world_up_unstable' })
+    expect(worldUpSource).toContain('resolveGravityWorldUpCandidate')
+    expect(worldUpSource).toContain('motionDiagnosticsState.lastGravitySampleAt')
+    expect(worldUpSource).not.toContain("source: 'unavailable_disable_world_tracking'")
     expect(diagnosticStart).toBeGreaterThanOrEqual(0)
-    expect(diagnosticSource).toContain('candidateOnly: true')
+    expect(diagnosticSource).toContain('candidateFlatScore')
     expect(diagnosticSource).not.toContain('classifySurfaceOrientation')
     expect(diagnosticSource).not.toContain('getSurfaceAlignmentQuaternion')
     expect(diagnosticSource).not.toContain('surfaceRoot.quaternion')
+  })
+
+  it('enters AUTO TABLETOP only after a finite gravity candidate and stable flat score', () => {
+    const resolveGravityWorldUpCandidate = Reflect.get(lifecycleModule, 'resolveGravityWorldUpCandidate')
+    const getSurfaceFlatScore = Reflect.get(lifecycleModule, 'getSurfaceFlatScore')
+    const classifySurfaceOrientation = Reflect.get(lifecycleModule, 'classifySurfaceOrientation')
+    const candidate = resolveGravityWorldUpCandidate?.({
+      worldUp: { x: 0, y: 0, z: 1 },
+      previousWorldUp: null,
+      sampleAgeMs: 0,
+    })
+    const flatScore = getSurfaceFlatScore?.({
+      targetNormal: { x: 0, y: 0, z: 1 },
+      worldUp: candidate?.worldUp,
+    })
+
+    expect(candidate?.available).toBe(true)
+    expect(flatScore).toBeGreaterThanOrEqual(0.82)
+    const pending = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore,
+      currentMode: 'SCREEN',
+      candidateMode: null,
+      candidateSince: null,
+      now: 1000,
+    })
+    const entered = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore,
+      currentMode: pending?.presentationMode,
+      candidateMode: pending?.candidateMode,
+      candidateSince: pending?.candidateSince,
+      now: 1400,
+    })
+
+    expect(pending?.presentationMode).toBe('SCREEN')
+    expect(entered).toMatchObject({
+      presentationMode: 'TABLETOP',
+      changed: true,
+      reason: 'auto_stable',
+    })
   })
 
   it('resolves generic screen, tabletop, and auto presentation requests', () => {
@@ -924,12 +988,28 @@ describe('AR interaction lifecycle contracts', () => {
       changed: false,
     })
 
+    const temporarilyUnavailable = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: null,
+      currentMode: 'TABLETOP',
+      candidateMode: null,
+      candidateSince: null,
+      lastValidAt: 3800,
+      now: 4000,
+    })
+    expect(temporarilyUnavailable).toMatchObject({
+      presentationMode: 'TABLETOP',
+      changed: false,
+      reason: 'world_up_grace',
+    })
+
     const unavailable = classifySurfaceOrientation?.({
       requestedMode: 'AUTO',
       flatScore: null,
       currentMode: 'TABLETOP',
       candidateMode: null,
       candidateSince: null,
+      lastValidAt: 3000,
       now: 4000,
     })
     expect(unavailable).toMatchObject({
@@ -937,6 +1017,92 @@ describe('AR interaction lifecycle contracts', () => {
       changed: true,
       reason: 'world_up_unavailable',
     })
+
+    const screenFallback = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: null,
+      currentMode: 'SCREEN',
+      candidateMode: null,
+      candidateSince: null,
+      now: 4000,
+    })
+    expect(screenFallback).toMatchObject({
+      presentationMode: 'SCREEN',
+      changed: false,
+      reason: 'world_up_unavailable',
+    })
+  })
+
+  it('keeps temporary sensor loss and reacquisition from flickering presentation mode', () => {
+    const classifySurfaceOrientation = Reflect.get(lifecycleModule, 'classifySurfaceOrientation')
+    const held = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: null,
+      currentMode: 'TABLETOP',
+      candidateMode: null,
+      candidateSince: null,
+      lastValidAt: 1000,
+      now: 1400,
+    })
+    expect(held).toMatchObject({ presentationMode: 'TABLETOP', changed: false })
+
+    const reacquisitionPending = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: 0.90,
+      currentMode: 'SCREEN',
+      candidateMode: null,
+      candidateSince: null,
+      now: 2000,
+    })
+    const reacquired = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: 0.90,
+      currentMode: 'SCREEN',
+      candidateMode: reacquisitionPending?.candidateMode,
+      candidateSince: reacquisitionPending?.candidateSince,
+      now: 2400,
+    })
+
+    expect(reacquisitionPending).toMatchObject({
+      presentationMode: 'SCREEN',
+      candidateMode: 'TABLETOP',
+      changed: false,
+    })
+    expect(reacquired).toMatchObject({ presentationMode: 'TABLETOP', changed: true })
+  })
+
+  it('keeps raw tracking and interaction geometry outside the surface presentation branch', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const presentationStart = source.indexOf('function updateSurfacePresentation(')
+    const presentationEnd = source.indexOf('\n    function updateSurfacePresentations', presentationStart)
+    const presentationSource = source.slice(presentationStart, presentationEnd)
+    const rawPositionStart = source.indexOf('function getAnchorWorldPosition(')
+    const rawPositionEnd = source.indexOf('\n    function computeTargetPairDistance', rawPositionStart)
+    const rawPositionSource = source.slice(rawPositionStart, rawPositionEnd)
+    const pairDistanceStart = source.indexOf('function computeTargetPairDistance(')
+    const pairDistanceEnd = source.indexOf('\n    function updateFilteredDistance', pairDistanceStart)
+    const pairDistanceSource = source.slice(pairDistanceStart, pairDistanceEnd)
+
+    expect(presentationSource).toContain('instance.surfaceRoot.quaternion')
+    expect(presentationSource).toContain('instance.presentationMode')
+    expect(presentationSource).not.toContain('trackedTargets.set(')
+    expect(presentationSource).not.toContain('trackedTargets.delete(')
+    expect(rawPositionSource).toContain('trackedTargets.get(')
+    expect(pairDistanceSource).toContain('getAnchorWorldPosition')
+  })
+
+  it('keeps surface telemetry debug-only and throttled', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const configStart = source.indexOf('const SURFACE_PRESENTATION_CONFIG = {')
+    const configEnd = source.indexOf('\n    };', configStart)
+    const diagnosticStart = source.indexOf('function emitSurfaceGravityDiagnostics(')
+    const diagnosticEnd = source.indexOf('\n    if (isDebug)', diagnosticStart)
+    const diagnosticSource = source.slice(diagnosticStart, diagnosticEnd)
+
+    expect(source.slice(configStart, configEnd)).toContain('telemetryIntervalMs: 2000')
+    expect(diagnosticSource).toContain('if (!isDebug')
+    expect(diagnosticSource).toContain('lastSurfaceTelemetryAt < 500')
+    expect(diagnosticSource).toContain("sendDebugOnly('SURFACE_GRAVITY_DIAGNOSTIC'")
   })
 
   it('keeps persistent config, surface presentation, and interaction yaw in distinct transforms', () => {

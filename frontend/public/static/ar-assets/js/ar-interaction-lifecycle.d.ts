@@ -94,6 +94,40 @@ export function getSurfaceFlatScore(args: {
   worldUp: { x?: number | null; y?: number | null; z?: number | null } | null
 }): number | null
 
+export function resolveGravityWorldUpCandidate(args: {
+  worldUp: { x?: number | null; y?: number | null; z?: number | null } | null
+  previousWorldUp?: { x?: number | null; y?: number | null; z?: number | null } | null
+  sampleAgeMs: number | null
+  maxAgeMs?: number | null
+  minStabilityDot?: number | null
+}): {
+  worldUp: { x: number; y: number; z: number } | null
+  available: boolean
+  reason: string
+  stabilityDot?: number
+}
+
+export function classifySurfaceOrientation(args: {
+  requestedMode?: string | null
+  flatScore: number | null
+  currentMode?: string | null
+  candidateMode?: string | null
+  candidateSince?: number | null
+  now: number
+  tabletopEnterScore?: number
+  tabletopExitScore?: number
+  orientationStableMs?: number
+  lastValidAt?: number | null
+  orientationLossGraceMs?: number
+}): {
+  presentationMode: 'SCREEN' | 'TABLETOP'
+  candidateMode: 'SCREEN' | 'TABLETOP' | null
+  candidateSince: number | null
+  changed: boolean
+  reason: string
+  lastValidAt: number | null
+}
+
 export function resolveModelPresentationProfile(profileName: unknown): {
   name: string
   fitRatio: number

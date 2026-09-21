@@ -262,6 +262,9 @@ const PRESENTATION_MODE_TABLETOP = 'TABLETOP'
 const DEFAULT_TABLETOP_ENTER_SCORE = 0.82
 const DEFAULT_TABLETOP_EXIT_SCORE = 0.65
 const DEFAULT_ORIENTATION_STABLE_MS = 400
+const DEFAULT_GRAVITY_MAX_AGE_MS = 750
+const DEFAULT_GRAVITY_STABILITY_DOT = 0.94
+const DEFAULT_ORIENTATION_LOSS_GRACE_MS = 750
 
 export function resolvePresentationMode(requestedMode) {
   const normalized = String(requestedMode || '').trim().toUpperCase()
@@ -359,6 +362,51 @@ export function getSurfaceFlatScore({ targetNormal, worldUp }) {
     + normalizedNormal.y * normalizedWorldUp.y
     + normalizedNormal.z * normalizedWorldUp.z,
   )
+}
+
+export function resolveGravityWorldUpCandidate({
+  worldUp,
+  previousWorldUp = null,
+  sampleAgeMs,
+  maxAgeMs = DEFAULT_GRAVITY_MAX_AGE_MS,
+  minStabilityDot = DEFAULT_GRAVITY_STABILITY_DOT,
+}) {
+  const normalizedWorldUp = normalizeVector3(worldUp)
+  if (!normalizedWorldUp) {
+    return { worldUp: null, available: false, reason: 'gravity_world_up_invalid' }
+  }
+  if (
+    !Number.isFinite(sampleAgeMs)
+    || sampleAgeMs < 0
+    || !Number.isFinite(maxAgeMs)
+    || sampleAgeMs > maxAgeMs
+  ) {
+    return { worldUp: null, available: false, reason: 'gravity_sample_stale' }
+  }
+
+  const normalizedPrevious = normalizeVector3(previousWorldUp)
+  const stabilityDot = normalizedPrevious
+    ? Math.abs(
+        normalizedWorldUp.x * normalizedPrevious.x
+        + normalizedWorldUp.y * normalizedPrevious.y
+        + normalizedWorldUp.z * normalizedPrevious.z,
+      )
+    : 1
+  if (!Number.isFinite(minStabilityDot) || stabilityDot < minStabilityDot) {
+    return {
+      worldUp: null,
+      available: false,
+      reason: 'gravity_world_up_unstable',
+      stabilityDot,
+    }
+  }
+
+  return {
+    worldUp: normalizedWorldUp,
+    available: true,
+    reason: 'gravity_world_up',
+    stabilityDot,
+  }
 }
 
 export function getSurfaceAlignmentQuaternion({ presentationMode, targetNormal }) {
@@ -550,6 +598,8 @@ export function classifySurfaceOrientation({
   tabletopEnterScore = DEFAULT_TABLETOP_ENTER_SCORE,
   tabletopExitScore = DEFAULT_TABLETOP_EXIT_SCORE,
   orientationStableMs = DEFAULT_ORIENTATION_STABLE_MS,
+  lastValidAt = null,
+  orientationLossGraceMs = DEFAULT_ORIENTATION_LOSS_GRACE_MS,
 }) {
   const requested = resolvePresentationMode(requestedMode)
   const current = currentMode === PRESENTATION_MODE_TABLETOP
@@ -563,16 +613,26 @@ export function classifySurfaceOrientation({
       candidateSince: null,
       changed: current !== requested,
       reason: 'manual_override',
+      lastValidAt: null,
     }
   }
 
   if (!Number.isFinite(flatScore)) {
+    const withinLossGrace = current === PRESENTATION_MODE_TABLETOP
+      && Number.isFinite(lastValidAt)
+      && Number.isFinite(now)
+      && now >= lastValidAt
+      && now - lastValidAt < orientationLossGraceMs
+    const fallbackMode = withinLossGrace
+      ? PRESENTATION_MODE_TABLETOP
+      : PRESENTATION_MODE_SCREEN
     return {
-      presentationMode: PRESENTATION_MODE_SCREEN,
+      presentationMode: fallbackMode,
       candidateMode: null,
       candidateSince: null,
-      changed: current !== PRESENTATION_MODE_SCREEN,
-      reason: 'world_up_unavailable',
+      changed: current !== fallbackMode,
+      reason: withinLossGrace ? 'world_up_grace' : 'world_up_unavailable',
+      lastValidAt: withinLossGrace ? lastValidAt : null,
     }
   }
 
@@ -589,6 +649,7 @@ export function classifySurfaceOrientation({
       candidateSince: null,
       changed: false,
       reason: desired === PRESENTATION_MODE_TABLETOP ? 'auto_tabletop_hold' : 'auto_screen_hold',
+      lastValidAt: now,
     }
   }
 
@@ -602,6 +663,7 @@ export function classifySurfaceOrientation({
       candidateSince: null,
       changed: true,
       reason: 'auto_stable',
+      lastValidAt: now,
     }
   }
 
@@ -611,6 +673,7 @@ export function classifySurfaceOrientation({
     candidateSince: candidateStartedAt,
     changed: false,
     reason: 'auto_candidate',
+    lastValidAt: now,
   }
 }
 

@@ -213,6 +213,7 @@
       'getTargetLossGraceState',
       'mapDeviceGravityToScreen',
       'normalizeDeviceGravity',
+      'resolveGravityWorldUpCandidate',
       'resolveDeviceMotionPermissionMode',
       'hasAnimationCapability',
       'selectCapabilityTargetInstance',
@@ -280,6 +281,7 @@
       getTargetLossGraceState,
       mapDeviceGravityToScreen,
       normalizeDeviceGravity,
+      resolveGravityWorldUpCandidate,
       resolveDeviceMotionPermissionMode,
       hasAnimationCapability,
       selectCapabilityTargetInstance,
@@ -351,6 +353,9 @@
       tabletopEnterScore: 0.82,
       tabletopExitScore: 0.65,
       orientationStableMs: 400,
+      orientationLossGraceMs: 750,
+      gravityMaxAgeMs: 750,
+      gravityStabilityDot: 0.94,
       telemetryIntervalMs: 2000,
       // 8th Wall planar image targets use the anchor-local XY plane. +Z is
       // therefore the candidate plane normal to validate with device telemetry.
@@ -386,6 +391,7 @@
       hasAcceleration: false,
       hasOrientation: false,
       hasGravitySample: false,
+      lastGravitySampleAt: Number.NEGATIVE_INFINITY,
       lastCapabilityTelemetryAt: 0,
       lastGravityTelemetryAt: 0,
       lastSurfaceTelemetryAt: 0,
@@ -393,9 +399,12 @@
     const diagnosticDeviceGravity = new THREE.Vector3();
     const diagnosticScreenGravity = new THREE.Vector3();
     const diagnosticCameraWorldUp = new THREE.Vector3();
+    const diagnosticPreviousWorldUp = new THREE.Vector3();
     const diagnosticTargetNormal = new THREE.Vector3();
     const diagnosticCameraQuaternion = new THREE.Quaternion();
     const diagnosticAnchorQuaternion = new THREE.Quaternion();
+    let diagnosticHasPreviousWorldUp = false;
+    const surfaceWorldUpState = { worldUp: null, source: 'gravity_unavailable' };
     const diagnosticRawAcceleration = { x: null, y: null, z: null };
     const diagnosticScreenMapArgs = {
       vector: diagnosticDeviceGravity,
@@ -453,6 +462,7 @@
     }
 
     function onDeviceMotionDiagnostic(event) {
+      const now = performance.now();
       const accelerationIncludingGravity = event.accelerationIncludingGravity;
       const acceleration = event.acceleration;
       motionDiagnosticsState.hasAccelerationIncludingGravity = !!accelerationIncludingGravity;
@@ -466,8 +476,11 @@
         return;
       }
       updateMotionDiagnosticGravity();
+      if (motionDiagnosticsState.hasGravitySample) {
+        motionDiagnosticsState.lastGravitySampleAt = now;
+      }
       emitMotionDiagnosticCapability();
-      emitDeviceGravitySample(performance.now());
+      emitDeviceGravitySample(now);
     }
 
     function onDeviceOrientationDiagnostic() {
@@ -528,7 +541,15 @@
     }
 
     async function enableMotionDiagnostics() {
-      if (!isDebug || motionDiagnosticsState.active) return;
+      if (!isDebug) return;
+      if (
+        motionDiagnosticsState.active
+        && motionDiagnosticsState.permissionState !== 'permission_required'
+      ) {
+        updateMotionDiagnosticsStatus('Motion diagnostics enabled; move phone');
+        emitMotionDiagnosticCapability();
+        return;
+      }
       const motionApiAvailable = typeof window.DeviceMotionEvent !== 'undefined';
       const orientationApiAvailable = typeof window.DeviceOrientationEvent !== 'undefined';
       const motionRequest = window.DeviceMotionEvent?.requestPermission;
@@ -565,6 +586,7 @@
           permissionResult: motionPermission,
         });
         if (motionDiagnosticsState.permissionState !== 'granted' && motionDiagnosticsState.permissionState !== 'implicit') {
+          motionDiagnosticsState.active = false;
           updateMotionDiagnosticsStatus(`Motion permission: ${motionDiagnosticsState.permissionState}`);
           return;
         }
@@ -572,6 +594,7 @@
         attachMotionDiagnosticListeners();
         updateMotionDiagnosticsStatus('Motion diagnostics enabled; move phone');
       } catch (error) {
+        motionDiagnosticsState.active = false;
         motionDiagnosticsState.permissionState = 'error';
         motionDiagnosticsState.motionPermission = null;
         motionDiagnosticsState.orientationPermission = null;
@@ -581,6 +604,30 @@
         if (motionDiagnosticsToggle && !motionDiagnosticsState.active) motionDiagnosticsToggle.disabled = false;
         emitMotionDiagnosticCapability();
       }
+    }
+
+    function initializeMotionSource() {
+      if (requestedPresentationMode !== 'AUTO') return;
+      const motionApiAvailable = typeof window.DeviceMotionEvent !== 'undefined';
+      if (!motionApiAvailable) {
+        motionDiagnosticsState.permissionState = 'unsupported';
+        return;
+      }
+
+      const motionRequestAvailable = typeof window.DeviceMotionEvent?.requestPermission === 'function';
+      if (motionRequestAvailable) {
+        // iOS requires a user gesture before requestPermission(). The existing
+        // debug control is the explicit gesture path; normal AUTO safely stays
+        // SCREEN until a usable sample is actually available.
+        motionDiagnosticsState.permissionState = 'permission_required';
+        motionDiagnosticsState.active = true;
+        attachMotionDiagnosticListeners();
+        return;
+      }
+
+      motionDiagnosticsState.permissionState = 'implicit';
+      motionDiagnosticsState.active = true;
+      attachMotionDiagnosticListeners();
     }
 
 
@@ -746,6 +793,7 @@
         presentationMode: 'SCREEN',
         presentationCandidateMode: null,
         presentationCandidateSince: null,
+        presentationLastValidAt: null,
         lastSurfaceTelemetryAt: Number.NEGATIVE_INFINITY,
         model: null,
         mixer: null,
@@ -1628,15 +1676,38 @@
     }
 
     // ========== SURFACE PRESENTATION (instance-aware) ==========
-    // XR world tracking is deliberately disabled for this image-target-only
-    // viewer. Without a proven gravity-aligned XR frame or an already-granted
-    // device-motion source, AUTO safely remains SCREEN; manual TABLETOP stays
-    // available for device calibration without requesting a new permission.
-    function getSurfaceWorldUp() {
-      return {
-        worldUp: null,
-        source: 'unavailable_disable_world_tracking',
-      };
+    // XR world tracking remains disabled for this image-target-only viewer.
+    // AUTO may use only a recent, finite, stable DeviceMotion candidate;
+    // manual TABLETOP remains independent of sensor permission/data.
+    function getSurfaceWorldUp(now = performance.now()) {
+      surfaceWorldUpState.worldUp = null;
+      surfaceWorldUpState.source = 'gravity_unavailable';
+      if (!motionDiagnosticsState.active || !motionDiagnosticsState.hasGravitySample || !camera) {
+        return surfaceWorldUpState;
+      }
+
+      camera.getWorldQuaternion(diagnosticCameraQuaternion);
+      diagnosticCameraWorldUp
+        .copy(diagnosticScreenGravity)
+        .applyQuaternion(diagnosticCameraQuaternion)
+        .normalize();
+      const candidate = resolveGravityWorldUpCandidate({
+        worldUp: diagnosticCameraWorldUp,
+        previousWorldUp: diagnosticHasPreviousWorldUp ? diagnosticPreviousWorldUp : null,
+        sampleAgeMs: now - motionDiagnosticsState.lastGravitySampleAt,
+        maxAgeMs: SURFACE_PRESENTATION_CONFIG.gravityMaxAgeMs,
+        minStabilityDot: SURFACE_PRESENTATION_CONFIG.gravityStabilityDot,
+      });
+      diagnosticPreviousWorldUp.copy(diagnosticCameraWorldUp);
+      diagnosticHasPreviousWorldUp = true;
+      if (!candidate.available) {
+        surfaceWorldUpState.source = `device_motion_${candidate.reason}`;
+        return surfaceWorldUpState;
+      }
+
+      surfaceWorldUpState.worldUp = diagnosticCameraWorldUp;
+      surfaceWorldUpState.source = 'device_motion_gravity';
+      return surfaceWorldUpState;
     }
 
     function getPresentationParent(instance) {
@@ -1663,7 +1734,7 @@
         targetNormalLocal.y,
         targetNormalLocal.z,
       ).applyQuaternion(anchorWorldQuaternion).normalize();
-      const worldUpState = getSurfaceWorldUp();
+      const worldUpState = getSurfaceWorldUp(now);
       const flatScore = getSurfaceFlatScore({
         targetNormal: targetNormalWorld,
         worldUp: worldUpState.worldUp,
@@ -1678,10 +1749,13 @@
         tabletopEnterScore: SURFACE_PRESENTATION_CONFIG.tabletopEnterScore,
         tabletopExitScore: SURFACE_PRESENTATION_CONFIG.tabletopExitScore,
         orientationStableMs: SURFACE_PRESENTATION_CONFIG.orientationStableMs,
+        lastValidAt: instance.presentationLastValidAt,
+        orientationLossGraceMs: SURFACE_PRESENTATION_CONFIG.orientationLossGraceMs,
       });
 
       instance.presentationCandidateMode = classification.candidateMode;
       instance.presentationCandidateSince = classification.candidateSince;
+      instance.presentationLastValidAt = classification.lastValidAt;
       if (classification.changed) {
         const previousMode = instance.presentationMode;
         instance.presentationMode = classification.presentationMode;
@@ -1695,7 +1769,7 @@
           correction.z,
           correction.w,
         );
-        sendARDebug('SURFACE_MODE_CHANGED', {
+        sendDebugOnly('SURFACE_MODE_CHANGED', {
           targetName: instance.config.qr_id,
           from: previousMode,
           to: instance.presentationMode,
@@ -1707,7 +1781,7 @@
 
       if (now - instance.lastSurfaceTelemetryAt >= SURFACE_PRESENTATION_CONFIG.telemetryIntervalMs) {
         instance.lastSurfaceTelemetryAt = now;
-        sendARDebug('SURFACE_ORIENTATION_SAMPLE', {
+        sendDebugOnly('SURFACE_ORIENTATION_SAMPLE', {
           targetName: instance.config.qr_id,
           presentationMode: instance.presentationMode,
           requestedMode: requestedPresentationMode,
@@ -1736,7 +1810,7 @@
       motionDiagnosticsState.lastSurfaceTelemetryAt = now;
       emitDeviceGravitySample(now);
       if (!motionDiagnosticsState.hasGravitySample || !camera) {
-        sendARDebug('SURFACE_GRAVITY_DIAGNOSTIC', {
+        sendDebugOnly('SURFACE_GRAVITY_DIAGNOSTIC', {
           targetName: instance.config.qr_id,
           targetNormal: null,
           derivedWorldUp: null,
@@ -1763,7 +1837,7 @@
         targetNormal: diagnosticTargetNormal,
         worldUp: diagnosticCameraWorldUp,
       });
-      sendARDebug('SURFACE_GRAVITY_DIAGNOSTIC', {
+      sendDebugOnly('SURFACE_GRAVITY_DIAGNOSTIC', {
         targetName: instance.config.qr_id,
         targetNormal: {
           x: diagnosticTargetNormal.x,
@@ -1783,11 +1857,19 @@
       });
     }
 
+    initializeMotionSource();
+
     if (isDebug) {
       motionDiagnosticsToggle.hidden = false;
       motionDiagnosticsStatus.hidden = false;
       motionDiagnosticsToggle.addEventListener('click', enableMotionDiagnostics);
-      updateMotionDiagnosticsStatus('Tap to enable motion diagnostics');
+      updateMotionDiagnosticsStatus(
+        motionDiagnosticsState.permissionState === 'permission_required'
+          ? 'Tap to enable motion diagnostics'
+          : motionDiagnosticsState.active
+            ? 'Motion source active; move phone'
+            : 'Motion diagnostics unavailable',
+      );
       emitMotionDiagnosticCapability();
     }
 
