@@ -9,8 +9,8 @@
  * - pushsubscriptionchange re-registers with the backend automatically.
  */
 
-const STATIC_CACHE = 'eduar-static-v3';
-const DYNAMIC_CACHE = 'eduar-dynamic-v3';
+const STATIC_CACHE = 'eduar-static-v4';
+const DYNAMIC_CACHE = 'eduar-dynamic-v4';
 
 const STATIC_ASSETS = [
   '/',

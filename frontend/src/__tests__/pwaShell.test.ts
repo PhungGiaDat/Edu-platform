@@ -42,8 +42,8 @@ describe('PWA shell contract', () => {
     const arRuntimeBypass = serviceWorkerSource.indexOf("url.pathname.startsWith('/static/ar-assets/')");
     const dynamicCacheLookup = serviceWorkerSource.indexOf('caches.match(request)');
 
-    expect(serviceWorkerSource).toContain("const STATIC_CACHE = 'eduar-static-v3';");
-    expect(serviceWorkerSource).toContain("const DYNAMIC_CACHE = 'eduar-dynamic-v3';");
+    expect(serviceWorkerSource).toContain("const STATIC_CACHE = 'eduar-static-v4';");
+    expect(serviceWorkerSource).toContain("const DYNAMIC_CACHE = 'eduar-dynamic-v4';");
     expect(arRuntimeBypass).toBeGreaterThan(-1);
     expect(arRuntimeBypass).toBeLessThan(dynamicCacheLookup);
     expect(serviceWorkerSource.slice(arRuntimeBypass, dynamicCacheLookup)).toContain(
