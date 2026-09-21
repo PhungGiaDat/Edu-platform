@@ -3,6 +3,7 @@ import {
   buildSessionTargetCatalogue,
   normalizeScannedQrId,
   normalizeXRTarget,
+  resolveARPresentationMode,
   resolveSessionTargetCatalogue,
   serializeXRTargets,
 } from '../pages/LearnAR8thWall';
@@ -166,14 +167,25 @@ describe('LearnAR8thWall target visual configuration', () => {
     expect(source).toContain('allow="camera; xr-spatial-tracking; gyroscope; accelerometer; autoplay"');
   });
 
-  it('forwards the optional generic presentation override to the XR viewer', () => {
+  it('defaults the physical-card viewer to TABLETOP while preserving explicit presentation overrides', () => {
     const source = readFileSync(
       resolve(process.cwd(), 'src/pages/LearnAR8thWall.tsx'),
       'utf8',
     );
+    const viewerStart = source.indexOf('const viewerSrc =');
+    const viewerEnd = source.indexOf('// Track when viewerSrc is set', viewerStart);
+    const viewerSource = source.slice(viewerStart, viewerEnd);
 
-    expect(source).toContain("get('presentation_mode')");
-    expect(source).toContain("params.set('presentation_mode', presentationMode)");
+    expect(viewerSource).toContain('resolveARPresentationMode(window.location.search)');
+    expect(viewerSource).toContain("params.set('presentation_mode', presentationMode)");
+    for (const [search, expected] of [
+      ['', 'TABLETOP'],
+      ['?presentation_mode=SCREEN', 'SCREEN'],
+      ['?presentation_mode=AUTO', 'AUTO'],
+      ['?presentation_mode=TABLETOP', 'TABLETOP'],
+    ]) {
+      expect(resolveARPresentationMode(search)).toBe(expected);
+    }
   });
 
   it('registers every usable deck target independently from the scanned entry and combo membership', () => {

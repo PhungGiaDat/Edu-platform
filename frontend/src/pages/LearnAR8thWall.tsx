@@ -52,6 +52,10 @@ export function resolveDebugCameraHandoffDelay(search: string): number {
     : 0;
 }
 
+export function resolveARPresentationMode(search: string): string {
+  return new URLSearchParams(search).get('presentation_mode') || 'TABLETOP';
+}
+
 function highResolutionTimestamp(): number {
   return typeof performance !== 'undefined'
     ? performance.timeOrigin + performance.now()
@@ -963,8 +967,8 @@ export const LearnAR8thWall: React.FC = () => {
     if (currentTarget.position)  params.set('position', currentTarget.position);
     if (currentTarget.rotation)  params.set('rotation', currentTarget.rotation);
     if (currentTarget.scale)     params.set('scale', currentTarget.scale);
-    const presentationMode = new URLSearchParams(window.location.search).get('presentation_mode');
-    if (presentationMode) params.set('presentation_mode', presentationMode);
+    const presentationMode = resolveARPresentationMode(window.location.search);
+    params.set('presentation_mode', presentationMode);
     // Milestone 1: pass all tracked targets (cat + fish) to viewer
     if (xrTargets.length > 0) {
       params.set('xr_targets', serializeXRTargets(xrTargets));
