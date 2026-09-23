@@ -52,6 +52,18 @@ jobs:
         run: |
           bash -n .github/scripts/deploy-backend-vps.sh
           bash .github/scripts/test-deploy-backend-vps.sh
+      - name: Validate Redis production config
+        run: |
+          cid="$(docker run -d --network none -v "$PWD/redis.conf:/usr/local/etc/redis/redis.conf:ro" redis:7-alpine redis-server /usr/local/etc/redis/redis.conf --maxmemory 192mb --maxmemory-policy noeviction)"
+          trap 'docker rm -f "$cid" >/dev/null 2>&1 || true' EXIT
+          for attempt in {1..10}; do
+            if [[ "$(docker exec "$cid" redis-cli ping 2>/dev/null || true)" == PONG ]]; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs "$cid"
+          exit 1
 
   publish-and-deploy:
     needs: test
@@ -109,5 +121,5 @@ jobs:
           ssh_opts=(-i "$ssh_dir/id_ed25519" -o "UserKnownHostsFile=$ssh_dir/known_hosts" -o StrictHostKeyChecking=yes -o BatchMode=yes -o IdentitiesOnly=yes)
           ssh "${ssh_opts[@]}" -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "mkdir -p /opt/edu-platform/.incoming/$GITHUB_SHA"
           scp "${ssh_opts[@]}" -P "$VPS_PORT" docker-compose.prod.yml redis.conf .github/scripts/deploy-backend-vps.sh "$VPS_USER@$VPS_HOST:/opt/edu-platform/.incoming/$GITHUB_SHA/"
-          remote="set -e; export DOCKER_CONFIG=/opt/edu-platform/.incoming/$GITHUB_SHA/.docker-auth; install -d -m 700 \"\$DOCKER_CONFIG\"; trap 'rm -f \"\$DOCKER_CONFIG/config.json\"; rmdir \"\$DOCKER_CONFIG\" || true' EXIT; docker login ghcr.io -u \"$GHCR_USER\" --password-stdin >/dev/null; bash /opt/edu-platform/.incoming/$GITHUB_SHA/deploy-backend-vps.sh $GITHUB_SHA"
+          remote="set -e; export DOCKER_CONFIG=/opt/edu-platform/.incoming/$GITHUB_SHA/.docker-auth; install -d -m 700 \"\$DOCKER_CONFIG\"; trap 'rm -f \"\$DOCKER_CONFIG/config.json\"' EXIT; docker login ghcr.io -u \"$GHCR_USER\" --password-stdin >/dev/null; bash /opt/edu-platform/.incoming/$GITHUB_SHA/deploy-backend-vps.sh $GITHUB_SHA"
           printf '%s' "$GHCR_TOKEN" | ssh "${ssh_opts[@]}" -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "$remote"
