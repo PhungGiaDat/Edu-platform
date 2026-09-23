@@ -44,7 +44,14 @@ docs/
 .pytest_cache/
 .coverage
 htmlcov/
+coverage_html/
+tests/
 *.log
+
+# Local analysis and separately deployed inference code
+benchmarks/
+backups/
+gop_scoring/
 
 # Database (local only)
 *.db
