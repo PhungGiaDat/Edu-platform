@@ -1,0 +1,48 @@
+name: Show backend CI/CD in Dozzle
+run-name: Dozzle CI status @ ${{ github.sha }}
+
+on:
+  push:
+    branches:
+      - 10-days-quick-run
+    paths:
+      - .github/scripts/ci-status-monitor.py
+      - .github/scripts/install-vps-ci-status.sh
+      - .github/workflows/deploy-ci-status.yml
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check monitor scripts
+        run: |
+          python3 .github/scripts/ci-status-monitor.py --self-test
+          bash -n .github/scripts/install-vps-ci-status.sh
+      - name: Install read-only CI status container on VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for name in VPS_HOST VPS_PORT VPS_USER VPS_SSH_KEY VPS_SSH_KNOWN_HOSTS; do
+            [[ -n "${!name}" ]] || { echo "Missing GitHub secret: $name" >&2; exit 1; }
+          done
+          [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
+          ssh_dir="$RUNNER_TEMP/edu-platform-ci-ssh"
+          install -m 700 -d "$ssh_dir"
+          printf '%s\n' "$VPS_SSH_KEY" > "$ssh_dir/id_ed25519"
+          printf '%s\n' "$VPS_SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+          chmod 600 "$ssh_dir/id_ed25519" "$ssh_dir/known_hosts"
+          ssh_opts=(-i "$ssh_dir/id_ed25519" -o "UserKnownHostsFile=$ssh_dir/known_hosts" -o StrictHostKeyChecking=yes -o BatchMode=yes -o IdentitiesOnly=yes)
+          stage="/opt/edu-platform/.incoming/$GITHUB_SHA"
+          ssh "${ssh_opts[@]}" -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "mkdir -p $stage"
+          scp "${ssh_opts[@]}" -P "$VPS_PORT" .github/scripts/ci-status-monitor.py .github/scripts/install-vps-ci-status.sh "$VPS_USER@$VPS_HOST:$stage/"
+          ssh "${ssh_opts[@]}" -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "bash $stage/install-vps-ci-status.sh $GITHUB_SHA"
+          echo 'Open https://edu-platform-api.duckdns.org/logs/ and select Backend CI/CD' >> "$GITHUB_STEP_SUMMARY"
