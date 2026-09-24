@@ -14,7 +14,7 @@ The VPS does not clone the repository or build the backend image. GitHub Actions
 
 ## One-time VPS setup
 
-Use an Ubuntu account with sudo for setup; routine deployments use `deploy` over SSH. The current API hostname is `edu-platform-api.duckdns.org`, whose A record points to `103.74.103.9`. Keep the Vercel frontend pointed at the existing Render API until its `VITE_API_BASE` setting is updated and the frontend is redeployed. Do not expose backend port 8000 or Redis port 6379 publicly.
+Use an Ubuntu account with sudo for setup; routine deployments use `deploy` over SSH. The current API hostname is `edu-platform-api.duckdns.org`, whose A record points to `103.74.103.9`. Keep the Vercel frontend pointed at the existing Render API until its `VITE_API_BASE` and `VITE_WS_URL` settings are updated and the frontend is redeployed. Do not expose backend port 8000 or Redis port 6379 publicly.
 
 For the inspected Ubuntu 24.04 x86_64 VPS, `.github/scripts/bootstrap-backend-vps.sh` automates the Docker/Compose installation and creation of the `deploy` user and persistent directories. Transfer and run it once as root; the equivalent manual commands follow. Do not run both paths. Install Docker Engine and the Compose plugin from [Docker's Ubuntu repository](https://docs.docker.com/engine/install/ubuntu/):
 
@@ -174,7 +174,7 @@ cd /opt/edu-platform
 IMAGE_TAG="$(cat current-image-tag)" docker compose -f docker-compose.prod.yml restart backend
 ```
 
-Set Vercel's `VITE_API_BASE` to `https://edu-platform-api.duckdns.org` and redeploy the frontend there. The backend `.env` already allows `https://edu-platform-dev.vercel.app` through CORS. No frontend code or container changes are needed.
+For the Vercel project `edu-platform-dev`, set `VITE_API_BASE=https://edu-platform-api.duckdns.org` and `VITE_WS_URL=wss://edu-platform-api.duckdns.org`, then redeploy the `10-days-quick-run` production branch. The frontend's `vercel.json` CSP and `/api`/`/ws` rewrites must also point to this hostname. The backend `.env` already allows `https://edu-platform-dev.vercel.app` through CORS.
 
 ## Manual rollback
 

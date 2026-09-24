@@ -348,7 +348,7 @@
     const targetJsonUrl  = params.get('xr_target_json_url') || '';
     const targetImageUrl = params.get('xr_target_image_url') || '';
     const word           = params.get('word') || qrId;
-    const apiBase        = (params.get('api_base') || 'https://edu-platform-api-do20.onrender.com').replace(/\/+$/, '');
+    const apiBase        = (params.get('api_base') || 'https://edu-platform-api.duckdns.org').replace(/\/+$/, '');
     const isDebug        = location.hostname === 'localhost' || params.get('debug') === 'true';
     const AR_VIEWER_BUILD_VERSION = 'slam-boundary-diagnostics-v1';
     const parentDiagnosticsVersion = params.get('ar_diagnostics_version') || 'absent';

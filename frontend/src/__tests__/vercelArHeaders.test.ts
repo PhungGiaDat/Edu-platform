@@ -14,7 +14,7 @@ interface HeaderRule {
 
 const config = JSON.parse(
   fs.readFileSync(path.resolve(process.cwd(), 'vercel.json'), 'utf8'),
-) as { headers: HeaderRule[] };
+) as { headers: HeaderRule[]; rewrites: { source: string; destination: string }[] };
 
 function matchingHeaderValues(requestPath: string, key: string): string[] {
   return config.headers
@@ -41,11 +41,11 @@ describe('Vercel AR iframe headers', () => {
     }
   });
 
-  it('permits the canonical combo-rule API only in the XR viewer CSP', () => {
+  it('permits the VPS API in the XR viewer CSP', () => {
     const cspValues = matchingHeaderValues('/ar-xr.html', 'Content-Security-Policy')
 
     expect(cspValues).toHaveLength(1)
-    expect(cspValues[0]).toContain('https://edu-platform-api-do20.onrender.com')
+    expect(cspValues[0]).toContain('https://edu-platform-api.duckdns.org')
   })
 
   it('permits project-owned Supabase audio in the XR viewer media policy', () => {
@@ -84,4 +84,18 @@ describe('Normal app lesson CSP frame-src', () => {
     expect(frameSrc).toContain('https://js.stripe.com');
     expect(frameSrc).not.toContain('*'); // no wildcard weakening
   });
+
+  it('permits HTTPS and WebSocket connections to the VPS API', () => {
+    const cspValues = matchingHeaderValues(lessonPath, 'Content-Security-Policy');
+
+    expect(cspValues[0]).toContain('https://edu-platform-api.duckdns.org');
+    expect(cspValues[0]).toContain('wss://edu-platform-api.duckdns.org');
+  });
+});
+
+it('routes same-origin API and WebSocket paths to the VPS backend', () => {
+  expect(config.rewrites.slice(0, 2)).toEqual([
+    { source: '/api/(.*)', destination: 'https://edu-platform-api.duckdns.org/api/$1' },
+    { source: '/ws/(.*)', destination: 'https://edu-platform-api.duckdns.org/ws/$1' },
+  ]);
 });

@@ -28,9 +28,10 @@ import {
 } from '@/features/ar/components/LearnerAROverlay';
 import { AudioService } from '@/services/AudioService';
 import { Msr } from '@/shared/components/Msr';
+import { getApiBase } from '@/config';
 import '../styles/LearnAR8thWall.css';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://edu-platform-api-do20.onrender.com';
+const API_BASE = getApiBase();
 // Keep the learner HUD enabled by default; capture mode is the screenshot switch.
 const SHOW_LEARNER_AR_OVERLAY = true;
 const TRANSITION_FADE_MS = 250;
