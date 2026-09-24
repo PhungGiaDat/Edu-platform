@@ -1,4 +1,5 @@
 name: Deploy backend to VPS
+run-name: Backend VPS @ ${{ github.sha }}
 
 on:
   push:
@@ -22,9 +23,19 @@ permissions:
 
 jobs:
   test:
+    name: 1 - Test backend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Show source commit
+        run: |
+          echo "Testing backend commit $GITHUB_SHA from $GITHUB_REF_NAME"
+          {
+            echo '### Backend CI/CD'
+            echo "- Commit: [\`$GITHUB_SHA\`](https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA)"
+            echo "- Branch: \`$GITHUB_REF_NAME\`"
+            echo '- Flow: tests → image → VPS → health check'
+          } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
@@ -66,6 +77,7 @@ jobs:
           exit 1
 
   publish-and-deploy:
+    name: 2 - Build image and deploy VPS
     needs: test
     runs-on: ubuntu-latest
     permissions:
@@ -81,6 +93,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push backend image
+        id: image
         uses: docker/build-push-action@v6
         with:
           context: ./backend
@@ -96,6 +109,7 @@ jobs:
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
       - name: Upload configuration and deploy on VPS
+        id: deploy
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_PORT: ${{ secrets.VPS_PORT }}
@@ -119,7 +133,24 @@ jobs:
           printf '%s\n' "$VPS_SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
           chmod 600 "$ssh_dir/id_ed25519" "$ssh_dir/known_hosts"
           ssh_opts=(-i "$ssh_dir/id_ed25519" -o "UserKnownHostsFile=$ssh_dir/known_hosts" -o StrictHostKeyChecking=yes -o BatchMode=yes -o IdentitiesOnly=yes)
+          echo "::group::Upload deployment files for $GITHUB_SHA"
           ssh "${ssh_opts[@]}" -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "mkdir -p /opt/edu-platform/.incoming/$GITHUB_SHA"
           scp "${ssh_opts[@]}" -P "$VPS_PORT" docker-compose.prod.yml redis.conf .github/scripts/deploy-backend-vps.sh "$VPS_USER@$VPS_HOST:/opt/edu-platform/.incoming/$GITHUB_SHA/"
+          echo '::endgroup::'
+          echo "::group::Deploy and health-check $GITHUB_SHA on VPS"
           remote="set -e; export DOCKER_CONFIG=/opt/edu-platform/.incoming/$GITHUB_SHA/.docker-auth; install -d -m 700 \"\$DOCKER_CONFIG\"; trap 'rm -f \"\$DOCKER_CONFIG/config.json\"' EXIT; docker login ghcr.io -u \"$GHCR_USER\" --password-stdin >/dev/null; bash /opt/edu-platform/.incoming/$GITHUB_SHA/deploy-backend-vps.sh $GITHUB_SHA"
           printf '%s' "$GHCR_TOKEN" | ssh "${ssh_opts[@]}" -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "$remote"
+          echo '::endgroup::'
+      - name: Report CI/CD result
+        if: always()
+        env:
+          IMAGE_RESULT: ${{ steps.image.outcome }}
+          DEPLOY_RESULT: ${{ steps.deploy.outcome }}
+        run: |
+          {
+            echo '### Backend image and VPS'
+            echo "- Commit: [\`$GITHUB_SHA\`](https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA)"
+            echo "- Image tag: \`ghcr.io/phunggiadat/edu-platform-backend:$GITHUB_SHA\`"
+            echo "- Build/push: **$IMAGE_RESULT**"
+            echo "- VPS deploy + health check: **$DEPLOY_RESULT**"
+          } >> "$GITHUB_STEP_SUMMARY"

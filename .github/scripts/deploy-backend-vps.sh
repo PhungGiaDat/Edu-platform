@@ -107,7 +107,9 @@ compose config -q
 install -m 0750 "$stage/deploy-backend-vps.sh" "$deploy_dir/deploy-backend-vps.sh"
 
 # Pull succeeds before any running backend container is replaced.
+echo "[$tag] Pulling backend image"
 compose pull backend
+echo "[$tag] Starting Redis"
 touched_redis=1
 compose up -d redis
 for ((attempt = 1; attempt <= 12; attempt++)); do
@@ -121,7 +123,9 @@ for ((attempt = 1; attempt <= 12; attempt++)); do
 done
 
 replaced_backend=1
+echo "[$tag] Replacing backend container"
 compose up -d --no-deps backend
+echo "[$tag] Checking backend /health"
 if ! wait_for_backend "$tag"; then
   fail "Backend did not pass /health within about 60 seconds"
 fi
@@ -139,6 +143,7 @@ rm -f "$compose_file.rollback" "$redis_file.rollback"
 
 # Keep the current and immediately previous SHA images for local rollback.
 # Only remove older images from this backend repository, not other VPS images.
+echo "[$tag] Cleaning old Docker artifacts"
 docker image prune -f || echo "Warning: dangling-image cleanup failed" >&2
 docker builder prune -f --filter "until=24h" || echo "Warning: build-cache cleanup failed" >&2
 if images="$(docker image ls --format '{{.Repository}}:{{.Tag}}' "$image_repo")"; then
