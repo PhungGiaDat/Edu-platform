@@ -11,7 +11,7 @@ readonly dozzle_name=edu-platform-dozzle
 readonly network_name=edu-platform-logs
 readonly config_dir=/opt/edu-platform/log-viewer
 readonly caddyfile="$config_dir/Caddyfile"
-readonly proxy_image=ghcr.io/tecnativa/docker-socket-proxy:v0.5.0
+readonly proxy_image=ghcr.io/tecnativa/docker-socket-proxy:v0.4.2
 readonly dozzle_image=amir20/dozzle:v11.1.0
 
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
@@ -90,7 +90,19 @@ docker run -d --name "$proxy_name" --restart unless-stopped \
 
 proxy_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$proxy_name")
 [[ -n "$proxy_ip" ]] || die 'Socket proxy has no private Docker-network address.'
-docker --host "tcp://$proxy_ip:2375" ps -q | grep -q . || die 'Socket proxy cannot list containers.'
+proxy_ready=false
+for _ in {1..20}; do
+  if curl -fsS --max-time 2 "http://$proxy_ip:2375/version" >/dev/null 2>&1 &&
+    curl -fsS --max-time 2 "http://$proxy_ip:2375/containers/json" >/dev/null 2>&1; then
+    proxy_ready=true
+    break
+  fi
+  sleep 1
+done
+if [[ "$proxy_ready" != true ]]; then
+  docker logs --tail=30 "$proxy_name" >&2 || true
+  die 'Socket proxy did not become ready; Caddy was not changed.'
+fi
 [[ $(curl -sS -o /dev/null -w '%{http_code}' --max-time 5 -X POST \
   "http://$proxy_ip:2375/containers/no-such-container/stop") == 403 ]] || die 'Socket proxy did not deny POST.'
 
