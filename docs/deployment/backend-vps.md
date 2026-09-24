@@ -3,7 +3,7 @@
 This deployment is for the `10-days-quick-run` branch on an **amd64** VPS with 2 vCPU, 4 GB RAM, and a 22 GB root filesystem (as inspected on the actual Ubuntu 24.04 host). Vercel continues to host the frontend.
 
 ```text
-Vercel frontend -> HTTPS api.example.com -> Caddy on Ubuntu
+Vercel frontend -> HTTPS edu-platform-api.duckdns.org -> Caddy container on Ubuntu
                                       -> 127.0.0.1:8000 -> FastAPI container
                                                               -> Redis container
                                       -> Supabase PostgreSQL and Storage
@@ -14,7 +14,7 @@ The VPS does not clone the repository or build the backend image. GitHub Actions
 
 ## One-time VPS setup
 
-Use an Ubuntu account with sudo for setup; routine deployments use `deploy` over SSH. An API domain is **not required to stage and health-check the backend locally**. Until one is available, skip the Caddy/HTTPS steps below, keep port 8000 bound to `127.0.0.1`, and keep the Vercel frontend pointed at the existing Render API. Do not expose an unauthenticated HTTP API on the VPS public IP as a substitute for HTTPS. When ready to switch traffic, point an API domain such as `api.example.com` to the VPS IPv4 address and complete the Caddy steps.
+Use an Ubuntu account with sudo for setup; routine deployments use `deploy` over SSH. The current API hostname is `edu-platform-api.duckdns.org`, whose A record points to `103.74.103.9`. Keep the Vercel frontend pointed at the existing Render API until its `VITE_API_BASE` setting is updated and the frontend is redeployed. Do not expose backend port 8000 or Redis port 6379 publicly.
 
 For the inspected Ubuntu 24.04 x86_64 VPS, `.github/scripts/bootstrap-backend-vps.sh` automates the Docker/Compose installation and creation of the `deploy` user and persistent directories. Transfer and run it once as root; the equivalent manual commands follow. Do not run both paths. Install Docker Engine and the Compose plugin from [Docker's Ubuntu repository](https://docs.docker.com/engine/install/ubuntu/):
 
@@ -63,25 +63,20 @@ sudo ufw enable
 sudo ss -ltnp
 ```
 
-Install [Caddy's official Ubuntu package](https://caddyserver.com/docs/install) and give it a single API reverse proxy. Caddy obtains HTTPS certificates once DNS and inbound ports 80/443 work.
+Run the [official Caddy image](https://hub.docker.com/_/caddy) as a separate container, not in the backend deployment Compose project. Host networking lets it reach the backend's loopback-only port 8000. The named volumes persist TLS certificates across container restarts; Caddy obtains and renews them when DNS and inbound ports 80/443 work. Run once as `deploy` (a Docker-group member):
 
 ```bash
-sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl gnupg
-curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt | sudo tee /etc/apt/sources.list.d/caddy-stable.list >/dev/null
-sudo chmod o+r /usr/share/keyrings/caddy-stable-archive-keyring.gpg /etc/apt/sources.list.d/caddy-stable.list
-sudo apt update
-sudo apt install -y caddy
-sudo tee /etc/caddy/Caddyfile >/dev/null <<'EOF'
-api.example.com {
-    reverse_proxy 127.0.0.1:8000
-}
-EOF
-sudo caddy validate --config /etc/caddy/Caddyfile
-sudo systemctl reload caddy
+docker pull caddy:2-alpine
+docker run -d --name edu-platform-caddy --restart unless-stopped --network host \
+  --log-opt max-size=10m --log-opt max-file=3 \
+  -v edu-platform-caddy-data:/data -v edu-platform-caddy-config:/config \
+  caddy:2-alpine caddy reverse-proxy \
+  --from edu-platform-api.duckdns.org --to 127.0.0.1:8000
+docker logs --tail=50 edu-platform-caddy
+curl -fsS https://edu-platform-api.duckdns.org/health
 ```
 
-Use a real backend domain in the Caddyfile. Do not place the Vercel frontend in this proxy.
+The Caddy container is independent of backend image deployments. Do not place the Vercel frontend in this proxy.
 
 ## Production environment and GHCR access
 
@@ -165,21 +160,21 @@ Pushes to `10-days-quick-run` that change `backend/**`, `Dockerfile.backend`, th
 ```bash
 curl -fsS http://127.0.0.1:8000/health
 curl -fsS http://127.0.0.1:8000/health/detailed
-curl -fsS https://api.example.com/health
+curl -fsS https://edu-platform-api.duckdns.org/health
 cd /opt/edu-platform
 IMAGE_TAG="$(cat current-image-tag)" docker compose -f docker-compose.prod.yml ps
 IMAGE_TAG="$(cat current-image-tag)" docker compose -f docker-compose.prod.yml logs --tail=100 backend redis
-sudo journalctl -u caddy --no-pager -n 100
+docker logs --tail=100 edu-platform-caddy
 ```
 
-For ongoing logs, add `-f` to the Compose or `journalctl` command. To restart the current API without pulling another image:
+For ongoing logs, add `-f` to the Compose or `docker logs` command. To restart the current API without pulling another image:
 
 ```bash
 cd /opt/edu-platform
 IMAGE_TAG="$(cat current-image-tag)" docker compose -f docker-compose.prod.yml restart backend
 ```
 
-Set Vercel's `VITE_API_BASE` to `https://api.example.com` and redeploy the frontend there. The backend `.env` must allow the Vercel origin through `ALLOWED_ORIGINS` and `DEFAULT_FRONTEND_ORIGIN`. No frontend code or container changes are needed.
+Set Vercel's `VITE_API_BASE` to `https://edu-platform-api.duckdns.org` and redeploy the frontend there. The backend `.env` already allows `https://edu-platform-dev.vercel.app` through CORS. No frontend code or container changes are needed.
 
 ## Manual rollback
 
@@ -221,5 +216,5 @@ No migration command runs automatically. `backend/database/postgres/migrations/`
 | Workflow SSH rejected | Deploy key, `VPS_USER`, port, and verified `VPS_SSH_KNOWN_HOSTS` |
 | `/health` fails | `docker compose logs backend redis`, `/opt/edu-platform/backend/.env`, and the prior SHA state file |
 | `/health` works but learner API fails | `/health/detailed`, Supabase `DATABASE_URL`, Redis and provider credentials, then an authenticated API request |
-| HTTPS returns 502 | DNS, Caddy logs, and `curl http://127.0.0.1:8000/health` on the VPS |
+| HTTPS returns 502 | DNS, `docker logs edu-platform-caddy`, and `curl http://127.0.0.1:8000/health` on the VPS |
 | Disk fills | `docker system df`, log rotation, Redis volume size, and old unused images |
