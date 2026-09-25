@@ -1,7 +1,6 @@
 ---
 name: DevOps
 description: DevOps specialist for CI/CD, deployment, infrastructure, and cloud operations
-model: deepseek/deepseek-v4-flash-free
 color: cyan
 tools:
   - Read

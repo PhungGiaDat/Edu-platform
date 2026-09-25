@@ -1,7 +1,6 @@
 ---
 name: Reviewer
 description: Expert code reviewer focusing on quality, security, performance, and best practices. Use proactively after code changes.
-model: tencent/hy3-free
 color: red
 tools:
   - Read

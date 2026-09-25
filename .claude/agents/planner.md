@@ -1,7 +1,6 @@
 ---
 name: Planner
 description: Strategic planner for requirements gathering, architecture design, and project planning
-model: tencent/hy3-free
 color: blue
 tools:
   - Read

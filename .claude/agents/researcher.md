@@ -1,7 +1,6 @@
 ---
 name: Researcher
 description: Research specialist for investigating technologies, debugging issues, and gathering information
-model: tencent/hy3-free
 color: blue
 tools:
   - Read

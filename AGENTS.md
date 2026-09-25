@@ -786,3 +786,9 @@ A task touches **any** of: `.blend`, `FBX`/`GLB`/`OBJ`/`USD` files, Blender Pyth
 - Treating `models/source/` as mutable.
 - Adding a Blender skill to `.agents/skills/` preemptively — create the skill when a real task forces it, not now.
 
+## Thesis writing
+
+For thesis, academic-writing, citation, related-work, methodology, results, or
+academic-humanization tasks, use the `thesis-writing-pipeline` skill. Citation-
+bearing prose must pass `ref-verify` after the final rewrite.
+

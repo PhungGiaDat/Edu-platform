@@ -1,7 +1,6 @@
 ---
 name: Database Admin
 description: Database specialist for query optimization, schema design, indexing, performance tuning, backup strategies, and comprehensive database health assessments
-model: deepseek/deepseek-v4-flash-free
 color: cyan
 tools:
   - Read

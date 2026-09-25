@@ -1,7 +1,6 @@
 ---
 name: Git Manager
 description: Git operations specialist for version control, branching strategies, and repository management
-model: tencent/hy3-free
 color: orange
 tools:
   - Read

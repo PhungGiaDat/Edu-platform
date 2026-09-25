@@ -1,7 +1,6 @@
 ---
 name: Debug
 description: Expert debugger specializing in root cause analysis, issue investigation, and problem diagnosis
-model: deepseek/deepseek-v4-flash-free
 color: purple
 tools:
   - Read

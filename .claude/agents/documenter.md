@@ -1,7 +1,6 @@
 ---
 name: Documenter
 description: Technical writer specializing in documentation, READMEs, API docs, and guides
-model: tencent/hy3-free
 color: green
 tools:
   - Read

@@ -1,7 +1,6 @@
 ---
 name: Fix
 description: Expert bug fixer specializing in implementing clean, safe, and tested solutions to identified issues
-model: deepseek/deepseek-v4-flash-free
 color: green
 tools:
   - Read

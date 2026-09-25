@@ -1,7 +1,6 @@
 ---
 name: Tester
 description: QA engineer specializing in test creation, test strategy, and quality assurance
-model: deepseek/deepseek-v4-flash-free
 color: purple
 tools:
   - Read
