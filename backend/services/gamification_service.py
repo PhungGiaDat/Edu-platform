@@ -702,12 +702,12 @@ class GamificationService:
         # Common stickers
         "star_gold": {"name": "Gold Star", "rarity": "common", "imageUrl": "/assets/stickers/star_gold.svg"},
         "trophy_bronze": {"name": "Bronze Trophy", "rarity": "common", "imageUrl": "/assets/stickers/trophy_bronze.svg"},
-        "animal_elephant": {"name": "Elephant", "rarity": "common", "imageUrl": "/assets/stickers/elephant.svg"},
+        "animal_elephant": {"name": "Elephant", "rarity": "common", "imageUrl": "/assets/game-cards/animals/elephant.png"},
         "heart_pink": {"name": "Pink Heart", "rarity": "common", "imageUrl": "/assets/stickers/heart_pink.svg"},
         "book_blue": {"name": "Blue Book", "rarity": "common", "imageUrl": "/assets/stickers/book_blue.svg"},
         # Rare stickers
         "star_rainbow": {"name": "Rainbow Star", "rarity": "rare", "imageUrl": "/assets/stickers/star_rainbow.svg"},
-        "animal_lion": {"name": "Lion", "rarity": "rare", "imageUrl": "/assets/stickers/lion.svg"},
+        "animal_lion": {"name": "Lion", "rarity": "rare", "imageUrl": "/assets/game-cards/animals/lion.png"},
         "rocket": {"name": "Rocket", "rarity": "rare", "imageUrl": "/assets/stickers/rocket.svg"},
         "medal_silver": {"name": "Silver Medal", "rarity": "rare", "imageUrl": "/assets/stickers/medal_silver.svg"},
         # Epic stickers

@@ -5,6 +5,7 @@ All tables are in public.* schema on Supabase.
 """
 from __future__ import annotations
 
+import json
 from datetime import datetime, date, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
@@ -62,7 +63,7 @@ class PronunciationAttemptRepository:
     ) -> Dict[str, Any]:
         attempt_id = uuid4().hex
         row = await postgres_pool().fetchrow(
-            """INSERT INTO public.pronunciation_attempts
+            """INSERT INTO public.pronunciation_course_attempts
                (attempt_id, user_id, topic_id, word_id, score, stars,
                 transcription, evaluation_method, session_id, device_info, client_timestamp)
                VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
@@ -76,7 +77,7 @@ class PronunciationAttemptRepository:
             transcription,
             evaluation_method,
             session_id,
-            device_info or {},
+            json.dumps(device_info or {}),
             client_timestamp,
         )
         return dict(row)
@@ -84,7 +85,7 @@ class PronunciationAttemptRepository:
     async def get_best_stars(self, user_id: str, word_id: str) -> int:
         val = await postgres_pool().fetchval(
             """SELECT MAX(stars)
-               FROM public.pronunciation_attempts
+               FROM public.pronunciation_course_attempts
                WHERE user_id=$1 AND word_id=$2""",
             user_id, word_id,
         )
@@ -98,7 +99,7 @@ class PronunciationAttemptRepository:
             return {}
         rows = await postgres_pool().fetch(
             """SELECT word_id, MAX(stars) AS best_stars
-               FROM public.pronunciation_attempts
+               FROM public.pronunciation_course_attempts
                WHERE user_id=$1 AND topic_id=$2 AND word_id = ANY($3::text[])
                GROUP BY word_id""",
             user_id, topic_id, word_ids,
@@ -111,9 +112,9 @@ class PronunciationAttemptRepository:
             """SELECT
                    COUNT(*)                                     AS total_attempts,
                    COUNT(DISTINCT word_id)                     AS words_practiced,
-                   SUM(stars)                                   AS total_stars,
+                   COALESCE(SUM(stars), 0)                      AS total_stars,
                    COUNT(DISTINCT topic_id)                     AS topics_started
-               FROM public.pronunciation_attempts
+               FROM public.pronunciation_course_attempts
                WHERE user_id=$1""",
             user_id,
         )
@@ -132,7 +133,7 @@ class PronunciationAttemptRepository:
                    ON w.topic_id = t.topic_id
                LEFT JOIN LATERAL (
                    SELECT word_id, stars
-                   FROM public.pronunciation_attempts a
+                   FROM public.pronunciation_course_attempts a
                    WHERE a.user_id = $1
                      AND a.topic_id = t.topic_id
                      AND a.stars >= 1
@@ -151,7 +152,7 @@ class PronunciationAttemptRepository:
                    t.name_vi                              AS topic_name,
                    COUNT(DISTINCT a.word_id)               AS words_learned
                FROM public.pronunciation_topics t
-               LEFT JOIN public.pronunciation_attempts a
+               LEFT JOIN public.pronunciation_course_attempts a
                    ON a.user_id = $1 AND a.topic_id = t.topic_id AND a.stars >= 1
                WHERE t.is_active = TRUE
                GROUP BY t.topic_id, t.name_vi
@@ -166,7 +167,7 @@ class PronunciationAttemptRepository:
         rows = await postgres_pool().fetch(
             """SELECT DISTINCT
                    DATE(created_at AT TIME ZONE 'UTC') AS day
-               FROM public.pronunciation_attempts
+               FROM public.pronunciation_course_attempts
                WHERE user_id = $1
                ORDER BY day DESC
                LIMIT 30""",
