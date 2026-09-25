@@ -172,6 +172,15 @@ const fallbackCourse = {
   is_published: true,
 } as const;
 
+const getAnimalMascot = (lessonId?: string, title?: string): string => {
+  const text = `${lessonId || ''} ${title || ''}`.toLowerCase();
+  if (text.includes('dog')) return 'dog';
+  if (text.includes('bird')) return 'bird';
+  if (text.includes('fish')) return 'fish';
+  if (text.includes('rabbit')) return 'rabbit';
+  return 'cat';
+};
+
 export const AnimalsAdventure: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -258,7 +267,7 @@ export const AnimalsAdventure: React.FC = () => {
               key={lesson.lesson_id}
               lessonId={lesson.lesson_id}
               title={locale === 'vi' ? lesson.title_vi : lesson.title}
-              thumbnailUrl={`/assets/animals/mascots/${lesson.title.toLowerCase()}.svg`}
+              thumbnailUrl={`/assets/animals/mascots/${getAnimalMascot(lesson.lesson_id, lesson.title)}.svg`}
               vocabPreview={lesson.vocabPreview.map(v => v.emoji)}
               xpReward={lesson.xpReward}
               isCompleted={lesson.isCompleted}
