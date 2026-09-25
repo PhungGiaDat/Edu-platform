@@ -126,6 +126,7 @@ function StickerCard({
   onCollect: () => void;
   isLoading: boolean;
 }) {
+  const [imgError, setImgError] = useState(false);
   const config = RARITY_CONFIG[sticker.rarity];
 
   return (
@@ -139,20 +140,13 @@ function StickerCard({
 
       {/* Sticker image — real asset from catalog; emoji fallback if missing */}
       <div className="relative z-10 flex h-20 items-center justify-center">
-        {sticker.imageUrl && isCollected ? (
+        {sticker.imageUrl && isCollected && !imgError ? (
           <img
             src={sticker.imageUrl}
             alt={sticker.name}
             loading="lazy"
             className={`h-16 w-16 object-contain ${isCollected ? '' : 'opacity-50 grayscale'}`}
-            onError={(e) => {
-              const img = e.currentTarget;
-              if (!img.dataset.emojiFallback) {
-                img.style.display = 'none';
-                img.parentElement
-                  ?.insertAdjacentHTML('beforeend', `<div class="text-5xl">${getStickerEmoji(stickerId)}</div>`);
-              }
-            }}
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className={`text-5xl ${isCollected ? '' : 'opacity-50 grayscale'}`}>{getStickerEmoji(stickerId)}</div>

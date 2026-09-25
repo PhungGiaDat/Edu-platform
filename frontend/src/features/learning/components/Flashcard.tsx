@@ -44,6 +44,7 @@ export default function Flashcard({
 }: FlashcardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [tapped, setTapped] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Determine persistent animation class from prop
@@ -133,12 +134,20 @@ export default function Flashcard({
               ${persistentAnim || tapAnim}`}
             style={{ border: "3px solid transparent" }}
           >
-            <img
-              src={imgUrl}
-              alt={word}
-              className="max-h-48 max-w-full object-contain rounded-lg select-none"
-              draggable={false}
-            />
+            {!imgError && imgUrl ? (
+              <img
+                src={imgUrl}
+                alt={word}
+                className="max-h-48 max-w-full object-contain rounded-lg select-none"
+                draggable={false}
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <div className="h-44 w-44 flex flex-col items-center justify-center bg-yellow-50 rounded-lg text-yellow-600 select-none">
+                <span className="text-5xl mb-2">⭐</span>
+                <span className="text-sm font-bold text-gray-600 uppercase tracking-wider">{word}</span>
+              </div>
+            )}
           </button>
         </div>
 
