@@ -240,6 +240,7 @@ export const PetUnlockModal: React.FC<PetUnlockModalProps> = ({
                 >
                     <PetViewer3DCompact
                         modelUrl={pet.model_url}
+                        textureUrl={pet.texture_url}
                         size={154}
                         scale={1.8}
                     />

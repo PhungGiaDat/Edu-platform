@@ -3,7 +3,6 @@
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock
 
-from bson import ObjectId
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -46,10 +45,7 @@ def _elephant_ar_object() -> dict:
 
 
 def _raw_jungle_combo() -> dict:
-    mongo_id = ObjectId("68ac0dbc7ddebe79bec8661e")
     return {
-        "id": mongo_id,
-        "_id": str(mongo_id),
         "combo_id": "jungle_scene_v1",
         "description": "Scene of an elephant in a jungle with a palm tree.",
         "required_tags": ["elephant_marker_01", "jungle_marker_01"],

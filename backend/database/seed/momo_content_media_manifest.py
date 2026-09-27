@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from collections.abc import Iterator
 from pathlib import Path, PurePosixPath
 from typing import Any, Literal
@@ -19,6 +20,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 SEED_ROOT = Path(__file__).resolve().parents[2] / "seeds" / "courses"
 MANIFEST_PATH = Path(__file__).with_name("manifests") / "momo_content_media_assets.json"
 STORYBOARD_PATH = Path(__file__).with_name("manifests") / "momo_content_media_storyboard.json"
+COURSE_VIDEO_SOURCES_PATH = Path(__file__).with_name("manifests") / "momo_course_video_sources.json"
+COURSE_VIDEO_STORYBOARDS_PATH = Path(__file__).with_name("manifests") / "momo_course_video_storyboards.json"
 SOURCE_FILES = (
     ("momo_home_family.json", "home_family"),
     ("momo_nature.json", "nature"),
@@ -152,6 +155,165 @@ class MomoLessonStoryboard(BaseModel):
         return tuple(sorted({(entry.course_id, entry.lesson_id) for entry in self.entries if entry.lesson_id is not None}))
 
 
+class MomoCourseVideoSource(BaseModel):
+    """Metadata only for a voluntary Course Details video; never binary media."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    course_id: str = Field(min_length=1)
+    slot: Literal["trailer", "explore_more"]
+    provider: Literal["supabase", "youtube"]
+    provider_id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    age_range: Literal["5-7"]
+    learning_objective: str = Field(min_length=1)
+    duration_seconds: int = Field(ge=1, le=180)
+    poster_object_path: str = Field(min_length=1)
+    captions_or_transcript: str = Field(min_length=1)
+    approval_status: Literal["pending_production", "approved"]
+    source_license_evidence: str | None = None
+
+    @model_validator(mode="after")
+    def validate_provider_policy(self) -> "MomoCourseVideoSource":
+        expected_prefix = f"courses/{self.course_id}/"
+        if not self.poster_object_path.startswith(expected_prefix):
+            raise ValueError("video poster must stay under its stable course prefix")
+        if self.provider == "supabase":
+            path = PurePosixPath(self.provider_id)
+            if "\\" in self.provider_id or path.is_absolute() or ".." in path.parts:
+                raise ValueError("Supabase provider ID must be a normalized relative object path")
+            if not self.provider_id.startswith(expected_prefix) or not self.provider_id.endswith(".mp4"):
+                raise ValueError("Supabase provider ID must be an MP4 under its stable course prefix")
+        else:
+            if not re.fullmatch(r"[A-Za-z0-9_-]{11}", self.provider_id):
+                raise ValueError("YouTube provider ID must be an 11-character video ID, not a URL")
+            if self.approval_status != "approved":
+                raise ValueError("YouTube video requires approved source status")
+        if self.slot == "trailer" and self.provider != "supabase":
+            raise ValueError("course trailer must be original Supabase media")
+        if not self.source_license_evidence:
+            raise ValueError("license evidence is required for every course video source")
+        return self
+
+
+class MomoCourseVideoSourceManifest(BaseModel):
+    """Stable allow-list for Course Details video providers and IDs."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = 1
+    source_only: Literal[True] = True
+    course_ids: tuple[str, ...]
+    entries: tuple[MomoCourseVideoSource, ...]
+
+    @model_validator(mode="after")
+    def validate_catalog(self) -> "MomoCourseVideoSourceManifest":
+        if self.course_ids != tuple(sorted(self.course_ids)):
+            raise ValueError("course IDs must use stable ordering")
+        known_course_ids = set(self.course_ids)
+        if {entry.course_id for entry in self.entries} != known_course_ids:
+            raise ValueError("course video sources must cover exactly the stable courses")
+        if any(entry.course_id not in known_course_ids for entry in self.entries):
+            raise ValueError("unknown course video source")
+        trailers = [entry for entry in self.entries if entry.slot == "trailer"]
+        if len(trailers) != len(self.course_ids) or {entry.course_id for entry in trailers} != known_course_ids:
+            raise ValueError("each stable course requires exactly one trailer")
+        for course_id in self.course_ids:
+            if sum(entry.course_id == course_id and entry.slot == "explore_more" for entry in self.entries) > 3:
+                raise ValueError("a course may have at most three explore-more videos")
+        identities = [(entry.course_id, entry.slot, entry.provider, entry.provider_id) for entry in self.entries]
+        if len(identities) != len(set(identities)):
+            raise ValueError("duplicate course video source")
+        return self
+
+
+class MomoCourseVideoBeat(BaseModel):
+    """One timed, child-safe beat in an approved trailer production brief."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    start_second: int = Field(ge=0, lt=45)
+    end_second: int = Field(gt=0, le=45)
+    purpose: Literal["lexi_greeting", "words_in_context", "observation_prompt", "spoken_recap", "start_invitation"]
+    visual_direction: str = Field(min_length=1)
+    on_screen_copy_vi: str = Field(min_length=1)
+    lexi_audio_cue: Literal["welcome_chirp", "word_sparkle", "thinking_pop", "practice_cheer", "start_twinkle"]
+    word_audio: tuple[str, ...] = ()
+    interaction_prompt: str | None = None
+
+    @model_validator(mode="after")
+    def validate_duration(self) -> "MomoCourseVideoBeat":
+        if self.end_second <= self.start_second:
+            raise ValueError("video beat must have a positive duration")
+        if self.purpose == "observation_prompt" and not self.interaction_prompt:
+            raise ValueError("observation beat requires a child prompt")
+        expected_cue = {
+            "lexi_greeting": "welcome_chirp",
+            "words_in_context": "word_sparkle",
+            "observation_prompt": "thinking_pop",
+            "spoken_recap": "practice_cheer",
+            "start_invitation": "start_twinkle",
+        }[self.purpose]
+        if self.lexi_audio_cue != expected_cue:
+            raise ValueError("video beat must use the approved non-verbal Lexi cue")
+        if self.purpose == "words_in_context" and len(self.word_audio) != 3:
+            raise ValueError("words-in-context beat requires exactly three optional word-audio entries")
+        if self.purpose != "words_in_context" and self.word_audio:
+            raise ValueError("only words-in-context beat may provide optional word audio")
+        if any(not word.islower() or any(character.isspace() for character in word) for word in self.word_audio):
+            raise ValueError("word audio entries must be individual lower-case English words")
+        return self
+
+
+class MomoCourseVideoStoryboard(BaseModel):
+    """Production brief, never proof that the referenced video object exists."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    course_id: str = Field(min_length=1)
+    provider_id: str = Field(min_length=1)
+    approval_status: Literal["approved_nonverbal_brief"] = "approved_nonverbal_brief"
+    beats: tuple[MomoCourseVideoBeat, ...] = Field(min_length=5, max_length=5)
+
+    @model_validator(mode="after")
+    def validate_timeline(self) -> "MomoCourseVideoStoryboard":
+        expected_purposes = (
+            "lexi_greeting",
+            "words_in_context",
+            "observation_prompt",
+            "spoken_recap",
+            "start_invitation",
+        )
+        if tuple(beat.purpose for beat in self.beats) != expected_purposes:
+            raise ValueError("trailer beats must follow the approved five-part flow")
+        if self.beats[0].start_second != 0 or self.beats[-1].end_second != 45:
+            raise ValueError("trailer storyboard must cover exactly 45 seconds")
+        if any(previous.end_second != current.start_second for previous, current in zip(self.beats, self.beats[1:])):
+            raise ValueError("trailer beats must be continuous without gaps or overlaps")
+        return self
+
+
+class MomoCourseVideoStoryboardManifest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = 1
+    source_only: Literal[True] = True
+    source_video_manifest: str = COURSE_VIDEO_SOURCES_PATH.name
+    course_ids: tuple[str, ...]
+    entries: tuple[MomoCourseVideoStoryboard, ...]
+
+    @model_validator(mode="after")
+    def validate_catalog(self) -> "MomoCourseVideoStoryboardManifest":
+        if self.course_ids != tuple(sorted(self.course_ids)):
+            raise ValueError("course IDs must use stable ordering")
+        if tuple(entry.course_id for entry in self.entries) != self.course_ids:
+            raise ValueError("storyboards must have one stable-ordered entry per course")
+        provider_ids = [entry.provider_id for entry in self.entries]
+        if len(provider_ids) != len(set(provider_ids)):
+            raise ValueError("duplicate trailer provider ID")
+        return self
+
+
 def _walk_media(value: Any, trail: tuple[str, ...] = (), question_id: str | None = None) -> Iterator[tuple[dict[str, Any], tuple[str, ...], str | None]]:
     if isinstance(value, dict):
         active_question = value.get("question_id", question_id)
@@ -205,8 +367,15 @@ def build_momo_content_media_manifest() -> MomoContentMediaManifest:
         course_id = course["course_id"]
         course_ids.append(course_id)
         for asset, trail, question_id in _walk_media(course):
-            if asset["bucket"] != "learnar-assets" or asset["status"] != "pending":
-                raise ValueError(f"Momo source asset must remain pending in learnar-assets: {asset}")
+            # Course Details trailer has its own verified Supabase publication
+            # pipeline and may already be ready in AR_models.  This manifest
+            # owns only pending lesson-content media in learnar-assets.
+            if trail and trail[0] == "courseTrailer":
+                continue
+            if asset["bucket"] != "learnar-assets" or asset["status"] not in {"pending", "ready"}:
+                raise ValueError(f"Momo source asset must use learnar-assets and a known status: {asset}")
+            if asset["status"] == "ready":
+                continue
             object_path, media_type = asset["path"], asset["type"]
             if media_type not in {"image", "audio", "video", "sticker"}:
                 raise ValueError(f"unsupported Momo media type: {media_type}")
@@ -295,6 +464,157 @@ def load_momo_lesson_storyboard(path: Path = STORYBOARD_PATH) -> MomoLessonStory
     return MomoLessonStoryboard.model_validate_json(path.read_text(encoding="utf-8"))
 
 
+_COURSE_VIDEO_BRIEFS = {
+    "momo-home-family-english-5-7": (
+        "Cùng Lexi khám phá ngôi nhà",
+        "Giới thiệu từ vựng về gia đình và ngôi nhà bằng tình huống gần gũi.",
+        "Chào con! Cùng Lexi khám phá gia đình và ngôi nhà nhé.",
+    ),
+    "momo-nature-english-5-7": (
+        "Cùng Lexi khám phá thiên nhiên",
+        "Gợi hứng thú gọi tên con vật và cảnh vật thiên nhiên quen thuộc.",
+        "Chào con! Cùng Lexi khám phá thiên nhiên nhé.",
+    ),
+    "momo-school-food-english-5-7": (
+        "Cùng Lexi đến trường",
+        "Gợi hứng thú học từ vựng lớp học và đồ ăn qua ngày vui ở trường.",
+        "Chào con! Cùng Lexi đến trường nhé.",
+    ),
+}
+
+_COURSE_TRAILER_BEATS = {
+    "momo-home-family-english-5-7": (
+        (0, 5, "lexi_greeting", "Lexi mở cánh cửa căn nhà ấm áp, vẫy tay cạnh gia đình thân thiện.", "Cùng khám phá ngôi nhà nhé!", "welcome_chirp", (), None),
+        (5, 17, "words_in_context", "Lexi chỉ lần lượt vào ngôi nhà, gia đình và mẹ trong cùng một cảnh bình tĩnh.", "Nhìn ba từ mới nào!", "word_sparkle", ("home", "family", "mother"), None),
+        (17, 27, "observation_prompt", "Lexi dừng cạnh cảnh bếp gia đình, giữ khung hình đủ lâu để bé quan sát.", "Con thấy ai trong ngôi nhà?", "thinking_pop", (), "Con thấy mẹ hay gia đình nào?"),
+        (27, 37, "spoken_recap", "Ba thẻ từ mềm mại xuất hiện lần lượt, không chớp nháy hoặc chuyển cảnh nhanh.", "Cùng nhìn lại ba từ nhé!", "practice_cheer", (), None),
+        (37, 45, "start_invitation", "Lexi chỉ vào nút bắt đầu ở khung cuối cùng, với ánh sao nhẹ nhàng.", "Mình bắt đầu nhé!", "start_twinkle", (), None),
+    ),
+    "momo-nature-english-5-7": (
+        (0, 5, "lexi_greeting", "Lexi chào bé trong khu vườn sáng dịu, có cây và ao nhỏ.", "Cùng khám phá thiên nhiên nhé!", "welcome_chirp", (), None),
+        (5, 17, "words_in_context", "Một chú chim, thỏ và cá lần lượt được Lexi chỉ trong cùng bối cảnh thiên nhiên.", "Nhìn ba từ mới nào!", "word_sparkle", ("bird", "rabbit", "fish"), None),
+        (17, 27, "observation_prompt", "Lexi dừng cạnh ao để bé tìm con vật đang bơi.", "Con thấy con nào đang bơi?", "thinking_pop", (), "Con thấy con cá ở đâu?"),
+        (27, 37, "spoken_recap", "Ba thẻ từ thiên nhiên hiện lần lượt với chuyển động nhỏ, chậm và dễ theo dõi.", "Cùng nhìn lại ba từ nhé!", "practice_cheer", (), None),
+        (37, 45, "start_invitation", "Lexi chỉ về lối mòn dẫn vào bài học, giữ bố cục rộng và rõ ràng.", "Mình bắt đầu nhé!", "start_twinkle", (), None),
+    ),
+    "momo-school-food-english-5-7": (
+        (0, 5, "lexi_greeting", "Lexi chào bé trước lớp học thân thiện, có ba lô và bàn học.", "Cùng đến trường nhé!", "welcome_chirp", (), None),
+        (5, 17, "words_in_context", "Lexi chỉ quyển sách, bút chì và quả táo trong một ngày vui ở trường.", "Nhìn ba từ mới nào!", "word_sparkle", ("book", "pencil", "apple"), None),
+        (17, 27, "observation_prompt", "Lexi dừng bên bàn học có hộp cơm để bé quan sát kỹ.", "Con thấy đồ ăn nào trên bàn?", "thinking_pop", (), "Con thấy quả táo ở đâu?"),
+        (27, 37, "spoken_recap", "Ba thẻ từ lớp học và đồ ăn hiện lần lượt với nhịp đọc chậm.", "Cùng nhìn lại ba từ nhé!", "practice_cheer", (), None),
+        (37, 45, "start_invitation", "Lexi giơ quyển sách và chỉ vào nút bắt đầu, không có lời kêu gọi mua hàng.", "Mình bắt đầu nhé!", "start_twinkle", (), None),
+    ),
+}
+
+
+def build_momo_course_video_sources(
+    manifest: MomoContentMediaManifest | None = None,
+) -> MomoCourseVideoSourceManifest:
+    """Create production-pending original trailers, without generating or uploading video."""
+    manifest = manifest or build_momo_content_media_manifest()
+    entries = tuple(
+        MomoCourseVideoSource(
+            course_id=course_id,
+            slot="trailer",
+            provider="supabase",
+            provider_id=f"courses/{course_id}/videos/course-trailer.mp4",
+            title=_COURSE_VIDEO_BRIEFS[course_id][0],
+            age_range="5-7",
+            learning_objective=_COURSE_VIDEO_BRIEFS[course_id][1],
+            duration_seconds=45,
+            poster_object_path=f"courses/{course_id}/images/course-cover.png",
+            captions_or_transcript=_COURSE_VIDEO_BRIEFS[course_id][2],
+            approval_status="pending_production",
+            source_license_evidence="Original Momo/Lexi production brief approved by product owner on 2026-09-02.",
+        )
+        for course_id in manifest.course_ids
+    )
+    return MomoCourseVideoSourceManifest(course_ids=manifest.course_ids, entries=entries)
+
+
+def approve_momo_course_video_sources(
+    source_manifest: MomoCourseVideoSourceManifest | None = None,
+) -> MomoCourseVideoSourceManifest:
+    """Record brief approval only; media objects remain absent until production/upload."""
+    source_manifest = source_manifest or build_momo_course_video_sources()
+    return MomoCourseVideoSourceManifest(
+        course_ids=source_manifest.course_ids,
+        entries=tuple(
+            entry.model_copy(update={"approval_status": "approved"})
+            for entry in source_manifest.entries
+        ),
+    )
+
+
+def build_momo_course_video_storyboards(
+    source_manifest: MomoCourseVideoSourceManifest | None = None,
+) -> MomoCourseVideoStoryboardManifest:
+    """Build the approved production briefs without creating a video artifact."""
+    source_manifest = source_manifest or approve_momo_course_video_sources()
+    approved_trailers = {
+        entry.course_id: entry
+        for entry in source_manifest.entries
+        if entry.slot == "trailer"
+    }
+    if set(approved_trailers) != set(source_manifest.course_ids):
+        raise ValueError("approved source manifest must contain one trailer per stable course")
+    if any(entry.provider != "supabase" or entry.approval_status != "approved" for entry in approved_trailers.values()):
+        raise ValueError("trailer storyboard requires an approved original Supabase trailer")
+    entries = tuple(
+        MomoCourseVideoStoryboard(
+            course_id=course_id,
+            provider_id=approved_trailers[course_id].provider_id,
+            beats=tuple(
+                MomoCourseVideoBeat(
+                    start_second=start_second,
+                    end_second=end_second,
+                    purpose=purpose,
+                    visual_direction=visual_direction,
+                    on_screen_copy_vi=on_screen_copy_vi,
+                    lexi_audio_cue=lexi_audio_cue,
+                    word_audio=word_audio,
+                    interaction_prompt=interaction_prompt,
+                )
+                for start_second, end_second, purpose, visual_direction, on_screen_copy_vi, lexi_audio_cue, word_audio, interaction_prompt in _COURSE_TRAILER_BEATS[course_id]
+            ),
+        )
+        for course_id in source_manifest.course_ids
+    )
+    return MomoCourseVideoStoryboardManifest(course_ids=source_manifest.course_ids, entries=entries)
+
+
+def render_course_video_storyboards_json(
+    storyboard_manifest: MomoCourseVideoStoryboardManifest | None = None,
+) -> str:
+    return json.dumps(
+        (storyboard_manifest or build_momo_course_video_storyboards()).model_dump(mode="json"),
+        ensure_ascii=False,
+        indent=2,
+    ) + "\n"
+
+
+def load_momo_course_video_storyboards(
+    path: Path = COURSE_VIDEO_STORYBOARDS_PATH,
+) -> MomoCourseVideoStoryboardManifest:
+    return MomoCourseVideoStoryboardManifest.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+def render_course_video_sources_json(
+    source_manifest: MomoCourseVideoSourceManifest | None = None,
+) -> str:
+    return json.dumps(
+        (source_manifest or build_momo_course_video_sources()).model_dump(mode="json"),
+        ensure_ascii=False,
+        indent=2,
+    ) + "\n"
+
+
+def load_momo_course_video_sources(
+    path: Path = COURSE_VIDEO_SOURCES_PATH,
+) -> MomoCourseVideoSourceManifest:
+    return MomoCourseVideoSourceManifest.model_validate_json(path.read_text(encoding="utf-8"))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build/check the source-only Momo content media manifest")
     parser.add_argument("--check", action="store_true", help="fail if committed manifest differs from canonical output")
@@ -302,6 +622,11 @@ def main() -> int:
     parser.add_argument("--check-storyboard", action="store_true", help="fail if committed storyboard differs from canonical output")
     parser.add_argument("--write-storyboard", action="store_true", help="write the deterministic review storyboard")
     parser.add_argument("--approve-storyboard", action="store_true", help="record approved sourcing policy in the storyboard")
+    parser.add_argument("--check-course-videos", action="store_true", help="fail if committed course-video sources differ from canonical output")
+    parser.add_argument("--write-course-videos", action="store_true", help="write the deterministic metadata-only course-video sources")
+    parser.add_argument("--approve-course-videos", action="store_true", help="record approved course-video briefs without producing media")
+    parser.add_argument("--check-course-video-storyboards", action="store_true", help="fail if committed course-video storyboards differ from canonical output")
+    parser.add_argument("--write-course-video-storyboards", action="store_true", help="write approved metadata-only course-video storyboards")
     args = parser.parse_args()
     rendered = render_manifest_json()
     if args.check:
@@ -311,7 +636,11 @@ def main() -> int:
     if args.write:
         MANIFEST_PATH.write_text(rendered, encoding="utf-8")
         return 0
-    storyboard = approve_momo_lesson_storyboard() if args.approve_storyboard else build_momo_lesson_storyboard()
+    storyboard = (
+        approve_momo_lesson_storyboard()
+        if args.approve_storyboard or args.check_storyboard
+        else build_momo_lesson_storyboard()
+    )
     storyboard_rendered = render_storyboard_json(storyboard)
     if args.check_storyboard:
         if not STORYBOARD_PATH.is_file() or STORYBOARD_PATH.read_text(encoding="utf-8") != storyboard_rendered:
@@ -322,6 +651,30 @@ def main() -> int:
         return 0
     if args.approve_storyboard:
         STORYBOARD_PATH.write_text(storyboard_rendered, encoding="utf-8")
+        return 0
+    course_videos = (
+        approve_momo_course_video_sources()
+        if args.approve_course_videos or args.check_course_videos
+        else build_momo_course_video_sources()
+    )
+    course_videos_rendered = render_course_video_sources_json(course_videos)
+    if args.check_course_videos:
+        if not COURSE_VIDEO_SOURCES_PATH.is_file() or COURSE_VIDEO_SOURCES_PATH.read_text(encoding="utf-8") != course_videos_rendered:
+            raise SystemExit("committed course-video sources are not the canonical deterministic output")
+        return 0
+    if args.write_course_videos:
+        COURSE_VIDEO_SOURCES_PATH.write_text(course_videos_rendered, encoding="utf-8")
+        return 0
+    if args.approve_course_videos:
+        COURSE_VIDEO_SOURCES_PATH.write_text(course_videos_rendered, encoding="utf-8")
+        return 0
+    course_video_storyboards_rendered = render_course_video_storyboards_json()
+    if args.check_course_video_storyboards:
+        if not COURSE_VIDEO_STORYBOARDS_PATH.is_file() or COURSE_VIDEO_STORYBOARDS_PATH.read_text(encoding="utf-8") != course_video_storyboards_rendered:
+            raise SystemExit("committed course-video storyboards are not the canonical deterministic output")
+        return 0
+    if args.write_course_video_storyboards:
+        COURSE_VIDEO_STORYBOARDS_PATH.write_text(course_video_storyboards_rendered, encoding="utf-8")
         return 0
     print(rendered, end="")
     return 0

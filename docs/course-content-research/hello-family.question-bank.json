@@ -1,0 +1,515 @@
+{
+  "course_id": "momo-home-family-english-5-7",
+  "lesson_id": "hello-family",
+  "lesson_title_en": "Hello Family",
+  "lesson_title_vi": "Chào gia đình",
+  "target_age": "5-8",
+  "cefr_level": "Pre-A1",
+  "research": {
+    "level": "Pre-A1 Starters (early beginner)",
+    "summary": "Young Vietnamese learners age 5-8 acquire family vocabulary most effectively through warm, concrete personal contexts (mother, father, baby). Pedagogical patterns emphasize clear image-to-word association, short oral prompts, and immediate positive auditory feedback.",
+    "sources": [
+      {
+        "source_name": "Cambridge English Pre A1 Starters Wordlist & Wordlist Picture Book",
+        "source_url": "https://www.cambridgeenglish.org/images/starters-word-list-picture-book.pdf",
+        "source_type": "official vocabulary and exam specification",
+        "topic_used": "Home & Family (mother/mom, father/dad, baby)",
+        "what_was_derived": [
+          "Target vocabulary scope for beginner learners",
+          "Listening task pattern: single auditory cue with 3-option visual choice",
+          "Visual-first cognitive load limit (one concept per question)"
+        ]
+      },
+      {
+        "source_name": "British Council LearnEnglish Kids - Family Resources",
+        "source_url": "https://learnenglishkids.britishcouncil.org/print-make/flashcards/family-flashcards",
+        "source_type": "open educational young learner resource",
+        "topic_used": "Family flashcards, chants, and picture matching",
+        "what_was_derived": [
+          "Pairing patterns for picture-word association",
+          "Child-friendly sentence frames ('This is my mom', 'I love my dad')",
+          "Gentle retry feedback mechanisms"
+        ]
+      },
+      {
+        "source_name": "Oxford Family and Friends Starter / Level 1 (Curriculum Preview)",
+        "source_url": "https://elt.oup.com/catalogue/items/global/young_learners/family_and_friends/",
+        "source_type": "commercial textbook syllabus reference",
+        "topic_used": "Unit: My Family",
+        "what_was_derived": [
+          "Introductory question structures: 'Who is this?', 'This is...'",
+          "Family distractor pool (brother, sister, grandma, grandpa)"
+        ]
+      }
+    ],
+    "pedagogical_patterns": {
+      "sentence_structures": [
+        "This is Mom.",
+        "This is Dad.",
+        "Hello, Baby!",
+        "I love my mom.",
+        "Dad is happy."
+      ],
+      "distractor_vocabulary": ["Brother", "Sister", "Grandma", "Grandpa", "Friend"],
+      "visual_contexts": "Cozy home living room, kitchen table, park walk, bedtime story"
+    }
+  },
+  "video": {
+    "title": "Baby Shark | Animal Songs | Super Simple Songs",
+    "url": "https://www.youtube.com/watch?v=XqZsoesa55w",
+    "provider": "YouTube",
+    "channel": "Super Simple Songs - Kids Songs",
+    "duration_seconds": 104,
+    "source": "official_curated",
+    "embeddable": true,
+    "pedagogical_reason": "Features clear, repetitive presentation of 'Baby', 'Mommy' (Mom), and 'Daddy' (Dad) in a highly energetic, globally recognized format with TPR gestures that build immediate learner engagement for ages 5-8."
+  },
+  "vocabulary": [
+    {
+      "vocabulary_id": "hello-family:mom",
+      "word_en": "Mom",
+      "word_vi": "Mẹ",
+      "phonetic": "/mɒm/",
+      "simple_sentence": "This is my mom.",
+      "explanation_vi": "Mom là mẹ, người phụ nữ yêu thương và chăm sóc bé mỗi ngày.",
+      "listen_and_choose_prompt": "Con hãy nghe và tìm hình của Mẹ nhé!",
+      "recognition_question": "Đâu là hình của Mom?",
+      "meaning_question": "Từ 'Mom' trong tiếng Anh nghĩa là gì?",
+      "context_question": "Ai là người nấu những món ăn ngon lành cho bé?",
+      "canonical_asset_ref": {
+        "image_path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
+        "audio_path": "courses/momo-home-family-english-5-7/lessons/hello-family/audio/mom.wav"
+      }
+    },
+    {
+      "vocabulary_id": "hello-family:dad",
+      "word_en": "Dad",
+      "word_vi": "Ba",
+      "phonetic": "/dæd/",
+      "simple_sentence": "I love my dad.",
+      "explanation_vi": "Dad là ba (bố), người cùng chơi đùa và che chở cho cả nhà.",
+      "listen_and_choose_prompt": "Con hãy lắng nghe và chạm vào hình của Ba nhé!",
+      "recognition_question": "Đâu là hình của Dad?",
+      "meaning_question": "Từ 'Dad' có nghĩa là gì nhỉ?",
+      "context_question": "Ai thường cõng bé trên vai và chơi đu quay cùng bé?",
+      "canonical_asset_ref": {
+        "image_path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
+        "audio_path": "courses/momo-home-family-english-5-7/lessons/hello-family/audio/dad.wav"
+      }
+    },
+    {
+      "vocabulary_id": "hello-family:baby",
+      "word_en": "Baby",
+      "word_vi": "Em bé",
+      "phonetic": "/ˈbeɪbi/",
+      "simple_sentence": "The baby smiles.",
+      "explanation_vi": "Baby là em bé nhỏ xíu xiu, thích cười toe toét và bú bình sữa.",
+      "listen_and_choose_prompt": "Con hãy lắng nghe thật kỹ và tìm đúng em bé nhé!",
+      "recognition_question": "Đâu là em bé - Baby?",
+      "meaning_question": "Từ 'Baby' trong tiếng Anh có nghĩa là gì?",
+      "context_question": "Ai nhỏ nhất trong nhà và thích uống bình sữa?",
+      "canonical_asset_ref": {
+        "image_path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
+        "audio_path": "courses/momo-home-family-english-5-7/lessons/hello-family/audio/baby.wav"
+      }
+    }
+  ],
+  "listen_choose": [
+    {
+      "question_id": "hello-family-lc-01",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé hãy nghe và chọn hình của Mom nhé!",
+      "audio_text": "Mom",
+      "target_vocabulary_id": "hello-family:mom",
+      "options": [
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "correctOptionId": "mom",
+      "feedbackCorrect": "Chính xác! Giỏi lắm, đây là Mẹ - Mom!",
+      "feedbackIncorrect": "Chưa đúng rồi. Bé bấm loa nghe lại nhé!"
+    },
+    {
+      "question_id": "hello-family-lc-02",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé hãy nghe và tìm xem Dad ở đâu nào!",
+      "audio_text": "Dad",
+      "target_vocabulary_id": "hello-family:dad",
+      "options": [
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "correctOptionId": "dad",
+      "feedbackCorrect": "Tuyệt vời! Bé đã tìm đúng Ba - Dad rồi!",
+      "feedbackIncorrect": "Gần đúng rồi, bé nghe Momo nói lại một lần nữa nha."
+    },
+    {
+      "question_id": "hello-family-lc-03",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé lắng nghe xem ai đang gọi nhé: Baby!",
+      "audio_text": "Baby",
+      "target_vocabulary_id": "hello-family:baby",
+      "options": [
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" },
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" }
+      ],
+      "correctOptionId": "baby",
+      "feedbackCorrect": "Đúng rồi! Đây chính là Em bé - Baby đáng yêu!",
+      "feedbackIncorrect": "Chưa chính xác. Bé nghe lại xem ai cười ngoan nhé."
+    },
+    {
+      "question_id": "hello-family-lc-04",
+      "type": "listen_and_choose",
+      "prompt_vi": "Nghe câu này nhé: This is Mom.",
+      "audio_text": "This is Mom",
+      "target_vocabulary_id": "hello-family:mom",
+      "options": [
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" }
+      ],
+      "correctOptionId": "mom",
+      "feedbackCorrect": "Xuất sắc! Con nghe rõ chữ Mom rồi đấy!",
+      "feedbackIncorrect": "Không sao, con bấm loa nghe lại câu này nhé."
+    },
+    {
+      "question_id": "hello-family-lc-05",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé nghe rõ từ này không: Dad!",
+      "audio_text": "Dad",
+      "target_vocabulary_id": "hello-family:dad",
+      "options": [
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" }
+      ],
+      "correctOptionId": "dad",
+      "feedbackCorrect": "Rất chuẩn! Dad là Ba đó con.",
+      "feedbackIncorrect": "Bé thử chọn lại xem Dad ở đâu nhé."
+    },
+    {
+      "question_id": "hello-family-lc-06",
+      "type": "listen_and_choose",
+      "prompt_vi": "Ai đang bi bô tập nói: Baby?",
+      "audio_text": "Baby",
+      "target_vocabulary_id": "hello-family:baby",
+      "options": [
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "correctOptionId": "baby",
+      "feedbackCorrect": "Hoan hô! Em bé Baby nhỏ tuổi nhất nhà!",
+      "feedbackIncorrect": "Hãy nghe kỹ lại âm Baby nhé bé."
+    }
+  ],
+  "match": [
+    {
+      "match_id": "hello-family-match-01",
+      "title_vi": "Ghép từ với nghĩa tiếng Việt",
+      "instruction_vi": "Bé hãy chạm vào từ tiếng Anh ở bên trái, rồi chạm vào nghĩa tiếng Việt tương ứng ở bên phải nhé!",
+      "pairs": [
+        { "left_id": "Mom", "left_text": "Mom", "right_id": "Me", "right_text": "Mẹ", "vocabulary_id": "hello-family:mom" },
+        { "left_id": "Dad", "left_text": "Dad", "right_id": "Ba", "right_text": "Ba (Bố)", "vocabulary_id": "hello-family:dad" },
+        { "left_id": "Baby", "left_text": "Baby", "right_id": "Embe", "right_text": "Em bé", "vocabulary_id": "hello-family:baby" }
+      ],
+      "feedback_correct_vi": "Tuyệt vời! Bé đã ghép đúng tất cả các từ trong gia đình!"
+    },
+    {
+      "match_id": "hello-family-match-02",
+      "title_vi": "Ghép giọng nói với hình ảnh",
+      "instruction_vi": "Nghe âm thanh và ghép vào hình thành viên gia đình tương ứng.",
+      "pairs": [
+        { "left_id": "audio_mom", "left_text": "🔊 Mom", "right_id": "img_mom", "right_text": "Hình Mẹ", "vocabulary_id": "hello-family:mom" },
+        { "left_id": "audio_dad", "left_text": "🔊 Dad", "right_id": "img_dad", "right_text": "Hình Ba", "vocabulary_id": "hello-family:dad" },
+        { "left_id": "audio_baby", "left_text": "🔊 Baby", "right_id": "img_baby", "right_text": "Hình Em bé", "vocabulary_id": "hello-family:baby" }
+      ],
+      "feedback_correct_vi": "Đôi tai bé thật tinh tường! Con đã nối đúng hết rồi!"
+    },
+    {
+      "match_id": "hello-family-match-03",
+      "title_vi": "Ghép câu giới thiệu với người thân",
+      "instruction_vi": "Bé hãy đọc câu giới thiệu và nối với người thân phù hợp nhé.",
+      "pairs": [
+        { "left_id": "sent_mom", "left_text": "This is Mom.", "right_id": "target_mom", "right_text": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "left_id": "sent_dad", "left_text": "This is Dad.", "right_id": "target_dad", "right_text": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "left_id": "sent_baby", "left_text": "Hello, Baby!", "right_id": "target_baby", "right_text": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "feedback_correct_vi": "Giỏi lắm! Con đã nhận biết trọn vẹn cả câu tiếng Anh!"
+    },
+    {
+      "match_id": "hello-family-match-04",
+      "title_vi": "Ghép cử chỉ yêu thương",
+      "instruction_vi": "Nối hoạt động yêu thương với từng thành viên trong nhà.",
+      "pairs": [
+        { "left_id": "act_mom", "left_text": "Mẹ ôm bé ấm áp", "right_id": "card_mom", "right_text": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "left_id": "act_dad", "left_text": "Ba kiệu bé lên vai", "right_id": "card_dad", "right_text": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "left_id": "act_baby", "left_text": "Em bé ngủ trong nôi", "right_id": "card_baby", "right_text": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "feedback_correct_vi": "Thật ấm áp! Bé hiểu tình cảm gia đình rất sâu sắc!"
+    },
+    {
+      "match_id": "hello-family-match-05",
+      "title_vi": "Ghép chữ in hoa và chữ thường",
+      "instruction_vi": "Bé nối chữ in hoa lớn với chữ thường tương ứng nha.",
+      "pairs": [
+        { "left_id": "upper_mom", "left_text": "MOM", "right_id": "lower_mom", "right_text": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "left_id": "upper_dad", "left_text": "DAD", "right_id": "lower_dad", "right_text": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "left_id": "upper_baby", "left_text": "BABY", "right_id": "lower_baby", "right_text": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "feedback_correct_vi": "Xuất sắc! Con phân biệt chữ in hoa và chữ thường rất chuẩn!"
+    },
+    {
+      "match_id": "hello-family-match-06",
+      "title_vi": "Ghép từ với đồ vật quen thuộc",
+      "instruction_vi": "Đồ vật này thuộc về ai nhỉ? Bé hãy ghép nhé!",
+      "pairs": [
+        { "left_id": "item_mom", "left_text": "Chiếc tạp dề làm bếp", "right_id": "owner_mom", "right_text": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "left_id": "item_dad", "left_text": "Chiếc đồng hồ đeo tay", "right_id": "owner_dad", "right_text": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "left_id": "item_baby", "left_text": "Bình sữa và núm ti giả", "right_id": "owner_baby", "right_text": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "feedback_correct_vi": "Hoan hô bé! Bé rất tinh ý khi quan sát đồ dùng của cả nhà!"
+    }
+  ],
+  "mini_games": [
+    {
+      "round_id": "hello-family-game-01",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo nói: Chạm vào Mom thật nhanh nào!",
+      "prompt_audio_text": "Tap Mom",
+      "target_vocabulary_id": "hello-family:mom",
+      "options": [
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "correctOptionId": "mom",
+      "feedback_vi": "Tuyệt cú mèo! Bé chạm đúng Mẹ Mom rồi!"
+    },
+    {
+      "round_id": "hello-family-game-02",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo nói: Tìm Dad đang mỉm cười chào bé!",
+      "prompt_audio_text": "Tap Dad",
+      "target_vocabulary_id": "hello-family:dad",
+      "options": [
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "correctOptionId": "dad",
+      "feedback_vi": "Quá siêu! Ba Dad đang cười vui cùng bé đấy!"
+    },
+    {
+      "round_id": "hello-family-game-03",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo nói: Chạm vào Baby để em bé không khóc nhé!",
+      "prompt_audio_text": "Tap Baby",
+      "target_vocabulary_id": "hello-family:baby",
+      "options": [
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" }
+      ],
+      "correctOptionId": "baby",
+      "feedback_vi": "Bé ngoan lắm! Baby cười toe toét rồi kìa!"
+    },
+    {
+      "round_id": "hello-family-game-04",
+      "game_type": "fast_catch",
+      "instruction_vi": "Bong bóng chữ rơi xuống! Bé hãy bắt bong bóng mang chữ 'Mom'!",
+      "prompt_audio_text": "Catch Mom",
+      "target_vocabulary_id": "hello-family:mom",
+      "options": [
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "correctOptionId": "mom",
+      "feedback_vi": "Tay bé nhanh như sóc! Bé bắt trúng chữ Mom rồi!"
+    },
+    {
+      "round_id": "hello-family-game-05",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo đố bé: Ai vừa đi làm về? Chạm vào Dad nhé!",
+      "prompt_audio_text": "Find Dad",
+      "target_vocabulary_id": "hello-family:dad",
+      "options": [
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "correctOptionId": "dad",
+      "feedback_vi": "Chính xác! Ba Dad đã về đến nhà rồi!"
+    },
+    {
+      "round_id": "hello-family-game-06",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo nói: Cả nhà vỗ tay khen Baby bé bỏng nào!",
+      "prompt_audio_text": "Clap for Baby",
+      "target_vocabulary_id": "hello-family:baby",
+      "options": [
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" },
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" }
+      ],
+      "correctOptionId": "baby",
+      "feedback_vi": "Hoan hô! Bé đã hoàn thành xuất sắc trò chơi gia đình!"
+    }
+  ],
+  "quiz": [
+    {
+      "question_id": "hello-family-q-original-01",
+      "type": "image_choice",
+      "prompt_vi": "Đâu là hình của Mẹ - Mom?",
+      "questionAudioText": "Mom",
+      "target_vocabulary_id": "hello-family:mom",
+      "options": [
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "correctOptionId": "mom",
+      "feedbackCorrect": "Giỏi lắm! Đây là Mẹ - Mom dịu dàng.",
+      "feedbackIncorrect": "Chưa đúng rồi. Con nhìn kỹ lại hình Mẹ nhé!"
+    },
+    {
+      "question_id": "hello-family-q-original-02",
+      "type": "image_choice",
+      "prompt_vi": "Đâu là hình của Ba - Dad?",
+      "questionAudioText": "Dad",
+      "target_vocabulary_id": "hello-family:dad",
+      "options": [
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "correctOptionId": "dad",
+      "feedbackCorrect": "Đúng rồi! Đây là Ba - Dad thân yêu.",
+      "feedbackIncorrect": "Chưa chính xác. Ba Dad ở đâu con nhỉ?"
+    },
+    {
+      "question_id": "hello-family-q-original-03",
+      "type": "image_choice",
+      "prompt_vi": "Đâu là hình của Em bé - Baby?",
+      "questionAudioText": "Baby",
+      "target_vocabulary_id": "hello-family:baby",
+      "options": [
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" },
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" }
+      ],
+      "correctOptionId": "baby",
+      "feedbackCorrect": "Xuất sắc! Em bé Baby nhỏ xíu xiu.",
+      "feedbackIncorrect": "Con chọn lại nha, đâu là em bé đáng yêu nào?"
+    },
+    {
+      "question_id": "hello-family-q-original-04",
+      "type": "listen_and_choose",
+      "prompt_vi": "Nghe Momo phát âm và chọn đúng hình nhé.",
+      "questionAudioText": "Mom",
+      "target_vocabulary_id": "hello-family:mom",
+      "options": [
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "correctOptionId": "mom",
+      "feedbackCorrect": "Chuẩn xác! Con nghe thấy từ Mom rất rõ.",
+      "feedbackIncorrect": "Chưa đúng rồi. Bấm vào loa để nghe lại nhé!"
+    },
+    {
+      "question_id": "hello-family-q-original-05",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé nghe xem từ phát ra là ai nhé.",
+      "questionAudioText": "Dad",
+      "target_vocabulary_id": "hello-family:dad",
+      "options": [
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" },
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" }
+      ],
+      "correctOptionId": "dad",
+      "feedbackCorrect": "Thông minh lắm! Đó chính là Dad!",
+      "feedbackIncorrect": "Không sao, con bấm loa nghe lại giọng đọc nha."
+    },
+    {
+      "question_id": "hello-family-q-original-06",
+      "type": "word_choice",
+      "prompt_vi": "Từ 'Mom' trong tiếng Anh nghĩa là gì?",
+      "questionAudioText": "Mom",
+      "target_vocabulary_id": "hello-family:mom",
+      "options": [
+        { "option_id": "opt_me", "label": "Mẹ" },
+        { "option_id": "opt_ba", "label": "Ba" },
+        { "option_id": "opt_embe", "label": "Em bé" }
+      ],
+      "correctOptionId": "opt_me",
+      "feedbackCorrect": "Chính xác! Mom có nghĩa là Mẹ.",
+      "feedbackIncorrect": "Chưa đúng rồi. Mom là người phụ nữ yêu thương bé nhất đấy!"
+    },
+    {
+      "question_id": "hello-family-q-original-07",
+      "type": "word_choice",
+      "prompt_vi": "Từ nào có nghĩa là 'Ba' hoặc 'Bố'?",
+      "questionAudioText": "Dad",
+      "target_vocabulary_id": "hello-family:dad",
+      "options": [
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "correctOptionId": "dad",
+      "feedbackCorrect": "Giỏi quá! Dad nghĩa là Ba (Bố).",
+      "feedbackIncorrect": "Thử lại nào bé ơi, từ chỉ Ba bắt đầu bằng chữ D nhé!"
+    },
+    {
+      "question_id": "hello-family-q-original-08",
+      "type": "word_choice",
+      "prompt_vi": "Từ 'Baby' trong tiếng Anh có nghĩa là gì?",
+      "questionAudioText": "Baby",
+      "target_vocabulary_id": "hello-family:baby",
+      "options": [
+        { "option_id": "opt_embe", "label": "Em bé" },
+        { "option_id": "opt_ong", "label": "Ông nội" },
+        { "option_id": "opt_ba", "label": "Ba" }
+      ],
+      "correctOptionId": "opt_embe",
+      "feedbackCorrect": "Rất đúng! Baby là em bé.",
+      "feedbackIncorrect": "Chưa đúng rồi. Baby là thành viên nhỏ nhất trong nhà đó con."
+    },
+    {
+      "question_id": "hello-family-q-original-09",
+      "type": "context_choice",
+      "prompt_vi": "Ai trong nhà thường uống bình sữa và ngủ ngoan trong nôi?",
+      "questionAudioText": "Baby",
+      "target_vocabulary_id": "hello-family:baby",
+      "options": [
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" }
+      ],
+      "correctOptionId": "baby",
+      "feedbackCorrect": "Đúng rồi! Em bé Baby thích bú sữa và ngủ nôi!",
+      "feedbackIncorrect": "Nghĩ thử xem nào, ai còn nhỏ xíu chưa biết ăn cơm?"
+    },
+    {
+      "question_id": "hello-family-q-original-10",
+      "type": "sentence_completion",
+      "prompt_vi": "Bé hoàn thành câu nhé: 'This is my ___.' (Nhìn hình Mẹ đang cười)",
+      "questionAudioText": "This is my mom.",
+      "target_vocabulary_id": "hello-family:mom",
+      "options": [
+        { "option_id": "mom", "label": "Mom", "vocabulary_id": "hello-family:mom" },
+        { "option_id": "dad", "label": "Dad", "vocabulary_id": "hello-family:dad" },
+        { "option_id": "baby", "label": "Baby", "vocabulary_id": "hello-family:baby" }
+      ],
+      "correctOptionId": "mom",
+      "feedbackCorrect": "Xuất sắc! 'This is my mom.' - Đây là mẹ của con!",
+      "feedbackIncorrect": "Con nhìn lại hình xem đây là Mẹ Mom hay ai nhé!"
+    }
+  ]
+}

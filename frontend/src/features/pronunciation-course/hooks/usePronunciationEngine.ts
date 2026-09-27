@@ -14,6 +14,7 @@ export function usePronunciationEngine() {
 
   const engineRef = useRef<PronunciationEngine | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
   const handleTranscription = useCallback((text: string, _isFinal: boolean) => {
@@ -55,6 +56,13 @@ export function usePronunciationEngine() {
 
     return () => {
       engineRef.current?.destroy();
+      // Stop an in-flight recording so the mic doesn't stay open if the
+      // component unmounts mid-recording (onstop closure never fires otherwise).
+      if (mediaRecorderRef.current?.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     };
   }, [handleTranscription, handleRecordingStart, handleRecordingEnd, handleResult, handleEngineError]);
 
@@ -65,6 +73,7 @@ export function usePronunciationEngine() {
         mimeType: 'audio/webm',
       });
       mediaRecorderRef.current = mediaRecorder;
+      streamRef.current = stream;
       chunksRef.current = [];
 
       mediaRecorder.ondataavailable = (e) => {

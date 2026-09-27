@@ -108,6 +108,7 @@ export const Login: React.FC = () => {
                   <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">{t('loginEmail')}</span>
                   <input
                     type="email"
+                    autoComplete="username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="hello@example.com"
@@ -120,6 +121,7 @@ export const Login: React.FC = () => {
                   <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">{t('loginPassword')}</span>
                   <input
                     type="password"
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"

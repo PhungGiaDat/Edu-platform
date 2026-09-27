@@ -15,7 +15,7 @@ The experience is intentionally a hybrid:
 - **Mission-first:** the top of the catalog and course page always offer one obvious action.
 - **Adaptive:** `current_lesson_id`, completed lessons, lesson progress, and learning-path preferences choose the next action deterministically.
 
-No new recommendation service, database table, client-side XP calculation, or native-client work is required for the first slice.
+No new recommendation service, database table, client-side XP calculation, or native-client work is required for the first slice. The slice first performs a read-only consistency audit across the complete catalog hierarchy, then reconciles audited canonical release-course content into the PostgreSQL `learning_blocks` contract where dependencies are resolvable, while preserving schema-v1 fallback content.
 
 The existing `/learning-path-3d` route remains a separate optional experience. It is not the source of truth for the generic catalog path.
 
@@ -44,6 +44,7 @@ Research sources are recorded in [`report-source.md`](../../../report-source.md)
 5. Completing a lesson returns authoritative progress/reward data and updates the next mission.
 6. The experience works at 375–428px mobile widths without horizontal overflow or unreachable controls.
 7. Existing course and lesson APIs remain compatible with the paused RN/Unity clients.
+8. Every known/published course is explicitly mapped, shared, empty, or classified as legacy/unmapped before reconciliation.
 
 ### Explicitly out of scope
 
@@ -53,7 +54,7 @@ Research sources are recorded in [`report-source.md`](../../../report-source.md)
 - Replacing the generic flow with the Three.js learning-path scene.
 - Rebuilding the Animals Adventure showcase as the generic course contract.
 - Hearts, lives, punitive blocking, leaderboards, or a full gamification redesign.
-- Migrating every legacy course in the same change.
+- Rewriting or silently deleting legacy courses that cannot yet be mapped to the canonical catalog.
 
 ## 4. Information architecture
 
@@ -81,6 +82,18 @@ Lesson (/courses/:courseId/lessons/:lessonId)
 ```
 
 The catalog remains the product's top-level course discovery surface. The learning path is an enhancement layer over catalog and progress, not a second independent content hierarchy.
+
+The consistency target is explicit:
+
+```text
+Topic Catalog
+  └─ one or more small Courses
+       └─ Course Detail
+            └─ ordered Lessons
+                 └─ canonical or legacy Activities
+```
+
+The learning path ranks/selects these existing courses; it does not create a parallel curriculum. A course that is present in PostgreSQL but has no trusted source/topic binding is retained and reported as `LEGACY_UNMAPPED` until a separate additive mapping is approved.
 
 ## 5. Contract mapping
 
@@ -119,6 +132,38 @@ When a learner opens a lesson, the existing session contract is authoritative:
 - `complete_lesson` returns the authoritative completion/progress/reward result.
 
 The client may render optimistic visual feedback for a tap or selection, but it must not mark a lesson complete, unlock a future lesson for security purposes, or add XP without the backend response.
+
+### 5.4 PostgreSQL content/data rollout
+
+The required PostgreSQL schema is already present in the existing migrations:
+
+- `20260812_01_mobile_core.sql` provides courses, lessons, `lessons.learning_blocks`, learner progress, sessions, and activity dependencies.
+- `20260814_03_lesson_activity_contract.sql` provides session `content_version` and authored activity metadata (`activity_type`, `activity_order`, and `required`).
+
+The first implementation therefore adds no DDL migration and no `course_units`/`sections` table. Before runtime acceptance, run a read-only consistency audit for all known canonical sources and published PostgreSQL courses, followed by an idempotent data reconciliation for the audited release catalog. The current source inventory is three Momo catalog files plus Animals Adventure. The reconciliation must:
+
+1. validate source JSON and an explicit semantic manifest before opening a write transaction;
+2. resolve existing flashcard, quiz, option, and mini-game identities without guessing or fabricating IDs; with the approved additive rollout, create only missing canonical release flashcard owners from authored source vocabulary using deterministic semantic IDs and verified source Supabase references;
+3. write schema-v2 `learning_blocks` with stable activity IDs and ordered required activities only when all dependencies are valid;
+4. preserve legacy lesson fields so schema-v1 rendering remains a compatibility fallback;
+5. report unresolved lessons as `LEGACY_FALLBACK`, create approved missing Momo flashcard owners only when their source asset references are valid, fail closed on semantic conflicts, and perform no deletes;
+6. avoid writes to learner progress, sessions, attempts, gamification, media, Storage, Qdrant, and AR data;
+7. support `--dry-run`, transactional `--apply`, fresh-session readback, and a second-run `NO_CHANGE` assertion.
+
+This rollout is strictly additive-only: no `DELETE`, `TRUNCATE`, `DROP`, destructive cascade, row replacement, content shrinking, or removal of existing activities/dependencies is allowed. Existing rows may be extended only when the canonical manifest owns them and the before/after readback proves that all previous content remains. Otherwise the command reports `CONFLICT` and leaves the row unchanged. A successful report must show zero deleted rows and zero destructive statements.
+
+An open lesson session is never rewritten by the data migration. Any content-version impact is reported and must be checked through the existing session normalization tests before learner rollout.
+
+### 5.5 Consistency audit gate
+
+Task 0 is a read-only gate before any write-capable reconciliation. It checks source course/lesson identities, catalog metadata, topic bindings, manifest coverage, PostgreSQL course/lesson ownership and order, legacy published rows, open sessions, and stale activity dependency references. It must emit structured issue codes including `CATALOG_MISSING`, `COURSE_METADATA_MISMATCH`, `TOPIC_UNMAPPED`, `LESSON_ORPHAN`, `LESSON_ORDER_CONFLICT`, `OWNER_AMBIGUOUS`, `DEPENDENCY_MISMATCH`, `BLOCK_REFERENCE_STALE`, `OPEN_SESSION`, and `LEGACY_UNMAPPED`.
+
+The audit has two safe modes:
+
+- `--source-only` validates the checked-in source and frontend topic registry without credentials.
+- The default mode adds PostgreSQL `SELECT`/`information_schema` checks and must fail closed when the database/schema is unavailable.
+
+The report must always state `writes_performed: 0` and `destructive_statements: 0`. A course may proceed to Task 1 only when every issue is either resolved or explicitly approved as a preserved legacy/fallback outcome. No metadata correction is inferred from keyword matching, and no open session is rewritten.
 
 ## 6. Adaptive next-action algorithm
 
@@ -334,7 +379,7 @@ These are implementation boundaries for the later plan, not a request to add all
 - `frontend/src/features/courses/types.ts`
   - add only client-side view-model types or missing read-only contract fields that already exist in API responses; do not invent persistence fields.
 
-No backend file needs to change for the first path/catalog slice. Any later canonical activity renderer must reuse the current FastAPI activity/session endpoints and preserve response semantics.
+The path/catalog slice has one backend data workstream but no new API route or DDL schema: add a validated, idempotent catalog reconciliation command and its tests for the release Momo seed data. It may update only owned canonical content/dependency rows and `lessons.learning_blocks`; it must preserve response semantics and leave learner runtime state untouched. Any canonical activity renderer must still reuse the current FastAPI activity/session endpoints.
 
 ## 13. Testing and acceptance
 
@@ -349,6 +394,20 @@ No backend file needs to change for the first path/catalog slice. Any later cano
 - lesson fields map to the correct primary activity and counts;
 - presentation units are stable and do not mutate course order;
 - status precedence is completed → current/available → locked, with review as an explicit action.
+
+### Database/data migration tests
+
+- the all-course consistency audit inventories the canonical sources, exposes topic/metadata/order gaps, and reports zero writes;
+- source JSON and the semantic manifest generate valid schema-v2 `learning_blocks`;
+- stable activity and dependency IDs are unchanged across repeated generation;
+- unresolved legacy references remain schema-v1 and produce an explicit fallback report;
+- semantic conflicts fail before writes and roll back the transaction;
+- dry-run performs no database mutation;
+- no `DELETE`/`TRUNCATE`/`DROP`, destructive cascade, row replacement, or content shrink occurs;
+- before/after snapshots prove existing activity, dependency, legacy, and learner-state content remains present;
+- applying twice produces `NO_CHANGE` with no duplicate dependencies;
+- fresh-session readback validates schema/content version, order, required flags, and references;
+- learner progress, open sessions, attempts, rewards, media, and external asset stores are unchanged.
 
 ### Component tests
 
@@ -378,7 +437,8 @@ Existing Animals Adventure tests remain unchanged and are not evidence that the 
 
 ### Release verification
 
-- `CODE_VERIFIED`: frontend typecheck/build, focused Vitest, and backend course/gamification regression tests.
+- `CODE_VERIFIED`: migration contract tests, frontend typecheck/build, focused Vitest, and backend course/gamification regression tests.
+- `DATA_VERIFIED`: PostgreSQL prerequisite preflight passes; dry-run is reviewed; apply succeeds transactionally; a second run reports `NO_CHANGE`; readback and state-isolation checks pass.
 - `RUNTIME_VERIFIED`: run the generic catalog → course → lesson → completion flow against the dev server.
 - `DEVICE_BROWSER_VERIFIED`: exercise the learner flow in a real mobile browser when release acceptance is claimed. Responsive desktop screenshots alone are insufficient.
 
@@ -386,6 +446,8 @@ Existing Animals Adventure tests remain unchanged and are not evidence that the 
 
 ### Phase 1 — Catalog and path shell
 
+- Read-only all-course catalog consistency audit and evidence report.
+- PostgreSQL schema preflight and idempotent audited release-catalog content reconciliation.
 - Pure next-action selector and tests.
 - Next Mission card in `/courses`.
 - Presentation-only units and node states in `/courses/:courseId`.
@@ -426,4 +488,6 @@ The following choices are intentionally fixed for this design unless product rev
 3. Four-lesson presentation chunks are visual grouping only.
 4. Existing FastAPI/session/reward contracts remain authoritative.
 5. Canonical `learning_blocks.activities` is preferred for new content; legacy fields remain fallback-compatible.
-6. No new API/schema or client-side reward logic is part of the first implementation slice.
+6. No new API route, DDL schema, or client-side reward logic is part of the first implementation slice; the approved data reconciliation updates only owned catalog content/dependencies.
+7. Any lesson whose dependencies cannot be resolved remains schema-v1 and is reported rather than being silently converted.
+8. The database rollout is additive-only and its success report contains zero deleted rows and zero destructive statements.

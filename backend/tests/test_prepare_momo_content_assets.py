@@ -7,6 +7,7 @@ repository or uploads it; publication remains a separate explicit task.
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
 from database.seed.momo_content_media_manifest import (
     MomoContentMediaManifest,
@@ -49,7 +50,7 @@ def test_preparation_reads_staged_original_and_writes_metadata_only(tmp_path: Pa
     media = manifest.entries[0]
     source = tmp_path / media.object_path
     source.parent.mkdir(parents=True)
-    source.write_text('<svg viewBox="0 0 32 32"><title>Momo home</title></svg>', encoding="utf-8")
+    Image.new("RGB", (64, 64), color=(255, 230, 120)).save(source, format="PNG")
 
     inventory = prepare_momo_manifest(manifest, MomoLessonStoryboard(entries=(approved,)), tmp_path, tmp_path / "prepared.json")
 

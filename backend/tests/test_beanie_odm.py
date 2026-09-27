@@ -150,12 +150,12 @@ class TestArCombinationSchema:
     def test_rejects_unknown_fields(self, valid_combo_data):
         valid_combo_data["reward_points"] = 999
         valid_combo_data["combo_name"] = "My Combo"
+        valid_combo_data["unexpected_field"] = True
         with pytest.raises(ValidationError) as exc_info:
             ArCombinationSchema(**valid_combo_data)
         errors = exc_info.value.errors()
         unknown = {e["loc"][0] for e in errors}
-        assert "reward_points" in unknown
-        assert "combo_name" in unknown
+        assert unknown == {"unexpected_field"}
 
     def test_default_values(self):
         dto = ArCombinationSchema(
@@ -303,12 +303,12 @@ class TestJungleSceneV1RoundTrip:
         assert dto.priority == 10
 
     def test_jungle_scene_with_stray_fields_rejected(self, jungle_scene_v1_data):
+        jungle_scene_v1_data["unexpected_field"] = True
         with pytest.raises(ValidationError) as exc_info:
             ArCombinationSchema(**jungle_scene_v1_data)
         errors = exc_info.value.errors()
         unknown = {e["loc"][0] for e in errors}
-        assert "reward_points" in unknown
-        assert "combo_name" in unknown
+        assert unknown == {"unexpected_field"}
 
     def test_jungle_scene_dict_can_round_trip(self, jungle_scene_v1_data):
         clean = {
@@ -321,18 +321,15 @@ class TestJungleSceneV1RoundTrip:
         assert output["required_tags"] == ["elephant_marker_01", "plant_palm_01"]
         assert output["semantic_result"] == "combo_jungle"
         assert output["animation"] == "jungle_entrance"
-        assert "reward_points" not in output
-        assert "combo_name" not in output
+        assert output["reward_points"] == 100
+        assert output["combo_name"] == "Jungle Scene V1"
 
 
 class TestLegacyDocUnknownFields:
-    def test_legacy_doc_rejected_by_schema(self, legacy_doc_with_unknown_fields):
-        with pytest.raises(ValidationError) as exc_info:
-            ArCombinationSchema(**legacy_doc_with_unknown_fields)
-        errors = exc_info.value.errors()
-        unknown = {e["loc"][0] for e in errors}
-        assert "reward_points" in unknown
-        assert "combo_name" in unknown
+    def test_legacy_doc_accepted_by_schema(self, legacy_doc_with_unknown_fields):
+        dto = ArCombinationSchema(**legacy_doc_with_unknown_fields)
+        assert dto.reward_points == 50
+        assert dto.combo_name == "Legacy Name"
 
     def test_legacy_doc_can_be_cleaned_for_insert(self, legacy_doc_with_unknown_fields):
         known = {
@@ -342,8 +339,8 @@ class TestLegacyDocUnknownFields:
         dto = ArCombinationSchema(**known)
         assert dto.combo_id == "legacy_combo"
         dump = dto.model_dump()
-        assert "reward_points" not in dump
-        assert "combo_name" not in dump
+        assert dump["reward_points"] == 50
+        assert dump["combo_name"] == "Legacy Name"
 
 
 # ===========================================================================

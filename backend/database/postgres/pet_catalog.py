@@ -5,49 +5,38 @@ from __future__ import annotations
 from typing import Any, Final
 
 
-# Keep these values aligned with the existing rarity thresholds documented in
-# scripts/fix_pet_unlock_conditions.py. The starter companions remain free.
+# Canonical rules for the full 24-pet Kenney cube catalog. Mirrors
+# database/postgres/migrations/20260924_01_complete_pet_xp_unlock_catalog.sql
+# so the Mongo importer's ON CONFLICT ... DO UPDATE cannot revert the gated
+# pets back to free. The three starter companions stay free.
 CANONICAL_PET_CATALOG_RULES: Final[dict[str, dict[str, Any]]] = {
-    "cube_deer": {
-        "rarity": "rare",
-        "unlock_condition": {"type": "xp", "value": 500},
-    },
-    "cube_fox": {
-        "rarity": "rare",
-        "unlock_condition": {"type": "xp", "value": 500},
-    },
-    "cube_koala": {
-        "rarity": "rare",
-        "unlock_condition": {"type": "xp", "value": 500},
-    },
-    "cube_panda": {
-        "rarity": "rare",
-        "unlock_condition": {"type": "xp", "value": 500},
-    },
-    "cube_elephant": {
-        "rarity": "epic",
-        "unlock_condition": {"type": "xp", "value": 1500},
-    },
-    "cube_giraffe": {
-        "rarity": "epic",
-        "unlock_condition": {"type": "xp", "value": 1500},
-    },
-    "cube_lion": {
-        "rarity": "epic",
-        "unlock_condition": {"type": "xp", "value": 1500},
-    },
-    "cube_tiger": {
-        "rarity": "epic",
-        "unlock_condition": {"type": "xp", "value": 1500},
-    },
-    "cube_parrot": {
-        "rarity": "legendary",
-        "unlock_condition": {"type": "xp", "value": 5000},
-    },
-    "cube_polar": {
-        "rarity": "legendary",
-        "unlock_condition": {"type": "xp", "value": 5000},
-    },
+    "cube_bunny": {"rarity": "common", "unlock_condition": {"type": "free", "value": 0}},
+    "cube_cat": {"rarity": "common", "unlock_condition": {"type": "free", "value": 0}},
+    "cube_dog": {"rarity": "common", "unlock_condition": {"type": "free", "value": 0}},
+
+    "cube_bee": {"rarity": "rare", "unlock_condition": {"type": "xp", "value": 500}},
+    "cube_chick": {"rarity": "rare", "unlock_condition": {"type": "xp", "value": 500}},
+    "cube_cow": {"rarity": "rare", "unlock_condition": {"type": "xp", "value": 500}},
+    "cube_deer": {"rarity": "rare", "unlock_condition": {"type": "xp", "value": 500}},
+    "cube_fox": {"rarity": "rare", "unlock_condition": {"type": "xp", "value": 500}},
+    "cube_koala": {"rarity": "rare", "unlock_condition": {"type": "xp", "value": 500}},
+    "cube_panda": {"rarity": "rare", "unlock_condition": {"type": "xp", "value": 500}},
+    "cube_pig": {"rarity": "rare", "unlock_condition": {"type": "xp", "value": 500}},
+
+    "cube_beaver": {"rarity": "epic", "unlock_condition": {"type": "xp", "value": 1500}},
+    "cube_caterpillar": {"rarity": "epic", "unlock_condition": {"type": "xp", "value": 1500}},
+    "cube_elephant": {"rarity": "epic", "unlock_condition": {"type": "xp", "value": 1500}},
+    "cube_fish": {"rarity": "epic", "unlock_condition": {"type": "xp", "value": 1500}},
+    "cube_giraffe": {"rarity": "epic", "unlock_condition": {"type": "xp", "value": 1500}},
+    "cube_hog": {"rarity": "epic", "unlock_condition": {"type": "xp", "value": 1500}},
+    "cube_lion": {"rarity": "epic", "unlock_condition": {"type": "xp", "value": 1500}},
+    "cube_monkey": {"rarity": "epic", "unlock_condition": {"type": "xp", "value": 1500}},
+    "cube_tiger": {"rarity": "epic", "unlock_condition": {"type": "xp", "value": 1500}},
+
+    "cube_crab": {"rarity": "legendary", "unlock_condition": {"type": "xp", "value": 5000}},
+    "cube_parrot": {"rarity": "legendary", "unlock_condition": {"type": "xp", "value": 5000}},
+    "cube_penguin": {"rarity": "legendary", "unlock_condition": {"type": "xp", "value": 5000}},
+    "cube_polar": {"rarity": "legendary", "unlock_condition": {"type": "xp", "value": 5000}},
 }
 
 

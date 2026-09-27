@@ -1,6 +1,6 @@
 ﻿// frontend/src/services/gamesAdminApi.ts
 /**
- * Admin Games Management API (2026-09-09 activation â€” approved spec Â§3.2)
+ * Admin Games Management API (2026-09-09 activation — approved spec §3.2)
  *
  * Mirrors adminApi.ts conventions (apiClient + '/api/v1/admin' base).
  * Endpoints:
@@ -10,7 +10,7 @@
  *   PUT        /admin/games/topics/{id}    update topic
  *   GET|POST   /admin/games/topics/{id}/vocab
  *   PUT|DELETE /admin/games/vocab/{itemId}
- *   POST       /admin/games/upload-media   base64 media â†’ Supabase
+ *   POST       /admin/games/upload-media   base64 media → Supabase
  */
 import { apiClient } from './apiClient';
 
@@ -142,7 +142,7 @@ export const adminGamesApi = {
 
   // ------------------------------------------------------------- Upload ----
   /**
-   * Upload media (image/audio) via base64 â€” mirrors uploadFlashcardImage
+   * Upload media (image/audio) via base64 — mirrors uploadFlashcardImage
    * contract (JSON body, base64 data). Returns the Supabase public URL.
    */
   async uploadMedia(file: File): Promise<string> {
@@ -152,7 +152,7 @@ export const adminGamesApi = {
         const result = String(reader.result || '');
         resolve(result.includes(',') ? result.split(',')[1] : result);
       };
-      reader.onerror = () => reject(new Error('KhÃ´ng Ä‘á»c Ä‘Æ°á»£c tá»‡p'));
+      reader.onerror = () => reject(new Error('Không đọc được tệp'));
       reader.readAsDataURL(file);
     });
 

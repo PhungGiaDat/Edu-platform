@@ -109,6 +109,7 @@ class CourseSource:
     category_label: str
     category_icon: str
     thumbnail: dict[str, Any] | None
+    course_trailer: dict[str, Any] | None
     catalog_preview: tuple[dict[str, Any], ...]
     is_published: bool
     lessons: tuple[CourseLessonSource, ...]
@@ -223,6 +224,7 @@ def build_course_index() -> dict[str, CourseSource]:
             category_label=str(raw.get("category_label") or ""),
             category_icon=str(raw.get("category_icon") or ""),
             thumbnail=dict(raw["thumbnail"]) if isinstance(raw.get("thumbnail"), dict) else None,
+            course_trailer=dict(raw["courseTrailer"]) if isinstance(raw.get("courseTrailer"), dict) else None,
             catalog_preview=tuple(dict(item) for item in raw.get("catalogPreview", []) if isinstance(item, dict)),
             is_published=bool(raw.get("is_published", True)),
             lessons=lessons,

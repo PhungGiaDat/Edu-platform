@@ -42,22 +42,20 @@ def make_user():
     )
 
 
-def make_database(*, words=4, quizzes=2):
-    word_collection = MagicMock()
-    word_collection.count_documents = AsyncMock(return_value=words)
-    quiz_collection = MagicMock()
-    quiz_collection.count_documents = AsyncMock(return_value=quizzes)
-    content_collection = MagicMock()
-    content_collection.update_one = AsyncMock()
-    content_collection.find_one = AsyncMock(return_value=None)
-    collections = {
-        "word_mastery": word_collection,
-        "quiz_attempts": quiz_collection,
-        "profile_content": content_collection,
-    }
-    database = MagicMock()
-    database.__getitem__.side_effect = collections.__getitem__
-    return database
+from contextlib import contextmanager
+from unittest.mock import patch
+
+
+@contextmanager
+def fake_pool(*, words=4, quizzes=2):
+    """Postgres-only service: patch the shared pool used by _words_learned /
+    _quizzes_passed (fetchval, called in that order) and _profile_content
+    (fetchrow → None → default content)."""
+    pool = MagicMock()
+    pool.fetchval = AsyncMock(side_effect=[words, quizzes])
+    pool.fetchrow = AsyncMock(return_value=None)
+    with patch("database.postgres_connection.postgres_pool", return_value=pool):
+        yield
 
 
 def test_auth_user_response_exposes_authoritative_admin_fields():
@@ -103,7 +101,8 @@ async def test_profile_uses_real_sources_and_authenticated_identity():
         }],
     }])
 
-    result = await ProfileService(gamification, courses, make_database()).get_profile(make_user())
+    with fake_pool():
+        result = await ProfileService(gamification, courses).get_profile(make_user())
 
     assert result.identity.id == "user-1"
     assert result.summary.total_points == 80
@@ -122,9 +121,8 @@ async def test_profile_reports_partial_sources_without_erasing_identity():
     gamification.get_leaderboard = AsyncMock(return_value=[])
     courses = MagicMock()
     courses.get_progress = AsyncMock(side_effect=RuntimeError("progress unavailable"))
-    database = make_database(words=0, quizzes=0)
-
-    result = await ProfileService(gamification, courses, database).get_profile(make_user())
+    with fake_pool(words=0, quizzes=0):
+        result = await ProfileService(gamification, courses).get_profile(make_user())
 
     assert result.identity.username == "learner"
     assert result.summary.total_points == 0

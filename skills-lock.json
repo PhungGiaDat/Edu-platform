@@ -120,6 +120,26 @@
       "sourceType": "github",
       "skillPath": "skills/verify-and-stop/SKILL.md",
       "computedHash": "3d67de16a2b3c48b643bc511ebc4cb86e6c7105215d8428b6140cbcb73aba4e6"
+    },
+    "scrape": {
+      "source": "orthogonal-sh/skills",
+      "sourceType": "github",
+      "skillPath": "skills/orthogonal-scrape/SKILL.md"
+    },
+    "imagegen": {
+      "source": "PracticalSwan/agent-skills",
+      "sourceType": "github",
+      "skillPath": "imagegen/SKILL.md"
+    },
+    "processing-images": {
+      "source": "oaustegard/claude-skills",
+      "sourceType": "github",
+      "skillPath": "processing-images/SKILL.md"
+    },
+    "supabase": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase/SKILL.md"
     }
   }
 }

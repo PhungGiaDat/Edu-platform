@@ -50,7 +50,7 @@ function getPathExtension(pathname: string): string {
 
 function isSupportedModelUrl(modelUrl: string): boolean {
   try {
-    const parsed = new URL(modelUrl);
+    const parsed = new URL(modelUrl, window.location.href);
     const extension = getPathExtension(parsed.pathname);
     return SUPPORTED_MODEL_EXTENSIONS.has(extension);
   } catch {
@@ -83,18 +83,15 @@ const FALLBACK_TEXTURE_PATHS = [
   '/learnar-assets/textures/colormap-fallback.png',
 ];
 
-function isLegacySupabaseColormapUrl(resourceUrl: URL, modelUrl: URL): boolean {
+export function isMissingColormapUrl(resourceUrl: URL, modelUrl: URL): boolean {
   const resourcePath = decodeURIComponent(resourceUrl.pathname).replace(/\\/g, '/').toLowerCase();
   const modelPath = decodeURIComponent(modelUrl.pathname).replace(/\\/g, '/').toLowerCase();
 
-  return (
-    resourceUrl.origin === modelUrl.origin &&
-    modelUrl.hostname.endsWith('.supabase.co') &&
+  if (resourceUrl.origin !== modelUrl.origin || !resourcePath.endsWith('/textures/colormap.png')) return false;
+  return (modelUrl.hostname.endsWith('.supabase.co') &&
     modelPath.includes('/storage/v1/object/public/ar_models/') &&
-    resourcePath.includes('/storage/v1/object/public/ar_models/') &&
-    resourcePath.includes('/textures/') &&
-    resourcePath.endsWith('/colormap.png')
-  );
+    resourcePath.includes('/storage/v1/object/public/ar_models/')) ||
+    (modelPath.startsWith('/assets/models/') && resourcePath.startsWith('/assets/models/'));
 }
 
 function loadLocalFallbackTexture(): Promise<THREE.Texture | null> {
@@ -130,7 +127,7 @@ function createGLTFLoader(modelUrl: string): {
   getExternalDependencies: () => string[];
 } {
   const manager = new THREE.LoadingManager();
-  const baseModelUrl = new URL(modelUrl);
+  const baseModelUrl = new URL(modelUrl, window.location.href);
   const externalDependencies = new Set<string>();
 
   // Keep signed query params for GLTF external resources (textures/bin files).
@@ -145,7 +142,7 @@ function createGLTFLoader(modelUrl: string): {
       const modelHasQuery = baseModelUrl.search.length > 1;
       const resourceHasQuery = resolved.search.length > 1;
 
-      if (isLegacySupabaseColormapUrl(resolved, baseModelUrl)) {
+      if (isMissingColormapUrl(resolved, baseModelUrl)) {
         externalDependencies.add(resolved.toString());
         return FALLBACK_TEXTURE_PATHS[0];
       }
@@ -236,7 +233,7 @@ export function useSafeGLTF(url: string | null | undefined, textureUrl?: string 
 
     // Check URL format
     try {
-      const parsed = new URL(url);
+      const parsed = new URL(url, window.location.href);
       if (!['http:', 'https:'].includes(parsed.protocol)) {
         setState('error');
         setError('Invalid URL protocol - must be http or https');

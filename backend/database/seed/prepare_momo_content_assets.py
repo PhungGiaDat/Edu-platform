@@ -14,6 +14,7 @@ import wave
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+from PIL import Image
 from pydantic import BaseModel, ConfigDict, Field
 
 from database.seed.momo_content_media_manifest import (
@@ -87,6 +88,16 @@ def _validate_wav(source: Path) -> None:
         raise MomoPreparationError(f"invalid WAV artifact: {source.name}") from exc
 
 
+def _validate_png(source: Path) -> None:
+    try:
+        with Image.open(source) as image:
+            image.load()
+            if image.format != "PNG" or image.width < 32 or image.height < 32:
+                raise MomoPreparationError(f"PNG technical validation failed: {source.name}")
+    except OSError as exc:
+        raise MomoPreparationError(f"invalid PNG artifact: {source.name}") from exc
+
+
 def _validate_mp4(source: Path) -> None:
     if source.stat().st_size < 1024 or b"ftyp" not in source.read_bytes()[:64]:
         raise MomoPreparationError(f"video production artifact is required for {source.name}")
@@ -102,6 +113,8 @@ def _validate_source(entry: MomoContentMediaEntry, source: Path) -> None:
     suffix = source.suffix.casefold()
     if suffix == ".svg":
         _validate_svg(source)
+    elif suffix == ".png":
+        _validate_png(source)
     elif suffix == ".wav":
         _validate_wav(source)
     elif suffix == ".mp4":

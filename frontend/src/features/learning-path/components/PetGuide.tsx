@@ -6,10 +6,10 @@
  * Pet faces the direction of travel and has walking bob animation.
  */
 
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { useSafeGLTF } from '@/hooks/useSafeGLTF';
 import { createPathSpline, getPointOnSpline, getTangentOnSpline } from '@/lib/pathSpline';
 import { computeGroundedOffset, computeNormalizationScale } from '../modelNormalization';
 import type { Pet } from '@/hooks/usePets';
@@ -81,15 +81,6 @@ export interface PetGuideProps {
 // ========== Component ==========
 
 export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, isCelebrating = false }) => {
-  // /learning-path-3d is NOT code-split (App.tsx statically imports every
-  // route, this module included) — a module-level useGLTF.preload() here
-  // would start downloading the elephant for every visitor at app startup,
-  // not just Learning Path users. Preloading on mount instead still starts
-  // the fetch before PetModel's own useGLTF() suspends, but only once this
-  // component actually renders.
-  useEffect(() => {
-    useGLTF.preload(DEFAULT_MASCOT_MODEL_URL);
-  }, []);
 
   const groupRef = useRef<THREE.Group | null>(null);
   const targetRotation = useRef(0);
@@ -160,15 +151,15 @@ export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, isCelebrating
   // shipped elephant mascot replaces the old plain clay-sphere placeholder.
   const modelUrl = pet.model_url || DEFAULT_MASCOT_MODEL_URL;
 
-  return <PetModel position={position} modelUrl={modelUrl} groupRef={groupRef} isCelebrating={isCelebrating} />;
+  return <PetModel position={position} modelUrl={modelUrl} textureUrl={pet.texture_url} groupRef={groupRef} isCelebrating={isCelebrating} />;
 };
 
 // ========== Pet Model Component ==========
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const PetModel: React.FC<{ position: THREE.Vector3; modelUrl: string; groupRef: any; isCelebrating?: boolean }> = ({ position, modelUrl, groupRef, isCelebrating }) => {
-  const { scene } = useGLTF(modelUrl);
-  const clonedScene = useMemo(() => scene.clone(), [scene]);
+const PetModel: React.FC<{ position: THREE.Vector3; modelUrl: string; textureUrl?: string | null; groupRef: any; isCelebrating?: boolean }> = ({ position, modelUrl, textureUrl, groupRef, isCelebrating }) => {
+  const { gltf } = useSafeGLTF(modelUrl, textureUrl);
+  const clonedScene = useMemo(() => gltf?.scene.clone() ?? null, [gltf]);
 
   // Bounding-box normalization: never trust the model's authored scale.
   // Measure once raw to find the scale that hits PET_TARGET_HEIGHT, apply
@@ -176,6 +167,7 @@ const PetModel: React.FC<{ position: THREE.Vector3; modelUrl: string; groupRef: 
   // get the exact grounding offset — this avoids hand-deriving how the
   // offset itself needs to be scaled.
   const groundedOffset = useMemo(() => {
+    if (!clonedScene) return new THREE.Vector3();
     const rawBox = new THREE.Box3().setFromObject(clonedScene);
     const rawSize = new THREE.Vector3();
     rawBox.getSize(rawSize);
@@ -193,6 +185,7 @@ const PetModel: React.FC<{ position: THREE.Vector3; modelUrl: string; groupRef: 
 
   // Apply cloned scene materials
   React.useEffect(() => {
+    if (!clonedScene) return;
     clonedScene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         child.castShadow = true;
@@ -200,6 +193,8 @@ const PetModel: React.FC<{ position: THREE.Vector3; modelUrl: string; groupRef: 
       }
     });
   }, [clonedScene]);
+
+  if (!clonedScene) return null;
 
   return (
     <group ref={groupRef} position={[position.x, position.y, position.z]}>

@@ -213,7 +213,7 @@ def test_missing_momo_flashcard_owners_are_added_only_from_valid_authored_source
     assert seeded["word_en"] == "Mom"
     assert seeded["category"] == "home_family"
     assert seeded["image_url"].endswith(
-        "/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.svg"
+        "/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png"
     )
     assert seeded["audio_url"].endswith(
         "/storage/v1/object/public/learnar-assets/courses/momo-home-family-english-5-7/lessons/hello-family/audio/mom.wav"

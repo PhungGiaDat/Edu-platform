@@ -29,6 +29,8 @@ export const AnimalsLessonCard: React.FC<AnimalsLessonCardProps> = ({
   onClick,
   index,
 }) => {
+  const [imgError, setImgError] = React.useState(false);
+
   const cardClasses = [
     'animals-lesson-card',
     isCompleted ? 'animals-lesson-card--completed' : '',
@@ -43,12 +45,19 @@ export const AnimalsLessonCard: React.FC<AnimalsLessonCardProps> = ({
       style={{ '--card-index': index } as React.CSSProperties}
     >
       <div className="animals-lesson-card__thumbnail">
-        <img 
-          src={thumbnailUrl} 
-          alt={title}
-          className="animals-lesson-card__image"
-          loading="lazy"
-        />
+        {!imgError && thumbnailUrl ? (
+          <img
+            src={thumbnailUrl}
+            alt={title}
+            className="animals-lesson-card__image"
+            loading="lazy"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div className="animals-lesson-card__image flex items-center justify-center text-4xl bg-amber-50">
+            🐾
+          </div>
+        )}
         {isCompleted && (
           <div className="animals-lesson-card__completed-badge" aria-label="Completed">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">

@@ -6,188 +6,259 @@
 
   "compaction": {
     "auto": true,
-    "keep": {
-      "tokens": 15000
-    },
-    "buffer": 10000
+    "reserved": 10000
   },
 
-"providers": {
-  "bai": {
-    "name": "B.AI",
-    "env": [
-      "BAI_API_KEY"
-    ],
-    "package": "@opencode-ai/ai/providers/openai-compatible",
+  "provider": {
+    "bai": {
+      "name": "B.AI",
+      "npm": "@ai-sdk/openai-compatible",
 
-    "settings": {
-      "baseURL": "https://api.b.ai/v1",
-      "apiKey": "{env:BAI_API_KEY}"
+      "options": {
+        "baseURL": "https://api.b.ai/v1",
+        "apiKey": "{env:BAI_API_KEY}"
+      },
+
+      "models": {
+        "glm-5.3-flash": {
+          "name": "GLM-5.3-Flash",
+          "reasoning": true,
+          "limit": {
+            "context": 1000000,
+            "output": 131072
+          },
+          "options": {
+            "reasoningEffort": "high"
+          },
+          "variants": {
+            "fast": {
+              "reasoningEffort": "low"
+            },
+            "deep": {
+              "reasoningEffort": "max"
+            }
+          }
+        },
+
+        "deepseek-v4-flash": {
+          "name": "DeepSeek-V4-Flash",
+          "reasoning": true,
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "options": {
+            "reasoningEffort": "high"
+          }
+        },
+
+        "mimo-v2.5": {
+          "name": "MiMo-V2.5",
+          "reasoning": true,
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "options": {
+            "reasoningEffort": "high"
+          }
+        },
+
+        "qwen3.8-flash": {
+          "name": "Qwen3.8-Flash",
+          "reasoning": true,
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "options": {
+            "reasoningEffort": "high"
+          }
+        }
+      }
     },
 
-    "models": {
-      "glm-5.3-flash": {
-        "modelID": "glm-5.3-flash",
-        "name": "GLM-5.3-Flash",
-        "limit": {
-          "context": 1000000,
-          "output": 131072
+    "apinex": {
+      "name": "APInex",
+      "npm": "@ai-sdk/openai-compatible",
+
+      "options": {
+        "baseURL": "https://apinex.bond/v1",
+        "apiKey": "{env:APINEX_API_KEY}"
+      },
+
+      "models": {
+        "free/glm-5.3-flash": {
+          "name": "GLM-5.3-Flash (Free)",
+          "reasoning": true,
+          "limit": {
+            "context": 1000000,
+            "output": 131072
+          },
+          "options": {
+            "reasoningEffort": "high"
+          }
+        },
+
+        "free/deepseek-v4.1-flash": {
+          "name": "DeepSeek-V4.1-Flash (Free)",
+          "reasoning": true,
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          }
+        },
+
+        "free/deepseek-v4-pro-0813": {
+          "name": "DeepSeek-V4-Pro-0813 (Free)",
+          "reasoning": true,
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          }
+        },
+
+        "free/qwen-3.8-max": {
+          "name": "Qwen-3.8-Max (Free)",
+          "reasoning": true,
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          }
+        },
+
+        "free/muse-spark-1.3": {
+          "name": "Muse-Spark-1.3 (Free)",
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          }
         }
+      }
+    },
+
+    "vercel": {
+      "name": "Vercel AI Gateway",
+      "npm": "@ai-sdk/openai-compatible",
+
+      "options": {
+        "baseURL": "https://ai-gateway.vercel.sh/v1",
+        "apiKey": "{env:AI_GATEWAY_API_KEY}"
       },
 
-      "deepseek-v4-flash": {
-        "modelID": "deepseek-v4-flash",
-        "name": "DeepSeek-V4-Flash"
-      },
+      "models": {
+        "minimax/minimax-m3": {
+          "name": "MiniMax M3 (Free)",
+          "limit": {
+            "context": 1000000,
+            "output": 131072
+          }
+        },
 
-      "mimo-v2.5": {
-        "modelID": "mimo-v2.5",
-        "name": "MiMo-V2.5"
-      },
-
-      "qwen3.8-flash": {
-        "modelID": "qwen3.8-flash",
-        "name": "Qwen3.8-Flash"
+        "inclusionai/ling-3.0-flash-fin": {
+          "name": "Ling 3.0 Flash Fin (Free)",
+          "limit": {
+            "context": 262144,
+            "output": 131072
+          }
+        }
       }
     }
-  }
-},
+  },
 
-  "permissions": [
-    {
-      "action": "edit",
-      "resource": "*",
-      "effect": "allow"
-    },
-    {
-      "action": "shell",
-      "resource": "*",
-      "effect": "allow"
-    }
-  ],
+  "permission": {
+    "edit": "allow",
+    "bash": "allow"
+  },
 
-  "agents": {
+  "agent": {
     "orchestrator": {
       "description": "Team orchestrator that coordinates SDLC agents and manages development workflow",
       "mode": "primary",
       "model": "bai/glm-5.3-flash",
-      "system": "At the start of the task, read .cursor/agents/sdlc-orchestrator.md and follow its role instructions while coordinating the available subagents. Superpowers skill discipline is injected automatically by the .opencode/plugins/superpowers.js plugin; load skills with the native `skill` tool, never by reading SKILL.md file paths.",
-      "request": {
-        "body": {
-          "temperature": 0.3
+
+      "prompt": "At the start of the task, read .cursor/agents/sdlc-orchestrator.md and follow its role instructions while coordinating the available subagents. Superpowers skill discipline is injected automatically by the .opencode/plugins/superpowers.js plugin; load skills with the native `skill` tool, never by reading SKILL.md file paths.",
+
+      "temperature": 0.3,
+
+      "permission": {
+        "task": {
+          "*": "allow"
         }
       },
-      "permissions": [
-        {
-          "action": "subagent",
-          "resource": "*",
-          "effect": "allow"
-        }
-      ],
+
       "color": "#8E44AD"
     },
 
     "planner": {
       "description": "Strategic planner for requirements gathering, architecture design, and project planning",
       "mode": "subagent",
-      "model": "bai/glm-5.3-flash",
-      "system": "Before working, read .cursor/agents/planner.md and follow its role instructions.",
-      "request": {
-        "body": {
-          "temperature": 0.2
-        }
-      },
+      "model": "bai/mimo-v2.5",
+      "prompt": "Before working, read .cursor/agents/planner.md and follow its role instructions.",
+      "temperature": 0.2,
       "color": "#2ECC71"
     },
 
     "researcher": {
       "description": "Research specialist for investigating technologies, debugging issues, and gathering information",
       "mode": "subagent",
-      "model": "bai/glm-5.3-flash",
-      "system": "Before working, read .cursor/agents/researcher.md and follow its role instructions.",
-      "request": {
-        "body": {
-          "temperature": 0.2
-        }
-      },
+      "model": "bai/qwen3.8-flash",
+      "prompt": "Before working, read .cursor/agents/researcher.md and follow its role instructions.",
+      "temperature": 0.2,
       "color": "#3498DB"
     },
 
     "debug": {
       "description": "Expert debugger specializing in root cause analysis, issue investigation, and problem diagnosis",
       "mode": "subagent",
-      "model": "bai/deepseek-v4-flash",
-      "system": "Before working, read .cursor/agents/debug.md and follow its role instructions.",
-      "request": {
-        "body": {
-          "temperature": 0.2
-        }
-      },
+      "model": "bai/mimo-v2.5",
+      "prompt": "Before working, read .cursor/agents/debug.md and follow its role instructions.",
+      "temperature": 0.2,
       "color": "#E67E22"
     },
 
     "fix": {
       "description": "Expert bug fixer specializing in implementing clean, safe, and tested solutions to identified issues",
       "mode": "subagent",
-      "model": "bai/deepseek-v4-flash",
-      "system": "Before working, read .cursor/agents/fix.md and follow its role instructions.",
-      "request": {
-        "body": {
-          "temperature": 0.1
-        }
-      },
+      "model": "vercel/minimax/minimax-m3",
+      "prompt": "Before working, read .cursor/agents/fix.md and follow its role instructions.",
+      "temperature": 0.1,
       "color": "#E74C3C"
     },
 
     "reviewer": {
       "description": "Code reviewer specializing in code quality, security audit, and maintainability",
       "mode": "subagent",
-      "model": "bai/deepseek-v4-flash",
-      "system": "Before working, read .cursor/agents/reviewer.md and follow its role instructions.",
-      "request": {
-        "body": {
-          "temperature": 0.1
-        }
-      },
+      "model": "bai/mimo-v2.5",
+      "prompt": "Before working, read .cursor/agents/reviewer.md and follow its role instructions.",
+      "temperature": 0.1,
       "color": "#9B59B6"
     },
 
     "tester": {
       "description": "QA engineer specializing in test creation, quality assurance, and coverage improvement",
       "mode": "subagent",
-      "model": "bai/deepseek-v4-flash",
-      "system": "Before working, read .cursor/agents/tester.md and follow its role instructions.",
-      "request": {
-        "body": {
-          "temperature": 0.1
-        }
-      },
+      "model": "bai/mimo-v2.5",
+      "prompt": "Before working, read .cursor/agents/tester.md and follow its role instructions.",
+      "temperature": 0.1,
       "color": "#1ABC9C"
     },
 
     "documenter": {
       "description": "Technical writer specializing in documentation, READMEs, API docs, and user guides",
       "mode": "subagent",
-      "model": "bai/mimo-v2.5",
-      "system": "Before working, read .cursor/agents/documenter.md and follow its role instructions.",
-      "request": {
-        "body": {
-          "temperature": 0.2
-        }
-      },
+      "model": "bai/qwen3.8-flash",
+      "prompt": "Before working, read .cursor/agents/documenter.md and follow its role instructions.",
+      "temperature": 0.2,
       "color": "#16A085"
     },
 
     "git-manager": {
       "description": "DevOps specialist for version control, branching, merging, and release management",
       "mode": "subagent",
-      "model": "bai/mimo-v2.5",
-      "system": "Before working, read .cursor/agents/git-manager.md and follow its role instructions.",
-      "request": {
-        "body": {
-          "temperature": 0.1
-        }
-      },
+      "model": "bai/qwen3.8-flash",
+      "prompt": "Before working, read .cursor/agents/git-manager.md and follow its role instructions.",
+      "temperature": 0.1,
       "color": "#F39C12"
     },
 
@@ -195,54 +266,44 @@
       "description": "DevOps specialist for CI/CD, deployment, infrastructure, and containerization",
       "mode": "subagent",
       "model": "bai/qwen3.8-flash",
-      "system": "Before working, read .cursor/agents/devops.md and follow its role instructions.",
-      "request": {
-        "body": {
-          "temperature": 0.1
-        }
-      },
+      "prompt": "Before working, read .cursor/agents/devops.md and follow its role instructions.",
+      "temperature": 0.1,
       "color": "#D35400"
     },
 
     "database-admin": {
       "description": "Database administrator specializing in schema design, query optimization, indexing, and migrations",
       "mode": "subagent",
-      "model": "bai/deepseek-v4-flash",
-      "system": "Before working, read .cursor/agents/database-admin.md and follow its role instructions.",
-      "request": {
-        "body": {
-          "temperature": 0.1
-        }
-      },
+      "model": "vercel/minimax/minimax-m3",
+      "prompt": "Before working, read .cursor/agents/database-admin.md and follow its role instructions.",
+      "temperature": 0.1,
       "color": "#7F8C8D"
     }
   },
 
   "mcp": {
-    "servers": {
-      "ast-grep": {
-        "type": "local",
-        "command": [
-          "sh",
-          "-c",
-          "[ -f .ast-grep/sgconfig.yml ] || (mkdir -p .ast-grep && printf 'ruleDirs: []\\n' > .ast-grep/sgconfig.yml); exec uvx --from git+https://github.com/ast-grep/ast-grep-mcp ast-grep-server --config .ast-grep/sgconfig.yml"
-        ]
-      },
+    "ast-grep": {
+      "type": "local",
+      "command": [
+        "sh",
+        "-c",
+        "[ -f .ast-grep/sgconfig.yml ] || (mkdir -p .ast-grep && printf 'ruleDirs: []\\n' > .ast-grep/sgconfig.yml); exec uvx --from git+https://github.com/ast-grep/ast-grep-mcp ast-grep-server --config .ast-grep/sgconfig.yml"
+      ]
+    },
 
-      "mcpls": {
-        "type": "local",
-        "command": [
-          "mcpls"
-        ]
-      },
+    "mcpls": {
+      "type": "local",
+      "command": [
+        "mcpls"
+      ]
+    },
 
-      "qmd": {
-        "type": "local",
-        "command": [
-          "qmd",
-          "mcp"
-        ]
-      }
+    "qmd": {
+      "type": "local",
+      "command": [
+        "qmd",
+        "mcp"
+      ]
     }
   }
 }

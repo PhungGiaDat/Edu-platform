@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
+import { AudioService } from '../../../services/AudioService';
 import { CourseDetail } from '../components/CourseDetail';
 import { RecordingButton } from '../components/RecordingButton';
 import { FeedbackDisplay } from '../components/FeedbackDisplay';
@@ -107,9 +108,7 @@ export function PronunciationCourseDetailPage() {
             <div className="flex justify-center mb-4">
               <button
                 onClick={() => {
-                  const utterance = new SpeechSynthesisUtterance(selectedWord.word);
-                  utterance.lang = 'en-US';
-                  speechSynthesis.speak(utterance);
+                  AudioService.playPronunciation(selectedWord.word, 'en');
                 }}
                 className="bg-sky-100 text-sky-600 px-4 py-2 rounded-full shadow-clay flex items-center gap-2 hover:bg-sky-200 transition-colors"
               >

@@ -54,6 +54,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Keep PWA metadata and icons current after deploy, with an offline fallback.
+  if (url.pathname === '/manifest.json' || url.pathname.startsWith('/icons/')) {
+    event.respondWith(
+      fetch(request, { cache: 'no-store' }).then((response) => {
+        if (response.ok) {
+          event.waitUntil(
+            caches.open(STATIC_CACHE).then((cache) => cache.put(request, response.clone()))
+          );
+        }
+        return response;
+      }).catch(() => caches.match(request))
+    );
+    return;
+  }
+
   if (request.mode === 'navigate') {
     event.respondWith(fetch(request).catch(() => caches.match('/index.html')));
     return;

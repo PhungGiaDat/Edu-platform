@@ -201,6 +201,17 @@ class EnrollmentCTA(BaseModel):
     buttonLabel: str = "Bat dau hoc"
 
 
+class CourseTrailer(BaseModel):
+    """Optional, child-safe course introduction shown before the mission path."""
+
+    title: str
+    duration_seconds: int = Field(gt=0, le=90)
+    asset: AssetReference
+    poster: Optional[AssetReference] = None
+    captions_vi: str = ""
+    autoplay: bool = False
+
+
 class Lesson(BaseModel):
     # Legacy/simple course fields kept for existing MongoDB documents.
     lesson_id: str = Field(default_factory=lambda: str(ObjectId()))
@@ -287,6 +298,7 @@ class CourseSchema(BaseModel):
     catalogPreview: List[CourseCatalogPreview] = Field(default_factory=list)
     studentTestimonials: List[StudentTestimonial] = Field(default_factory=list)
     enrollmentCta: Optional[EnrollmentCTA] = None
+    courseTrailer: Optional[CourseTrailer] = None
     lessons: List[Lesson] = Field(default_factory=list)
     is_published: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)

@@ -120,19 +120,19 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/hello-family/audio/mom.wav",
             "type": "audio",
-            "status": "pending"
+            "status": "ready"
           },
           "sticker": {
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/hello-family/stickers/mom.png",
             "type": "sticker",
-            "status": "pending"
+            "status": "ready"
           },
           "simple_sentence": "This is my mom."
         },
@@ -144,19 +144,19 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/hello-family/audio/dad.wav",
             "type": "audio",
-            "status": "pending"
+            "status": "ready"
           },
           "sticker": {
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/hello-family/stickers/dad.png",
             "type": "sticker",
-            "status": "pending"
+            "status": "ready"
           },
           "simple_sentence": "I love my dad."
         },
@@ -168,19 +168,19 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/hello-family/audio/baby.wav",
             "type": "audio",
-            "status": "pending"
+            "status": "ready"
           },
           "sticker": {
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/hello-family/stickers/baby.png",
             "type": "sticker",
-            "status": "pending"
+            "status": "ready"
           },
           "simple_sentence": "The baby smiles."
         }
@@ -201,7 +201,7 @@
               "bucket": "learnar-assets",
               "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Tuyệt cú mèo! Bé chạm đúng Mẹ Mom rồi!"
           },
@@ -215,7 +215,7 @@
               "bucket": "learnar-assets",
               "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Quá siêu! Ba Dad đang cười vui cùng bé đấy!"
           },
@@ -229,35 +229,35 @@
               "bucket": "learnar-assets",
               "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Bé ngoan lắm! Baby cười toe toét rồi kìa!"
           },
           {
             "id": "game-4",
             "round": 4,
-            "label": "Dad",
+            "label": "Mom",
             "instruction_vi": "Bong bóng chữ rơi xuống! Bé hãy bắt bong bóng mang chữ 'Mom'!",
             "prompt_audio_text": "Catch Mom",
             "image": {
               "bucket": "learnar-assets",
               "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Tay bé nhanh như sóc! Bé bắt trúng chữ Mom rồi!"
           },
           {
             "id": "game-5",
             "round": 5,
-            "label": "Mom",
+            "label": "Dad",
             "instruction_vi": "Momo đố bé: Ai vừa đi làm về? Chạm vào Dad nhé!",
             "prompt_audio_text": "Find Dad",
             "image": {
               "bucket": "learnar-assets",
               "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Chính xác! Ba Dad đã về đến nhà rồi!"
           },
@@ -271,7 +271,7 @@
               "bucket": "learnar-assets",
               "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Hoan hô! Bé đã hoàn thành xuất sắc trò chơi gia đình!"
           }
@@ -367,7 +367,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -377,7 +377,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -387,7 +387,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -408,7 +408,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -418,7 +418,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -428,7 +428,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -449,7 +449,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -459,7 +459,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -469,7 +469,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -490,7 +490,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -500,7 +500,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -510,7 +510,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -531,7 +531,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -541,7 +541,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -551,7 +551,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -931,7 +931,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/bed.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -955,7 +955,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/chair.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -979,7 +979,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/my-room/vocabulary/toy.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -1482,7 +1482,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/milk.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -1506,7 +1506,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/snack-time/vocabulary/cookie.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -1985,7 +1985,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/hand.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2009,7 +2009,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/soap.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2033,7 +2033,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/clean-hands/vocabulary/clean.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2512,7 +2512,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/happy.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2536,7 +2536,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/sad.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2560,7 +2560,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-home-family-english-5-7/lessons/happy-feelings/vocabulary/smile.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",

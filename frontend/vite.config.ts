@@ -37,7 +37,8 @@ export default defineConfig(({ mode }) => {
 
     // Exclude 8th Wall files from Vite processing
     optimizeDeps: {
-      exclude: ['@8thwall/engine-binary']
+      exclude: ['@8thwall/engine-binary'],
+      include: ['void-elements', 'html-parse-stringify']
     },
     build: {
       // Use terser to strip all console.log/debugger calls from production bundle.
@@ -73,9 +74,9 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       port: 5173,
       cors: true,
-      hmr: {
+      hmr: env.VITE_PUBLIC_HOST ? {
         clientPort: 443,
-      },
+      } : undefined,
       headers: {
         'Access-Control-Allow-Origin': '*',
       },
@@ -95,7 +96,7 @@ export default defineConfig(({ mode }) => {
           target: proxyTarget,
           changeOrigin: true,
           secure: false,
-          rewrite: (path) => path.replace(/^\/api/, ''), // ✅ Remove /api prefix
+          // Backend serves under /api/v1 — forward the path intact (no strip).
         },
           '/assets/model2D': {  // ✅ Chỉ proxy model2D
           target: proxyTarget,

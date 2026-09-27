@@ -541,6 +541,62 @@ fix-*.diff
 # macOS junk
 .DS_Store
 
-# VAPID private keys (Web Push) — never commit
+# VAPID private keys (Web Push) ï¿½ never commit
 **/vapid_private.pem
 *_vapid_tmp*
+
+# Locally generated seed-media outputs. Keep seed scripts and authored manifests tracked.
+scratch/momo-content-prepared-course-covers.json
+backend/database/seed/__pycache__/
+
+# Project-local agent/tool mirrors. The curated skill catalog remains tracked
+# under .agents/skills-disabled/; these are generated runtime copies.
+.agents/skills/
+.superpowers/
+.codex/agents/
+.codex/scripts/
+
+# Local 8th Wall tool checkout and reproducible image-target compiler outputs.
+# Published runtime artifacts live in Supabase Storage rather than this worktree.
+/8thwallmcp/
+/target/
+
+# Generated agents workspace directory
+/agents/
+agents/
+
+# --- Junk / generated artefacts (added 2026-09-27) ---
+# scan / acl / temp dumps
+.scan_i18n.txt
+.scan_moji.txt
+backend_acl.txt
+seeds_acl.txt
+/nul
+.codex.zip
+
+# caches
+.ruff_cache/
+
+# temp / generated working dirs
+/temp/
+backend/database/orm_models_accessible/
+backend/database/orm_models_temp/
+backend/database/postgres_accessible/
+backend/database/orm_models/test.txt
+
+# generated benchmark / audit / report outputs
+backend/benchmarks/results/
+frontend/audit-results.json
+docs/report/BENCHMARK_DASHBOARD_*.html
+docs/supabase_course_assets_upload_report.json
+
+# test artefacts / results
+frontend/test-artifacts/
+frontend/test-results/
+/test-results/
+
+# thesis working / compare dirs and draft docx (keep only the canonical report)
+thesis_report/.codex-thesis-work/
+thesis_report/_qa_compare/
+thesis_report/*.docx
+!thesis_report/IT22.105_BM08_PhungGiaDat.docx

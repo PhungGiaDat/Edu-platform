@@ -1,0 +1,50 @@
+{
+ "1": {
+  "A": "base",
+  "B": "skillv2"
+ },
+ "2": {
+  "A": "skillv2",
+  "B": "base"
+ },
+ "3": {
+  "A": "skillv2",
+  "B": "base"
+ },
+ "4": {
+  "A": "skillv2",
+  "B": "base"
+ },
+ "5": {
+  "A": "base",
+  "B": "skillv2"
+ },
+ "6": {
+  "A": "base",
+  "B": "skillv2"
+ },
+ "7": {
+  "A": "skillv2",
+  "B": "base"
+ },
+ "8": {
+  "A": "skillv2",
+  "B": "base"
+ },
+ "9": {
+  "A": "base",
+  "B": "skillv2"
+ },
+ "10": {
+  "A": "base",
+  "B": "skillv2"
+ },
+ "11": {
+  "A": "skillv2",
+  "B": "base"
+ },
+ "12": {
+  "A": "skillv2",
+  "B": "base"
+ }
+}

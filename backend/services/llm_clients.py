@@ -102,10 +102,19 @@ def get_bai_llm(
     temperature: float = 0.4,
     timeout: Optional[float] = None,
 ) -> ChatOpenAI:
-    """
-    B.AI deprecated/disabled — routed safely to OpenRouter.
-    """
-    return get_openrouter_llm(settings.CHAT_PRIMARY_MODEL, temperature, timeout)
+    """Return a ChatOpenAI client routed through the B.AI gateway."""
+    api_key = (
+        settings.BAI_API_KEY.get_secret_value() if settings.BAI_API_KEY else ""
+    )
+    return ChatOpenAI(
+        model=model or settings.BAI_GENERATION_MODEL,
+        api_key=api_key,
+        base_url=settings.BAI_BASE_URL,
+        timeout=timeout or settings.AI_CONTENT_TIMEOUT_SECONDS,
+        max_retries=0,
+        temperature=temperature,
+        callbacks=[TRACE_HANDLER],
+    )
 
 
 def get_justwoker_llm(
@@ -154,21 +163,21 @@ def get_google_llm(
 # 1b. Provider-prefixed model routing
 # ──────────────────────────────────────────────
 
-_PROVIDER_PREFIXES = ("openrouter/", "google/", "bai/", "justwoker/")
+_KNOWN_PROVIDERS = ("openrouter", "google", "bai", "justwoker")
 
 
 def parse_provider_model(model: str) -> tuple[str, str]:
     """
     Split a possibly provider-prefixed model id into (provider, bare_model).
+
+    Known prefixes (google/, bai/, openrouter/, justwoker/) are stripped to
+    their bare model. Any other id ("qwen/…", "deepseek/…", "nvidia/…") stays
+    whole under the default tokenrouter provider.
     """
-    if model.startswith("openrouter/"):
-        return "openrouter", model[len("openrouter/"):]
-    if model.startswith("google/gemini"):
-        return "google", model[len("google/"):]
-    if model.startswith("justwoker/"):
-        return "justwoker", model[len("justwoker/"):]
-    # Default to openrouter for gemma, nemotron, and other models
-    return "openrouter", model
+    prefix, _, rest = model.partition("/")
+    if rest and prefix in _KNOWN_PROVIDERS:
+        return prefix, rest
+    return "tokenrouter", model
 
 
 def build_llm_for_model(
@@ -176,13 +185,18 @@ def build_llm_for_model(
     temperature: float = 0.4,
     timeout: Optional[float] = None,
 ) -> ChatOpenAI:
-    """Factory dispatch for provider-prefixed model ids."""
+    """Factory dispatch for provider-prefixed model ids (no key gate — the
+    cascade omits providers without keys before building)."""
     provider, bare = parse_provider_model(model)
-    if provider == "google" and _has_configured_key(settings.GOOGLE_API_KEY):
+    if provider == "google":
         return get_google_llm(bare, temperature, timeout)
-    if provider == "justwoker" and _has_configured_key(settings.JUSTWOKER_API_KEY):
+    if provider == "bai":
+        return get_bai_llm(bare, temperature, timeout)
+    if provider == "justwoker":
         return get_justwoker_llm(bare, temperature, timeout)
-    return get_openrouter_llm(model, temperature, timeout)
+    if provider == "openrouter":
+        return get_openrouter_llm(bare, temperature, timeout)
+    return get_tokenrouter_llm(model, temperature, timeout)
 
 
 # ──────────────────────────────────────────────
@@ -428,8 +442,8 @@ class ModelRouter:
             "openrouter": settings.OPENROUTER_API_KEY,
             "google": settings.GOOGLE_API_KEY,
             "justwoker": settings.JUSTWOKER_API_KEY,
-            "bai": None,
-            "tokenrouter": None,
+            "bai": settings.BAI_API_KEY,
+            "tokenrouter": settings.TOKENROUTER_API_KEY,
         }
         entries: list[tuple[str, ChatOpenAI, str]] = []
         seen: set[str] = set()
@@ -444,8 +458,10 @@ class ModelRouter:
         add(self.primary_model)
         for model in self.fallback_models:
             add(model)
-        add(settings.CHAT_PRIMARY_MODEL)
-        add(settings.CHAT_FALLBACK_MODEL)
+        # B.AI is the always-on last-resort provider (own key + model namespace);
+        # no MODEL_* slug carries a "bai/" prefix, so append it explicitly.
+        if settings.BAI_GENERATION_MODEL:
+            add(f"bai/{settings.BAI_GENERATION_MODEL}")
 
         preferred = llm_health.preferred_provider()
 

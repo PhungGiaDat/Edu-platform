@@ -120,19 +120,19 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/audio/elephant.wav",
             "type": "audio",
-            "status": "pending"
+            "status": "ready"
           },
           "sticker": {
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/stickers/elephant.png",
             "type": "sticker",
-            "status": "pending"
+            "status": "ready"
           },
           "simple_sentence": "The elephant is big."
         },
@@ -144,19 +144,19 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/audio/big.wav",
             "type": "audio",
-            "status": "pending"
+            "status": "ready"
           },
           "sticker": {
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/stickers/big.png",
             "type": "sticker",
-            "status": "pending"
+            "status": "ready"
           },
           "simple_sentence": "It is big."
         },
@@ -168,19 +168,19 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/audio/trunk.wav",
             "type": "audio",
-            "status": "pending"
+            "status": "ready"
           },
           "sticker": {
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/stickers/trunk.png",
             "type": "sticker",
-            "status": "pending"
+            "status": "ready"
           },
           "simple_sentence": "The trunk is long."
         }
@@ -201,7 +201,7 @@
               "bucket": "learnar-assets",
               "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Bé nhanh tay quá! Bạn voi Elephant vẫy tai cảm ơn bé kìa!"
           },
@@ -215,7 +215,7 @@
               "bucket": "learnar-assets",
               "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Chính xác! Big là to lớn khổng lồ!"
           },
@@ -229,35 +229,35 @@
               "bucket": "learnar-assets",
               "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Giỏi quá! Trunk phun nước mát rượi luôn!"
           },
           {
             "id": "game-4",
             "round": 4,
-            "label": "Trunk",
+            "label": "Elephant",
             "instruction_vi": "Bé hãy đón lấy chiếc lá có chữ 'Elephant' nhé!",
             "prompt_audio_text": "Catch Elephant",
             "image": {
               "bucket": "learnar-assets",
               "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Bé đón trúng chiếc lá Elephant rồi! Xuất sắc!"
           },
           {
             "id": "game-5",
             "round": 5,
-            "label": "Elephant",
+            "label": "Trunk",
             "instruction_vi": "Momo đố bé: Bạn voi có chiếc vòi dài tên là gì? Chạm vào Trunk!",
             "prompt_audio_text": "Find Trunk",
             "image": {
               "bucket": "learnar-assets",
               "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Đúng rồi! Chiếc vòi dài xinh xắn chính là Trunk!"
           },
@@ -271,7 +271,7 @@
               "bucket": "learnar-assets",
               "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Hoan hô! Bé đã hoàn thành tất cả thử thách cùng chú voi!"
           }
@@ -367,7 +367,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -375,9 +375,9 @@
               "label": "Big",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -385,9 +385,9 @@
               "label": "Trunk",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -406,9 +406,9 @@
               "label": "Trunk",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -418,7 +418,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -426,9 +426,9 @@
               "label": "Big",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -447,9 +447,9 @@
               "label": "Big",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -457,9 +457,9 @@
               "label": "Trunk",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -469,7 +469,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -490,7 +490,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -498,9 +498,9 @@
               "label": "Big",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -508,9 +508,9 @@
               "label": "Trunk",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -529,9 +529,9 @@
               "label": "Trunk",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -539,9 +539,9 @@
               "label": "Big",
               "image": {
                 "bucket": "learnar-assets",
-                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+                "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -551,7 +551,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -931,7 +931,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/tree.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -955,7 +955,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/leaf.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -979,7 +979,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/the-green-tree/vocabulary/green.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -1458,7 +1458,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/river.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -1482,7 +1482,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/water.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -1506,7 +1506,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/splashing-river/vocabulary/blue.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2009,7 +2009,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/fly.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2033,7 +2033,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/little-bird/vocabulary/small.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2512,7 +2512,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/sun.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2536,7 +2536,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/sky.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2560,7 +2560,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-nature-english-5-7/lessons/sunny-sky/vocabulary/yellow.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",

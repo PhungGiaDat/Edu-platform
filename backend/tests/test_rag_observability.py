@@ -292,7 +292,7 @@ async def _run_with_fakes(service, monkeypatch, *, cached=None, generator_error=
         "services.agentic_rag_service.schedule_rag_trace", lambda row: rows.append(row) or True
     )
 
-    async def fake_planner(question, user_id, model, trace):
+    async def fake_planner(question, user_id, model, trace, lesson_context=None):
         await asyncio.sleep(0.02)  # run() measures planner itself via perf_counter
         trace.append("planner:done model=pl-1")
         active_sink().token_records.append(

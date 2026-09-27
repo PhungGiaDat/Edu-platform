@@ -50,4 +50,14 @@ describe('PWA shell contract', () => {
       'event.respondWith(fetch(request));',
     );
   });
+
+  it('refreshes PWA icon and manifest requests before using cached copies', () => {
+    const refreshBranch = serviceWorkerSource.indexOf("url.pathname === '/manifest.json' || url.pathname.startsWith('/icons/')");
+    const dynamicCacheLookup = serviceWorkerSource.indexOf('caches.match(request).then((cached)');
+
+    expect(refreshBranch).toBeGreaterThan(-1);
+    expect(refreshBranch).toBeLessThan(dynamicCacheLookup);
+    expect(serviceWorkerSource.slice(refreshBranch, dynamicCacheLookup)).toContain("fetch(request, { cache: 'no-store' })");
+    expect(serviceWorkerSource.slice(refreshBranch, dynamicCacheLookup)).toContain('catch(() => caches.match(request))');
+  });
 });

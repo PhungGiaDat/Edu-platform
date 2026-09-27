@@ -22,6 +22,7 @@ from repositories.postgres_user_repository import PostgresUser
 from tests.test_chat_integration import FAKE_USER  # reuse the fake identity
 
 ANON_POSTS = [
+    ("/api/v1/chat/stream", {"question": "hi"}),
     ("/api/v1/chat/rag", {"question": "hi"}),
     ("/api/v1/chat/message", {"message": "hi"}),
     ("/api/v1/chat/pronunciation", {"target_text": "cat", "audio_text": "cat"}),

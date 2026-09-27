@@ -16,8 +16,14 @@
       }
     },
     "mongodb": {
-      "command": "npx",
-      "args": ["-y", "mongodb-mcp-server@latest", "--readOnly"]
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "E:\\University\\Graduted Project\\Edu-platform\\.codex\\scripts\\start-mongodb-mcp.ps1"
+      ]
     },
     "supabase": {
       "command": "npx",

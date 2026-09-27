@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preview v2 — Style A "Friendly Technical" (spec: 20260913_ops_dashboard_style_spec.md)</title>
+<!-- Font ĐÚNG NHƯ APP: Nunito display + DM Sans body. Offline -> fallback system-ui (vẫn xem ổn) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#6EB9FF; --accent:#B4E197;
+    --success:#16A34A; --warning:#D97706; --danger:#DC2626; --neutral:#64748B;
+    --refusal:#0F766E; --refusal-bg:#F0FDFA; --refusal-bd:#99F6E4;   /* teal thay violet — LILA BAN */
+    --surface:#F8FAFC; --card:#FFFFFF; --border:#E2E8F0;
+    --ink:#0F172A; --ink-2:#475569; --ink-3:#94A3B8;
+    --st1:#1E40AF; --st2:#3B82F6; --st3:#6EB9FF; --st4:#B4E197;
+    --r:12px; --shadow:0 1px 2px rgba(15,23,42,.06),0 1px 3px rgba(15,23,42,.08);
+    --fd:'Nunito',system-ui,sans-serif; --fb:'DM Sans',system-ui,sans-serif;
+    --fm:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--fb);background:var(--surface);color:var(--ink);font-size:14px;line-height:1.45}
+  .num{font-variant-numeric:tabular-nums}
+  .mono{font-family:var(--fm);font-size:12px}
+  svg.ic{width:1em;height:1em;display:inline-block;vertical-align:-.125em;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  /* ---------- banner ---------- */
+  .banner{background:#0F172A;color:#E2E8F0;padding:8px 14px;font-size:12px;text-align:center}
+  .banner b{color:var(--primary)} .banner .tag{background:#1E293B;border:1px solid #334155;border-radius:6px;padding:1px 8px;font-weight:700;color:#7DD3FC;margin-right:8px}
+  /* ---------- shell ---------- */
+  .page{max-width:1280px;margin:0 auto;padding:20px 24px 72px}
+  header.shell{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  h1{font-family:var(--fd);font-size:23px;font-weight:900;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+  h1 .ic{font-size:22px;color:var(--primary)}
+  .asof{font-size:12px;color:var(--ink-2);margin-top:3px}
+  .head-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .flag{font-size:11px;font-weight:700;color:var(--success);border:1px solid #BBF7D0;background:#F0FDF4;border-radius:999px;padding:3px 10px}
+  .btn{font-family:var(--fb);border:1px solid var(--border);background:var(--card);border-radius:10px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--ink-2);cursor:pointer;box-shadow:var(--shadow);display:inline-flex;align-items:center;gap:7px;transition:background .2s,color .2s,border-color .2s,transform .1s}
+  .btn:hover{background:#F1F5F9;color:var(--ink)} .btn:active{transform:scale(.98)}
+  .btn:focus-visible{outline:2px solid var(--st1);outline-offset:2px}
+  .live{border-radius:999px;padding:5px 12px}
+  .live .dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:breathe 1.6s ease-in-out infinite}
+  @keyframes breathe{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.25);opacity:.4}}
+  /* ---------- tabbar: SVG icons, KHÔNG emoji ---------- */
+  nav.tabs{display:inline-flex;gap:4px;background:var(--card);border-radius:var(--r);padding:4px;box-shadow:var(--shadow);margin-bottom:18px;flex-wrap:wrap}
+  .tab{font-family:var(--fb);border:0;background:transparent;padding:8px 15px;border-radius:9px;font-size:13.5px;font-weight:700;color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .2s,color .2s}
+  .tab .ic{font-size:15px}
+  .tab:hover{background:#EFF6FF} .tab:active{transform:scale(.98)}
+  .tab[aria-selected="true"]{background:var(--primary);color:#fff;box-shadow:0 1px 2px rgba(14,116,209,.35)}
+  .tab:focus-visible{outline:2px solid var(--st1);outline-offset:2px}
+  /* ---------- cards + stagger mount ---------- */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;animation:rise .45s cubic-bezier(.16,1,.3,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .card:nth-of-type(1){animation-delay:0ms}.card:nth-of-type(2){animation-delay:60ms}.card:nth-of-type(3){animation-delay:120ms}.card:nth-of-type(4){animation-delay:180ms}.card:nth-of-type(5){animation-delay:240ms}
+  @media (prefers-reduced-motion:reduce){.card{animation:none}.live .dot{animation:none}.skel{animation:none!important}}
+  .card h3{font-family:var(--fd);font-size:13px;font-weight:800;color:var(--ink-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .card h3 .sub{font-family:var(--fb);font-size:11px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink-3)}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:2fr 1fr}.g2e{grid-template-columns:1fr 1fr}
+  @media(max-width:980px){.g2,.g2e{grid-template-columns:1fr}.kstrip{grid-template-columns:repeat(2,1fr)!important}}
+  @media(max-width:640px){.kstrip{grid-template-columns:1fr!important}}
+  /* ---------- KPI STRIP (1 card, divide-x — mượn từ hướng B) ---------- */
+  .kstrip{display:grid;grid-template-columns:repeat(5,1fr)}
+  .kstrip>div{padding:14px 18px;border-left:1px solid var(--border)}
+  .kstrip>div:first-child{border-left:0}
+  .kpi .l{font-size:11px;color:var(--ink-2);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+  .kpi .v{font-family:var(--fd);font-size:27px;font-weight:900;letter-spacing:-.02em}
+  .kpi .d{font-size:11.5px;font-weight:700;margin-top:3px}
+  .up{color:var(--success)} .down{color:var(--danger)} .flat{color:var(--neutral);font-weight:500}
+  .badge-src{font-size:10px;font-weight:700;color:var(--ink-2);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1px 6px;margin-left:6px}
+  /* ---------- pills / chips : icon + text + color ---------- */
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;border-radius:999px;padding:3px 10px;border:1px solid}
+  .pill .ic{font-size:11px}
+  .pill.ok{color:var(--success);border-color:#BBF7D0;background:#F0FDF4}
+  .pill.warn{color:var(--warning);border-color:#FDE68A;background:#FFFBEB}
+  .pill.err{color:var(--danger);border-color:#FECACA;background:#FEF2F2}
+  .pill.idle{color:var(--neutral);border-color:var(--border);background:var(--surface)}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border-radius:7px;padding:2px 9px;border:1px solid var(--border);background:var(--surface);color:var(--ink-2)}
+  .chip.teal{color:var(--refusal);border-color:var(--refusal-bd);background:var(--refusal-bg)}
+  .chip.red{color:var(--danger);border-color:#FECACA;background:#FEF2F2}
+  .chip.blue{color:#1D4ED8;border-color:#BFDBFE;background:#EFF6FF}
+  .chip.mint{color:#15803D;border-color:#BBF7D0;background:#F0FDF4}
+  /* ---------- tables ---------- */
+  table.rows{width:100%;border-collapse:collapse}
+  table.rows th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-3);text-align:left;padding:6px 10px;border-bottom:1px solid var(--border)}
+  table.rows td{padding:9px 10px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+  table.rows tbody tr:last-child td{border-bottom:0}
+  tr.trace{cursor:pointer;transition:background .2s} tr.trace:hover{background:#EFF6FF}
+  tr.err-edge td:first-child{box-shadow:inset 3px 0 0 var(--danger)}
+  tr.detail{display:none} tr.detail.open{display:table-row} tr.detail td{background:#F8FAFC;border-bottom:2px solid var(--border)}
+  .tr-hint{font-size:11px;color:var(--ink-3)}
+  /* ---------- bars ---------- */
+  .stacked{display:flex;height:26px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+  .stacked>div{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;min-width:0}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--ink-2)}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+  .wf{display:flex;height:16px;border-radius:5px;overflow:hidden;background:var(--surface);border:1px solid var(--border)}
+  .wf i{display:block;height:100%}
+  .wf-l{font-size:10.5px;color:var(--ink-2)}
+  /* ---------- states gallery ---------- */
+  .skel{background:linear-gradient(90deg,#EEF2F7 25%,#E2E8F0 50%,#EEF2F7 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite;border-radius:6px;height:14px}
+  @keyframes shimmer{to{background-position:-200% 0}}
+  .errstrip{border:1px solid #FECACA;border-left:4px solid var(--danger);background:#FEF2F2;color:#7F1D1D;border-radius:0 var(--r) var(--r) 0;padding:10px 14px;font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .empty{border:1.5px dashed var(--border);border-radius:var(--r);padding:30px;text-align:center;color:var(--ink-2);font-size:13px;background:#fff}
+  .empty .ic{font-size:26px;color:var(--ink-3);margin-bottom:8px}
+  .stale{opacity:.62;position:relative}
+  .stale::after{content:"dữ liệu cũ";position:absolute;top:10px;right:10px;font-size:11px;font-weight:800;color:var(--warning);display:inline-flex;align-items:center;gap:4px}
+  .sec-title{font-family:var(--fd);font-size:16px;font-weight:900;margin:26px 0 12px;display:flex;align-items:center;gap:8px;color:var(--ink)}
+  .sec-title .ic{color:var(--primary);font-size:17px}
+  footer.note{margin-top:34px;font-size:12px;color:var(--ink-3);text-align:center}
+  table.diff td,table.diff th{font-size:12.5px}
+  .src{font-size:10px;font-weight:800;border-radius:5px;padding:1px 6px;white-space:nowrap}
+  .src.t1{background:#FEF3C7;color:#92400E;border:1px solid #FDE68A}
+  .src.um{background:#DBEAFE;color:#1E40AF;border:1px solid #BFDBFE}
+  .src.bo{background:#E0E7FF;color:#3730A3;border:1px solid #C7D2FE}
+</style>
+</head>
+<body>
+
+<!-- icon set (pattern file Icons.tsx thật — strokeWidth 2, 24 viewBox) -->
+<svg width="0" height="0" style="position:absolute"><defs>
+  <g id="i-monitor"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></g>
+  <g id="i-chip"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></g>
+  <g id="i-child"><circle cx="12" cy="7" r="3.5"/><path d="M5 21c0-4 3-6.5 7-6.5s7 2.5 7 6.5"/></g>
+  <g id="i-globe"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14 0 18-3-4-3-14.5 0-18z"/></g>
+  <g id="i-swatch"><rect x="3" y="3" width="18" height="18" rx="3"/><rect x="7" y="7" width="4" height="4"/><rect x="13" y="7" width="4" height="4"/><rect x="7" y="13" width="4" height="4"/><circle cx="15" cy="15" r="2"/></g>
+  <g id="i-refresh"><path d="M20 11a8 8 0 10-2.3 6.3M20 6v5h-5"/></g>
+  <g id="i-check"><path d="M20 6L9 17l-5-5"/></g>
+  <g id="i-x"><path d="M18 6L6 18M6 6l12 12"/></g>
+  <g id="i-warn"><path d="M12 3l10 18H2L12 3zM12 10v5M12 18.5v.5"/></g>
+  <g id="i-dash"><path d="M5 12h14"/></g>
+  <g id="i-slashb"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></g>
+  <g id="i-undo"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 016 6v5"/></g>
+  <g id="i-bolt"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></g>
+  <g id="i-inbox"><path d="M3 12l3-8h12l3 8v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7z"/><path d="M3 12h5l2 3h4l2-3h5"/></g>
+</defs></svg>
+
+<div class="banner"><span class="tag">PREVIEW v2</span> Hướng style <b>A · “Friendly Technical”</b> — brainstorm bởi <b>ui-ux-pro-max</b> × <b>design-taste-frontend-v1</b> · mọi số liệu là <b>MẪU</b> · font nạp online đúng như app (offline tự fallback) · spec: <span class="mono">docs/design/20260913_ops_dashboard_style_spec.md</span></div>
+
+<div class="page">
+<header class="shell">
+  <div>
+    <h1><svg class="ic"><use href="#i-monitor"/></svg> Giám sát vận hành</h1>
+    <div class="asof">EduPlatform Admin · cập nhật lúc <b class="num">21:42:05</b> · <span class="mono">/api/v1/admin/monitoring/*</span> · teacher-only</div>
+  </div>
+  <div class="head-right">
+    <span class="flag">● MONITORING_ENABLED: ON</span>
+    <button class="btn live"><span class="dot"></span> Live 10s</button>
+    <button class="btn"><svg class="ic"><use href="#i-refresh"/></svg> Cập nhật</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Chức năng giám sát">
+  <button class="tab" role="tab" aria-selected="false"><svg class="ic"><use href="#i-monitor"/></svg> Health hệ thống</button>
+  <button class="tab" role="tab" aria-selected="true"><svg class="ic"><use href="#i-chip"/></svg> RAG / LLM</button>
+  <button class="tab" role="tab" aria-selected="false"><svg class="ic"><use href="#i-child"/></svg> Học viên</button>
+  <button class="tab" role="tab" aria-selected="false"><svg class="ic"><use href="#i-globe"/></svg> API</button>
+</nav>
+
+<!-- ======= KPI STRIP: 1 card divide-x (thay 5 card rời của v1) ======= -->
+<div class="card kstrip">
+  <div class="kpi"><div class="l">Yêu cầu · 24h</div><div class="v num">133</div><div class="d up">▲ +18 <span class="flat">vs hôm qua</span></div></div>
+  <div class="kpi"><div class="l">e2e p50</div><div class="v num">18.4<span style="font-size:15px;font-weight:700">s</span></div><div class="d up">▲ −2.1s</div></div>
+  <div class="kpi"><div class="l">e2e p95</div><div class="v num">41.2<span style="font-size:15px;font-weight:700">s</span></div><div class="d down">▲ +3.4s</div></div>
+  <div class="kpi"><div class="l">Từ chối OOD đúng</div><div class="v num">4.5<span style="font-size:15px;font-weight:700">%</span></div><div class="d flat">6/133 · <svg class="ic" style="font-size:12px"><use href="#i-slashb"/></svg> teal = refusal</div></div>
+  <div class="kpi"><div class="l">Tokens · 24h</div><div class="v num">407,832</div><div class="d flat">≈ 3,066/req · 2–3 calls</div></div>
+</div>
+
+<div class="grid g2e" style="margin-top:14px">
+  <div class="card">
+    <h3>Validator verdicts <span class="sub">133 req · mode: <b>rule</b> (Tier 2 default)</span></h3>
+    <div class="stacked">
+      <div style="width:73.7%;background:var(--st4);color:#14532D">rule-pass 73.7%</div>
+      <div style="width:15.8%;background:var(--st2)">15.8%</div>
+      <div style="width:6.8%;background:var(--primary);color:#0C4A6E;font-size:10px">rew 6.8</div>
+      <div style="width:3.8%;background:var(--danger)"></div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--st4)"></i>rule-pass · 98 (TB 0.001s)</span>
+      <span><i style="background:var(--st2)"></i>escalate→LLM · 21</span>
+      <span><i style="background:var(--primary)"></i>llm-rewrite · 9</span>
+      <span><i style="background:var(--danger)"></i>error · 5</span>
+    </div>
+    <p class="tr-hint" style="margin-top:10px">Toàn bộ % lẻ — không số tròn “fake”. Nếu 100% escalate → badge gợi ý chỉnh <span class="mono">VALIDATOR_ESCALATION_THRESHOLD</span>.</p>
+  </div>
+  <div class="card">
+    <h3>Latency stages <span class="sub">TB/ngày · ms · ramp 4 màu + label chữ</span></h3>
+    <table class="rows"><tbody>
+      <tr><td class="num" style="width:36px">T5</td><td><div class="wf"><i style="width:6%;background:var(--st1)"></i><i style="width:12%;background:var(--st2)"></i><i style="width:79%;background:var(--st3)"></i><i style="width:3%;background:var(--st4)"></i></div><div class="wf-l num">pl 1.14 · rt 2.36 · <b>gen 15.21</b> · va 0.41 = 19.12s</div></td></tr>
+      <tr><td class="num">T6</td><td><div class="wf"><i style="width:5%;background:var(--st1)"></i><i style="width:10%;background:var(--st2)"></i><i style="width:83%;background:var(--st3)"></i><i style="width:2%;background:var(--st4)"></i></div><div class="wf-l num">pl 1.02 · rt 2.18 · <b>gen 18.04</b> · va 0.29 = 21.53s</div></td></tr>
+      <tr><td class="num">CN</td><td><div class="wf"><i style="width:4%;background:var(--st1)"></i><i style="width:8%;background:var(--st2)"></i><i style="width:86%;background:var(--st3)"></i><i style="width:2%;background:var(--st4)"></i></div><div class="wf-l num">pl 0.93 · rt 1.87 · <b>gen 20.93</b> · va 0.36 = 24.09s</div></td></tr>
+    </tbody></table>
+    <div class="legend"><span><i style="background:var(--st1)"></i>planner</span><span><i style="background:var(--st2)"></i>retrieval</span><span><i style="background:var(--st3)"></i>generator</span><span><i style="background:var(--st4)"></i>validator</span></div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <h3>RAG traces <span class="sub">rag_traces · 25 dòng/trang · 133 · as&nbsp;of&nbsp;21:42:05</span>
+    <span><button class="chip" style="cursor:pointer"><svg class="ic"><use href="#i-x"/></svg> chỉ lỗi</button> <button class="chip teal" style="cursor:pointer"><svg class="ic"><use href="#i-slashb"/></svg> chỉ từ chối</button> <button class="chip" style="cursor:pointer">vi | en</button></span></h3>
+  <table class="rows">
+    <thead><tr><th style="width:80px">Thời gian</th><th style="width:36px">Ngôn ngữ</th><th>Câu hỏi</th><th style="width:80px">e2e ⇅</th><th style="width:140px">Model</th><th style="width:130px">Verdict</th><th style="width:56px">Nguồn</th><th style="width:24px"></th></tr></thead>
+    <tbody>
+      <tr class="trace" onclick="tg(this)"><td class="num">20:31:12</td><td>vi</td><td>tại sao bầu trời màu xanh?</td><td class="num">21.43s</td><td class="mono">nex-n2.5-pro</td><td><span class="chip mint"><svg class="ic"><use href="#i-check"/></svg> rule-pass</span></td><td class="num">3</td><td>▾</td></tr>
+      <tr class="detail"><td colspan="8">
+        <div style="display:grid;grid-template-columns:1fr 290px;gap:16px">
+          <div>
+            <div class="wf" style="height:20px"><i style="width:3.1%;background:var(--st1)"></i><i style="width:5.2%;background:var(--st2)"></i><i style="width:89.7%;background:var(--st3)"></i><i style="width:2%;background:var(--st4)"></i></div>
+            <div class="wf-l num">planner <b>0.67s (3.1%)</b> · retrieval <b>1.12s (5.2%)</b> · generator <b>19.21s (89.7%)</b> · validator <b>0.43s (2.0%)</b> → bottleneck: generator (Kilo :free)</div>
+            <p style="margin-top:8px;font-size:12.5px" class="mono">planner:start → planner:done model=nex-n2.5-pro → generator:start → sources=3 → rule:pass → llm-validator:skipped</p>
+          </div>
+          <div>
+            <span class="chip blue">prompt 1,204</span> <span class="chip blue">completion 337</span> <span class="chip">calls 2</span><br>
+            <span class="chip" style="margin-top:6px">by_model · nex-n2.5-pro:free ×2</span><br>
+            <span class="chip mint" style="margin-top:6px">animal_sky#12 · animal_bird#4 · kb_momo#9</span>
+          </div>
+        </div></td></tr>
+      <tr class="trace" onclick="tg(this)"><td class="num">20:29:40</td><td>vi</td><td>số 9 cộng số 10 bằng bao nhiêu?</td><td class="num">9.77s</td><td class="mono">nex-n2.5-pro</td><td><span class="chip teal"><svg class="ic"><use href="#i-slashb"/></svg> từ chối OOD</span></td><td class="num">0</td><td>▾</td></tr>
+      <tr class="detail"><td colspan="8"><span class="wf-l">refusal_template_idx=<b>2</b>/8 (REFUSAL_VARIANTS xoay vòng — Tier 1) · hành vi ĐÚNG. Trả lời: “Bài này chưa nói về phép tính, con hỏi thầy/cô nhé!”</span></td></tr>
+      <tr class="trace err-edge" onclick="tg(this)"><td class="num">20:14:03</td><td>en</td><td>Can a turtle swim?</td><td class="num">46.12s</td><td class="mono">ultra-550b <span class="chip" style="padding:0 5px"><svg class="ic"><use href="#i-undo"/></svg> fallback</span></td><td><span class="chip red"><svg class="ic"><use href="#i-x"/></svg> llm-error</span></td><td class="num">3</td><td>▾</td></tr>
+      <tr class="detail"><td colspan="8"><span class="wf-l">nex-n2.5-pro APITimeoutError → cascade → model thật trong trace: <b>ultra-550b</b> ≠ model yêu cầu → icon+chữ “↩ fallback” (không chỉ màu — bản in đen trắng vẫn đọc được)</span></td></tr>
+      <tr class="trace" onclick="tg(this)"><td class="num">19:58:31</td><td>vi</td><td>con bướm thích ăn gì hả bác?</td><td class="num">15.94s</td><td class="mono">nex-n2.5-pro</td><td><span class="chip blue">↟ escalate→pass</span></td><td class="num">3</td><td>▾</td></tr>
+      <tr class="detail"><td colspan="8"><span class="wf-l">rule confidence 0.52 &lt; threshold 0.7 → LLM validator 3.94s → pass · rule_breaks: []</span></td></tr>
+      <tr class="trace" onclick="tg(this)"><td class="num">19:47:02</td><td>vi</td><td>con kiến sống ở đâu?</td><td class="num">13.98s</td><td class="mono">nex-n2.5-pro</td><td><span class="chip mint"><svg class="ic"><use href="#i-check"/></svg> rule-pass</span></td><td class="num">3</td><td>▾</td></tr>
+      <tr class="detail"><td colspan="8"><span class="wf-l">question lưu truncated (MONITORING_STORE_QUESTIONS=true) · answer chỉ length+hash</span></td></tr>
+    </tbody>
+  </table>
+  <div style="display:flex;justify-content:space-between;margin-top:10px"><span class="tr-hint num">‹ 1 / 6 ›</span><span class="tr-hint">Mọi state = icon + chữ + màu · hover không dịch chuyển layout · :active scale .98</span></div>
+</div>
+
+<!-- ================= GALERY TRẠNG THÁI (taste-v1 Rule 5) ================= -->
+<h2 class="sec-title"><svg class="ic"><use href="#i-bolt"/></svg> Galery trạng thái — P1 phải có đủ, không chờ polish</h2>
+<div class="grid g2e">
+  <div class="card">
+    <h3>1 · LOADING — skeleton đúng hình dạng thật <span class="sub">shimmer 1.4s · motion-reduce → đứng yên</span></h3>
+    <div class="kstrip" style="border:1px dashed var(--border);border-radius:10px;padding:8px">
+      <div style="padding:8px"><div class="skel" style="width:60%"></div><div class="skel" style="width:85%;height:24px;margin-top:8px"></div></div>
+      <div style="padding:8px"><div class="skel" style="width:55%"></div><div class="skel" style="width:80%;height:24px;margin-top:8px"></div></div>
+      <div style="padding:8px"><div class="skel" style="width:58%"></div><div class="skel" style="width:82%;height:24px;margin-top:8px"></div></div>
+      <div style="padding:8px"><div class="skel" style="width:50%"></div><div class="skel" style="width:78%;height:24px;margin-top:8px"></div></div>
+      <div style="padding:8px"><div class="skel" style="width:62%"></div><div class="skel" style="width:88%;height:24px;margin-top:8px"></div></div>
+    </div>
+    <div style="margin-top:10px"><div class="skel" style="height:14px;margin:6px 0"></div><div class="skel" style="height:14px;margin:6px 0;width:86%"></div><div class="skel" style="height:14px;margin:6px 0;width:70%"></div></div>
+  </div>
+  <div class="card">
+    <h3>2 · ERROR (inline) + 3 · STALE</h3>
+    <div class="errstrip"><svg class="ic"><use href="#i-warn"/></svg>
+      <span><b>GET …/monitoring/rag-traces → 500</b> — hiển thị dữ liệu cũ nhất lúc <b class="num">21:42:05</b></span>
+      <button class="btn" style="margin-left:auto;padding:4px 12px"><svg class="ic"><use href="#i-refresh"/></svg> Thử lại</button>
+    </div>
+    <p class="tr-hint" style="margin:8px 0 14px">Fail 2 lần liên tiếp → toàn tab tự chuyển sang chế độ stale bên dưới (không biến mất, không số giả).</p>
+    <div class="card stale" style="box-shadow:none"><h3>4 · EMPTY state</h3>
+      <div class="empty"><svg class="ic"><use href="#i-inbox"/></svg><div><b>Chưa có RAG trace nào.</b><br>Gửi 1 câu hỏi vào chat Lexi, hoặc kiểm tra flag <span class="mono">MONITORING_ENABLED / RAG_TRACE_STORE</span>.</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ================= BẢNG DIFF + NGUỒN LUẬT ================= -->
+<h2 class="sec-title"><svg class="ic"><use href="#i-swatch"/></svg> Diff v1 → v2 và “luật nào bắt đổi”</h2>
+<div class="card">
+  <table class="rows diff">
+    <thead><tr><th>#</th><th>v1 preview</th><th>v2 (hướng A)</th><th style="width:210px">Xuất xứ luật</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td>Inter font stack</td><td><b>Nunito</b> display + <b>DM Sans</b> body — đúng font app thật</td><td><span class="src t1">taste-v1</span> ANTI-SLOP “no Inter” + repo evidence</td></tr>
+      <tr><td class="num">2</td><td>Emoji ⚙️🤖🧒🌐 làm icon tab</td><td>SVG cùng bộ <span class="mono">Icons.tsx</span> hiện có (7 icon mới)</td><td><span class="src bo">cả 2</span> ANTI-EMOJI / “no emoji icons”</td></tr>
+      <tr><td class="num">3</td><td>Chip refusal <b>tím</b> #7C3AED</td><td>Chip refusal <b>teal</b> #0F766E</td><td><span class="src t1">taste-v1</span> THE LILA BAN</td></tr>
+      <tr><td class="num">4</td><td>5 KPI card rời</td><td><b>KPI strip</b> 1 card divide-x</td><td><span class="src t1">taste-v1</span> anti-card-overuse (mượn B)</td></tr>
+      <tr><td class="num">5</td><td>Số tròn 78% · 128 · 41.0s</td><td>Số “bẩn” 73.7% · 133 · 41.2s · 407,832</td><td><span class="src t1">taste-v1</span> no fake numbers</td></tr>
+      <tr><td class="num">6</td><td>Có empty + stale</td><td>+ <b>skeleton shimmer</b> + <b>error inline strip</b> (gallery trên)</td><td><span class="src t1">taste-v1</span> Rule 5 mandatory states</td></tr>
+      <tr><td class="num">7</td><td>Tĩnh hoàn toàn</td><td>Stagger mount 60ms/card · breathing dot · :active .98 — <b>data không bao giờ anim</b></td><td><span class="src t1">taste-v1</span> motion 6 + <span class="src um">ui-max</span> honesty</td></tr>
+      <tr><td class="num">8</td><td>Hover tức thì</td><td>transition-colors 200ms · focus-visible ring · cursor-pointer</td><td><span class="src um">ui-max</span> checklist</td></tr>
+      <tr><td class="num">9</td><td>Tabular-nums một phần</td><td><span class="mono">.num</span> áp dụng MỌI số (đã bật ở trên)</td><td><span class="src um">ui-max</span> + spec cũ</td></tr>
+    </tbody>
+  </table>
+  <p class="tr-hint" style="margin-top:10px">Deviations có chủ đích (giữ lại dù trái luật v1): duo-tone xanh+mint thay “max 1 accent” · không nạp webfont mono mới (tabular-nums đủ) · dashboard tiles ≠ “3-col feature row” bị cấm. Chi tiết §4 spec.</p>
+</div>
+
+<footer class="note">Style spec brainstorm: ui-ux-pro-max × design-taste-frontend-v1 · hướng A “Friendly Technical” · diff vs v1: 20260913_ops_dashboard_preview.html · schema/API không đổi — style thuần presentation · 2026-09-13</footer>
+</div>
+
+<script>
+  function tg(row){const d=row.nextElementSibling;d.classList.toggle('open');row.lastElementChild.textContent=d.classList.contains('open')?'▴':'▾';}
+  // roving tabindex demo (pattern component thật)
+  const tabs=[...document.querySelectorAll('[role=tab]')];
+  tabs.forEach((b,i)=>{b.tabIndex=i===1?0:-1;b.addEventListener('keydown',e=>{
+    if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;e.preventDefault();
+    const n=tabs[(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length];
+    tabs.forEach(t=>t.tabIndex=-1);n.tabIndex=0;n.focus();});});
+</script>
+</body>
+</html>

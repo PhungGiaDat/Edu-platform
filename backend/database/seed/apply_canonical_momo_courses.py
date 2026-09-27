@@ -75,6 +75,7 @@ class InMemoryMomoCatalogStore:
                 "age_range": course.age_range,
                 "level": course.level,
                 "thumbnail": copy.deepcopy(course.thumbnail),
+                "course_trailer": copy.deepcopy(course.course_trailer),
                 "catalog_preview": [copy.deepcopy(item) for item in course.catalog_preview],
                 "is_published": course.is_published,
             }
@@ -220,6 +221,7 @@ def _course_metadata_payload(course) -> dict[str, Any]:
         "age_range": course.age_range,
         "level": course.level,
         "thumbnail": copy.deepcopy(course.thumbnail),
+        "course_trailer": copy.deepcopy(course.course_trailer),
         "catalog_preview": [copy.deepcopy(item) for item in course.catalog_preview],
         "is_published": course.is_published,
     }
@@ -712,7 +714,7 @@ async def _load_live_store(session, manifest: ManifestCatalog, course_id: str | 
             text(
                 "SELECT course_id, title, title_vi, description, description_vi, thumbnail_url, "
                 "subtitle_vi, theme, category_key, category_label, category_icon, age_range, level, "
-                "thumbnail, catalog_preview, is_published "
+                "thumbnail, course_trailer, catalog_preview, is_published "
                 "FROM courses WHERE course_id=ANY(CAST(:course_ids AS text[]))"
             ),
             {"course_ids": course_ids},
@@ -738,6 +740,7 @@ async def _load_live_store(session, manifest: ManifestCatalog, course_id: str | 
             "age_range": str(row["age_range"] or ""),
             "level": str(row["level"] or ""),
             "thumbnail": copy.deepcopy(row["thumbnail"]),
+            "course_trailer": copy.deepcopy(row.get("course_trailer")),
             "catalog_preview": copy.deepcopy(row["catalog_preview"] or []),
             "is_published": bool(row["is_published"]),
         }
@@ -950,6 +953,7 @@ async def _persist_live_changes(session, before: dict[str, Any], store: InMemory
         "age_range",
         "level",
         "thumbnail",
+        "course_trailer",
         "catalog_preview",
         "is_published",
     )
@@ -962,7 +966,7 @@ async def _persist_live_changes(session, before: dict[str, Any], store: InMemory
                 "description_vi=:description_vi, thumbnail_url=:thumbnail_url, subtitle_vi=:subtitle_vi, "
                 "theme=:theme, category_key=:category_key, category_label=:category_label, "
                 "category_icon=:category_icon, age_range=:age_range, level=:level, "
-                "thumbnail=CAST(:thumbnail AS jsonb), catalog_preview=CAST(:catalog_preview AS jsonb), "
+                "thumbnail=CAST(:thumbnail AS jsonb), course_trailer=CAST(:course_trailer AS jsonb), catalog_preview=CAST(:catalog_preview AS jsonb), "
                 "is_published=:is_published WHERE course_id=:course_id"
             ),
             {
@@ -980,6 +984,7 @@ async def _persist_live_changes(session, before: dict[str, Any], store: InMemory
                 "age_range": row["age_range"],
                 "level": row["level"],
                 "thumbnail": json.dumps(row["thumbnail"], ensure_ascii=False),
+                "course_trailer": json.dumps(row["course_trailer"], ensure_ascii=False),
                 "catalog_preview": json.dumps(row["catalog_preview"], ensure_ascii=False),
                 "is_published": row["is_published"],
             },

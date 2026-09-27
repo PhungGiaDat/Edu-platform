@@ -57,6 +57,19 @@ class PronunciationService {
     private recordingFormat = { mimeType: 'audio/webm', extension: 'webm' };
     private useServerFallback = false;
     private serverAvailable: boolean | null = null; // null = not checked yet
+    private autoStopTimer: ReturnType<typeof setTimeout> | null = null;
+
+    /** Attempt id valid = current session id. Stale async callbacks discarded. */
+    private isAttemptActive(id: number): boolean {
+        return id === this.sessionId;
+    }
+
+    private clearAutoStopTimer(): void {
+        if (this.autoStopTimer !== null) {
+            clearTimeout(this.autoStopTimer);
+            this.autoStopTimer = null;
+        }
+    }
 
     constructor() {
         this.initRecognition();
@@ -81,15 +94,31 @@ class PronunciationService {
         this.recognition.maxAlternatives = 3;
 
         this.recognition.onresult = (event: any) => {
-            const result = event.results[0][0];
-            this.handleResult(result.transcript, result.confidence, 'webspeech');
+            const alternatives = Array.from(event.results[0]) as Array<{ transcript: string; confidence: number }>;
+            // Web Speech returns up to maxAlternatives guesses; pick the one
+            // closest to the expected word instead of blindly taking the first.
+            const best = alternatives.reduce((a, b) =>
+                this.calculateSimilarity(b.transcript.toLowerCase().trim(), this.expectedWord)
+                > this.calculateSimilarity(a.transcript.toLowerCase().trim(), this.expectedWord)
+                    ? b : a
+            );
+            this.handleResult(best.transcript, best.confidence, 'webspeech');
         };
 
         this.recognition.onerror = async (event: any) => {
             console.error('[Pronunciation] Web Speech error:', event.error);
             this.isListening = false;
 
-            if (['network', 'service-not-allowed', 'not-allowed'].includes(event.error)) {
+            // User denied mic permission: terminal. Server fallback also needs the
+            // mic, so falling back would just fail again — surface it now.
+            if (event.error === 'not-allowed') {
+                eventBus.emit('PRONUNCIATION_ERROR' as any, {
+                    error: 'microphone-not-allowed'
+                });
+                return;
+            }
+
+            if (['network', 'service-not-allowed'].includes(event.error)) {
                 console.log('[Pronunciation] Trying server fallback due to error');
                 this.useServerFallback = true;
                 await this.startServerListening();
@@ -101,12 +130,11 @@ class PronunciationService {
             });
         };
 
-        const boundSessionId = this.sessionId;
+        // No frozen session guard: onend must always clear listening state and
+        // emit ENDED, else a new attempt after sessionId++ leaves us deadlocked.
         this.recognition.onend = () => {
-            if (boundSessionId === this.sessionId) {
-                this.isListening = false;
-                eventBus.emit('PRONUNCIATION_ENDED' as any, {});
-            }
+            this.isListening = false;
+            eventBus.emit('PRONUNCIATION_ENDED' as any, {});
         };
 
         console.log('[Pronunciation] Service initialized with Web Speech API');
@@ -143,6 +171,14 @@ class PronunciationService {
         this.sessionId++;
         this.expectedWord = expectedWord.toLowerCase().trim();
         this.onResultCallback = onResult || null;
+
+        // Re-probe Web Speech each attempt. A transient error (one-off network
+        // blip, denied-then-granted mic) previously flipped this flag on the
+        // singleton for the whole session; reset it when Web Speech exists so we
+        // recover. Browsers without recognition keep it true (set in constructor).
+        if (this.recognition) {
+            this.useServerFallback = false;
+        }
 
         if (this.useServerFallback) {
             await this.startServerListening();
@@ -199,6 +235,7 @@ class PronunciationService {
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const attemptId = this.sessionId;
 
             this.audioChunks = [];
             this.recordingFormat = this.getSupportedRecordingFormat();
@@ -215,6 +252,9 @@ class PronunciationService {
             this.mediaRecorder.onstop = async () => {
                 // Stop all tracks to release microphone
                 stream.getTracks().forEach(track => track.stop());
+
+                // Stale attempt — mic released, skip server round-trip
+                if (!this.isAttemptActive(attemptId)) return;
 
                 // Send audio to server for transcription
                 await this.sendAudioToServer();
@@ -429,17 +469,13 @@ class PronunciationService {
     }
 
     /**
-     * Check if Web Speech API is available
+     * Force use of server fallback (useful for testing)
      */
-    hasWebSpeech(): boolean {
-        return !!this.recognition;
-    }
-
-    /**
-     * Check if using server fallback
-     */
-    isUsingServerFallback(): boolean {
-        return this.useServerFallback;
+    setUseServerFallback(use: boolean): void {
+        this.useServerFallback = use;
+        if (use) {
+            this.checkServerAvailability();
+        }
     }
 
     /**
@@ -449,15 +485,6 @@ class PronunciationService {
         return this.isListening;
     }
 
-    /**
-     * Force use of server fallback (useful for testing)
-     */
-    setUseServerFallback(use: boolean): void {
-        this.useServerFallback = use;
-        if (use) {
-            this.checkServerAvailability();
-        }
-    }
 }
 
 // Singleton instance

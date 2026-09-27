@@ -755,6 +755,8 @@ export const PetViewer3D: React.FC<PetViewer3DProps> = ({
 export interface PetViewer3DCompactProps {
     /** Model URL to load */
     modelUrl: string;
+    /** Separate texture URL for models that ship textures apart from the GLB */
+    textureUrl?: string | null;
     /** Size of the viewer (square) */
     size?: number;
     /** Scale multiplier for the model */
@@ -768,6 +770,7 @@ export interface PetViewer3DCompactProps {
  */
 export const PetViewer3DCompact: React.FC<PetViewer3DCompactProps> = ({
     modelUrl,
+    textureUrl,
     size = 100,
     scale = 1.5,
 }) => {
@@ -810,6 +813,7 @@ export const PetViewer3DCompact: React.FC<PetViewer3DCompactProps> = ({
                         <Suspense fallback={null}>
                             <Pet3DModel
                                 url={modelUrl}
+                                textureUrl={textureUrl}
                                 scale={scale}
                                 enableAnimation={false}
                                 onError={handleError}

@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .codex/hooks/thesis_router.py",
+            "commandWindows": "python .codex/hooks/thesis_router.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

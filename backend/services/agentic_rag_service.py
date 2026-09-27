@@ -49,6 +49,7 @@ from services.qdrant_rag_service import (
     get_qdrant_rag_service,
 )
 from services.rag_content_rules import REFUSAL_VARIANTS, evaluate_answer
+from services.retrieval_reranker import rerank
 from repositories.learning_progress_repository import LearningProgressRepository
 from repositories.chat_repository import ChatRepository
 
@@ -355,7 +356,12 @@ class AgenticRAGService:
         context_documents: List[Dict[str, Any]] = []
         _r0 = time.perf_counter()
         try:
-            context_documents = await self._retriever.retrieve(search_query)
+            raw_documents = await self._retriever.retrieve(search_query)
+            context_documents = (
+                rerank(search_query, raw_documents, top_k=settings.QDRANT_CONTEXT_LIMIT)
+                if raw_documents
+                else []
+            )
             logger.info(f"[AgenticRAG] Generator found {len(context_documents)} Qdrant documents")
         except QdrantRAGUnavailable:
             logger.warning("[AgenticRAG] Qdrant retrieval unavailable; continuing without context")

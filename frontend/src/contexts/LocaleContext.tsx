@@ -21,8 +21,7 @@ const detectBrowserLocale = (): Locale => {
   return candidates.some((candidate) => typeof candidate === 'string' && candidate.toLowerCase().startsWith('vi')) ? 'vi' : 'en';
 };
 
-const messages: Record<Locale, Record<string, string>> = {
-  en: {
+const en = {
     language: 'Language',
     english: 'English',
     vietnamese: 'Vietnamese',
@@ -193,8 +192,69 @@ const messages: Record<Locale, Record<string, string>> = {
     gamesXpPending: 'Claiming reward…',
     gamesXpDailyDone: 'This game already gave XP today — come back tomorrow!',
     gamesPlayAgain: 'Play again',
-  },
-  vi: {
+    // Sidebar + nav (EN parity fill)
+    navMyPet: 'My Pet',
+    navPetShort: 'Pet',
+    navStickers: 'Stickers',
+    navStickersShort: 'Stickers',
+    navMore: 'More',
+    navMoreAdventures: 'More adventures',
+    expandNavigation: 'Expand navigation',
+    collapseNavigation: 'Collapse navigation',
+    primaryNavigation: 'Main navigation',
+    learningSidebar: 'Learning sidebar',
+    dailyProgressAndLearningStreak: 'Daily progress and learning streak',
+    progressTracker: 'Progress tracker',
+    stickers: 'Stickers',
+    courseCompletion: 'Course completion',
+    noPublishedCourses: 'No published courses yet',
+    dailyGoal: "Today's goal",
+    minutes: 'min',
+    todaysGoal: "Today's goal",
+    keepGoing: 'Keep going',
+    learnALittleToday: 'Learn a little today',
+    startFreeTrial: 'Start free trial',
+    jumpIntoAr: 'Explore AR',
+    browseCourses: 'Browse courses',
+    closeMoreMenu: 'Close more menu',
+    sidebarTagline: 'Play. Explore. Learn English.',
+    dailyShort: 'Daily',
+    quickLinks: 'Quick links',
+    // Auth pages
+    loginTitle: 'Welcome back',
+    loginEmail: 'Email',
+    loginPassword: 'Password',
+    loginSubmit: 'LOG IN',
+    loginSubmitting: 'LOGGING IN...',
+    loginTryWithout: 'TRY WITHOUT AN ACCOUNT',
+    loginNewHere: 'New here?',
+    loginCreateAccount: 'Create account',
+    registerTitle: 'Start your journey',
+    registerSubtitle: 'Create a learning profile and unlock full progress tracking.',
+    registerName: 'Your name',
+    registerNamePlaceholder: 'Enter your name',
+    registerEmail: 'Email',
+    registerPassword: 'Password',
+    registerSubmit: 'CREATE ACCOUNT',
+    registerSubmitting: 'CREATING ACCOUNT...',
+    registerTryWithout: 'TRY WITHOUT AN ACCOUNT',
+    registerAlready: 'Already have an account?',
+    registerSignIn: 'Sign in',
+    // Session break reminder
+    sessionWarningTitle: 'Break time is coming up!',
+    sessionLimitTitle: 'Time for a break!',
+    sessionWarningTime: 'Only {time} left!',
+    sessionWarningGreatJob: "You're doing great!",
+    sessionWarningBodySuffix: "You've studied really hard today!",
+    sessionLimitBody: "You've been learning for a while. Give your eyes a rest!",
+    sessionKeepGoing: 'Keep learning!',
+    sessionTakeBreak: 'Take a break!',
+    sessionExitNow: 'Exit now',
+    sessionLimitFooter: 'Rest is important for learning too! See you again soon!',
+    sessionWarningFooter: 'You can always come back later!',
+} satisfies Record<string, string>;
+
+const vi = {
     language: 'Ngôn ngữ',
     english: 'Tiếng Anh',
     vietnamese: 'Tiếng Việt',
@@ -423,8 +483,9 @@ const messages: Record<Locale, Record<string, string>> = {
     gamesXpPending: 'Đang nhận phần thưởng…',
     gamesXpDailyDone: 'Hôm nay đã nhận XP game này rồi — mai chơi tiếp nhé!',
     gamesPlayAgain: 'Chơi lại',
-  },
-};
+} satisfies Record<keyof typeof en, string>;
+
+const messages: Record<Locale, typeof en> = { en, vi };
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
@@ -497,6 +558,18 @@ export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     </I18nextProvider>
   );
 };
+
+/**
+ * Type-safe inline copy selector. Enforces identical key shapes across the
+ * `en`/`vi` dictionaries at compile time (missing/extra keys become TS errors),
+ * with zero runtime overhead. Replaces the raw `{ en, vi }[locale]` idiom.
+ */
+export function localeCopy<T extends Record<string, unknown>>(
+  map: Record<Locale, T>,
+  locale: Locale,
+): T {
+  return map[locale];
+}
 
 export const useLocale = () => {
   const context = useContext(LocaleContext);

@@ -114,6 +114,36 @@ describe('PronunciationService browser fallback', () => {
     expect(audio.type).toBe('audio/mp4');
   });
 
+  it('re-tries Web Speech on the next attempt after a transient fallback error', async () => {
+    const getUserMedia = vi.fn().mockResolvedValue({
+      getTracks: () => [{ stop: vi.fn() }],
+    });
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: { getUserMedia },
+    });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ available: true }),
+    }));
+
+    const { default: PronunciationService } = await import(
+      '@/features/pronunciation/services/PronunciationService'
+    );
+    const service = new PronunciationService();
+
+    // First attempt errors and falls back to server.
+    await service.startListening('Elephant');
+    expect(MockRecognition.instance.start).toHaveBeenCalledTimes(1);
+    MockRecognition.instance.onerror?.({ error: 'network' });
+    await vi.waitFor(() => expect(getUserMedia).toHaveBeenCalledTimes(1));
+
+    // Second attempt must probe Web Speech again, not stay stuck on server.
+    await service.startListening('Elephant');
+    expect(MockRecognition.instance.start).toHaveBeenCalledTimes(2);
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+  });
+
   it('emits a friendly terminal error only when server fallback is unavailable', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,

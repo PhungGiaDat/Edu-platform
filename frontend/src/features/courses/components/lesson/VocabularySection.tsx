@@ -5,6 +5,7 @@ import { AudioService } from '@/services/AudioService';
 import { getAssetCandidateUrls } from '@/lib/courseAssets';
 import { getPronunciationService, type PronunciationResult } from '@/services/PronunciationService';
 import { eventBus } from '@/runtime/EventBus';
+import { localeCopy } from '@/contexts/LocaleContext';
 import { ClayButton, ClayStage, ClayPill } from './clayComponents';
 
 export interface PracticeResult {
@@ -70,7 +71,7 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  const copy = {
+  const copy = localeCopy({
     en: {
       instruction: 'Listen carefully & repeat after Momo',
       listen: 'Listen',
@@ -99,7 +100,7 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
       finishVocab: 'Hoàn thành từ mới 🎉',
       allDone: `Con đã học xong ${vocabulary.length} từ mới!`,
     },
-  }[locale];
+  }, locale);
 
   useEffect(() => {
     const handleStarted = (payload: { expectedWord?: string }) => {
@@ -123,6 +124,19 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
       getPronunciationService().stopListening();
     }
   }, []);
+
+  // Cancel any in-flight pronunciation when the active word changes (covers
+  // both the Next button and the page-dot jumps — both only set currentIndex).
+  useEffect(() => {
+    if (activeSpeechWordRef.current === null) return;
+    pronunciationAttemptRef.current += 1;
+    activeSpeechWordRef.current = null;
+    pronunciationCleanupRef.current?.();
+    pronunciationCleanupRef.current = null;
+    getPronunciationService().stopListening();
+    setIsListeningKey(null);
+    setSpeechState('idle');
+  }, [currentIndex]);
 
   const handlePlayAudio = async (item: VocabularyItem) => {
     setErrorMessage(null);

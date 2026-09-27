@@ -44,6 +44,7 @@ class CourseORM(Base):
     catalog_preview: Mapped[list[Any]] = mapped_column(JSONB, default=list)
     student_testimonials: Mapped[list[Any]] = mapped_column(JSONB, default=list)
     enrollment_cta: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB)
+    course_trailer: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB)
     lessons: Mapped[list["LessonORM"]] = relationship(back_populates="course", lazy="selectin")
 
 

@@ -1,0 +1,525 @@
+{
+  "course_id": "momo-school-food-english-5-7",
+  "lesson_id": "my-classroom",
+  "lesson_title_en": "My Classroom",
+  "lesson_title_vi": "Lớp học của em",
+  "target_age": "5-8",
+  "cefr_level": "Pre-A1",
+  "research": {
+    "level": "Pre-A1 Starters (early beginner)",
+    "summary": "The school and classroom theme is universally relevant for children aged 5-8 entering kindergarten and primary grade 1. Objects children physically touch daily—a book, a pencil, a backpack—create the strongest multisensory connections in early language acquisition.",
+    "sources": [
+      {
+        "source_name": "Cambridge English Pre A1 Starters Wordlist & Wordlist Picture Book",
+        "source_url": "https://www.cambridgeenglish.org/images/starters-word-list-picture-book.pdf",
+        "source_type": "official vocabulary and exam specification",
+        "topic_used": "School / Classroom objects (book, pencil, bag, pen, desk)",
+        "what_was_derived": [
+          "Standard Pre-A1 school vocabulary definitions",
+          "Reading & Writing Part 1 task style (Look and read: 'This is a book [tick/cross]')",
+          "Listening Part 3 object selection patterns"
+        ]
+      },
+      {
+        "source_name": "British Council LearnEnglish Kids - School Things",
+        "source_url": "https://learnenglishkids.britishcouncil.org/print-make/flashcards/school-things-flashcards",
+        "source_type": "open educational young learner resource",
+        "topic_used": "School things flashcards, picture-word matching, and chants",
+        "what_was_derived": [
+          "Interactive question frames: 'What's in your school bag?', 'What do you have?'",
+          "Tactile classroom action prompts (opening book, holding pencil, wearing bag)",
+          "Bilingual learner scaffolding for Vietnamese children"
+        ]
+      },
+      {
+        "source_name": "Oxford Family and Friends 1 (Curriculum Preview)",
+        "source_url": "https://elt.oup.com/catalogue/items/global/young_learners/family_and_friends/",
+        "source_type": "commercial textbook syllabus reference",
+        "topic_used": "Unit 1: What's this? (School things)",
+        "what_was_derived": [
+          "Target question pattern: 'What is this? - It is a [noun]'",
+          "Stationery distractor set (ruler, eraser, pen)"
+        ]
+      },
+      {
+        "source_name": "Cambridge Super Minds Starter (Curriculum Preview)",
+        "source_url": "https://www.cambridge.org/gb/cambridgeenglish/catalog/primary/super-minds-2nd-edition",
+        "source_type": "commercial textbook syllabus reference",
+        "topic_used": "Unit 1: My Classroom",
+        "what_was_derived": [
+          "Imperative beginner instructions: 'Open your book', 'Put your pencil in your bag'",
+          "Desk and classroom visual layouts"
+        ]
+      }
+    ],
+    "pedagogical_patterns": {
+      "sentence_structures": [
+        "This is a book.",
+        "I have a pencil.",
+        "My bag is blue.",
+        "Open your book.",
+        "Put the pencil in the bag."
+      ],
+      "distractor_vocabulary": ["Ruler", "Eraser", "Desk", "Chair", "Pen", "Crayon"],
+      "visual_contexts": "Bright primary classroom, wooden student desk with colorful stationery, open picture book, cheerful backpack"
+    }
+  },
+  "video": {
+    "title": "What Is In Your Bag? | School Vocabulary Song for Kids | Dream English Kids",
+    "url": "https://www.youtube.com/watch?v=JLMsm-D7kjk",
+    "provider": "YouTube",
+    "channel": "Dream English Kids",
+    "duration_seconds": 150,
+    "source": "official_curated",
+    "embeddable": true,
+    "pedagogical_reason": "Features an energetic, highly repetitive guessing song with host Matt asking 'What is in your bag?' and directly highlighting 'A book!', 'A pencil!', and 'A bag!'. Perfectly suited for 5-8 year old ESL learners."
+  },
+  "vocabulary": [
+    {
+      "vocabulary_id": "my-classroom:book",
+      "word_en": "Book",
+      "word_vi": "Quyển sách",
+      "phonetic": "/bʊk/",
+      "simple_sentence": "This is my book.",
+      "explanation_vi": "Book là quyển sách chứa đầy những hình ảnh đẹp và câu chuyện thú vị để bé mở ra xem.",
+      "listen_and_choose_prompt": "Con hãy nghe Momo và tìm quyển sách nhé!",
+      "recognition_question": "Đâu là quyển sách - Book?",
+      "meaning_question": "Từ 'Book' trong tiếng Anh nghĩa là gì?",
+      "context_question": "Vật nào có nhiều trang giấy xinh xắn để bé mở ra đọc mỗi ngày?",
+      "canonical_asset_ref": {
+        "image_path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
+        "audio_path": "courses/momo-school-food-english-5-7/lessons/my-classroom/audio/book.wav"
+      }
+    },
+    {
+      "vocabulary_id": "my-classroom:pencil",
+      "word_en": "Pencil",
+      "word_vi": "Bút chì",
+      "phonetic": "/ˈpensl/",
+      "simple_sentence": "I have a pencil.",
+      "explanation_vi": "Pencil là chiếc bút chì xinh xắn giúp bé tập tô màu, vẽ tranh và viết chữ thật đẹp.",
+      "listen_and_choose_prompt": "Con hãy lắng nghe và chọn cây bút chì nhé!",
+      "recognition_question": "Đâu là chiếc bút chì - Pencil?",
+      "meaning_question": "Từ 'Pencil' có nghĩa là gì nào?",
+      "context_question": "Đồ dùng học tập nào bé cầm trên tay để vẽ hình bạn gấu Momo?",
+      "canonical_asset_ref": {
+        "image_path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
+        "audio_path": "courses/momo-school-food-english-5-7/lessons/my-classroom/audio/pencil.wav"
+      }
+    },
+    {
+      "vocabulary_id": "my-classroom:bag",
+      "word_en": "Bag",
+      "word_vi": "Cặp sách",
+      "phonetic": "/bæɡ/",
+      "simple_sentence": "My bag is blue.",
+      "explanation_vi": "Bag là chiếc cặp sách (ba lô) dùng để đựng sách, bút chì và đồ dùng đến trường mỗi ngày.",
+      "listen_and_choose_prompt": "Con hãy nghe và tìm chiếc cặp sách xinh xắn nhé!",
+      "recognition_question": "Đâu là chiếc cặp sách - Bag?",
+      "meaning_question": "Từ 'Bag' trong tiếng Anh nghĩa là gì?",
+      "context_question": "Đồ vật nào giúp bé cất gọn sách và bút khi đi đến trường?",
+      "canonical_asset_ref": {
+        "image_path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
+        "audio_path": "courses/momo-school-food-english-5-7/lessons/my-classroom/audio/bag.wav"
+      }
+    }
+  ],
+  "listen_choose": [
+    {
+      "question_id": "my-classroom-lc-01",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé hãy nghe và chạm vào quyển sách Book nhé!",
+      "audio_text": "Book",
+      "target_vocabulary_id": "my-classroom:book",
+      "options": [
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "correctOptionId": "book",
+      "feedbackCorrect": "Chính xác! Bé chọn đúng quyển sách Book rồi!",
+      "feedbackIncorrect": "Chưa đúng rồi. Bấm vào loa để nghe lại tiếng Book nhé!"
+    },
+    {
+      "question_id": "my-classroom-lc-02",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé nghe rõ từ này: Pencil!",
+      "audio_text": "Pencil",
+      "target_vocabulary_id": "my-classroom:pencil",
+      "options": [
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "correctOptionId": "pencil",
+      "feedbackCorrect": "Tuyệt vời! Pencil là chiếc bút chì xinh!",
+      "feedbackIncorrect": "Thử lại nào bé ơi, nghe xem chiếc bút chì Pencil ở đâu nha."
+    },
+    {
+      "question_id": "my-classroom-lc-03",
+      "type": "listen_and_choose",
+      "prompt_vi": "Chiếc cặp đi học đâu rồi? Nghe nhé: Bag!",
+      "audio_text": "Bag",
+      "target_vocabulary_id": "my-classroom:bag",
+      "options": [
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" },
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" }
+      ],
+      "correctOptionId": "bag",
+      "feedbackCorrect": "Đúng rồi! Bag là chiếc cặp sách đáng yêu!",
+      "feedbackIncorrect": "Chưa đúng rồi. Bé nghe lại xem chiếc cặp Bag ở đâu nhé!"
+    },
+    {
+      "question_id": "my-classroom-lc-04",
+      "type": "listen_and_choose",
+      "prompt_vi": "Lắng nghe câu này nhé: Open your book!",
+      "audio_text": "Open your book",
+      "target_vocabulary_id": "my-classroom:book",
+      "options": [
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" },
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" }
+      ],
+      "correctOptionId": "book",
+      "feedbackCorrect": "Xuất sắc! 'Open your book' - Hãy mở sách ra nào!",
+      "feedbackIncorrect": "Bé nghe lại câu này xem Momo nhắc đến đồ vật nào nha."
+    },
+    {
+      "question_id": "my-classroom-lc-05",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé nghe xem từ nào giúp con vẽ tranh nhé: I have a pencil!",
+      "audio_text": "I have a pencil",
+      "target_vocabulary_id": "my-classroom:pencil",
+      "options": [
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "correctOptionId": "pencil",
+      "feedbackCorrect": "Rất chuẩn! 'I have a pencil' - Mình có một cây bút chì!",
+      "feedbackIncorrect": "Gần đúng rồi, con nghe lại chữ Pencil nhé."
+    },
+    {
+      "question_id": "my-classroom-lc-06",
+      "type": "listen_and_choose",
+      "prompt_vi": "Chiếc cặp xinh đến trường: A school bag!",
+      "audio_text": "A school bag",
+      "target_vocabulary_id": "my-classroom:bag",
+      "options": [
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "correctOptionId": "bag",
+      "feedbackCorrect": "Hoan hô! 'A school bag' - Chiếc cặp đi học xinh xắn!",
+      "feedbackIncorrect": "Bé lắng nghe kỹ âm 'Bag' nha!"
+    }
+  ],
+  "match": [
+    {
+      "match_id": "my-classroom-match-01",
+      "title_vi": "Ghép từ với nghĩa tiếng Việt",
+      "instruction_vi": "Bé hãy chạm vào từ tiếng Anh ở bên trái, rồi chạm vào nghĩa tiếng Việt tương ứng ở bên phải nhé!",
+      "pairs": [
+        { "left_id": "Book", "left_text": "Book", "right_id": "Quyensach", "right_text": "Quyển sách", "vocabulary_id": "my-classroom:book" },
+        { "left_id": "Pencil", "left_text": "Pencil", "right_id": "Butchi", "right_text": "Bút chì", "vocabulary_id": "my-classroom:pencil" },
+        { "left_id": "Bag", "left_text": "Bag", "right_id": "Capsach", "right_text": "Cặp sách", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "feedback_correct_vi": "Tuyệt vời! Bé đã nối đúng tất cả đồ dùng học tập!"
+    },
+    {
+      "match_id": "my-classroom-match-02",
+      "title_vi": "Ghép âm thanh với hình ảnh lớp học",
+      "instruction_vi": "Nghe âm thanh và ghép vào hình đồ dùng học tập tương ứng.",
+      "pairs": [
+        { "left_id": "audio_book", "left_text": "🔊 Book", "right_id": "img_book", "right_text": "Hình Quyển sách", "vocabulary_id": "my-classroom:book" },
+        { "left_id": "audio_pencil", "left_text": "🔊 Pencil", "right_id": "img_pencil", "right_text": "Hình Bút chì", "vocabulary_id": "my-classroom:pencil" },
+        { "left_id": "audio_bag", "left_text": "🔊 Bag", "right_id": "img_bag", "right_text": "Hình Cặp sách", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "feedback_correct_vi": "Tai bé nghe thật tinh tường! Nối chuẩn cả 3 món đồ!"
+    },
+    {
+      "match_id": "my-classroom-match-03",
+      "title_vi": "Ghép câu hành động với đồ dùng",
+      "instruction_vi": "Bé hãy nối hành động với đồ dùng phù hợp nhất nhé.",
+      "pairs": [
+        { "left_id": "act_book", "left_text": "Mở ra để xem tranh và đọc chữ", "right_id": "target_book", "right_text": "Book", "vocabulary_id": "my-classroom:book" },
+        { "left_id": "act_pencil", "left_text": "Cầm tay để vẽ bạn Momo", "right_id": "target_pencil", "right_text": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "left_id": "act_bag", "left_text": "Đeo lên vai cùng bé đến lớp", "right_id": "target_bag", "right_text": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "feedback_correct_vi": "Giỏi quá! Bé nắm rất rõ công dụng của từng món đồ!"
+    },
+    {
+      "match_id": "my-classroom-match-04",
+      "title_vi": "Ghép câu giới thiệu đồ vật",
+      "instruction_vi": "Bé đọc câu giới thiệu và nối với đồ vật tương ứng nhé.",
+      "pairs": [
+        { "left_id": "sent_book", "left_text": "This is my book.", "right_id": "card_book", "right_text": "Book", "vocabulary_id": "my-classroom:book" },
+        { "left_id": "sent_pencil", "left_text": "I have a pencil.", "right_id": "card_pencil", "right_text": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "left_id": "sent_bag", "left_text": "My bag is blue.", "right_id": "card_bag", "right_text": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "feedback_correct_vi": "Xuất sắc! Con đọc hiểu câu tiếng Anh rất lưu loát!"
+    },
+    {
+      "match_id": "my-classroom-match-05",
+      "title_vi": "Ghép chữ in hoa và chữ thường",
+      "instruction_vi": "Bé nối chữ in hoa lớn với chữ thường tương ứng nha.",
+      "pairs": [
+        { "left_id": "upper_book", "left_text": "BOOK", "right_id": "lower_book", "right_text": "Book", "vocabulary_id": "my-classroom:book" },
+        { "left_id": "upper_pencil", "left_text": "PENCIL", "right_id": "lower_pencil", "right_text": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "left_id": "upper_bag", "left_text": "BAG", "right_id": "lower_bag", "right_text": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "feedback_correct_vi": "Thông minh lắm! Bé nhận diện chữ hoa và chữ thường rất siêu!"
+    },
+    {
+      "match_id": "my-classroom-match-06",
+      "title_vi": "Ghép đặc điểm nhận dạng đồ dùng",
+      "instruction_vi": "Đặc điểm nhận diện này thuộc về đồ dùng nào?",
+      "pairs": [
+        { "left_id": "trait_book", "left_text": "Có bìa đẹp và nhiều trang giấy", "right_id": "item_book", "right_text": "Book", "vocabulary_id": "my-classroom:book" },
+        { "left_id": "trait_pencil", "left_text": "Làm bằng gỗ, có ruột chì để viết", "right_id": "item_pencil", "right_text": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "left_id": "trait_bag", "left_text": "Có khóa kéo và quai đeo êm ái", "right_id": "item_bag", "right_text": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "feedback_correct_vi": "Hoan hô bé! Bé quan sát đồ dùng học tập rất cẩn thận!"
+    }
+  ],
+  "mini_games": [
+    {
+      "round_id": "my-classroom-game-01",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo nói: Chạm vào quyển sách Book thật nhanh nào!",
+      "prompt_audio_text": "Tap Book",
+      "target_vocabulary_id": "my-classroom:book",
+      "options": [
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "correctOptionId": "book",
+      "feedback_vi": "Nhanh như chớp! Bé tìm trúng quyển sách Book rồi!"
+    },
+    {
+      "round_id": "my-classroom-game-02",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo nói: Tìm chiếc bút chì Pencil để tô màu nào!",
+      "prompt_audio_text": "Tap Pencil",
+      "target_vocabulary_id": "my-classroom:pencil",
+      "options": [
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" },
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" }
+      ],
+      "correctOptionId": "pencil",
+      "feedback_vi": "Chính xác! Chiếc bút chì Pencil đã sẵn sàng vẽ tranh!"
+    },
+    {
+      "round_id": "my-classroom-game-03",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo nói: Chạm vào chiếc cặp Bag để cất đồ nhé!",
+      "prompt_audio_text": "Tap Bag",
+      "target_vocabulary_id": "my-classroom:bag",
+      "options": [
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" },
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" }
+      ],
+      "correctOptionId": "bag",
+      "feedback_vi": "Giỏi quá! Chiếc cặp Bag đã được cất gọn gàng!"
+    },
+    {
+      "round_id": "my-classroom-game-04",
+      "game_type": "fast_catch",
+      "instruction_vi": "Bé hãy đón ngôi sao có chữ 'Book' đang bay đến!",
+      "prompt_audio_text": "Catch Book",
+      "target_vocabulary_id": "my-classroom:book",
+      "options": [
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "correctOptionId": "book",
+      "feedback_vi": "Bé chụp trúng ngôi sao Book rồi! Rất khéo léo!"
+    },
+    {
+      "round_id": "my-classroom-game-05",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo đố bé: Đồ dùng nào viết chữ được? Chạm vào Pencil!",
+      "prompt_audio_text": "Find Pencil",
+      "target_vocabulary_id": "my-classroom:pencil",
+      "options": [
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" },
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" }
+      ],
+      "correctOptionId": "pencil",
+      "feedback_vi": "Đúng rồi! Bút chì Pencil viết chữ và vẽ tranh rất đẹp!"
+    },
+    {
+      "round_id": "my-classroom-game-06",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo nói: Đeo cặp lên vai đi học nào! Chạm vào Bag!",
+      "prompt_audio_text": "Tap Bag",
+      "target_vocabulary_id": "my-classroom:bag",
+      "options": [
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" },
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" }
+      ],
+      "correctOptionId": "bag",
+      "feedback_vi": "Hoan hô! Bé đã hoàn thành tất cả thử thách trong lớp học!"
+    }
+  ],
+  "quiz": [
+    {
+      "question_id": "my-classroom-q-original-01",
+      "type": "image_choice",
+      "prompt_vi": "Đâu là quyển sách - Book?",
+      "questionAudioText": "Book",
+      "target_vocabulary_id": "my-classroom:book",
+      "options": [
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "correctOptionId": "book",
+      "feedbackCorrect": "Giỏi lắm! Đây là quyển sách Book với nhiều trang truyện hay.",
+      "feedbackIncorrect": "Chưa đúng rồi. Con nhìn kỹ quyển sách mở ra nhé!"
+    },
+    {
+      "question_id": "my-classroom-q-original-02",
+      "type": "image_choice",
+      "prompt_vi": "Đâu là chiếc bút chì - Pencil?",
+      "questionAudioText": "Pencil",
+      "target_vocabulary_id": "my-classroom:pencil",
+      "options": [
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "correctOptionId": "pencil",
+      "feedbackCorrect": "Đúng rồi! Đây là chiếc bút chì Pencil thon dài.",
+      "feedbackIncorrect": "Chưa chính xác. Cây bút chì nhọn đầu ở đâu con nhỉ?"
+    },
+    {
+      "question_id": "my-classroom-q-original-03",
+      "type": "image_choice",
+      "prompt_vi": "Đâu là chiếc cặp sách - Bag?",
+      "questionAudioText": "Bag",
+      "target_vocabulary_id": "my-classroom:bag",
+      "options": [
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" },
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" }
+      ],
+      "correctOptionId": "bag",
+      "feedbackCorrect": "Xuất sắc! Chiếc cặp sách Bag đồng hành cùng bé đến lớp.",
+      "feedbackIncorrect": "Con chọn lại nha, chiếc cặp có quai đeo ở đâu nhỉ?"
+    },
+    {
+      "question_id": "my-classroom-q-original-04",
+      "type": "listen_and_choose",
+      "prompt_vi": "Nghe Momo phát âm và chọn đúng hình nhé.",
+      "questionAudioText": "Book",
+      "target_vocabulary_id": "my-classroom:book",
+      "options": [
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" },
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" }
+      ],
+      "correctOptionId": "book",
+      "feedbackCorrect": "Chuẩn xác! Con nghe thấy từ Book rất rõ ràng.",
+      "feedbackIncorrect": "Chưa đúng rồi. Bấm vào loa để nghe lại nhé!"
+    },
+    {
+      "question_id": "my-classroom-q-original-05",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé nghe xem từ phát ra là đồ dùng nào nhé.",
+      "questionAudioText": "Pencil",
+      "target_vocabulary_id": "my-classroom:pencil",
+      "options": [
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "correctOptionId": "pencil",
+      "feedbackCorrect": "Thông minh lắm! Đó chính là Pencil - cây bút chì!",
+      "feedbackIncorrect": "Không sao, con bấm loa nghe lại giọng đọc nha."
+    },
+    {
+      "question_id": "my-classroom-q-original-06",
+      "type": "word_choice",
+      "prompt_vi": "Từ 'Book' trong tiếng Anh nghĩa là gì?",
+      "questionAudioText": "Book",
+      "target_vocabulary_id": "my-classroom:book",
+      "options": [
+        { "option_id": "opt_sach", "label": "Quyển sách" },
+        { "option_id": "opt_ban", "label": "Cái bàn" },
+        { "option_id": "opt_ghe", "label": "Cái ghế" }
+      ],
+      "correctOptionId": "opt_sach",
+      "feedbackCorrect": "Chính xác! Book có nghĩa là Quyển sách.",
+      "feedbackIncorrect": "Chưa đúng rồi. Book là vật bé mở ra đọc truyện tranh đấy!"
+    },
+    {
+      "question_id": "my-classroom-q-original-07",
+      "type": "word_choice",
+      "prompt_vi": "Từ nào có nghĩa là 'bút chì'?",
+      "questionAudioText": "Pencil",
+      "target_vocabulary_id": "my-classroom:pencil",
+      "options": [
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" },
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" }
+      ],
+      "correctOptionId": "pencil",
+      "feedbackCorrect": "Giỏi quá! Pencil nghĩa là chiếc bút chì.",
+      "feedbackIncorrect": "Thử lại nào bé ơi, từ chỉ cây bút chì bắt đầu bằng chữ P nhé!"
+    },
+    {
+      "question_id": "my-classroom-q-original-08",
+      "type": "word_choice",
+      "prompt_vi": "Từ 'Bag' trong tiếng Anh có nghĩa là gì?",
+      "questionAudioText": "Bag",
+      "target_vocabulary_id": "my-classroom:bag",
+      "options": [
+        { "option_id": "opt_cap", "label": "Cặp sách" },
+        { "option_id": "opt_thuoc", "label": "Thước kẻ" },
+        { "option_id": "opt_tay", "label": "Cục tẩy" }
+      ],
+      "correctOptionId": "opt_cap",
+      "feedbackCorrect": "Rất đúng! Bag là chiếc cặp sách (ba lô).",
+      "feedbackIncorrect": "Chưa đúng rồi. Bag dùng để đựng sách vở đến trường đó con."
+    },
+    {
+      "question_id": "my-classroom-q-original-09",
+      "type": "context_choice",
+      "prompt_vi": "Đồ dùng nào bé cầm trên tay để tô màu và vẽ những bông hoa xinh xắn?",
+      "questionAudioText": "Pencil",
+      "target_vocabulary_id": "my-classroom:pencil",
+      "options": [
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" },
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" }
+      ],
+      "correctOptionId": "pencil",
+      "feedbackCorrect": "Đúng rồi! Chiếc bút chì Pencil giúp bé vẽ nên những bức tranh tuyệt đẹp!",
+      "feedbackIncorrect": "Nghĩ thử xem nào, đồ vật nào có ngòi nhọn để vẽ tranh?"
+    },
+    {
+      "question_id": "my-classroom-q-original-10",
+      "type": "sentence_completion",
+      "prompt_vi": "Bé hoàn thành câu nhé: 'This is a ___.' (Nhìn hình quyển sách mở ra)",
+      "questionAudioText": "This is a book.",
+      "target_vocabulary_id": "my-classroom:book",
+      "options": [
+        { "option_id": "book", "label": "Book", "vocabulary_id": "my-classroom:book" },
+        { "option_id": "pencil", "label": "Pencil", "vocabulary_id": "my-classroom:pencil" },
+        { "option_id": "bag", "label": "Bag", "vocabulary_id": "my-classroom:bag" }
+      ],
+      "correctOptionId": "book",
+      "feedbackCorrect": "Xuất sắc! 'This is a book.' - Đây là một quyển sách!",
+      "feedbackIncorrect": "Con nhìn lại hình xem đây là quyển sách Book hay chiếc cặp Bag nhé!"
+    }
+  ]
+}

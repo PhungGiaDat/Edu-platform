@@ -1,0 +1,525 @@
+{
+  "course_id": "momo-nature-english-5-7",
+  "lesson_id": "meet-the-elephant",
+  "lesson_title_en": "Meet the Elephant",
+  "lesson_title_vi": "Gặp bạn voi",
+  "target_age": "5-8",
+  "cefr_level": "Pre-A1",
+  "research": {
+    "level": "Pre-A1 Starters (early beginner)",
+    "summary": "At early Pre-A1, nature and animal themes captivate young children through sensory imagery, size comparisons, and physical animal body features. Young Vietnamese learners naturally grasp the contrast between big/small and enjoy mimicking the long trunk of an elephant.",
+    "sources": [
+      {
+        "source_name": "Cambridge English Pre A1 Starters Wordlist & Wordlist Picture Book",
+        "source_url": "https://www.cambridgeenglish.org/images/starters-word-list-picture-book.pdf",
+        "source_type": "official vocabulary and exam specification",
+        "topic_used": "At the zoo / Animals & Nature (elephant, big, animal)",
+        "what_was_derived": [
+          "Curriculum scope for young learner animal vocabulary",
+          "Visual identification test patterns (point to the elephant, tick the box)",
+          "Size adjectives introduction (big vs small)"
+        ]
+      },
+      {
+        "source_name": "British Council LearnEnglish Kids - Wild Animals",
+        "source_url": "https://learnenglishkids.britishcouncil.org/print-make/flashcards/wild-animals-flashcards",
+        "source_type": "open educational young learner resource",
+        "topic_used": "Wild animal flashcards, memory games, and listening games",
+        "what_was_derived": [
+          "Animal descriptive sentence patterns ('The elephant is big', 'It has a long trunk')",
+          "Movement and sound mimicry prompts for active listening",
+          "Positive reinforcement cues in bilingual context"
+        ]
+      },
+      {
+        "source_name": "Oxford Family and Friends 1 (Curriculum Preview)",
+        "source_url": "https://elt.oup.com/catalogue/items/global/young_learners/family_and_friends/",
+        "source_type": "commercial textbook syllabus reference",
+        "topic_used": "Unit: Zoo Animals (Look at the animals!)",
+        "what_was_derived": [
+          "Descriptive sentence frame: 'The [noun] is [adjective]'",
+          "Animal feature labeling (trunk, ears, legs)"
+        ]
+      },
+      {
+        "source_name": "Cambridge Super Minds Starter (Curriculum Preview)",
+        "source_url": "https://www.cambridge.org/gb/cambridgeenglish/catalog/primary/super-minds-2nd-edition",
+        "source_type": "commercial textbook syllabus reference",
+        "topic_used": "Unit: At the Zoo",
+        "what_was_derived": [
+          "Total Physical Response (TPR) action: waving trunk, stomping feet",
+          "Contextual distractor pool: bird, tree, cat, dog, ear"
+        ]
+      }
+    ],
+    "pedagogical_patterns": {
+      "sentence_structures": [
+        "This is an elephant.",
+        "The elephant is big.",
+        "Look at the trunk.",
+        "It has a long trunk.",
+        "The trunk is long."
+      ],
+      "distractor_vocabulary": ["Bird", "Tree", "Cat", "Dog", "Small", "Ear", "Tail"],
+      "visual_contexts": "Sunny green savanna, watering hole with splashing water, friendly cartoon elephant waving its trunk"
+    }
+  },
+  "video": {
+    "title": "Baby Elephant | Get Up And Move Song for Kids! | Super Simple Songs",
+    "url": "https://www.youtube.com/watch?v=Fj2F1W5vF1M",
+    "provider": "YouTube",
+    "channel": "Super Simple Songs - Kids Songs",
+    "duration_seconds": 110,
+    "source": "official_curated",
+    "embeddable": true,
+    "pedagogical_reason": "Directly reinforces the target vocabulary 'Elephant', 'Big', and 'Trunk' with clear movement prompts ('Wave your trunk up high, wave your trunk down low') designed to engage 5-8 year old learners through physical action."
+  },
+  "vocabulary": [
+    {
+      "vocabulary_id": "meet-the-elephant:elephant",
+      "word_en": "Elephant",
+      "word_vi": "Con voi",
+      "phonetic": "/ˈelɪfənt/",
+      "simple_sentence": "The elephant is big.",
+      "explanation_vi": "Elephant là chú voi to lớn màu xám, có đôi tai to như cái quạt và bước đi bình bịch.",
+      "listen_and_choose_prompt": "Con hãy nghe và chạm vào chú voi đáng yêu nhé!",
+      "recognition_question": "Đâu là chú voi - Elephant?",
+      "meaning_question": "Từ 'Elephant' trong tiếng Anh nghĩa là gì?",
+      "context_question": "Con vật nào có đôi tai to như hai cái quạt và bước đi bình bịch?",
+      "canonical_asset_ref": {
+        "image_path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/elephant.png",
+        "audio_path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/audio/elephant.wav"
+      }
+    },
+    {
+      "vocabulary_id": "meet-the-elephant:big",
+      "word_en": "Big",
+      "word_vi": "To lớn",
+      "phonetic": "/bɪɡ/",
+      "simple_sentence": "It is big.",
+      "explanation_vi": "Big có nghĩa là to lớn, khổng lồ, giống như một ngôi nhà hay một bạn voi bự ơi là bự.",
+      "listen_and_choose_prompt": "Con hãy nghe Momo nói và tìm từ chỉ sự to lớn nhé!",
+      "recognition_question": "Hình nào thể hiện sự to lớn - Big?",
+      "meaning_question": "Từ 'Big' có nghĩa là gì nhỉ?",
+      "context_question": "Con voi so với chú chuột nhắt nhỏ bé thì như thế nào?",
+      "canonical_asset_ref": {
+        "image_path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/big.png",
+        "audio_path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/audio/big.wav"
+      }
+    },
+    {
+      "vocabulary_id": "meet-the-elephant:trunk",
+      "word_en": "Trunk",
+      "word_vi": "Cái vòi",
+      "phonetic": "/trʌŋk/",
+      "simple_sentence": "The trunk is long.",
+      "explanation_vi": "Trunk là chiếc vòi dài của chú voi, dùng để hút nước mát rượi và hái lá cây ăn đấy.",
+      "listen_and_choose_prompt": "Con hãy lắng nghe và chọn chiếc vòi dài của chú voi nhé!",
+      "recognition_question": "Đâu là chiếc vòi voi - Trunk?",
+      "meaning_question": "Từ 'Trunk' của bạn voi có nghĩa là gì?",
+      "context_question": "Bộ phận nào giúp chú voi hút nước phun thành vòi sen mát rượi?",
+      "canonical_asset_ref": {
+        "image_path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/vocabulary/trunk.png",
+        "audio_path": "courses/momo-nature-english-5-7/lessons/meet-the-elephant/audio/trunk.wav"
+      }
+    }
+  ],
+  "listen_choose": [
+    {
+      "question_id": "meet-the-elephant-lc-01",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé hãy nghe và chạm vào chú voi Elephant nhé!",
+      "audio_text": "Elephant",
+      "target_vocabulary_id": "meet-the-elephant:elephant",
+      "options": [
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "correctOptionId": "elephant",
+      "feedbackCorrect": "Hoan hô! Bé chọn đúng bạn voi Elephant rồi!",
+      "feedbackIncorrect": "Chưa đúng rồi. Bé bấm loa nghe lại tiếng Elephant nhé!"
+    },
+    {
+      "question_id": "meet-the-elephant-lc-02",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé nghe rõ từ này: Big!",
+      "audio_text": "Big",
+      "target_vocabulary_id": "meet-the-elephant:big",
+      "options": [
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "correctOptionId": "big",
+      "feedbackCorrect": "Rất giỏi! Big nghĩa là to lớn đó bé!",
+      "feedbackIncorrect": "Thử lại nào bé ơi, nghe xem từ nào là Big nha."
+    },
+    {
+      "question_id": "meet-the-elephant-lc-03",
+      "type": "listen_and_choose",
+      "prompt_vi": "Chiếc vòi của bạn voi đâu nhỉ? Nghe nhé: Trunk!",
+      "audio_text": "Trunk",
+      "target_vocabulary_id": "meet-the-elephant:trunk",
+      "options": [
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" },
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" }
+      ],
+      "correctOptionId": "trunk",
+      "feedbackCorrect": "Chính xác! Trunk là chiếc vòi dài của chú voi!",
+      "feedbackIncorrect": "Chưa đúng rồi. Bé nghe lại xem cái vòi Trunk ở đâu nhé!"
+    },
+    {
+      "question_id": "meet-the-elephant-lc-04",
+      "type": "listen_and_choose",
+      "prompt_vi": "Lắng nghe câu ngắn này nhé: An elephant!",
+      "audio_text": "An elephant",
+      "target_vocabulary_id": "meet-the-elephant:elephant",
+      "options": [
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" }
+      ],
+      "correctOptionId": "elephant",
+      "feedbackCorrect": "Xuất sắc! 'An elephant' - Một chú voi to lớn!",
+      "feedbackIncorrect": "Bé hãy bấm loa để nghe lại câu ngắn này nha."
+    },
+    {
+      "question_id": "meet-the-elephant-lc-05",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé nghe xem từ nào nói về kích thước nhé: It is big!",
+      "audio_text": "It is big",
+      "target_vocabulary_id": "meet-the-elephant:big",
+      "options": [
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "correctOptionId": "big",
+      "feedbackCorrect": "Tuyệt vời! 'It is big' nghĩa là nó thật to lớn!",
+      "feedbackIncorrect": "Gần đúng rồi, con nghe lại chữ Big nhé."
+    },
+    {
+      "question_id": "meet-the-elephant-lc-06",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé nghe thấy chiếc vòi dài không: A long trunk!",
+      "audio_text": "A long trunk",
+      "target_vocabulary_id": "meet-the-elephant:trunk",
+      "options": [
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" }
+      ],
+      "correctOptionId": "trunk",
+      "feedbackCorrect": "Đúng rồi! Trunk chính là chiếc vòi voi!",
+      "feedbackIncorrect": "Bé lắng nghe kỹ âm cuối 'Trunk' nha!"
+    }
+  ],
+  "match": [
+    {
+      "match_id": "meet-the-elephant-match-01",
+      "title_vi": "Ghép từ với nghĩa tiếng Việt",
+      "instruction_vi": "Bé hãy chạm vào từ tiếng Anh ở bên trái, rồi chạm vào nghĩa tiếng Việt tương ứng ở bên phải nhé!",
+      "pairs": [
+        { "left_id": "Elephant", "left_text": "Elephant", "right_id": "Convoi", "right_text": "Con voi", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "left_id": "Big", "left_text": "Big", "right_id": "Tolon", "right_text": "To lớn", "vocabulary_id": "meet-the-elephant:big" },
+        { "left_id": "Trunk", "left_text": "Trunk", "right_id": "Caivoi", "right_text": "Cái vòi", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "feedback_correct_vi": "Tuyệt vời! Bé đã nối đúng tất cả các từ của bạn voi!"
+    },
+    {
+      "match_id": "meet-the-elephant-match-02",
+      "title_vi": "Ghép âm thanh với hình ảnh",
+      "instruction_vi": "Nghe âm thanh và ghép vào hình ảnh thiên nhiên tương ứng.",
+      "pairs": [
+        { "left_id": "audio_elephant", "left_text": "🔊 Elephant", "right_id": "img_elephant", "right_text": "Hình Chú voi", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "left_id": "audio_big", "left_text": "🔊 Big", "right_id": "img_big", "right_text": "Kích thước To lớn", "vocabulary_id": "meet-the-elephant:big" },
+        { "left_id": "audio_trunk", "left_text": "🔊 Trunk", "right_id": "img_trunk", "right_text": "Hình Chiếc vòi", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "feedback_correct_vi": "Tai bé nghe chuẩn quá! Ghép đúng cả 3 hình rồi!"
+    },
+    {
+      "match_id": "meet-the-elephant-match-03",
+      "title_vi": "Ghép câu miêu tả với hình vẽ",
+      "instruction_vi": "Bé hãy đọc câu miêu tả ngắn và nối vào hình vẽ phù hợp nha.",
+      "pairs": [
+        { "left_id": "sent_elephant", "left_text": "This is an elephant.", "right_id": "target_elephant", "right_text": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "left_id": "sent_big", "left_text": "The elephant is big.", "right_id": "target_big", "right_text": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "left_id": "sent_trunk", "left_text": "The trunk is long.", "right_id": "target_trunk", "right_text": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "feedback_correct_vi": "Giỏi quá! Bé đọc hiểu các câu về bạn voi rất nhanh!"
+    },
+    {
+      "match_id": "meet-the-elephant-match-04",
+      "title_vi": "Ghép câu đố vui thiên nhiên",
+      "instruction_vi": "Bé hãy đoán xem câu đố này đang nói về từ nào nhé!",
+      "pairs": [
+        { "left_id": "riddle_elephant", "left_text": "Con vật khổng lồ có đôi tai to", "right_id": "ans_elephant", "right_text": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "left_id": "riddle_big", "left_text": "Kích thước khổng lồ như ngọn núi", "right_id": "ans_big", "right_text": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "left_id": "riddle_trunk", "left_text": "Cái mũi siêu dài hút nước phun mưa", "right_id": "ans_trunk", "right_text": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "feedback_correct_vi": "Bé là nhà thám hiểm tài ba! Giải đố xuất sắc!"
+    },
+    {
+      "match_id": "meet-the-elephant-match-05",
+      "title_vi": "Ghép chữ in hoa và chữ thường",
+      "instruction_vi": "Bé nối chữ in hoa lớn với chữ thường tương ứng nha.",
+      "pairs": [
+        { "left_id": "upper_elephant", "left_text": "ELEPHANT", "right_id": "lower_elephant", "right_text": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "left_id": "upper_big", "left_text": "BIG", "right_id": "lower_big", "right_text": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "left_id": "upper_trunk", "left_text": "TRUNK", "right_id": "lower_trunk", "right_text": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "feedback_correct_vi": "Thông minh lắm! Bé nhận diện chữ in hoa rất chuẩn!"
+    },
+    {
+      "match_id": "meet-the-elephant-match-06",
+      "title_vi": "Ghép hành động của chú voi",
+      "instruction_vi": "Hành động đáng yêu này gắn liền với điều gì?",
+      "pairs": [
+        { "left_id": "action_walk", "left_text": "Bước đi bình bịch rung rinh mặt đất", "right_id": "obj_elephant", "right_text": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "left_id": "action_compare", "left_text": "To hơn cả ngôi nhà nhỏ", "right_id": "obj_big", "right_text": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "left_id": "action_spray", "left_text": "Uống nước mát và tắm mát cho bạn", "right_id": "obj_trunk", "right_text": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "feedback_correct_vi": "Hoan hô bé! Bé rất am hiểu về bạn voi đáng yêu!"
+    }
+  ],
+  "mini_games": [
+    {
+      "round_id": "meet-the-elephant-game-01",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo nói: Chạm vào chú voi Elephant thật nhanh nào!",
+      "prompt_audio_text": "Tap Elephant",
+      "target_vocabulary_id": "meet-the-elephant:elephant",
+      "options": [
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "correctOptionId": "elephant",
+      "feedback_vi": "Bé nhanh tay quá! Bạn voi Elephant vẫy tai cảm ơn bé kìa!"
+    },
+    {
+      "round_id": "meet-the-elephant-game-02",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo nói: Tìm biểu tượng to lớn Big!",
+      "prompt_audio_text": "Tap Big",
+      "target_vocabulary_id": "meet-the-elephant:big",
+      "options": [
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" },
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" }
+      ],
+      "correctOptionId": "big",
+      "feedback_vi": "Chính xác! Big là to lớn khổng lồ!"
+    },
+    {
+      "round_id": "meet-the-elephant-game-03",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo nói: Chạm vào chiếc vòi Trunk đang vung vẩy!",
+      "prompt_audio_text": "Tap Trunk",
+      "target_vocabulary_id": "meet-the-elephant:trunk",
+      "options": [
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" },
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" }
+      ],
+      "correctOptionId": "trunk",
+      "feedback_vi": "Giỏi quá! Trunk phun nước mát rượi luôn!"
+    },
+    {
+      "round_id": "meet-the-elephant-game-04",
+      "game_type": "fast_catch",
+      "instruction_vi": "Bé hãy đón lấy chiếc lá có chữ 'Elephant' nhé!",
+      "prompt_audio_text": "Catch Elephant",
+      "target_vocabulary_id": "meet-the-elephant:elephant",
+      "options": [
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" },
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" }
+      ],
+      "correctOptionId": "elephant",
+      "feedback_vi": "Bé đón trúng chiếc lá Elephant rồi! Xuất sắc!"
+    },
+    {
+      "round_id": "meet-the-elephant-game-05",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo đố bé: Bạn voi có chiếc vòi dài tên là gì? Chạm vào Trunk!",
+      "prompt_audio_text": "Find Trunk",
+      "target_vocabulary_id": "meet-the-elephant:trunk",
+      "options": [
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" }
+      ],
+      "correctOptionId": "trunk",
+      "feedback_vi": "Đúng rồi! Chiếc vòi dài xinh xắn chính là Trunk!"
+    },
+    {
+      "round_id": "meet-the-elephant-game-06",
+      "game_type": "listen_and_tap",
+      "instruction_vi": "Momo nói: Khen bạn voi to lớn nào! Chạm vào Big!",
+      "prompt_audio_text": "Tap Big",
+      "target_vocabulary_id": "meet-the-elephant:big",
+      "options": [
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "correctOptionId": "big",
+      "feedback_vi": "Hoan hô! Bé đã hoàn thành tất cả thử thách cùng chú voi!"
+    }
+  ],
+  "quiz": [
+    {
+      "question_id": "meet-the-elephant-q-original-01",
+      "type": "image_choice",
+      "prompt_vi": "Đâu là chú voi - Elephant?",
+      "questionAudioText": "Elephant",
+      "target_vocabulary_id": "meet-the-elephant:elephant",
+      "options": [
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "correctOptionId": "elephant",
+      "feedbackCorrect": "Giỏi lắm! Đây chính là chú voi Elephant.",
+      "feedbackIncorrect": "Chưa đúng rồi. Con nhìn kỹ chú voi to lớn nhé!"
+    },
+    {
+      "question_id": "meet-the-elephant-q-original-02",
+      "type": "image_choice",
+      "prompt_vi": "Đâu là chiếc vòi voi - Trunk?",
+      "questionAudioText": "Trunk",
+      "target_vocabulary_id": "meet-the-elephant:trunk",
+      "options": [
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" },
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" }
+      ],
+      "correctOptionId": "trunk",
+      "feedbackCorrect": "Đúng rồi! Đây là chiếc vòi Trunk dài cong cong.",
+      "feedbackIncorrect": "Chưa chính xác. Cái vòi dài của bạn voi ở đâu nào?"
+    },
+    {
+      "question_id": "meet-the-elephant-q-original-03",
+      "type": "image_choice",
+      "prompt_vi": "Hình nào thể hiện sự to lớn - Big?",
+      "questionAudioText": "Big",
+      "target_vocabulary_id": "meet-the-elephant:big",
+      "options": [
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" },
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" }
+      ],
+      "correctOptionId": "big",
+      "feedbackCorrect": "Xuất sắc! Big là to lớn khổng lồ.",
+      "feedbackIncorrect": "Con chọn lại nha, hình nào chỉ sự to lớn nhỉ?"
+    },
+    {
+      "question_id": "meet-the-elephant-q-original-04",
+      "type": "listen_and_choose",
+      "prompt_vi": "Nghe Momo phát âm và chọn đúng hình nhé.",
+      "questionAudioText": "Elephant",
+      "target_vocabulary_id": "meet-the-elephant:elephant",
+      "options": [
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "correctOptionId": "elephant",
+      "feedbackCorrect": "Chuẩn xác! Con nghe thấy từ Elephant rất rõ.",
+      "feedbackIncorrect": "Chưa đúng rồi. Bấm vào loa để nghe lại nhé!"
+    },
+    {
+      "question_id": "meet-the-elephant-q-original-05",
+      "type": "listen_and_choose",
+      "prompt_vi": "Bé nghe xem từ phát ra là gì nhé.",
+      "questionAudioText": "Trunk",
+      "target_vocabulary_id": "meet-the-elephant:trunk",
+      "options": [
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" }
+      ],
+      "correctOptionId": "trunk",
+      "feedbackCorrect": "Thông minh lắm! Đó chính là Trunk - cái vòi!",
+      "feedbackIncorrect": "Không sao, con bấm loa nghe lại giọng đọc nha."
+    },
+    {
+      "question_id": "meet-the-elephant-q-original-06",
+      "type": "word_choice",
+      "prompt_vi": "Từ 'Elephant' trong tiếng Anh nghĩa là gì?",
+      "questionAudioText": "Elephant",
+      "target_vocabulary_id": "meet-the-elephant:elephant",
+      "options": [
+        { "option_id": "opt_voi", "label": "Con voi" },
+        { "option_id": "opt_meo", "label": "Con mèo" },
+        { "option_id": "opt_chim", "label": "Con chim" }
+      ],
+      "correctOptionId": "opt_voi",
+      "feedbackCorrect": "Chính xác! Elephant có nghĩa là Con voi.",
+      "feedbackIncorrect": "Chưa đúng rồi. Elephant là bạn động vật to lớn có vòi dài đó con!"
+    },
+    {
+      "question_id": "meet-the-elephant-q-original-07",
+      "type": "word_choice",
+      "prompt_vi": "Từ nào có nghĩa là 'cái vòi' của chú voi?",
+      "questionAudioText": "Trunk",
+      "target_vocabulary_id": "meet-the-elephant:trunk",
+      "options": [
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" }
+      ],
+      "correctOptionId": "trunk",
+      "feedbackCorrect": "Giỏi quá! Trunk nghĩa là cái vòi voi.",
+      "feedbackIncorrect": "Thử lại nào bé ơi, từ chỉ cái vòi bắt đầu bằng chữ T nhé!"
+    },
+    {
+      "question_id": "meet-the-elephant-q-original-08",
+      "type": "word_choice",
+      "prompt_vi": "Từ 'Big' trong tiếng Anh có nghĩa là gì?",
+      "questionAudioText": "Big",
+      "target_vocabulary_id": "meet-the-elephant:big",
+      "options": [
+        { "option_id": "opt_to", "label": "To lớn" },
+        { "option_id": "opt_nho", "label": "Nhỏ bé" },
+        { "option_id": "opt_ngan", "label": "Ngắn cũn" }
+      ],
+      "correctOptionId": "opt_to",
+      "feedbackCorrect": "Rất đúng! Big là to lớn khổng lồ.",
+      "feedbackIncorrect": "Chưa đúng rồi. Bạn voi rất bự nên được gọi là Big đấy!"
+    },
+    {
+      "question_id": "meet-the-elephant-q-original-09",
+      "type": "context_choice",
+      "prompt_vi": "Con vật nào có chiếc vòi dài và đôi tai to như cái quạt?",
+      "questionAudioText": "Elephant",
+      "target_vocabulary_id": "meet-the-elephant:elephant",
+      "options": [
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" },
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" }
+      ],
+      "correctOptionId": "elephant",
+      "feedbackCorrect": "Đúng rồi! Bạn voi Elephant có chiếc vòi dài và đôi tai rất to!",
+      "feedbackIncorrect": "Nghĩ thử xem nào, con vật nào to lớn bước đi bình bịch?"
+    },
+    {
+      "question_id": "meet-the-elephant-q-original-10",
+      "type": "sentence_completion",
+      "prompt_vi": "Bé hoàn thành câu nhé: 'The elephant is ___.' (Chú voi rất to lớn)",
+      "questionAudioText": "The elephant is big.",
+      "target_vocabulary_id": "meet-the-elephant:big",
+      "options": [
+        { "option_id": "big", "label": "Big", "vocabulary_id": "meet-the-elephant:big" },
+        { "option_id": "trunk", "label": "Trunk", "vocabulary_id": "meet-the-elephant:trunk" },
+        { "option_id": "elephant", "label": "Elephant", "vocabulary_id": "meet-the-elephant:elephant" }
+      ],
+      "correctOptionId": "big",
+      "feedbackCorrect": "Xuất sắc! 'The elephant is big.' - Chú voi thật to lớn!",
+      "feedbackIncorrect": "Con nhìn lại xem, từ chỉ kích thước to lớn là Big hay từ nào nha!"
+    }
+  ]
+}

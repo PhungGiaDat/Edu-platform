@@ -1,0 +1,7 @@
+Coffee is more than just a beverage — it's a ritual, a science, and an art form all rolled into one. In the ever-evolving world of home brewing, enthusiasts are increasingly discovering that crafting the perfect cup doesn't require a trip to an expensive café. With the right knowledge and a few key tools, anyone can elevate their morning routine into something truly special.
+
+At its core, great coffee comes down to four crucial variables: grind size, water temperature, brew time, and ratio. Experts agree that a ratio of 1:16 — one gram of coffee to sixteen grams of water — serves as a solid starting point for most brewing methods. Water temperature plays a pivotal role as well; the ideal range sits between 90 and 96 degrees Celsius, as water that's too hot extracts bitter compounds while water that's too cool leaves the cup tasting sour and underdeveloped.
+
+It's worth noting that freshness matters immensely. Coffee beans begin losing their aromatic complexity within two weeks of roasting, underscoring the importance of buying whole beans in small batches and grinding them just before brewing.
+
+From pour-over to French press, from AeroPress to cold brew, each method offers its own unique tapestry of flavors waiting to be explored. In this guide, we'll delve into the fundamentals that will transform your daily cup from ordinary to extraordinary. Your journey to better coffee starts here.

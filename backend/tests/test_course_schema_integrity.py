@@ -37,13 +37,12 @@ def test_normalizeCoursePayload_fillsMissingAssetBucketWhenStatusOmitted():
     assert normalized["thumbnail"]["status"] == "pending"
 
 
-def test_normalizeCoursePayload_rejectsMissingGeneratedCourseBlock():
+def test_normalizeCoursePayload_allowsOptionalGeneratedVideo():
     payload = _seed_payload()
-    lesson_id = payload["lessons"][0]["lesson_id"]
     payload["lessons"][0]["videoLesson"] = None
 
-    with pytest.raises(ValueError, match=f"Lesson {lesson_id} requires videoLesson"):
-        normalize_course_payload(payload, strict_generated=True)
+    normalized = normalize_course_payload(payload, strict_generated=True)
+    assert normalized["lessons"][0]["videoLesson"] is None
 
 
 def test_normalizeCoursePayload_canAuditLegacyCourseShape():

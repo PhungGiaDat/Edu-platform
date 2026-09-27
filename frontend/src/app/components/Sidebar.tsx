@@ -613,7 +613,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isDesktopExpanded, onDesktopEx
 
     useEffect(() => {
         let cancelled = false;
-        const learnerId = user?.id || (isGuest ? 'guest-learner' : null);
+        const learnerId = isGuest ? null : user?.id || null;
 
         Promise.all([
             courseService.listCourses(),

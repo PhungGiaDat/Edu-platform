@@ -1,0 +1,50 @@
+{
+ "1": {
+  "A": "skill",
+  "B": "base"
+ },
+ "2": {
+  "A": "base",
+  "B": "skill"
+ },
+ "3": {
+  "A": "base",
+  "B": "skill"
+ },
+ "4": {
+  "A": "base",
+  "B": "skill"
+ },
+ "5": {
+  "A": "base",
+  "B": "skill"
+ },
+ "6": {
+  "A": "base",
+  "B": "skill"
+ },
+ "7": {
+  "A": "base",
+  "B": "skill"
+ },
+ "8": {
+  "A": "skill",
+  "B": "base"
+ },
+ "9": {
+  "A": "skill",
+  "B": "base"
+ },
+ "10": {
+  "A": "base",
+  "B": "skill"
+ },
+ "11": {
+  "A": "skill",
+  "B": "base"
+ },
+ "12": {
+  "A": "skill",
+  "B": "base"
+ }
+}

@@ -10,7 +10,8 @@ import Flashcard from '@/features/learning/components/Flashcard';
 import { PronunciationPractice } from '@/features/pronunciation/components/PronunciationPractice';
 import { apiClient } from "../services/apiClient";
 import { useAuth } from "../contexts/AuthContext";
-import jungle from "../../public/assets/flashcards/jungle.jpg";
+
+const jungle = "/assets/flashcards/jungle.jpg";
 
 // -------- Types --------
 
@@ -167,10 +168,18 @@ const FlashcardPage = () => {
             : false;
 
           return (
-            <button
+            <div
+              role="button"
+              tabIndex={0}
               key={cardId}
               onClick={() => handleCardClick(card)}
-              className={`focus:outline-none rounded-2xl transition-transform duration-200
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleCardClick(card);
+                }
+              }}
+              className={`focus:outline-none rounded-2xl transition-transform duration-200 cursor-pointer
                 ${isSelected ? "ring-4 ring-yellow-400 scale-105" : "hover:scale-105"}`}
               aria-label={`Select ${card.word} flashcard`}
             >
@@ -183,7 +192,7 @@ const FlashcardPage = () => {
                 imageAnimationType={card.image_animation_type}
                 translation={getTranslationText(card.translation)}
               />
-            </button>
+            </div>
           );
         })}
       </div>

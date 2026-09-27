@@ -31,6 +31,8 @@ def test_momo_seed_copy_has_no_lossy_unicode() -> None:
 
 
 def test_migration_updates_only_suspicious_string_fields() -> None:
+    assert is_suspicious("B? Gấu")
+    assert not is_suspicious("Ai vừa đi làm về? Chạm vào Dad nhé!")
     existing = {
         "course_id": "example",
         "title": "B? G?u",

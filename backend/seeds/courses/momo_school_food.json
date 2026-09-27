@@ -164,19 +164,19 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/audio/book.wav",
             "type": "audio",
-            "status": "pending"
+            "status": "ready"
           },
           "sticker": {
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/stickers/book.png",
             "type": "sticker",
-            "status": "pending"
+            "status": "ready"
           },
           "simple_sentence": "This is my book."
         },
@@ -188,19 +188,19 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/audio/pencil.wav",
             "type": "audio",
-            "status": "pending"
+            "status": "ready"
           },
           "sticker": {
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/stickers/pencil.png",
             "type": "sticker",
-            "status": "pending"
+            "status": "ready"
           },
           "simple_sentence": "I have a pencil."
         },
@@ -212,19 +212,19 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/audio/bag.wav",
             "type": "audio",
-            "status": "pending"
+            "status": "ready"
           },
           "sticker": {
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/stickers/bag.png",
             "type": "sticker",
-            "status": "pending"
+            "status": "ready"
           },
           "simple_sentence": "My bag is blue."
         }
@@ -245,7 +245,7 @@
               "bucket": "learnar-assets",
               "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Nhanh như chớp! Bé tìm trúng quyển sách Book rồi!"
           },
@@ -259,7 +259,7 @@
               "bucket": "learnar-assets",
               "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Chính xác! Chiếc bút chì Pencil đã sẵn sàng vẽ tranh!"
           },
@@ -273,35 +273,35 @@
               "bucket": "learnar-assets",
               "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Giỏi quá! Chiếc cặp Bag đã được cất gọn gàng!"
           },
           {
             "id": "game-4",
             "round": 4,
-            "label": "Pencil",
+            "label": "Book",
             "instruction_vi": "Bé hãy đón ngôi sao có chữ 'Book' đang bay đến!",
             "prompt_audio_text": "Catch Book",
             "image": {
               "bucket": "learnar-assets",
               "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Bé chụp trúng ngôi sao Book rồi! Rất khéo léo!"
           },
           {
             "id": "game-5",
             "round": 5,
-            "label": "Bag",
+            "label": "Pencil",
             "instruction_vi": "Momo đố bé: Đồ dùng nào viết chữ được? Chạm vào Pencil!",
             "prompt_audio_text": "Find Pencil",
             "image": {
               "bucket": "learnar-assets",
               "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Đúng rồi! Bút chì Pencil viết chữ và vẽ tranh rất đẹp!"
           },
@@ -315,7 +315,7 @@
               "bucket": "learnar-assets",
               "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
               "type": "image",
-              "status": "pending"
+              "status": "ready"
             },
             "feedback_vi": "Hoan hô! Bé đã hoàn thành tất cả thử thách trong lớp học!"
           }
@@ -411,7 +411,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -421,7 +421,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -431,7 +431,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -452,7 +452,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -462,7 +462,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -472,7 +472,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -493,7 +493,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -503,7 +503,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -513,7 +513,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -534,7 +534,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -544,7 +544,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -554,7 +554,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -575,7 +575,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/pencil.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -585,7 +585,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/book.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             },
             {
@@ -595,7 +595,7 @@
                 "bucket": "learnar-assets",
                 "path": "courses/momo-school-food-english-5-7/lessons/my-classroom/vocabulary/bag.png",
                 "type": "image",
-                "status": "pending"
+                "status": "ready"
               }
             }
           ],
@@ -975,7 +975,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/color-hunt/vocabulary/red.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -1502,7 +1502,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/number-play/vocabulary/one.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -1526,7 +1526,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/number-play/vocabulary/two.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -1550,7 +1550,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/number-play/vocabulary/three.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2029,7 +2029,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/vocabulary/rice.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2053,7 +2053,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/vocabulary/egg.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2077,7 +2077,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/lunch-box/vocabulary/juice.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2556,7 +2556,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/action-time/vocabulary/run.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2580,7 +2580,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/action-time/vocabulary/jump.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",
@@ -2604,7 +2604,7 @@
             "bucket": "learnar-assets",
             "path": "courses/momo-school-food-english-5-7/lessons/action-time/vocabulary/clap.png",
             "type": "image",
-            "status": "pending"
+            "status": "ready"
           },
           "audio": {
             "bucket": "learnar-assets",

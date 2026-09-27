@@ -4,7 +4,7 @@
 
 **Goal:** Make the existing mobile-web course catalog guide learners to one adaptive next mission and present each course's lessons and activities as a coherent, progress-aware journey.
 
-**Architecture:** Add a pure frontend adapter over `Course[]`, `UserProgress[]`, learning-path preferences, and server lesson sessions. Keep `/courses` as the catalog entry point, render `/courses/:courseId` as a presentation-only mission path, and let `LessonPlayer` follow the backend session step order while reusing its current vocabulary, game, story, pronunciation, quiz, media, and reward components.
+**Architecture:** Audit the complete catalog hierarchy first, then reconcile canonical release-course lesson content into the PostgreSQL `learning_blocks` contract. Add a pure frontend adapter over `Course[]`, `UserProgress[]`, learning-path preferences, and server lesson sessions. Keep `/courses` as the catalog entry point, render `/courses/:courseId` as a presentation-only mission path, and let `LessonPlayer` follow the backend session step order while reusing its current vocabulary, game, story, pronunciation, quiz, media, and reward components.
 
 **Tech Stack:** React 18, TypeScript 5.8, React Router 6, Tailwind CSS 4, existing claymorphic CSS tokens, Vitest + Testing Library, Playwright, FastAPI contracts, PostgreSQL-backed service boundary.
 
@@ -13,8 +13,13 @@
 - The primary implementation surface is `frontend/**` responsive mobile web; do not start new RN/Unity feature work.
 - The generic `/courses` route remains the catalog entry point; `/learning-path-3d` remains a separate optional experience.
 - Learning-path preferences rank catalog actions; they do not create a second course-content hierarchy.
+- The authoritative learner hierarchy is `topic catalog -> many small courses -> learning path -> course detail -> ordered lessons -> activities`.
+- Task 0 must inventory and classify every known/published course before any content reconciliation. No course may be silently omitted; legacy or unmapped courses remain explicit fallback records.
 - Presentation-only four-lesson chunks must not be persisted or treated as backend curriculum units.
 - Prefer canonical `learning_blocks.activities[]` for activity metadata when present; preserve legacy lesson fields as a compatibility fallback.
+- The required PostgreSQL tables and columns already exist in the `20260812_01_mobile_core.sql` and `20260814_03_lesson_activity_contract.sql` migrations; do not add a `course_units`/`sections` table for presentation-only groups.
+- Add an idempotent catalog data migration/reconciliation before runtime signoff. It must materialize schema-v2 `learning_blocks` only when relational dependencies resolve, preserve legacy fields, and report unresolved lessons instead of fabricating IDs.
+- The data migration may update catalog content/dependency rows only. It must not rewrite learner progress, open lesson sessions, gamification history, media assets, Supabase Storage, Qdrant, or AR data.
 - Existing FastAPI/session/reward contracts remain authoritative; do not add a recommendation service, database table, or client-side XP logic.
 - XP and reward values displayed after completion must come from the backend response; replay must not duplicate authoritative rewards.
 - The visual locked state is not an authorization boundary; direct lesson URLs still use backend/session validation.
@@ -28,6 +33,13 @@
 ## File map
 
 ### Create
+
+- `backend/database/seed/canonical_momo_courses.py` - typed source-to-canonical mapping for the three release catalog seed files, stable semantic IDs, and schema-v2 lesson block generation.
+- `backend/database/seed/apply_canonical_momo_courses.py` - idempotent PostgreSQL dry-run/apply command with dependency resolution, transaction protection, conflict reporting, and readback verification.
+- `backend/database/seed/audit_catalog_consistency.py` - read-only source/topic/PostgreSQL hierarchy audit and structured issue report.
+- `backend/database/seed/manifests/momo_adaptive_courses.json` - explicit vocabulary/question/game mapping for legacy catalog entries that cannot be safely inferred from source JSON.
+- `backend/tests/test_canonical_momo_courses_seed.py` - data migration contract, idempotency, conflict, fallback, and no-write dry-run tests.
+- `backend/tests/test_catalog_consistency_audit.py` - all-course inventory, topic mapping, metadata, ordering, and SELECT-only audit tests.
 
 - `frontend/src/features/courses/missionPath.ts` — pure lesson sorting, activity summaries, next-mission selection, presentation-unit grouping, and node-state derivation.
 - `frontend/src/__tests__/features/courses/missionPath.test.ts` — selector and adapter tests.
@@ -54,7 +66,11 @@
 - `frontend/src/pages/CourseDetail.tsx` — use mission-path adapters and CourseMap instead of a flat lesson list.
 - `frontend/src/pages/LessonPlayer.tsx` — use server session order, map canonical/legacy steps safely, and gate reward display on completion response.
 
-### Backend verification only
+### Backend prerequisites and verification
+
+- `backend/database/postgres/migrations/20260812_01_mobile_core.sql` - read-only prerequisite confirming `courses`, `lessons.learning_blocks`, progress, session, and dependency tables exist.
+- `backend/database/postgres/migrations/20260814_03_lesson_activity_contract.sql` - read-only prerequisite confirming `content_version` and authored activity metadata columns exist.
+- `backend/database/seed/canonical_animals.py` and `backend/database/seed/apply_canonical_animals.py` - read-only implementation pattern for validated, transactional, idempotent canonical content seeding.
 
 - `backend/tests/test_course_start.py`
 - `backend/tests/test_lesson_activity_contract.py`
@@ -64,11 +80,205 @@
 - `backend/tests/test_course_service_gamification.py`
 - `backend/tests/test_gamification_idempotency.py`
 
-No backend source file or API route changes are planned.
+No new PostgreSQL DDL migration, FastAPI route, or public payload change is planned for the first slice. Task 0 is read-only. Later database work is a one-time/re-runnable data reconciliation against the schema that is already present. It may create or reconcile only canonical catalog dependency rows required by audited release lessons and update `lessons.learning_blocks`; learner runtime state remains untouched.
 
 ---
 
-## Task 1: Build the pure mission-path adapter
+## Task 0: Audit the complete catalog hierarchy before reconciliation
+
+Task 0 is a read-only gate. It establishes the inventory and lineage needed to make the catalog consistent without guessing whether a row came from the pre-catalog Mongo version, the current catalog seed, or a canonical dependency manifest.
+
+**Files:**
+
+- Create: `backend/database/seed/audit_catalog_consistency.py`
+- Test: `backend/tests/test_catalog_consistency_audit.py`
+- Read: `backend/seeds/courses/momo_home_family.json`
+- Read: `backend/seeds/courses/momo_nature.json`
+- Read: `backend/seeds/courses/momo_school_food.json`
+- Read: `backend/database/seed/animals_adventure.json`
+- Read: `backend/database/seed/canonical_animals.py`
+- Read: `backend/database/seed/manifests/momo_adaptive_courses.json`
+- Read: `frontend/src/lib/learningPathTopics.ts`
+- Read: PostgreSQL `courses`, `lessons`, `lesson_sessions`, and activity dependency tables
+
+**Audit contract:**
+
+- Inventory every canonical source course and lesson by stable ID; report duplicate identities, missing order, duplicate order, missing catalog metadata, and source-to-manifest gaps.
+- Compare Animals Adventure source metadata with its canonical Python definition. A mismatch is `COURSE_METADATA_MISMATCH`, not an implicit correction.
+- Treat the frontend topic registry as the current topic-catalog input. Report topics with no explicit course key, source category keys with no authoritative topic binding, and ambiguous keyword-only matches as `TOPIC_UNMAPPED` or `OWNER_AMBIGUOUS`.
+- When `DATABASE_URL` is available, perform only `SELECT`/`information_schema` reads. Compare source inventory with PostgreSQL courses/lessons, classify extra published legacy courses as `LEGACY_UNMAPPED`, report open sessions, and detect stale numeric activity references.
+- Source-only mode must work without credentials. The report must include `writes_performed: 0` and `destructive_statements: 0`.
+- Task 0 does not update metadata, lessons, dependencies, sessions, progress, media, Storage, Qdrant, or AR data.
+
+**Acceptance gate:**
+
+- Known source inventory is explicit (currently three Momo courses plus Animals Adventure, 23 lessons).
+- Every known/published PostgreSQL course is either mapped to canonical source/topic data or explicitly classified as `LEGACY_UNMAPPED`.
+- No duplicate course/lesson/order identity exists in the canonical inventory.
+- Topic outcomes are explicit: mapped, deliberately shared, deliberately empty, or blocked/ambiguous.
+- All blockers are recorded before Task 1; no live apply is allowed while a semantic conflict or unsafe open-session change is unresolved.
+
+Run:
+
+```powershell
+Push-Location backend
+python -m database.seed.audit_catalog_consistency --source-only
+python -m database.seed.audit_catalog_consistency --json --source-only
+Pop-Location
+```
+
+After the source-only report is reviewed, run the same command without `--source-only` against the target PostgreSQL deployment. This task is complete only when the report is saved as an evidence artifact and the reconciliation scope is explicit.
+
+---
+
+## Task 1: Reconcile audited canonical release content into PostgreSQL
+
+The frontend path can consume legacy lesson fields, but the adaptive experience is more reliable when all audited canonical release courses have explicit, ordered activity metadata. The existing PostgreSQL schema already has the required columns and tables; this task is a content/data migration, not a DDL redesign.
+
+**Files:**
+
+- Create: `backend/database/seed/canonical_momo_courses.py`
+- Create: `backend/database/seed/apply_canonical_momo_courses.py`
+- Create: `backend/database/seed/manifests/momo_adaptive_courses.json`
+- Test: `backend/tests/test_canonical_momo_courses_seed.py`
+- Read: `backend/seeds/courses/momo_home_family.json`
+- Read: `backend/seeds/courses/momo_nature.json`
+- Read: `backend/seeds/courses/momo_school_food.json`
+- Read: `backend/database/seed/animals_adventure.json`
+- Read: `backend/database/seed/canonical_animals.py`
+- Read: `backend/database/seed/apply_canonical_animals.py`
+- Depends on: Task 0 audit report and explicit approval of any metadata/topic conflict.
+
+**Interfaces and invariants:**
+
+- Preflight requires the existing `courses`, `lessons.learning_blocks`, `flashcards`, `quiz_questions`, `quiz_question_options`, and `mini_game_items` tables plus the `content_version`, `activity_type`, `activity_order`, and `required` columns from the existing PostgreSQL migrations.
+- The audited canonical source files remain the source catalog. Do not rewrite them as a side effect of applying the database migration.
+- `canonical_momo_courses.py` produces validated schema-v2 `learning_blocks` with stable `activity_id` values derived from stable course/lesson/source identities. Activity order, required flags, content version, and relational reference IDs must be deterministic.
+- The manifest is required for ambiguous legacy entries. A migration must never guess a quiz-to-vocabulary or game-to-flashcard relationship, invent a foreign-key ID, or silently drop an unsupported activity.
+- Resolve existing relational dependencies by stable semantic identity first. Insert a dependency row only when the canonical manifest owns the identity and the row does not conflict; never delete rows or overwrite learner-authored content.
+- With the approved additive seed option, a missing Momo flashcard owner may be created from an authored vocabulary entry only when its deterministic semantic `qr_id` is collision-free and its required image reference is present. Reuse the source Supabase bucket/path for image and optional audio references; do not upload, replace, or delete Storage objects in this task. Existing flashcard rows remain unchanged, and missing or ambiguous asset references remain a no-write fallback.
+- Write only catalog content/dependency rows: canonical dependency rows where needed and `lessons.learning_blocks`. Preserve existing legacy lesson fields so the API and frontend v1 fallback remain compatible.
+- Do not update `user_course_progress`, `user_course_lesson_progress`, `lesson_sessions`, `lesson_session_steps`, `lesson_step_attempts`, gamification history, media assets, Supabase Storage, Qdrant, or AR data. Report open sessions that may observe a content-version change and run this before learner rollout when possible.
+- A lesson that cannot be safely materialized remains schema-v1 and is reported as `LEGACY_FALLBACK`; it is not a failed destructive conversion. A semantic conflict or invalid canonical payload is a hard error with a transaction rollback.
+
+**Non-destructive database rule:**
+
+- The migration is additive-only. `DELETE`, `TRUNCATE`, `DROP`, destructive `CASCADE`, and bulk replacement of catalog/dependency rows are forbidden.
+- Existing dependency rows and authored lesson content are immutable unless the row is explicitly owned by this canonical manifest and the change only adds missing canonical fields/items. Never remove an activity, vocabulary reference, quiz option, game item, media reference, or legacy field.
+- `lessons.learning_blocks` may be populated or extended, but a non-empty payload must not be shrunk or replaced with a payload that loses existing content. If preservation cannot be proven, report `CONFLICT` and leave the row unchanged.
+- The apply report must include `inserted_rows`, `extended_rows`, `unchanged_rows`, `deleted_rows`, and `destructive_statements`; success requires `deleted_rows = 0` and `destructive_statements = 0`.
+- Tests must snapshot the relevant rows before/after apply and assert that no row identity, learner state, or existing content disappears.
+
+- [ ] **Step 1: Add failing data-migration contract tests**
+
+Create fixtures for one complete canonical lesson, one legacy lesson with unresolved references, one conflicting semantic dependency, and a second run against already-materialized rows. Cover:
+
+1. canonical generation validates as `LessonLearningBlocks` schema v2 and preserves lesson order;
+2. activity IDs and dependency IDs are stable across two generations;
+3. unresolved references produce an explicit `LEGACY_FALLBACK` report and no v2 write;
+4. approved missing Momo flashcard owners are added only from canonical vocabulary with deterministic IDs, while conflicting existing IDs remain a no-write conflict;
+5. conflicting dependency payloads fail before the transaction writes anything;
+6. dry-run performs no session/learner-state writes and reports the planned changes;
+7. a second apply reports `NO_CHANGE` and does not duplicate dependency rows;
+8. readback rejects missing, duplicated, or out-of-order required activities;
+9. existing legacy fields remain available after canonical blocks are written.
+
+Run the new test before implementing the migration:
+
+```powershell
+Push-Location backend
+python -m pytest -q tests/test_canonical_momo_courses_seed.py
+Pop-Location
+```
+
+Expected: FAIL because the canonical Momo source, applicator, and migration test helpers do not exist yet.
+
+- [ ] **Step 2: Define the canonical Momo mapping and migration report**
+
+Implement typed definitions in `canonical_momo_courses.py` for the release catalog IDs and lesson identities read from the three existing seed files. Keep the mapping explicit at the semantic boundary:
+
+- normalize only comparison keys such as case, whitespace, and Unicode punctuation; preserve learner-facing text and media URLs;
+- map each vocabulary item to an existing flashcard/owner identity when one exists, or to an approved deterministic additive owner row when it is missing and the source asset references are valid;
+- map each quiz question and option to stable canonical IDs and a resolved vocabulary/flashcard owner;
+- map supported game items to stable mini-game IDs and their resolved flashcard references;
+- emit the canonical activities in the authored lesson order, with only activity types already accepted by `backend/models/lesson_activity.py`;
+- represent content revisions with the existing `content_version` field and increment it only for a deliberate semantic content change;
+- return a structured report containing `course_id`, `lesson_id`, `status`, `created`, `updated`, `unchanged`, `fallback_reason`, `conflicts`, and `open_session_count`.
+
+Do not add a unit/section model. The four-lesson visual grouping remains frontend-only and is not part of this mapping.
+
+- [ ] **Step 3: Implement the idempotent PostgreSQL apply command**
+
+Build `apply_canonical_momo_courses.py` on the existing async SQLAlchemy/database session and canonical-animals seed pattern. Run module commands from `backend/`, as required by the existing seed tooling. The command must expose mutually exclusive modes and an optional course scope:
+
+```powershell
+Push-Location backend
+python -m database.seed.apply_canonical_momo_courses --dry-run
+python -m database.seed.apply_canonical_momo_courses --apply
+python -m database.seed.apply_canonical_momo_courses --dry-run --course-id COURSE_ID
+Pop-Location
+```
+
+The command flow is:
+
+1. Load and validate all source JSON plus the explicit manifest before opening a write transaction.
+2. Verify the PostgreSQL schema prerequisites and fail with a clear migration-order error if `20260812_01_mobile_core.sql` or `20260814_03_lesson_activity_contract.sql` has not been applied.
+3. Resolve the selected catalog courses and lessons by stable IDs; fail on duplicate or missing identities rather than matching by array position.
+4. Preflight all flashcard, quiz, option, and mini-game dependencies. Classify unsupported legacy content as `LEGACY_FALLBACK`; classify missing Momo flashcard owners as additive creates only when source fields and Supabase references are valid; classify semantic payload conflicts as `CONFLICT` and abort before any write.
+5. In `--dry-run`, emit the report and perform no database mutation.
+6. In `--apply`, insert or extend only canonical dependency rows and populate/extend `lessons.learning_blocks` inside one transaction. Preserve legacy columns and reject any operation that would delete, shrink, replace, or cascade existing content.
+7. Read back every changed lesson in a fresh session and validate schema version, content version, stable IDs, ordered activities, and all relational references before reporting success.
+8. Re-run the same command and require `NO_CHANGE` for already reconciled rows. A failed readback or transaction error must leave the database unchanged.
+
+Do not add a new SQL migration file unless the preflight proves that a required column is absent in the target deployment. If that occurs, stop the data rollout, add only an additive DDL migration, and extend the existing contract tests before applying content data.
+
+- [ ] **Step 4: Verify session compatibility and migration safety**
+
+Use the existing lesson-session service tests to prove that canonical activity ordering is picked up for a newly started session and that an existing open session is not rewritten by the data migration. Verify that `_normalize_session` continues to reconcile content-version/order metadata according to the existing backend contract. Confirm that no progress or gamification aggregate changes during dry-run or apply.
+
+Run:
+
+```powershell
+Push-Location backend
+python -m pytest -q tests/test_canonical_momo_courses_seed.py tests/test_lesson_activity_contract.py tests/test_course_start.py tests/test_course_service_gamification.py tests/test_gamification_idempotency.py
+Pop-Location
+```
+
+Expected: the migration tests pass, repeated apply is idempotent, and existing session/progress/reward behavior remains green.
+
+- [ ] **Step 5: Execute the controlled data rollout and save evidence**
+
+Run dry-run first and inspect the report for unresolved lessons, conflicts, row counts, and open sessions:
+
+```powershell
+Push-Location backend
+python -m database.seed.apply_canonical_momo_courses --dry-run
+Pop-Location
+```
+
+Only after the report is clean for the selected release catalog, run:
+
+```powershell
+Push-Location backend
+python -m database.seed.apply_canonical_momo_courses --apply
+python -m database.seed.apply_canonical_momo_courses --dry-run
+Pop-Location
+```
+
+The final report must show the expected `created`/`updated` rows on the first apply and `NO_CHANGE` on the second dry-run. Preserve the report with the feature verification artifacts. Do not claim the whole catalog is schema-v2 if any lesson is intentionally `LEGACY_FALLBACK`; the frontend task must continue to exercise that compatibility path.
+
+- [ ] **Step 6: Commit the database slice independently**
+
+```powershell
+git add -- backend/database/seed/canonical_momo_courses.py backend/database/seed/apply_canonical_momo_courses.py backend/database/seed/manifests/momo_adaptive_courses.json backend/tests/test_canonical_momo_courses_seed.py
+git commit -m "feat(content): reconcile adaptive catalog lesson blocks"
+```
+
+Expected: only the migration source, manifest, and tests are staged; no unrelated workspace files or historical DDL migrations are included. The migration report proves zero deletes and zero destructive statements.
+
+---
+
+## Task 2: Build the pure mission-path adapter
 
 **Files:**
 
@@ -521,7 +731,7 @@ git add -- frontend/src/features/courses/types.ts frontend/src/features/courses/
 git commit -m "feat(courses): add mission path selectors"
 ```
 
-## Task 2: Add the adaptive mission card and connect Learning Path setup
+## Task 3: Add the adaptive mission card and connect Learning Path setup
 
 **Files:**
 
@@ -534,7 +744,7 @@ git commit -m "feat(courses): add mission path selectors"
 
 **Interfaces:**
 
-- Consumes: `NextMission` from Task 1, the existing `courseTitle()`, `lessonTitle()`, `courseService`, and `learningPathService`.
+- Consumes: `NextMission` from Task 2, the existing `courseTitle()`, `lessonTitle()`, `courseService`, and `learningPathService`.
 - Produces: one `data-testid="next-mission-card"` section on unfiltered `/courses`, and a post-save button that navigates to `/courses`.
 
 - [ ] **Step 1: Add failing catalog and setup tests**
@@ -866,7 +1076,7 @@ git commit -m "feat(courses): surface next mission"
 
 Expected: focused tests PASS and the build completes.
 
-## Task 3: Replace the flat CourseDetail list with a mission path
+## Task 4: Replace the flat CourseDetail list with a mission path
 
 **Files:**
 
@@ -878,7 +1088,7 @@ Expected: focused tests PASS and the build completes.
 
 **Interfaces:**
 
-- Consumes: `MissionPath`, `MissionUnit`, and `MissionLesson` from Task 1.
+- Consumes: `MissionPath`, `MissionUnit`, and `MissionLesson` from Task 2.
 - Produces: `CourseMap` with no `useNavigate()` and no hardcoded `/learn-ar`, `/flashcards`, or `/courses` destinations; `CourseDetail` owns the concrete lesson href.
 
 - [ ] **Step 1: Add failing path and route tests**
@@ -1012,7 +1222,7 @@ The selected-node trigger must have an accessible name that contains both its st
 
 - [ ] **Step 4: Refactor CourseMap into a presentational component**
 
-Replace its private `Lesson`/`Unit` interfaces with the Task 1 types. Use this prop contract:
+Replace its private `Lesson`/`Unit` interfaces with the Task 2 types. Use this prop contract:
 
 ```ts
 export interface CourseMapProps {
@@ -1096,7 +1306,7 @@ git commit -m "feat(courses): render mission path"
 
 Expected: node-state and route tests PASS; the build completes; `CourseMap` contains no unrelated hardcoded destination.
 
-## Task 4: Make lesson steps follow the backend session and canonical activity metadata
+## Task 5: Make lesson steps follow the backend session and canonical activity metadata
 
 **Files:**
 
@@ -1299,7 +1509,7 @@ git add -- frontend/src/features/courses/types.ts frontend/src/features/courses/
 git commit -m "feat(courses): align lesson steps with session"
 ```
 
-## Task 5: Wire LessonPlayer to the session adapter and authoritative reward response
+## Task 6: Wire LessonPlayer to the session adapter and authoritative reward response
 
 **Files:**
 
@@ -1310,7 +1520,7 @@ git commit -m "feat(courses): align lesson steps with session"
 
 **Interfaces:**
 
-- Consumes: `LessonStepView`, `canCompleteLesson`, and typed `LessonCompletionResult` from Task 4.
+- Consumes: `LessonStepView`, `canCompleteLesson`, and typed `LessonCompletionResult` from Task 5.
 - Produces: one active server-approved step at a time; reward popup appears only after successful lesson completion with backend `gamification.xp_earned`.
 
 - [ ] **Step 1: Add failing reward-gating tests**
@@ -1535,7 +1745,7 @@ git commit -m "feat(lessons): drive activity progress from session"
 
 Expected: focused tests PASS, the build completes, and no reward is displayed for a completion response with `xp_earned: 0`.
 
-## Task 6: Add generic mobile browser coverage and run regression gates
+## Task 7: Add generic mobile browser coverage and run regression gates
 
 **Files:**
 
@@ -1623,10 +1833,10 @@ Expected: lint, typecheck/build, and the full Vitest suite PASS. Existing course
 - [ ] **Step 4: Run focused backend contract/gamification regressions**
 
 ```powershell
-python -m pytest -q backend/tests/test_course_start.py backend/tests/test_lesson_activity_contract.py backend/tests/test_vocabulary_activity_contract.py backend/tests/test_quiz_activity_contract.py backend/tests/test_mini_game_activity_contract.py backend/tests/test_course_service_gamification.py backend/tests/test_gamification_idempotency.py
+python -m pytest -q backend/tests/test_canonical_momo_courses_seed.py backend/tests/test_course_start.py backend/tests/test_lesson_activity_contract.py backend/tests/test_vocabulary_activity_contract.py backend/tests/test_quiz_activity_contract.py backend/tests/test_mini_game_activity_contract.py backend/tests/test_course_service_gamification.py backend/tests/test_gamification_idempotency.py
 ```
 
-Expected: all selected backend tests PASS without source changes. If the local Python environment uses a project-specific runner, use that runner for the same explicit test paths.
+Expected: all selected backend tests PASS without API or schema-contract regressions. If the local Python environment uses a project-specific runner, use that runner for the same explicit test paths.
 
 - [ ] **Step 5: Perform runtime verification in the running web app**
 
@@ -1659,10 +1869,12 @@ Only add files belonging to this feature. Preserve unrelated pre-existing untrac
 
 ## Final self-review checklist
 
-- [ ] Every spec section maps to a task: catalog Next Mission, learning-path handoff, course mission path, activity summaries, session-driven lesson steps, feedback/retry, backend-authoritative reward, accessibility, tests, and mobile runtime verification.
+- [ ] Every spec section maps to a task: PostgreSQL content reconciliation, catalog Next Mission, learning-path handoff, course mission path, activity summaries, session-driven lesson steps, feedback/retry, backend-authoritative reward, accessibility, tests, and mobile runtime verification.
 - [ ] Placeholder scan completes with no forbidden marker matches in the plan.
 - [ ] Types match across `missionPath.ts`, `lessonSteps.ts`, `CourseMap`, `CourseDetail`, and `LessonPlayer`.
-- [ ] No task changes a FastAPI route or persistence model.
+- [ ] No task adds a FastAPI route, DDL schema, or presentation-only persistence model; Task 1 changes only explicitly owned catalog content/dependency rows.
+- [ ] Task 1 is dry-run safe, transactional, idempotent, readback-verified, and never mutates learner progress, sessions, rewards, or media state.
+- [ ] Task 1 is additive-only: zero `DELETE`/`TRUNCATE`/`DROP`, zero destructive cascades, zero removed content, and zero deleted rows in the final report.
 - [ ] No client code calls legacy `add-xp` or fabricates authoritative progress.
 - [ ] Locked nodes are presentation-only and direct lesson URLs remain backend validated.
 - [ ] Existing Animals Adventure behavior and tests are preserved.

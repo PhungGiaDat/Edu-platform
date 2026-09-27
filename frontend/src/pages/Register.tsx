@@ -102,6 +102,7 @@ export const Register: React.FC = () => {
                 <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">{t('registerEmail')}</span>
                 <input
                   type="email"
+                  autoComplete="username"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="hello@example.com"
@@ -114,6 +115,7 @@ export const Register: React.FC = () => {
                 <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">{t('registerPassword')}</span>
                 <input
                   type="password"
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
