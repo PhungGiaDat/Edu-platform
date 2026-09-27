@@ -539,8 +539,8 @@ export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           params[name] !== undefined ? String(params[name]) : `{{${name}}}`);
       };
       // 1) Inline dict (legacy + curated keys)
-      if (key in messages[locale]) return interpolate(messages[locale][key]);
-      if (key in messages.en) return interpolate(messages.en[key]);
+      if (key in messages[locale]) return interpolate(messages[locale][key as keyof typeof en]);
+      if (key in messages.en) return interpolate(messages.en[key as keyof typeof en]);
       // 2) Bridge (hybrid approach C): fall through to the global i18next
       //    instance so NEW translations can live in JSON (learner.* keys)
       //    without touching this dict. Language is kept in sync by the

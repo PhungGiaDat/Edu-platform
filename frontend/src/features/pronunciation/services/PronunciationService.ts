@@ -57,18 +57,9 @@ class PronunciationService {
     private recordingFormat = { mimeType: 'audio/webm', extension: 'webm' };
     private useServerFallback = false;
     private serverAvailable: boolean | null = null; // null = not checked yet
-    private autoStopTimer: ReturnType<typeof setTimeout> | null = null;
-
     /** Attempt id valid = current session id. Stale async callbacks discarded. */
     private isAttemptActive(id: number): boolean {
         return id === this.sessionId;
-    }
-
-    private clearAutoStopTimer(): void {
-        if (this.autoStopTimer !== null) {
-            clearTimeout(this.autoStopTimer);
-            this.autoStopTimer = null;
-        }
     }
 
     constructor() {
