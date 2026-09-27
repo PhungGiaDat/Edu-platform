@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { runInNewContext } from 'node:vm';
+import { describe, expect, it, vi } from 'vitest';
 
 const frontendRoot = resolve(process.cwd());
 const indexHtml = readFileSync(resolve(frontendRoot, 'index.html'), 'utf8');
@@ -32,7 +33,7 @@ describe('PWA shell contract', () => {
   });
 
   it('registers the production service worker and keeps an offline app-shell fallback', () => {
-    expect(mainSource).toContain(".register('/sw.js', { scope: '/' })");
+    expect(mainSource).toContain(".register('/sw.js', { scope: '/', updateViaCache: 'none' })");
     expect(serviceWorkerEntrypoint).toContain("importScripts('/static/js/sw-notifications.js')");
     expect(serviceWorkerSource).toContain("caches.match('/index.html')");
     expect(serviceWorkerSource).not.toContain('module.exports');
@@ -51,13 +52,40 @@ describe('PWA shell contract', () => {
     );
   });
 
-  it('refreshes PWA icon and manifest requests before using cached copies', () => {
-    const refreshBranch = serviceWorkerSource.indexOf("url.pathname === '/manifest.json' || url.pathname.startsWith('/icons/')");
-    const dynamicCacheLookup = serviceWorkerSource.indexOf('caches.match(request).then((cached)');
+  it('fetches current icons online and falls back to cached PWA metadata offline', async () => {
+    type FetchEvent = {
+      request: { url: string; method: string; mode: string };
+      respondWith: (response: Promise<unknown>) => void;
+      waitUntil: (work: Promise<unknown>) => void;
+    };
+    const listeners = new Map<string, (event: FetchEvent) => void>();
+    const cached = { source: 'cache' };
+    const fresh = { ok: true, clone: () => ({ source: 'network copy' }) };
+    const put = vi.fn(async () => undefined);
+    const match = vi.fn(async () => cached);
+    const fetch = vi.fn().mockResolvedValueOnce(fresh).mockRejectedValueOnce(new Error('offline'));
 
-    expect(refreshBranch).toBeGreaterThan(-1);
-    expect(refreshBranch).toBeLessThan(dynamicCacheLookup);
-    expect(serviceWorkerSource.slice(refreshBranch, dynamicCacheLookup)).toContain("fetch(request, { cache: 'no-store' })");
-    expect(serviceWorkerSource.slice(refreshBranch, dynamicCacheLookup)).toContain('catch(() => caches.match(request))');
+    runInNewContext(serviceWorkerSource, {
+      self: { location: { origin: 'https://example.test' }, addEventListener: (type: string, listener: (event: FetchEvent) => void) => listeners.set(type, listener) },
+      caches: { open: async () => ({ put }), match },
+      fetch,
+      URL,
+    });
+
+    const request = (path: string) => ({ url: `https://example.test${path}`, method: 'GET', mode: 'same-origin' });
+    const respond = async (path: string) => {
+      let response: Promise<unknown> | undefined;
+      let work: Promise<unknown> | undefined;
+      listeners.get('fetch')?.({ request: request(path), respondWith: (value) => { response = value; }, waitUntil: (value) => { work = value; } });
+      const result = await response;
+      await work;
+      return result;
+    };
+
+    expect(await respond('/icons/icon-180x180.png')).toBe(fresh);
+    expect(fetch).toHaveBeenCalledWith(request('/icons/icon-180x180.png'), { cache: 'no-store' });
+    expect(put).toHaveBeenCalledOnce();
+    expect(await respond('/manifest.json')).toBe(cached);
+    expect(match).toHaveBeenCalledWith(request('/manifest.json'));
   });
 });

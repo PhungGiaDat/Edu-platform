@@ -39,7 +39,7 @@ function registerProgressiveWebApp(): void {
 
   window.addEventListener('load', () => {
     navigator.serviceWorker
-      .register('/sw.js', { scope: '/' })
+      .register('/sw.js', { scope: '/', updateViaCache: 'none' })
       .then((reg) => {
         arTrace('SW_REGISTER_SUCCESS', {
           scope: reg.scope,
