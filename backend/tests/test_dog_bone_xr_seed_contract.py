@@ -41,10 +41,7 @@ def test_dog_bone_combo_rule_is_additive_with_dog_as_actor():
     assert "('clay_dog_bone', 'bone001', 1)" in migration
     assert "'\"SHIBA_EAT_BONE\"'::jsonb" in migration
     # Runtime ignores rules without proximity, so all four values are required.
-    assert "0.62,
-    0.70,
-    300,
-    0.25," in migration
+    assert "0.62,\n    0.70,\n    300,\n    0.25," in migration
     assert migration.count("ON CONFLICT") == 2
     assert "UPDATE " not in migration
     assert "DELETE FROM" not in migration
