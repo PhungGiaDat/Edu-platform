@@ -2262,6 +2262,36 @@
         scale: detail.scale ?? 1,
         lastSeenAt: Date.now(),
       });
+      lastRawAnchorPositions.set(detail.name, trackedTargets.get(detail.name).position);
+    }
+
+    // ========== SPATIAL DUPLICATE SUPPRESSION ==========
+    // A new recognition sitting on an already-owned card is cross-target confusion of the same
+    // physical card: the existing owner (tracked or within loss grace) keeps it. Real separate
+    // cards (e.g. an interaction pair) sit well beyond this distance in raw anchor space.
+    const SPATIAL_DUPLICATE_DISTANCE = 0.20;
+    const lastRawAnchorPositions = new Map();
+    const spatialDuplicateTargets = new Set();
+
+    function findSpatialDuplicateOwner({ candidateTarget, candidatePosition, ownerPositions, threshold }) {
+      let owner = null;
+      for (const [existingTarget, position] of ownerPositions) {
+        if (existingTarget === candidateTarget) continue;
+        const distance = distanceBetweenPositions(candidatePosition, position);
+        if (distance != null && distance < threshold && (!owner || distance < owner.distance)) {
+          owner = { existingTarget, distance };
+        }
+      }
+      return owner;
+    }
+
+    function getSpatialOwnerPositions() {
+      const owners = new Map();
+      for (const name of getEffectivelyTrackedTargetNames(performance.now())) {
+        const position = lastRawAnchorPositions.get(name);
+        if (position) owners.set(name, position);
+      }
+      return owners;
     }
 
     function waitForXR8() {
@@ -2431,6 +2461,23 @@
               });
               return;
             }
+            const duplicateOwner = findSpatialDuplicateOwner({
+              candidateTarget: detail.name,
+              candidatePosition: detail.position,
+              ownerPositions: getSpatialOwnerPositions(),
+              threshold: SPATIAL_DUPLICATE_DISTANCE,
+            });
+            if (duplicateOwner) {
+              spatialDuplicateTargets.add(detail.name);
+              sendARDebug('TARGET_FOUND_REJECTED_SPATIAL_DUPLICATE', {
+                candidateTarget: detail.name,
+                existingTarget: duplicateOwner.existingTarget,
+                distance: Number(duplicateOwner.distance.toFixed(3)),
+                threshold: SPATIAL_DUPLICATE_DISTANCE,
+              });
+              return;
+            }
+            spatialDuplicateTargets.delete(detail.name);
             onTargetFound(detail);
           } },
           { event: 'reality.imageupdated', process: ({detail}) => {
@@ -2441,11 +2488,13 @@
               realityImageUpdated._lastLog = now;
               sendARDebug('IMAGE_UPDATED', { name: detail?.name });
             }
-            if (!isRuntimeTargetAdmitted(detail.name)) return;
+            if (!isRuntimeTargetAdmitted(detail.name) || spatialDuplicateTargets.has(detail.name)) return;
             saveTargetPose(detail);
           }},
           { event: 'reality.imagelost', process: ({detail}) => {
             sendARDebug('IMAGE_LOST', { name: detail?.name });
+            // A suppressed duplicate was never found; its loss only re-arms a future IMAGE_FOUND.
+            if (detail?.name && spatialDuplicateTargets.delete(detail.name)) return;
             if (detail?.name && isRuntimeTargetAdmitted(detail.name)) onTargetLost(detail.name);
           } },
         ],
