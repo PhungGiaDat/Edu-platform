@@ -2464,7 +2464,7 @@
 
       sendARDebug('XR_PIPELINE_READY', {});
 
-      // Configure ALL image targets — disableWorldTracking reduces processing for
+      // Configure the scoped image targets (see XR_TARGET_SCOPE) — disableWorldTracking reduces processing for
       // image-target-only experiences (no surface/plane SLAM needed)
       const imageTargetData = targetDataList.map(t => ({ name: t.name, type: t.type || 'PLANAR', imagePath: t.imagePath, properties: t.properties || {}, metadata: t.metadata || {} }));
       sendARDebug('XR_TARGETS_REGISTER', { count: imageTargetData.length, targets: imageTargetData.map(t => t.name) });
@@ -3611,6 +3611,25 @@
       }
     }
 
+    // ========== XR TARGET SCOPE ==========
+    // Register only session-admitted targets once rules settle. A slow or cold rules API
+    // keeps the full catalogue so secondary targets stay recognisable (today's behaviour).
+    const RULES_BEFORE_XR_WAIT_MS = 1200;
+
+    function waitForSettled(promise, timeoutMs) {
+      let timer;
+      return Promise.race([
+        promise.then(() => true, () => false),  // a failed rules install must not block XR boot
+        new Promise((resolve) => { timer = setTimeout(() => resolve(false), timeoutMs); }),
+      ]).finally(() => clearTimeout(timer));
+    }
+
+    function scopeXrTargetData(targetDataList, rulesReady, admittedNames) {
+      if (!rulesReady) return targetDataList;
+      const scoped = targetDataList.filter((target) => admittedNames.has(target.name));
+      return scoped.length > 0 ? scoped : targetDataList;
+    }
+
     // ========== MESSAGE LISTENER ==========
     window.addEventListener('message', (event) => {
       const messageData = event.data;
@@ -3638,8 +3657,8 @@
     });
 
     // ========== STAGED MODEL PRELOAD ==========
-    // Only the entry target is loaded at boot. The full image-target catalogue
-    // stays registered, while every other GLB starts lazily after IMAGE_FOUND.
+    // Only the entry target is loaded at boot. Registered image targets are scoped by
+    // XR_TARGET_SCOPE, while every other GLB starts lazily after IMAGE_FOUND.
 
     // ========== MAIN ==========
     async function main() {
@@ -3647,7 +3666,7 @@
       try {
         initThree();
         updateDebug('Three.js ready');
-        loadComboRules();
+        const rulesSettled = loadComboRules();
 
         const targetsPromise = Promise.all(xrTargetConfigs.map(cfg => loadTargetData(cfg)));
 
@@ -3681,8 +3700,20 @@
         setPhase('loading');
         sendARDebug('LOADING_ASSETS', { hasModel: !!modelUrl, targetCount: targetDataList.length });
 
+        const scopeWaitStart = performance.now();
+        const rulesReady = await waitForSettled(rulesSettled, RULES_BEFORE_XR_WAIT_MS);
+        const xrTargetDataList = scopeXrTargetData(targetDataList, rulesReady, admittedTargetNames);
+        sendARDebug('XR_TARGET_SCOPE', {
+          rulesReady,
+          entryTarget: primaryModelTargetName,
+          admittedTargets: Array.from(admittedTargetNames),
+          registeredTargets: xrTargetDataList.map(t => t.name),
+          totalCatalogueTargets: targetDataList.length,
+          waitedMs: Math.round(performance.now() - scopeWaitStart),
+        });
+
         // XR init must NOT wait for model downloads.
-        await initXR(targetDataList);
+        await initXR(xrTargetDataList);
 
         setPhase('viewing');
         sendARDebug('INIT_COMPLETE', { modelLoaded: !!loadedModel, targetCount: targetDataList.length });
