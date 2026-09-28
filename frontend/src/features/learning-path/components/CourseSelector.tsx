@@ -40,7 +40,7 @@ export const CourseSelector: React.FC<CourseSelectorProps> = ({ courses, selecte
         onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex max-w-[9.5rem] items-center gap-1 rounded-lg bg-white px-2 py-1 text-left shadow-sm"
+        className="flex max-w-[9.5rem] items-center gap-1 !rounded-lg bg-white !px-2 !py-1 text-left shadow-sm"
       >
         <span className="flex min-w-0 items-center gap-1 text-[11px] font-bold text-gray-700">
           <span aria-hidden="true">{emoji}</span>

@@ -173,8 +173,8 @@ export const LearningPathScene: React.FC<LearningPathSceneProps> = ({
           dampingFactor={0.08}
           minPolarAngle={THREE.MathUtils.degToRad(30)}
           maxPolarAngle={THREE.MathUtils.degToRad(65)}
-          minDistance={6}
-          maxDistance={10}
+          minDistance={7}
+          maxDistance={14}
           makeDefault
         />
       </Canvas>

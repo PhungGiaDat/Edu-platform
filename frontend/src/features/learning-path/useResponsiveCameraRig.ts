@@ -18,8 +18,10 @@ export interface CameraRig {
  * *scale* (LessonNode3D) is now the lever for "nodes readable on mobile",
  * not camera proximity.
  */
-const WIDE: CameraRig = { fov: 48, backDistance: 8, heightOffset: 5.5 };
-const NARROW: CameraRig = { fov: 50, backDistance: 6, heightOffset: 4.2 };
+// Captured at 390x844 the old 6/4.2 rig let the current node fill half the
+// screen with only one neighbour visible; this frames current + ~3 ahead.
+const WIDE: CameraRig = { fov: 45, backDistance: 9, heightOffset: 8 };
+const NARROW: CameraRig = { fov: 50, backDistance: 7.5, heightOffset: 7 };
 
 /**
  * Tracks whether the viewport is narrower than `breakpointPx` and returns the

@@ -9,7 +9,32 @@ import React, { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
+import { createPathSpline } from '@/lib/pathSpline';
 import { getCategoryPreset, type CategoryPreset } from '../categoryPresets';
+
+// ========== Path-relative placement ==========
+
+/**
+ * Props used to sit at hardcoded z = 0..+21 — BEHIND the start of a path
+ * that actually runs z = 0..-22, and at fixed x offsets the ±3 S-curve
+ * would cross. Everything is now placed relative to the spline itself:
+ * `t` along the path (may go slightly <0 / >1 past the ends), `side` -1/+1,
+ * `offset` world units sideways from the centerline.
+ */
+const LAYOUT_SPLINE = createPathSpline();
+const LAYOUT_LENGTH = LAYOUT_SPLINE.getLength();
+
+function beside(t: number, side: number, offset: number): [number, number, number] {
+  const clamped = Math.max(0, Math.min(1, t));
+  const point = LAYOUT_SPLINE.getPointAt(clamped);
+  const tangent = LAYOUT_SPLINE.getTangentAt(clamped);
+  // Past either end: continue straight along the end tangent.
+  point.addScaledVector(tangent, (t - clamped) * LAYOUT_LENGTH);
+  // cross(up, tangent) = (tz, 0, -tx)
+  const perp = new THREE.Vector3(tangent.z, 0, -tangent.x).normalize();
+  point.addScaledVector(perp, side * offset);
+  return [point.x, 0, point.z];
+}
 
 // ========== Component ==========
 
@@ -123,7 +148,7 @@ const GroundWithHills: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
           castShadow
         >
           <sphereGeometry args={[1, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-          <primitive object={hillMaterial.clone()} />
+          <primitive object={hillMaterial} attach="material" />
         </mesh>
       ))}
     </group>
@@ -139,16 +164,18 @@ const BackgroundHills: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
     });
   }, [preset.grassDark]);
 
+  // Kept clear of the path corridor (|x| <= ~6 for z 0..-22): the old
+  // [0,0,-25] 15x8x12 hill swallowed the last third of the lessons.
   const hills = [
-    { pos: [-20, 0, -15], scale: [8, 5, 8] },
-    { pos: [-8, 0, -18], scale: [10, 6, 10] },
-    { pos: [5, 0, -20], scale: [12, 7, 10] },
-    { pos: [18, 0, -16], scale: [9, 5.5, 9] },
-    { pos: [25, 0, -12], scale: [7, 4, 7] },
-    { pos: [-25, 0, -10], scale: [6, 3.5, 6] },
-    { pos: [0, 0, -25], scale: [15, 8, 12] },
-    { pos: [-15, 0, -22], scale: [11, 6.5, 10] },
-    { pos: [12, 0, -22], scale: [10, 6, 9] },
+    { pos: [-18, 0, -12], scale: [8, 4.5, 7] },
+    { pos: [18, 0, -14], scale: [8, 4, 7] },
+    { pos: [-22, 0, 0], scale: [7, 3.5, 6] },
+    { pos: [22, 0, -2], scale: [7, 3.5, 6] },
+    { pos: [-12, 0, -34], scale: [12, 6, 8] },
+    { pos: [6, 0, -38], scale: [14, 7, 9] },
+    { pos: [20, 0, -30], scale: [10, 5.5, 8] },
+    { pos: [-26, 0, -24], scale: [10, 6, 8] },
+    { pos: [0, 0, -50], scale: [22, 9, 10] },
   ];
 
   return (
@@ -161,7 +188,7 @@ const BackgroundHills: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
           receiveShadow
         >
           <sphereGeometry args={[1, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-          <primitive object={hillMaterial.clone()} />
+          <primitive object={hillMaterial} attach="material" />
         </mesh>
       ))}
     </group>
@@ -172,26 +199,11 @@ const BackgroundHills: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
 
 /** Shared placement for every prop shape so category switching feels like a
  * re-skin, not a re-arranged scene. */
-const PROP_POSITIONS: Array<[number, number, number]> = [
-  // Left side
-  [-2, 0, -2],
-  [-3.5, 0, 1],
-  [-2, 0, 4],
-  [-3, 0, 7],
-  [-2.5, 0, 10],
-  [-3, 0, 13],
-  [-2, 0, 16],
-  [-3.5, 0, 19],
-  // Right side
-  [2, 0, 0],
-  [3, 0, 3],
-  [2.5, 0, 6],
-  [3, 0, 9],
-  [2, 0, 12],
-  [3.5, 0, 15],
-  [2, 0, 18],
-  [3, 0, 21],
-];
+const PROP_POSITIONS: Array<[number, number, number]> = Array.from({ length: 16 }, (_, i) => {
+  const side = i % 2 === 0 ? -1 : 1;
+  const t = -0.12 + Math.floor(i / 2) * 0.165 + (side > 0 ? 0.08 : 0);
+  return beside(t, side, 2.9 + (i % 3) * 0.45);
+});
 
 const Props: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
   switch (preset.propShape) {
@@ -216,27 +228,29 @@ const Props: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
  */
 const ALPHABET_BLOCK_COLORS = ['#E85D5D', '#4C9AE8', '#F2C94C', '#6FCF7A'];
 const ALPHABET_BLOCK_POSITIONS: Array<[number, number, number]> = [
-  [-1.6, 0, -1],
-  [1.5, 0, 2],
-  [-1.5, 0, 8],
-  [1.6, 0, 13],
+  beside(0.04, 1, 1.8),
+  beside(0.3, -1, 1.9),
+  beside(0.55, 1, 1.8),
+  beside(0.82, -1, 1.9),
 ];
 
 const BOOK_STACK_POSITIONS: Array<[number, number, number]> = [
-  [-2.6, 0, 4],
-  [2.7, 0, 9],
-  [-2.5, 0, 17],
+  beside(0.16, 1, 2.8),
+  beside(0.44, -1, 2.9),
+  beside(0.7, 1, 2.8),
+  beside(0.95, -1, 2.9),
 ];
 
 const PENCIL_POSITIONS: Array<[number, number, number]> = [
-  [-6, 0, -2],
-  [6, 0, 6],
-  [-6.5, 0, 15],
+  beside(0.1, -1, 5),
+  beside(0.38, 1, 5.2),
+  beside(0.64, -1, 5),
+  beside(0.9, 1, 5.2),
 ];
 
 const LUNCHBOX_POSITIONS: Array<[number, number, number]> = [
-  [1.1, 0, -1],
-  [-1.2, 0, 10],
+  beside(0.22, -1, 1.7),
+  beside(0.62, 1, 1.7),
 ];
 
 const SchoolWorld: React.FC = () => {
@@ -402,27 +416,29 @@ const FLOWER_MODEL_URL = '/assets/models/flower_redA.glb';
 
 function useClonedInstances(url: string, count: number) {
   const { scene } = useGLTF(url);
-  return useMemo(() => Array.from({ length: count }, () => scene.clone()), [scene, count]);
+  return useMemo(() => {
+    // Kenney kit GLBs ship metallicFactor 1; with no env map that renders
+    // near-black. Clay props should be fully diffuse. Materials are shared
+    // across clones, so this runs once per material.
+    scene.traverse((child) => {
+      const material = (child as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
+      if (material && 'metalness' in material) material.metalness = 0;
+    });
+    return Array.from({ length: count }, () => scene.clone());
+  }, [scene, count]);
 }
 
-const NatureClusters: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
+const NatureClusters: React.FC<{ preset: CategoryPreset }> = () => {
   const treeClones = useClonedInstances(TREE_MODEL_URL, PROP_POSITIONS.length);
   const mushroomClones = useClonedInstances(MUSHROOM_MODEL_URL, 6);
   const flowerClones = useClonedInstances(FLOWER_MODEL_URL, 10);
 
-  const treeScales = useMemo(() => PROP_POSITIONS.map(() => 1.1 + Math.random() * 0.6), []);
+  const treeScales = useMemo(() => PROP_POSITIONS.map(() => 1.5 + Math.random() * 0.7), []);
   const treeRotations = useMemo(() => PROP_POSITIONS.map(() => Math.random() * Math.PI * 2), []);
 
   // Midground: a small mushroom cluster tucked just inside the tree line.
   const mushroomPositions = useMemo<Array<[number, number, number]>>(
-    () => [
-      [-1.6, 0, -1],
-      [-1.4, 0, 5],
-      [-1.7, 0, 11],
-      [1.6, 0, 2],
-      [1.5, 0, 8],
-      [1.8, 0, 14],
-    ],
+    () => [0.06, 0.24, 0.42, 0.6, 0.78, 0.96].map((t, i) => beside(t, i % 2 === 0 ? 1 : -1, 2.0)),
     [],
   );
 
@@ -431,7 +447,7 @@ const NatureClusters: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
     const positions: Array<[number, number, number]> = [];
     for (let i = 0; i < 10; i++) {
       const side = i % 2 === 0 ? -1 : 1;
-      positions.push([side * (0.9 + Math.random() * 0.3), 0, i * 2.2 - 2]);
+      positions.push(beside(-0.04 + i * 0.11, side, 1.5 + Math.random() * 0.3));
     }
     return positions;
   }, []);
@@ -442,25 +458,7 @@ const NatureClusters: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
     [],
   );
   const rockPositions = useMemo<Array<[number, number, number]>>(
-    () => [
-      [-2.6, 0, 2],
-      [2.7, 0, -1],
-      [-2.4, 0, 9],
-      [2.5, 0, 12],
-      [-2.8, 0, 17],
-    ],
-    [],
-  );
-
-  const streamMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: '#6FB8D9',
-        roughness: 0.25,
-        metalness: 0.1,
-        transparent: true,
-        opacity: 0.75,
-      }),
+    () => [0.02, 0.2, 0.46, 0.68, 0.9].map((t, i) => beside(t, i % 2 === 0 ? 1 : -1, 2.4)),
     [],
   );
 
@@ -493,21 +491,6 @@ const NatureClusters: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
         <primitive key={`flower-${i}`} object={clone} position={flowerPositions[i]} scale={0.5} />
       ))}
 
-      {/* A shallow stream running alongside the corridor — lightweight
-          "river" visual idea, a single tinted plane rather than a
-          simulated water surface. */}
-      <mesh position={[-4.6, 0.02, 9]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[1.1, 24]} />
-        <primitive object={streamMaterial} attach="material" />
-      </mesh>
-
-      {/* Keep the prop-color/accent from the preset visible too, via the
-          grass-edge accent underlining the corridor (ties this category
-          system to the shared preset contract, not just hardcoded assets). */}
-      <mesh position={[0, 0.005, 9]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[7, 26]} />
-        <meshBasicMaterial color={preset.grassDark} transparent opacity={0.15} />
-      </mesh>
     </group>
   );
 };
@@ -519,15 +502,15 @@ useGLTF.preload(FLOWER_MODEL_URL);
 // ========== Clouds ==========
 
 const CloudGroup: React.FC = () => {
+  // High and behind the path: the old y=4-6 clouds sat between the
+  // (now y~7) camera and the path and filled the frame with grey slabs.
   const cloudPositions: Array<[number, number, number]> = [
-    [-8, 5, -5],
-    [5, 6, -8],
-    [-3, 4.5, -12],
-    [10, 5.5, -6],
-    [-15, 6, -3],
-    [8, 4, -15],
-    [-5, 5, 2],
-    [15, 5, -10],
+    [-14, 11, -34],
+    [4, 12, -42],
+    [16, 10.5, -30],
+    [-24, 12, -20],
+    [24, 11, -16],
+    [-4, 13, -52],
   ];
 
   return (

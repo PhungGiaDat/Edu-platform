@@ -9,6 +9,7 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { useSafeGLTF } from '@/hooks/useSafeGLTF';
 import { createPathSpline, getPointOnSpline, getTangentOnSpline } from '@/lib/pathSpline';
 import { computeGroundedOffset, computeNormalizationScale } from '../modelNormalization';
@@ -38,7 +39,7 @@ const DEFAULT_MASCOT_MODEL_URL = '/assets/models/elephant-learning-path.glb';
  * "towering over"). The model's AUTHORED scale is never trusted — see
  * modelNormalization.ts.
  */
-const PET_TARGET_HEIGHT = 1.35;
+const PET_TARGET_HEIGHT = 1.15;
 
 /** Small lift so the (now bottom-grounded) model doesn't z-fight the
  * ground plane / stepping stones; grounding itself is handled by
@@ -55,8 +56,12 @@ const ROTATION_SMOOTHING = 0.1;
  * its footprint (which reaches ~0.96 units from center on the current
  * node's raised platform).
  */
-const LATERAL_OFFSET = 1.15;
-const BEHIND_OFFSET = 0.4;
+const LATERAL_OFFSET = 1.35;
+const BEHIND_OFFSET = 0.15;
+/** Turn slightly off the tangent toward the path ahead, so the camera (which
+ * sits behind, looking along the path) sees the pet's face in 3/4 profile,
+ * trunk toward the lesson — not its back. Sign/size verified in captures. */
+const GUIDE_TURN = -2.2;
 
 /**
  * The GLB's authored "forward" axis is unknown/unverified — this rotates
@@ -65,7 +70,8 @@ const BEHIND_OFFSET = 0.4;
  * (path direction vs. model-authoring quirk) don't get tangled into one
  * magic number. 0 until visually confirmed in a browser.
  */
-const MODEL_ROTATION_OFFSET = 0;
+// Verified in 390x844 captures: the elephant GLB's authored forward is +X.
+const MODEL_ROTATION_OFFSET = -Math.PI / 2;
 
 // ========== Component Props ==========
 
@@ -109,7 +115,7 @@ export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, isCelebrating
 
   // Calculate target rotation from tangent (face direction of travel)
   const targetAngle = useMemo(() => {
-    return Math.atan2(tangent.x, tangent.z);
+    return Math.atan2(tangent.x, tangent.z) + GUIDE_TURN;
   }, [tangent]);
 
   // Track distance traveled for walking animation speed
@@ -159,7 +165,10 @@ export const PetGuide: React.FC<PetGuideProps> = ({ pet, progress, isCelebrating
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const PetModel: React.FC<{ position: THREE.Vector3; modelUrl: string; textureUrl?: string | null; groupRef: any; isCelebrating?: boolean }> = ({ position, modelUrl, textureUrl, groupRef, isCelebrating }) => {
   const { gltf } = useSafeGLTF(modelUrl, textureUrl);
-  const clonedScene = useMemo(() => gltf?.scene.clone() ?? null, [gltf]);
+  // SkeletonUtils.clone, not scene.clone(): the elephant is skinned, and a
+  // plain clone stays bound to the ORIGINAL (never-rendered) bones — the mesh
+  // then ignored this group's scale/position and drew huge near the origin.
+  const clonedScene = useMemo(() => (gltf ? cloneSkinned(gltf.scene) : null), [gltf]);
 
   // Bounding-box normalization: never trust the model's authored scale.
   // Measure once raw to find the scale that hits PET_TARGET_HEIGHT, apply
@@ -187,9 +196,19 @@ const PetModel: React.FC<{ position: THREE.Vector3; modelUrl: string; textureUrl
   React.useEffect(() => {
     if (!clonedScene) return;
     clonedScene.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      // three's GLTFLoader no longer understands KHR_materials_pbrSpecularGlossiness
+      // (the elephant uses it) and falls back to metalness=1, which renders
+      // black without an env map. Restore the authored diffuse color.
+      const material = mesh.material as THREE.MeshStandardMaterial;
+      const diffuse = material?.userData?.gltfExtensions?.KHR_materials_pbrSpecularGlossiness?.diffuseFactor;
+      if (Array.isArray(diffuse)) {
+        material.color.setRGB(diffuse[0], diffuse[1], diffuse[2]);
+        material.metalness = 0;
+        material.roughness = 0.8;
       }
     });
   }, [clonedScene]);

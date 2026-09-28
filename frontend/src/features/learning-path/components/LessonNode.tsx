@@ -30,28 +30,30 @@ const NODE_RADIUS = 0.4;
 
 // State colors — saturated so nodes read as the brightest thing in the
 // scene, clearly above the more desaturated terrain/props behind them.
+// Warm orange owns "you are here"; cool blue = open next; soft green = done;
+// grey = not yet. Completed must never out-shine current.
 const STATE_COLORS = {
-  current: '#3D6FE0',
-  available: '#7FB0FF',
-  completed: '#FFCF33',
-  locked: '#9CA3AF',
+  current: '#FF7A2F',
+  available: '#4F9BEA',
+  completed: '#58BE84',
+  locked: '#AEB4BF',
 } as const;
 
 // Glow intensities
 const GLOW_INTENSITIES = {
-  current: 0.7,
-  available: 0.3,
-  completed: 0.45,
+  current: 0.6,
+  available: 0.25,
+  completed: 0.15,
   locked: 0,
 } as const;
 
 /** Relative size hierarchy: current is the unmistakable landmark; locked is
  * visibly the least important. Understandable even with all text hidden. */
 const STATE_SCALE = {
-  current: 1.35,
+  current: 1.45,
   available: 1.0,
-  completed: 0.95,
-  locked: 0.75,
+  completed: 0.9,
+  locked: 0.72,
 } as const;
 
 // Clay material properties
@@ -83,32 +85,21 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
   const beaconRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
-  // Calculate position and orientation from spline
-  const { position, quaternion } = useMemo(() => {
-    const point = getPointOnSpline(spline, node.position);
-    const tangent = getTangentOnSpline(spline, node.position);
-
-    // Position node slightly above the path
-    const pos = point.clone();
-    pos.y += NODE_RADIUS + 0.15;
-
-    // Create quaternion to orient node to face along path
-    const quat = new THREE.Quaternion();
-    const up = new THREE.Vector3(0, 1, 0);
-    const axis = new THREE.Vector3().crossVectors(up, tangent).normalize();
-    const angle = Math.acos(Math.max(-1, Math.min(1, up.dot(tangent))));
-    if (axis.length() > 0.001) {
-      quat.setFromAxisAngle(axis, angle);
-    }
-
-    return { position: pos, quaternion: quat };
-  }, [spline, node.position]);
-
   const isLocked = node.state === 'locked';
   const isCurrent = node.state === 'current';
   const isCompleted = node.state === 'completed';
   const baseScale = STATE_SCALE[node.state] ?? 1;
   const platformRadius = NODE_RADIUS * baseScale * 1.5;
+
+  // Grounded + yaw-only. The old up->tangent quaternion tipped every
+  // platform onto its edge (a big vertical disc in front of the node).
+  const { position, yaw } = useMemo(() => {
+    const point = getPointOnSpline(spline, node.position);
+    const tangent = getTangentOnSpline(spline, node.position);
+    const pos = point.clone();
+    pos.y += PLATFORM_HEIGHT + NODE_RADIUS * baseScale + 0.04;
+    return { position: pos, yaw: Math.atan2(tangent.x, tangent.z) };
+  }, [spline, node.position, baseScale]);
 
   // Get state color
   const stateColor = STATE_COLORS[node.state] || STATE_COLORS.locked;
@@ -120,7 +111,7 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
     const stateColorObj = new THREE.Color(stateColor);
 
     // Blend clay color with state color
-    const blendedColor = baseColor.lerp(stateColorObj, 0.55);
+    const blendedColor = baseColor.lerp(stateColorObj, isLocked ? 0.55 : 0.8);
 
     // Main clay material
     const mainMaterial = new THREE.MeshStandardMaterial({
@@ -157,7 +148,7 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
       new THREE.MeshBasicMaterial({
         color: new THREE.Color(STATE_COLORS.current),
         transparent: true,
-        opacity: 0.35,
+        opacity: 0.45,
       }),
     [],
   );
@@ -187,11 +178,11 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
     // strongest landmark, understandable even with labels hidden.
     if (isCurrent) {
       const t = state.clock.elapsedTime;
-      const pulse = 1.25 + Math.sin(t * 1.6) * 0.06;
+      const pulse = 1 + Math.sin(t * 1.6) * 0.06;
       if (haloRef.current) haloRef.current.scale.setScalar(pulse);
-      haloMaterial.opacity = 0.35 + Math.sin(t * 1.6) * 0.1;
+      haloMaterial.opacity = 0.55 + Math.sin(t * 1.6) * 0.15;
       if (beaconRef.current) {
-        beaconMaterial.opacity = 0.22 + Math.sin(t * 1.6) * 0.08;
+        beaconMaterial.opacity = 0.32 + Math.sin(t * 1.6) * 0.1;
       }
     }
   });
@@ -210,7 +201,7 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
   };
 
   return (
-    <group position={[position.x, position.y, position.z]} quaternion={quaternion}>
+    <group position={[position.x, position.y, position.z]} rotation={[0, yaw, 0]}>
       {/* Toy platform — every node stands on one, sized by state. This is
           what turns a "gray placeholder sphere" into a deliberate level
           marker even when it's small/distant/locked. */}
@@ -240,8 +231,8 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
       {/* Current-node halo ring — the single strongest visual cue that this
           is where the child should go next. */}
       {isCurrent && (
-        <mesh ref={haloRef} rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[NODE_RADIUS * 1.1, NODE_RADIUS * 1.3, 24]} />
+        <mesh ref={haloRef} position={[0, -NODE_RADIUS * baseScale - PLATFORM_HEIGHT + 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[platformRadius * 1.1, platformRadius * 1.3, 32]} />
           <primitive object={haloMaterial} />
         </mesh>
       )}
@@ -261,7 +252,9 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
         receiveShadow
       >
         {/* LOD: lower detail geometry for distant nodes */}
-        <icosahedronGeometry args={position.z < -15 ? [NODE_RADIUS, 1] : [NODE_RADIUS, 2]} />
+        {/* Cheap silhouette per state: faceted pebble when locked, smooth
+            orb when open. */}
+        <icosahedronGeometry args={[NODE_RADIUS, isLocked ? 0 : 2]} />
         <primitive object={materials.main} attach="material" />
       </mesh>
 

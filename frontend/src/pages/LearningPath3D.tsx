@@ -105,7 +105,7 @@ export const LearningPath3D: React.FC = () => {
   const nextNode = path && currentNodeIndex >= 0 ? path.nodes[currentNodeIndex + 1] : undefined;
   const lookAheadProgress =
     currentNode && nextNode
-      ? currentNode.position + (nextNode.position - currentNode.position) * 0.32
+      ? currentNode.position + (nextNode.position - currentNode.position) * 0.6
       : petProgress;
 
   // ========== Loading ==========
@@ -185,7 +185,8 @@ export const LearningPath3D: React.FC = () => {
       <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-3">
         <div className="pointer-events-auto mx-auto max-w-md rounded-xl bg-white/75 px-2.5 py-1.5 shadow-sm backdrop-blur-sm">
           <div className="flex items-baseline justify-between gap-2">
-            <h1 className="text-xs font-extrabold text-gray-700">Learning Path</h1>
+            {/* ! = beat the unlayered global `h1 { font-size: 3.2em }` in index.css. */}
+            <h1 className="!m-0 !text-xs !leading-4 font-extrabold text-gray-700">Learning Path</h1>
             {path && (
               <span className="shrink-0 text-[11px] font-bold text-amber-600">
                 {path.completed_count}/{path.total_count}

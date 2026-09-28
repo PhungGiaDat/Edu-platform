@@ -20,8 +20,11 @@ import type { LessonNode } from '@/types/learning-path';
 // stays quiet: muted tan, small, and sparse.
 const STONE_COLOR_A = '#C9A27C';
 const STONE_COLOR_B = '#B8916C';
-const STONE_RADIUS = 0.2;
-const STONE_HEIGHT = 0.1;
+const STONE_DONE_COLOR = '#F4C152';
+const TRAIL_COLOR = '#D8C08E';
+const TRAIL_HALF_WIDTH = 0.55;
+const STONE_RADIUS = 0.3;
+const STONE_HEIGHT = 0.12;
 /** A handful of stones BETWEEN each pair of lesson nodes, not a fixed
  * spacing over the whole spline length — a long path with many lessons
  * should not get proportionally more stones than a short one; each segment
@@ -78,7 +81,8 @@ export const ClayPath: React.FC<ClayPathProps> = ({ nodes, currentProgress }) =>
 
     const stoneData: Array<{
       position: THREE.Vector3;
-      quaternion: THREE.Quaternion;
+      yaw: number;
+      done: boolean;
       scale: number;
       colorMix: number;
       spin: number;
@@ -92,18 +96,16 @@ export const ClayPath: React.FC<ClayPathProps> = ({ nodes, currentProgress }) =>
       const perpendicular = new THREE.Vector3().crossVectors(up, tangent).normalize();
       const sway = Math.sin(i * 1.7) * SWAY_AMOUNT;
       const position = point.clone().addScaledVector(perpendicular, sway);
-      position.y -= STONE_HEIGHT / 2 + 0.01;
+      position.y = STONE_HEIGHT / 2;
 
-      const quaternion = new THREE.Quaternion();
-      const axis = new THREE.Vector3().crossVectors(up, tangent).normalize();
-      const angle = Math.acos(Math.max(-1, Math.min(1, up.dot(tangent))));
-      if (axis.length() > 0.001) {
-        quaternion.setFromAxisAngle(axis, angle);
-      }
+      // Yaw only: stones lie flat on the ground and turn to follow the path.
+      // (Rotating +Y onto the tangent stood every stone on its edge.)
+      const yaw = Math.atan2(tangent.x, tangent.z);
 
       stoneData.push({
         position,
-        quaternion,
+        yaw,
+        done: progress <= currentProgress,
         scale: 0.8 + Math.abs(Math.sin(i * 2.3)) * 0.25,
         colorMix: (i % 3) / 3,
         spin: (i * 0.6) % (Math.PI * 2),
@@ -111,7 +113,7 @@ export const ClayPath: React.FC<ClayPathProps> = ({ nodes, currentProgress }) =>
     });
 
     return { stones: stoneData };
-  }, [nodes]);
+  }, [nodes, currentProgress]);
 
   const stoneGeometry = useMemo(() => new THREE.CylinderGeometry(STONE_RADIUS, STONE_RADIUS * 0.92, STONE_HEIGHT, 14), []);
 
@@ -129,78 +131,56 @@ export const ClayPath: React.FC<ClayPathProps> = ({ nodes, currentProgress }) =>
     );
   }, []);
 
-  return (
-    <group>
-      {stones.map((stone, index) => {
-        const rotation = new THREE.Euler().setFromQuaternion(stone.quaternion);
-        return (
-          <mesh
-            key={index}
-            geometry={stoneGeometry}
-            material={stoneMaterials[Math.round(stone.colorMix * 2)]}
-            position={[stone.position.x, stone.position.y, stone.position.z]}
-            rotation={[rotation.x, rotation.y + stone.spin * 0.15, rotation.z]}
-            scale={[stone.scale, 1, stone.scale]}
-            castShadow
-            receiveShadow
-          />
-        );
-      })}
-
-      {/* Golden progress trail - shows completed portion of path. No
-          separate "progress marker" sphere here anymore — LessonNode3D's
-          own current-node halo/platform/beacon already marks that spot;
-          a second glowing ball on top of it was redundant clutter. */}
-      {currentProgress > 0 && (
-        <ProgressTrail nodes={nodes} progress={currentProgress} />
-      )}
-    </group>
+  // Stones already walked (up to the backend-derived current position) turn
+  // warm gold — the "trail behind you" cue, without a separate tube mesh.
+  const doneMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: STONE_DONE_COLOR, roughness: 0.6, emissive: STONE_DONE_COLOR, emissiveIntensity: 0.15 }),
+    [],
   );
-};
 
-// ========== Golden Progress Trail ==========
-
-interface ProgressTrailProps {
-  nodes: LessonNode[];
-  progress: number;
-}
-
-const ProgressTrail: React.FC<ProgressTrailProps> = ({ nodes, progress }) => {
+  // Soft earth trail under the stones — makes the path read as worn into
+  // the ground instead of stones floating on a flat lawn. One flat strip
+  // mesh built once from the spline.
   const trailGeometry = useMemo(() => {
-    const fullSpline = createPathSpline();
-    const length = fullSpline.getLength();
-
-    // Create a spline from start to current progress
-    const points: THREE.Vector3[] = [];
-    const numPoints = Math.max(20, Math.floor(length * 10)); // At least 20 points
-
-    for (let i = 0; i <= numPoints; i++) {
-      const pointProgress = (i / numPoints) * progress;
-      const point = fullSpline.getPointAt(pointProgress);
-      points.push(point);
+    const spline = createPathSpline();
+    const segments = 120;
+    const positions: number[] = [];
+    const indices: number[] = [];
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments;
+      const p = spline.getPointAt(t);
+      const tan = spline.getTangentAt(t);
+      const px = tan.z * TRAIL_HALF_WIDTH;
+      const pz = -tan.x * TRAIL_HALF_WIDTH;
+      positions.push(p.x - px, 0.004, p.z - pz, p.x + px, 0.004, p.z + pz);
+      if (i < segments) {
+        const k = i * 2;
+        indices.push(k, k + 2, k + 1, k + 1, k + 2, k + 3);
+      }
     }
-
-    // Create spline from points
-    const trailSpline = new THREE.CatmullRomCurve3(points);
-    return new THREE.TubeGeometry(trailSpline, 100, 0.2, 8, false);
-  }, [nodes, progress]);
-
-  const trailMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: new THREE.Color('#FFD700'),
-      emissive: new THREE.Color('#FFD700'),
-      emissiveIntensity: 0.3,
-      roughness: 0.4,
-      metalness: 0.2,
-      transparent: true,
-      opacity: 0.7,
-    });
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+    return geometry;
   }, []);
 
   return (
-    <mesh geometry={trailGeometry} position={[0, 0.02, 0]}>
-      <primitive object={trailMaterial} />
-    </mesh>
+    <group>
+      <mesh geometry={trailGeometry}>
+        <meshStandardMaterial color={TRAIL_COLOR} roughness={1} side={THREE.DoubleSide} />
+      </mesh>
+      {stones.map((stone, index) => (
+        <mesh
+          key={index}
+          geometry={stoneGeometry}
+          material={stone.done ? doneMaterial : stoneMaterials[Math.round(stone.colorMix * 2)]}
+          position={[stone.position.x, stone.position.y, stone.position.z]}
+          rotation={[0, stone.yaw + stone.spin * 0.15, 0]}
+          scale={[stone.scale, 1, stone.scale * 0.8]}
+        />
+      ))}
+    </group>
   );
 };
 
