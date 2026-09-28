@@ -2089,7 +2089,7 @@ describe('AR interaction lifecycle contracts', () => {
     }) || [])).toEqual(['entryA', 'partnerB'])
   })
 
-  it('recomputes session admission after rules install and gates all raw image event paths', () => {
+  it('admits the whole session catalogue after rules install and gates all raw image event paths', () => {
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
     const lifecycleSource = readFileSync(
       resolve(process.cwd(), 'public/static/ar-assets/js/ar-interaction-lifecycle.js'),
@@ -2116,12 +2116,13 @@ describe('AR interaction lifecycle contracts', () => {
     const helperEnd = lifecycleSource.indexOf('\nexport function', helperStart + 1)
     const helperSource = lifecycleSource.slice(helperStart, helperEnd)
 
-    expect(source).toContain('let admittedTargetNames = new Set([primaryModelTargetName])')
+    expect(source).toContain('let admittedTargetNames = new Set(targetInstances.keys())')
     expect(installSource).toContain('refreshSessionTargetAdmission()')
-    expect(admissionSource).toContain('resolveSessionTargetAdmission')
+    expect(admissionSource).toContain('admittedTargetNames = new Set(targetInstances.keys())')
+    expect(admissionSource).not.toContain('resolveSessionTargetAdmission')
     expect(source).toContain('return targetInstances.has(targetName) && admittedTargetNames.has(targetName)')
     expect(admissionSource).toContain("sendDebugOnly('SESSION_TARGET_ADMISSION'")
-    expect(admissionSource).toContain("source: 'entry-plus-interaction-rules'")
+    expect(admissionSource).toContain("source: 'session-catalogue'")
 
     expect(foundSource).toContain("sendARDebug('IMAGE_FOUND'")
     expect(foundSource).toContain('isRuntimeTargetAdmitted(detail.name)')
