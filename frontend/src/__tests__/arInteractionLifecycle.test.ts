@@ -895,25 +895,28 @@ describe('AR interaction lifecycle contracts', () => {
     expect(resolvePresentationMode?.('unknown')).toBe('AUTO')
   })
 
-  it('resolves presentation mode per target instance', () => {
+  it('applies the session presentation mode to every card, not only the QR entry', () => {
     const resolveInstancePresentationMode = Reflect.get(lifecycleModule, 'resolveInstancePresentationMode')
 
     expect(resolveInstancePresentationMode).toBeTypeOf('function')
-    expect(resolveInstancePresentationMode?.({
-      instance: { config: { qr_id: 'cat001' } },
-      primaryModelTargetName: 'cat001',
-      requestedPresentationMode: 'TABLETOP',
-    })).toBe('TABLETOP')
+    for (const qr_id of ['cat001', 'fish001', 'dog001', 'bone001']) {
+      expect(resolveInstancePresentationMode?.({
+        instance: { config: { qr_id } },
+        requestedPresentationMode: 'TABLETOP',
+      }), qr_id).toBe('TABLETOP')
+    }
     expect(resolveInstancePresentationMode?.({
       instance: { config: { qr_id: 'fish001' } },
-      primaryModelTargetName: 'cat001',
-      requestedPresentationMode: 'TABLETOP',
+      requestedPresentationMode: 'SCREEN',
     })).toBe('SCREEN')
     expect(resolveInstancePresentationMode?.({
       instance: { config: { qr_id: 'fish001', presentation_mode: 'TABLETOP' } },
-      primaryModelTargetName: 'cat001',
       requestedPresentationMode: 'SCREEN',
     })).toBe('TABLETOP')
+    expect(resolveInstancePresentationMode?.({
+      instance: { config: { qr_id: 'dog001' } },
+      requestedPresentationMode: undefined,
+    })).toBe('AUTO')
 
     const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
     const presentationStart = source.indexOf('function updateSurfacePresentation(')

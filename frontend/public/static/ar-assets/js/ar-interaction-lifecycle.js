@@ -273,17 +273,14 @@ export function resolvePresentationMode(requestedMode) {
   return PRESENTATION_MODE_AUTO
 }
 
+// Every card in a multi-target session shares the requested mode; the QR entry target
+// is not special. A per-target presentation_mode still wins.
 export function resolveInstancePresentationMode({
   instance,
-  primaryModelTargetName,
   requestedPresentationMode,
 }) {
   const explicit = instance?.config?.presentation_mode
-  if (explicit) return resolvePresentationMode(explicit)
-  if (instance?.config?.qr_id === primaryModelTargetName) {
-    return resolvePresentationMode(requestedPresentationMode)
-  }
-  return PRESENTATION_MODE_SCREEN
+  return resolvePresentationMode(explicit || requestedPresentationMode)
 }
 
 function normalizeVector3(vector) {
