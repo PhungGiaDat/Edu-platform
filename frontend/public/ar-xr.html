@@ -3593,14 +3593,17 @@
     }
 
     // ========== COMBO DETECTION (background) ==========
+    // Resolves true only when backend rules were fetched and parsed; fallbacks still install either way.
     async function loadComboRules() {
       const deck = params.get('deck_id') || 'claymorphic-animals-001';
       let rawRules = [];
+      let loaded = false;
       try {
         const url = `${apiBase}/api/v1/combos/rules?flashcard_set=${encodeURIComponent(deck)}`;
         const res = await fetch(url);
         if (res.ok) {
           rawRules = (await res.json()).rules || [];
+          loaded = true;
           sendARDebug('COMBO_RULE_LOAD_COMPLETE', { count: rawRules.length, url });
         }
         else sendARDebug('COMBO_RULE_LOAD_ERROR', { status: res.status });
@@ -3609,6 +3612,7 @@
       } finally {
         installInteractionRules(rawRules);
       }
+      return loaded;
     }
 
     // ========== XR TARGET SCOPE ==========
@@ -3619,7 +3623,7 @@
     function waitForSettled(promise, timeoutMs) {
       let timer;
       return Promise.race([
-        promise.then(() => true, () => false),  // a failed rules install must not block XR boot
+        promise.then((loaded) => loaded === true, () => false),  // failed/rejected rules keep the full catalogue
         new Promise((resolve) => { timer = setTimeout(() => resolve(false), timeoutMs); }),
       ]).finally(() => clearTimeout(timer));
     }
@@ -3716,7 +3720,7 @@
         await initXR(xrTargetDataList);
 
         setPhase('viewing');
-        sendARDebug('INIT_COMPLETE', { modelLoaded: !!loadedModel, targetCount: targetDataList.length });
+        sendARDebug('INIT_COMPLETE', { modelLoaded: !!loadedModel, targetCount: xrTargetDataList.length, catalogueTargetCount: targetDataList.length });
 
         // Attach CAT gesture handlers — pointer events work for touch and mouse.
         window.addEventListener('pointerdown', onPointerDown, { passive: true });

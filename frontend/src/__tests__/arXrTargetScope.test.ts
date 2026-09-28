@@ -74,9 +74,41 @@ describe('XR target scope', () => {
   it('bounds the rules wait and treats a rejected rules load as not ready', async () => {
     expect(RULES_BEFORE_XR_WAIT_MS).toBeGreaterThan(0)
     expect(RULES_BEFORE_XR_WAIT_MS).toBeLessThanOrEqual(1500)
-    await expect(waitForSettled(Promise.resolve(), 50)).resolves.toBe(true)
+    await expect(waitForSettled(Promise.resolve(true), 50)).resolves.toBe(true)
+    await expect(waitForSettled(Promise.resolve(false), 50)).resolves.toBe(false)
     await expect(waitForSettled(new Promise(() => {}), 10)).resolves.toBe(false)
     await expect(waitForSettled(Promise.reject(new Error('rules')), 50)).resolves.toBe(false)
+  })
+
+  it('keeps the full catalogue when the real rules loader fails, while still installing fallbacks', async () => {
+    const loaderSource = sliceBetween('async function loadComboRules()', '// ========== XR TARGET SCOPE')
+    const makeLoader = (fetchImpl: () => Promise<unknown>) => {
+      const installed: unknown[][] = []
+      const load = new Function(
+        'fetch', 'params', 'apiBase', 'sendARDebug', 'installInteractionRules',
+        `${loaderSource}; return loadComboRules;`,
+      )(fetchImpl, new URLSearchParams(), '', () => {}, (rules: unknown[]) => installed.push(rules)) as () => Promise<boolean>
+      return { load, installed }
+    }
+    const dogRules = { rules: [backendRule('dog001', 'bone001')] }
+    const cases: Array<[string, () => Promise<unknown>, boolean]> = [
+      ['network error', () => Promise.reject(new TypeError('Failed to fetch')), false],
+      ['non-2xx', () => Promise.resolve({ ok: false, status: 503 }), false],
+      ['bad JSON', () => Promise.resolve({ ok: true, json: () => Promise.reject(new SyntaxError('bad')) }), false],
+      ['success', () => Promise.resolve({ ok: true, json: () => Promise.resolve(dogRules) }), true],
+    ]
+    for (const [label, fetchImpl, expected] of cases) {
+      const { load, installed } = makeLoader(fetchImpl)
+      const rulesReady = await waitForSettled(load(), 200)
+      expect(rulesReady, label).toBe(expected)
+      expect(installed, label).toHaveLength(1)  // fallbacks install on every path
+      const admitted = resolveSessionTargetAdmission({
+        entryTarget: 'dog001',
+        rules: (installed[0] as Array<Record<string, unknown>>).map(normalizeInteractionRule),
+      })
+      const registered = scopeXrTargetData(CATALOGUE, rulesReady, admitted).map(t => t.name)
+      expect(registered, label).toEqual(expected ? ['dog001', 'bone001'] : CATALOGUE.map(t => t.name))
+    }
   })
 
   it('keeps the scope logic generic and wires it between target data and XR init', () => {
