@@ -97,18 +97,23 @@ export const Login: React.FC = () => {
                 </h1>
               </div>
 
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4" autoComplete="on">
                 {errorText && (
                   <div className="rounded-2xl border-2 border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
                     {errorText}
                   </div>
                 )}
 
-                <label className="block">
+                <label className="block" htmlFor="login-email">
                   <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">{t('loginEmail')}</span>
                   <input
+                    id="login-email"
+                    name="username"
                     type="email"
                     autoComplete="username"
+                    inputMode="email"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="hello@example.com"
@@ -117,9 +122,11 @@ export const Login: React.FC = () => {
                   />
                 </label>
 
-                <label className="block">
+                <label className="block" htmlFor="login-password">
                   <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-600">{t('loginPassword')}</span>
                   <input
+                    id="login-password"
+                    name="password"
                     type="password"
                     autoComplete="current-password"
                     value={password}
