@@ -251,7 +251,7 @@ export const LessonPlayer: React.FC = () => {
           lesson_id: lessonId,
           section_id: 'words',
           session_id: session?.session_id,
-          target_text: wordEn,
+          target_text: result.targetText || wordEn,
         })
         .catch((err) => console.warn('[LessonPlayer] pronunciation log:', err));
     }

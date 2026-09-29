@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Msr } from '@/shared/components/Msr';
 import type { Course, Lesson } from '@/types/course';
 import { getCourseTheme, type CourseThemeConfig } from '@/features/courses/courseThemes';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
@@ -27,7 +28,7 @@ export const WarmUpSection: React.FC<WarmUpSectionProps> = ({
       duration: 'Duration',
       mins: 'mins',
       wordsToLearn: 'New Words',
-      startCta: 'Bắt đầu học ngay 🚀',
+      startCta: 'Bắt đầu học ngay',
       preview: 'Vocabulary preview:',
     },
     vi: {
@@ -36,7 +37,7 @@ export const WarmUpSection: React.FC<WarmUpSectionProps> = ({
       duration: 'Thời lượng',
       mins: 'phút',
       wordsToLearn: 'từ mới',
-      startCta: 'Bắt đầu học ngay 🚀',
+      startCta: 'Bắt đầu học ngay',
       preview: 'Từ vựng bài học:',
     },
   }[locale];
@@ -138,16 +139,16 @@ export const WarmUpSection: React.FC<WarmUpSectionProps> = ({
       {/* Compact playful metadata row */}
       <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-black text-slate-500">
         <span className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 border border-white shadow-2xs">
-          ⏱️ {lesson.duration_minutes || 5} {copy.mins}
+          <Msr icon="timer" size={16} /> {lesson.duration_minutes || 5} {copy.mins}
         </span>
         <span className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 border border-white shadow-2xs">
-          🔤 {vocabulary.length || 3} {copy.wordsToLearn}
+          <Msr icon="abc" size={16} /> {vocabulary.length || 3} {copy.wordsToLearn}
         </span>
         <span
           className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 border border-white shadow-2xs"
           style={{ background: theme.pillBg, color: theme.pillText }}
         >
-          ⭐ +{lesson.reward?.xp || 25} XP
+          <Msr icon="star" size={16} /> +{lesson.reward?.xp || 25} XP
         </span>
       </div>
 
@@ -160,6 +161,7 @@ export const WarmUpSection: React.FC<WarmUpSectionProps> = ({
           style={{ background: theme.accentGradient }}
         >
           {copy.startCta}
+          <Msr icon="arrow_forward" />
         </button>
       </div>
     </section>

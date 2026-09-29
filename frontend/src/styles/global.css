@@ -18,9 +18,19 @@ button[class*="fullscreen"],
 }
 
 /* Material Symbols Rounded — child-friendly filled icons (EduAR install guide) */
+@font-face {
+  font-family: 'Material Symbols Rounded';
+  src: url('/fonts/material-symbols-rounded.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+}
+
 .msr {
   font-family: 'Material Symbols Rounded';
-  font-weight: normal; font-style: normal; line-height: 1;
+  font-weight: 500; font-style: normal; line-height: 1;
   display: inline-block; white-space: nowrap; user-select: none;
+  font-feature-settings: 'liga';
+  text-transform: none; letter-spacing: normal; direction: ltr;
   font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
 }

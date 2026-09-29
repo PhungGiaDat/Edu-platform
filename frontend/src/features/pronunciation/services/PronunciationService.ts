@@ -404,11 +404,17 @@ class PronunciationService {
      * Handles common speech variations like "the cat" vs "cat".
      */
     private calculateSimilarity(str1: string, str2: string): number {
-        if (str1 === str2) return 1;
+        const normalize = (text: string) => text.toLowerCase()
+            .replace(/’/g, "'")
+            .replace(/[^\p{L}\p{N}'\s]/gu, ' ')
+            .trim().replace(/\s+/g, ' ');
+        str1 = normalize(str1);
+        str2 = normalize(str2);
         if (!str1 || !str2) return 0;
+        if (str1 === str2) return 1;
 
-        // Check if expected word appears in transcript (handles "the cat" matching "cat")
-        if (str1.includes(str2) || str2.includes(str1)) {
+        // Accept extra words for a single target word, but require the whole sentence otherwise.
+        if (!str2.includes(' ') && str1.split(' ').includes(str2)) {
             return 0.95;
         }
 
@@ -427,7 +433,9 @@ class PronunciationService {
             }
         }
 
-        return 1 - dp[m][n] / Math.max(m, n);
+        const characterSimilarity = 1 - dp[m][n] / Math.max(m, n);
+        // A long isolated word must not count as a complete sentence.
+        return Math.min(characterSimilarity, str1.split(' ').length / str2.split(' ').length);
     }
 
     /**

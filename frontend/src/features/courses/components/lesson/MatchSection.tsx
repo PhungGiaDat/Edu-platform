@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Msr } from '@/shared/components/Msr';
 import type { Lesson, VocabularyItem } from '@/types/course';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
@@ -124,7 +125,7 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
       {/* Compact Heading with Pair Count */}
       <div className="flex items-center justify-between px-1">
         <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5">
-          <span>🧩</span>
+          <Msr icon="extension" size={24} />
           <span>{copy.title}</span>
         </h2>
         <span className="text-xs font-black text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200">
@@ -144,7 +145,7 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
         {/* Left Zone: floating word tokens (pill-shaped) */}
         <div className="space-y-3">
           <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-center">
-            🔤 {copy.wordsCol}
+            <Msr icon="abc" size={16} style={{ verticalAlign: 'middle' }} /> {copy.wordsCol}
           </p>
           {vocabulary.map((item, idx) => {
             const wordKey = item.word_en.toLowerCase();
@@ -172,7 +173,7 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
                   {item.word_en}
                 </span>
                 {isMatched ? (
-                  <span className="text-[10px] font-black text-emerald-700">✓ Đã ghép</span>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700"><Msr icon="check" size={14} /> Đã ghép</span>
                 ) : (
                   <span className="text-[10px] font-bold text-sky-700/80">{item.word_vi}</span>
                 )}
@@ -184,7 +185,7 @@ export const MatchSection: React.FC<MatchSectionProps> = ({
         {/* Right Zone: floating image tokens (circular blobs) */}
         <div className="space-y-3">
           <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-center">
-            🖼️ {copy.imagesCol}
+            <Msr icon="image" size={16} style={{ verticalAlign: 'middle' }} /> {copy.imagesCol}
           </p>
           {shuffledImages.map((item, idx) => {
             const wordKey = item.word_en.toLowerCase();

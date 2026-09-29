@@ -4,6 +4,8 @@ import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
 import { HapticService } from '@/services/HapticService';
 import { FeedbackMascot } from './FeedbackMascot';
+import { getAssetCandidateUrls } from '@/lib/courseAssets';
+import { Msr } from '@/shared/components/Msr';
 
 interface QuizSectionProps {
   lesson: Lesson;
@@ -31,6 +33,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
 
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [audioErrorId, setAudioErrorId] = useState<string | null>(null);
   const [feedbackState, setFeedbackState] = useState<{
     optionId: string;
     isCorrect: boolean;
@@ -41,8 +44,8 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
       title: 'Quiz Challenge',
       question: 'Câu',
       listenPrompt: 'Nghe câu hỏi',
-      submitQuiz: 'Nộp bài Quiz 📝',
-      continue: 'Tiếp tục →',
+      submitQuiz: 'Nộp bài Quiz',
+      continue: 'Tiếp tục',
       submitting: 'Đang chấm điểm...',
       passed: 'Xuất sắc! Bé đã vượt qua bài kiểm tra!',
       tryAgain: 'Cố gắng lên nhé! Bé hãy thử lại để nhận sao nha.',
@@ -54,8 +57,8 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
       title: 'Thử thách Quiz bài học',
       question: 'Câu',
       listenPrompt: 'Nghe câu hỏi',
-      submitQuiz: 'Nộp bài Quiz 📝',
-      continue: 'Tiếp tục →',
+      submitQuiz: 'Nộp bài Quiz',
+      continue: 'Tiếp tục',
       submitting: 'Đang chấm điểm...',
       passed: 'Xuất sắc! Bé đã vượt qua bài kiểm tra!',
       tryAgain: 'Cố gắng lên nhé! Bé hãy thử lại để nhận sao nha.',
@@ -70,11 +73,20 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
     (currentQuestion ? answers[currentQuestion.question_id] : undefined) ||
     feedbackState?.optionId;
 
-  const handlePlayAudio = async (questionId: string, text?: string) => {
+  const handlePlayAudio = async () => {
+    if (!currentQuestion || playingAudioId) return;
+    const englishText = currentQuestion.questionAudioText?.trim();
+    const text = englishText || currentQuestion.prompt_vi?.trim();
     if (!text) return;
-    setPlayingAudioId(questionId);
+    const matchingWord = englishText
+      ? vocabulary.find(item => item.word_en.trim().toLowerCase() === englishText.toLowerCase())
+      : undefined;
+    setAudioErrorId(null);
+    setPlayingAudioId(currentQuestion.question_id);
     try {
-      await AudioService.playPronunciation(text, 'en');
+      await AudioService.playPronunciation(text, englishText ? 'en' : 'vi', getAssetCandidateUrls(matchingWord?.audio)[0]);
+    } catch {
+      setAudioErrorId(currentQuestion.question_id);
     } finally {
       setPlayingAudioId(null);
     }
@@ -99,6 +111,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
 
   const handleAdvance = () => {
     setFeedbackState(null);
+    setAudioErrorId(null);
     if (activeQuestionIndex < quizQuestions.length - 1) {
       setActiveQuestionIndex((prev) => prev + 1);
     } else {
@@ -125,7 +138,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
               : 'bg-[#FCE59A] text-amber-950 shadow-[0_10px_0_#F0B72B,0_16px_28px_rgba(245,158,11,0.25)]'
           }`}
         >
-          <span className="text-5xl block mb-2">{result.passed ? '🏆' : '💪'}</span>
+          <span className="block mb-2"><Msr icon={result.passed ? 'emoji_events' : 'exercise'} size={48} /></span>
           <p className="text-xs font-black uppercase tracking-wider opacity-70 mb-1">
             {copy.score}
           </p>
@@ -142,7 +155,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
               onClick={onRetry}
               className="w-full min-h-[52px] rounded-2xl border-2 border-white bg-amber-500 hover:bg-amber-600 text-white font-black text-base shadow-[0_5px_0_#B45309] active:translate-y-1 active:shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>🔄</span>
+              <Msr icon="replay" />
               <span>Làm lại bài kiểm tra</span>
             </button>
           )}
@@ -159,7 +172,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
       {/* Header: Câu N / 10 + Compact Progress Bar */}
       <div className="flex items-center justify-between px-1">
         <span className="text-xs font-black uppercase tracking-wider text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-200">
-          📝 {copy.question} {activeQuestionIndex + 1} / {quizQuestions.length}
+          <Msr icon="quiz" size={16} /> {copy.question} {activeQuestionIndex + 1} / {quizQuestions.length}
         </span>
         <div className="flex gap-1.5">
           {quizQuestions.map((q, idx) => (
@@ -179,15 +192,22 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
 
       {/* Question as a floating speech-bubble cloud, not a giant card */}
       <div className="relative mx-auto mt-2 max-w-[320px]">
-        {currentQuestion.questionAudioText && (
+        {(currentQuestion.questionAudioText?.trim() || currentQuestion.prompt_vi?.trim()) && (
           <button
             type="button"
-            onClick={() => handlePlayAudio(currentQuestion.question_id, currentQuestion.questionAudioText)}
-            className="mb-2 flex items-center gap-1.5 mx-auto rounded-full border-2 border-sky-200 bg-white px-3.5 py-1 text-xs font-black text-sky-800 shadow-2xs hover:bg-sky-50 active:scale-95 transition-transform cursor-pointer"
+            onClick={handlePlayAudio}
+            disabled={Boolean(playingAudioId)}
+            aria-busy={Boolean(playingAudioId)}
+            className="mb-2 flex items-center gap-1.5 mx-auto rounded-full border-2 border-sky-200 bg-white px-3.5 py-1 text-xs font-black text-sky-800 shadow-2xs hover:bg-sky-50 active:scale-95 transition-transform cursor-pointer disabled:opacity-60 disabled:cursor-wait"
           >
-            <span>{playingAudioId === currentQuestion.question_id ? '🔊' : '🔈'}</span>
-            <span>{copy.listenPrompt}</span>
+            <Msr icon={playingAudioId === currentQuestion.question_id ? 'volume_up' : 'volume_down'} size={18} />
+            <span>{playingAudioId ? 'Đang phát câu hỏi' : copy.listenPrompt}</span>
           </button>
+        )}
+        {audioErrorId === currentQuestion.question_id && (
+          <p role="alert" className="mb-2 text-sm font-bold text-rose-700">
+            Chưa phát được câu hỏi. Bé chạm loa để thử lại nhé.
+          </p>
         )}
         <div className="relative rounded-[28px] bg-white px-5 py-4 shadow-[0_6px_0_#BAE6FD,0_10px_20px_rgba(2,132,199,0.1)] border-2 border-sky-100">
           <h3 className="text-xl font-black text-slate-900 tracking-tight leading-snug">
@@ -257,6 +277,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
             className="w-full min-h-[56px] rounded-2xl border-2 border-white bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-base sm:text-lg shadow-[0_6px_0_#0D9488] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             <span>{isSubmitting ? copy.submitting : isLastQuestion ? copy.submitQuiz : copy.continue}</span>
+            <Msr icon={isLastQuestion ? 'task_alt' : 'arrow_forward'} />
           </button>
         </div>
       )}

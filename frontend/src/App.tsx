@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useParams, matchPath } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import FlashcardPage from "./pages/FlashcardPage";
 import LearnARV2 from "./pages/LearnARV2";
@@ -228,8 +228,10 @@ const ConditionalAIChatBuddy: React.FC = () => {
   // Learning Path 3D has its own in-world PetGuide as the mascot/focal point;
   // a second floating mascot bubble competes with it for attention.
   const isLearningPath3D = location.pathname === '/learning-path-3d';
+  // Lessons have their own Lexi guide; the floating chat button covers lesson actions.
+  const isLessonPage = Boolean(matchPath('/courses/:courseId/lessons/:lessonId', location.pathname));
 
-  if (isARPage || isPublicRoute || isLearningPath3D) return null;
+  if (isARPage || isPublicRoute || isLearningPath3D || isLessonPage) return null;
   if (!isAuthenticated && !isGuest) return null;
 
   return <AIChatBuddy />;

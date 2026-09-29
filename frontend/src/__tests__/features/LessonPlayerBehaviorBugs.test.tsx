@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 const audioMocks = vi.hoisted(() => ({
@@ -350,10 +350,10 @@ describe('TDD: Lesson Player Behavioral Fixes', () => {
   });
 
   describe('Vocabulary audio behavior', () => {
-    it('uses vocabulary audio asset rather than vocabulary image for Nghe mẫu', () => {
+    it('uses vocabulary audio asset rather than vocabulary image when no sentence is available', () => {
       render(
         <VocabularySection
-          lesson={sampleLesson}
+          lesson={{ ...sampleLesson, vocabulary: [{ ...sampleLesson.vocabulary[0], simple_sentence: '' }] }}
           onWordPracticed={vi.fn()}
           practicedWords={{}}
           locale="vi"
@@ -367,6 +367,56 @@ describe('TDD: Lesson Player Behavioral Fixes', () => {
         'en',
         '/learnar-assets/courses/momo-nature/lessons/meet-the-elephant/audio/elephant.wav',
       );
+    });
+
+    it('plays the displayed sentence without using the word-only recording', () => {
+      render(<VocabularySection lesson={sampleLesson} onWordPracticed={vi.fn()} practicedWords={{}} locale="vi" />);
+
+      expect(screen.getByText('Bé hãy phát âm theo câu sau')).toBeDefined();
+      expect(screen.getByLabelText('Lexi cùng bé luyện nói')).toBeDefined();
+      fireEvent.click(screen.getByRole('button', { name: /nghe mẫu/i }));
+
+      expect(audioMocks.playPronunciation).toHaveBeenCalledWith('The elephant is huge.', 'en', undefined);
+    });
+
+    it.each([undefined, '', '   '])('uses the word for hearing and recognition when sentence is %j', async (simple_sentence) => {
+      const startListening = vi.spyOn(getPronunciationService(), 'startListening').mockResolvedValue(undefined);
+      try {
+        render(<VocabularySection
+          lesson={{ ...sampleLesson, vocabulary: [{ ...sampleLesson.vocabulary[0], simple_sentence: simple_sentence as string }] }}
+          onWordPracticed={vi.fn()} practicedWords={{}} locale="vi"
+        />);
+        await act(async () => {
+          fireEvent.click(screen.getByRole('button', { name: /nghe mẫu/i }));
+        });
+        expect(audioMocks.playPronunciation).toHaveBeenCalledWith(
+          'Elephant', 'en', '/learnar-assets/courses/momo-nature/lessons/meet-the-elephant/audio/elephant.wav',
+        );
+        fireEvent.click(screen.getByRole('button', { name: /luyện nói/i }));
+        expect(startListening).toHaveBeenCalledWith('Elephant', expect.any(Function));
+      } finally {
+        startListening.mockRestore();
+      }
+    });
+
+    it('recognizes the displayed sentence while saving progress under its vocabulary word', async () => {
+      const onWordPracticed = vi.fn();
+      const startListening = vi.spyOn(getPronunciationService(), 'startListening').mockResolvedValue(undefined);
+      try {
+        render(<VocabularySection lesson={sampleLesson} onWordPracticed={onWordPracticed} practicedWords={{}} locale="vi" />);
+        fireEvent.click(screen.getByRole('button', { name: /luyện nói/i }));
+        expect(startListening).toHaveBeenCalledWith('The elephant is huge.', expect.any(Function));
+
+        const resultCallback = startListening.mock.calls[0][1]!;
+        await act(async () => {
+          resultCallback({ transcript: 'The elephant is huge.', confidence: 0.95, accuracy: 95, isCorrect: true });
+        });
+        await waitFor(() => expect(onWordPracticed).toHaveBeenCalledWith('Elephant', expect.objectContaining({
+          transcript: 'The elephant is huge.', score: 95, passed: true,
+        })));
+      } finally {
+        startListening.mockRestore();
+      }
     });
 
     it('uses current vocabulary audio for Listen & Choose replay', () => {
@@ -402,6 +452,7 @@ describe('TDD: Lesson Player Behavioral Fixes', () => {
       fireEvent.click(screen.getByRole('button', { name: /nghe mẫu/i }));
 
       expect((screen.getByRole('button', { name: /đang phát/i }) as HTMLButtonElement).disabled).toBe(true);
+      expect(screen.getByLabelText('Lexi đang đọc mẫu')).toBeDefined();
       act(() => finishPlayback?.());
     });
 
@@ -450,11 +501,12 @@ describe('TDD: Lesson Player Behavioral Fixes', () => {
 
       fireEvent.click(screen.getByRole('button', { name: /luyện nói/i }));
       act(() => eventBus.emit('PRONUNCIATION_STARTED' as any, {
-        expectedWord: 'Elephant',
+        expectedWord: 'The elephant is huge.',
         source: 'webspeech',
       }));
 
       expect((screen.getByRole('button', { name: /đang nghe/i }) as HTMLButtonElement).disabled).toBe(true);
+      expect(screen.getByLabelText('Lexi đang nghe bé')).toBeDefined();
     });
 
     it('ignores a pronunciation start event for another word', () => {
@@ -658,9 +710,9 @@ describe('TDD: Lesson Player Behavioral Fixes', () => {
       );
 
       fireEvent.click(screen.getByRole('button', { name: /^Elephant\b/i }));
-      fireEvent.click(screen.getByRole('button', { name: /^Tiếp tục\s*→$/i }));
+      fireEvent.click(screen.getByRole('button', { name: /^Tiếp tục$/i }));
       fireEvent.click(screen.getByRole('button', { name: /^Big\b/i }));
-      fireEvent.click(screen.getByRole('button', { name: /^Tiếp tục\s*→$/i }));
+      fireEvent.click(screen.getByRole('button', { name: /^Tiếp tục$/i }));
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(1_500);

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Msr } from '@/shared/components/Msr';
 import { useNavigate } from 'react-router-dom';
 import type { Course, Lesson } from '@/types/course';
 import { getCourseTheme, type CourseThemeConfig } from '@/features/courses/courseThemes';
@@ -61,7 +62,7 @@ export const LessonShell: React.FC<LessonShellProps> = ({
       previous: 'Previous',
       next: 'Continue',
       submitQuiz: 'Submit Quiz',
-      finishLesson: 'Complete Lesson 🎉',
+      finishLesson: 'Complete Lesson',
       submitting: 'Processing...',
     },
     vi: {
@@ -70,7 +71,7 @@ export const LessonShell: React.FC<LessonShellProps> = ({
       previous: 'Quay lại',
       next: 'Tiếp tục',
       submitQuiz: 'Nộp bài Quiz',
-      finishLesson: 'Hoàn thành bài học 🎉',
+      finishLesson: 'Hoàn thành bài học',
       submitting: 'Đang xử lý...',
     },
   }[locale];
@@ -113,7 +114,7 @@ export const LessonShell: React.FC<LessonShellProps> = ({
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#FFC4BE] text-sm font-black text-rose-950 shadow-[0_3px_0_#F24E42] hover:brightness-105 transition-all active:translate-y-1 active:shadow-[0_1px_0_#F24E42] cursor-pointer"
             aria-label={copy.back}
           >
-            ✕
+            <Msr icon="close" />
           </button>
 
           {/* Center: compact label */}
@@ -169,7 +170,7 @@ export const LessonShell: React.FC<LessonShellProps> = ({
           aria-live="polite"
           className="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm rounded-2xl border-2 border-white bg-[#FBD65C] px-4 py-2.5 text-xs font-black text-amber-950 shadow-[0_4px_0_#F0B72B] animate-fade-in flex items-center gap-2 pointer-events-none"
         >
-          <span className="text-sm">🔔</span>
+          <Msr icon="notifications" size={18} />
           <span className="truncate">{visibleNotice}</span>
         </div>
       )}
@@ -193,7 +194,7 @@ export const LessonShell: React.FC<LessonShellProps> = ({
                 className="flex h-13 px-4 items-center justify-center rounded-2xl border-2 border-white bg-[#BBD9FE] text-sm font-black text-blue-950 shadow-[0_4px_0_#5B96EE] hover:brightness-105 transition-all active:translate-y-1 active:shadow-[0_1px_0_#5B96EE] disabled:opacity-40 cursor-pointer"
                 aria-label={copy.previous}
               >
-                ←
+                <Msr icon="arrow_back" />
               </button>
             )}
 
@@ -208,7 +209,7 @@ export const LessonShell: React.FC<LessonShellProps> = ({
                 }}
               >
                 <span>{getNextButtonLabel()}</span>
-                <span>→</span>
+                <Msr icon={currentStep.id === 'reward' ? 'celebration' : 'arrow_forward'} />
               </button>
             )}
           </div>

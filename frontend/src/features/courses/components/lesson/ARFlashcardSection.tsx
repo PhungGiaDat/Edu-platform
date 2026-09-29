@@ -1,4 +1,5 @@
 import React from 'react';
+import { Msr } from '@/shared/components/Msr';
 import { useNavigate } from 'react-router-dom';
 import type { Lesson } from '@/types/course';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
@@ -22,18 +23,18 @@ export const ARFlashcardSection: React.FC<ARFlashcardSectionProps> = ({
       badge: 'AR 3D',
       title: 'Trải nghiệm Thẻ AR 3D sống động',
       helper: 'Point your camera to see interactive 3D models!',
-      launchAr: 'Mở Camera AR 📸',
+      launchAr: 'Mở Camera AR',
       accessibleAr: 'Khám phá cùng Camera AR',
-      continue: 'Tiếp tục sang Trò chơi nhỏ →',
+      continue: 'Tiếp tục sang Trò chơi nhỏ',
       preview: 'Vocabulary models in this lesson:',
     },
     vi: {
       badge: 'AR 3D',
       title: 'Trải nghiệm Thẻ AR 3D sống động',
       helper: 'Hướng camera vào thẻ học để xem mô hình 3D tương tác nhé!',
-      launchAr: 'Mở Camera AR 📸',
+      launchAr: 'Mở Camera AR',
       accessibleAr: 'Khám phá cùng Camera AR',
-      continue: 'Tiếp tục sang Trò chơi nhỏ →',
+      continue: 'Tiếp tục sang Trò chơi nhỏ',
       preview: 'Mô hình trong bài học:',
     },
   }[locale];
@@ -53,7 +54,7 @@ export const ARFlashcardSection: React.FC<ARFlashcardSectionProps> = ({
       <span className="inline-block rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-black text-purple-700 shadow-2xs border border-white mb-1.5">
         ✨ {copy.badge}
       </span>
-      <h2 className="text-xl font-black text-slate-900 tracking-tight">📱 {copy.title}</h2>
+      <h2 className="text-xl font-black text-slate-900 tracking-tight"><Msr icon="view_in_ar" size={24} style={{ verticalAlign: 'middle' }} /> {copy.title}</h2>
 
       {/* AR portal: circular purple stage with orbiting vocab objects, CTA embedded at center */}
       <div className="relative mx-auto mt-5 h-[260px] w-[260px]">
@@ -90,8 +91,8 @@ export const ARFlashcardSection: React.FC<ARFlashcardSectionProps> = ({
           aria-label={copy.accessibleAr}
           className="absolute inset-0 m-auto h-[104px] w-[104px] rounded-full border-4 border-white bg-white/95 text-purple-800 font-black text-xs shadow-[0_6px_0_rgba(107,33,168,0.3)] hover:brightness-105 active:translate-y-1 active:shadow-[0_2px_0_rgba(107,33,168,0.3)] transition-all cursor-pointer flex flex-col items-center justify-center gap-1"
         >
-          <span className="text-2xl">📸</span>
-          <span>{copy.launchAr.replace(' 📸', '')}</span>
+          <Msr icon="photo_camera" size={32} />
+          <span>{copy.launchAr}</span>
         </button>
       </div>
 
@@ -102,9 +103,10 @@ export const ARFlashcardSection: React.FC<ARFlashcardSectionProps> = ({
         <button
           type="button"
           onClick={onContinue}
-          className="text-xs font-black text-slate-500 underline underline-offset-2 cursor-pointer hover:text-slate-700"
+          className="text-xs font-black text-slate-500 underline underline-offset-2 cursor-pointer hover:text-slate-700 inline-flex items-center gap-1.5"
         >
           {copy.continue}
+          <Msr icon="arrow_forward" size={18} />
         </button>
       </div>
     </section>

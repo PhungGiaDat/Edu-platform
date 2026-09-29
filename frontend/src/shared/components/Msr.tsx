@@ -1,6 +1,6 @@
 /**
  * Msr — Material Symbols Rounded glyph (shared).
- * Font loaded via Google Fonts in index.html; variation settings in global.css.
+ * Font bundled in public/fonts; glyph settings in global.css.
  */
 import React from 'react';
 

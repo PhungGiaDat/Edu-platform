@@ -7,12 +7,15 @@ import { getPronunciationService, type PronunciationResult } from '@/services/Pr
 import { eventBus } from '@/runtime/EventBus';
 import { localeCopy } from '@/contexts/LocaleContext';
 import { ClayButton, ClayStage, ClayPill } from './clayComponents';
+import { Msr } from '@/shared/components/Msr';
+import { CodexPetSprite } from '@/features/pets/components/CodexPetSprite';
 
 export interface PracticeResult {
   transcript: string;
   score: number;
   passed: boolean;
   feedback: string;
+  targetText?: string;
 }
 
 interface VocabularySectionProps {
@@ -73,7 +76,8 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
 
   const copy = localeCopy({
     en: {
-      instruction: 'Listen carefully & repeat after Momo',
+      instruction: 'Repeat the following sentence',
+      wordInstruction: 'Repeat the following word',
       listen: 'Listen',
       speak: 'Speak',
       listening: 'Listening...',
@@ -82,12 +86,13 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
       processing: 'Scoring...',
       passed: 'Awesome!',
       tryAgain: 'Try Again',
-      nextWord: 'Next Word →',
-      finishVocab: 'Complete Words 🎉',
+      nextWord: 'Next Word',
+      finishVocab: 'Complete Words',
       allDone: `You've learned all ${vocabulary.length} words!`,
     },
     vi: {
-      instruction: 'Bé hãy nghe và đọc theo Momo nhé',
+      instruction: 'Bé hãy phát âm theo câu sau',
+      wordInstruction: 'Bé hãy phát âm từ sau',
       listen: 'Nghe mẫu',
       speak: 'Luyện nói',
       listening: 'Đang nghe bé nói...',
@@ -96,8 +101,8 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
       processing: 'Đang chấm điểm...',
       passed: 'Giỏi lắm!',
       tryAgain: 'Bé thử lại nhé',
-      nextWord: 'Tiếp tục →',
-      finishVocab: 'Hoàn thành từ mới 🎉',
+      nextWord: 'Tiếp tục',
+      finishVocab: 'Hoàn thành từ mới',
       allDone: `Con đã học xong ${vocabulary.length} từ mới!`,
     },
   }, locale);
@@ -142,7 +147,8 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
     setErrorMessage(null);
     setActiveWordKey(item.word_en);
     try {
-      await AudioService.playPronunciation(item.word_en, 'en', getAssetCandidateUrls(item.audio)[0]);
+      const sentence = item.simple_sentence?.trim();
+      await AudioService.playPronunciation(sentence || item.word_en, 'en', sentence ? undefined : getAssetCandidateUrls(item.audio)[0]);
     } catch (err) {
       console.warn('[VocabularySection] audio play error:', err);
       setErrorMessage(locale === 'vi'
@@ -155,8 +161,9 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
 
   const handlePracticeSpeaking = async (item: VocabularyItem) => {
     const wordKey = item.word_en.toLowerCase();
+    const targetText = item.simple_sentence?.trim() || item.word_en;
     const attemptId = ++pronunciationAttemptRef.current;
-    activeSpeechWordRef.current = wordKey;
+    activeSpeechWordRef.current = targetText.toLowerCase().trim();
     setIsListeningKey(wordKey);
     setSpeechState('opening');
     setErrorMessage(null);
@@ -189,7 +196,7 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
         eventBus.on('PRONUNCIATION_ERROR', handleError);
 
         service
-          .startListening(item.word_en, async (result: PronunciationResult) => {
+          .startListening(targetText, async (result: PronunciationResult) => {
             cleanup();
             if (attemptId !== pronunciationAttemptRef.current) {
               resolve();
@@ -202,13 +209,18 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
             const passed = Boolean(result.isCorrect || score >= 60);
 
             const summary: PracticeResult = {
-              transcript: result.transcript || item.word_en,
+              transcript: result.transcript || targetText,
+              targetText,
               score,
               passed,
               feedback: result.feedback || (passed ? copy.passed : copy.tryAgain),
             };
 
             await AudioService.playSoundEffect(passed ? 'correct' : 'wrong');
+            if (attemptId !== pronunciationAttemptRef.current) {
+              resolve();
+              return;
+            }
             onWordPracticed(item.word_en, summary);
             resolve();
           })
@@ -254,6 +266,15 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
     );
   }
 
+  const currentItem = vocabulary[currentIndex];
+  const isSpeaking = isListeningKey === currentItem.word_en.toLowerCase();
+  const isPlaying = activeWordKey === currentItem.word_en;
+  const currentPractice = practicedWords[currentItem.word_en.toLowerCase()];
+  const lexiLabel = isSpeaking
+    ? 'Lexi đang nghe bé'
+    : isPlaying ? 'Lexi đang đọc mẫu'
+      : currentPractice?.passed ? 'Lexi khen bé' : 'Lexi cùng bé luyện nói';
+
   return (
     <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
       {/* Header: Clay Step Indicator Pill + Interactive Page Dots */}
@@ -283,6 +304,17 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
             />
           ))}
         </div>
+      </div>
+
+      <div className="flex items-center justify-center gap-2 rounded-2xl bg-white/70 px-3 py-1.5">
+        <CodexPetSprite
+          size={64}
+          animationState={isSpeaking ? 'waiting' : isPlaying ? 'waving' : currentPractice?.passed ? 'jumping' : 'idle'}
+          label={lexiLabel}
+        />
+        <p className="text-sm font-black text-slate-700">
+          {currentItem.simple_sentence?.trim() ? copy.instruction : copy.wordInstruction}
+        </p>
       </div>
 
       {/* Child-friendly speech error notice if any */}
@@ -339,10 +371,10 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
                   </p>
 
                   {/* Example sentence as a small speech bubble */}
-                  {item.simple_sentence && (
+                  {item.simple_sentence?.trim() && (
                     <div className="relative z-10 mt-2 max-w-[260px]">
                       <p className="rounded-2xl rounded-bl-sm bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 italic shadow-[0_3px_0_#E2E8F0] border border-sky-100">
-                        "{item.simple_sentence}"
+                        "{item.simple_sentence.trim()}"
                       </p>
                     </div>
                   )}
@@ -352,11 +384,11 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
                     <button
                       type="button"
                       onClick={() => handlePlayAudio(item)}
-                      disabled={activeWordKey === item.word_en}
+                      disabled={activeWordKey !== null || isListeningKey !== null}
                       className="flex flex-col items-center gap-1 cursor-pointer disabled:opacity-60"
                     >
                       <span className="flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-[#4A9FF5] to-[#2563EB] text-xl text-white shadow-[0_5px_0_#1D4ED8] active:translate-y-1 active:shadow-[0_1px_0_#1D4ED8] transition-all">
-                        🔊
+                        <Msr icon="volume_up" size={28} />
                       </span>
                       <span className="text-[10px] font-black text-slate-600">
                         {activeWordKey === item.word_en ? copy.playing : copy.listen}
@@ -366,7 +398,7 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
                     <button
                       type="button"
                       onClick={() => handlePracticeSpeaking(item)}
-                      disabled={isListeningKey === item.word_en.toLowerCase()}
+                      disabled={isListeningKey !== null || activeWordKey !== null}
                       className="flex flex-col items-center gap-1 cursor-pointer disabled:opacity-60"
                     >
                       <span
@@ -378,7 +410,7 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
                               : 'bg-gradient-to-br from-[#FFD34E] to-[#FBBF24]'
                         }`}
                       >
-                        {isListeningKey === item.word_en.toLowerCase() ? '👂' : '🎤'}
+                        <Msr icon={isListeningKey === item.word_en.toLowerCase() ? 'hearing' : 'mic'} size={28} />
                       </span>
                       <span className="text-[10px] font-black text-slate-600">
                         {isListeningKey === item.word_en.toLowerCase()
@@ -414,6 +446,7 @@ export const VocabularySection: React.FC<VocabularySectionProps> = ({
           size="lg"
         >
           {currentIndex < vocabulary.length - 1 ? copy.nextWord : copy.finishVocab}
+          <Msr icon={currentIndex < vocabulary.length - 1 ? 'arrow_forward' : 'celebration'} size={24} />
         </ClayButton>
       </div>
 

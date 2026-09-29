@@ -144,12 +144,12 @@ test.describe('Mobile 390x844 Hero Lesson Player Responsive Flow', () => {
       await choice.click();
 
       if (index < 2) {
-        const continueBtn = listenChooseSection.getByRole('button', { name: /^Tiếp tục\s*→$/i });
+        const continueBtn = listenChooseSection.getByRole('button', { name: /^Tiếp tục$/i });
         await expect(continueBtn).toBeVisible();
         await continueBtn.click();
       }
     }
-    const listenChooseFooter = page.getByRole('button', { name: /^Tiếp tục\s*→$/i });
+    const listenChooseFooter = page.getByRole('button', { name: /^Tiếp tục$/i });
     await expect(listenChooseFooter).toBeVisible();
     await listenChooseFooter.click();
     await expect(page.getByText(/Nối từ & Ghép hình/i)).toBeVisible({ timeout: 5000 });
@@ -174,7 +174,7 @@ test.describe('Mobile 390x844 Hero Lesson Player Responsive Flow', () => {
       await expect(visualBtn).toBeVisible();
       await visualBtn.click();
     }
-    const matchFooter = page.getByRole('button', { name: /^Tiếp tục\s*→$/i });
+    const matchFooter = page.getByRole('button', { name: /^Tiếp tục$/i });
     await expect(matchFooter).toBeVisible();
     await matchFooter.click();
     await expect(page.getByText(/Trải nghiệm Thẻ AR 3D/i)).toBeVisible({ timeout: 5000 });
@@ -203,7 +203,7 @@ test.describe('Mobile 390x844 Hero Lesson Player Responsive Flow', () => {
       await expect(gameContinueBtn).toBeVisible();
       await gameContinueBtn.click();
     }
-    const miniGameFooter = page.getByRole('button', { name: /^Tiếp tục\s*→$/i });
+    const miniGameFooter = page.getByRole('button', { name: /^Tiếp tục$/i });
     await expect(miniGameFooter).toBeVisible();
     await miniGameFooter.click();
     // ==========================================

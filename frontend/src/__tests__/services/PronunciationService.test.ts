@@ -53,6 +53,58 @@ describe('PronunciationService browser fallback', () => {
     vi.restoreAllMocks();
   });
 
+  it.each([
+    ['This is my mom.', '  THIS is my mom  ', 100, true],
+    ['This is my mom.', 'Mom', 21, false],
+    ['It is a butterfly.', 'butterfly', 25, false],
+    ['It is a butterfly.', 'It is a butterfly', 100, true],
+    ['cat', 'the cat', 96, true],
+    ['cat', 'caterpillar', 27, false],
+  ])('scores expected "%s" against transcript "%s"', async (expected, transcript, accuracy, isCorrect) => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ emoji: '', message: 'Keep practicing' }),
+    }));
+    const { default: PronunciationService } = await import(
+      '@/features/pronunciation/services/PronunciationService'
+    );
+    const { eventBus } = await import('@/runtime/EventBus');
+    const started = vi.fn();
+    eventBus.on('PRONUNCIATION_STARTED', started);
+    const onResult = vi.fn();
+    const service = new PronunciationService();
+
+    await service.startListening(expected, onResult);
+    MockRecognition.instance.onresult?.({ results: [[{ transcript, confidence: 0.9 }]] });
+
+    await vi.waitFor(() => expect(onResult).toHaveBeenCalledWith(expect.objectContaining({
+      transcript, accuracy, isCorrect,
+    })));
+    expect(started).toHaveBeenCalledWith(expect.objectContaining({ expectedWord: expected.toLowerCase() }));
+  });
+
+  it('chooses the complete sentence over a partial-word recognition alternative', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ emoji: '', message: 'Well done' }),
+    }));
+    const { default: PronunciationService } = await import(
+      '@/features/pronunciation/services/PronunciationService'
+    );
+    const service = new PronunciationService();
+    const onResult = vi.fn();
+    await service.startListening('This is my mom.', onResult);
+
+    MockRecognition.instance.onresult?.({ results: [[
+      { transcript: 'Mom', confidence: 0.99 },
+      { transcript: 'This is my mom', confidence: 0.8 },
+    ]] });
+
+    await vi.waitFor(() => expect(onResult).toHaveBeenCalledWith(expect.objectContaining({
+      transcript: 'This is my mom', accuracy: 100, isCorrect: true,
+    })));
+  });
+
   it('continues the active attempt with server recording before emitting a terminal Web Speech error', async () => {
     const stopTrack = vi.fn();
     const getUserMedia = vi.fn().mockResolvedValue({

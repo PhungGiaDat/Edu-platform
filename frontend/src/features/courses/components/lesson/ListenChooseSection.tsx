@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Msr } from '@/shared/components/Msr';
 import type { Lesson, VocabularyItem } from '@/types/course';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
@@ -40,7 +41,7 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
       tapToHear: 'Chạm loa để nghe',
       correctPrefix: 'Chính xác! Giỏi lắm!',
       tryAgain: 'Chưa đúng rồi. Nghe lại nhé!',
-      continue: 'Tiếp tục →',
+      continue: 'Tiếp tục',
       completedAll: 'Xuất sắc! Bé đã nghe và chọn đúng tất cả các hình!',
     },
     vi: {
@@ -50,7 +51,7 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
       tapToHear: 'Chạm loa để nghe',
       correctPrefix: 'Chính xác! Giỏi lắm!',
       tryAgain: 'Chưa đúng rồi. Nghe lại nhé!',
-      continue: 'Tiếp tục →',
+      continue: 'Tiếp tục',
       completedAll: 'Xuất sắc! Bé đã nghe và chọn đúng tất cả các hình!',
     },
   }[locale];
@@ -135,7 +136,7 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
       {/* Top Heading + Stepper */}
       <div className="flex items-center justify-between px-1">
         <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5">
-          <span>👂</span>
+          <Msr icon="hearing" size={24} />
           <span>{copy.title}</span>
         </h2>
         <span className="text-xs font-black text-sky-600 bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-200">
@@ -153,7 +154,7 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
           aria-label={copy.replay}
           className="relative flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-sky-400 to-blue-500 text-3xl text-white shadow-[0_8px_0_#0284C7] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all cursor-pointer"
         >
-          🔊
+          <Msr icon="volume_up" size={36} />
         </button>
         <p className="mt-2 text-xs font-extrabold text-slate-500">{copy.tapToHear}</p>
       </div>
@@ -232,9 +233,10 @@ export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
           <button
             type="button"
             onClick={handleManualNext}
-            className="w-full min-h-[52px] rounded-2xl border-2 border-white bg-emerald-500 text-white font-black text-base shadow-[0_5px_0_#059669] hover:bg-emerald-600 active:translate-y-1 transition-all cursor-pointer"
+            className="w-full min-h-[52px] rounded-2xl border-2 border-white bg-emerald-500 text-white font-black text-base shadow-[0_5px_0_#059669] hover:bg-emerald-600 active:translate-y-1 transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             {copy.continue}
+            <Msr icon="arrow_forward" />
           </button>
         </div>
       )}

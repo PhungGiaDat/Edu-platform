@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Msr } from '@/shared/components/Msr';
 import type { Lesson, VocabularyItem } from '@/types/course';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
 import { AudioService } from '@/services/AudioService';
@@ -41,8 +42,8 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
       findPicture: 'Chạm vào hình đúng nhé!',
       correct: 'Giỏi quá! Bé tìm đúng hình rồi!',
       tryAgain: 'Chưa đúng rồi, bé thử lại nhé!',
-      continue: 'Tiếp tục →',
-      finishGame: 'Hoàn thành trò chơi 🎉',
+      continue: 'Tiếp tục',
+      finishGame: 'Hoàn thành trò chơi',
       allCompleted: 'Xuất sắc! Bé đã vượt qua thử thách chọn hình của Momo!',
     },
     vi: {
@@ -52,8 +53,8 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
       findPicture: 'Chạm vào hình đúng nhé!',
       correct: 'Giỏi quá! Bé tìm đúng hình rồi!',
       tryAgain: 'Chưa đúng rồi, bé thử lại nhé!',
-      continue: 'Tiếp tục →',
-      finishGame: 'Hoàn thành trò chơi 🎉',
+      continue: 'Tiếp tục',
+      finishGame: 'Hoàn thành trò chơi',
       allCompleted: 'Xuất sắc! Bé đã vượt qua thử thách chọn hình của Momo!',
     },
   }[locale];
@@ -146,7 +147,7 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
       <div className="flex items-center justify-between px-1">
         <div className="text-left">
           <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5">
-            <span>🎮</span>
+            <Msr icon="sports_esports" size={24} />
             <span>{copy.title}</span>
           </h2>
           <p className="text-xs font-bold text-slate-500">{copy.subtitle}</p>
@@ -165,7 +166,7 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
           aria-label={copy.tapToHear}
           className="relative flex h-24 w-24 flex-col items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-[#FCE072] to-[#F0B72B] shadow-[0_7px_0_#D9930F] active:translate-y-1 active:shadow-[0_2px_0_#D9930F] transition-all cursor-pointer"
         >
-          <span className="text-xl">🔊</span>
+          <Msr icon="volume_up" size={28} />
           <span className="text-[11px] font-black text-amber-950 capitalize leading-tight px-1">
             {currentTarget.word_en}
           </span>
@@ -238,9 +239,10 @@ export const MiniGamesSection: React.FC<MiniGamesSectionProps> = ({
           <button
             type="button"
             onClick={handleManualNext}
-            className="w-full min-h-[52px] rounded-2xl border-2 border-white bg-emerald-500 text-white font-black text-base shadow-[0_5px_0_#059669] hover:bg-emerald-600 active:translate-y-1 transition-all cursor-pointer"
+            className="w-full min-h-[52px] rounded-2xl border-2 border-white bg-emerald-500 text-white font-black text-base shadow-[0_5px_0_#059669] hover:bg-emerald-600 active:translate-y-1 transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             {currentTargetIndex < vocabulary.length - 1 ? copy.continue : copy.finishGame}
+            <Msr icon={currentTargetIndex < vocabulary.length - 1 ? 'arrow_forward' : 'celebration'} />
           </button>
         </div>
       )}

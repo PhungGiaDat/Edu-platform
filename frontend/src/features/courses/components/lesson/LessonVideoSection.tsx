@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Msr } from '@/shared/components/Msr';
 import type { Lesson } from '@/types/course';
 import { getAssetCandidateUrls, resolveStoredMediaUrl } from '@/lib/courseAssets';
 import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
@@ -111,28 +112,28 @@ export const LessonVideoSection: React.FC<LessonVideoSectionProps> = ({
     en: {
       title: 'Watch & Discover',
       subtitle: 'Watch carefully to discover new words with Momo!',
-      markWatched: 'Continue to Vocabulary →',
-      watchedDone: 'Watched ✓ Continue →',
+      markWatched: 'Continue to Vocabulary',
+      watchedDone: 'Watched. Continue',
       completionFeedback: 'Great job! You finished watching the video lesson.',
       fallbackTitle: 'Video lesson is getting ready',
       fallbackDesc: 'You can continue right now to explore the exciting new words!',
       loading: 'Loading video...',
-      watchVideo: '▶ Watch video',
-      playerFailed: '🎬 Video cannot play here',
+      watchVideo: 'Watch video',
+      playerFailed: 'Video cannot play here',
       retry: 'Try again',
       watchOnYouTube: 'Watch on YouTube',
     },
     vi: {
       title: 'Xem và khám phá',
       subtitle: 'Bé hãy chăm chú theo dõi video để khám phá các từ vựng mới nhé!',
-      markWatched: 'Con đã xem xong! Tiếp tục →',
-      watchedDone: 'Đã xem xong ✓ Tiếp tục →',
+      markWatched: 'Con đã xem xong! Tiếp tục',
+      watchedDone: 'Đã xem xong. Tiếp tục',
       completionFeedback: 'Bé giỏi lắm! Đã theo dõi xong video bài học.',
       fallbackTitle: 'Video bài học chưa sẵn sàng',
       fallbackDesc: 'Bé có thể tiếp tục khám phá từ vựng mới cùng bạn Momo nhé!',
       loading: 'Đang tải video...',
-      watchVideo: '▶ Xem video',
-      playerFailed: '🎬 Không thể phát video tại đây',
+      watchVideo: 'Xem video',
+      playerFailed: 'Không thể phát video tại đây',
       retry: 'Thử lại',
       watchOnYouTube: 'Xem trên YouTube',
     },
@@ -146,8 +147,8 @@ export const LessonVideoSection: React.FC<LessonVideoSectionProps> = ({
 
   return (
     <section className="animate-fade-in w-full text-center max-w-md mx-auto">
-      <h2 className="text-lg font-black text-slate-900 tracking-tight">
-        🎬 {copy.title}
+      <h2 className="text-lg font-black text-slate-900 tracking-tight flex items-center justify-center gap-1.5">
+        <Msr icon="movie" size={24} /> {copy.title}
       </h2>
       <p className="mt-0.5 text-xs font-bold text-slate-600">{copy.subtitle}</p>
 
@@ -225,7 +226,8 @@ export const LessonVideoSection: React.FC<LessonVideoSectionProps> = ({
                           🎬 {youtubeFallbackEmoji}
                         </span>
                       )}
-                      <span className="relative inline-flex translate-y-8 rounded-full bg-white/90 px-4 py-2 text-sm font-black text-purple-950 shadow-sm">
+                      <span className="relative inline-flex items-center gap-1.5 translate-y-8 rounded-full bg-white/90 px-4 py-2 text-sm font-black text-purple-950 shadow-sm">
+                        <Msr icon="play_arrow" />
                         {copy.watchVideo}
                       </span>
                     </button>
@@ -293,7 +295,7 @@ export const LessonVideoSection: React.FC<LessonVideoSectionProps> = ({
 
       {isWatched && (
         <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-100 border border-emerald-300 px-3.5 py-1 text-xs font-black text-emerald-900 shadow-2xs animate-fade-in">
-          <span>✓</span>
+          <Msr icon="check_circle" size={18} />
           <span>{copy.completionFeedback}</span>
         </div>
       )}
@@ -304,7 +306,9 @@ export const LessonVideoSection: React.FC<LessonVideoSectionProps> = ({
           onClick={onWatched}
           size="lg"
         >
-          {isWatched ? `✓ ${copy.watchedDone}` : `👀 ${copy.markWatched}`}
+          <Msr icon={isWatched ? 'check_circle' : 'visibility'} />
+          {isWatched ? copy.watchedDone : copy.markWatched}
+          <Msr icon="arrow_forward" />
         </ClayButton>
       </div>
     </section>

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Msr } from '@/shared/components/Msr';
 import { useNavigate } from 'react-router-dom';
 import type { Course, Lesson, QuizSubmitResult } from '@/types/course';
 import { getAssetCandidateUrls } from '@/lib/courseAssets';
@@ -49,14 +50,14 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
       congrats: 'Con làm rất tốt!',
       subtitle: 'Chúc mừng bé đã hoàn thành bài học!',
       finishCta: 'Lưu tiến độ & Hoàn tất',
-      reviewCta: 'Xem lại bài học 🔄',
+      reviewCta: 'Xem lại bài học',
       backToCourse: 'Về danh sách bài học',
     },
     vi: {
       congrats: 'Con làm rất tốt!',
       subtitle: 'Chúc mừng bé đã hoàn thành bài học!',
       finishCta: 'Lưu tiến độ & Hoàn tất',
-      reviewCta: 'Xem lại bài học 🔄',
+      reviewCta: 'Xem lại bài học',
       backToCourse: 'Về danh sách bài học',
     },
   }[locale];
@@ -137,16 +138,17 @@ export const RewardSection: React.FC<RewardSectionProps> = ({
             className="w-full min-h-[56px] rounded-2xl border-2 border-white bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-base sm:text-lg shadow-[0_6px_0_#0D9488] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             <span>{isCompleted ? copy.backToCourse : copy.finishCta}</span>
-            <span>🚀</span>
+            <Msr icon={isCompleted ? 'arrow_back' : 'check_circle'} />
           </button>
 
           {/* Secondary Replay Button */}
           <button
             type="button"
             onClick={onReplayLesson}
-            className="w-full min-h-[46px] rounded-2xl border-2 border-slate-200 bg-white text-slate-700 font-black text-sm shadow-xs hover:bg-slate-50 active:translate-y-0.5 transition-all cursor-pointer"
+            className="w-full min-h-[46px] rounded-2xl border-2 border-slate-200 bg-white text-slate-700 font-black text-sm shadow-xs hover:bg-slate-50 active:translate-y-0.5 transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             {copy.reviewCta}
+            <Msr icon="replay" />
           </button>
         </div>
       </div>

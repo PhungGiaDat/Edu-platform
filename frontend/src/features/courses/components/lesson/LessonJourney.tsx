@@ -1,4 +1,5 @@
 import React from 'react';
+import { Msr } from '@/shared/components/Msr';
 import type { CourseThemeConfig } from '@/features/courses/courseThemes';
 
 export type JourneyStepId =
@@ -29,7 +30,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     labelVi: 'Khởi động',
     shortLabelEn: 'Khởi động',
     shortLabelVi: 'Khởi động',
-    icon: '👋',
+    icon: 'waving_hand',
     backendStepId: 'intro',
   },
   {
@@ -38,7 +39,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     labelVi: 'Xem video',
     shortLabelEn: 'Video',
     shortLabelVi: 'Xem video',
-    icon: '🎬',
+    icon: 'movie',
     backendStepId: 'watch',
   },
   {
@@ -47,7 +48,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     labelVi: 'Học từ vựng',
     shortLabelEn: 'Từ mới',
     shortLabelVi: 'Từ mới',
-    icon: '🔤',
+    icon: 'abc',
     backendStepId: 'words',
   },
   {
@@ -56,7 +57,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     labelVi: 'Nghe & Chọn',
     shortLabelEn: 'Nghe chọn',
     shortLabelVi: 'Nghe chọn',
-    icon: '👂',
+    icon: 'hearing',
     backendStepId: 'words',
   },
   {
@@ -65,7 +66,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     labelVi: 'Nối từ & hình',
     shortLabelEn: 'Nối từ',
     shortLabelVi: 'Nối từ',
-    icon: '🧩',
+    icon: 'extension',
     backendStepId: 'words',
   },
   {
@@ -74,7 +75,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     labelVi: 'Thẻ AR 3D',
     shortLabelEn: 'Thẻ AR',
     shortLabelVi: 'Thẻ AR',
-    icon: '📱',
+    icon: 'view_in_ar',
   },
   {
     id: 'mini_game',
@@ -82,7 +83,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     labelVi: 'Trò chơi nhỏ',
     shortLabelEn: 'Trò chơi',
     shortLabelVi: 'Trò chơi',
-    icon: '🎮',
+    icon: 'sports_esports',
     backendStepId: 'game',
   },
   {
@@ -91,7 +92,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     labelVi: 'Thử thách Quiz',
     shortLabelEn: 'Quiz',
     shortLabelVi: 'Quiz',
-    icon: '📝',
+    icon: 'quiz',
     backendStepId: 'quiz',
   },
   {
@@ -100,7 +101,7 @@ export const JOURNEY_STEPS: JourneyStepMeta[] = [
     labelVi: 'Nhận phần thưởng',
     shortLabelEn: 'Thưởng',
     shortLabelVi: 'Thưởng',
-    icon: '🎁',
+    icon: 'redeem',
     backendStepId: 'finish',
   },
 ];
@@ -158,9 +159,9 @@ export const LessonJourney: React.FC<LessonJourneyProps> = ({
               >
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs shadow-xs">
                   {isCompleted && !isActive ? (
-                    <span className="text-xs font-black text-emerald-600">✓</span>
+                    <Msr icon="check" size={16} color="#059669" />
                   ) : (
-                    step.icon
+                    <Msr icon={step.icon} size={16} />
                   )}
                 </span>
                 <span className="whitespace-nowrap font-bold text-[11px]">

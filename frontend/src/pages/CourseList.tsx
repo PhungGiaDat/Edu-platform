@@ -743,7 +743,6 @@ export const CourseList: React.FC = () => {
               {filteredCourses.map((course, index) => {
                 const courseProgress = getCourseProgress(course, progressByCourse.get(course.course_id));
                 const totalCourseXp = course.lessons.reduce((sum, lesson) => sum + (lesson.reward?.xp || 0), 0);
-                const firstLessonId = progressByCourse.get(course.course_id)?.current_lesson_id || course.lessons[0]?.lesson_id;
                 const displayProgress = hasLiveCourses ? courseProgress.progressPercent : [35, 50, 22][index] || 30;
                 const displayXp = hasLiveCourses ? totalCourseXp : [500, 350, 480][index] || 420;
                 const duration = course.lessons.reduce((sum, lesson) => sum + (lesson.duration_minutes || 0), 0) || course.lessons.length * 6;
@@ -769,9 +768,7 @@ export const CourseList: React.FC = () => {
                     tags={tags}
                     isInteractive
                     onOpen={() => navigate(`/courses/${course.course_id}`)}
-                    onStart={() => {
-                      navigate(firstLessonId ? `/courses/${course.course_id}/lessons/${firstLessonId}` : `/courses/${course.course_id}`);
-                    }}
+                    onStart={() => navigate(`/courses/${course.course_id}`)}
                   />
                 );
               })}
