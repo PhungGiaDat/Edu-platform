@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 
@@ -12,8 +12,10 @@ const { courseService } = vi.hoisted(() => ({ courseService: {
   startCourse: vi.fn(),
 } }));
 
+const authState = vi.hoisted(() => ({ user: { id: 'learner-1' } as { id: string } | null, isGuest: false }));
+
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ user: { id: 'learner-1' } }),
+  useAuth: () => authState,
 }));
 
 vi.mock('@/contexts/LocaleContext', () => ({
@@ -70,6 +72,13 @@ function Location() {
 }
 
 describe('CourseDetail', () => {
+  beforeEach(() => {
+    authState.user = { id: 'learner-1' };
+    authState.isGuest = false;
+    courseService.startCourse.mockClear();
+    courseService.getProgress.mockClear();
+  });
+
   it('offers authored warm-up questions without changing the existing course launch action', async () => {
     courseService.getCourse.mockResolvedValue({
       ...course,
@@ -163,5 +172,26 @@ describe('CourseDetail', () => {
       expect(courseService.startCourse).toHaveBeenCalledWith('mission-test-course', 'learner-1');
       expect(screen.getByTestId('location').textContent).toBe('/courses/mission-test-course/lessons/lesson-one');
     });
+  });
+
+  it.each([null, { id: 'residual-user' }])('opens the first lesson for a guest without protected course start (user: %j)', async (user) => {
+    authState.user = user;
+    authState.isGuest = true;
+    courseService.getCourse.mockResolvedValue(course);
+    courseService.getProgress.mockResolvedValue([]);
+    // A protected endpoint would fail and trigger the global unauthorized flow.
+    courseService.startCourse.mockRejectedValue(new Error('HTTP 401 Unauthorized'));
+    render(<MemoryRouter initialEntries={['/courses/mission-test-course']}>
+      <Routes>
+        <Route path="/courses/:id" element={<CourseDetail />} />
+        <Route path="/courses/:courseId/lessons/:lessonId" element={<Location />} />
+      </Routes>
+    </MemoryRouter>);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Start mission' }));
+
+    await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/courses/mission-test-course/lessons/lesson-one'));
+    expect(courseService.startCourse).not.toHaveBeenCalled();
+    expect(courseService.getProgress).toHaveBeenCalledWith('guest-learner');
   });
 });

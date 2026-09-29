@@ -29,7 +29,7 @@ const getLearnerId = (userId?: string | null) => userId || 'guest-learner';
 export const CourseDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const { locale } = useLocale();
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -105,7 +105,7 @@ export const CourseDetail: React.FC = () => {
 
   useEffect(() => {
     if (!id) return;
-    const learnerId = getLearnerId(user?.id);
+    const learnerId = getLearnerId(isGuest ? undefined : user?.id);
     setIsLoading(true);
     setError(null);
 
@@ -123,7 +123,7 @@ export const CourseDetail: React.FC = () => {
         setError(copy.courseNotFound);
       })
       .finally(() => setIsLoading(false));
-  }, [copy.courseNotFound, id, user?.id]);
+  }, [copy.courseNotFound, id, isGuest, user?.id]);
 
   const theme: CourseThemeConfig = useMemo(() => getCourseTheme(course), [course]);
 
@@ -144,6 +144,12 @@ export const CourseDetail: React.FC = () => {
 
   const handleStart = async () => {
     if (!course) return;
+    if (isGuest || !user?.id) {
+      const firstLessonId = course.lessons[0]?.lesson_id;
+      if (firstLessonId) navigate(`/courses/${course.course_id}/lessons/${firstLessonId}`);
+      else setError(copy.courseNotFound);
+      return;
+    }
     setIsStarting(true);
     try {
       const nextProgress = await courseService.startCourse(course.course_id, getLearnerId(user?.id));

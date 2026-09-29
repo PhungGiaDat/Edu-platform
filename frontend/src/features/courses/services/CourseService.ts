@@ -86,7 +86,8 @@ export const courseService = {
     }),
 
   getProgress: (userId: string): Promise<UserProgress[]> =>
-    apiClient.get(`/api/v1/users/${userId}/progress`),
+    // Guest previews have no saved account progress.
+    userId === 'guest-learner' ? Promise.resolve([]) : apiClient.get(`/api/v1/users/${userId}/progress`),
 
   // Media upload endpoints
   uploadMedia: (
