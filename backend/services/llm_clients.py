@@ -344,7 +344,9 @@ def call_with_retry(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
     return _retry(fn)(*args, **kwargs)
 
 
-async def acall_with_retry(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
+async def acall_with_retry(
+    fn: Callable[..., Any], *args: Any, max_attempts: int = 3, **kwargs: Any
+) -> Any:
     """
     Await fn with tenacity retry.
     tenacity >= 8.2 supports async natively.
@@ -352,7 +354,7 @@ async def acall_with_retry(fn: Callable[..., Any], *args: Any, **kwargs: Any) ->
     async_retry = tenacity.AsyncRetrying(
         retry=tenacity.retry_if_exception(_is_retryable),
         wait=tenacity.wait_exponential(multiplier=1, min=2, max=30),
-        stop=tenacity.stop_after_attempt(3),
+        stop=tenacity.stop_after_attempt(max_attempts),
         reraise=True,
         after=_on_retry,
     )
@@ -390,8 +392,12 @@ class ModelRouter:
         role: str,
         primary_model: Optional[str] = None,
         fallback_models: Optional[list[str]] = None,
+        max_attempts: int = 3,
+        timeout: Optional[float] = None,
     ) -> None:
         self.role = role
+        self.max_attempts = max_attempts
+        self.timeout = timeout
         self.primary_model = primary_model or self._default_for_role(role)
         self.fallback_models = fallback_models or self._parse_fallbacks()
         self._breaker = CircuitBreaker(
@@ -419,7 +425,7 @@ class ModelRouter:
     def get_llm(self) -> ChatOpenAI:
         """Return the primary LLM (provider-routed by model prefix).
         Use llm_cascade() when you want automatic fallback."""
-        return build_llm_for_model(self.primary_model)
+        return build_llm_for_model(self.primary_model, timeout=self.timeout)
 
     def _cascade_entries(self) -> Iterator[tuple[str, ChatOpenAI, str]]:
         """
@@ -453,7 +459,7 @@ class ModelRouter:
             if not _has_configured_key(provider_keys.get(provider)) or model in seen:
                 return
             seen.add(model)
-            entries.append((provider, build_llm_for_model(model), model))
+            entries.append((provider, build_llm_for_model(model, timeout=self.timeout), model))
 
         add(self.primary_model)
         for model in self.fallback_models:
@@ -507,7 +513,9 @@ class ModelRouter:
             provider = parse_provider_model(model_name)[0]
             started = time.monotonic()
             try:
-                result = await acall_with_retry(fn, llm, *args, **kwargs)
+                result = await acall_with_retry(
+                    fn, llm, *args, max_attempts=self.max_attempts, **kwargs
+                )
                 llm_health.record(provider, True, (time.monotonic() - started) * 1000)
                 return result, model_name
             except Exception as exc:  # noqa: PERF203

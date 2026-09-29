@@ -129,14 +129,19 @@ class Settings(BaseSettings):
     TOKENROUTER_API_KEY: Optional[SecretStr] = None
     TOKENROUTER_BASE_URL: str = "https://api.tokenrouter.com/v1"
     # Default models per pipeline stage (can override per-request)
-    MODEL_PLANNER: str = "google/gemma-4-26b-a4b-it:free"
-    MODEL_GENERATOR: str = "google/gemma-4-26b-a4b-it:free"
+    # "openrouter/" prefix routes via OpenRouter; a bare "google/…" id would hit Google's endpoint.
+    MODEL_PLANNER: str = "openrouter/google/gemma-4-31b-it:free"
+    MODEL_GENERATOR: str = "openrouter/google/gemma-4-31b-it:free"
     MODEL_VALIDATOR: str = "nvidia/nemotron-3-super-120b-a12b:free"
     # Fallback cascade — comma-separated model list, tried in order on failure
     MODEL_FALLBACKS: str = "nvidia/nemotron-3-super-120b-a12b:free"
     # Circuit breaker: fail_max consecutive failures before skipping a model (60s reset)
     LLM_CIRCUIT_BREAKER_FAIL_MAX: int = 5
     LLM_CIRCUIT_BREAKER_RESET_SECONDS: int = 60
+    # Agentic RAG Planner/Generator latency budget: per-model request timeout and
+    # attempts per model (1 = no retry; the fallback cascade still applies).
+    AGENTIC_LLM_TIMEOUT_SECONDS: float = 5.0
+    AGENTIC_LLM_MAX_ATTEMPTS: int = 1
     # Validator strategy for the Agentic RAG pipeline:
     #   "rule" (default) — deterministic content protection (services/rag_content_rules);
     #                      the LLM validator only runs when a rule cannot fix the draft.

@@ -20,7 +20,6 @@ TokenRouter multi-model routing:
 MongoDB-backed response caching (rag_cache collection, 24h TTL).
 """
 
-import asyncio
 import hashlib
 import json
 import logging
@@ -61,7 +60,6 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────────
 # Constants
 # ──────────────────────────────────────────────
-INTER_AGENT_DELAY = 1.0          # seconds between LLM calls (free tier RPM safety)
 CACHE_TTL_HOURS = 24            # MongoDB rag_cache document lifetime
 
 # Rendered into GENERATOR_PROMPT; kept in sync with the validator's
@@ -293,10 +291,15 @@ class AgenticRAGService:
 
         async def do_call(llm: "BaseChatModel", inputs: Dict[str, Any]) -> str:
             chain = self.PLANNER_PROMPT | llm | self._parser
-            return await acall_with_retry(chain.ainvoke, inputs)
+            return await chain.ainvoke(inputs)  # retries owned by the router below
 
         try:
-            router = ModelRouter(role="planner", primary_model=model_override)
+            router = ModelRouter(
+                role="planner",
+                primary_model=model_override,
+                max_attempts=settings.AGENTIC_LLM_MAX_ATTEMPTS,
+                timeout=settings.AGENTIC_LLM_TIMEOUT_SECONDS,
+            )
             raw, model_name = await router.call_with_fallback(
                 do_call,
                 {"question": question, "progress_summary": progress_summary},
@@ -385,10 +388,15 @@ class AgenticRAGService:
         # LLM call via cascade
         async def do_call(llm: "BaseChatModel", inputs: Dict[str, Any]) -> str:
             chain = self.GENERATOR_PROMPT | llm | self._parser
-            return await acall_with_retry(chain.ainvoke, inputs)
+            return await chain.ainvoke(inputs)  # retries owned by the router below
 
         try:
-            router = ModelRouter(role="generator", primary_model=model_override)
+            router = ModelRouter(
+                role="generator",
+                primary_model=model_override,
+                max_attempts=settings.AGENTIC_LLM_MAX_ATTEMPTS,
+                timeout=settings.AGENTIC_LLM_TIMEOUT_SECONDS,
+            )
             draft, model_name = await router.call_with_fallback(
                 do_call,
                 {"question": question, "context": context},
@@ -442,8 +450,6 @@ class AgenticRAGService:
 
         logger.info("[AgenticRAG] ✅ Validator LLM starting...")
         agent_trace.append("validator:start")
-        # Only pay the inter-call delay when we are actually issuing another LLM call.
-        await asyncio.sleep(INTER_AGENT_DELAY)
 
         recent_history = "\n---\n".join(history) if history else "Không có lịch sử."
 
@@ -521,7 +527,6 @@ class AgenticRAGService:
                 question, user_id, planner_model, agent_trace, lesson_context
             )
             mark_stage("planner", time.perf_counter() - _t0)
-            await asyncio.sleep(INTER_AGENT_DELAY)
 
             # ── 3. GENERATOR ──────────────────────────────────────────────────
             _t0 = time.perf_counter()
@@ -531,8 +536,6 @@ class AgenticRAGService:
             mark_stage("generator", time.perf_counter() - _t0)
 
             # ── 4. VALIDATOR ─────────────────────────────────────────────────
-            # Rule mode adds no LLM call, so the inter-call delay is paid inside
-            # _validator only when it actually escalates to the LLM.
             _t0 = time.perf_counter()
             final_response = await self._validator(
                 draft_response, session_id, validator_model, agent_trace, sources
@@ -572,6 +575,20 @@ class AgenticRAGService:
                 if cache_hit:
                     row["validator_verdict"] = "cache-hit"
                 schedule_rag_trace(row)
+                stage_ms = {k: round(v * 1000) for k, v in sink.stages.items()}
+                model_used = next(
+                    (t.split("model=")[1].split()[0] for t in agent_trace
+                     if t.startswith("generator:done model=")),
+                    None,
+                )
+                logger.info(
+                    "agentic_rag timing: planner=%sms retrieval=%sms generator=%sms validator=%sms total=%sms model=%s",
+                    stage_ms.get("planner"), stage_ms.get("retrieval"),
+                    # "generator" stage wraps retrieval; log the LLM share only
+                    stage_ms.get("generator", 0) - stage_ms.get("retrieval", 0),
+                    stage_ms.get("validator"),
+                    round((time.perf_counter() - started) * 1000), model_used,
+                )
             except Exception as trace_exc:  # noqa: BLE001
                 logger.debug(f"[AgenticRAG] trace build failed (ignored): {trace_exc}")
             end_sink(sink_token)
