@@ -134,6 +134,21 @@ describe('LearnerAROverlay', () => {
     expect(screen.getByRole('status')).not.toBe(firstFeedback);
   });
 
+  it('never pairs a zero count with stale card-found feedback', () => {
+    renderOverlay({ activeTargets: [], feedback: { id: 'fish001:1', message: 'Card found: Fish' } });
+
+    expect(screen.queryByText(/0 active/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Card found: Fish')).not.toBeInTheDocument();
+    expect(screen.getByText('Scanning for cards')).toBeInTheDocument();
+  });
+
+  it('shows a singular count alongside the found feedback', () => {
+    renderOverlay({ activeTargets: [activeTargets[1]], featuredTargetName: 'fish001', feedback: { id: 'fish001:1', message: 'Card found: Fish' } });
+
+    expect(screen.getByText('1 active card')).toBeInTheDocument();
+    expect(screen.getByText('Card found: Fish')).toBeInTheDocument();
+  });
+
   it('contains no operator or diagnostic UI', () => {
     renderOverlay();
 

@@ -29,6 +29,7 @@ function displayWord(word: string): string {
 }
 
 function activeTargetLabel(count: number): string {
+  if (count === 0) return 'Scanning for cards';
   return `${count} active ${count === 1 ? 'card' : 'cards'}`;
 }
 
@@ -69,6 +70,8 @@ export function LearnerAROverlay({
   const featuredTarget = activeTargets.find(target => target.targetName === featuredTargetName)
     ?? activeTargets[0];
   const targetCount = activeTargets.length;
+  // "Card found" only makes sense while a card is still tracked.
+  const visibleFeedback = targetCount > 0 ? feedback : null;
 
   return (
     <aside
@@ -128,15 +131,15 @@ export function LearnerAROverlay({
             </button>
           </div>
 
-          {feedback && (
+          {visibleFeedback && (
             <p
-              key={feedback.id}
+              key={visibleFeedback.id}
               className="learner-ar-overlay__feedback"
-              data-feedback-id={feedback.id}
+              data-feedback-id={visibleFeedback.id}
               role="status"
               aria-live="polite"
             >
-              {feedback.message}
+              {visibleFeedback.message}
             </p>
           )}
         </section>
@@ -182,15 +185,15 @@ export function LearnerAROverlay({
           </div>
 
           <p className="learner-ar-overlay__instruction">{instruction}</p>
-          {feedback && (
+          {visibleFeedback && (
             <p
-              key={feedback.id}
+              key={visibleFeedback.id}
               className="learner-ar-overlay__feedback"
-              data-feedback-id={feedback.id}
+              data-feedback-id={visibleFeedback.id}
               role="status"
               aria-live="polite"
             >
-              {feedback.message}
+              {visibleFeedback.message}
             </p>
           )}
         </section>

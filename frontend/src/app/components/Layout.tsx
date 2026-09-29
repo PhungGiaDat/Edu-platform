@@ -9,6 +9,9 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
     const location = useLocation();
     const isLessonRoute = /^\/courses\/[^/]+\/lessons\/[^/]+/.test(location.pathname);
+    // Full-bleed 3D map: the scene runs under the floating mobile nav instead
+    // of leaving the nav's reserved padding as an empty strip.
+    const isFullBleedRoute = isLessonRoute || location.pathname === '/learning-path-3d';
     const [isSidebarExpanded, setIsSidebarExpanded] = useState(() => {
         if (typeof window === 'undefined') return true;
 
@@ -51,7 +54,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 onDesktopExpandedChange={setSidebarExpanded}
             />
             <main className={`learner-main w-full max-w-[100vw] min-w-0 flex-1 overflow-x-hidden ${
-                isLessonRoute ? 'pb-0' : 'pb-[calc(76px+env(safe-area-inset-bottom,0px)+0.75rem)]'
+                isFullBleedRoute ? 'pb-0' : 'pb-[calc(76px+env(safe-area-inset-bottom,0px)+0.75rem)]'
             } transition-[margin,max-width] duration-300 md:pb-0 motion-reduce:transition-none`}>
                 {children}
             </main>

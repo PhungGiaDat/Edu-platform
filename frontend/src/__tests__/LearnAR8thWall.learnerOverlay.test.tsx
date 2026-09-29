@@ -210,7 +210,7 @@ describe('LearnAR8thWall learner overlay orchestration', () => {
     expect(screen.getByTestId('learner-ar-overlay')).toBeInTheDocument();
     expect(screen.getByTestId('learner-ar-overlay')).toHaveAttribute('data-mode', 'collapsed');
     fireEvent.click(screen.getByRole('button', { name: 'Expand learner overlay' }));
-    expect(screen.getByText('0 active cards')).toBeInTheDocument();
+    expect(screen.getByText('Scanning for cards')).toBeInTheDocument();
     expect(screen.queryByText('Cat')).not.toBeInTheDocument();
 
     await emitStableFound(viewerSource, 'cat001');

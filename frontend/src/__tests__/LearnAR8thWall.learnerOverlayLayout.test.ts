@@ -29,7 +29,8 @@ describe('LearnerAROverlay layout contract', () => {
     expect(reopen).toMatch(/height:\s*48px/);
     expect(reopen).toMatch(/border-radius:\s*50%/);
     expect(reopen).toMatch(/right:\s*max\(16px,\s*calc\(env\(safe-area-inset-right\)/);
-    expect(reopen).toMatch(/bottom:\s*max\(16px,\s*calc\(env\(safe-area-inset-bottom\)/);
+    expect(reopen).toMatch(/top:\s*max\(76px,\s*calc\(env\(safe-area-inset-top\)/);
+    expect(reopen).not.toMatch(/bottom:/);
     // Only explicit controls and the expanded panel take input; the shell and compact panel stay pass-through.
     expect(css).toMatch(/\.learner-ar-overlay__panel--compact\s*\{[^}]*pointer-events:\s*none/);
     expect(css.match(/pointer-events:\s*auto/g)).toHaveLength(2);

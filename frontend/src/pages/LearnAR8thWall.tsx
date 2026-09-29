@@ -899,7 +899,7 @@ export const LearnAR8thWall: React.FC = () => {
           setFeaturedTargetName(learnerTarget.targetName);
           setLearnerFeedback({
             id: `${learnerTarget.targetName}:${learnerTarget.acquiredAt}`,
-            message: `Card found: ${learnerTarget.word}`,
+            message: `Card found: ${learnerTarget.word.charAt(0).toUpperCase()}${learnerTarget.word.slice(1)}`,
           });
           break;
         }

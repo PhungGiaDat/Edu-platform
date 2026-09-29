@@ -113,7 +113,7 @@ export const LearningPath3D: React.FC = () => {
   // ========== Loading ==========
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
         <div className="text-center">
           <div className="text-6xl">🐾</div>
           <p className="mt-4 font-bold text-slate-600">{t('learningPathLoading')}</p>
@@ -125,7 +125,7 @@ export const LearningPath3D: React.FC = () => {
   // ========== Error ==========
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50 px-4">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50 px-4">
         <div className="max-w-sm rounded-3xl bg-white/90 p-6 text-center shadow-lg">
           <p className="mb-4 font-bold text-slate-700">{error}</p>
           <button
@@ -142,7 +142,7 @@ export const LearningPath3D: React.FC = () => {
   // ========== Empty state ==========
   if (joinedCourses.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50 px-4">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50 px-4">
         <div className="max-w-sm rounded-3xl bg-white/90 p-6 text-center shadow-lg">
           <div className="mb-3 text-5xl">📚</div>
           <p className="mb-4 font-bold text-slate-700">
@@ -160,11 +160,12 @@ export const LearningPath3D: React.FC = () => {
   }
 
   return (
-    // h-full (not h-[100dvh]): the parent <main> shell already reserves the
-    // bottom-nav safe-area via padding-bottom. A hardcoded 100dvh here
-    // double-counted that space and pushed the bottom of the world (where
-    // the current node + PetGuide often sit) off-screen, behind the nav.
-    <div className="relative h-full w-full overflow-hidden bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
+    // Explicit 100dvh flex column (Layout drops its nav padding on this route):
+    // `h-full` relied on <main> having a definite height, which it doesn't
+    // (the shell only has min-height), so mobile WebKit could leave a blank
+    // strip under the scene. The floating mobile nav overlays the scene.
+    <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
+      <div className="relative min-h-0 w-full flex-1 overflow-hidden">
       {/* 3D Scene is the hero — it fills the whole container behind this
           compact header, not a small leftover strip beneath it. Single
           reusable Canvas; course switches reframe/re-skin in place (courseKey
@@ -178,6 +179,7 @@ export const LearningPath3D: React.FC = () => {
         categoryKey={selectedCourse?.category_key}
         courseKey={selectedCourseId}
       />
+      </div>
 
       {/* Compact header — two rows, never one row fighting for width.
           Row 1 is ONLY the title + counter (nothing to truncate "Learning
