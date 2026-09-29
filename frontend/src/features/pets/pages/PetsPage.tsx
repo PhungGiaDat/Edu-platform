@@ -136,6 +136,8 @@ function PetCollectionCard({
     onSelect,
     onFeed,
     onPlay,
+    onUnlock,
+    isUnlocking = false,
     hunger = 50 // Default hunger value for cards
 }: {
     pet: Pet;
@@ -143,6 +145,8 @@ function PetCollectionCard({
     onSelect: () => void;
     onFeed: () => void;
     onPlay: () => void;
+    onUnlock: () => void;
+    isUnlocking?: boolean;
     hunger?: number; // 0 = full, 100 = starving
 }) {
     const config = rarityConfig[pet.rarity];
@@ -173,8 +177,25 @@ function PetCollectionCard({
                 </div>
             )}
 
+            {/* Claim Overlay — locked but the server says it can be claimed now */}
+            {isLocked && pet.can_unlock && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 rounded-3xl bg-white/60 backdrop-blur-sm">
+                    <div className="text-center">
+                        <span className="text-4xl">🔓</span>
+                        <p className="text-sm font-bold text-gray-700 mt-2">Ready to unlock!</p>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onUnlock(); }}
+                            disabled={isUnlocking}
+                            className="clay-cta-primary mt-2 min-h-[44px] px-4 text-sm disabled:opacity-60"
+                        >
+                            {isUnlocking ? 'Claiming...' : 'Claim Pet'}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Lock Overlay */}
-            {isLocked && (
+            {isLocked && !pet.can_unlock && (
                 <div className="absolute inset-0 flex items-center justify-center z-10 rounded-3xl bg-white/60 backdrop-blur-sm">
                     <div className="text-center">
                         <span className="text-4xl">🔒</span>
@@ -273,8 +294,9 @@ function ProgressBar({ label, value, max, color }: { label: string; value: numbe
 export default function PetsPage() {
     const { user, isLoading: authLoading, isAuthenticated } = useAuth();
     const userId = user?.id ?? null;
-    const { pets, activePet, setActivePet, isLoading } = usePets(userId);
+    const { pets, activePet, setActivePet, unlockPet, isLoading } = usePets(userId);
     const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+    const [unlockingPetId, setUnlockingPetId] = useState<string | null>(null);
     const [petCare, setPetCare] = useState<PetCareState>({
         happiness: 50,
         hunger: 45,
@@ -378,6 +400,19 @@ export default function PetsPage() {
             HapticService.success();
             SoundEffectService.play('tap');
             await setActivePet(petId);
+        }
+    };
+
+    // Activation stays with the global PetUnlockModal ("Set as My Pet!"),
+    // which usePets triggers via PET_UNLOCKED after a confirmed unlock.
+    const handleUnlock = async (petId: string) => {
+        if (unlockingPetId) return;
+        setUnlockingPetId(petId);
+        try {
+            const result = await unlockPet(petId);
+            if (result.success && result.pet) setSelectedPet(result.pet);
+        } finally {
+            setUnlockingPetId(null);
         }
     };
 
@@ -529,6 +564,8 @@ export default function PetsPage() {
                                             pet={pet}
                                             isActive={pet.pet_id === activePet?.pet_id}
                                             onSelect={() => handleActivate(pet.pet_id)}
+                                            onUnlock={() => handleUnlock(pet.pet_id)}
+                                            isUnlocking={unlockingPetId === pet.pet_id}
                                             onFeed={() => handleFeed(pet.pet_id)}
                                             onPlay={() => handlePlay(pet.pet_id)}
                                         />
