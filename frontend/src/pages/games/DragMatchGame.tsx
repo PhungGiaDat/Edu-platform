@@ -25,6 +25,7 @@ import {
   speakWord,
   topicBackgroundUrl,
   localGameCardUrl,
+  wordEmoji,
   GAME_TOPICS,
   type GameVocabItem,
   type GameTopic,
@@ -343,8 +344,14 @@ export const DragMatchGame: React.FC = () => {
                 disabled={done}
                 aria-label={`Hình: ${card.word}`}
               >
-                <span className="dm-img-emoji" aria-hidden="true">{emojiFallback(topic)}</span>
-                <img src={card.image_url} alt="" loading="lazy" draggable={false} onError={(e) => handleImgError(e, topic, card.word)} />
+                {wordEmoji(card.word) ? (
+                  <span className="dm-img-emoji dm-word-emoji" aria-hidden="true">{wordEmoji(card.word)}</span>
+                ) : (
+                  <>
+                    <span className="dm-img-emoji" aria-hidden="true">{emojiFallback(topic)}</span>
+                    <img src={card.image_url} alt="" loading="lazy" draggable={false} onError={(e) => handleImgError(e, topic, card.word)} />
+                  </>
+                )}
                 {done && <Msr icon="check_circle" size={22} color="#4C8A2A" style={{ position: 'absolute', top: 6, right: 6 }} />}
               </button>
               <button
@@ -376,14 +383,18 @@ export const DragMatchGame: React.FC = () => {
               padding: 8, willChange: 'transform', display: 'grid', placeItems: 'center', fontSize: 56,
             }}
           >
-            <img
-              src={card.image_url}
-              alt=""
-              draggable={false}
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 14 }}
-            />
-            <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>{emojiFallback(topic)}</span>
+            {wordEmoji(card.word) ?? (
+              <>
+                <img
+                  src={card.image_url}
+                  alt=""
+                  draggable={false}
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 14 }}
+                />
+                <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>{emojiFallback(topic)}</span>
+              </>
+            )}
           </div>
         );
       })()}
@@ -400,7 +411,8 @@ export const DragMatchGame: React.FC = () => {
         .dm-img-card{position:relative;border:3px solid transparent;border-radius:20px;background:#fff;box-shadow:0 6px 0 rgba(26,39,68,.08),0 10px 18px rgba(26,39,68,.08);padding:8px;cursor:pointer;display:grid;place-items:center;transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s;touch-action:none;-webkit-user-select:none;user-select:none}
         .dm-img-emoji{position:absolute;inset:0;display:grid;place-items:center;font-size:46px;filter:saturate(.9)}
         .dm-img-card:active{transform:scale(.97)}
-        .dm-img-card img{position:relative;z-index:1;width:96px;height:96px;object-fit:cover;border-radius:14px;transition:opacity .3s}
+        .dm-img-card img{position:relative;z-index:1;width:96px;height:96px;object-fit:contain;border-radius:14px;background:#F6F8FB;transition:opacity .3s}
+        .dm-word-emoji{position:relative;inset:auto;width:96px;height:96px;border-radius:14px;background:#F6F8FB;font-size:58px;line-height:1;filter:none}
         .dm-word-card{border:3px solid transparent;border-radius:18px;background:${colors.warmWhite};box-shadow:0 5px 0 rgba(26,39,68,.10);padding:16px 12px;font-family:${DISPLAY_FONT};font-weight:900;font-size:1rem;color:${colors.deepSlate};cursor:pointer;text-align:center;min-height:64px;transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s,background .2s;width:100%}
         .dm-lifting{opacity:.35}
         .dm-drop-target{border-color:${colors.mintGreen};background:${withOpacity(colors.mintGreen, 0.25)};transform:scale(1.04)}

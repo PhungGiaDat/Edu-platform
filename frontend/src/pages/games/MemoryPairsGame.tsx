@@ -21,6 +21,7 @@ import {
   speakWord,
   topicBackgroundUrl,
   localGameCardUrl,
+  wordEmoji,
   GAME_TOPICS,
   type GameVocabItem,
   type GameTopic,
@@ -223,6 +224,9 @@ export const MemoryPairsGame: React.FC = () => {
                 <span className="mp-face mp-back"><Msr icon="pets" size={22} /></span>
                 {tile.kind === 'image' ? (
                   <span className="mp-face mp-front mp-front-img">
+                    {wordEmoji(pair.word) ? (
+                      <span className="mp-emoji mp-word-emoji" aria-hidden="true">{wordEmoji(pair.word)}</span>
+                    ) : (<>
                     <img
                       src={pair.image_url}
                       alt=""
@@ -235,6 +239,7 @@ export const MemoryPairsGame: React.FC = () => {
                       }}
                     />
                     <span className="mp-emoji" aria-hidden="true">{topic ? TOPIC_EMOJI[topic] : '🔤'}</span>
+                    </>)}
                   </span>
                 ) : (
                   <span className="mp-face mp-front mp-front-word">{pair.word}</span>
@@ -261,7 +266,8 @@ export const MemoryPairsGame: React.FC = () => {
         .mp-back .msr{color:#fff;font-size:22px}
         .mp-front{transform:rotateY(180deg);background:#fff;box-shadow:0 4px 0 rgba(26,39,68,.10)}
         .mp-front-img{background:#fff;overflow:hidden}
-        .mp-front-img img{position:relative;z-index:1;width:82%;height:82%;object-fit:cover;border-radius:12px}
+        .mp-front-img img{position:relative;z-index:1;width:82%;height:82%;object-fit:contain;border-radius:12px;background:#F6F8FB}
+        .mp-word-emoji{font-size:40px;line-height:1}
         .mp-emoji{position:absolute;inset:0;display:grid;place-items:center;font-size:34px}
         .mp-front-word{background:${colors.warmWhite};padding:6px;text-align:center}
         .mp-matched .mp-front{background:${colors.mintLight};box-shadow:0 4px 0 rgba(125,199,96,.4);opacity:.9}

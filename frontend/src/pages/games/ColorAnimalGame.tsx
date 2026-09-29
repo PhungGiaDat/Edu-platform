@@ -28,7 +28,7 @@ const Msr: React.FC<{ icon: string; size?: number; color?: string; style?: React
 );
 
 const PALETTE = [
-  { hex: '#9AA5B1', en: 'gray' }, { hex: '#FF9F9F', en: 'pink' }, { hex: '#FF6B6B', en: 'red' },
+  { hex: '#B7825A', en: 'brown' }, { hex: '#FF9F9F', en: 'pink' }, { hex: '#FF6B6B', en: 'red' },
   { hex: '#FF8C42', en: 'orange' }, { hex: '#FFD93D', en: 'yellow' }, { hex: '#B4E197', en: 'green' },
   { hex: '#6EB9FF', en: 'blue' }, { hex: '#C4A7F5', en: 'purple' },
 ];
@@ -40,7 +40,7 @@ interface AnimalDef {
   svg: React.ReactElement;
 }
 
-const S = { fill: '#FFFFFF', stroke: STROKE, strokeWidth: 3.5 } as const;
+const S = { fill: '#FFFFFF', stroke: STROKE, strokeWidth: 4 } as const;
 const th = (r: string) => ({ className: 'cr', 'data-region': r });
 
 const ANIMALS: AnimalDef[] = [
@@ -508,15 +508,15 @@ const caStyles = `
   .ca-pick svg{width:100%;height:auto}
   .ca-pick b{font-family:${DISPLAY_FONT};font-weight:900;font-size:.95rem;color:${colors.deepSlate}}
   .ca-pick small{font-size:.78rem;font-weight:700;color:${colors.mediumGray}}
-  .ca-stage{background:#fff;border-radius:24px;box-shadow:${shadows.clayCard};padding:12px}
+  .ca-stage{background:#fff;border:3px solid ${colors.sunshineYellow};border-radius:24px;box-shadow:${shadows.clayCard};padding:12px}
   .ca-stage svg{display:block;width:100%;height:auto}
   .cr{cursor:pointer;transition:fill .25s ease}
-  .ca-palette{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px;max-width:360px;margin-left:auto;margin-right:auto;width:100%}
-  .ca-pal{aspect-ratio:1;border-radius:14px;cursor:pointer;border:3px solid transparent;box-shadow:0 4px 0 rgba(26,39,68,.12),inset 0 2px 0 rgba(255,255,255,.5);transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s}
+  .ca-palette{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:6px;margin-top:12px;max-width:360px;margin-left:auto;margin-right:auto;width:100%}
+  .ca-pal{aspect-ratio:1;min-height:48px;border-radius:50%;cursor:pointer;border:4px solid #fff;box-shadow:0 4px 0 rgba(26,39,68,.12),inset 0 2px 0 rgba(255,255,255,.5);transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .2s}
   .ca-pal:hover{transform:translateY(-2px)}
-  .ca-pal.ca-sel{border-color:${colors.deepSlate};transform:translateY(-2px) scale(1.06)}
+  .ca-pal.ca-sel{border-color:#fff;outline:4px solid ${colors.deepSlate};outline-offset:2px;transform:translateY(-3px) scale(1.12)}
   .ca-hint{font-size:.85rem;color:${colors.mediumGray};text-align:center;min-height:1.3em;margin-top:8px}
-  .ca-done{display:flex;align-items:center;gap:8px;border-radius:16px;background:${colors.mintLight};border:2px solid ${colors.mintGreen};padding:10px 14px;font-size:.88rem;font-weight:700;color:${colors.deepSlate};margin-top:6px}
+  .ca-done{display:flex;align-items:center;gap:8px;border-radius:18px;background:${colors.mintLight};border:3px solid ${colors.mintGreen};padding:14px 16px;font-size:1rem;font-weight:800;color:${colors.deepSlate};margin-top:6px}
   .ca-btn{display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;border-radius:14px;padding:10px 16px;font-family:${DISPLAY_FONT};font-weight:800;font-size:.82rem;background:${withOpacity(colors.skyBlue, 0.3)};color:${colors.deepSlate};box-shadow:0 4px 0 ${colors.skyDark}}
   @media (prefers-reduced-motion: reduce){.ca-pick,.ca-pal{transition:none}}
 `;

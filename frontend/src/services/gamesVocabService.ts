@@ -76,6 +76,30 @@ export function topicBackgroundUrl(topic: GameTopic | null | undefined): string 
   return `/assets/game-themes/${topic}/bg.jpg`;
 }
 
+/**
+ * Clear native emoji per game word. The clay card images are often ambiguous
+ * (moon/cloud/rain/banana all read as blobs), so a word listed here shows its
+ * own emoji instead of the image; unlisted words keep the image.
+ */
+const WORD_EMOJI: Record<string, string> = {
+  // animals
+  bear: '🐻', bird: '🐦', cat: '🐱', cow: '🐮', dog: '🐶', duck: '🦆', elephant: '🐘', fish: '🐟',
+  horse: '🐴', lion: '🦁', monkey: '🐵', owl: '🦉', penguin: '🐧', pig: '🐷', rabbit: '🐰', turtle: '🐢',
+  // home
+  bed: '🛏️', chair: '🪑', clock: '⏰', door: '🚪', family: '👨‍👩‍👧', father: '👨', garden: '🌷',
+  house: '🏠', kitchen: '🍳', lamp: '💡', mother: '👩', sofa: '🛋️', window: '🪟',
+  // nature
+  cloud: '☁️', flower: '🌸', grass: '🌱', leaf: '🍃', moon: '🌙', mountain: '⛰️', rain: '🌧️',
+  river: '🏞️', sky: '🌤️', star: '⭐', stone: '🪨', sun: '☀️', tree: '🌳', water: '💧',
+  // school & food
+  apple: '🍎', bag: '🎒', banana: '🍌', book: '📖', bread: '🍞', cake: '🍰', egg: '🥚', juice: '🧃',
+  milk: '🥛', notebook: '📓', pen: '🖊️', pencil: '✏️', rice: '🍚', ruler: '📏',
+};
+
+export function wordEmoji(word: string): string | null {
+  return WORD_EMOJI[word.trim().toLowerCase()] ?? null;
+}
+
 /** Local chibi PNG card for a word (fallback when a storage URL 404s). */
 export function localGameCardUrl(topic: GameTopic | null, word: string): string | null {
   if (!topic) return null;
