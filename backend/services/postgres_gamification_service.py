@@ -14,6 +14,7 @@ from uuid import uuid4
 
 from database.postgres_connection import postgres_pool
 from models.gamification_model import XP_REWARDS, calculate_next_level_xp
+from utils.cache import invalidate_user_cache
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +226,7 @@ class PostgresGamificationService:
         pool = postgres_pool()
         async with pool.acquire() as connection:
             async with connection.transaction():
-                return await self.apply_xp_event(
+                result = await self.apply_xp_event(
                     connection,
                     user_id=user_id,
                     event_id=event_id,
@@ -238,6 +239,11 @@ class PostgresGamificationService:
                     learning_path_id=learning_path_id,
                     metadata=metadata,
                 )
+        # After commit, so GET /pets recomputes can_unlock from the new total at once.
+        # ponytail: in-process cache; with WORKERS>1 other workers keep their copy up to its 60 s TTL.
+        if result.get("success"):
+            await invalidate_user_cache(user_id)
+        return result
 
     @staticmethod
     async def grant_badge_on_connection(
