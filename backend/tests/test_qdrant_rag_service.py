@@ -358,3 +358,23 @@ def test_extract_english_terms_dedupes_and_orders():
 
 def test_extract_unknown_terms_empty():
     assert extract_english_terms("kể chuyện cổ tích") == []
+
+
+def test_chat_retriever_reuses_one_client_with_long_keepalive_and_no_version_ping(
+    monkeypatch, configured_settings
+):
+    # Each new TLS connection to Qdrant Cloud costs seconds from the VPS; the
+    # per-client compatibility check adds a GET / on every construction.
+    constructor = Mock()
+    monkeypatch.setattr(qdrant_rag_service, "QdrantClient", constructor)
+    qdrant_rag_service.get_qdrant_rag_service.cache_clear()
+
+    first = qdrant_rag_service.get_qdrant_rag_service()
+    assert qdrant_rag_service.get_qdrant_rag_service() is first
+    assert first._get_client() is first._get_client()
+
+    constructor.assert_called_once()
+    kwargs = constructor.call_args.kwargs
+    assert kwargs["check_compatibility"] is False
+    assert kwargs["limits"].keepalive_expiry >= 60
+    qdrant_rag_service.get_qdrant_rag_service.cache_clear()

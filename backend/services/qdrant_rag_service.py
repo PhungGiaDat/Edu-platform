@@ -1,16 +1,22 @@
 """Small, safe boundary around Qdrant Cloud Inference for Lexi retrieval."""
 
 import asyncio
+import functools
 import hashlib
+import logging
+import time
 import uuid
 from typing import Any, Optional, Sequence
 
 import re
+import httpx
 from qdrant_client import QdrantClient, models
 
 from settings import settings
 from services.animal_rag_dataset import AnimalRAGDocument, build_qdrant_payload
 from services.llm_clients import CircuitBreaker, CircuitOpenError
+
+logger = logging.getLogger(__name__)
 
 
 class QdrantRAGUnavailable(RuntimeError):
@@ -95,6 +101,13 @@ class QdrantRAGService:
             api_key=api_key_value,
             cloud_inference=True,
             timeout=30,
+            # A new TLS handshake to Qdrant Cloud costs seconds from the VPS:
+            # skip the per-client GET / version probe and keep idle connections
+            # alive well past httpx's 5s default.
+            check_compatibility=False,
+            limits=httpx.Limits(
+                max_connections=100, max_keepalive_connections=20, keepalive_expiry=300
+            ),
         )
         return self._client
 
@@ -139,15 +152,24 @@ class QdrantRAGService:
                 )
             ]
         )
+        started = time.perf_counter()
+        query_ms: list[int] = []
+
+        async def timed_query(qtext: str) -> Any:
+            t0 = time.perf_counter()
+            response = await self._breaker.acall(
+                asyncio.to_thread,
+                self._call_qdrant,
+                qtext,
+                query_filter,
+            )
+            query_ms.append(round((time.perf_counter() - t0) * 1000))
+            return response
+
         try:
             all_points = []
-            for qtext in query_texts:
-                response = await self._breaker.acall(
-                    asyncio.to_thread,
-                    self._call_qdrant,
-                    qtext,
-                    query_filter,
-                )
+            # Concurrent round-trips to Qdrant Cloud; gather keeps query order.
+            for response in await asyncio.gather(*(timed_query(q) for q in query_texts)):
                 all_points.extend(response.points)
         except CircuitOpenError:
             raise QdrantRAGUnavailable("Qdrant circuit breaker is open — skipping retrieval")
@@ -172,6 +194,11 @@ class QdrantRAGService:
             context.append(payload)
             if len(context) >= settings.QDRANT_CONTEXT_LIMIT:
                 break
+        # Cloud Inference embeds server-side, so each query_ms is embed + search + network.
+        logger.info(
+            "retrieval timing: qdrant_queries=%s total=%sms points=%s",
+            query_ms, round((time.perf_counter() - started) * 1000), len(context),
+        )
         return context
 
     def ensure_collection(self) -> None:
@@ -333,6 +360,7 @@ class QdrantRAGService:
                 f"Qdrant verification failed: {missing_count} document IDs are missing"
             )
 
+@functools.lru_cache(maxsize=1)
 def get_qdrant_rag_service() -> QdrantRAGService:
-    """FastAPI dependency factory for the Qdrant retrieval boundary."""
+    """Process-wide Qdrant retrieval boundary: one client and connection pool per worker."""
     return QdrantRAGService()
