@@ -216,4 +216,59 @@ describe('PronunciationService browser fallback', () => {
     await vi.waitFor(() => expect(errors).toEqual(['speech-recognition-unavailable']));
     expect(errors).not.toContain('service-not-allowed');
   });
+
+  it('emits a terminal error immediately when recognition.start() throws synchronously (WebKit still finalizing previous session)', async () => {
+    const { default: PronunciationService } = await import(
+      '@/features/pronunciation/services/PronunciationService'
+    );
+    const { eventBus } = await import('@/runtime/EventBus');
+    const service = new PronunciationService();
+    const errors: string[] = [];
+    eventBus.on<{ error: string }>('PRONUNCIATION_ERROR', ({ error }) => errors.push(error));
+
+    MockRecognition.instance.start.mockImplementationOnce(() => {
+      throw new DOMException('already started', 'InvalidStateError');
+    });
+
+    await service.startListening('Elephant');
+
+    // No 8-second wait: the caller's own timeout must never be the recovery path.
+    expect(errors).toEqual(['start-failed']);
+    expect(service.getIsListening()).toBe(false);
+  });
+
+  it('emits a terminal error and clears listening state when the server recording is empty', async () => {
+    const getUserMedia = vi.fn().mockResolvedValue({
+      getTracks: () => [{ stop: vi.fn() }],
+    });
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: { getUserMedia },
+    });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ available: true }),
+    }));
+
+    const { default: PronunciationService } = await import(
+      '@/features/pronunciation/services/PronunciationService'
+    );
+    const { eventBus } = await import('@/runtime/EventBus');
+    const service = new PronunciationService();
+    const errors: string[] = [];
+    const ended = vi.fn();
+    eventBus.on<{ error: string }>('PRONUNCIATION_ERROR', ({ error }) => errors.push(error));
+    eventBus.on('PRONUNCIATION_ENDED', ended);
+
+    await service.startListening('Elephant');
+    MockRecognition.instance.onerror?.({ error: 'service-not-allowed' });
+    await vi.waitFor(() => expect(getUserMedia).toHaveBeenCalledWith({ audio: true }));
+
+    // No ondataavailable fired: stop() with zero recorded chunks.
+    await MockMediaRecorder.instance.onstop?.();
+
+    expect(errors).toEqual(['no-speech']);
+    expect(ended).toHaveBeenCalled();
+    expect(service.getIsListening()).toBe(false);
+  });
 });

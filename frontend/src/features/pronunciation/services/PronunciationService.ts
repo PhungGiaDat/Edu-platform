@@ -204,6 +204,14 @@ class PronunciationService {
             console.log(`[Pronunciation] Web Speech listening for: "${this.expectedWord}"`);
         } catch (err) {
             console.error('[Pronunciation] Failed to start Web Speech:', err);
+            // recognition.start() can throw synchronously (e.g. WebKit still
+            // finalizing the previous session's onend). Without a terminal
+            // event here, the caller has no error/result to resolve on and
+            // sits stuck until its own timeout — surface it immediately.
+            this.isListening = false;
+            eventBus.emit('PRONUNCIATION_ERROR' as any, {
+                error: 'start-failed'
+            });
         }
     }
 
@@ -297,6 +305,11 @@ class PronunciationService {
     private async sendAudioToServer(): Promise<void> {
         if (this.audioChunks.length === 0) {
             console.warn('[Pronunciation] No audio recorded');
+            this.isListening = false;
+            eventBus.emit('PRONUNCIATION_ERROR' as any, {
+                error: 'no-speech'
+            });
+            eventBus.emit('PRONUNCIATION_ENDED' as any, {});
             return;
         }
 
