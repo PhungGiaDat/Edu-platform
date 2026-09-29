@@ -5,6 +5,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { LocaleProvider } from '@/contexts/LocaleContext';
 import type { LessonNode, LearningPathMeResponse } from '@/types/learning-path';
 
 const mockNavigate = vi.fn();
@@ -107,11 +108,13 @@ function response(overrides: Partial<LearningPathMeResponse> = {}): LearningPath
 
 function renderPage(initialEntry = '/learning-path-3d') {
   return render(
-    <MemoryRouter initialEntries={[initialEntry]}>
-      <Routes>
-        <Route path="/learning-path-3d" element={<LearningPath3D />} />
-      </Routes>
-    </MemoryRouter>,
+    <LocaleProvider>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <Routes>
+          <Route path="/learning-path-3d" element={<LearningPath3D />} />
+        </Routes>
+      </MemoryRouter>
+    </LocaleProvider>,
   );
 }
 

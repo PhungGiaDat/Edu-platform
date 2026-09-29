@@ -15,6 +15,7 @@ import { CourseSelector } from '@/features/learning-path/components/CourseSelect
 import { useLearningPath3DStore } from '@/hooks/useLearningPath3D';
 import { usePets } from '@/hooks/usePets';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { apiClient } from '@/services/apiClient';
 import type { LessonNode, LearningPathMeResponse } from '@/types/learning-path';
 
@@ -23,6 +24,7 @@ import type { LessonNode, LearningPathMeResponse } from '@/types/learning-path';
 export const LearningPath3D: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLocale();
   const { activePet } = usePets(user?.id || null);
   const [searchParams, setSearchParams] = useSearchParams();
   const courseIdParam = searchParams.get('course_id');
@@ -53,7 +55,7 @@ export const LearningPath3D: React.FC = () => {
       setPath(data.path);
     } catch (err) {
       console.error('[LearningPath3D] Failed to load learning path:', err);
-      setError('Unable to load your learning path.');
+      setError(t('learningPathLoadError'));
     } finally {
       setLoading(false);
     }
@@ -114,7 +116,7 @@ export const LearningPath3D: React.FC = () => {
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
         <div className="text-center">
           <div className="text-6xl">🐾</div>
-          <p className="mt-4 font-bold text-slate-600">Loading your path...</p>
+          <p className="mt-4 font-bold text-slate-600">{t('learningPathLoading')}</p>
         </div>
       </div>
     );
@@ -130,7 +132,7 @@ export const LearningPath3D: React.FC = () => {
             onClick={handleRetry}
             className="rounded-2xl bg-amber-500 px-6 py-3 font-bold text-white shadow-md hover:bg-amber-600"
           >
-            Retry
+            {t('learningPathRetry')}
           </button>
         </div>
       </div>
@@ -144,13 +146,13 @@ export const LearningPath3D: React.FC = () => {
         <div className="max-w-sm rounded-3xl bg-white/90 p-6 text-center shadow-lg">
           <div className="mb-3 text-5xl">📚</div>
           <p className="mb-4 font-bold text-slate-700">
-            You haven&apos;t joined any courses yet.
+            {t('learningPathEmpty')}
           </p>
           <button
             onClick={() => navigate('/courses')}
             className="rounded-2xl bg-amber-500 px-6 py-3 font-bold text-white shadow-md hover:bg-amber-600"
           >
-            Explore Courses
+            {t('learningPathExplore')}
           </button>
         </div>
       </div>
@@ -186,7 +188,7 @@ export const LearningPath3D: React.FC = () => {
         <div className="pointer-events-auto mx-auto max-w-md rounded-xl bg-white/75 px-2.5 py-1.5 shadow-sm backdrop-blur-sm">
           <div className="flex items-baseline justify-between gap-2">
             {/* ! = beat the unlayered global `h1 { font-size: 3.2em }` in index.css. */}
-            <h1 className="!m-0 !text-xs !leading-4 font-extrabold text-gray-700">Learning Path</h1>
+            <h1 className="!m-0 !text-xs !leading-4 font-extrabold text-gray-700">{t('navLearningPath')}</h1>
             {path && (
               <span className="shrink-0 text-[11px] font-bold text-amber-600">
                 {path.completed_count}/{path.total_count}

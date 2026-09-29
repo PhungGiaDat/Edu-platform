@@ -252,6 +252,12 @@ const en = {
     sessionExitNow: 'Exit now',
     sessionLimitFooter: 'Rest is important for learning too! See you again soon!',
     sessionWarningFooter: 'You can always come back later!',
+    // Learning path 3D page
+    learningPathLoading: 'Loading your path...',
+    learningPathLoadError: 'Unable to load your learning path.',
+    learningPathRetry: 'Retry',
+    learningPathEmpty: "You haven't joined any courses yet.",
+    learningPathExplore: 'Explore Courses',
 } satisfies Record<string, string>;
 
 const vi = {
@@ -483,6 +489,12 @@ const vi = {
     gamesXpPending: 'Đang nhận phần thưởng…',
     gamesXpDailyDone: 'Hôm nay đã nhận XP game này rồi — mai chơi tiếp nhé!',
     gamesPlayAgain: 'Chơi lại',
+    // Learning path 3D page
+    learningPathLoading: 'Đang tải lộ trình học...',
+    learningPathLoadError: 'Không thể tải lộ trình học.',
+    learningPathRetry: 'Thử lại',
+    learningPathEmpty: 'Bé chưa tham gia khóa học nào.',
+    learningPathExplore: 'Khám phá khóa học',
 } satisfies Record<keyof typeof en, string>;
 
 const messages: Record<Locale, typeof en> = { en, vi };
