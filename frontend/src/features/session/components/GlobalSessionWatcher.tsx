@@ -12,9 +12,6 @@ import { BreakCooldownNotice } from './BreakCooldownNotice';
 import { BreakReminder } from './BreakReminder';
 
 export const GlobalSessionWatcher: React.FC = () => {
-  // Temporary disabled for AR testing - return null to hide all breaktime/limit UI
-  return null;
-
   const {
     isWarning,
     isLimitReached,
