@@ -278,6 +278,7 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
         position={[0, 0, NODE_RADIUS + 0.01]}
         style={{ pointerEvents: 'none', userSelect: 'none' }}
         distanceFactor={8}
+        zIndexRange={[20, 0]}
       >
         {isLocked ? (
           <div style={{ fontSize: '16px', opacity: 0.7 }}>{'\u{1F512}'}</div>
@@ -313,6 +314,7 @@ export const LessonNode3D: React.FC<LessonNode3DProps> = ({ node, onClick, splin
           position={[0, NODE_RADIUS + 0.6, 0]}
           style={{ pointerEvents: 'none', userSelect: 'none' }}
           distanceFactor={8}
+          zIndexRange={[20, 0]}
         >
           <div
             style={{

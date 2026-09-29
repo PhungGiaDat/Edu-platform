@@ -5,7 +5,7 @@
  * Includes hills, clouds, trees, and a gradient sky.
  */
 
-import React, { useMemo, useRef } from 'react';
+import React, { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -342,7 +342,10 @@ const SimpleProps: React.FC<{ preset: CategoryPreset }> = ({ preset }) => {
 
   const shape = preset.propShape;
 
-  useMemo(() => {
+  // Layout effect, not useMemo: the instanced-mesh refs are only attached
+  // after render, and running before paint avoids a one-frame origin flash.
+  useLayoutEffect(() => {
+    if (!baseRef.current || !accentRef.current) return;
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();
     const quaternion = new THREE.Quaternion();
