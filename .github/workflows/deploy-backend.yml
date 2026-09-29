@@ -57,6 +57,7 @@ jobs:
             tests/test_learning_path_me.py \
             tests/test_lesson_activity_contract.py \
             tests/test_lesson_session_response.py \
+            tests/test_piper_tts.py \
             tests/test_gamification_idempotency.py \
             tests/test_gamification_service.py
       - name: Check VPS deployment script

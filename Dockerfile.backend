@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # ========================================
 # Eduplatform AR API - Dockerfile
 # Multi-stage production build
@@ -37,6 +38,44 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
+# Bundle both voices so synthesis never needs a model download on the VPS.
+RUN python -m piper.download_voices --download-dir /app/tts_models \
+    en_US-lessac-medium vi_VN-vais1000-medium
+RUN printf '%s\n' \
+    '5efe09e69902187827af646e1a6e9d269dee769f9877d17b16b1b46eeaaf019f  /app/tts_models/en_US-lessac-medium.onnx' \
+    'efe19c417bed055f2d69908248c6ba650fa135bc868b0e6abb3da181dab690a0  /app/tts_models/en_US-lessac-medium.onnx.json' \
+    'ec7c89e2c85f4d1edc24b6120c18aaf1bda614f06b511567eb9c7c0de15e2dab  /app/tts_models/vi_VN-vais1000-medium.onnx' \
+    'fafb9da1354ed4b77c31af228ed41fb41cd825c14cffa105454b25e6ae751ee0  /app/tts_models/vi_VN-vais1000-medium.onnx.json' \
+    | sha256sum -c -
+
+# Exercise native CPU synthesis during build; keep generated WAVs in memory.
+RUN python - <<'PY'
+import io
+import json
+from pathlib import Path
+import wave
+import onnxruntime as ort
+from piper import PiperConfig, PiperVoice
+
+options = ort.SessionOptions()
+options.intra_op_num_threads = 2
+options.inter_op_num_threads = 1
+for name, text in (
+    ("en_US-lessac-medium", "This is my mom."),
+    ("vi_VN-vais1000-medium", "Bé hãy phát âm theo câu sau."),
+):
+    model = Path("/app/tts_models") / f"{name}.onnx"
+    config = json.loads(Path(f"{model}.json").read_text(encoding="utf-8"))
+    session = ort.InferenceSession(str(model), sess_options=options, providers=["CPUExecutionProvider"])
+    voice = PiperVoice(session=session, config=PiperConfig.from_dict(config))
+    audio = io.BytesIO()
+    with wave.open(audio, "wb") as wav_file:
+        voice.synthesize_wav(text, wav_file)
+    with wave.open(io.BytesIO(audio.getvalue()), "rb") as wav_file:
+        assert wav_file.getnframes() > 0, f"Empty synthesis for {name}"
+    print(f"Piper native WAV smoke passed: {name}")
+PY
+
 # ========================================
 # Stage 3: Production
 # ========================================
@@ -45,6 +84,7 @@ FROM base AS production
 # Copy installed packages from dependencies stage
 COPY --from=dependencies /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 COPY --from=dependencies /usr/local/bin /usr/local/bin
+COPY --from=dependencies /app/tts_models /app/tts_models
 
 # Copy application code
 COPY . .

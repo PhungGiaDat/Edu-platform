@@ -50,6 +50,7 @@ tests/
 
 # Local analysis and separately deployed inference code
 benchmarks/
+tts_models/
 backups/
 gop_scoring/
 

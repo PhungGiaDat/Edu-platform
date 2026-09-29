@@ -13,7 +13,7 @@ Endpoints:
   POST /pronunciation/tts            — Generate TTS audio for word pronunciation
   POST /pronunciation/evaluate        — Full AI pronunciation evaluation
 """
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Response
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Response, Path, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
@@ -84,7 +84,7 @@ class TTSResponse(BaseModel):
     text: str
     language: str
     duration_seconds: float
-    source: str  # 'xtts', 'google', 'cache'
+    source: str  # 'piper', 'xtts', 'google', 'cache'
 
 
 class EvaluationRequest(BaseModel):
@@ -457,8 +457,7 @@ async def generate_tts_audio(
     """
     Generate AI-powered Text-to-Speech audio for pronunciation practice.
     
-    Uses Coqui XTTS v2 (offline, high quality) with Google Cloud TTS as fallback.
-    Supports Vietnamese language with natural, kid-friendly voices.
+    Uses CPU Piper for English/Vietnamese, with optional legacy providers.
     
     The audio is returned directly in the response with appropriate content-type.
     """
@@ -498,9 +497,9 @@ async def generate_tts_audio(
 
 @router.get("/tts/stream/{word}")
 async def stream_tts_audio(
-    word: str,
-    language: str = "en",
-    speed: float = 0.9,
+    word: str = Path(..., min_length=1, max_length=500),
+    language: str = Query("en", max_length=20),
+    speed: float = Query(0.9, ge=0.5, le=2.0),
     tts_service: TTSService = Depends(get_tts_service),
 ):
     """
@@ -550,7 +549,7 @@ async def get_tts_status(
     
     Returns:
     - Service availability
-    - Available providers (Coqui XTTS, Google TTS)
+    - Available providers (Piper, Coqui XTTS, Google TTS)
     - Supported languages
     - Cache status
     """
