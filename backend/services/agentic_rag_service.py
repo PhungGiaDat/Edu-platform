@@ -299,6 +299,7 @@ class AgenticRAGService:
                 primary_model=model_override,
                 max_attempts=settings.AGENTIC_LLM_MAX_ATTEMPTS,
                 timeout=settings.AGENTIC_LLM_TIMEOUT_SECONDS,
+                use_fallbacks=settings.AGENTIC_LLM_FALLBACK_ENABLED,
             )
             raw, model_name = await router.call_with_fallback(
                 do_call,
@@ -396,6 +397,7 @@ class AgenticRAGService:
                 primary_model=model_override,
                 max_attempts=settings.AGENTIC_LLM_MAX_ATTEMPTS,
                 timeout=settings.AGENTIC_LLM_TIMEOUT_SECONDS,
+                use_fallbacks=settings.AGENTIC_LLM_FALLBACK_ENABLED,
             )
             draft, model_name = await router.call_with_fallback(
                 do_call,

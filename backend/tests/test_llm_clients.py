@@ -224,6 +224,11 @@ class TestModelRouter:
         models = [m for _, m in router.llm_cascade()]
         assert models.count("qwen/qwen3.8-max-free") == 1
 
+    def test_cascade_without_fallbacks_is_primary_only(self):
+        # Agentic RAG demo path: one model, no fallback chain, no B.AI last resort
+        router = ModelRouter("planner", use_fallbacks=False)
+        assert [m for _, m in router.llm_cascade()] == ["qwen/qwen3.8-max-free"]
+
     def test_cascade_order(self):
         router = ModelRouter("planner")
         models = [m for _, m in router.llm_cascade()]

@@ -394,8 +394,10 @@ class ModelRouter:
         fallback_models: Optional[list[str]] = None,
         max_attempts: int = 3,
         timeout: Optional[float] = None,
+        use_fallbacks: bool = True,
     ) -> None:
         self.role = role
+        self.use_fallbacks = use_fallbacks
         self.max_attempts = max_attempts
         self.timeout = timeout
         self.primary_model = primary_model or self._default_for_role(role)
@@ -462,6 +464,9 @@ class ModelRouter:
             entries.append((provider, build_llm_for_model(model, timeout=self.timeout), model))
 
         add(self.primary_model)
+        if not self.use_fallbacks:
+            yield from entries
+            return
         for model in self.fallback_models:
             add(model)
         # B.AI is the always-on last-resort provider (own key + model namespace);

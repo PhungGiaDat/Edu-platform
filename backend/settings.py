@@ -142,6 +142,9 @@ class Settings(BaseSettings):
     # attempts per model (1 = no retry; the fallback cascade still applies).
     AGENTIC_LLM_TIMEOUT_SECONDS: float = 5.0
     AGENTIC_LLM_MAX_ATTEMPTS: int = 1
+    # False = Planner/Generator call only their primary model (no MODEL_FALLBACKS, no B.AI);
+    # on failure the Planner uses its default plan and the Generator its safe message.
+    AGENTIC_LLM_FALLBACK_ENABLED: bool = False
     # Validator strategy for the Agentic RAG pipeline:
     #   "rule" (default) — deterministic content protection (services/rag_content_rules);
     #                      the LLM validator only runs when a rule cannot fix the draft.

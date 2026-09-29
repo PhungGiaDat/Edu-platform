@@ -57,6 +57,7 @@ async def test_animal_question_runs_planner_qdrant_generator_bounded_and_without
     assert all(c["primary_model"] is None for c in calls)  # model comes from settings, not code
     assert all(c["max_attempts"] == settings.AGENTIC_LLM_MAX_ATTEMPTS == 1 for c in calls)
     assert all(c["timeout"] == settings.AGENTIC_LLM_TIMEOUT_SECONDS == 5.0 for c in calls)
+    assert all(c["use_fallbacks"] is settings.AGENTIC_LLM_FALLBACK_ENABLED is False for c in calls)
     assert retriever.queries == ["animals elephant food"]
     assert result["response"] == ANSWER
     assert any(t.startswith("generator:done model=" + GEMMA) for t in result["agent_trace"])
