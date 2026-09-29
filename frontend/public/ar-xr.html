@@ -657,7 +657,7 @@
     const INTERACTION_CONFIG = {
       primaryLockMs: 400,
       proximityStableMs: 300,
-      lostGraceMs: 300,
+      lostGraceMs: 550,
       distance: {
         enter: 0.72,
         exit: 0.80,
@@ -3371,6 +3371,8 @@
 
         const raw = computeTargetPairDistance(actorInst, partnerInst);
         const filtered = updateFilteredDistance(raw, proximityConfig);
+        // No live pose (target in loss grace): time without data must not count as stable proximity.
+        if (filtered == null) interactionState.proximityEnteredAt = null;
 
         // Throttled proximity log
         const sampleInterval = 1000 / INTERACTION_CONFIG.proximitySampleHz;
