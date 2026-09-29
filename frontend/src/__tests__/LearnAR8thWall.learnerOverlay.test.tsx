@@ -208,6 +208,8 @@ describe('LearnAR8thWall learner overlay orchestration', () => {
     });
 
     expect(screen.getByTestId('learner-ar-overlay')).toBeInTheDocument();
+    expect(screen.getByTestId('learner-ar-overlay')).toHaveAttribute('data-mode', 'collapsed');
+    fireEvent.click(screen.getByRole('button', { name: 'Expand learner overlay' }));
     expect(screen.getByText('0 active cards')).toBeInTheDocument();
     expect(screen.queryByText('Cat')).not.toBeInTheDocument();
 
@@ -223,6 +225,7 @@ describe('LearnAR8thWall learner overlay orchestration', () => {
 
     await emitStableFound(viewerSource, 'cat001');
     await emitStableFound(viewerSource, 'fish001');
+    fireEvent.click(screen.getByRole('button', { name: 'Expand learner overlay' }));
     fireEvent.click(screen.getByRole('button', { name: 'Show all active cards' }));
 
     expect(screen.getByText('Cat')).toBeInTheDocument();
@@ -247,6 +250,7 @@ describe('LearnAR8thWall learner overlay orchestration', () => {
     await emitStableFound(viewerSource, 'cat001');
 
     expect(audioState.playPronunciation).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Expand learner overlay' }));
     fireEvent.click(screen.getByRole('button', { name: 'Hear Cat' }));
     expect(audioState.playPronunciation).toHaveBeenCalledWith(
       'cat',

@@ -62,6 +62,41 @@ describe('LearnerAROverlay', () => {
     expect(screen.getByText('2 active cards')).toBeInTheDocument();
   });
 
+  it('can start as a single floating reopen control with no wide pill or panel', () => {
+    renderOverlay({ activeTargets: [], initialMode: 'collapsed' });
+
+    const reopen = screen.getByRole('button', { name: 'Expand learner overlay' });
+    expect(screen.getByTestId('learner-ar-overlay')).toHaveAttribute('data-mode', 'collapsed');
+    expect(screen.getAllByRole('button')).toEqual([reopen]);
+    expect(screen.queryByTestId('learner-overlay-compact')).not.toBeInTheDocument();
+    expect(screen.queryByText(/active card/i)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('learner-overlay-badge')).not.toBeInTheDocument();
+  });
+
+  it('shows only a small numeric badge on the floating control when cards are active', () => {
+    renderOverlay({ initialMode: 'collapsed' });
+
+    expect(screen.getByTestId('learner-overlay-badge')).toHaveTextContent(/^2$/);
+    expect(screen.queryByText(/active card/i)).not.toBeInTheDocument();
+  });
+
+  it('opens compact from the floating control, then Details expands and Hide collapses again', () => {
+    renderOverlay({ activeTargets: [activeTargets[0]], initialMode: 'collapsed' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand learner overlay' }));
+    expect(screen.getByTestId('learner-ar-overlay')).toHaveAttribute('data-mode', 'compact');
+    expect(screen.getByText('Cat')).toBeInTheDocument();
+    expect(screen.getByText('Hold a card in the camera view.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Hear Cat' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show all active cards' }));
+    expect(screen.getByTestId('learner-ar-overlay')).toHaveAttribute('data-mode', 'expanded');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse learner overlay' }));
+    expect(screen.getByTestId('learner-ar-overlay')).toHaveAttribute('data-mode', 'collapsed');
+    expect(screen.getByTestId('learner-overlay-collapsed')).toBeInTheDocument();
+  });
+
   it('delegates a generic target speaker action to its parent callback', () => {
     const { onSpeak } = renderOverlay();
 

@@ -11,4 +11,27 @@ describe('LearnerAROverlay layout contract', () => {
     expect(css).toMatch(/\.learner-ar-overlay__panel--expanded\s*\{[\s\S]*?pointer-events:\s*auto/);
     expect(css).toContain('@media (prefers-reduced-motion: reduce)');
   });
+
+  it('mounts the learner overlay collapsed in LearnAR8thWall', () => {
+    const page = readFileSync(resolve(process.cwd(), 'src/pages/LearnAR8thWall.tsx'), 'utf8');
+    const start = page.indexOf('<LearnerAROverlay');
+    const usage = page.slice(start, page.indexOf('/>', start));
+
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(usage).toContain('initialMode="collapsed"');
+  });
+
+  it('makes the floating control a 48px circle in the safe-area corner and adds no full-screen blocker', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/styles/LearnAR8thWall.css'), 'utf8');
+    const reopen = css.match(/\.learner-ar-overlay__reopen\s*\{([^}]*)\}/g)?.join('\n') ?? '';
+
+    expect(reopen).toMatch(/width:\s*48px/);
+    expect(reopen).toMatch(/height:\s*48px/);
+    expect(reopen).toMatch(/border-radius:\s*50%/);
+    expect(reopen).toMatch(/right:\s*max\(16px,\s*calc\(env\(safe-area-inset-right\)/);
+    expect(reopen).toMatch(/bottom:\s*max\(16px,\s*calc\(env\(safe-area-inset-bottom\)/);
+    // Only explicit controls and the expanded panel take input; the shell and compact panel stay pass-through.
+    expect(css).toMatch(/\.learner-ar-overlay__panel--compact\s*\{[^}]*pointer-events:\s*none/);
+    expect(css.match(/pointer-events:\s*auto/g)).toHaveLength(2);
+  });
 });

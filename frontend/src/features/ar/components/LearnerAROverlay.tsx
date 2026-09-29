@@ -85,7 +85,12 @@ export function LearnerAROverlay({
           aria-label="Expand learner overlay"
           data-testid="learner-overlay-collapsed"
         >
-          {targetCount > 0 ? activeTargetLabel(targetCount) : 'AR'}
+          <Msr icon="view_in_ar" size={24} />
+          {targetCount > 0 && (
+            <span className="learner-ar-overlay__badge" data-testid="learner-overlay-badge">
+              {targetCount}
+            </span>
+          )}
         </button>
       )}
 

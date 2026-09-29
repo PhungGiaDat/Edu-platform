@@ -1100,6 +1100,7 @@ export const LearnAR8thWall: React.FC = () => {
             featuredTargetName={featuredTargetName}
             instruction={learnerInstruction}
             feedback={learnerFeedback}
+            initialMode="collapsed"
             onSpeak={handleLearnerSpeak}
           />
         )}

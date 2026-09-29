@@ -289,7 +289,9 @@ describe('LearnAR8thWall transition UX', () => {
     });
 
     expect(screen.getByTestId('ar-transition-overlay')).toHaveAttribute('data-visible', 'false');
-    expect(screen.getByTestId('learner-ar-overlay')).toHaveAttribute('data-mode', 'compact');
+    expect(screen.getByTestId('learner-ar-overlay')).toHaveAttribute('data-mode', 'collapsed');
+    expect(screen.queryByText('Hold a card in the camera view.')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Expand learner overlay' }));
     expect(screen.getByText('Hold a card in the camera view.')).toBeInTheDocument();
   });
 
@@ -483,7 +485,9 @@ describe('LearnAR8thWall transition UX', () => {
     act(() => {
       postViewerMessage('XR_CAMERA_HAS_VIDEO');
     });
-    expect(screen.getByTestId('learner-ar-overlay')).toHaveAttribute('data-mode', 'compact');
+    expect(screen.getByTestId('learner-ar-overlay')).toHaveAttribute('data-mode', 'collapsed');
+    expect(screen.queryByText('Hold a card in the camera view.')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Expand learner overlay' }));
     expect(screen.getByText('Hold a card in the camera view.')).toBeInTheDocument();
   });
 
