@@ -60,6 +60,21 @@ class AddXPEventRequest(BaseModel):
         return v.strip()
 
 
+class PetCareRequest(BaseModel):
+    """Feed/play body. Any user_id sent by legacy clients is ignored."""
+    pet_id: Optional[str] = None
+
+
+def _care_pet_id(current_user: PostgresUser, pet_id: Optional[str]) -> str:
+    """Pick the pet to care for and make sure this user actually owns it."""
+    pet_id = pet_id or current_user.active_pet
+    if not pet_id:
+        raise HTTPException(status_code=400, detail="pet_id is required")
+    if pet_id not in (current_user.unlocked_pets or []):
+        raise HTTPException(status_code=403, detail="Pet is not unlocked")
+    return pet_id
+
+
 class ChoosePetRequest(BaseModel):
     user_id: str
     pet_type: str
@@ -199,20 +214,23 @@ async def award_badge(
 @router.get("/gamification/pet/{user_id}")
 async def get_pet(
     user_id: str,
+    pet_id: Optional[str] = Query(None),
     current_user: PostgresUser = Depends(get_current_user),
     service: GamificationService = Depends(get_gamification_service),
 ):
     user_id = current_user.id
-    return await service.get_pet(user_id)
+    return await service.get_pet(user_id, pet_id=pet_id)
 
 
 @router.post("/gamification/pet/feed")
 async def feed_pet(
+    request: Optional[PetCareRequest] = None,
     current_user: PostgresUser = Depends(get_current_user),
     service: GamificationService = Depends(get_gamification_service),
 ):
     user_id = current_user.id
-    return await service.feed_pet(user_id)
+    pet_id = _care_pet_id(current_user, request.pet_id if request else None)
+    return await service.feed_pet(user_id, pet_id=pet_id)
 
 
 @router.post("/gamification/pet/choose")
@@ -230,11 +248,13 @@ async def choose_pet(
 
 @router.post("/gamification/pet/play")
 async def play_pet(
+    request: Optional[PetCareRequest] = None,
     current_user: PostgresUser = Depends(get_current_user),
     service: GamificationService = Depends(get_gamification_service),
 ):
     user_id = current_user.id
-    return await service.play_with_pet(user_id)
+    pet_id = _care_pet_id(current_user, request.pet_id if request else None)
+    return await service.play_with_pet(user_id, pet_id=pet_id)
 
 
 @router.post("/gamification/pet/outfit")
@@ -253,11 +273,12 @@ async def change_pet_outfit(
 @router.get("/gamification/pet-xp/{user_id}")
 async def get_pet_xp(
     user_id: str,
+    pet_id: Optional[str] = Query(None),
     current_user: PostgresUser = Depends(get_current_user),
     service: GamificationService = Depends(get_gamification_service),
 ):
     user_id = current_user.id
-    return await service.get_pet_xp(user_id)
+    return await service.get_pet_xp(user_id, pet_id=pet_id)
 
 
 # ========== Stickers ==========

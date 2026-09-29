@@ -354,8 +354,100 @@ class PostgresGamificationService:
             "longest_streak": stats.get("longest_streak", 0),
         }
 
-    async def get_pet(self, user_id: str) -> dict[str, Any]:
-        return (await self.get_user_stats(user_id)).get("pet_state") or {}
+    # ---------- per-pet care (pet_state v2: {"version": 2, "pets": {pet_id: state}}) ----------
+
+    @staticmethod
+    def _pet_state_map(raw: Any) -> dict[str, Any]:
+        """Decode pet_state into the v2 per-pet map.
+
+        A legacy single-object state is kept under "legacy" and is never copied
+        into any pet, so one old shared state can't leak onto every pet.
+        """
+        if isinstance(raw, str):
+            try:
+                raw = json.loads(raw)
+            except ValueError:
+                raw = None
+        if isinstance(raw, dict) and raw.get("version") == 2 and isinstance(raw.get("pets"), dict):
+            return {**raw, "pets": dict(raw["pets"])}
+        state: dict[str, Any] = {"version": 2, "pets": {}}
+        if isinstance(raw, dict) and raw:
+            state["legacy"] = raw
+        return state
+
+    @staticmethod
+    def _default_pet_care(now: str) -> dict[str, Any]:
+        return {
+            "happiness": 50,
+            "hunger": 45,
+            "energy": 70,
+            "mood": "content",
+            "last_fed": None,
+            "last_played": None,
+            "last_care_at": now,
+            "last_mood_update": now,
+            "last_action": "idle",
+            "animation_clip": "idle",
+            "xp_earned": 0,
+            "stage": "baby",
+        }
+
+    @staticmethod
+    def _evolution():
+        from services.gamification_service import GamificationService
+
+        # Reuse the existing stage/progress math without building its repositories.
+        return GamificationService.__new__(GamificationService)
+
+    @classmethod
+    def _evolution_stage(cls, xp: int) -> str:
+        return cls._evolution()._get_evolution_stage(xp)
+
+    async def get_pet(self, user_id: str, pet_id: Optional[str] = None) -> dict[str, Any]:
+        raw = (await self.get_user_stats(user_id)).get("pet_state")
+        if not pet_id:
+            return raw or {}
+        pet = self._pet_state_map(raw)["pets"].get(pet_id)
+        if pet is None:
+            pet = self._default_pet_care(datetime.now(timezone.utc).isoformat())
+        return {**pet, "pet_id": pet_id}
+
+    async def _mutate_pet_care(self, user_id: str, pet_id: str, apply) -> dict[str, Any]:
+        """Locked read-modify-write of ONE pet's entry; other pets are untouched."""
+        now = datetime.now(timezone.utc).isoformat()
+        async with postgres_pool().acquire() as connection:
+            async with connection.transaction():
+                await connection.execute(
+                    "INSERT INTO public.user_gamification (user_id, pet_state) VALUES ($1, '{}'::jsonb) "
+                    "ON CONFLICT (user_id) DO NOTHING",
+                    user_id,
+                )
+                raw = await connection.fetchval(
+                    "SELECT pet_state FROM public.user_gamification WHERE user_id=$1 FOR UPDATE",
+                    user_id,
+                )
+                state = self._pet_state_map(raw)
+                pet = dict(state["pets"].get(pet_id) or self._default_pet_care(now))
+                old_stage = pet.get("stage", "baby")
+                apply(pet, now)
+                pet["stage"] = self._evolution_stage(pet["xp_earned"])
+                state["pets"][pet_id] = pet
+                await connection.execute(
+                    "UPDATE public.user_gamification SET pet_state=$2::jsonb, updated_at=now() WHERE user_id=$1",
+                    user_id,
+                    json.dumps(state),
+                )
+        return {**pet, "evolved": pet["stage"] != old_stage}
+
+    @staticmethod
+    def _care_response(pet_id: str, pet: dict[str, Any], awarded: int) -> dict[str, Any]:
+        return {
+            **pet,
+            "success": True,
+            "pet_id": pet_id,
+            "pet_xp": pet["xp_earned"],
+            "xp_earned": awarded,
+        }
 
     async def _update_pet(self, user_id: str, change: dict[str, Any]) -> dict[str, Any]:
         stats = await self.get_user_stats(user_id)
@@ -368,11 +460,40 @@ class PostgresGamificationService:
         )
         return {"success": True, "pet": pet}
 
-    async def feed_pet(self, user_id: str) -> dict[str, Any]:
-        return await self._update_pet(user_id, {"last_action": "feed"})
+    async def feed_pet(self, user_id: str, pet_id: str) -> dict[str, Any]:
+        def apply(pet: dict[str, Any], now: str) -> None:
+            pet.update({
+                "happiness": min(100, pet.get("happiness", 50) + 10),
+                "hunger": max(0, pet.get("hunger", 45) - 35),
+                "energy": min(100, pet.get("energy", 70) + 5),
+                "mood": "happy",
+                "last_fed": now,
+                "last_care_at": now,
+                "last_mood_update": now,
+                "last_action": "feed",
+                "animation_clip": "feed",
+                "xp_earned": pet.get("xp_earned", 0) + 5,
+            })
 
-    async def play_with_pet(self, user_id: str) -> dict[str, Any]:
-        return await self._update_pet(user_id, {"last_action": "play"})
+        return self._care_response(pet_id, await self._mutate_pet_care(user_id, pet_id, apply), 5)
+
+    async def play_with_pet(self, user_id: str, pet_id: str) -> dict[str, Any]:
+        def apply(pet: dict[str, Any], now: str) -> None:
+            energy = pet.get("energy", 70)
+            pet.update({
+                "happiness": min(100, pet.get("happiness", 50) + 15),
+                "hunger": min(100, pet.get("hunger", 45) + 10),
+                "energy": max(0, energy - 15),
+                "mood": "happy" if energy > 20 else "tired",
+                "last_played": now,
+                "last_care_at": now,
+                "last_mood_update": now,
+                "last_action": "play",
+                "animation_clip": "play",
+                "xp_earned": pet.get("xp_earned", 0) + 8,
+            })
+
+        return self._care_response(pet_id, await self._mutate_pet_care(user_id, pet_id, apply), 8)
 
     async def choose_pet(self, user_id: str, pet_type: str) -> dict[str, Any]:
         return await self._update_pet(user_id, {"type": pet_type})
@@ -380,9 +501,17 @@ class PostgresGamificationService:
     async def change_pet_outfit(self, user_id: str, outfit: str) -> dict[str, Any]:
         return await self._update_pet(user_id, {"outfit": outfit})
 
-    async def get_pet_xp(self, user_id: str) -> dict[str, Any]:
+    async def get_pet_xp(self, user_id: str, pet_id: Optional[str] = None) -> dict[str, Any]:
+        if not pet_id:
+            return {
+                "xp_earned": (await self.get_user_stats(user_id)).get("total_points", 0)
+            }
+        xp = int((await self.get_pet(user_id, pet_id)).get("xp_earned", 0))
         return {
-            "xp_earned": (await self.get_user_stats(user_id)).get("total_points", 0)
+            "pet_id": pet_id,
+            "xp": xp,
+            "stage": self._evolution_stage(xp),
+            "progress": self._evolution()._get_evolution_progress(xp),
         }
 
     async def get_stickers(self, user_id: str) -> list[dict[str, Any]]:

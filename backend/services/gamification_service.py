@@ -509,8 +509,10 @@ class GamificationService:
         return await self.repo.get_streak(user_id)
 
     # ========== PET METHODS ==========
-    
-    async def get_pet(self, user_id: str) -> Dict[str, Any]:
+    # ponytail: this legacy (POSTGRES_CORE_ENABLED=False) path keeps one shared pet and
+    # ignores pet_id; per-pet care lives in PostgresGamificationService, the default.
+
+    async def get_pet(self, user_id: str, pet_id: Optional[str] = None) -> Dict[str, Any]:
         """Get user's virtual pet"""
         pet = await self.repo.get_pet(user_id)
         hydrated = self._hydrate_pet_state(pet)
@@ -518,7 +520,7 @@ class GamificationService:
             await self.repo.update_pet(user_id, hydrated)
         return hydrated
     
-    async def feed_pet(self, user_id: str) -> Dict[str, Any]:
+    async def feed_pet(self, user_id: str, pet_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Feed user's pet - increases happiness.
         Returns updated pet state.
@@ -586,7 +588,7 @@ class GamificationService:
         
         return {"success": True, "pet": pet_data}
     
-    async def play_with_pet(self, user_id: str) -> Dict[str, Any]:
+    async def play_with_pet(self, user_id: str, pet_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Play with user's pet - increases happiness and awards XP.
         Returns updated pet state.
@@ -679,7 +681,7 @@ class GamificationService:
             "next_stage_threshold": next_threshold,
         }
     
-    async def get_pet_xp(self, user_id: str) -> Dict[str, Any]:
+    async def get_pet_xp(self, user_id: str, pet_id: Optional[str] = None) -> Dict[str, Any]:
         """Get pet XP and evolution progress for a user"""
         pet = await self.repo.get_pet(user_id)
         if not pet:

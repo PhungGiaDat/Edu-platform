@@ -8,7 +8,7 @@
  * - Vibrant, engaging colors for educational platform
  */
 
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { usePets, type Pet } from '@/features/pets/hooks/usePets';
 import { apiClient } from '@/services/apiClient';
 import { useAuth } from '@/contexts/AuthContext';
@@ -320,15 +320,19 @@ export default function PetsPage() {
         }
     }, [activePet, pets, selectedPet]);
 
-    useEffect(() => {
+    // Care state and pet XP belong to ONE pet: only the displayed pet is loaded,
+    // and a late response for a pet that is no longer displayed is dropped.
+    const displayedPetId = (selectedPet || activePet || pets[0])?.pet_id ?? null;
+    const displayedPetIdRef = useRef<string | null>(displayedPetId);
+    displayedPetIdRef.current = displayedPetId;
+
+    const loadPetState = useCallback((petId: string) => {
         if (!userId) return;
+        const query = `?pet_id=${encodeURIComponent(petId)}`;
 
-        let isMounted = true;
-
-        // Load pet care state
-        apiClient.get(`/api/v1/gamification/pet/${userId}`)
+        apiClient.get(`/api/v1/gamification/pet/${userId}${query}`)
             .then((pet) => {
-                if (!isMounted) return;
+                if (displayedPetIdRef.current !== petId) return;
                 setPetCare({
                     happiness: pet.happiness ?? 50,
                     hunger: pet.hunger ?? 45,
@@ -341,15 +345,26 @@ export default function PetsPage() {
                 console.warn('[PetsPage] Pet care state unavailable:', error);
             });
 
-        // Load pet XP data
-        apiClient.get(`/api/v1/gamification/pet-xp/${userId}`)
+        apiClient.get(`/api/v1/gamification/pet-xp/${userId}${query}`)
             .then((xpData: PetXPData) => {
-                if (!isMounted) return;
+                if (displayedPetIdRef.current !== petId) return;
                 setPetXP(xpData);
             })
             .catch((error) => {
                 console.warn('[PetsPage] Pet XP unavailable:', error);
             });
+    }, [userId]);
+
+    useEffect(() => {
+        if (!displayedPetId) return;
+        setPetXP(null);
+        loadPetState(displayedPetId);
+    }, [displayedPetId, loadPetState]);
+
+    useEffect(() => {
+        if (!userId) return;
+
+        let isMounted = true;
 
         apiClient.getUserStats(userId)
             .then((stats: GamificationStats) => {
@@ -419,22 +434,27 @@ export default function PetsPage() {
     const handleFeed = async (petId: string) => {
         HapticService.success();
         SoundEffectService.play('success');
-        setViewerInteraction('feed');
-        setViewerInteractionKey(prev => prev + 1);
-        setPetCare(prev => ({
-            ...prev,
-            happiness: Math.min(100, prev.happiness + 8),
-            hunger: Math.max(0, prev.hunger - 16),
-            mood: 'happy',
-            last_action: 'feed',
-        }));
-        window.setTimeout(() => setViewerInteraction('idle'), 1300);
+        // Gallery buttons can target a pet that isn't in the detail panel:
+        // only the displayed pet gets the optimistic animation/stat bump.
+        if (petId === displayedPetIdRef.current) {
+            setViewerInteraction('feed');
+            setViewerInteractionKey(prev => prev + 1);
+            setPetCare(prev => ({
+                ...prev,
+                happiness: Math.min(100, prev.happiness + 8),
+                hunger: Math.max(0, prev.hunger - 16),
+                mood: 'happy',
+                last_action: 'feed',
+            }));
+            window.setTimeout(() => setViewerInteraction('idle'), 1300);
+        }
 
         try {
             const result = await apiClient.post('/api/v1/gamification/pet/feed', {
                 user_id: userId,
                 pet_id: petId,
             });
+            if (petId !== displayedPetIdRef.current) return;
             setPetCare(prev => ({
                 ...prev,
                 happiness: result.happiness ?? prev.happiness,
@@ -468,28 +488,36 @@ export default function PetsPage() {
             }
         } catch (error) {
             console.error('Feed error:', error);
+        } finally {
+            // The server owns this pet's state: drop any optimistic guess (e.g. on failure).
+            loadPetState(petId);
         }
     };
 
     const handlePlay = async (petId: string) => {
         HapticService.success();
         SoundEffectService.play('success');
-        setViewerInteraction('play');
-        setViewerInteractionKey(prev => prev + 1);
-        setPetCare(prev => ({
-            ...prev,
-            happiness: Math.min(100, prev.happiness + 10),
-            energy: Math.max(0, prev.energy - 15),
-            mood: 'happy',
-            last_action: 'play',
-        }));
-        window.setTimeout(() => setViewerInteraction('idle'), 1300);
+        // Gallery buttons can target a pet that isn't in the detail panel:
+        // only the displayed pet gets the optimistic animation/stat bump.
+        if (petId === displayedPetIdRef.current) {
+            setViewerInteraction('play');
+            setViewerInteractionKey(prev => prev + 1);
+            setPetCare(prev => ({
+                ...prev,
+                happiness: Math.min(100, prev.happiness + 10),
+                energy: Math.max(0, prev.energy - 15),
+                mood: 'happy',
+                last_action: 'play',
+            }));
+            window.setTimeout(() => setViewerInteraction('idle'), 1300);
+        }
 
         try {
             const result = await apiClient.post('/api/v1/gamification/pet/play', {
                 user_id: userId,
                 pet_id: petId,
             });
+            if (petId !== displayedPetIdRef.current) return;
             setPetCare(prev => ({
                 ...prev,
                 happiness: result.happiness ?? prev.happiness,
@@ -500,6 +528,8 @@ export default function PetsPage() {
             }));
         } catch (error) {
             console.error('Play error:', error);
+        } finally {
+            loadPetState(petId);
         }
     };
 
