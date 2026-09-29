@@ -330,3 +330,29 @@ describe('AIChatBuddy — error UX', () => {
         expect(screen.getByText('animal')).toBeVisible();
     });
 });
+
+describe('AIChatBuddy — FAB bottom clearance', () => {
+    const fabAt = (path: string) => {
+        render(
+            <MemoryRouter initialEntries={[path]}>
+                <AIChatBuddy userId="test-user-1" />
+            </MemoryRouter>,
+        );
+        return screen.getByRole('button', { name: 'Talk to Lexi' });
+    };
+
+    it('clears the floating mobile navbar (and safe area) on non-lesson pages', () => {
+        const fab = fabAt('/courses');
+        expect(fab).toHaveClass('bottom-[calc(76px+env(safe-area-inset-bottom,0px)+1.5rem)]');
+        expect(fab).not.toHaveClass('bottom-4');
+    });
+
+    it('keeps lesson bottom-action clearance on lesson routes', () => {
+        const fab = fabAt('/courses/c1/lessons/l1');
+        expect(fab).toHaveClass('bottom-[calc(var(--lesson-bottom-action-height,4.5rem)+env(safe-area-inset-bottom,0px)+1.5rem)]');
+    });
+
+    it('keeps md+ desktop positioning unchanged', () => {
+        expect(fabAt('/courses')).toHaveClass('md:bottom-6', 'md:right-6');
+    });
+});
