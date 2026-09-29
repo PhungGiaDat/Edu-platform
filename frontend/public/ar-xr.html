@@ -1354,6 +1354,79 @@
       return playCatOneShot({ clipName: 'CAT_SPIN', source: 'CAT_SPIN', priority: 60 });
     }
 
+    // ========== DOG TAP / BARK ==========
+    // Audio-only tap reaction, identified by target identity (not clip names).
+    const DOG_TARGET_NAME = 'dog001';
+    const DOG_AUDIO_CONFIG = {
+      barkUrl: 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/animal/dog_bark.mp3',
+    };
+    let dogBarkAudio = null;
+    let dogBarkAudioLoaded = false;
+    const dogPointerGesture = { active: false, pointerId: null, startedAt: 0, startX: 0, startY: 0 };
+
+    function getDogBarkInstance() {
+      return selectCapabilityTargetInstance({
+        targetInstances,
+        supportsCapability: instance => instance.config?.qr_id === DOG_TARGET_NAME,
+        requireTracked: true,
+        requireVisible: true,
+        requireInteractionReady: true,
+      })?.instance || null;
+    }
+
+    // A committed combo that owns DOG keeps user gestures out; never cancel it to bark.
+    function canTriggerDogBark() {
+      if (!getDogBarkInstance()) return false;
+      return !(isInteractionExecutionLocked() && isTargetInActiveInteraction(DOG_TARGET_NAME));
+    }
+
+    function createDogBarkAudio() {
+      dogBarkAudio = new Audio(DOG_AUDIO_CONFIG.barkUrl);
+      dogBarkAudio.preload = 'auto';
+      dogBarkAudio.playsInline = true;
+    }
+
+    function preloadDogBarkAudio() {
+      if (dogBarkAudioLoaded) return;
+      try {
+        createDogBarkAudio();
+        dogBarkAudio.load();
+        dogBarkAudioLoaded = true;
+        sendARDebug('DOG_BARK_AUDIO_PRELOADED', { url: DOG_AUDIO_CONFIG.barkUrl });
+      } catch (error) {
+        sendARDebug('DOG_BARK_AUDIO_PLAY_ERROR', { stage: 'preload', message: error?.message || String(error) });
+      }
+    }
+
+    // Called synchronously from the DOG pointerup so mobile browsers allow playback.
+    // Errors are telemetry only.
+    function requestDogBarkAudio() {
+      const reportError = error => sendARDebug('DOG_BARK_AUDIO_PLAY_ERROR', {
+        name: error?.name || null,
+        message: error?.message || String(error),
+        mediaErrorCode: dogBarkAudio?.error?.code || null,
+      });
+      try {
+        if (!dogBarkAudio || dogBarkAudio.error) createDogBarkAudio();
+        dogBarkAudio.currentTime = 0;
+        sendARDebug('DOG_BARK_AUDIO_REQUESTED', { url: DOG_AUDIO_CONFIG.barkUrl });
+        const playPromise = dogBarkAudio.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.then(() => sendARDebug('DOG_BARK_AUDIO_PLAYING', { url: DOG_AUDIO_CONFIG.barkUrl }), reportError);
+        }
+      } catch (error) {
+        reportError(error);
+      }
+    }
+
+    // One ray, several tappable animals: the nearest real mesh wins. The CAT
+    // near-miss proxy only counts when no mesh was hit at all.
+    function pickTapTarget(hits) {
+      const meshHits = hits.filter(hit => hit.source === 'mesh');
+      const pool = meshHits.length ? meshHits : hits;
+      return pool.reduce((best, hit) => (!best || hit.distance < best.distance ? hit : best), null);
+    }
+
     // Pointer event handler — records hit eligibility and classifies on pointerup.
     function onPointerDown(event) {
       // Ignore UI interactions
@@ -1361,13 +1434,14 @@
       // Guard: renderer must be acquired before we can raycast
       if (!renderer?.domElement) return;
 
-      // Only check CAT when AR is visible and CAT exists
+      // CAT and DOG may be tracked together; one ray decides which was tapped.
       const catInst = getCatMascotInstance({
         requireTracked: true,
         requireVisible: true,
         requireInteractionReady: true,
       });
-      if (!catInst?.model) return;
+      const dogInst = getDogBarkInstance();
+      if (!catInst?.model && !dogInst?.model) return;
 
       // Compute NDC pointer
       const rect = renderer.domElement.getBoundingClientRect();
@@ -1375,25 +1449,48 @@
       pointerNdc.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(pointerNdc, camera);
 
-      // Mesh stays authoritative. The cached invisible proxy only handles
-      // near-misses around the CAT body and is never raycast as part of a scene.
-      const meshHits = raycaster.intersectObject(catInst.model, true)
-        .filter(hit => !hit.object.userData.isCatInteractionProxy);
-      const meshHit = meshHits[0] || null;
-      const proxyHits = !meshHit && catInst.catInteractionProxy
-        ? raycaster.intersectObject(catInst.catInteractionProxy, false)
-        : [];
-      const proxyHit = proxyHits[0] || null;
-      const hitSource = classifyCatTap({
-        meshHit: !!meshHit,
-        proxyHit: !!proxyHit,
-      });
-      if (hitSource === 'miss') {
-        sendARDebug('CAT_TAP_MISS', { x: event.clientX, y: event.clientY });
+      const tapHits = [];
+      if (catInst?.model) {
+        // Mesh stays authoritative. The cached invisible proxy only handles
+        // near-misses around the CAT body and is never raycast as part of a scene.
+        const meshHits = raycaster.intersectObject(catInst.model, true)
+          .filter(hit => !hit.object.userData.isCatInteractionProxy);
+        const meshHit = meshHits[0] || null;
+        const proxyHits = !meshHit && catInst.catInteractionProxy
+          ? raycaster.intersectObject(catInst.catInteractionProxy, false)
+          : [];
+        const proxyHit = proxyHits[0] || null;
+        const catHitSource = classifyCatTap({
+          meshHit: !!meshHit,
+          proxyHit: !!proxyHit,
+        });
+        if (catHitSource !== 'miss') {
+          tapHits.push({ target: 'cat', source: catHitSource, distance: (meshHit || proxyHit).distance });
+        }
+      }
+      const dogHit = dogInst?.model ? raycaster.intersectObject(dogInst.model, true)[0] : null;
+      if (dogHit) tapHits.push({ target: 'dog', source: 'mesh', distance: dogHit.distance });
+
+      const tapHit = pickTapTarget(tapHits);
+      if (!tapHit) {
+        if (catInst?.model) sendARDebug('CAT_TAP_MISS', { x: event.clientX, y: event.clientY });
+        return;
+      }
+      if (tapHit.target === 'dog') {
+        if (!canTriggerDogBark()) {
+          sendARDebug('DOG_GESTURE_IGNORED', { reason: 'combo_busy', phase: interactionState.phase });
+          return;
+        }
+        dogPointerGesture.active = true;
+        dogPointerGesture.pointerId = event.pointerId;
+        dogPointerGesture.startedAt = performance.now();
+        dogPointerGesture.startX = event.clientX;
+        dogPointerGesture.startY = event.clientY;
         return;
       }
 
-      const hitDistance = (meshHit || proxyHit).distance;
+      const hitSource = tapHit.source;
+      const hitDistance = tapHit.distance;
       if (!canTriggerCatInteraction()) {
         const phase = interactionState.phase;
         const reason = catAnimationState.action
@@ -1416,6 +1513,20 @@
     }
 
     function onPointerUp(event) {
+      if (dogPointerGesture.active && event.pointerId === dogPointerGesture.pointerId) {
+        dogPointerGesture.active = false;
+        dogPointerGesture.pointerId = null;
+        const durationMs = performance.now() - dogPointerGesture.startedAt;
+        const dx = event.clientX - dogPointerGesture.startX;
+        const dy = event.clientY - dogPointerGesture.startY;
+        if (classifyCatGesture({ durationMs, dx, dy }) === 'tap' && canTriggerDogBark()) {
+          sendARDebug('DOG_GESTURE_TAP', { durationMs, dx, dy });
+          requestDogBarkAudio();
+        } else {
+          sendARDebug('DOG_GESTURE_IGNORED', { reason: 'not_tap_or_not_ready', durationMs, phase: interactionState.phase });
+        }
+        return;
+      }
       if (!catPointerGesture.active || event.pointerId !== catPointerGesture.pointerId) return;
       const durationMs = performance.now() - catPointerGesture.startedAt;
       const dx = event.clientX - catPointerGesture.startX;
@@ -1444,6 +1555,10 @@
     }
 
     function onPointerCancel(event) {
+      if (event.pointerId === dogPointerGesture.pointerId) {
+        dogPointerGesture.active = false;
+        dogPointerGesture.pointerId = null;
+      }
       if (event.pointerId !== catPointerGesture.pointerId) return;
       catPointerGesture.active = false;
       catPointerGesture.pointerId = null;
@@ -1611,6 +1726,7 @@
             });
 
             if (isCatMascotInstance(instance)) preloadCatMeowAudio();
+            if (targetName === DOG_TARGET_NAME) preloadDogBarkAudio();
 
             // ---- Boot gate: only the scanned entry model gates first reveal ----
             if (targetName === primaryModelTargetName && !bootState.primaryReady) {
