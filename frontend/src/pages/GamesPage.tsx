@@ -4,7 +4,7 @@
  * Rebuild 2026-09-05 per approved design: choose a TOPIC first (Animals /
  * Home / Nature / School & Food — momo course themes), then a game.
  * Topic progress = 3 mini-games played today (XP idempotent per game/day,
- * so the daily ceiling is 60 XP). Lexi hero + clay tokens, Vietnamese copy.
+ * so the daily ceiling is 3 × 30 = 90 XP). Lexi hero + clay tokens, Vietnamese copy.
  *
  * 2026-09-09 activation: topics/games load from GET /games/catalog
  * (teacher-created content, spec §3.3). On API failure the hardcoded

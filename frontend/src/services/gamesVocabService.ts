@@ -149,11 +149,10 @@ export async function awardGameComplete(
         source_id: game,
         metadata: { game },
       },
-    }) as { xp_awarded?: number; status?: string };
-    return {
-      xp_awarded: result.xp_awarded ?? 0,
-      alreadyToday: (result.status ?? '') !== 'APPLIED' || (result.xp_awarded ?? 0) === 0,
-    };
+    }) as { xp_awarded?: number; idempotent_replay?: boolean };
+    // A replay returns the original event snapshot (xp_awarded 30) without adding XP.
+    const newlyAwarded = result.idempotent_replay ? 0 : (result.xp_awarded ?? 0);
+    return { xp_awarded: newlyAwarded, alreadyToday: newlyAwarded === 0 };
   } catch (err) {
     // XP is a side reward — a gamification outage must never fail the game flow
     console.error('[GamesVocab] awardGameComplete failed:', err);
