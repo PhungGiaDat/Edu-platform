@@ -35,6 +35,10 @@ argon2-cffi>=23.1.0  # Use argon2 for better security and reliability
 # === Environment & Utils ===
 python-dotenv>=1.0.0
 python-multipart>=0.0.12
+# Image inspection/resizing for the local content-preparation pipeline
+# (database/seed/prepare_learner_assets.py, prepare_momo_content_assets.py).
+# Imported directly, so it must be a declared dependency, not a transitive one.
+Pillow>=10.0.0
 
 # === WebSocket ===
 websockets>=13.0
