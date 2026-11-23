@@ -15,13 +15,32 @@ from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional
 from pydantic import BaseModel
 
-from models.ar_combination import ArCombinationSchema
+from models.ar_combination import (
+    ArCombinationSchema,
+    ProximityConfigSchema,
+    serialize_ar_combination,
+)
 from services.ar_service import ARService, get_ar_service
 
 router = APIRouter(prefix="/combos", tags=["combos"])
 
 
 # ========== RESPONSE SCHEMAS ==========
+
+class ComboRule(BaseModel):
+    """Single combo rule for frontend"""
+    tags: List[str]
+    target_order: Optional[List[str]] = None
+    name: str
+    combo_id: str
+    animation_trigger: Optional[str] = None
+    priority: int = 0
+    proximity: Optional[ProximityConfigSchema] = None
+
+class ComboRulesResponse(BaseModel):
+    """Response for combo rules endpoint"""
+    rules: List[ComboRule]
+    total: int
 
 class ComboCheckResponse(BaseModel):
     """Response for combo check endpoint"""
@@ -40,25 +59,7 @@ def _to_combo_response(combo: dict) -> ArCombinationSchema:
     FastAPI's response_model=ArCombinationSchema calls this internally,
     but we call it explicitly for error clarity.
     """
-    return ArCombinationSchema(
-        combo_id=combo.get("combo_id", ""),
-        description=combo.get("description", ""),
-        required_tags=combo.get("required_tags", []),
-        target_order=combo.get("target_order"),
-        model_3d_url=combo.get("model_3d_url", ""),
-        texture_url=combo.get("texture_url"),
-        image_2d_url=combo.get("image_2d_url", ""),
-        combo_mind_url=combo.get("combo_mind_url"),
-        bonus_xp=combo.get("bonus_xp", combo.get("reward_xp", 100)),
-        # ---- Semantic fields ----
-        semantic_result=combo.get("semantic_result"),
-        animation=combo.get("animation"),
-        sound=combo.get("sound"),
-        phrase=combo.get("phrase"),
-        priority=combo.get("priority", 0),
-        active=combo.get("active", True),
-        flashcard_set=combo.get("flashcard_set"),
-    )
+    return serialize_ar_combination(combo)
 
 
 # ========== ENDPOINTS (Controller) ==========
@@ -129,7 +130,68 @@ async def get_combos_by_flashcard_set(
     return [_to_combo_response(c) for c in filtered]
 
 
-# Parameterized route MUST be last to avoid capturing /check and / paths
+@router.get(
+    "/rules",
+    response_model=ComboRulesResponse,
+    response_model_exclude_unset=True,
+)
+async def get_combo_rules(
+    flashcard_set: Optional[str] = Query(None, description="Flashcard set ID to filter rules"),
+    active_only: bool = Query(True, description="Only return active combos"),
+    ar_service: ARService = Depends(get_ar_service)
+):
+    """
+    Get combo rules for frontend AR engine.
+    Returns simplified rule format: { tags: [], name: string }
+    REPLACES: hardcoded comboRules in ar-xr.html
+
+    Example: /api/v1/combinations/rules?flashcardSet=claymorphic-animals-001
+    """
+    combos = await ar_service.list_combos(skip=0, limit=200)
+
+    # Filter by flashcard_set if provided
+    if flashcard_set:
+        combos = [c for c in combos if c.get("flashcard_set") == flashcard_set]
+
+    # Filter by active if specified
+    if active_only:
+        combos = [c for c in combos if c.get("active", True)]
+
+    # Convert to simple rules format
+    rules = []
+    for combo in combos:
+        if not combo.get("required_tags"):
+            continue
+        proximity_values = (
+            combo.get("proximity_enter_distance"),
+            combo.get("proximity_exit_distance"),
+            combo.get("proximity_stable_ms"),
+            combo.get("proximity_smoothing_alpha"),
+        )
+        proximity = None
+        if all(value is not None for value in proximity_values):
+            proximity = {
+                "enter_distance": proximity_values[0],
+                "exit_distance": proximity_values[1],
+                "proximity_stable_ms": proximity_values[2],
+                "smoothing_alpha": proximity_values[3],
+            }
+        rule = {
+            "tags": combo.get("required_tags", []),
+            "name": combo.get("combo_name") or combo.get("description") or "",
+            "combo_id": combo.get("combo_id", ""),
+            "animation_trigger": combo.get("animation_trigger") or combo.get("animation"),
+            "priority": combo.get("priority", 0),
+            "proximity": proximity,
+        }
+        if "target_order" in combo:
+            rule["target_order"] = combo["target_order"]
+        rules.append(rule)
+
+    return ComboRulesResponse(rules=rules, total=len(rules))
+
+
+# Parameterized route MUST be last to avoid capturing /check, /, and /rules paths
 @router.get("/{combo_id}", response_model=ArCombinationSchema)
 async def get_combo(
     combo_id: str,

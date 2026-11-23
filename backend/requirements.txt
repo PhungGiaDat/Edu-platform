@@ -5,15 +5,22 @@
 # === Core Framework ===
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
+sentry-sdk>=2.0.0
 pydantic>=2.9.0
 pydantic-settings>=2.5.0
 email-validator>=2.0.0
+pywebpush>=1.14.0
 
 # === Database - MongoDB (Beanie ODM) ===
 motor>=3.6.0
 pymongo>=4.10.0
 dnspython>=2.6.0
 beanie>=1.27.0,<2.0.0
+
+# === Database - PostgreSQL ORM / migrations ===
+asyncpg>=0.31.0
+SQLAlchemy>=2.0.44,<2.1.0
+alembic>=1.14.0,<2.0.0
 
 # === Redis (Caching, Sessions, Rate Limiting) ===
 redis>=5.0.0
@@ -28,6 +35,10 @@ argon2-cffi>=23.1.0  # Use argon2 for better security and reliability
 # === Environment & Utils ===
 python-dotenv>=1.0.0
 python-multipart>=0.0.12
+# Image inspection/resizing for the local content-preparation pipeline
+# (database/seed/prepare_learner_assets.py, prepare_momo_content_assets.py).
+# Imported directly, so it must be a declared dependency, not a transitive one.
+Pillow>=10.0.0
 
 # === WebSocket ===
 websockets>=13.0
@@ -38,12 +49,24 @@ httpx>=0.27.0
 # === AI - LangChain (Core only - no numpy conflict) ===
 langchain-core>=0.3.0
 langchain-google-genai>=2.0.0
+langchain-openai>=0.1.0
 google-generativeai>=0.8.0
+
+# === LLM Retry & Resilience ===
+tenacity>=8.2.0
+# Ops Monitoring Dashboard — process/host metrics for /admin/monitoring/overview
+psutil>=5.9.0
+
+# === Vector Search - Qdrant Cloud Inference (no local embedding model) ===
+qdrant-client>=1.14.2,<2.0.0
 
 # === Speech-to-Text (Server-side fallback for Safari/Firefox) ===
 # faster-whisper uses CTranslate2 for efficient CPU inference
 # Only ~150MB RAM for 'tiny' model
 faster-whisper>=1.0.0
+
+# === Text-to-Speech (CPU, bundled English and Vietnamese voices) ===
+piper-tts==1.8.0
 
 # === Production Server ===
 gunicorn>=23.0.0

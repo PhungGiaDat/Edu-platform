@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "food-v1",
+  "mindUrl": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/mind-catalogs/food-v1/0bd7144cdc99104d2d33588c6469f91b4a791d4764c19cec5609e4e3fb265d87.mind",
+  "targetCount": 5,
+  "sha256": "0bd7144cdc99104d2d33588c6469f91b4a791d4764c19cec5609e4e3fb265d87",
+  "targets": [
+    { "arTag": "fish001", "mindTargetIndex": 0 },
+    { "arTag": "carrot001", "mindTargetIndex": 1 },
+    { "arTag": "grass001", "mindTargetIndex": 2 },
+    { "arTag": "bamboo001", "mindTargetIndex": 3 },
+    { "arTag": "meat001", "mindTargetIndex": 4 }
+  ]
+}

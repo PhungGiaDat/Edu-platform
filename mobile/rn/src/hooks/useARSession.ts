@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { unityBridge } from '../bridge/UnityBridgeModule';
-import { mapToUnityPayload } from '../bridge/ARExperienceMapper';
+import { mapToUnityPayload, validateNativeTrackingMetadata, toCardDescriptorRN } from '../bridge/ARExperienceMapper';
 import { flashcardApi } from '../services/api';
 import type { UnityARExperiencePayload } from '../types/ar';
 import type { ARMessage } from '../bridge/arMessages';
+import type { AddXpEventRequest } from '../types/gamification';
+import { toAddXpEventWireRequest } from '../types/gamification';
 
 export type ARState =
   | 'IDLE'
@@ -16,7 +18,10 @@ export type ARState =
   | 'AR_ERROR';
 
 export interface TrackedImage {
+  /** AR Foundation runtime handle (informational — do not use as Map key). */
   imageId: string;
+  /** Business identity — primary Map key, per TRACK-REQ-004. */
+  qrId: string;
   imageName: string;
   modelId: string;
   transform: { x: number; y: number; z: number };
@@ -34,6 +39,7 @@ export interface ARSessionState {
   progress: number;
   progressStage: 'download' | 'load' | 'instantiate' | null;
   progressMessage: string;
+  xpRewardPending: boolean;
 }
 
 export interface UseARSessionResult extends ARSessionState {
@@ -43,6 +49,8 @@ export interface UseARSessionResult extends ARSessionState {
   triggerCombo: () => Promise<void>;
   feedPet: (foodModelId: string) => void;
   retry: () => void;
+  /** Called whenever a combo completes with XP info. Parent (ARScreen) wires XP API. */
+  onComboComplete?: (xpAwarded: number, comboId: string, sessionId?: string) => void;
 }
 
 /**
@@ -50,7 +58,8 @@ export interface UseARSessionResult extends ARSessionState {
  */
 export const useARSession = (
   _lessonId?: string,
-  _initialPayload?: UnityARExperiencePayload
+  _initialPayload?: UnityARExperiencePayload,
+  options?: { onComboComplete?: (xpAwarded: number, comboId: string, sessionId?: string) => void }
 ): UseARSessionResult => {
   const [arState, setArState] = useState<ARState>('IDLE');
   const [trackedImages, setTrackedImages] = useState<Map<string, TrackedImage>>(new Map());
@@ -61,6 +70,7 @@ export const useARSession = (
   const [progress, setProgress] = useState(0);
   const [progressStage, setProgressStage] = useState<'download' | 'load' | 'instantiate' | null>(null);
   const [progressMessage, setProgressMessage] = useState('');
+  const [xpRewardPending, setXpRewardPending] = useState(false);
 
   const currentPayloadRef = useRef<UnityARExperiencePayload | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -72,12 +82,83 @@ export const useARSession = (
     }
   }, []);
 
+  /** Tracks qrIds already sent to the backend this session. Prevents duplicate API calls. */
+  const qrResolutionCache = useRef<Set<string>>(new Set());
+
+  /** External callback for combo completion — set by parent via onComboComplete prop. */
+  const onComboCompleteRef = useRef<(xpAwarded: number, comboId: string, sessionId?: string) => void>(() => {});
+  onComboCompleteRef.current = options?.onComboComplete ?? (() => {});
+
+  /**
+   * Resolves a QR-decoded qrId via the backend API, then sends the CardDescriptorRN
+   * to Unity for runtime image registration.
+   *
+   * This is the QR-discovery → backend resolution step of the ele123 golden path:
+   *   QRScanner (Unity) → onQrDecoded → handleQrDecoded → flashcardApi → CardDescriptorRN
+   *   → startImageTrackingMulti → CardImageLibraryBuilder (Unity) → MutableRuntimeReferenceImageLibrary
+   */
+  const handleQrDecoded = useCallback(async (qrId: string) => {
+    if (qrResolutionCache.current.has(qrId)) {
+      // Already resolved this session — deduplicated.
+      console.log(`[useARSession] qrId '${qrId}' already resolved — ignoring duplicate QR event`);
+      return;
+    }
+    qrResolutionCache.current.add(qrId);
+
+    console.log(`[useARSession] Resolving qrId '${qrId}' via backend...`);
+    try {
+      const response = await flashcardApi.getFlashcard(qrId);
+      const availability = validateNativeTrackingMetadata(response.data);
+
+      if (availability.kind !== 'ready') {
+        console.error(`[useARSession] Backend metadata unavailable for '${qrId}': ${availability.reason}`);
+        // Signal Unity to unblock the qrId for retry (card was rejected).
+        unityBridge.sendToUnity?.('onCardResolved', JSON.stringify({ qrId, registered: false }));
+        return;
+      }
+
+      const descriptor = toCardDescriptorRN(availability.tracking);
+      console.log(`[useARSession] Backend resolved '${qrId}' — sending to Unity`);
+
+      // Signal Unity that this qrId is registered (unblocks QR deduplication).
+      unityBridge.sendToUnity?.('onCardResolved', JSON.stringify({ qrId, registered: true }));
+
+      // Send to Unity for runtime reference-image registration.
+      await unityBridge.startImageTrackingMulti({ cards: [descriptor] });
+      console.log(`[useARSession] startImageTrackingMulti dispatched for '${qrId}'`);
+    } catch (err) {
+      console.error(`[useARSession] Backend resolution failed for '${qrId}':`, err);
+      qrResolutionCache.current.delete(qrId); // Allow retry on error.
+      unityBridge.sendToUnity?.('onCardResolved', JSON.stringify({ qrId, registered: false }));
+    }
+  }, []);
+
   const handleUnityEvent = useCallback((message: ARMessage) => {
     switch (message.type) {
       case 'onArReady':
         setArState('IMAGE_TRACKING_READY');
         clearTrackingTimeout();
         break;
+
+      /**
+       * onQrDecoded — Unity QRScanner decoded a QR code.
+       *
+       * Runtime path: QR discovery → Unity → RN → backend API → CardDescriptorRN
+       * → startImageTrackingMulti → Unity builds runtime reference-image library.
+       *
+       * Once registered, the qrId is locked (QRScanner deduplication) until the
+       * session ends or the card is explicitly unregistered. Subsequent physical
+       * detections of the SAME card go through image tracking (onImageDetected),
+       * not QR.
+       *
+       * This event fires ONLY from the QRScanner discovery layer, not from image
+       * tracking itself.
+       */
+      case 'onQrDecoded': {
+        const payload = message.payload as { qrId: string };
+        handleQrDecoded(payload.qrId);
+        break;
+      }
 
       case 'onError': {
         const payload = message.payload as { code: string; message: string };
@@ -88,11 +169,14 @@ export const useARSession = (
       }
 
       case 'onImageDetected': {
-        const payload = message.payload as { imageId: string; imageName: string; transform: { x: number; y: number; z: number } };
+        // Per bridge-contract.md §K-2, qrId is the business card identity.
+        // imageId is the AR Foundation runtime handle (informational only).
+        const payload = message.payload as { imageId: string; qrId: string; imageName: string; transform: { x: number; y: number; z: number } };
         setTrackedImages(prev => {
           const next = new Map(prev);
-          next.set(payload.imageId, {
+          next.set(payload.qrId, {
             imageId: payload.imageId,
+            qrId: payload.qrId,
             imageName: payload.imageName,
             modelId: '',
             transform: payload.transform,
@@ -108,10 +192,12 @@ export const useARSession = (
       }
 
       case 'onImageTrackingLost': {
-        const payload = message.payload as { imageId: string };
+        // Per bridge-contract.md §K-2: payload carries qrId (business identity).
+        // NOT tracking-state degradation — that is a quality signal, not removal.
+        const payload = message.payload as { qrId: string };
         setTrackedImages(prev => {
           const next = new Map(prev);
-          next.delete(payload.imageId);
+          next.delete(payload.qrId);
           return next;
         });
         if (arState !== 'IDLE' && arState !== 'AR_INITIALIZING') {
@@ -149,15 +235,16 @@ export const useARSession = (
         setProgressMessage('Ready!');
         break;
 
-      case 'onModelLoaded':
+      case 'onModelLoaded': {
+        // qrId is present per spec §K-2 (for card lookup); handler only needs AR state.
         if (arState === 'MODEL_SPAWNING') {
           setArState('MODEL_LOADED');
-          // Check if we should go to AR_INTERACTING
           if (trackedImages.size >= 2) {
             setArState('AR_INTERACTING');
           }
         }
         break;
+      }
 
       case 'onProximityNear':
         // Show combo hint UI
@@ -168,8 +255,12 @@ export const useARSession = (
         break;
 
       case 'onComboComplete': {
-        const payload = message.payload as { rewardCardId: string; xpAwarded: number };
-        setCurrentStreak(prev => prev + payload.xpAwarded);
+        const payload = message.payload as { rewardCardId: string; xpAwarded: number; comboId?: string };
+        const xpAwarded = payload.xpAwarded;
+        const comboId = payload.comboId ?? `combo_${Date.now()}`;
+        setCurrentStreak(prev => prev + xpAwarded);
+        setXpRewardPending(true);
+        onComboCompleteRef.current(xpAwarded, comboId);
         break;
       }
 
@@ -195,6 +286,7 @@ export const useARSession = (
     const unsubscribers = [
       unityBridge.subscribe('onArReady', handleUnityEvent),
       unityBridge.subscribe('onError', handleUnityEvent),
+      unityBridge.subscribe('onQrDecoded', handleUnityEvent),
       unityBridge.subscribe('onImageDetected', handleUnityEvent),
       unityBridge.subscribe('onImageTrackingLost', handleUnityEvent),
       unityBridge.subscribe('onMultiImageDetected', handleUnityEvent),
@@ -252,10 +344,26 @@ export const useARSession = (
   }, [clearTrackingTimeout]);
 
   const triggerCombo = useCallback(async () => {
-    const images = Array.from(trackedImages.keys());
+    const images = Array.from(trackedImages.values());
     if (images.length < 2) return;
-
-    await unityBridge.triggerCombo?.(images[0], images[1]);
+    // ⚠️ DECISION_REQUIRED — combo semantic identity unresolved.
+    //
+    // Per `mobile-ar-product-spec.md §F-1`, combos are identified by `arTag`
+    // (semantic combo tag) — backend `related_combos` is keyed by ar_tag,
+    // NOT qr_id. Per `bridge-contract.md §"React Native → Unity Methods"`,
+    // `triggerCombo` payload is `{ cardA, cardB }` with no field-level
+    // semantic identity specified (ambiguous).
+    //
+    // Current implementation passes `qrId` because:
+    //   1. `TrackedImage` exposes `qrId` (REQUIRED per spec §K-2)
+    //   2. The bridge has no `arTag` field on `TrackedImage`
+    //
+    // This needs resolution before combo UX lands (M5). Until then:
+    //   - Unity side (`ComboManager`) is the source of truth for ar_tag mapping
+    //   - RN should NOT silently choose qrId over arTag
+    //
+    // Forwarded as DECISION_REQUIRED: see MQ-7 (added).
+    await unityBridge.triggerCombo?.(images[0].qrId, images[1].qrId);
   }, [trackedImages]);
 
   const feedPet = useCallback((foodModelId: string) => {
@@ -280,11 +388,13 @@ export const useARSession = (
     progress,
     progressStage,
     progressMessage,
+    xpRewardPending,
     canCombo: trackedImages.size >= 2,
     startSession,
     stopSession,
     triggerCombo,
     feedPet,
     retry,
+    onComboComplete: onComboCompleteRef.current,
   };
 };

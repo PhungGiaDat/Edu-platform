@@ -16,6 +16,8 @@
  *   - `CompleteLessonStats`      → body for POST /lessons/{id}/complete
  */
 
+import type { LessonActivityType } from './course';
+
 export type LessonStepStatus =
   | 'locked'
   | 'available'
@@ -28,6 +30,9 @@ export type LessonStatus = 'started' | 'completed';
 export interface LessonSessionStepState {
   step_id: string;
   title?: string;
+  activity_type?: LessonActivityType | null;
+  activity_order?: number | null;
+  required: boolean;
   status: LessonStepStatus;
   attempts: number;
   best_score: number;
@@ -42,6 +47,7 @@ export interface LessonSession {
   user_id: string;
   course_id: string;
   lesson_id: string;
+  content_version: number;
   status: LessonStatus;
   current_step_id: string;
   current_step_index: number;
@@ -53,7 +59,7 @@ export interface LessonSession {
 }
 
 export interface LessonStepAttemptPayload {
-  user_id: string;
+  user_id?: string;
   step_id: string;
   attempt_type?: string;
   passed: boolean;

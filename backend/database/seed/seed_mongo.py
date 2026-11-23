@@ -25,6 +25,7 @@ load_dotenv(BACKEND_DIR / ".env")
 
 import certifi
 import pymongo
+from core.url_builders import supabase_resolve_placeholders
 
 MONGO_URL = os.getenv("MONGO_URL")
 MONGO_DB  = os.getenv("MONGO_DB", "edu_platform")
@@ -67,9 +68,15 @@ def upsert_seed_data(collection_name: str, file_path: Path, unique_key: str) -> 
     - Existing docs (matched by unique_key) are updated via $set.
     - Fields absent from the seed (e.g. vector_embedding) are left untouched.
     - New docs are inserted.
+    - ``__SUPABASE_BASE__`` placeholders in any string field are replaced with
+      ``settings.SUPABASE_PROJECT_URL`` at load time, so seed JSON files do
+      not need to know the deployed Supabase host.
     """
     with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
+
+    # Resolve env-driven placeholders before walking individual docs.
+    data = supabase_resolve_placeholders(data)
 
     inserted = updated = 0
 

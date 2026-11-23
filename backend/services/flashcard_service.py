@@ -35,9 +35,9 @@ class FlashcardService:
         """Get active flashcards for the learner gallery."""
         return await self.flashcard_repo.get_all_active(skip=skip, limit=limit)
     
-    async def get_by_category(self, category: str) -> List[Dict[str, Any]]:
+    async def get_by_category(self, category: str, skip: int = 0, limit: int = 50) -> List[Dict[str, Any]]:
         """Get flashcards by category"""
-        return await self.flashcard_repo.get_by_category(category)
+        return await self.flashcard_repo.get_by_category(category, skip=skip, limit=limit)
     
     async def search(self, query: str) -> List[Dict[str, Any]]:
         """Search flashcards by word"""
@@ -151,6 +151,10 @@ class FlashcardService:
 def get_flashcard_service() -> FlashcardService:
     """Factory function for dependency injection"""
     flashcard_repo = get_flashcard_repository()
-    ai_service = get_ai_service()
+    # Qdrant/AI is not required for ordinary PostgreSQL-backed card reads;
+    # constructing its legacy Mongo config repository would reintroduce a
+    # forbidden normal-path dependency.
+    from database.postgres_connection import postgres_core_enabled
+    ai_service = None if postgres_core_enabled() else get_ai_service()
     return FlashcardService(flashcard_repo, ai_service)
 

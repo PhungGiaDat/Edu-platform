@@ -14,10 +14,27 @@
     "lessonsCount": "{count} lessons",
     "lessonsHeader": "Lessons",
     "expand": "Show lessons",
-    "collapse": "Hide lessons"
+    "collapse": "Hide lessons",
+    "startLearning": "Start learning",
+    "continueLearning": "Continue learning",
+    "openingLesson": "Opening lesson…",
+    "startCourseFailed": "Could not open this lesson",
+    "filterByCategory": "Category",
+    "filterByLevel": "Level",
+    "allCategories": "All categories",
+    "allLevels": "All levels",
+    "levelBeginner": "Beginner",
+    "levelIntermediate": "Intermediate",
+    "levelAdvanced": "Advanced"
   },
   "pets": {
     "title": "My Pets",
+    "yourPets": "Your pets",
+    "allPets": "All pets",
+    "activePetCta": "View active pet",
+    "updatingActivePet": "Updating…",
+    "careLoadFailed": "Could not load pet care stats",
+    "activePetFailed": "Could not update the active pet",
     "mood": {
       "idle": "Idle",
       "anticipating": "Anticipating",

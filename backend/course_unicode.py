@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, Iterable, Tuple
 
 
 def is_suspicious(text: str) -> bool:
     body = text.rstrip().rstrip("?!")
+    body = re.sub(r"(?<=\w{2})\?\s+(?=\w)", "", body)
     return "?" in body or "�" in text or "Ã" in text
 
 

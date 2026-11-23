@@ -1,0 +1,45 @@
+fileFormatVersion: 2
+guid: d41d8cd98f00b204e9800998ecf8427e
+PluginImporter:
+  externalObjects: {}
+  serializedData: ''
+  iconMap: {}
+  executionOrder: {}
+  defineConstraints: []
+  isPreloaded: 0
+  isOverridable: 0
+  isExplicitlyDefinedCrossPlatform: 0
+  validateReferences: 1
+  platformData:
+  - first:
+      Any:
+    second:
+      enabled: 1
+      settings:
+        Exclude Editor: 0
+        Exclude Linux: 0
+        Exclude Linux64: 0
+        Exclude LinuxUniversal: 0
+        Exclude OSXUniversal: 0
+        Exclude SamsungTV: 0
+        Exclude WebGL: 0
+        Exclude Win: 0
+        Exclude Win64: 0
+        Exclude WindowsStandaloneSupport: 0
+  - first:
+      Android: Android
+    second:
+      enabled: 1
+      settings:
+        CPU: ARM64
+  - first:
+      iOS: iOS
+    second:
+      enabled: 1
+  - first:
+      Standalone: Editor
+    second:
+      enabled: 1
+  userData: ''
+  assetBundleName: ''
+  assetBundleVariant:

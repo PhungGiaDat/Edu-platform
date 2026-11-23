@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # ========================================
 # Eduplatform AR API - Dockerfile
 # Multi-stage production build
@@ -37,6 +38,38 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
+# Bundle both voices so synthesis never needs a model download on the VPS.
+RUN python -m piper.download_voices --download-dir /app/tts_models \
+    en_US-lessac-medium vi_VN-vais1000-medium
+
+# Exercise native CPU synthesis during build; keep generated WAVs in memory.
+RUN python - <<'PY'
+import io
+import json
+from pathlib import Path
+import wave
+import onnxruntime as ort
+from piper import PiperConfig, PiperVoice
+
+options = ort.SessionOptions()
+options.intra_op_num_threads = 2
+options.inter_op_num_threads = 1
+for name, text in (
+    ("en_US-lessac-medium", "This is my mom."),
+    ("vi_VN-vais1000-medium", "Bé hãy phát âm theo câu sau."),
+):
+    model = Path("/app/tts_models") / f"{name}.onnx"
+    config = json.loads(Path(f"{model}.json").read_text(encoding="utf-8"))
+    session = ort.InferenceSession(str(model), sess_options=options, providers=["CPUExecutionProvider"])
+    voice = PiperVoice(session=session, config=PiperConfig.from_dict(config))
+    audio = io.BytesIO()
+    with wave.open(audio, "wb") as wav_file:
+        voice.synthesize_wav(text, wav_file)
+    with wave.open(io.BytesIO(audio.getvalue()), "rb") as wav_file:
+        assert wav_file.getnframes() > 0, f"Empty synthesis for {name}"
+    print(f"Piper native WAV smoke passed: {name}")
+PY
+
 # ========================================
 # Stage 3: Production
 # ========================================
@@ -45,6 +78,7 @@ FROM base AS production
 # Copy installed packages from dependencies stage
 COPY --from=dependencies /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 COPY --from=dependencies /usr/local/bin /usr/local/bin
+COPY --from=dependencies /app/tts_models /app/tts_models
 
 # Copy application code
 COPY . .
@@ -66,7 +100,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # Start application with Gunicorn + Uvicorn workers
 CMD gunicorn main:app \
     --bind 0.0.0.0:${PORT:-8000} \
-    --workers ${WORKERS:-2} \
+    --workers ${WORKERS:-1} \
     --worker-class uvicorn.workers.UvicornWorker \
     --timeout 120 \
     --keep-alive 5 \

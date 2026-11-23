@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
+  <!-- 
+    IMPORTANT: A-Frame/AR.js removed from parent app!
+    Using IFRAME ISOLATION pattern - AR runs inside ar-nft.html iframe only.
+    This prevents version conflicts and React lifecycle interference.
+    See: frontend-web/public/ar-nft.html for AR runtime.
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png" />
+  <meta name="theme-color" content="#FFD93D" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#243447" media="(prefers-color-scheme: dark)" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="EduAR" />
+  <title>EduAR — Học tiếng Anh cùng Lexi</title>
+  <meta name="description" content="Học từ vựng tiếng Anh cho trẻ 5-8 tuổi cùng Lexi: thẻ flashcard AR, trò chơi ghép hình, tô màu con vật và phần thưởng sticker mỗi ngày." />
+  <meta property="og:title" content="EduAR — Học tiếng Anh cùng Lexi" />
+  <meta property="og:description" content="Học từ vựng tiếng Anh cho trẻ 5-8 tuổi cùng Lexi: thẻ flashcard AR, trò chơi ghép hình, tô màu con vật và phần thưởng sticker mỗi ngày." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://learnvocab.pages.dev" />
+  <meta property="og:image" content="https://learnvocab.pages.dev/icons/icon-512x512.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="EduAR — Học tiếng Anh cùng Lexi" />
+  <meta name="twitter:description" content="Học từ vựng tiếng Anh cho trẻ 5-8 tuổi cùng Lexi: flashcard AR, trò chơi và phần thưởng sticker." />
+
+  <!-- Performance: preconnect to Google Fonts CDN before CSS @import fires -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Learner brand fonts (spec 2026-08-30 dictionary/notebook): Nunito headings, DM Sans body -->
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;700&family=Baloo+2:wght@600;700;800&display=swap" />
+
+  <!-- Bundled Material Symbols Rounded for learner controls -->
+  <link rel="preload" href="/fonts/material-symbols-rounded.woff2" as="font" type="font/woff2" crossorigin />
+
+  <!-- Performance: early DNS resolution + TCP connection to the VPS API.
+       Reduces cold-connection latency on first API call (quiz, AR data, pets). -->
+  <link rel="preconnect" href="https://edu-platform-api.duckdns.org" />
+  <link rel="dns-prefetch" href="https://edu-platform-api.duckdns.org" />
+</head>
+
+<body>
+  <div id="root"></div>
+  <!-- Pre-React persistent control trace — survives hard reload, immune to drop_console -->
+  <script>
+(function installARControlTrace() {
+  var params = new URLSearchParams(location.search);
+  if (params.get('debug') !== 'true' && params.get('artrace') !== 'true') return;
+
+  var STORAGE_KEY = '__ar_control_trace_v1__';
+  var MAX_BUFFER = 300;
+  var seq = 0;
+
+  function makeBootId() {
+    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+  }
+
+  function readBuffer() {
+    try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch (e) { return []; }
+  }
+
+  function persist(entries) {
+    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(-MAX_BUFFER))); }
+    catch (e) {}
+  }
+
+  function emit(label, details) {
+    details = details || {};
+    var entries = readBuffer();
+    var entry = {
+      bootId: window.__AR_BOOT_ID__ || 'unknown',
+      seq: ++seq,
+      time: new Date().toISOString(),
+      perf: Math.round(performance.now()),
+      label: label,
+      details: details,
+      path: location.pathname,
+      visibility: document.visibilityState
+    };
+    entries.push(entry);
+    if (entries.length > MAX_BUFFER) entries.shift();
+    persist(entries);
+    window.__AR_CONTROL_BUFFER__ = entries;
+    window.dispatchEvent(new CustomEvent('ar:control-trace', { detail: entry }));
+  }
+
+  window.__AR_BOOT_ID__ = makeBootId();
+  window.__AR_CONTROL_BUFFER__ = readBuffer();
+  window.ARControlTrace = emit;
+
+  var navEntry = performance.getEntriesByType('navigation')[0];
+  emit('DOCUMENT_BOOT', {
+    navigationType: navEntry && navEntry.type || 'unknown',
+    href: location.href,
+    referrer: document.referrer,
+    userAgent: navigator.userAgent
+  });
+
+  window.addEventListener('pageshow', function(e) { emit('PAGE_SHOW', { persisted: e.persisted }); });
+  window.addEventListener('pagehide', function(e) { emit('PAGE_HIDE', { persisted: e.persisted }); });
+  window.addEventListener('beforeunload', function() { emit('BEFORE_UNLOAD'); });
+  window.addEventListener('visibilitychange', function() { emit('VISIBILITY_CHANGE', { state: document.visibilityState }); });
+  window.addEventListener('vite:preloadError', function(e) { emit('VITE_PRELOAD_ERROR', { payload: String(e.payload || '') }); });
+  window.addEventListener('error', function(e) { emit('WINDOW_ERROR', { message: e.message, source: e.filename, line: e.lineno, column: e.colno }); }, true);
+  window.addEventListener('unhandledrejection', function(e) { emit('UNHANDLED_REJECTION', { reason: String(e.reason) }); });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      emit('SW_CONTROLLER_CHANGE', { controller: navigator.serviceWorker.controller ? navigator.serviceWorker.controller.scriptURL : null });
+    });
+    emit('SW_STATE_AT_BOOT', { controller: navigator.serviceWorker.controller ? navigator.serviceWorker.controller.scriptURL : null });
+  }
+})();
+  </script>
+  <!-- Mobile debug logger — console.* override, postMessage interception -->
+  <script src="/static/ar-assets/js/mobile-debug.js"></script>
+  <script type="module" src="/src/main.tsx"></script>
+  <!-- Eruda mobile console - Activate with ?debug=true or ?eruda=true -->
+  <script>
+    (function() {
+      var erudaRoot = null;
+
+      function initEruda() {
+        if (typeof eruda === 'undefined') return false;
+
+        // Never mount Eruda on document.body. Eruda assigns its container the
+        // #eruda id, so styling that id would otherwise resize the whole page
+        // and collapse the React/AR iframe to 0x0.
+        if (!erudaRoot) {
+          erudaRoot = document.createElement('div');
+          erudaRoot.setAttribute('data-eruda-root', 'true');
+          document.body.appendChild(erudaRoot);
+        }
+
+        eruda.init({
+          container: erudaRoot,
+          tool: ['console', 'elements', 'network', 'sources', 'storage'],
+          useSnapshots: false,
+          overrideConsole: true,
+          theme: 'dark',
+        });
+
+
+        // mobile-debug.js starts before React/camera and buffers the early
+        // lifecycle. Replay that snapshot only after Eruda owns console.*.
+        if (window.MobileDebug && typeof window.MobileDebug.attachEruda === 'function') {
+          window.MobileDebug.attachEruda();
+        }
+
+        // Auto-hide after 60s to not annoy user
+        setTimeout(function() {
+          if (typeof eruda.hide === 'function') eruda.hide();
+        }, 60000);
+        console.log('[eruda] Mobile console enabled');
+        return true;
+      }
+      function waitForEruda() {
+        if (initEruda()) return;
+        // Try once more via CDN — handles CSP errors gracefully
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+        s.crossOrigin = 'anonymous';
+        s.onload = function() {
+          if (!initEruda()) {
+            console.warn('[eruda] init failed even after retry');
+          }
+        };
+        s.onerror = function() {
+          console.warn('[eruda] failed to load from CDN — possibly blocked by CSP');
+        };
+        document.head.appendChild(s);
+      }
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('debug') === 'true' || params.get('eruda') === 'true') {
+        // The isolated root prevents Eruda from resizing document.body and
+        // collapsing the React/AR iframe while the camera is active.
+        waitForEruda();
+      }
+    })();
+  </script>
+</body>
+
+</html>

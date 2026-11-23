@@ -42,6 +42,37 @@ services:
       
       - key: WORKERS
         value: 1  # Single worker for free tier (512MB RAM)
+
+      # Supabase + avatar + frontend origin — wired through env (sync:false
+      # because the values are deployment-specific).
+      - key: SUPABASE_PROJECT_URL
+        sync: false  # Set in Render dashboard (sensitive project URL)
+
+      - key: SUPABASE_STORAGE_BUCKET
+        value: AR_models
+
+      - key: AVATAR_SERVICE_URL
+        value: https://api.dicebear.com/7.x/avataaars/svg
+
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false  # Set in Render dashboard; keep server-only
+
+      - key: TELEGRAM_CHAT_ID
+        sync: false  # Set in Render dashboard
+
+      - key: DEFAULT_FRONTEND_ORIGIN
+        sync: false  # Set to the deployed Vercel frontend origin
+
+      # Sentry backend monitoring. The DSN is server-side and must be entered
+      # manually in Render; tracing is intentionally sampled in production.
+      - key: SENTRY_DSN
+        sync: false
+
+      - key: SENTRY_ENVIRONMENT
+        value: production
+
+      - key: SENTRY_TRACES_SAMPLE_RATE
+        value: 0.1
     
     # Health check
     healthCheckPath: /health

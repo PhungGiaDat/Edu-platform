@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "source_only": true,
+  "source_video_manifest": "momo_course_video_sources.json",
+  "course_ids": [
+    "momo-home-family-english-5-7",
+    "momo-nature-english-5-7",
+    "momo-school-food-english-5-7"
+  ],
+  "entries": [
+    {
+      "course_id": "momo-home-family-english-5-7",
+      "provider_id": "courses/momo-home-family-english-5-7/videos/course-trailer.mp4",
+      "approval_status": "approved_nonverbal_brief",
+      "beats": [
+        {
+          "start_second": 0,
+          "end_second": 5,
+          "purpose": "lexi_greeting",
+          "visual_direction": "Lexi mở cánh cửa căn nhà ấm áp, vẫy tay cạnh gia đình thân thiện.",
+          "on_screen_copy_vi": "Cùng khám phá ngôi nhà nhé!",
+          "lexi_audio_cue": "welcome_chirp",
+          "word_audio": [],
+          "interaction_prompt": null
+        },
+        {
+          "start_second": 5,
+          "end_second": 17,
+          "purpose": "words_in_context",
+          "visual_direction": "Lexi chỉ lần lượt vào ngôi nhà, gia đình và mẹ trong cùng một cảnh bình tĩnh.",
+          "on_screen_copy_vi": "Nhìn ba từ mới nào!",
+          "lexi_audio_cue": "word_sparkle",
+          "word_audio": [
+            "home",
+            "family",
+            "mother"
+          ],
+          "interaction_prompt": null
+        },
+        {
+          "start_second": 17,
+          "end_second": 27,
+          "purpose": "observation_prompt",
+          "visual_direction": "Lexi dừng cạnh cảnh bếp gia đình, giữ khung hình đủ lâu để bé quan sát.",
+          "on_screen_copy_vi": "Con thấy ai trong ngôi nhà?",
+          "lexi_audio_cue": "thinking_pop",
+          "word_audio": [],
+          "interaction_prompt": "Con thấy mẹ hay gia đình nào?"
+        },
+        {
+          "start_second": 27,
+          "end_second": 37,
+          "purpose": "spoken_recap",
+          "visual_direction": "Ba thẻ từ mềm mại xuất hiện lần lượt, không chớp nháy hoặc chuyển cảnh nhanh.",
+          "on_screen_copy_vi": "Cùng nhìn lại ba từ nhé!",
+          "lexi_audio_cue": "practice_cheer",
+          "word_audio": [],
+          "interaction_prompt": null
+        },
+        {
+          "start_second": 37,
+          "end_second": 45,
+          "purpose": "start_invitation",
+          "visual_direction": "Lexi chỉ vào nút bắt đầu ở khung cuối cùng, với ánh sao nhẹ nhàng.",
+          "on_screen_copy_vi": "Mình bắt đầu nhé!",
+          "lexi_audio_cue": "start_twinkle",
+          "word_audio": [],
+          "interaction_prompt": null
+        }
+      ]
+    },
+    {
+      "course_id": "momo-nature-english-5-7",
+      "provider_id": "courses/momo-nature-english-5-7/videos/course-trailer.mp4",
+      "approval_status": "approved_nonverbal_brief",
+      "beats": [
+        {
+          "start_second": 0,
+          "end_second": 5,
+          "purpose": "lexi_greeting",
+          "visual_direction": "Lexi chào bé trong khu vườn sáng dịu, có cây và ao nhỏ.",
+          "on_screen_copy_vi": "Cùng khám phá thiên nhiên nhé!",
+          "lexi_audio_cue": "welcome_chirp",
+          "word_audio": [],
+          "interaction_prompt": null
+        },
+        {
+          "start_second": 5,
+          "end_second": 17,
+          "purpose": "words_in_context",
+          "visual_direction": "Một chú chim, thỏ và cá lần lượt được Lexi chỉ trong cùng bối cảnh thiên nhiên.",
+          "on_screen_copy_vi": "Nhìn ba từ mới nào!",
+          "lexi_audio_cue": "word_sparkle",
+          "word_audio": [
+            "bird",
+            "rabbit",
+            "fish"
+          ],
+          "interaction_prompt": null
+        },
+        {
+          "start_second": 17,
+          "end_second": 27,
+          "purpose": "observation_prompt",
+          "visual_direction": "Lexi dừng cạnh ao để bé tìm con vật đang bơi.",
+          "on_screen_copy_vi": "Con thấy con nào đang bơi?",
+          "lexi_audio_cue": "thinking_pop",
+          "word_audio": [],
+          "interaction_prompt": "Con thấy con cá ở đâu?"
+        },
+        {
+          "start_second": 27,
+          "end_second": 37,
+          "purpose": "spoken_recap",
+          "visual_direction": "Ba thẻ từ thiên nhiên hiện lần lượt với chuyển động nhỏ, chậm và dễ theo dõi.",
+          "on_screen_copy_vi": "Cùng nhìn lại ba từ nhé!",
+          "lexi_audio_cue": "practice_cheer",
+          "word_audio": [],
+          "interaction_prompt": null
+        },
+        {
+          "start_second": 37,
+          "end_second": 45,
+          "purpose": "start_invitation",
+          "visual_direction": "Lexi chỉ về lối mòn dẫn vào bài học, giữ bố cục rộng và rõ ràng.",
+          "on_screen_copy_vi": "Mình bắt đầu nhé!",
+          "lexi_audio_cue": "start_twinkle",
+          "word_audio": [],
+          "interaction_prompt": null
+        }
+      ]
+    },
+    {
+      "course_id": "momo-school-food-english-5-7",
+      "provider_id": "courses/momo-school-food-english-5-7/videos/course-trailer.mp4",
+      "approval_status": "approved_nonverbal_brief",
+      "beats": [
+        {
+          "start_second": 0,
+          "end_second": 5,
+          "purpose": "lexi_greeting",
+          "visual_direction": "Lexi chào bé trước lớp học thân thiện, có ba lô và bàn học.",
+          "on_screen_copy_vi": "Cùng đến trường nhé!",
+          "lexi_audio_cue": "welcome_chirp",
+          "word_audio": [],
+          "interaction_prompt": null
+        },
+        {
+          "start_second": 5,
+          "end_second": 17,
+          "purpose": "words_in_context",
+          "visual_direction": "Lexi chỉ quyển sách, bút chì và quả táo trong một ngày vui ở trường.",
+          "on_screen_copy_vi": "Nhìn ba từ mới nào!",
+          "lexi_audio_cue": "word_sparkle",
+          "word_audio": [
+            "book",
+            "pencil",
+            "apple"
+          ],
+          "interaction_prompt": null
+        },
+        {
+          "start_second": 17,
+          "end_second": 27,
+          "purpose": "observation_prompt",
+          "visual_direction": "Lexi dừng bên bàn học có hộp cơm để bé quan sát kỹ.",
+          "on_screen_copy_vi": "Con thấy đồ ăn nào trên bàn?",
+          "lexi_audio_cue": "thinking_pop",
+          "word_audio": [],
+          "interaction_prompt": "Con thấy quả táo ở đâu?"
+        },
+        {
+          "start_second": 27,
+          "end_second": 37,
+          "purpose": "spoken_recap",
+          "visual_direction": "Ba thẻ từ lớp học và đồ ăn hiện lần lượt với nhịp đọc chậm.",
+          "on_screen_copy_vi": "Cùng nhìn lại ba từ nhé!",
+          "lexi_audio_cue": "practice_cheer",
+          "word_audio": [],
+          "interaction_prompt": null
+        },
+        {
+          "start_second": 37,
+          "end_second": 45,
+          "purpose": "start_invitation",
+          "visual_direction": "Lexi giơ quyển sách và chỉ vào nút bắt đầu, không có lời kêu gọi mua hàng.",
+          "on_screen_copy_vi": "Mình bắt đầu nhé!",
+          "lexi_audio_cue": "start_twinkle",
+          "word_audio": [],
+          "interaction_prompt": null
+        }
+      ]
+    }
+  ]
+}

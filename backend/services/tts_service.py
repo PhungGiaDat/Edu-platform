@@ -1,10 +1,11 @@
 """
-TTS Service - Text-to-Speech using Coqui XTTS or Google Cloud TTS
+TTS Service - CPU Piper with optional Coqui XTTS / Google Cloud fallbacks
 
 Provides high-quality AI voice generation for pronunciation practice.
 Supports Vietnamese language with natural, kid-friendly voices.
 
 Features:
+- Piper for English and Vietnamese, with models packaged in the server image
 - Coqui XTTS v2 for high-quality offline TTS (open source)
 - Google Cloud TTS as cloud fallback
 - Caching to reduce API calls
@@ -15,6 +16,12 @@ import io
 import hashlib
 import logging
 import os
+import importlib.util
+import json
+import math
+import threading
+import uuid
+import wave
 from typing import Optional, Tuple
 from pathlib import Path
 from dataclasses import dataclass
@@ -24,6 +31,10 @@ logger = logging.getLogger(__name__)
 # Lazy loading for heavy dependencies
 _xtts_model = None
 _model_lock = asyncio.Lock()
+_piper_models = {}
+# ponytail: serialize native CPU synthesis on the 2-vCPU VPS; revisit for higher concurrency.
+_piper_lock = threading.Lock()
+_PIPER_VOICES = {"en": "en_US-lessac-medium", "vi": "vi_VN-vais1000-medium"}
 
 # Cache directory for generated audio
 CACHE_DIR = Path.home() / ".cache" / "tts"
@@ -37,7 +48,7 @@ class TTSResult:
     sample_rate: int
     duration_seconds: float
     text: str
-    source: str  # 'xtts' or 'google'
+    source: str  # 'piper', 'xtts', 'google', or 'cache'
 
 
 class TTSError(Exception):
@@ -83,9 +94,9 @@ async def _get_xtts_model():
             return None
 
 
-def _get_cache_key(text: str, language: str, speaker_id: str = "default") -> str:
+def _get_cache_key(text: str, language: str, speaker_id: str = "default", speed: float = 1.0) -> str:
     """Generate cache key for TTS audio."""
-    content = f"{text}:{language}:{speaker_id}"
+    content = f"{text}:{language}:{speaker_id}:{speed}"
     return hashlib.md5(content.encode()).hexdigest()
 
 
@@ -94,8 +105,9 @@ class TTSService:
     Text-to-Speech service supporting multiple providers.
     
     Provider priority:
-    1. Coqui XTTS v2 (offline, high quality, supports Vietnamese)
-    2. Google Cloud TTS (cloud, requires API key)
+    1. Piper (offline, bounded CPU inference for English and Vietnamese)
+    2. Coqui XTTS v2 (optional)
+    3. Google Cloud TTS (optional)
     """
     
     # Supported languages
@@ -135,7 +147,74 @@ class TTSService:
     
     def _normalize_language(self, language: str) -> str:
         """Normalize language code."""
-        return self.LANGUAGE_CODES.get(language.lower(), language.lower())
+        language = language.lower().replace("_", "-")
+        return self.LANGUAGE_CODES.get(language, language.split("-")[0])
+
+    def _piper_model_path(self, language: str) -> Path:
+        directory = Path(os.environ.get("PIPER_MODEL_DIR", str(Path(__file__).resolve().parents[1] / "tts_models")))
+        return directory / f"{_PIPER_VOICES[language]}.onnx"
+
+    def _piper_available_languages(self) -> list:
+        if importlib.util.find_spec("piper") is None:
+            return []
+        return [language for language in _PIPER_VOICES
+                if self._piper_model_path(language).is_file()
+                and Path(str(self._piper_model_path(language)) + ".json").is_file()]
+
+    def _piper_identity(self, language: str) -> str:
+        model = self._piper_model_path(language).resolve()
+        config = Path(str(model) + ".json")
+        return f"piper:{model}:{model.stat().st_mtime_ns}:{config.stat().st_mtime_ns}"
+
+    def _piper_generate(self, text: str, language: str, speed: float) -> TTSResult:
+        """Runs in a worker thread; native models stay loaded for subsequent requests."""
+        from piper import PiperVoice
+        from piper.config import PiperConfig, SynthesisConfig
+        import onnxruntime as ort
+
+        with _piper_lock:
+            identity = self._piper_identity(language)
+            if identity not in _piper_models:
+                path = self._piper_model_path(language)
+                options = ort.SessionOptions()
+                options.intra_op_num_threads = max(1, int(os.environ.get("PIPER_THREADS", "2")))
+                options.inter_op_num_threads = 1
+                options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
+                session = ort.InferenceSession(str(path), sess_options=options,
+                                               providers=["CPUExecutionProvider"])
+                config = json.loads(Path(str(path) + ".json").read_text(encoding="utf-8"))
+                _piper_models[identity] = PiperVoice(session, PiperConfig.from_dict(config))
+            buffer = io.BytesIO()
+            with wave.open(buffer, "wb") as output:
+                _piper_models[identity].synthesize_wav(
+                    text, output, SynthesisConfig(length_scale=1.0 / speed))
+            return self._wav_result(buffer.getvalue(), text, "piper")
+
+    def _wav_result(self, data: bytes, text: str, source: str) -> TTSResult:
+        with wave.open(io.BytesIO(data), "rb") as audio:
+            rate = audio.getframerate()
+            frames = audio.getnframes()
+            if rate <= 0 or frames <= 0:
+                raise wave.Error("Invalid WAV sample rate or empty audio")
+            expected_bytes = frames * audio.getnchannels() * audio.getsampwidth()
+            if len(audio.readframes(frames)) != expected_bytes:
+                raise wave.Error("Incomplete WAV frame payload")
+            duration = frames / rate
+        return TTSResult(data, rate, duration, text, source)
+
+    def _save_cache(self, cache_key: str, data: bytes) -> None:
+        destination = self._get_cache_path(cache_key)
+        temporary = destination.with_suffix(f".{uuid.uuid4().hex}.tmp")
+        try:
+            temporary.write_bytes(data)
+            temporary.replace(destination)
+        except OSError as error:
+            logger.warning("[TTS] Cannot save audio cache: %s", error)
+        finally:
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError:
+                logger.debug("[TTS] Cannot remove temporary cache file: %s", temporary)
     
     def _get_cache_path(self, cache_key: str) -> Path:
         """Get cache file path for a cache key."""
@@ -154,6 +233,8 @@ class TTSService:
     
     async def is_available(self) -> bool:
         """Check if TTS service is available (any provider)."""
+        if self._piper_available_languages():
+            return True
         # Check XTTS
         xtts = await _get_xtts_model()
         if xtts:
@@ -189,22 +270,38 @@ class TTSService:
         """
         if not text or not text.strip():
             raise TTSError("Cannot generate speech from empty text")
+        if len(text) > 500 or not math.isfinite(speed) or not 0.5 <= speed <= 2.0:
+            raise TTSError("TTS requires at most 500 characters and speed between 0.5 and 2.0")
         
         normalized_lang = self._normalize_language(language)
+        piper_available = normalized_lang in self._piper_available_languages()
+        identity = self._piper_identity(normalized_lang) if piper_available else "legacy"
+        cache_key = _get_cache_key(text, normalized_lang, identity, speed)
         
         # Check cache first
         if use_cache:
-            cache_key = _get_cache_key(text, normalized_lang)
             cached_path = self._check_cache(cache_key)
             if cached_path:
-                audio_data = cached_path.read_bytes()
-                return TTSResult(
-                    audio_data=audio_data,
-                    sample_rate=22050,
-                    duration_seconds=len(audio_data) / (22050 * 2),  # Rough estimate
-                    text=text,
-                    source="cache",
-                )
+                try:
+                    result = self._wav_result(cached_path.read_bytes(), text, "cache")
+                except (OSError, EOFError, wave.Error):
+                    logger.warning("[TTS] Ignoring unreadable audio cache: %s", cached_path)
+                else:
+                    if output_path:
+                        Path(output_path).write_bytes(result.audio_data)
+                    return result
+
+        if piper_available:
+            try:
+                result = await asyncio.to_thread(self._piper_generate, text, normalized_lang, speed)
+            except Exception as error:
+                logger.warning("[TTS] Piper synthesis failed: %s", error)
+            else:
+                if use_cache:
+                    self._save_cache(cache_key, result.audio_data)
+                if output_path:
+                    Path(output_path).write_bytes(result.audio_data)
+                return result
         
         # Try XTTS first (higher quality, offline)
         xtts = await _get_xtts_model()
@@ -221,7 +318,7 @@ class TTSService:
             return await self._generate_google_tts(text, normalized_lang, speed, output_path)
         
         raise TTSUnavailableError(
-            "No TTS provider available. Install Coqui TTS or configure Google Cloud TTS."
+            "No TTS provider available. Install Piper and its voice models."
         )
     
     async def _generate_xtts(
@@ -399,7 +496,7 @@ class TTSService:
         Generate Vietnamese speech with optimized settings.
         
         Vietnamese has tonal qualities that require careful TTS handling.
-        Uses XTTS v2 which has good Vietnamese support.
+        Uses the configured Vietnamese voice.
         """
         return await self.generate_speech(
             text=text,
@@ -421,10 +518,13 @@ class TTSService:
     
     async def get_status(self) -> dict:
         """Get TTS service status."""
+        piper_languages = self._piper_available_languages()
         xtts_available = await _get_xtts_model() is not None
         
         return {
-            "available": xtts_available or self._google_tts_available,
+            "available": bool(piper_languages) or xtts_available or self._google_tts_available,
+            "piper_available": bool(piper_languages),
+            "piper_languages": piper_languages,
             "xtts_available": xtts_available,
             "google_tts_available": self._google_tts_available,
             "supported_languages": list(self.SUPPORTED_LANGUAGES.keys()),

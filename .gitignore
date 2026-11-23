@@ -3,8 +3,40 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-.opencode    
-/scripts/
+# OpenCode workspace config IS version-controlled (agents, commands, plugins,
+# rules, package manifest).
+#
+# skills/ is deliberately NOT tracked. It is a vendored mirror: 122 of 132 dirs
+# are byte-identical copies of .cursor/skills, 10 more have silently drifted,
+# and the remaining unity-* skills are already tracked under .claude/skills and
+# .agents/skills. OpenCode V2 discovers skills from those compatibility sources
+# too (verified: it loads .claude/skills, .agents/skills and .opencode/skills),
+# so nothing is lost by ignoring this copy.
+.opencode/skills
+.opencode/node_modules
+
+# Each vendored superpowers copy ships its own (V1-only) .opencode/ plugin dir.
+# The previous blanket ".opencode" pattern matched at every depth and hid these;
+# now that the root config is tracked they surface as untracked noise, so ignore
+# them explicitly to stop a stray "git add -A" from committing the dead V1
+# plugin three more times.
+.claude/skills/*/.opencode/
+.agents/skills/*/.opencode/
+.cursor/skills/*/.opencode/
+
+# Local agent permissions and MCP credentials
+.claude/settings.local.json
+
+# Scripts (root level)
+!/scripts/
+scripts/*.py
+scripts/*.js
+scripts/*.sh
+scripts/*.md
+!scripts/compile_xr_targets.js
+!scripts/upload_ragdoll_3d.py
+!scripts/upload_tus_ragdoll.py
+!scripts/README_3D_UPLOAD.md
 !backend/scripts/
 backend/scripts/*
 !backend/scripts/create_admin.py
@@ -434,9 +466,12 @@ FodyWeavers.xsd
 
 .backend\.env
 .env
+.mcp.json
 .agent
 
-# 3D Model files (assets hosted on Supabase, URLs in MongoDB)
+# 3D Model files (bulk assets hosted on Supabase, URLs stored in the DB).
+# Kept ignored to avoid re-vendoring large binaries; the small runtime
+# bundles that the app and CI actually load are re-included below.
 *.glb
 *.gltf
 *.fbx
@@ -449,3 +484,143 @@ FodyWeavers.xsd
 **/models/3d/
 **/assets/models/
 **/public/models/
+
+# Isolated Codex feature worktrees
+.worktrees/
+
+# Codex cache
+.codex/npm-cache/
+.git-rewrite/
+
+# Project-local VieNeu review runtime and temporary media only.
+tools/vieneu-runtime/
+scratch/momo-tts-models/
+scratch/momo-vieneu-tmp/
+scratch/momo-vieneu-pip-cache/
+scratch/momo-content-staging/
+
+# 3D Models (bulk assets hosted on Supabase, URLs stored in the DB).
+# Ignore the directory *contents* rather than the directory itself: git cannot
+# re-include a file whose parent directory is excluded, so `3DModels/` would
+# make the exceptions below inert. `3DModels/*` + explicit `!` rules is the
+# pattern that actually works.
+3DModels/*
+
+# --- Runtime model exceptions (must ship with the repo) ---
+# The learner app imports these directly (Landscape.tsx -> /assets/models/*.glb,
+# Buddy3D.tsx -> /assets/models/buddy.glb), and
+# backend/tests/test_fish_mobile_asset.py parses the GLB header of
+# 3DModels/fish/fish_mobile_v1.glb, so neither can be Supabase-only.
+# These MUST stay after every `*.glb` / `3DModels/*` rule above.
+!frontend/public/assets/models/
+!frontend/public/assets/models/**
+!3DModels/fish/
+!3DModels/fish/**
+!3DModels/ragdollcat/
+!3DModels/ragdollcat/*
+# ...except the 39MB Blender master, which is a local authoring input only.
+# The runtime ships ragdollcat_runtime_mobile.glb (via Supabase Storage).
+3DModels/ragdollcat/ragdollcat_runtime_master.glb
+3DModels/ragdollcat/*_preexport_*.json
+3DModels/ragdollcat/*_source_audit.json
+
+# IDE files
+mobile/.idea/
+
+# Unity per-machine/user settings
+mobile/unity/.claude/
+mobile/unity/.utmp/
+mobile/unity/Assets/_Recovery/
+mobile/unity/Builds/
+mobile/unity/UserSettings/
+
+# Temp extraction files
+temp_pptx_extract/
+temp_pptx.zip
+temp_*.zip
+temp_*.tmp
+
+# Mobile/RN prototypes
+mobile/rn/assets/prototypes/
+mobile/rn/test-artifacts/
+
+# Shiba (removed)
+shiba/
+
+# Test results
+frontend/test-results/
+
+# 3D Models cache (use Supabase instead)
+# 3DModels/cache/
+
+# Upload results
+docs/upload_xr_flashcards_results.json
+
+# Supabase local (if any)
+supabase/
+
+# Fix diffs
+fix-*.diff
+
+# macOS junk
+.DS_Store
+
+# VAPID private keys (Web Push) � never commit
+**/vapid_private.pem
+*_vapid_tmp*
+
+# Locally generated seed-media outputs. Keep seed scripts and authored manifests tracked.
+scratch/momo-content-prepared-course-covers.json
+backend/database/seed/__pycache__/
+
+# Project-local agent/tool mirrors. The curated skill catalog remains tracked
+# under .agents/skills-disabled/; these are generated runtime copies.
+.agents/skills/
+.superpowers/
+.codex/agents/
+.codex/scripts/
+
+# Local 8th Wall tool checkout and reproducible image-target compiler outputs.
+# Published runtime artifacts live in Supabase Storage rather than this worktree.
+/8thwallmcp/
+/target/
+
+# Generated agents workspace directory
+/agents/
+agents/
+
+# --- Junk / generated artefacts (added 2026-09-27) ---
+# scan / acl / temp dumps
+.scan_i18n.txt
+.scan_moji.txt
+backend_acl.txt
+seeds_acl.txt
+/nul
+.codex.zip
+
+# caches
+.ruff_cache/
+
+# temp / generated working dirs
+/temp/
+backend/database/orm_models_accessible/
+backend/database/orm_models_temp/
+backend/database/postgres_accessible/
+backend/database/orm_models/test.txt
+
+# generated benchmark / audit / report outputs
+backend/benchmarks/results/
+frontend/audit-results.json
+docs/report/BENCHMARK_DASHBOARD_*.html
+docs/supabase_course_assets_upload_report.json
+
+# test artefacts / results
+frontend/test-artifacts/
+frontend/test-results/
+/test-results/
+
+# thesis working / compare dirs and draft docx (keep only the canonical report)
+thesis_report/.codex-thesis-work/
+thesis_report/_qa_compare/
+thesis_report/*.docx
+!thesis_report/IT22.105_BM08_PhungGiaDat.docx

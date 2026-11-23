@@ -1,0 +1,29 @@
+{
+ "bucket": "learnar-assets",
+ "public_base": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/learnar-assets/",
+ "topics": {
+  "home": [
+   {
+    "word": "baby",
+    "translation_vi": "",
+    "lesson": "hello family",
+    "storage_path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/baby.png",
+    "audio_storage_path": null
+   },
+   {
+    "word": "dad",
+    "translation_vi": "",
+    "lesson": "hello family",
+    "storage_path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/dad.png",
+    "audio_storage_path": null
+   },
+   {
+    "word": "mom",
+    "translation_vi": "",
+    "lesson": "hello family",
+    "storage_path": "courses/momo-home-family-english-5-7/lessons/hello-family/vocabulary/mom.png",
+    "audio_storage_path": null
+   }
+  ]
+ }
+}

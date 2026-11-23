@@ -4,7 +4,10 @@ AI API Router - Endpoints for AI-powered features
 """
 from fastapi import Depends, HTTPException, status, Body
 from core.base_router import create_router
+from core.security import get_current_user
+from repositories.postgres_user_repository import PostgresUser
 from services.ai_service import AIService, get_ai_service
+from services.llm_health import snapshot as llm_health_snapshot
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any, Literal
 import logging
@@ -15,6 +18,17 @@ router = create_router(
     prefix="/ai",
     tags=["AI"]
 )
+
+
+@router.get("/llm-health")
+async def get_llm_health(
+    current_user: PostgresUser = Depends(get_current_user),
+):
+    """
+    Which LLM provider keys are alive right now (startup ping + live outcomes).
+    Keys are masked; diagnostics only.
+    """
+    return {"providers": llm_health_snapshot()}
 
 
 class QuizGenerateRequest(BaseModel):

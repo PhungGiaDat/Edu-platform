@@ -1,0 +1,239 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { Msr } from '@/shared/components/Msr';
+import type { Lesson, VocabularyItem } from '@/types/course';
+import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
+import { AudioService } from '@/services/AudioService';
+import { HapticService } from '@/services/HapticService';
+
+interface MatchSectionProps {
+  lesson: Lesson;
+  onComplete: () => void;
+  locale: 'en' | 'vi';
+}
+
+function shuffleArray<T>(array: T[]): T[] {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+export const MatchSection: React.FC<MatchSectionProps> = ({
+  lesson,
+  onComplete,
+  locale,
+}) => {
+  const vocabulary = useMemo(() => lesson.vocabulary || [], [lesson.vocabulary]);
+
+  const [selectedWordPill, setSelectedWordPill] = useState<string | null>(null);
+  const [selectedImageWord, setSelectedImageWord] = useState<string | null>(null);
+  const [matchedWords, setMatchedWords] = useState<Set<string>>(new Set());
+  const [shakeKey, setShakeKey] = useState<string | null>(null);
+
+  // Shuffled order of images for the right column
+  const [shuffledImages, setShuffledImages] = useState<VocabularyItem[]>([]);
+
+  useEffect(() => {
+    setShuffledImages(shuffleArray(vocabulary));
+    setMatchedWords(new Set());
+    setSelectedWordPill(null);
+    setSelectedImageWord(null);
+  }, [vocabulary]);
+
+  const copy = {
+    en: {
+      title: 'Nối từ & Ghép hình',
+      pairsCount: `${vocabulary.length || 3} pairs`,
+      subtitle: 'Tap a word on the left, then tap its picture on the right!',
+      matchedAll: 'Hooray! All pairs matched perfectly!',
+      wordsCol: 'TỪ VỰNG',
+      imagesCol: 'HÌNH ẢNH',
+    },
+    vi: {
+      title: 'Nối từ & Ghép hình',
+      pairsCount: `${vocabulary.length || 3} cặp`,
+      subtitle: 'Bé chạm từ ở bên trái, rồi chạm hình đúng ở bên phải nhé!',
+      matchedAll: 'Tuyệt vời! Bé đã nối đúng tất cả các cặp từ!',
+      wordsCol: 'TỪ VỰNG',
+      imagesCol: 'HÌNH ẢNH',
+    },
+  }[locale];
+
+  const handleSelectWord = (wordEn: string) => {
+    if (matchedWords.has(wordEn.toLowerCase())) return;
+    setSelectedWordPill(wordEn);
+
+    if (selectedImageWord) {
+      checkMatch(wordEn, selectedImageWord);
+    }
+  };
+
+  const handleSelectImage = (wordEn: string) => {
+    if (matchedWords.has(wordEn.toLowerCase())) return;
+    setSelectedImageWord(wordEn);
+
+    if (selectedWordPill) {
+      checkMatch(selectedWordPill, wordEn);
+    }
+  };
+
+  const checkMatch = async (word: string, imageWord: string) => {
+    const isMatch = word.toLowerCase() === imageWord.toLowerCase();
+
+    if (isMatch) {
+      const nextMatched = new Set(matchedWords);
+      nextMatched.add(word.toLowerCase());
+      setMatchedWords(nextMatched);
+      setSelectedWordPill(null);
+      setSelectedImageWord(null);
+
+      await AudioService.playSoundEffect('correct');
+      HapticService.success();
+
+      if (nextMatched.size === vocabulary.length) {
+        window.setTimeout(() => {
+          onComplete();
+        }, 1200);
+      }
+    } else {
+      setShakeKey(`${word}-${imageWord}`);
+      await AudioService.playSoundEffect('wrong');
+      HapticService.tap();
+
+      window.setTimeout(() => {
+        setShakeKey(null);
+        setSelectedWordPill(null);
+        setSelectedImageWord(null);
+      }, 700);
+    }
+  };
+
+  if (!vocabulary.length) {
+    return (
+      <div className="rounded-3xl border-4 border-white bg-white/90 p-8 text-center text-slate-500 shadow-md">
+        Không có dữ liệu bài tập nối từ.
+      </div>
+    );
+  }
+
+  const isAllMatched = matchedWords.size === vocabulary.length;
+
+  return (
+    <section className="space-y-3.5 animate-fade-in w-full max-w-md mx-auto">
+      {/* Compact Heading with Pair Count */}
+      <div className="flex items-center justify-between px-1">
+        <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+          <Msr icon="extension" size={24} />
+          <span>{copy.title}</span>
+        </h2>
+        <span className="text-xs font-black text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200">
+          {copy.pairsCount}
+        </span>
+      </div>
+
+      <p className="text-xs font-bold text-slate-500 px-1 text-center">
+        {copy.subtitle}
+      </p>
+
+      {/* Game board: two floating zones with a connector gutter, no table alignment */}
+      <div className="relative grid grid-cols-2 gap-x-5 gap-y-4 w-full">
+        {/* Dotted connector line down the middle, purely decorative */}
+        <div className="pointer-events-none absolute left-1/2 top-6 bottom-6 w-px -translate-x-1/2 border-l-2 border-dashed border-purple-200" />
+
+        {/* Left Zone: floating word tokens (pill-shaped) */}
+        <div className="space-y-3">
+          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-center">
+            <Msr icon="abc" size={16} style={{ verticalAlign: 'middle' }} /> {copy.wordsCol}
+          </p>
+          {vocabulary.map((item, idx) => {
+            const wordKey = item.word_en.toLowerCase();
+            const isMatched = matchedWords.has(wordKey);
+            const isSelected = selectedWordPill === item.word_en;
+            const isShaking = shakeKey?.startsWith(`${item.word_en}-`);
+
+            return (
+              <button
+                key={`word-${item.word_en}`}
+                type="button"
+                onClick={() => handleSelectWord(item.word_en)}
+                disabled={isMatched}
+                className={`appearance-none w-full min-h-[58px] flex flex-col justify-center items-center px-3 py-2 rounded-full !border-3 text-center transition-all cursor-pointer ${idx % 2 === 1 ? 'ml-2' : '-ml-2'} ${
+                  isMatched
+                    ? '!border-white !bg-[#7BE8B8] opacity-50 scale-90 cursor-default shadow-[0_2px_0_#22C481]'
+                    : isSelected
+                      ? '!border-white !bg-[#C79BF9] scale-[1.05] shadow-[0_6px_0_#9D5EF0] -translate-y-0.5'
+                      : isShaking
+                        ? '!border-white !bg-[#FF9E94] animate-shake shadow-[0_4px_0_#F24E42]'
+                        : '!border-white !bg-[#7DD3EE] hover:brightness-105 shadow-[0_6px_0_#2B9DC4] active:translate-y-1 active:shadow-[0_2px_0_#2B9DC4]'
+                }`}
+              >
+                <span className="text-base font-black text-slate-900 capitalize leading-tight">
+                  {item.word_en}
+                </span>
+                {isMatched ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700"><Msr icon="check" size={14} /> Đã ghép</span>
+                ) : (
+                  <span className="text-[10px] font-bold text-sky-700/80">{item.word_vi}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right Zone: floating image tokens (circular blobs) */}
+        <div className="space-y-3">
+          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-center">
+            <Msr icon="image" size={16} style={{ verticalAlign: 'middle' }} /> {copy.imagesCol}
+          </p>
+          {shuffledImages.map((item, idx) => {
+            const wordKey = item.word_en.toLowerCase();
+            const isMatched = matchedWords.has(wordKey);
+            const isSelected = selectedImageWord === item.word_en;
+            const isShaking = shakeKey?.endsWith(`-${item.word_en}`);
+            const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
+
+            return (
+              <button
+                key={`img-${item.word_en}`}
+                type="button"
+                onClick={() => handleSelectImage(item.word_en)}
+                disabled={isMatched}
+                className={`appearance-none w-full min-h-[58px] flex items-center justify-center px-2 py-1.5 rounded-full !border-3 transition-all cursor-pointer ${idx % 2 === 1 ? '-mr-2' : 'mr-2'} ${
+                  isMatched
+                    ? '!border-white !bg-[#7BE8B8] opacity-50 scale-90 cursor-default shadow-[0_2px_0_#22C481]'
+                    : isSelected
+                      ? '!border-white !bg-[#C79BF9] scale-[1.05] shadow-[0_6px_0_#9D5EF0] -translate-y-0.5'
+                      : isShaking
+                        ? '!border-white !bg-[#FF9E94] animate-shake shadow-[0_4px_0_#F24E42]'
+                        : '!border-white !bg-[#FCE59A] hover:brightness-105 shadow-[0_6px_0_#F0B72B] active:translate-y-1 active:shadow-[0_2px_0_#F0B72B]'
+                }`}
+              >
+                <div
+                  className={`h-11 w-11 rounded-full border-2 shadow-inner overflow-hidden flex items-center justify-center ${
+                    isMatched ? 'bg-[#C6F5DE] border-white' : isSelected ? 'bg-[#EBDCFC] border-white' : isShaking ? 'bg-[#FFD3CD] border-white' : 'bg-[#FDF0C4] border-white'
+                  }`}
+                >
+                  {visual.imageUrl ? (
+                    <img src={visual.imageUrl} alt={item.word_en} className="h-full w-full object-contain p-1" loading="lazy" />
+                  ) : (
+                    <span className="text-xl">{visual.emoji || item.emoji || '✨'}</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Completion Celebration Banner */}
+      {isAllMatched && (
+        <div className="rounded-2xl border-3 border-white bg-[#7BE8B8] p-3.5 text-center shadow-[0_6px_0_#22C481] animate-fade-in">
+          <span className="text-2xl block mb-0.5">🎉</span>
+          <h3 className="text-sm font-black text-emerald-900">{copy.matchedAll}</h3>
+        </div>
+      )}
+    </section>
+  );
+};

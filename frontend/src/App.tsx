@@ -1,0 +1,458 @@
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Routes, Route, Navigate, useLocation, useParams, matchPath } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import FlashcardPage from "./pages/FlashcardPage";
+import LearnARV2 from "./pages/LearnARV2";
+import LearnAR8thWall from "./pages/LearnAR8thWall";
+import { CourseList } from "./pages/CourseList";
+import { CourseDetail } from "./pages/CourseDetail";
+import { LessonPlayer } from "./pages/LessonPlayer";
+import { AnimalsAdventure } from "./pages/AnimalsAdventure";
+import { AnimalsCourse } from "./pages/AnimalsCourse";
+import { AnimalsLessonPlayer } from "./pages/AnimalsLessonPlayer";
+import { Profile } from "./pages/Profile";
+import { Login } from "./pages/Login";
+import { Register } from "./pages/Register";
+import { LandingPage } from "./pages/LandingPage";
+import { ProgressDashboard } from "./pages/ProgressDashboard";
+import { Leaderboard } from "./pages/Leaderboard";
+import { GamesPage } from "./pages/GamesPage";
+import DragMatchGame from "./pages/games/DragMatchGame";
+import MemoryPairsGame from "./pages/games/MemoryPairsGame";
+import ColorLearnGame from "./pages/games/ColorLearnGame";
+import ColorAnimalGame from "./pages/games/ColorAnimalGame";
+import { LexiTransitionOverlay } from "./features/shared/lexi-transition/LexiTransitionOverlay";
+import { LearningPathSetup } from "./pages/LearningPathSetup";
+import { LearningPath3D } from "./pages/LearningPath3D";
+import PetsPage from "./pages/PetsPage";
+import StickersPage from "./pages/StickersPage";
+import { DailyChallengePage } from "./pages/DailyChallengePage";
+import { NotebookPage } from "./pages/NotebookPage";
+import { NotificationSettingsPage } from "./pages/NotificationSettingsPage";
+import { DictionaryPage } from "./pages/DictionaryPage";
+import { InstallGuidePage } from "./pages/InstallGuidePage";
+import { Layout } from "./app/components/Layout";
+import { AIChatBuddy } from "./features/chat/components/AIChatBuddy";
+import { SpeedInsights } from "@vercel/speed-insights/react";
+import { PetUnlockModal } from "./features/pets/components/PetUnlockModal";
+import { eventBus } from "./runtime/EventBus";
+import { usePets, type Pet } from "./features/pets/hooks/usePets";
+import { useAuth } from "./contexts/AuthContext";
+import { getApiBase } from "./config";
+import { apiClient } from "./services/apiClient";
+import { SoundEffectService } from "./services/SoundEffectService";
+import { GlobalSessionWatcher } from "./features/session/components/GlobalSessionWatcher";
+
+// Admin Pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminStudentList from "./pages/admin/StudentList";
+import AdminStudentDetail from "./pages/admin/StudentDetail";
+import AdminCourseManager from "./pages/admin/CourseManager";
+import AdminFlashcardManager from "./pages/admin/FlashcardManager";
+import AdminAnalytics from "./pages/admin/Analytics";
+import AdminMonitoring from "./pages/admin/monitoring/MonitoringPage";
+import AdminGoalSettings from "./pages/admin/GoalSettings";
+import AdminErrorBoundary from "./features/admin/components/AdminErrorBoundary";
+import { CourseCreatePage, CourseEditPage } from "./pages/admin/CourseEditor";
+import GameManager from "./pages/admin/GameManager";
+import { GameCreatePage, GameEditPage } from "./pages/admin/GameEditor";
+import { DeckNewPage, DeckEditPage, CardNewPage, CardEditPage } from "./pages/admin/FlashcardEditor";
+import FlashcardView from "./pages/public/FlashcardView";
+import { PronunciationCoursesPage } from "./features/pronunciation-course/pages/PronunciationCoursesPage";
+import { PronunciationCourseDetailPage } from "./features/pronunciation-course/pages/PronunciationCourseDetailPage";
+import { PronunciationProgressPage } from "./features/pronunciation-course/pages/PronunciationProgressPage";
+
+// ========== Global Pet Unlock Notifier ==========
+// Listens to PET_CAN_UNLOCK (XP gate met) and PET_UNLOCKED (after actual unlock)
+// Shows PetUnlockModal as a global overlay on any page
+
+const API_BASE = getApiBase();
+const STORAGE_KEY = "pet_notified_ids";
+
+/** Load notified pet IDs from localStorage (persists across tab close).
+ *  Previously used sessionStorage which reset on every tab open, causing
+ *  the unlock modal to re-show the same already-notified pets each visit. */
+function loadNotifiedIds(): Set<string> {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+/** Persist notified pet IDs to localStorage */
+function saveNotifiedIds(ids: Set<string>) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
+  } catch {
+    // localStorage unavailable — silently ignore
+  }
+}
+
+export const GlobalPetUnlockNotifier: React.FC = () => {
+  const [modalPet, setModalPet] = useState<Pet | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Queue of pets waiting to be shown — prevents mid-animation replacement
+  const queueRef = useRef<Pet[]>([]);
+  const isBusyRef = useRef(false);
+
+  // Keep celebration history across navigation and tab restarts (localStorage-backed).
+  const notifiedIdsRef = useRef<Set<string>>(loadNotifiedIds());
+  // Guard an initial reconciliation and a simultaneous XP event from racing
+  // duplicate POST /pets/{pet_id}/unlock calls in the same browser tab.
+  const unlockingPetIdsRef = useRef<Set<string>>(new Set());
+
+  const { user } = useAuth();
+  const { unlockPet, setActivePet } = usePets(user?.id || null);
+
+  const handleSetActive = useCallback(async (petId: string) => {
+    await setActivePet(petId);
+  }, [setActivePet]);
+
+  /** Show the next pet in the queue, if any */
+  const showNext = useCallback(() => {
+    const next = queueRef.current.shift();
+    if (next) {
+      isBusyRef.current = true;
+      setModalPet(next);
+      setIsModalOpen(true);
+    } else {
+      isBusyRef.current = false;
+    }
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setIsModalOpen(false);
+    // Wait for PetUnlockModal's own 300ms fade-out, then advance the queue
+    setTimeout(() => {
+      setModalPet(null);
+      showNext();
+    }, 320);
+  }, [showNext]);
+
+  /** Enqueue a pet for the modal — skips if already shown this session */
+  const enqueue = useCallback((pet: Pet, forceShow = false) => {
+    if (!forceShow && notifiedIdsRef.current.has(pet.pet_id)) return;
+
+    notifiedIdsRef.current.add(pet.pet_id);
+    saveNotifiedIds(notifiedIdsRef.current);
+
+    if (isBusyRef.current) {
+      // Modal already open — queue for after current one closes
+      queueRef.current.push(pet);
+    } else {
+      isBusyRef.current = true;
+      setModalPet(pet);
+      setIsModalOpen(true);
+    }
+  }, []);
+
+  // Reconcile XP-gated pets on login and after every XP event. The client
+  // merely triggers the existing authenticated unlock endpoint; the backend
+  // independently checks the gamification total before persisting ownership.
+  useEffect(() => {
+    const handleCanUnlock = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { pets: freshPets } = await apiClient.get('/api/v1/pets');
+
+        const xpUnlockablePets: Pet[] = freshPets.filter(
+          (p: Pet) => (
+            !p.is_unlocked
+            && p.can_unlock
+            && p.unlock_condition.type === 'xp'
+            && !unlockingPetIdsRef.current.has(p.pet_id)
+          )
+        );
+
+        await Promise.all(xpUnlockablePets.map(async (pet) => {
+          unlockingPetIdsRef.current.add(pet.pet_id);
+          try {
+            const result = await unlockPet(pet.pet_id);
+            if (!result.success) {
+              console.warn('[GlobalPetUnlockNotifier] Server rejected pet unlock:', result.message);
+            }
+          } finally {
+            unlockingPetIdsRef.current.delete(pet.pet_id);
+          }
+        }));
+      } catch (error) {
+        console.error('[GlobalPetUnlockNotifier] Unable to reconcile XP pet unlocks:', error);
+      }
+    };
+
+    void handleCanUnlock();
+    eventBus.on('PET_CAN_UNLOCK', handleCanUnlock);
+    return () => eventBus.off('PET_CAN_UNLOCK', handleCanUnlock);
+  }, [unlockPet, user?.id]);
+
+  // Listen for PET_UNLOCKED - emitted by usePets after a confirmed server unlock.
+  // Always show celebration (forceShow=true), even if we notified before.
+  useEffect(() => {
+    const handleUnlocked = (data: { pet: Pet }) => {
+      if (data?.pet) enqueue(data.pet, true);
+    };
+
+    eventBus.on("PET_UNLOCKED", handleUnlocked);
+    return () => eventBus.off("PET_UNLOCKED", handleUnlocked);
+  }, [enqueue]);
+
+  if (!modalPet) return null;
+
+  return (
+    <PetUnlockModal
+      pet={modalPet}
+      isOpen={isModalOpen}
+      onClose={handleClose}
+      onSetActive={handleSetActive}
+    />
+  );
+};
+
+// ========== Conditional AI Chat Buddy ==========
+// Suppressed on /learn-ar to avoid z-index conflicts with AR overlays
+
+const ConditionalAIChatBuddy: React.FC = () => {
+  const location = useLocation();
+  const { isAuthenticated, isGuest } = useAuth();
+
+  // Hide on AR page (z-index conflict, camera/session interference) and all public/unauthenticated routes
+  const publicRoutes = ['/', '/login', '/register'];
+  const isPublicRoute = publicRoutes.includes(location.pathname);
+  const isARPage =
+    location.pathname === '/learn-ar' ||
+    location.pathname.startsWith('/learn-ar-xr');
+  // Learning Path 3D has its own in-world PetGuide as the mascot/focal point;
+  // a second floating mascot bubble competes with it for attention.
+  const isLearningPath3D = location.pathname === '/learning-path-3d';
+  // Lessons have their own Lexi guide; the floating chat button covers lesson actions.
+  const isLessonPage = Boolean(matchPath('/courses/:courseId/lessons/:lessonId', location.pathname));
+
+  if (isARPage || isPublicRoute || isLearningPath3D || isLessonPage) return null;
+  if (!isAuthenticated && !isGuest) return null;
+
+  return <AIChatBuddy />;
+};
+
+const RequireLearnerAccess: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isLoading, isAuthenticated, isGuest } = useAuth();
+  if (isLoading) return null;
+  if (!isAuthenticated && !isGuest) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
+
+const RequireUserAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isLoading, isAuthenticated, isGuest } = useAuth();
+  if (isLoading) return null;
+  if (!isAuthenticated || isGuest) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
+
+const RequireTeacherRole: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isLoading } = useAuth();
+  const { t } = useTranslation();
+  if (isLoading) return null;
+  
+  // Check if user has teacher/admin privileges
+  const hasTeacherRole = user?.role === 'teacher' || user?.role === 'admin' || user?.is_superuser;
+  
+  if (!hasTeacherRole) {
+    // Non-teachers get an explicit notice instead of a silent redirect
+    // (silent bounce looked exactly like "buttons don't work")
+    return (
+      <div className="min-h-dvh flex items-center justify-center bg-[#f7f5f0] px-4">
+        <div className="bg-white border-2 border-white rounded-[18px] shadow-[0_5px_0_rgba(34,48,58,0.05),0_10px_22px_rgba(34,48,58,0.05)] max-w-md w-full p-8 text-center">
+          <div className="mx-auto mb-4 w-12 h-12 rounded-[13px] bg-[rgba(217,119,6,0.12)] flex items-center justify-center">
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h2 className="text-lg font-bold text-[#22303a] mb-2">
+            {t('admin.access.noPermissionTitle', 'Yêu cầu quyền giáo viên')}
+          </h2>
+          <p className="text-sm text-[rgba(34,48,58,0.55)] mb-6">
+            {t('admin.access.noPermission', 'Tài khoản của bạn chưa có quyền giáo viên — cần quyền giáo viên để truy cập khu vực quản lý.')}
+          </p>
+          <a
+            href="/profile"
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded-[13px] bg-white text-[#0d9488] font-semibold text-sm shadow-[0_4px_0_rgba(34,48,58,0.08),inset_0_1px_0_#fff] hover:bg-[rgba(13,148,136,0.06)] transition-colors"
+          >
+            {t('admin.access.backToProfile', '← Về trang cá nhân')}
+          </a>
+        </div>
+      </div>
+    );
+  }
+  
+  return <>{children}</>;
+};
+
+/**
+ * /admin/courses/:courseId had no registered route (blank page on card click).
+ * Card click now lands here and forwards to the existing edit page.
+ */
+const CourseDetailRedirect: React.FC = () => {
+  const { courseId } = useParams<{ courseId: string }>();
+  return <Navigate to={`/admin/courses/${courseId}/edit`} replace />;
+};
+
+// ========== App ==========
+
+const App = () => {
+  // Fire-and-forget warmup ping to wake Render free-tier from cold-start sleep.
+  // This runs once on first page load so the backend is warmed by the time
+  // the user navigates to any data-fetching page.
+  useEffect(() => {
+    fetch(`${API_BASE}/health`).catch(() => {/* ignore — best-effort warmup */});
+  }, []);
+
+  // Initialize audio context on first user interaction
+  useEffect(() => {
+    const unlockAudio = () => {
+      SoundEffectService.unlock().catch(() => {});
+      // Remove listeners after first interaction
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
+    
+    document.addEventListener('click', unlockAudio, { once: true });
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    
+    return () => {
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
+  }, []);
+
+  const location = useLocation();
+  const isARRoute = location.pathname.startsWith('/learn-ar-xr');
+
+  // Eruda mounts from index.html on ?debug/?eruda hard-load. SPA navigation never
+  // reloads that document, so a debug session would leak its console into every
+  // later route. Tear it down whenever the current route is not an explicit debug session.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const isDebugSession = params.get('debug') === 'true' || params.get('eruda') === 'true';
+    if (isDebugSession) return;
+    try {
+      (window as unknown as { eruda?: { destroy?: () => void } }).eruda?.destroy?.();
+    } catch {
+      /* eruda teardown is best-effort */
+    }
+    document.querySelectorAll('[data-eruda-root], #eruda').forEach(el => el.remove());
+  }, [location.pathname, location.search]);
+
+  return (
+    <>
+      <SpeedInsights />
+      {/* Routes */}
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Public QR Code Route */}
+        <Route path="/f/:qrId" element={<FlashcardView />} />
+
+        {/* Public PWA install guide ("Vườn Giờ Vàng") — standalone, no Layout/auth */}
+        <Route path="/install" element={<InstallGuidePage />} />
+
+        {/* Protected Routes (Wrapped in Layout) */}
+        <Route path="/flashcards" element={<RequireUserAuth><Layout><FlashcardPage /></Layout></RequireUserAuth>} />
+        <Route path="/learn-ar" element={<RequireLearnerAccess><LearnARV2 /></RequireLearnerAccess>} />
+        <Route path="/learn-ar-xr" element={<RequireLearnerAccess><LearnAR8thWall /></RequireLearnerAccess>} />
+        <Route path="/learn-ar-xr/:deckId" element={<RequireLearnerAccess><LearnAR8thWall /></RequireLearnerAccess>} />
+        {/* XR routes disabled - implementation in progress */}
+        <Route path="/courses" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/animals" element={<RequireLearnerAccess><Layout><AnimalsCourse /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/animals-adventure" element={<RequireLearnerAccess><Layout><AnimalsAdventure /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/animals-adventure/lessons/:id" element={<RequireLearnerAccess><Layout><AnimalsLessonPlayer /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/animals/lessons/:lessonId" element={<RequireLearnerAccess><Layout><AnimalsLessonPlayer /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/path/:pathId" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/level/:level" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/category/:category" element={<RequireLearnerAccess><Layout><CourseList /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/:id" element={<RequireLearnerAccess><Layout><CourseDetail /></Layout></RequireLearnerAccess>} />
+        <Route path="/courses/:courseId/lessons/:lessonId" element={<RequireLearnerAccess><Layout><LessonPlayer /></Layout></RequireLearnerAccess>} />
+        <Route path="/profile" element={<RequireUserAuth><Layout><Profile /></Layout></RequireUserAuth>} />
+        <Route path="/progress" element={<RequireUserAuth><Layout><ProgressDashboard /></Layout></RequireUserAuth>} />
+        <Route path="/daily-challenge" element={<RequireUserAuth><Layout><DailyChallengePage /></Layout></RequireUserAuth>} />
+        <Route path="/leaderboard" element={<RequireUserAuth><Layout><Leaderboard /></Layout></RequireUserAuth>} />
+        <Route path="/learning-path" element={<RequireUserAuth><Layout><LearningPathSetup /></Layout></RequireUserAuth>} />
+        <Route path="/learning-path-3d" element={<RequireUserAuth><Layout><LearningPath3D /></Layout></RequireUserAuth>} />
+
+        <Route path="/pets" element={<RequireUserAuth><Layout><PetsPage /></Layout></RequireUserAuth>} />
+        <Route path="/stickers" element={<RequireUserAuth><Layout><StickersPage /></Layout></RequireUserAuth>} />
+        <Route path="/scan" element={<Navigate to="/learn-ar" replace />} />
+
+        {/* Games Routes — RequireUserAuth: game completion awards XP server-side;
+            unauthenticated/guest play would 401 mid-game and hard-redirect, losing progress */}
+        <Route path="/games" element={<RequireUserAuth><Layout><GamesPage /></Layout></RequireUserAuth>} />
+        <Route path="/games/drag-match" element={<RequireUserAuth><Layout><DragMatchGame /></Layout></RequireUserAuth>} />
+        <Route path="/games/memory-pairs" element={<RequireUserAuth><Layout><MemoryPairsGame /></Layout></RequireUserAuth>} />
+        <Route path="/games/color-learn" element={<RequireUserAuth><Layout><ColorLearnGame /></Layout></RequireUserAuth>} />
+        <Route path="/games/color-animal" element={<RequireUserAuth><Layout><ColorAnimalGame /></Layout></RequireUserAuth>} />
+
+        {/* Notebook (SRS) + Dictionary — backend contracts READY (PG-backed) */}
+        <Route path="/notebook" element={<RequireUserAuth><Layout><NotebookPage /></Layout></RequireUserAuth>} />
+        <Route path="/dictionary" element={<RequireUserAuth><Layout><DictionaryPage /></Layout></RequireUserAuth>} />
+
+        {/* Pronunciation Courses */}
+        <Route path="/pronunciation-course" element={<RequireUserAuth><Layout><PronunciationCoursesPage /></Layout></RequireUserAuth>} />
+        <Route path="/pronunciation-course/:topicId" element={<RequireUserAuth><Layout><PronunciationCourseDetailPage /></Layout></RequireUserAuth>} />
+        <Route path="/pronunciation-course/progress" element={<RequireUserAuth><Layout><PronunciationProgressPage /></Layout></RequireUserAuth>} />
+
+        {/* Kid reminder settings ("Thời điểm vàng") — parent-facing Web Push config */}
+        <Route path="/notifications" element={<RequireUserAuth><Layout><NotificationSettingsPage /></Layout></RequireUserAuth>} />
+
+        {/* Admin Routes - Require Teacher/Admin Role with Error Boundary */}
+        <Route path="/admin" element={<RequireTeacherRole><AdminErrorBoundary><AdminDashboard /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/flashcards" element={<RequireTeacherRole><AdminErrorBoundary><AdminFlashcardManager /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/games" element={<RequireTeacherRole><AdminErrorBoundary><GameManager /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/courses" element={<RequireTeacherRole><AdminErrorBoundary><AdminCourseManager /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/students" element={<RequireTeacherRole><AdminErrorBoundary><AdminStudentList /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/students/:userId" element={<RequireTeacherRole><AdminErrorBoundary><AdminStudentDetail /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/students/:userId/goals" element={<RequireTeacherRole><AdminErrorBoundary><AdminGoalSettings /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/analytics" element={<RequireTeacherRole><AdminErrorBoundary><AdminAnalytics /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/monitoring" element={<RequireTeacherRole><AdminErrorBoundary><AdminMonitoring /></AdminErrorBoundary></RequireTeacherRole>} />
+
+        {/* Course CRUD Routes */}
+        {/* Card-click route (was missing → blank page): redirect to the edit page */}
+        <Route path="/admin/courses/:courseId" element={<RequireTeacherRole><AdminErrorBoundary><CourseDetailRedirect /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/courses/new" element={<RequireTeacherRole><AdminErrorBoundary><CourseCreatePage /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/courses/:courseId/edit" element={<RequireTeacherRole><AdminErrorBoundary><CourseEditPage /></AdminErrorBoundary></RequireTeacherRole>} />
+
+        {/* Game CRUD Routes (2026-09-09 activation) */}
+        <Route path="/admin/games/new" element={<RequireTeacherRole><AdminErrorBoundary><GameCreatePage /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/games/:gameId/edit" element={<RequireTeacherRole><AdminErrorBoundary><GameEditPage /></AdminErrorBoundary></RequireTeacherRole>} />
+
+        {/* Flashcard CRUD Routes */}
+        <Route path="/admin/flashcards/new-deck" element={<RequireTeacherRole><AdminErrorBoundary><DeckNewPage /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/flashcards/:deckId/edit" element={<RequireTeacherRole><AdminErrorBoundary><DeckEditPage /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/flashcards/:deckId/new" element={<RequireTeacherRole><AdminErrorBoundary><CardNewPage /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/flashcards/:deckId/:cardId" element={<RequireTeacherRole><AdminErrorBoundary><CardEditPage /></AdminErrorBoundary></RequireTeacherRole>} />
+        <Route path="/admin/flashcards/:deckId/:cardId/edit" element={<RequireTeacherRole><AdminErrorBoundary><CardEditPage /></AdminErrorBoundary></RequireTeacherRole>} />
+      </Routes>
+
+      {/* Global AI Chat Buddy - Hidden on AR page to avoid z-index conflicts */}
+      <ConditionalAIChatBuddy />
+
+      {/* Global Pet Unlock Celebration Modal — hidden on AR routes */}
+      {!isARRoute && <GlobalPetUnlockNotifier />}
+
+      {/* Global Session Break Reminder — hidden on AR routes */}
+      {!isARRoute && <GlobalSessionWatcher />}
+
+      {/* Lexi route-transition overlay (Duolingo-style) — suppressed on AR routes,
+          auth pages, and same-path query changes via internal rules */}
+      {!isARRoute && <LexiTransitionOverlay />}
+    </>
+  );
+};
+
+export default App;

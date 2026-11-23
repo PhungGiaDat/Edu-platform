@@ -8,7 +8,8 @@ from typing import Optional, List, Any
 from datetime import datetime
 
 from core.security import get_current_user, get_current_active_superuser, get_current_teacher
-from models.user_mongo import UserDocument
+from repositories.postgres_user_repository import PostgresUser
+from database.postgres_connection import postgres_pool
 from models.admin_models import (
     DashboardStats,
     FlashcardDeckCreate,
@@ -27,6 +28,8 @@ from models.admin_models import (
 )
 from repositories.admin_repository import AdminRepository, get_admin_repository
 from services.flashcard_upload_service import get_flashcard_upload_service
+from models.ar_object_contract import ARObjectConfigurationError
+from models.admin_models import GameRoleUpdate
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,10 +38,10 @@ router = APIRouter()
 
 
 def get_admin_repo(
-    current_user: UserDocument = Depends(get_current_teacher)
+    current_user: PostgresUser = Depends(get_current_teacher)
 ) -> AdminRepository:
     """Dependency to get admin repository scoped to current user"""
-    return AdminRepository(teacher_id=str(current_user.id))
+    return AdminRepository(teacher_id=current_user.id)
 
 
 # ========== Dashboard ==========
@@ -336,6 +339,17 @@ async def create_flashcard_in_deck(
     try:
         card = await repo.create_flashcard(card_dict)
         return AdminFlashcardResponse(**card)
+    except ARObjectConfigurationError as exc:
+        # AR configuration failures are operator mistakes (missing or invalid
+        # AR object), not server faults. Map to 422 so the admin UI can
+        # surface a precise remediation hint without leaking stack traces.
+        logger.info(f"[Admin] Flashcard rejected — {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"[Admin] Flashcard creation error: {e}")
         raise HTTPException(
@@ -446,6 +460,41 @@ async def upload_flashcard_image(
     return result
 
 
+# ========== User Role Management (BE5 — superuser-only) ==========
+
+@router.put("/users/{user_id}/role")
+async def set_user_role(
+    user_id: str,
+    role_data: GameRoleUpdate,
+    current_user: PostgresUser = Depends(get_current_active_superuser),
+):
+    """Promote/demote a user's role. SUPERUSER-ONLY (teachers must never be
+    able to grant themselves or others elevated roles).
+
+    Body: {"role": "teacher" | "learner", "is_superuser": bool?}
+    """
+    logger.info(f"[Admin] PUT /admin/users/{user_id}/role -> {role_data.role}")
+    row = await postgres_pool().fetchrow(
+        """UPDATE public.users
+              SET role=$2,
+                  is_superuser = COALESCE($3, is_superuser),
+                  updated_at = now()
+            WHERE id=$1
+            RETURNING id, role, is_superuser""",
+        user_id, role_data.role, role_data.is_superuser,
+    )
+    if row is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    return {
+        "user_id": row["id"],
+        "role": row["role"],
+        "is_superuser": row["is_superuser"],
+    }
+
+
 # ========== Students ==========
 
 @router.get("/students", response_model=PaginatedResponse)
@@ -537,7 +586,6 @@ async def get_engagement_analytics(
 
 @router.post("/learning-goals", response_model=LearningGoalResponse)
 async def set_student_learning_goal(
-    user_id: str,
     goal_data: LearningGoalCreate,
     repo: AdminRepository = Depends(get_admin_repo)
 ):
@@ -545,9 +593,9 @@ async def set_student_learning_goal(
     Set or update learning goal for a student
     
     Args:
-        user_id: The student's user ID
-        goal_data: Learning goal settings
+        goal_data: user_id + learning goal settings (body — matches frontend contract)
     """
+    user_id = goal_data.user_id
     logger.info(f"[Admin] POST /admin/learning-goals for user {user_id}")
     
     # Verify student is enrolled in teacher's courses

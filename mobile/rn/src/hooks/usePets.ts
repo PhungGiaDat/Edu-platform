@@ -9,6 +9,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { petService } from '../services/petService';
+import { petsApi } from '../services/api';
 import type { Pet } from '../types/pet';
 
 export interface UsePetsResult {
@@ -18,6 +19,7 @@ export interface UsePetsResult {
   error: string | null;
   refresh: () => Promise<void>;
   getPet: (petId: string) => Promise<Pet | null>;
+  setActivePet: (petId: string) => Promise<Pet | null>;
 }
 
 export const usePets = (): UsePetsResult => {
@@ -68,6 +70,22 @@ export const usePets = (): UsePetsResult => {
     }
   }, []);
 
+  const setActivePet = useCallback(async (petId: string): Promise<Pet | null> => {
+    try {
+      const response = await petsApi.setActivePet(petId);
+      setPets((currentPets) =>
+        currentPets.map((pet) => ({
+          ...pet,
+          is_active: pet.pet_id === response.data.pet_id,
+        })),
+      );
+      return response.data;
+    } catch (err) {
+      console.error('usePets: setActivePet failed', err);
+      return null;
+    }
+  }, []);
+
   return {
     pets,
     loading,
@@ -75,5 +93,6 @@ export const usePets = (): UsePetsResult => {
     error,
     refresh,
     getPet,
+    setActivePet,
   };
 };

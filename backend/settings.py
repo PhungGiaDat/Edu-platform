@@ -3,6 +3,8 @@
 Centralized Configuration Management
 Supports both local (.env) and production (environment variables) deployments
 """
+
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 import os
@@ -11,48 +13,202 @@ from pathlib import Path
 # Get the base directory (backend folder)
 BASE_DIR = Path(__file__).resolve().parent
 
+# Forbidden SECRET_KEY placeholder values — fail-closed at import time.
+# CVE-2026-47410 class risk: leaked public defaults must never reach production.
+_FORBIDDEN_SECRET_VALUES = frozenset(
+    {
+        "",
+        "dev-secret-key-change-in-production",
+        "dev-secret",
+        "change-in-production",
+        "changeme",
+        "test-secret",
+        "your-super-secret-key-change-this-in-production",
+    }
+)
+
 
 class Settings(BaseSettings):
     """
     Application Settings - Auto loads from .env file or environment variables
     Priority: Environment Variables > .env file > Default values
     """
-    
+
     # ========== MongoDB Configuration ==========
-    MONGO_URL: str
-    MONGO_DB: str = "eduplatform"
-    
+    # Legacy/transitional. Remove when all domains are Postgres-native.
+    # Legacy-only optional setting. PostgreSQL course workflows must not need a
+    # dummy Mongo URL merely to import application configuration.
+    MONGO_URL: Optional[str] = None
+    MONGO_DB: Optional[str] = "eduplatform"
+
+    # PostgreSQL owns migrated mobile-core paths.  Optional only for isolated
+    # unit tests that construct Settings without a database URL.
+    DATABASE_URL: Optional[SecretStr] = None
+    # Explicit deployment gate: do not route legacy endpoints to the new store
+    # until their response contracts have passed the migration smoke suite.
+    POSTGRES_CORE_ENABLED: bool = True
+    DAILY_CHALLENGE_TIMEZONE: str = "Asia/Ho_Chi_Minh"
+
     # ========== Security ==========
-    SECRET_KEY: str = "dev-secret-key-change-in-production"
+    # Required. No default. Validator rejects placeholders and short values.
+    SECRET_KEY: SecretStr
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    
+
     # ========== Application ==========
     APP_NAME: str = "Eduplatform AR API"
     DEBUG: bool = False
     API_V1_PREFIX: str = "/api/v1"
-    
+
     # ========== CORS ==========
     ALLOWED_ORIGINS: str = "*"  # Comma-separated list
-    
+    # Comma-separated dev-only origins; merged into cors_origins only when DEBUG=true.
+    DEV_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173"
+
     # ========== Static Files ==========
     STATIC_DIR: Path = BASE_DIR / "static"
     UPLOAD_DIR: Path = BASE_DIR / "uploads"
     LEARNAR_ASSETS_BUCKET: str = "learnar-assets"
     SUPABASE_URL: Optional[str] = None
     SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
-    
+
+    # ========== Supabase Storage (refactored: env-driven) ==========
+    # Required. The full Supabase project URL (no trailing slash).
+    # Example: https://rofprrtoeyirssfndxag.supabase.co
+    SUPABASE_PROJECT_URL: str
+    # The public storage bucket that holds AR assets.
+    SUPABASE_STORAGE_BUCKET: str = "AR_models"
+
+    # ========== External Services ==========
+    # Dicebear (or compatible) avatar service base URL.
+    AVATAR_SERVICE_URL: str = "https://api.dicebear.com/7.x/avataaars/svg"
+
+    # ========== Web Push (kid-friendly reminders) ==========
+    # Generate once via scripts/generate_vapid_keys.py. The PRIVATE key never
+    # leaves the server; the public key is served to browsers for subscribe.
+    VAPID_PUBLIC_KEY: Optional[str] = None
+    VAPID_PRIVATE_KEY: Optional[SecretStr] = None
+    # Contact claim required by the Web Push protocol (mailto: or https: URL).
+    VAPID_CLAIM_SUB: str = "https://learnvocab.pages.dev"
+    # Secret header value guarding POST /notifications/internal/dispatch.
+    NOTIFICATION_DISPATCH_SECRET: Optional[SecretStr] = None
+    # Quiet hours (server timezone, 24h) — no pushes between these hours.
+    NOTIFICATION_QUIET_START: int = 20  # 20:30 enforced as start+0.5h window
+    NOTIFICATION_QUIET_END: int = 7  # allowed again from 07:30
+
+    # Telegram debug sync. These values are server-only and must never be
+    # exposed through the frontend bundle.
+    TELEGRAM_BOT_TOKEN: Optional[SecretStr] = None
+    TELEGRAM_CHAT_ID: Optional[str] = None
+
+    # ========== Frontend Origin (CORS — single prod origin) ==========
+    # Required. The deployed Vercel frontend origin (no trailing slash).
+    DEFAULT_FRONTEND_ORIGIN: str
+
     # ========== Server ==========
     HOST: str = "0.0.0.0"
     PORT: int = 8000
-    
+
     # ========== AI Services (Optional) ==========
     OPENAI_API_KEY: Optional[str] = None
     GOOGLE_API_KEY: Optional[str] = None
     AI_DYNAMIC_CONTENT_ENABLED: bool = True
-    AI_CONTENT_TIMEOUT_SECONDS: float = 8.0
-    AI_CONTENT_RETRIES: int = 2
-    
+    AI_CONTENT_TIMEOUT_SECONDS: float = 30.0
+    AI_CONTENT_RETRIES: int = 3
+
+    # ========== OpenRouter Lexi Chatbot (Isolated) ==========
+    OPENROUTER_API_KEY: Optional[SecretStr] = None
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    CHAT_PRIMARY_MODEL: str = "google/gemma-4-26b-a4b-it:free"
+    CHAT_FALLBACK_MODEL: str = "nvidia/nemotron-3-super-120b-a12b:free"
+    CHAT_PRIMARY_START_TIMEOUT_MS: int = 5000
+    CHAT_FALLBACK_START_TIMEOUT_MS: int = 8000
+
+    # ========== TokenRouter Multi-Model LLM ==========
+    # OpenAI-compatible endpoint for Lexi Agentic RAG (Planner / Generator / Validator routing)
+    TOKENROUTER_API_KEY: Optional[SecretStr] = None
+    TOKENROUTER_BASE_URL: str = "https://api.tokenrouter.com/v1"
+    # Default models per pipeline stage (can override per-request)
+    # "openrouter/" prefix routes via OpenRouter; a bare "google/…" id would hit Google's endpoint.
+    MODEL_PLANNER: str = "openrouter/google/gemma-4-31b-it:free"
+    MODEL_GENERATOR: str = "openrouter/google/gemma-4-31b-it:free"
+    MODEL_VALIDATOR: str = "nvidia/nemotron-3-super-120b-a12b:free"
+    # Fallback cascade — comma-separated model list, tried in order on failure
+    MODEL_FALLBACKS: str = "nvidia/nemotron-3-super-120b-a12b:free"
+    # Circuit breaker: fail_max consecutive failures before skipping a model (60s reset)
+    LLM_CIRCUIT_BREAKER_FAIL_MAX: int = 5
+    LLM_CIRCUIT_BREAKER_RESET_SECONDS: int = 60
+    # Agentic RAG Planner/Generator latency budget: per-model request timeout and
+    # attempts per model (1 = no retry; the fallback cascade still applies).
+    AGENTIC_LLM_TIMEOUT_SECONDS: float = 5.0
+    AGENTIC_LLM_MAX_ATTEMPTS: int = 1
+    # False = Planner/Generator call only their primary model (no MODEL_FALLBACKS, no B.AI);
+    # on failure the Planner uses its default plan and the Generator its safe message.
+    AGENTIC_LLM_FALLBACK_ENABLED: bool = False
+    # Validator strategy for the Agentic RAG pipeline:
+    #   "rule" (default) — deterministic content protection (services/rag_content_rules);
+    #                      the LLM validator only runs when a rule cannot fix the draft.
+    #   "llm"            — legacy behaviour: LLM validation on every answer (~7s p50 cost).
+    # Explicit per-request validator_model always forces the LLM path.
+    VALIDATOR_MODE: str = "rule"
+
+    # ========== Ops Monitoring (in-app dashboard) ==========
+    # Master switch for RAG trace persistence + /api/v1/admin/monitoring reads.
+    # Fire-and-forget inserts into Postgres `rag_traces`; never affects chat
+    # responses (persist failures are swallowed and logged at debug level).
+    MONITORING_ENABLED: bool = False
+    # Store a truncated (≤500 char) copy of the learner question on each trace
+    # row. Turn off for stricter privacy; stats/latency capture is unaffected.
+    MONITORING_STORE_QUESTIONS: bool = True
+    # Salt for the non-reversible user hash stored on trace rows. Falls back to
+    # SECRET_KEY when empty — set explicitly if SECRET_KEY may rotate.
+    MONITORING_HASH_SALT: str = ""
+    # Advisory retention window (days) surfaced in the dashboard; pruning is a
+    # manual/operational task (docs/plan/20260912_ops_dashboard.md §8).
+    MONITORING_RETENTION_DAYS: int = 90
+
+    # B.AI provider (OpenAI-compatible fallback for LLM generation)
+    BAI_API_KEY: Optional[SecretStr] = None
+    BAI_BASE_URL: str = "https://api.b.ai/v1"
+    BAI_GENERATION_MODEL: str = "glm-5.3-flash"
+
+    # Justwoker provider (OpenAI-compatible gateway; extra cascade fallback on
+    # timeout/5xx from the primary providers). Only participates in the cascade
+    # once a model is added under this prefix to MODEL_FALLBACKS, e.g.
+    # MODEL_FALLBACKS="justwoker/<model_id>,nvidia/nemotron-3-super-120b-a12b:free"
+    JUSTWOKER_API_KEY: Optional[SecretStr] = None
+    JUSTWOKER_BASE_URL: str = "https://api.justwoker.icu/v1"
+
+    # Google Gemini provider (OpenAI-compatible endpoint; reuses GOOGLE_API_KEY).
+    # Model slugs prefixed "google/" in MODEL_* route here via llm_clients.
+    GOOGLE_LLM_BASE_URL: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
+    GOOGLE_MODEL_FLASH: str = "gemini-flash-latest"
+    GOOGLE_MODEL_LITE: str = "gemini-flash-lite-latest"
+
+    # LLM provider health pings (startup probe + cascade recheck window)
+    LLM_HEALTH_TIMEOUT_SECONDS: float = 4.0
+    LLM_HEALTH_RECHECK_SECONDS: float = 60.0
+
+    # ========== Qdrant RAG (Optional) ==========
+    QDRANT_URL: Optional[str] = None
+    QDRANT_API_KEY: Optional[SecretStr] = None
+    QDRANT_COLLECTION: str = "kids_english_animals_minilm_v1"
+    QDRANT_EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
+    QDRANT_VECTOR_SIZE: int = 384
+    QDRANT_SCORE_THRESHOLD: float = 0.35
+    QDRANT_RETRIEVAL_LIMIT: int = 8
+    QDRANT_CONTEXT_LIMIT: int = 3
+
+    # ========== Wikipedia Retrieval ==========
+    WIKI_FETCH_TIMEOUT_SECONDS: float = 8.0
+    WIKI_SUMMARY_MAX_CHARS: int = 1200
+    WIKI_USER_AGENT: str = (
+        "EduPlatform-Lexi/1.0 (educational dictionary; graduation project)"
+    )
+    # Wiktionary definition fallback (Task 3b)
+    WIKTIONARY_MAX_SENSES: int = 3
+    WIKTIONARY_TEXT_MAX_CHARS: int = 800
+
     # ========== Redis Configuration ==========
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
@@ -63,40 +219,63 @@ class Settings(BaseSettings):
     REDIS_SOCKET_TIMEOUT: int = 5
     REDIS_SOCKET_CONNECT_TIMEOUT: int = 5
     REDIS_SSL: bool = False
-    
+
     # ========== App Lock / Time Limit Settings ==========
     APP_LOCK_DEFAULT_TTL_MINUTES: int = 30
     APP_LOCK_WARNING_TTL_MINUTES: int = 25
     APP_LOCK_MAX_EXTENSION_MINUTES: int = 60
-    
+
     # ========== Rate Limiting Settings ==========
     RATE_LIMIT_AUTH_PER_MINUTE: int = 10
     RATE_LIMIT_API_PER_MINUTE: int = 60
     RATE_LIMIT_API_PER_HOUR: int = 1000
     RATE_LIMIT_BURST: int = 10
-    
+
     # ========== Session Settings ==========
     SESSION_TTL_HOURS: int = 24
     SESSION_REFRESH_THRESHOLD_MINUTES: int = 30
-    
+
     # ========== Cache Settings ==========
     REDIS_TTL: int = 300
     CACHE_PETS_TTL_SECONDS: int = 600
     CACHE_COURSE_TTL_SECONDS: int = 300
     CACHE_USER_STATS_TTL_SECONDS: int = 60
     CACHE_LEADERBOARD_TTL_SECONDS: int = 300
-    
+
     # ========== Supabase Redis Backup ==========
     SUPABASE_REDIS_BACKUP_ENABLED: bool = False
-    
+
     # ========== Pydantic Settings Config ==========
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-        case_sensitive=True
+        env_file=".env", env_file_encoding="utf-8", extra="ignore", case_sensitive=True
     )
-    
+
+    @field_validator("SECRET_KEY", mode="before")
+    @classmethod
+    def _validate_secret_key(cls, v):
+        """Reject empty/placeholder SECRET_KEY values at import time.
+
+        Catches known leaked defaults ("dev-secret-key-change-in-production",
+        "your-super-secret-key-change-this-in-production") and any value shorter
+        than 32 characters. Generate a safe value with:
+
+            python -c "import secrets; print(secrets.token_urlsafe(32))"
+        """
+        raw = v.get_secret_value() if isinstance(v, SecretStr) else str(v)
+        if raw in _FORBIDDEN_SECRET_VALUES:
+            raise ValueError(
+                "SECRET_KEY is set to a known default placeholder. "
+                "Generate a fresh value with: "
+                'python -c "import secrets; print(secrets.token_urlsafe(32))" '
+                "and set it in .env / Render dashboard / docker-compose."
+            )
+        if len(raw) < 32:
+            raise ValueError(
+                f"SECRET_KEY must be at least 32 characters (got {len(raw)}). "
+                "Generate a new one with secrets.token_urlsafe(32)."
+            )
+        return v
+
     @property
     def redis_url(self) -> Optional[str]:
         """Get Redis URL (full URL takes precedence)."""
@@ -105,41 +284,61 @@ class Settings(BaseSettings):
         if self.REDIS_PASSWORD:
             return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
-    
+
     @property
     def is_redis_configured(self) -> bool:
         """Check if Redis is properly configured."""
         return bool(self.REDIS_URL or self.REDIS_HOST != "localhost")
-    
+
+    @property
+    def qdrant_retrieval_version(self) -> str:
+        """Stable identifier for the active Qdrant retrieval configuration."""
+        return f"qdrant:{self.QDRANT_COLLECTION}:{self.QDRANT_EMBEDDING_MODEL}"
+
     @property
     def cors_origins(self) -> list[str]:
-        """Parse ALLOWED_ORIGINS from comma-separated string.
-        
-        The hardcoded defaults are ALWAYS included regardless of the
-        ALLOWED_ORIGINS env var so that the Vercel frontend is never blocked
-        even when Render sets ALLOWED_ORIGINS to a custom value.
+        """Build the effective CORS origin list.
+
+        Rules:
+        - ALLOWED_ORIGINS="*" is honored as the literal list ``["*"]`` ONLY when
+          no credentials are required. With ``allow_credentials=True`` the
+          browser blocks ``*`` (Starlette raises at startup too), so we always
+          narrow to the explicit list in that case.
+        - Always include DEFAULT_FRONTEND_ORIGIN + the canonical Vercel origin.
+        - When DEBUG=true, append the parsed DEV_ORIGINS list.
+        - Order preserved, deduped.
         """
-        # These are always allowed — never remove
-        default_origins = [
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:5173",
+        # When ALLOWED_ORIGINS is a literal "*" we honor the wildcard intent
+        # ONLY when no credentials are required. main.py always sets
+        # allow_credentials=True; treat that as the conservative default and
+        # narrow to the explicit list.
+        if self.ALLOWED_ORIGINS.strip() == "*":
+            explicit = [
+                self.DEFAULT_FRONTEND_ORIGIN.rstrip("/"),
+                "https://edu-platform-dun.vercel.app",
+            ]
+            if self.DEBUG:
+                explicit.extend(
+                    o.strip() for o in self.DEV_ORIGINS.split(",") if o.strip()
+                )
+            return list(dict.fromkeys(explicit))
+
+        always = [
+            self.DEFAULT_FRONTEND_ORIGIN.rstrip("/"),
+            "https://edu-platform-dev.vercel.app",
             "https://edu-platform-dun.vercel.app",
         ]
-        
-        if self.ALLOWED_ORIGINS == "*":
-            # Wildcard requested — honour it
-            return ["*"]
-        
-        # Parse any extra origins from env and merge with always-allowed defaults
-        custom_origins = [
-            origin.strip()
-            for origin in self.ALLOWED_ORIGINS.split(",")
-            if origin.strip()
+        custom = [
+            o.strip()
+            for o in self.ALLOWED_ORIGINS.split(",")
+            if o.strip() and o.strip() != "*"
         ]
-        return list(set(default_origins + custom_origins))
-    
+        result = list(dict.fromkeys(always + custom))
+        if self.DEBUG:
+            dev = [o.strip() for o in self.DEV_ORIGINS.split(",") if o.strip()]
+            result = list(dict.fromkeys(result + dev))
+        return result
+
     def __repr__(self) -> str:
         return f"<Settings(db={self.MONGO_DB}, debug={self.DEBUG}, redis={self.is_redis_configured})>"
 
@@ -150,6 +349,19 @@ settings = Settings()
 
 # Print configuration on startup (sanitized)
 if __name__ != "__main__":
-    print(f"[CONFIG] Loaded settings: DB={settings.MONGO_DB}, Debug={settings.DEBUG}")
-    print(f"[CONFIG] Redis configured: {settings.is_redis_configured}")
-    print(f"[CONFIG] Static dir: {settings.STATIC_DIR}")
+    import sys
+
+    print(
+        f"[CONFIG] Loaded settings: DB={settings.MONGO_DB}, Debug={settings.DEBUG}",
+        file=sys.stderr,
+    )
+    print(f"[CONFIG] Redis configured: {settings.is_redis_configured}", file=sys.stderr)
+    print(f"[CONFIG] Static dir: {settings.STATIC_DIR}", file=sys.stderr)
+
+    # Warn if OpenRouter API key is missing
+    if not settings.OPENROUTER_API_KEY:
+        import logging
+
+        logging.getLogger("settings").warning(
+            "[CONFIG] OPENROUTER_API_KEY is not set — /api/v1/chat endpoints require OPENROUTER_API_KEY."
+        )

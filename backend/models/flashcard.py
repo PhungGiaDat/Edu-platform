@@ -1,87 +1,13 @@
 # models/flashcard.py
 """
-Flashcard Models - Beanie Documents and Pydantic Schemas
+Flashcard Models - PostgreSQL via repositories
 
-Architecture: Hybrid Database (Beanie for MongoDB)
-- Beanie Document for database operations
-- Pydantic schemas for API request/response
+All database operations go through FlashcardRepository (PostgreSQL).
+Pydantic schemas are used for API request/response validation.
 """
-from beanie import Document, Indexed
 from pydantic import BaseModel, Field
 from typing import Dict, Optional, List
 from datetime import datetime
-
-
-# ========== Beanie Document (MongoDB) ==========
-class Flashcard(Document):
-    """
-    Flashcard Document - stored in MongoDB
-
-    Collection: flashcards
-    """
-    qr_id: Indexed(str, unique=True)  # Unique identifier for QR code
-    word: str
-    translation: Dict[str, str] = Field(
-        ...,
-        description="Translations in different languages, e.g., {'en': 'hello', 'vi': 'xin chào'}"
-    )
-    definition: Optional[str] = None  # Text description for embedding generation
-    category: str
-    image_url: str
-
-    # Supabase public URL format:
-    # https://<project>.supabase.co/storage/v1/object/public/audio/<filename>.mp3
-    audio_url: Optional[str] = None
-
-    difficulty: str = Field(default="easy")  # easy, medium, hard
-    ar_tag: Optional[str] = None  # Reference to AR target/marker
-
-    # Animation hint for Flashcard.tsx component.
-    # "bounce" → animate-bounce (Tailwind)
-    # "pulse"  → animate-pulse (Tailwind)
-    # "wiggle" → custom CSS keyframe (±15deg rotation)
-    # None     → static image; brief bounce plays on tap
-    image_animation_type: Optional[str] = None
-
-    # AI Vector Embedding (3072 dimensions for Gemini gemini-embedding-001)
-    vector_embedding: Optional[List[float]] = None
-
-    # Metadata
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: Optional[datetime] = None
-
-    class Settings:
-        name = "flashcards"  # MongoDB collection name
-        indexes: list = [
-            # NOTE: qr_id unique index is auto-generated from the field-level
-            # `qr_id: Indexed(str, unique=True)` declaration above (name="qr_id_1").
-            # Do NOT add [("qr_id", 1)] here or MongoDB will raise
-            # IndexKeySpecsConflict (code 86) because two indexes would share
-            # the same auto-generated name with different unique options.
-            # Organization indexes
-            [("category", 1)],
-            [("difficulty", 1)],
-            [("is_active", 1)],
-            # Deck-based queries
-            [("deck_id", 1), ("created_at", 1)],  # Flashcards in deck by creation time
-            # Teacher scoping
-            [("teacher_id", 1)],  # Teacher's flashcards (sparse - nullable field)
-        ]
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "qr_id": "apple_001",
-                "word": "apple",
-                "translation": {"en": "apple", "vi": "quả táo"},
-                "category": "fruits",
-                "image_url": "https://<project>.supabase.co/storage/v1/object/public/images/apple.png",
-                "audio_url": "https://<project>.supabase.co/storage/v1/object/public/audio/apple.mp3",
-                "difficulty": "easy",
-                "ar_tag": "apple_marker",
-                "image_animation_type": "bounce"
-            }
-        }
 
 
 # ========== Pydantic Schemas (API) ==========
@@ -90,13 +16,13 @@ class FlashcardCreate(BaseModel):
     qr_id: str
     word: str
     translation: Dict[str, str]
-    definition: Optional[str] = None  # Text for AI embedding
+    definition: Optional[str] = None
     category: str
     image_url: str
-    audio_url: Optional[str] = None           # Supabase URL
+    audio_url: Optional[str] = None
     difficulty: str = "easy"
     ar_tag: Optional[str] = None
-    image_animation_type: Optional[str] = None  # "bounce" | "pulse" | "wiggle" | None
+    image_animation_type: Optional[str] = None
 
 
 class FlashcardUpdate(BaseModel):
@@ -106,7 +32,7 @@ class FlashcardUpdate(BaseModel):
     definition: Optional[str] = None
     category: Optional[str] = None
     image_url: Optional[str] = None
-    audio_url: Optional[str] = None           # Supabase URL
+    audio_url: Optional[str] = None
     difficulty: Optional[str] = None
     ar_tag: Optional[str] = None
     image_animation_type: Optional[str] = None
@@ -125,19 +51,15 @@ class FlashcardResponse(BaseModel):
     difficulty: str
     ar_tag: Optional[str] = None
     image_animation_type: Optional[str] = None
-    has_embedding: bool = False  # Indicates if vector_embedding exists
+    has_embedding: bool = False
 
     class Config:
         from_attributes = True
         populate_by_name = True
 
 
-# ========== Legacy Schema (Backward Compatibility) ==========
 class FlashcardSchema(BaseModel):
-    """
-    Legacy flashcard schema - kept for backward compatibility
-    Use FlashcardResponse for new code
-    """
+    """Legacy flashcard schema - kept for backward compatibility"""
     qr_id: str
     word: str
     translation: Dict[str, str] = Field(..., description="Từ vựng và bản dịch của nó")
