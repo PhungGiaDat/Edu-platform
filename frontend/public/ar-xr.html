@@ -1,0 +1,3876 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>8th Wall AR - Claymorphic Flashcards</title>
+
+  <link rel="preconnect" href="https://rofprrtoeyirssfndxag.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+  <script>
+    var xrDebugParams = new URLSearchParams(location.search);
+    if (xrDebugParams.get('eruda') === 'true' || xrDebugParams.get('debug') === 'true') {
+      (function() {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/eruda@3';
+        s.onload = function() { eruda.init({ defaults: { displaySize: 30, transparency: 0.8 }, useShadowDom: true }); };
+        document.head.appendChild(s);
+      })();
+    }
+  </script>
+
+  <script>
+    (function installViewerDebugBridge() {
+      var params = new URLSearchParams(location.search);
+      if (params.get('debug') !== 'true' && location.hostname !== 'localhost') return;
+
+      try {
+        window.parent.postMessage({
+          type: 'AR_DEBUG',
+          payload: {
+            label: 'VIEWER_JS_ALIVE',
+            details: { ts: Date.now(), href: location.href, ua: navigator.userAgent.substring(0, 80) },
+            source: 'ar-viewer-console',
+          },
+          timestamp: Date.now(),
+          origin: 'child'
+        }, '*');
+      } catch (_) {}
+
+      function sendDebug(label, details) {
+        try {
+          window.parent.postMessage({
+            type: 'AR_DEBUG',
+            payload: { label: label, details: details || {}, source: 'ar-viewer-console' },
+            timestamp: Date.now(),
+            origin: 'child'
+          }, '*');
+        } catch (_) {}
+      }
+
+      // Keep this bridge available before any module import. If the main AR
+      // module fails to resolve, the probes below can still report the cause.
+      window.__arSendDebug = sendDebug;
+
+      window.addEventListener('securitypolicyviolation', function(event) {
+        sendDebug('CSP_VIOLATION', {
+          blockedURI: event.blockedURI || null,
+          violatedDirective: event.violatedDirective || null,
+          effectiveDirective: event.effectiveDirective || null,
+          sourceFile: event.sourceFile || null,
+          lineNumber: event.lineNumber || null,
+          columnNumber: event.columnNumber || null,
+        });
+      });
+
+      function serialise(args) {
+        return Array.prototype.slice.call(args).map(function(value) {
+          try {
+            if (value instanceof Error) return value.stack || value.message;
+            return typeof value === 'object' ? JSON.stringify(value) : String(value);
+          } catch (_) { return String(value); }
+        }).join(' ').slice(0, 4000);
+      }
+
+      ['error', 'warn', 'log', 'info'].forEach(function(level) {
+        var original = console[level].bind(console);
+        console[level] = function() {
+          try { sendDebug('VIEWER_CONSOLE_' + level.toUpperCase(), { level: level, text: serialise(arguments), engine: '8th-wall' }); } catch (_) {}
+          return original.apply(console, arguments);
+        };
+      });
+
+      window.addEventListener('error', function(event) {
+        var el = event.target;
+        sendDebug('VIEWER_ERROR', {
+          message: event.message || null,
+          error: event.error && (event.error.stack || event.error.message) || null,
+          filename: event.filename || null,
+          line: event.lineno || null,
+          column: event.colno || null,
+          tag: el && el.tagName || null,
+          src: el && (el.src || el.href) || null,
+        });
+      }, true);
+
+      window.addEventListener('unhandledrejection', function(event) {
+        var reason = event.reason;
+        sendDebug('VIEWER_UNHANDLED_REJECTION', { level: 'error', text: reason instanceof Error ? (reason.stack || reason.message) : String(reason) });
+      });
+
+      console.info('[ar-xr] Debug bridge installed');
+    })();
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: system-ui, sans-serif; }
+    #canvas-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
+    #camerafeed { display: block; width: 100%; height: 100%; }
+    #model-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    #overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); color: #fff; z-index: 100; transition: opacity 0.3s ease; }
+    #overlay.hidden { opacity: 0; pointer-events: none; }
+    .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.15); border-top-color: #4ecdc4; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading-text { font-size: 18px; margin-bottom: 8px; text-align: center; }
+    #hint-text { font-size: 14px; opacity: 0.6; text-align: center; }
+    #error-text { color: #FF6B6B; font-size: 14px; margin-top: 16px; text-align: center; max-width: 280px; }
+    #card-label { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: 600; z-index: 50; pointer-events: none; opacity: 0; transition: opacity 0.3s ease; }
+    #card-label.visible { opacity: 1; }
+    #debug-panel { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.75); color: #0f0; padding: 8px 12px; border-radius: 8px; font-size: 11px; font-family: monospace; z-index: 200; display: none; }
+    #motion-diagnostics-toggle { margin-top: 6px; padding: 3px 6px; border: 1px solid #0f0; border-radius: 4px; background: #081408; color: #0f0; font: inherit; cursor: pointer; }
+    #motion-diagnostics-status { max-width: 260px; margin-top: 4px; color: #b8ffb8; white-space: normal; }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <canvas id="camerafeed"></canvas>
+    <canvas id="model-canvas"></canvas>
+  </div>
+  <div id="overlay">
+    <div class="spinner"></div>
+    <div id="loading-text">Loading 8th Wall Engine...</div>
+    <div id="hint-text">Point camera at flashcard</div>
+    <div id="error-text"></div>
+  </div>
+  <div id="card-label"></div>
+  <div id="debug-panel">
+    <div id="debug-status">Initializing...</div>
+    <div id="debug-engine">Engine: 8th Wall (self-hosted)</div>
+    <button id="motion-diagnostics-toggle" type="button" hidden>Enable motion diagnostics</button>
+    <div id="motion-diagnostics-status" hidden>Motion diagnostics idle</div>
+  </div>
+
+  <script
+    id="xr8-engine-script"
+    src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js"
+    async
+    crossorigin="anonymous">
+  </script>
+
+  <script>
+    (function installXr8ScriptProbe() {
+      var xrScript = document.getElementById('xr8-engine-script');
+      var debug = window.__arSendDebug;
+      if (!xrScript || typeof debug !== 'function') return;
+
+      xrScript.addEventListener('load', function() {
+        debug('XR8_SCRIPT_LOAD', { hasXR8: !!window.XR8 });
+      });
+
+      xrScript.addEventListener('error', function(event) {
+        debug('XR8_SCRIPT_ERROR', { src: xrScript.src, type: event.type });
+      });
+    })();
+  </script>
+
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/" } }
+  </script>
+
+  <script type="module">
+    const debug = (label, details = {}) => window.__arSendDebug?.(label, details);
+
+    debug('MODULE_PROBE_START');
+
+    try {
+      await import('three');
+      debug('MODULE_PROBE_THREE_OK');
+    } catch (error) {
+      debug('MODULE_PROBE_THREE_FAIL', {
+        error: error?.stack || error?.message || String(error),
+      });
+    }
+
+    try {
+      await import('three/addons/loaders/GLTFLoader.js');
+      debug('MODULE_PROBE_GLTF_OK');
+    } catch (error) {
+      debug('MODULE_PROBE_GLTF_FAIL', {
+        error: error?.stack || error?.message || String(error),
+      });
+    }
+
+    const expectedLifecycleExports = [
+      'advanceCatReturnTween',
+      'advanceComboProximityGate',
+      'advanceTargetAcquisitionState',
+      'advanceVisualPose',
+      'canPlayCatMeow',
+      'classifyCatGesture',
+      'classifyCatTap',
+      'classifyInteractionTargetLoss',
+      'classifySurfaceOrientation',
+      'createInteractionTransaction',
+      'distanceBetweenPositions',
+      'getConsumablePartnerTargets',
+      'getEligibleCatAmbient',
+      'getGroundedCenterOffset',
+      'getInteractionParticipantTargets',
+      'getSurfaceAlignmentQuaternion',
+      'getSurfaceFlatScore',
+      'getTargetLossGraceState',
+      'mapDeviceGravityToScreen',
+      'normalizeDeviceGravity',
+      'resolveGravityWorldUpCandidate',
+      'resolveDeviceMotionPermissionMode',
+      'resolveSessionTargetAdmission',
+      'hasAnimationCapability',
+      'selectCapabilityTargetInstance',
+      'isCatOneShotCompletionOwner',
+      'isInteractionRunOwner',
+      'isInteractionTransactionLocked',
+      'isInteractionTransactionWatchdogExpired',
+      'normalizeInteractionRule',
+      'reconcileInteractionParticipantTracking',
+      'resolveInteractionAnimation',
+      'resolveForwardAxis',
+      'resolveInstancePresentationMode',
+      'resolveModelPresentation',
+      'resolvePresentationMode',
+      'resolveRuleProximityConfig',
+      'resolveTargetModelAttachment',
+      'selectActiveInteractionRule',
+      'setInteractionPartnerVisibility',
+      'shouldReplaceCatAnimation',
+      'shouldUpdateVisualPose',
+      'shouldRevealAR',
+      'smoothstep',
+    ];
+
+    try {
+      const lifecycleModule = await import('./static/ar-assets/js/ar-interaction-lifecycle.js?v=target-admission-v2');
+      const missingExports = expectedLifecycleExports.filter((name) => !(name in lifecycleModule));
+      if (missingExports.length > 0) {
+        debug('MODULE_PROBE_LIFECYCLE_FAIL', {
+          missingExports,
+          availableExports: Object.keys(lifecycleModule).sort(),
+        });
+      } else {
+        debug('MODULE_PROBE_LIFECYCLE_OK', { exports: expectedLifecycleExports });
+      }
+    } catch (error) {
+      debug('MODULE_PROBE_LIFECYCLE_FAIL', {
+        error: error?.stack || error?.message || String(error),
+      });
+    }
+
+    debug('MODULE_PROBE_COMPLETE');
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import {
+      advanceCatReturnTween,
+      advanceComboProximityGate,
+      advanceTargetAcquisitionState,
+      advanceVisualPose,
+      canPlayCatMeow,
+      classifyCatGesture,
+      classifyCatTap,
+      classifyInteractionTargetLoss,
+      classifySurfaceOrientation,
+      createInteractionTransaction,
+      distanceBetweenPositions,
+      getConsumablePartnerTargets,
+      getEligibleCatAmbient,
+      getGroundedCenterOffset,
+      getInteractionParticipantTargets,
+      getSurfaceAlignmentQuaternion,
+      getSurfaceFlatScore,
+      getTargetLossGraceState,
+      mapDeviceGravityToScreen,
+      normalizeDeviceGravity,
+      resolveGravityWorldUpCandidate,
+      resolveDeviceMotionPermissionMode,
+      resolveSessionTargetAdmission,
+      hasAnimationCapability,
+      selectCapabilityTargetInstance,
+      isCatOneShotCompletionOwner,
+      isInteractionRunOwner,
+      isInteractionTransactionLocked,
+      isInteractionTransactionWatchdogExpired,
+      normalizeInteractionRule,
+      reconcileInteractionParticipantTracking,
+      resolveInteractionAnimation,
+      resolveForwardAxis,
+      resolveInstancePresentationMode,
+      resolveModelPresentation,
+      resolvePresentationMode,
+      resolveRuleProximityConfig,
+      resolveTargetModelAttachment,
+      selectActiveInteractionRule,
+      setInteractionPartnerVisibility,
+      shouldReplaceCatAnimation,
+      shouldUpdateVisualPose,
+      shouldRevealAR,
+      smoothstep,
+    } from './static/ar-assets/js/ar-interaction-lifecycle.js?v=target-admission-v2';
+    import {
+      createLearnerTargetGate,
+      LEARNER_TARGET_STABLE_DWELL_MS,
+    } from './static/ar-assets/js/learner-target-gate.js';
+    window.THREE = THREE;
+
+    // ========== RUNTIME DIAGNOSTICS ==========
+    const RuntimeDiagnostics = {
+      xrRunCount: 0,
+      assert(condition, label) {
+        if (!condition) {
+          const msg = `[RUNTIME_INVARIANT VIOLATED] ${label}`;
+          console.error(msg);
+          sendMessage('XR_ERROR', { message: msg, stage: 'invariant' });
+        }
+      },
+    };
+
+    // ========== LOGGING BUFFER ==========
+    const MAX_LOG_BUFFER = 500;
+    const logBuffer = [];
+    function logToBuffer(level, message, details = null) {
+      const timestamp = new Date().toISOString().substring(11, 23);
+      const entry = { timestamp, level, message, details };
+      logBuffer.push(entry);
+      if (logBuffer.length > MAX_LOG_BUFFER) logBuffer.shift();
+      const prefix = `[${timestamp}]`;
+      if (details) console.log(prefix, `[${level.toUpperCase()}]`, message, details);
+      else console.log(prefix, `[${level.toUpperCase()}]`, message);
+    }
+
+    window.XRDebug = { getLogs: () => logBuffer.map(e => { const details = e.details ? ` ${JSON.stringify(e.details)}` : ''; return `${e.timestamp} [${e.level.toUpperCase()}] ${e.message}${details}`; }).join('\n'), logBuffer };
+
+    // ========== PARAMS FROM URL ==========
+    const params = new URLSearchParams(location.search);
+    const qrId           = params.get('qr_id') || '';
+    const modelUrl       = params.get('model_3d_url') || '';
+    const targetJsonUrl  = params.get('xr_target_json_url') || '';
+    const targetImageUrl = params.get('xr_target_image_url') || '';
+    const word           = params.get('word') || qrId;
+    const apiBase        = (params.get('api_base') || 'https://edu-platform-api.duckdns.org').replace(/\/+$/, '');
+    const isDebug        = location.hostname === 'localhost' || params.get('debug') === 'true';
+    const AR_VIEWER_BUILD_VERSION = 'slam-boundary-diagnostics-v1';
+    const parentDiagnosticsVersion = params.get('ar_diagnostics_version') || 'absent';
+    const requestedPresentationMode = resolvePresentationMode(params.get('presentation_mode'));
+    const SURFACE_PRESENTATION_CONFIG = {
+      tabletopEnterScore: 0.82,
+      tabletopExitScore: 0.65,
+      orientationStableMs: 400,
+      orientationLossGraceMs: 750,
+      gravityMaxAgeMs: 750,
+      gravityStabilityDot: 0.94,
+      telemetryIntervalMs: 2000,
+      // 8th Wall planar image targets use the anchor-local XY plane. +Z is
+      // therefore the candidate plane normal to validate with device telemetry.
+      targetNormalLocal: { x: 0, y: 0, z: 1 },
+    };
+
+    // ========== BOOTSTRAP STATE (must exist before any sendARDebug call) ==========
+    let currentPhase = 'initializing';
+    const viewerBootStartedAt = performance.timeOrigin + performance.now();
+    let xrCameraStatus = 'unknown';
+    let xrTargetConfigs = [];
+
+    // ========== PER-TARGET INSTANCE STATE ==========
+    // One entry per tracked QR code. scene/camera/renderer stay singletons (ONE XR scene).
+    const targetInstances = new Map();
+    // Primary target's singleton refs — used for the entry (scanned) target's model rendering
+    // Compatibility diagnostics for the scanned entry target only. Generic
+    // rendering and interaction ownership live exclusively on targetInstances.
+    let loadedModel = null;
+
+    // Scene singletons — ONE XR scene, shared by all targets
+    let scene = null, camera = null, renderer = null;
+
+    // Debug-only DeviceMotion probe. The sensor reports device-body axes;
+    // camera orientation maps its screen-adjusted vector into XR scene space.
+    const motionDiagnosticsState = {
+      active: false,
+      listenersAttached: false,
+      motionPermission: null,
+      orientationPermission: null,
+      permissionState: 'idle',
+      hasAccelerationIncludingGravity: false,
+      hasAcceleration: false,
+      hasOrientation: false,
+      hasGravitySample: false,
+      lastGravitySampleAt: Number.NEGATIVE_INFINITY,
+      lastCapabilityTelemetryAt: 0,
+      lastGravityTelemetryAt: 0,
+      lastSurfaceTelemetryAt: 0,
+    };
+    const diagnosticDeviceGravity = new THREE.Vector3();
+    const diagnosticScreenGravity = new THREE.Vector3();
+    const diagnosticCameraWorldUp = new THREE.Vector3();
+    const diagnosticPreviousWorldUp = new THREE.Vector3();
+    const diagnosticTargetNormal = new THREE.Vector3();
+    const diagnosticCameraQuaternion = new THREE.Quaternion();
+    const diagnosticAnchorQuaternion = new THREE.Quaternion();
+    let diagnosticHasPreviousWorldUp = false;
+    const surfaceWorldUpState = { worldUp: null, source: 'gravity_unavailable' };
+    const diagnosticRawAcceleration = { x: null, y: null, z: null };
+    const diagnosticScreenMapArgs = {
+      vector: diagnosticDeviceGravity,
+      screenAngle: 0,
+      out: diagnosticScreenGravity,
+    };
+
+    function getMotionDiagnosticScreenAngle() {
+      const angle = window.screen?.orientation?.angle;
+      return Number.isFinite(angle) ? angle : (Number.isFinite(window.orientation) ? window.orientation : 0);
+    }
+
+    function getMotionDiagnosticScreenOrientation() {
+      return {
+        angle: getMotionDiagnosticScreenAngle(),
+        type: window.screen?.orientation?.type || null,
+      };
+    }
+
+    function getMotionDiagnosticCapability() {
+      const motionApiAvailable = typeof window.DeviceMotionEvent !== 'undefined';
+      const orientationApiAvailable = typeof window.DeviceOrientationEvent !== 'undefined';
+      const motionRequestAvailable = typeof window.DeviceMotionEvent?.requestPermission === 'function';
+      const orientationRequestAvailable = typeof window.DeviceOrientationEvent?.requestPermission === 'function';
+      return {
+        supported: motionApiAvailable,
+        motionApiAvailable,
+        orientationApiAvailable,
+        motionRequestAvailable,
+        orientationRequestAvailable,
+        permissionState: motionDiagnosticsState.permissionState,
+        motionPermission: motionDiagnosticsState.motionPermission,
+        orientationPermission: motionDiagnosticsState.orientationPermission,
+        hasAccelerationIncludingGravity: motionDiagnosticsState.hasAccelerationIncludingGravity,
+        hasAcceleration: motionDiagnosticsState.hasAcceleration,
+        hasOrientation: motionDiagnosticsState.hasOrientation,
+        screenOrientation: getMotionDiagnosticScreenOrientation(),
+      };
+    }
+
+    function updateMotionDiagnosticsStatus(text) {
+      if (motionDiagnosticsStatus) motionDiagnosticsStatus.textContent = text;
+    }
+
+    function emitMotionDiagnosticCapability(now = performance.now()) {
+      if (!isDebug || now - motionDiagnosticsState.lastCapabilityTelemetryAt < 500) return;
+      motionDiagnosticsState.lastCapabilityTelemetryAt = now;
+      sendARDebug('DEVICE_MOTION_CAPABILITY', getMotionDiagnosticCapability());
+    }
+
+    function updateMotionDiagnosticGravity() {
+      diagnosticScreenMapArgs.screenAngle = getMotionDiagnosticScreenAngle();
+      const mapped = mapDeviceGravityToScreen(diagnosticScreenMapArgs);
+      motionDiagnosticsState.hasGravitySample = !!mapped;
+    }
+
+    function onDeviceMotionDiagnostic(event) {
+      const now = performance.now();
+      const accelerationIncludingGravity = event.accelerationIncludingGravity;
+      const acceleration = event.acceleration;
+      motionDiagnosticsState.hasAccelerationIncludingGravity = !!accelerationIncludingGravity;
+      motionDiagnosticsState.hasAcceleration = !!acceleration;
+      diagnosticRawAcceleration.x = accelerationIncludingGravity?.x ?? null;
+      diagnosticRawAcceleration.y = accelerationIncludingGravity?.y ?? null;
+      diagnosticRawAcceleration.z = accelerationIncludingGravity?.z ?? null;
+      if (!normalizeDeviceGravity(accelerationIncludingGravity, diagnosticDeviceGravity)) {
+        motionDiagnosticsState.hasGravitySample = false;
+        emitMotionDiagnosticCapability();
+        return;
+      }
+      updateMotionDiagnosticGravity();
+      if (motionDiagnosticsState.hasGravitySample) {
+        motionDiagnosticsState.lastGravitySampleAt = now;
+      }
+      emitMotionDiagnosticCapability();
+      emitDeviceGravitySample(now);
+    }
+
+    function onDeviceOrientationDiagnostic() {
+      motionDiagnosticsState.hasOrientation = true;
+      emitMotionDiagnosticCapability();
+    }
+
+    function onMotionDiagnosticScreenOrientationChange() {
+      if (motionDiagnosticsState.hasGravitySample) updateMotionDiagnosticGravity();
+    }
+
+    function attachMotionDiagnosticListeners() {
+      if (motionDiagnosticsState.listenersAttached) return;
+      window.addEventListener('devicemotion', onDeviceMotionDiagnostic, { passive: true });
+      window.addEventListener('deviceorientation', onDeviceOrientationDiagnostic, { passive: true });
+      window.screen?.orientation?.addEventListener?.('change', onMotionDiagnosticScreenOrientationChange);
+      window.addEventListener('orientationchange', onMotionDiagnosticScreenOrientationChange, { passive: true });
+      motionDiagnosticsState.listenersAttached = true;
+    }
+
+    function emitDeviceGravitySample(now) {
+      if (!isDebug || !motionDiagnosticsState.active || now - motionDiagnosticsState.lastGravityTelemetryAt < 500) return;
+      motionDiagnosticsState.lastGravityTelemetryAt = now;
+      if (motionDiagnosticsState.hasGravitySample && camera) {
+        camera.getWorldQuaternion(diagnosticCameraQuaternion);
+        diagnosticCameraWorldUp.copy(diagnosticScreenGravity).applyQuaternion(diagnosticCameraQuaternion).normalize();
+      }
+      sendARDebug('DEVICE_GRAVITY_SAMPLE', {
+        rawAccelerationIncludingGravity: {
+          x: diagnosticRawAcceleration.x,
+          y: diagnosticRawAcceleration.y,
+          z: diagnosticRawAcceleration.z,
+        },
+        normalizedDeviceGravity: motionDiagnosticsState.hasGravitySample ? {
+          x: diagnosticDeviceGravity.x,
+          y: diagnosticDeviceGravity.y,
+          z: diagnosticDeviceGravity.z,
+        } : null,
+        screenCameraUp: motionDiagnosticsState.hasGravitySample ? {
+          x: diagnosticScreenGravity.x,
+          y: diagnosticScreenGravity.y,
+          z: diagnosticScreenGravity.z,
+        } : null,
+        derivedWorldUp: motionDiagnosticsState.hasGravitySample && camera ? {
+          x: diagnosticCameraWorldUp.x,
+          y: diagnosticCameraWorldUp.y,
+          z: diagnosticCameraWorldUp.z,
+        } : null,
+        cameraQuaternion: camera ? {
+          x: diagnosticCameraQuaternion.x,
+          y: diagnosticCameraQuaternion.y,
+          z: diagnosticCameraQuaternion.z,
+          w: diagnosticCameraQuaternion.w,
+        } : null,
+        screenOrientation: getMotionDiagnosticScreenOrientation(),
+        source: 'device_motion_acceleration_including_gravity_camera_world_quaternion',
+      });
+    }
+
+    async function enableMotionDiagnostics() {
+      if (!isDebug) return;
+      if (
+        motionDiagnosticsState.active
+        && motionDiagnosticsState.permissionState !== 'permission_required'
+      ) {
+        updateMotionDiagnosticsStatus('Motion diagnostics enabled; move phone');
+        emitMotionDiagnosticCapability();
+        return;
+      }
+      const motionApiAvailable = typeof window.DeviceMotionEvent !== 'undefined';
+      const orientationApiAvailable = typeof window.DeviceOrientationEvent !== 'undefined';
+      const motionRequest = window.DeviceMotionEvent?.requestPermission;
+      const orientationRequest = window.DeviceOrientationEvent?.requestPermission;
+      const motionRequestAvailable = typeof motionRequest === 'function';
+      const orientationRequestAvailable = typeof orientationRequest === 'function';
+      if (!motionApiAvailable) {
+        motionDiagnosticsState.permissionState = 'unsupported';
+        updateMotionDiagnosticsStatus('DeviceMotion unsupported');
+        emitMotionDiagnosticCapability();
+        return;
+      }
+
+      updateMotionDiagnosticsStatus('Requesting motion permission…');
+      if (motionDiagnosticsToggle) motionDiagnosticsToggle.disabled = true;
+
+      try {
+        // Calls begin synchronously inside the button gesture as required by iOS.
+        const motionPermissionPromise = motionRequestAvailable
+          ? motionRequest.call(window.DeviceMotionEvent)
+          : Promise.resolve('implicit');
+        const orientationPermissionPromise = orientationApiAvailable && orientationRequestAvailable
+          ? orientationRequest.call(window.DeviceOrientationEvent)
+          : Promise.resolve(orientationApiAvailable ? 'implicit' : 'unsupported');
+        const [motionPermission, orientationPermission] = await Promise.all([
+          motionPermissionPromise,
+          orientationPermissionPromise,
+        ]);
+        motionDiagnosticsState.motionPermission = motionPermission;
+        motionDiagnosticsState.orientationPermission = orientationPermission;
+        motionDiagnosticsState.permissionState = resolveDeviceMotionPermissionMode({
+          apiAvailable: motionApiAvailable,
+          requestPermissionAvailable: motionRequestAvailable,
+          permissionResult: motionPermission,
+        });
+        if (motionDiagnosticsState.permissionState !== 'granted' && motionDiagnosticsState.permissionState !== 'implicit') {
+          motionDiagnosticsState.active = false;
+          updateMotionDiagnosticsStatus(`Motion permission: ${motionDiagnosticsState.permissionState}`);
+          return;
+        }
+        motionDiagnosticsState.active = true;
+        attachMotionDiagnosticListeners();
+        updateMotionDiagnosticsStatus('Motion diagnostics enabled; move phone');
+      } catch (error) {
+        motionDiagnosticsState.active = false;
+        motionDiagnosticsState.permissionState = 'error';
+        motionDiagnosticsState.motionPermission = null;
+        motionDiagnosticsState.orientationPermission = null;
+        updateMotionDiagnosticsStatus('Motion permission error');
+        sendDebugOnly('DEVICE_MOTION_PERMISSION_ERROR', { error: String(error) });
+      } finally {
+        if (motionDiagnosticsToggle && !motionDiagnosticsState.active) motionDiagnosticsToggle.disabled = false;
+        emitMotionDiagnosticCapability();
+      }
+    }
+
+    function initializeMotionSource() {
+      if (requestedPresentationMode !== 'AUTO') return;
+      const motionApiAvailable = typeof window.DeviceMotionEvent !== 'undefined';
+      if (!motionApiAvailable) {
+        motionDiagnosticsState.permissionState = 'unsupported';
+        return;
+      }
+
+      const motionRequestAvailable = typeof window.DeviceMotionEvent?.requestPermission === 'function';
+      if (motionRequestAvailable) {
+        // iOS requires a user gesture before requestPermission(). The existing
+        // debug control is the explicit gesture path; normal AUTO safely stays
+        // SCREEN until a usable sample is actually available.
+        motionDiagnosticsState.permissionState = 'permission_required';
+        motionDiagnosticsState.active = true;
+        attachMotionDiagnosticListeners();
+        return;
+      }
+
+      motionDiagnosticsState.permissionState = 'implicit';
+      motionDiagnosticsState.active = true;
+      attachMotionDiagnosticListeners();
+    }
+
+
+    // ========== INTERACTION STATE MACHINE ==========
+    // Phases:
+    // SEARCH_PRIMARY → PRIMARY_LOCKED → WAIT_SECONDARY
+    // → WAIT_SECONDARY_MODEL (fish found but model not yet visible)
+    // → PROXIMITY_PENDING → PROXIMITY_ENTER
+    // → COMBO_ARMED → COMBO_TURNING → COMBO_PLAYING → COMBO_CONSUMED
+    // → (rearm on far) → WAIT_SECONDARY
+    const InteractionPhase = {
+      SEARCH_PRIMARY: 'SEARCH_PRIMARY',
+      PRIMARY_LOCKED: 'PRIMARY_LOCKED',
+      WAIT_SECONDARY: 'WAIT_SECONDARY',
+      WAIT_SECONDARY_MODEL: 'WAIT_SECONDARY_MODEL',
+      PROXIMITY_PENDING: 'PROXIMITY_PENDING',
+      COMBO_ARMED: 'COMBO_ARMED',
+      COMBO_TURNING: 'COMBO_TURNING',
+      COMBO_PLAYING: 'COMBO_PLAYING',
+      COMBO_CONSUMED: 'COMBO_CONSUMED',
+    };
+
+    const INTERACTION_CONFIG = {
+      primaryLockMs: 400,
+      proximityStableMs: 300,
+      lostGraceMs: 550,
+      distance: {
+        enter: 0.72,
+        exit: 0.80,
+        smoothingAlpha: 0.25,
+      },
+      proximitySampleHz: 4,
+      consumeAtRatio: 0.65,
+    };
+
+    // Procedural combo visual config
+    const COMBO_VISUAL_CONFIG = {
+      bodyTurnMs: 400,
+      maxBodyYawDeg: 55,
+      returnTurnMs: 400,
+      forwardYawOffsetDeg: 0,
+    };
+    const INTERACTION_TRANSACTION_CONFIG = {
+      safetyBufferMs: 750,
+    };
+    const VISUAL_POSE_CONFIG = {
+      tauMs: 80,
+      telemetryIntervalMs: 1000,
+    };
+
+    // Boot gate state
+    let bootState = {
+      cameraReady: false,
+      primaryReady: false,
+      primaryReadyAt: null,   // performance.now() when the entry model finished loading
+      arRevealed: false,
+      secondaryProgress: 0,
+      lastProgressLogPercent: 0,  // throttle to 20/40/60/80/100
+    };
+
+    // The one CAT mixer owns every CAT clip. A callback can mutate it only if
+    // it still owns both the generation and exact AnimationAction it started.
+    const catAnimationState = {
+      generation: 0,
+      action: null,
+      clipName: null,
+      source: null,
+      priority: 0,
+    };
+    const interactionAnimationCleanupHooks = new Set();
+    const catPointerGesture = {
+      active: false,
+      pointerId: null,
+      startedAt: 0,
+      startX: 0,
+      startY: 0,
+      hitDistance: null,
+      hitSource: null,
+    };
+    const catAmbientState = {
+      idleSince: performance.now(),
+      nextClip: 'CAT_LOOK_UP',
+    };
+
+    // CAT meow audio (preloaded when CAT becomes ready)
+    const CAT_AUDIO_CONFIG = {
+      // Audio asset from existing project: Supabase AR_models/assets/animal/
+      meowUrl: 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/animal/cat_meow.mp3',
+    };
+    let catMeowAudio = null;
+    let catMeowAudioLoaded = false;
+    let normalizedInteractionRules = [];
+    let selectedInteractionRuleId = null;
+    const unavailableAnimationRuleIds = new Set();
+
+    const interactionState = {
+      phase: InteractionPhase.SEARCH_PRIMARY,
+      primaryLockedAt: null,
+      proximityEnteredAt: null,
+      filteredDistance: null,
+      comboPlaying: false,
+      comboConsumed: false,
+      comboRunId: 0,
+      // Latched state captured at COMBO_ARMED
+      comboLatch: null,          // { runId, ruleId, actorTarget, partnerTargets, actorPose, partnerPose, actorOriginalYaw }
+      // Generic ownership lock for a committed actor/partner interaction run.
+      transaction: null,         // { runId, ruleId, actorTarget, partnerTargets, participantTargets, lockedAt, watchdogAt, deferredLosses }
+      activeAnimation: null,     // { runId, actorTarget, action, mixer, onFinish, idleClip, catAnimationGeneration }
+      // Procedural turn state
+      actorTurn: null,          // { runId, actorTarget, fromYaw, toYaw, startedAt, durationMs }
+      // Post-combo return state
+      actorReturn: null,        // { runId, actorTarget, fromYaw, toYaw, startedAt, durationMs }
+      actorTarget: null,
+      partnerTargets: [],
+      // Visual grace: targets pending hidden due to grace expiry
+      pendingGraceHides: new Map(), // targetName → graceStartTime
+      // Debug: last logged SECONDARY_READINESS to avoid spam
+      lastSecondaryReadiness: null,
+      consumeTimeoutId: null,
+      lastProximityLog: 0,
+    };
+
+    // ========== MULTI-TARGET CONFIG PARSING ==========
+    function parseXRTargetConfigs() {
+      const raw = params.get('xr_targets');
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch (error) {
+          logToBuffer('error', 'XR_TARGET_CONFIG_PARSE_ERROR', { error: String(error) });
+        }
+      }
+      return [{
+        qr_id: qrId,
+        word: word,
+        xr_target_json_url: targetJsonUrl,
+        xr_target_image_url: targetImageUrl,
+        model_3d_url: modelUrl,
+        animations: null,
+        default_animation: null,
+        combo_animation: null,
+        position: null,
+        rotation: null,
+        scale: null,
+        physical_width_m: null,
+        presentation_mode: null,
+        presentation_profile: null,
+        presentation_scale_multiplier: null,
+        presentation_position_offset: null,
+        presentation_forward_axis: null,
+      }];
+    }
+
+    xrTargetConfigs = parseXRTargetConfigs();
+
+    // Populate targetInstances Map for all tracked targets
+    for (const config of xrTargetConfigs) {
+      targetInstances.set(config.qr_id, {
+        config,
+        anchor: null,
+        offsetGroup: null,
+        surfaceRoot: null,
+        presentationMode: 'SCREEN',
+        presentationCandidateMode: null,
+        presentationCandidateSince: null,
+        presentationLastValidAt: null,
+        lastSurfaceTelemetryAt: Number.NEGATIVE_INFINITY,
+        model: null,
+        mixer: null,
+        animations: [],
+        tracked: false,
+        pose: null,
+        attachPromise: null,
+        modelAttached: false,
+        modelState: 'idle', // idle | loading | loaded | error
+        modelLoadStart: 0,
+        pivotNormalized: false, // normalize pivot only once per model
+        modelPresentation: null,
+        presentationBounds: null,
+        visualPosition: null,
+        visualQuaternion: null,
+        visualPoseInitialized: false,
+        lastVisualPoseAt: null,
+        lastVisualPoseTelemetryAt: Number.NEGATIVE_INFINITY,
+        catInteractionProxy: null,
+        // Interaction fields
+        foundAt: null,
+        stable: false,
+        lastSeenAt: 0,
+        lostAt: null,
+        lossConfirmedAt: null,
+        interactionReady: false,
+        visibleByInteraction: true,
+      });
+    }
+
+    const targetConfigByName = new Map(xrTargetConfigs.map(c => [c.qr_id, c]));
+    const primaryModelTargetName = qrId;
+
+    function getInstanceRequestedPresentationMode(instance) {
+      return resolveInstancePresentationMode({
+        instance,
+        requestedPresentationMode,
+      });
+    }
+
+    // Multi-target session: every catalogue target may appear. The entry target only seeds the
+    // boot preload and focus; interaction rules only decide which combinations trigger behaviour.
+    let admittedTargetNames = new Set(targetInstances.keys());
+    let sessionAdmissionLogEmitted = false;
+
+    // Demo resilience is declarative configuration only. Every fallback passes
+    // through the same normalized rule matcher and executor as backend data.
+    const DEMO_INTERACTION_FALLBACKS = Object.freeze([{
+      tags: ['cat001', 'fish001'],
+      target_order: ['cat001', 'fish001'],
+      combo_id: 'cat001-fish001-fallback',
+      animation_trigger: 'CAT_EAT',
+      priority: 100,
+      proximity: {
+        enter_distance: 0.62,
+        exit_distance: 0.70,
+        proximity_stable_ms: 300,
+        smoothing_alpha: 0.25,
+      },
+      consume_at_ratio: 0.65,
+      source: 'fallback',
+    }]);
+
+    function hasSameRuleTargets(left, right) {
+      return Array.isArray(left)
+        && Array.isArray(right)
+        && left.length === right.length
+        && left.every((target) => right.includes(target));
+    }
+
+    function hasCompatibleRuleProximity(rule, fallback) {
+      const ruleProximity = rule?.proximity;
+      const fallbackProximity = fallback?.proximity;
+      return ruleProximity?.enter_distance === fallbackProximity?.enter_distance
+        && ruleProximity?.exit_distance === fallbackProximity?.exit_distance
+        && ruleProximity?.proximity_stable_ms === fallbackProximity?.proximity_stable_ms
+        && ruleProximity?.smoothing_alpha === fallbackProximity?.smoothing_alpha;
+    }
+
+    function withConfiguredDemoFallback(rawRules) {
+      let rules = Array.isArray(rawRules) ? [...rawRules] : [];
+      for (const fallback of DEMO_INTERACTION_FALLBACKS) {
+        if (!fallback.tags.every((targetName) => targetInstances.has(targetName))) continue;
+        const validBackendRule = rules.find((rule) => (
+          hasSameRuleTargets(rule?.tags, fallback.tags)
+          && hasCompatibleRuleProximity(rule, fallback)
+        ));
+        if (validBackendRule) continue;
+        rules = [
+          ...rules.filter((rule) => !hasSameRuleTargets(rule?.tags, fallback.tags)),
+          { ...fallback },
+        ];
+      }
+      return rules;
+    }
+
+    function installInteractionRules(rawRules) {
+      normalizedInteractionRules = withConfiguredDemoFallback(rawRules)
+        .map((rawRule) => normalizeInteractionRule(rawRule));
+      unavailableAnimationRuleIds.clear();
+
+      sendARDebug('INTERACTION_RULES_LOADED', {
+        count: normalizedInteractionRules.length,
+        executableCount: normalizedInteractionRules.filter((rule) => rule.executable).length,
+      });
+      for (const rule of normalizedInteractionRules) {
+        sendARDebug('INTERACTION_RULE_NORMALIZED', {
+          ruleId: rule.id,
+          requiredTargets: rule.requiredTargets,
+          executable: rule.executable,
+          source: rule.source,
+        });
+        sendARDebug('RULE_ACTOR_RESOLVED', {
+          ruleId: rule.id,
+          actorTarget: rule.actorTarget,
+          partnerTargets: rule.partnerTargets,
+          source: rule.actorSource,
+        });
+        if (!rule.executable) {
+          sendARDebug('INTERACTION_RULE_UNSUPPORTED', {
+            ruleId: rule.id,
+            requiredTargetCount: rule.requiredTargets.length,
+          });
+        }
+        if (rule.executable) {
+          const proximity = resolveRuleProximityConfig(rule, null);
+          sendARDebug('INTERACTION_RULE_PROXIMITY_RESOLVED', {
+            actorTarget: rule.actorTarget,
+            partnerTargets: rule.partnerTargets,
+            source: rule.source,
+            enterDistance: proximity?.enterDistance ?? null,
+            exitDistance: proximity?.exitDistance ?? null,
+            proximityStableMs: proximity?.stableMs ?? null,
+            smoothingAlpha: proximity?.smoothingAlpha ?? null,
+          });
+        }
+      }
+      refreshSessionTargetAdmission();
+    }
+
+    function refreshSessionTargetAdmission() {
+      admittedTargetNames = new Set(targetInstances.keys());
+      if (sessionAdmissionLogEmitted) return;
+      sessionAdmissionLogEmitted = true;
+      sendDebugOnly('SESSION_TARGET_ADMISSION', {
+        entryTarget: primaryModelTargetName,
+        admittedTargets: Array.from(admittedTargetNames),
+        source: 'session-catalogue',
+      });
+    }
+
+    function isRuntimeTargetAdmitted(targetName) {
+      return targetInstances.has(targetName) && admittedTargetNames.has(targetName);
+    }
+
+    if (isDebug) {
+      sendARDebug('AR_VIEWER_BUILD', {
+        version: AR_VIEWER_BUILD_VERSION,
+        parentVersion: parentDiagnosticsVersion,
+        diagnosticsVersion: AR_VIEWER_BUILD_VERSION,
+      });
+    }
+
+    sendARDebug('XR_MULTI_CONFIG', {
+      count: xrTargetConfigs.length,
+      targets: xrTargetConfigs.map(t => t.qr_id),
+    });
+
+    // ========== DOM ==========
+    const overlay    = document.getElementById('overlay');
+    const loadingText = document.getElementById('loading-text');
+    const hintText    = document.getElementById('hint-text');
+    const errorText   = document.getElementById('error-text');
+    const cardLabel   = document.getElementById('card-label');
+    const debugPanel  = document.getElementById('debug-panel');
+    const debugStatus = document.getElementById('debug-status');
+    const motionDiagnosticsToggle = document.getElementById('motion-diagnostics-toggle');
+    const motionDiagnosticsStatus = document.getElementById('motion-diagnostics-status');
+    if (isDebug) debugPanel.style.display = 'block';
+    logToBuffer('info', 'ar-xr.html loaded', { qrId, isDebug });
+
+    // ========== POST MESSAGE ==========
+    function sendMessage(type, payload = {}) {
+      window.parent.postMessage({ type, payload, timestamp: Date.now() }, '*');
+    }
+
+    const learnerTargetGate = createLearnerTargetGate({
+      dwellMs: LEARNER_TARGET_STABLE_DWELL_MS,
+      onStableFound: ({ targetName, word, acquiredAt }) => {
+        sendMessage('AR_LEARNER_TARGET_STABLE_FOUND', { targetName, word, acquiredAt });
+      },
+      onStableLost: ({ targetName, lostAt }) => {
+        sendMessage('AR_LEARNER_TARGET_STABLE_LOST', { targetName, lostAt });
+      },
+    });
+
+    // ========== AR_DEBUG MESSAGE ==========
+    function sendARDebug(label, details = {}) {
+      const debugPayload = {
+        label, details, source: 'ar-xr',
+        phase: currentPhase, engine: '8th-wall',
+        qrId, word, xrTargetsCount: xrTargetConfigs.length,
+      };
+      sendMessage('AR_DEBUG', debugPayload);
+      logToBuffer('debug', label, details);
+    }
+
+    // Boundary probes are intentionally available only to an explicit debug
+    // session. They observe boot ordering and never participate in control flow.
+    function sendDebugOnly(label, details = {}) {
+      if (!isDebug) return;
+      sendARDebug(label, details);
+    }
+
+    function setPhase(phase) {
+      const previousPhase = currentPhase;
+      currentPhase = phase;
+      sendARDebug('PHASE_CHANGE', { from: previousPhase, to: phase });
+    }
+
+    function showOverlay(text, hint = '') {
+      overlay.classList.remove('hidden');
+      loadingText.textContent = text;
+      hintText.textContent = hint;
+      errorText.textContent = '';
+    }
+    function hideOverlay() { overlay.classList.add('hidden'); }
+
+    // ========== CAT TAP / MEOW ==========
+    // Three.js Raycaster (reusable, not allocated per tap)
+    const raycaster = new THREE.Raycaster();
+    const pointerNdc = new THREE.Vector2();
+    const CAT_HIT_PROXY_SCALE = 1.30;
+
+    function isCatMascotInstance(instance) {
+      return hasAnimationCapability(instance, 'CAT_IDLE') && (
+        hasAnimationCapability(instance, 'CAT_MEOW')
+        || hasAnimationCapability(instance, 'CAT_PET_REACT')
+        || hasAnimationCapability(instance, 'CAT_SPIN')
+      );
+    }
+
+    function getCatMascotInstance({
+      requireTracked = false,
+      requireVisible = false,
+      requireInteractionReady = false,
+    } = {}) {
+      const selected = selectCapabilityTargetInstance({
+        targetInstances,
+        supportsCapability: isCatMascotInstance,
+        requireTracked,
+        requireVisible,
+        requireInteractionReady,
+      });
+      return selected?.instance || null;
+    }
+
+    // CAT gestures are a per-model capability layer. Generic pair interaction
+    // never depends on CAT_MEOW or any other mascot clip.
+    function canTriggerCatInteraction() {
+      const catInst = getCatMascotInstance({
+        requireTracked: true,
+        requireVisible: true,
+        requireInteractionReady: true,
+      });
+      if (!catInst) return false;
+      if (!isCatMascotInstance(catInst)) return false;
+      if (!catInst.model) return false;
+      if (!catInst.mixer) return false;
+      if (!catInst.model.visible) return false;
+      // Must be effectively tracked (grace-ok)
+      if (!catInst.tracked) return false;
+      return canPlayCatMeow({
+        phase: interactionState.phase,
+        catReturn: interactionState.actorReturn,
+        catReady: catInst.modelState === 'loaded',
+        catTracked: catInst.tracked,
+        catMeowing: !!catAnimationState.action,
+      });
+    }
+
+    function resetCatAmbientIdle() {
+      catAmbientState.idleSince = performance.now();
+    }
+
+    function getCatIdleClip(instance) {
+      return instance?.animations?.find(
+        clip => clip.name === (instance.config?.default_animation || 'CAT_IDLE')
+      ) || instance?.animations?.find(clip => clip.name === 'CAT_IDLE');
+    }
+
+    // One-shot actions are faded out immediately after completion. There is no
+    // delayed stop/reset, so an older run cannot mutate a newer AnimationAction.
+    function restoreCatIdleAfterOneShot(instance, oneShotAction, source, oneShotClipName = null) {
+      if (!instance?.mixer) return;
+
+      const idleClip = getCatIdleClip(instance);
+      if (!idleClip) {
+        sendARDebug('CAT_IDLE_RESTORE_FAILED', {
+          source,
+          reason: 'idle_clip_missing',
+        });
+        return;
+      }
+
+      if (oneShotAction) {
+        oneShotAction.fadeOut(0.12);
+      }
+
+      const idleAction = instance.mixer.clipAction(idleClip);
+      idleAction.reset();
+      idleAction.enabled = true;
+      idleAction.fadeIn(0.12);
+      idleAction.play();
+
+      sendARDebug('CAT_IDLE_RESTORED', {
+        source,
+        idleClip: idleClip.name,
+        oneShotClip: oneShotClipName,
+      });
+    }
+
+    function cacheCatInteractionProxy(instance) {
+      if (
+        !instance?.model ||
+        !isCatMascotInstance(instance) ||
+        instance.catInteractionProxy
+      ) return;
+
+      const model = instance.model;
+      model.updateWorldMatrix(true, true);
+      const box = new THREE.Box3().setFromObject(model);
+      if (box.isEmpty()) {
+        sendARDebug('CAT_INTERACTION_PROXY_FAILED', { reason: 'empty_bounds' });
+        return;
+      }
+
+      const worldSphere = box.getBoundingSphere(new THREE.Sphere());
+      const worldScale = model.getWorldScale(new THREE.Vector3());
+      const largestWorldScale = Math.max(worldScale.x, worldScale.y, worldScale.z);
+      if (!Number.isFinite(largestWorldScale) || largestWorldScale <= 0) {
+        sendARDebug('CAT_INTERACTION_PROXY_FAILED', { reason: 'invalid_scale' });
+        return;
+      }
+
+      const localCenter = model.worldToLocal(worldSphere.center.clone());
+      const localRadius = (worldSphere.radius / largestWorldScale) * CAT_HIT_PROXY_SCALE;
+      const proxy = new THREE.Mesh(
+        new THREE.SphereGeometry(localRadius, 16, 12),
+        new THREE.MeshBasicMaterial(),
+      );
+      proxy.name = 'cat-interaction-proxy';
+      proxy.visible = false;
+      proxy.userData.isCatInteractionProxy = true;
+      proxy.position.copy(localCenter);
+      model.add(proxy);
+      instance.catInteractionProxy = proxy;
+
+      sendARDebug('CAT_INTERACTION_PROXY_READY', {
+        targetName: instance.config?.qr_id,
+        scale: CAT_HIT_PROXY_SCALE,
+        radius: Number(localRadius.toFixed(4)),
+      });
+    }
+
+    // Preload meow audio when CAT becomes ready.
+    function preloadCatMeowAudio() {
+      if (!CAT_AUDIO_CONFIG.meowUrl || catMeowAudioLoaded) return;
+      try {
+        catMeowAudio = new Audio(CAT_AUDIO_CONFIG.meowUrl);
+        catMeowAudio.preload = 'auto';
+        catMeowAudio.playsInline = true;
+        catMeowAudio.load();
+        catMeowAudioLoaded = true;
+        sendARDebug('CAT_MEOW_AUDIO_PRELOADED', { url: CAT_AUDIO_CONFIG.meowUrl });
+      } catch (e) {
+        sendARDebug('CAT_MEOW_AUDIO_PRELOAD_ERROR', { error: String(e) });
+      }
+    }
+
+    function describeAudioError(error) {
+      return {
+        name: error?.name || null,
+        message: error?.message || String(error),
+        mediaErrorCode: catMeowAudio?.error?.code || null,
+        mediaErrorMessage: catMeowAudio?.error?.message || null,
+      };
+    }
+
+    // This function is always called synchronously from a valid CAT pointer
+    // gesture. Audio errors are telemetry only and never affect animation.
+    function requestCatMeowAudio() {
+      if (!catMeowAudio || catMeowAudio.error) {
+        catMeowAudio = new Audio(CAT_AUDIO_CONFIG.meowUrl);
+        catMeowAudio.preload = 'auto';
+        catMeowAudio.playsInline = true;
+      }
+      let playbackOutcomeReported = false;
+      const reportPlaying = () => {
+        if (playbackOutcomeReported) return;
+        playbackOutcomeReported = true;
+        sendARDebug('CAT_MEOW_AUDIO_PLAYING', { url: CAT_AUDIO_CONFIG.meowUrl });
+      };
+      const reportError = error => {
+        if (playbackOutcomeReported) return;
+        playbackOutcomeReported = true;
+        sendARDebug('CAT_MEOW_AUDIO_PLAY_ERROR', describeAudioError(error));
+      };
+
+      try {
+        catMeowAudio.currentTime = 0;
+        catMeowAudio.addEventListener('playing', reportPlaying, { once: true });
+        catMeowAudio.addEventListener('error', () => reportError(catMeowAudio.error), { once: true });
+        sendARDebug('CAT_MEOW_AUDIO_REQUESTED', { url: CAT_AUDIO_CONFIG.meowUrl });
+        const playPromise = catMeowAudio.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.then(reportPlaying).catch(reportError);
+        }
+      } catch (error) {
+        reportError(error);
+      }
+    }
+
+    function emitCatOneShotStart(source, clip, generation, catInst) {
+      const details = {
+        targetName: catInst?.config?.qr_id || null,
+        clip: clip.name,
+        generation,
+        durationMs: Math.round((clip.duration || 0) * 1000),
+      };
+      if (source === 'CAT_MEOW') sendARDebug('CAT_MEOW_START', details);
+      if (source === 'CAT_PET_REACT') sendARDebug('CAT_PET_REACT_START', details);
+      if (source === 'CAT_SPIN') sendARDebug('CAT_SPIN_START', details);
+      if (source === 'CAT_AMBIENT') sendARDebug('CAT_AMBIENT_START', { clip: clip.name, generation });
+    }
+
+    function emitCatOneShotFinished(source, clip, generation, catInst) {
+      const details = { targetName: catInst?.config?.qr_id || null, generation };
+      if (source === 'CAT_MEOW') sendARDebug('CAT_MEOW_FINISHED', details);
+      if (source === 'CAT_PET_REACT') sendARDebug('CAT_PET_REACT_FINISHED', details);
+      if (source === 'CAT_SPIN') sendARDebug('CAT_SPIN_FINISHED', details);
+      if (source === 'CAT_AMBIENT') sendARDebug('CAT_AMBIENT_FINISHED', { ...details, clip: clip.name });
+    }
+
+    function clearCatOneShotOwnershipForInteractionAction(action) {
+      if (catAnimationState.action !== action) return;
+      catAnimationState.generation++;
+      catAnimationState.action = null;
+      catAnimationState.clipName = null;
+      catAnimationState.source = null;
+      catAnimationState.priority = 0;
+    }
+    interactionAnimationCleanupHooks.add(clearCatOneShotOwnershipForInteractionAction);
+
+    function cancelActiveCatOneShotForCombo() {
+      if (!catAnimationState.action) return;
+      const cancelled = {
+        generation: catAnimationState.generation,
+        source: catAnimationState.source,
+        clipName: catAnimationState.clipName,
+      };
+      catAnimationState.generation++;
+      catAnimationState.action.fadeOut(0.12);
+      catAnimationState.action = null;
+      catAnimationState.clipName = null;
+      catAnimationState.source = null;
+      catAnimationState.priority = 0;
+      sendARDebug('CAT_ONE_SHOT_CANCELLED_FOR_COMBO', cancelled);
+    }
+
+    function playCatOneShot({ clipName, source, priority, audio = false }) {
+      const catInst = getCatMascotInstance({ requireTracked: true, requireVisible: true });
+      if (!catInst || !catInst.mixer) return false;
+      if (!hasAnimationCapability(catInst, clipName)) return false;
+      const clip = catInst.animations?.find(candidate => candidate.name === clipName);
+      if (!clip) {
+        sendARDebug('CAT_ONE_SHOT_CLIP_MISSING', { source, clipName });
+        return false;
+      }
+      if (catAnimationState.action) {
+        if (!shouldReplaceCatAnimation({ currentPriority: catAnimationState.priority, nextPriority: priority })) {
+          return false;
+        }
+        catAnimationState.generation++;
+        catAnimationState.action.fadeOut(0.12);
+      }
+
+      catAnimationState.generation++;
+      const generation = catAnimationState.generation;
+      const action = catInst.mixer.clipAction(clip);
+      catAnimationState.action = action;
+      catAnimationState.clipName = clip.name;
+      catAnimationState.source = source;
+      catAnimationState.priority = priority;
+
+      const idleClip = getCatIdleClip(catInst);
+      if (idleClip) {
+        const idleAction = catInst.mixer.clipAction(idleClip);
+        idleAction.fadeOut(0.12);
+      }
+      action.reset();
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+      action.fadeIn(0.12);
+      action.play();
+      emitCatOneShotStart(source, clip, generation, catInst);
+      if (audio) requestCatMeowAudio();
+
+      const onFinished = (event) => {
+        if (event.action !== action) return;
+        catInst.mixer.removeEventListener('finished', onFinished);
+        if (!isCatOneShotCompletionOwner({
+          capturedGeneration: generation,
+          capturedAction: action,
+          current: catAnimationState,
+        })) {
+          sendARDebug('CAT_ONE_SHOT_FINISH_IGNORED_STALE', {
+            generation,
+            currentGeneration: catAnimationState.generation,
+            source,
+          });
+          return;
+        }
+        catAnimationState.action = null;
+        catAnimationState.clipName = null;
+        catAnimationState.source = null;
+        catAnimationState.priority = 0;
+        emitCatOneShotFinished(source, clip, generation, catInst);
+        if (source === 'CAT_AMBIENT') {
+          catAmbientState.nextClip = clip.name === 'CAT_LOOK_UP' ? 'CAT_SIT' : 'CAT_LOOK_UP';
+        }
+        restoreCatIdleAfterOneShot(catInst, action, source, clip.name);
+        if (source === 'CAT_AMBIENT') resetCatAmbientIdle('ambient_complete');
+      };
+      catInst.mixer.addEventListener('finished', onFinished);
+      return true;
+    }
+
+    function playCatMeow() {
+      return playCatOneShot({
+        clipName: 'CAT_MEOW',
+        source: 'CAT_MEOW',
+        priority: 60,
+        audio: true,
+      });
+    }
+
+    function playCatPetReact() {
+      return playCatOneShot({ clipName: 'CAT_PET_REACT', source: 'CAT_PET_REACT', priority: 60 });
+    }
+
+    function playCatSpin() {
+      return playCatOneShot({ clipName: 'CAT_SPIN', source: 'CAT_SPIN', priority: 60 });
+    }
+
+    // ========== DOG TAP / BARK ==========
+    // Audio-only tap reaction, identified by target identity (not clip names).
+    const DOG_TARGET_NAME = 'dog001';
+    const DOG_AUDIO_CONFIG = {
+      barkUrl: 'https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/assets/animal/dog_bark.mp3',
+    };
+    let dogBarkAudio = null;
+    let dogBarkAudioLoaded = false;
+    const dogPointerGesture = { active: false, pointerId: null, startedAt: 0, startX: 0, startY: 0 };
+
+    function getDogBarkInstance() {
+      return selectCapabilityTargetInstance({
+        targetInstances,
+        supportsCapability: instance => instance.config?.qr_id === DOG_TARGET_NAME,
+        requireTracked: true,
+        requireVisible: true,
+        requireInteractionReady: true,
+      })?.instance || null;
+    }
+
+    // A committed combo that owns DOG keeps user gestures out; never cancel it to bark.
+    function canTriggerDogBark() {
+      if (!getDogBarkInstance()) return false;
+      return !(isInteractionExecutionLocked() && isTargetInActiveInteraction(DOG_TARGET_NAME));
+    }
+
+    function createDogBarkAudio() {
+      dogBarkAudio = new Audio(DOG_AUDIO_CONFIG.barkUrl);
+      dogBarkAudio.preload = 'auto';
+      dogBarkAudio.playsInline = true;
+    }
+
+    function preloadDogBarkAudio() {
+      if (dogBarkAudioLoaded) return;
+      try {
+        createDogBarkAudio();
+        dogBarkAudio.load();
+        dogBarkAudioLoaded = true;
+        sendARDebug('DOG_BARK_AUDIO_PRELOADED', { url: DOG_AUDIO_CONFIG.barkUrl });
+      } catch (error) {
+        sendARDebug('DOG_BARK_AUDIO_PLAY_ERROR', { stage: 'preload', message: error?.message || String(error) });
+      }
+    }
+
+    // Called synchronously from the DOG pointerup so mobile browsers allow playback.
+    // Errors are telemetry only.
+    function requestDogBarkAudio() {
+      const reportError = error => sendARDebug('DOG_BARK_AUDIO_PLAY_ERROR', {
+        name: error?.name || null,
+        message: error?.message || String(error),
+        mediaErrorCode: dogBarkAudio?.error?.code || null,
+      });
+      try {
+        if (!dogBarkAudio || dogBarkAudio.error) createDogBarkAudio();
+        dogBarkAudio.currentTime = 0;
+        sendARDebug('DOG_BARK_AUDIO_REQUESTED', { url: DOG_AUDIO_CONFIG.barkUrl });
+        const playPromise = dogBarkAudio.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.then(() => sendARDebug('DOG_BARK_AUDIO_PLAYING', { url: DOG_AUDIO_CONFIG.barkUrl }), reportError);
+        }
+      } catch (error) {
+        reportError(error);
+      }
+    }
+
+    // One ray, several tappable animals: the nearest real mesh wins. The CAT
+    // near-miss proxy only counts when no mesh was hit at all.
+    function pickTapTarget(hits) {
+      const meshHits = hits.filter(hit => hit.source === 'mesh');
+      const pool = meshHits.length ? meshHits : hits;
+      return pool.reduce((best, hit) => (!best || hit.distance < best.distance ? hit : best), null);
+    }
+
+    // Pointer event handler — records hit eligibility and classifies on pointerup.
+    function onPointerDown(event) {
+      // Ignore UI interactions
+      if (event.target.closest?.('#overlay, #debug-panel, button, input')) return;
+      // Guard: renderer must be acquired before we can raycast
+      if (!renderer?.domElement) return;
+
+      // CAT and DOG may be tracked together; one ray decides which was tapped.
+      const catInst = getCatMascotInstance({
+        requireTracked: true,
+        requireVisible: true,
+        requireInteractionReady: true,
+      });
+      const dogInst = getDogBarkInstance();
+      if (!catInst?.model && !dogInst?.model) return;
+
+      // Compute NDC pointer
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointerNdc.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointerNdc.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointerNdc, camera);
+
+      const tapHits = [];
+      if (catInst?.model) {
+        // Mesh stays authoritative. The cached invisible proxy only handles
+        // near-misses around the CAT body and is never raycast as part of a scene.
+        const meshHits = raycaster.intersectObject(catInst.model, true)
+          .filter(hit => !hit.object.userData.isCatInteractionProxy);
+        const meshHit = meshHits[0] || null;
+        const proxyHits = !meshHit && catInst.catInteractionProxy
+          ? raycaster.intersectObject(catInst.catInteractionProxy, false)
+          : [];
+        const proxyHit = proxyHits[0] || null;
+        const catHitSource = classifyCatTap({
+          meshHit: !!meshHit,
+          proxyHit: !!proxyHit,
+        });
+        if (catHitSource !== 'miss') {
+          tapHits.push({ target: 'cat', source: catHitSource, distance: (meshHit || proxyHit).distance });
+        }
+      }
+      const dogHit = dogInst?.model ? raycaster.intersectObject(dogInst.model, true)[0] : null;
+      if (dogHit) tapHits.push({ target: 'dog', source: 'mesh', distance: dogHit.distance });
+
+      const tapHit = pickTapTarget(tapHits);
+      if (!tapHit) {
+        if (catInst?.model) sendARDebug('CAT_TAP_MISS', { x: event.clientX, y: event.clientY });
+        return;
+      }
+      if (tapHit.target === 'dog') {
+        if (!canTriggerDogBark()) {
+          sendARDebug('DOG_GESTURE_IGNORED', { reason: 'combo_busy', phase: interactionState.phase });
+          return;
+        }
+        dogPointerGesture.active = true;
+        dogPointerGesture.pointerId = event.pointerId;
+        dogPointerGesture.startedAt = performance.now();
+        dogPointerGesture.startX = event.clientX;
+        dogPointerGesture.startY = event.clientY;
+        return;
+      }
+
+      const hitSource = tapHit.source;
+      const hitDistance = tapHit.distance;
+      if (!canTriggerCatInteraction()) {
+        const phase = interactionState.phase;
+        const reason = catAnimationState.action
+          ? 'already_playing'
+          : interactionState.actorReturn
+            ? 'returning'
+          : phase === InteractionPhase.COMBO_ARMED || phase === InteractionPhase.COMBO_TURNING || phase === InteractionPhase.COMBO_PLAYING
+            ? 'combo_busy'
+            : 'not_ready';
+        sendARDebug('CAT_GESTURE_IGNORED', { reason, phase });
+        return;
+      }
+      catPointerGesture.active = true;
+      catPointerGesture.pointerId = event.pointerId;
+      catPointerGesture.startedAt = performance.now();
+      catPointerGesture.startX = event.clientX;
+      catPointerGesture.startY = event.clientY;
+      catPointerGesture.hitDistance = hitDistance;
+      catPointerGesture.hitSource = hitSource;
+    }
+
+    function onPointerUp(event) {
+      if (dogPointerGesture.active && event.pointerId === dogPointerGesture.pointerId) {
+        dogPointerGesture.active = false;
+        dogPointerGesture.pointerId = null;
+        const durationMs = performance.now() - dogPointerGesture.startedAt;
+        const dx = event.clientX - dogPointerGesture.startX;
+        const dy = event.clientY - dogPointerGesture.startY;
+        if (classifyCatGesture({ durationMs, dx, dy }) === 'tap' && canTriggerDogBark()) {
+          sendARDebug('DOG_GESTURE_TAP', { durationMs, dx, dy });
+          requestDogBarkAudio();
+        } else {
+          sendARDebug('DOG_GESTURE_IGNORED', { reason: 'not_tap_or_not_ready', durationMs, phase: interactionState.phase });
+        }
+        return;
+      }
+      if (!catPointerGesture.active || event.pointerId !== catPointerGesture.pointerId) return;
+      const durationMs = performance.now() - catPointerGesture.startedAt;
+      const dx = event.clientX - catPointerGesture.startX;
+      const dy = event.clientY - catPointerGesture.startY;
+      const hitDistance = catPointerGesture.hitDistance;
+      catPointerGesture.active = false;
+      catPointerGesture.pointerId = null;
+
+      const gesture = classifyCatGesture({ durationMs, dx, dy });
+      if (gesture === 'none' || !canTriggerCatInteraction()) {
+        if (gesture === 'none') sendARDebug('CAT_GESTURE_NONE', { durationMs, dx, dy });
+        return;
+      }
+      if (gesture === 'tap') {
+        sendARDebug('CAT_GESTURE_TAP', { durationMs, dx, dy, hitDistance });
+        if (playCatMeow()) resetCatAmbientIdle('user_interaction');
+      }
+      if (gesture === 'pet') {
+        sendARDebug('CAT_GESTURE_LONG_PRESS', { durationMs, dx, dy, hitDistance });
+        if (playCatPetReact()) resetCatAmbientIdle('user_interaction');
+      }
+      if (gesture === 'swipe') {
+        sendARDebug('CAT_GESTURE_SWIPE', { durationMs, dx, dy, hitDistance });
+        if (playCatSpin()) resetCatAmbientIdle('user_interaction');
+      }
+    }
+
+    function onPointerCancel(event) {
+      if (event.pointerId === dogPointerGesture.pointerId) {
+        dogPointerGesture.active = false;
+        dogPointerGesture.pointerId = null;
+      }
+      if (event.pointerId !== catPointerGesture.pointerId) return;
+      catPointerGesture.active = false;
+      catPointerGesture.pointerId = null;
+    }
+
+    function updateCatAmbient(now) {
+      const catInst = getCatMascotInstance({ requireTracked: true, requireVisible: true });
+      if (
+        !catInst?.model ||
+        catInst.modelState !== 'loaded' ||
+        !catInst.tracked ||
+        !catInst.model.visible
+      ) return;
+      const clipName = getEligibleCatAmbient({
+        now,
+        idleSince: catAmbientState.idleSince,
+        nextClip: catAmbientState.nextClip,
+        activeOneShot: !!catAnimationState.action,
+        pointerGestureActive: catPointerGesture.active,
+        catReturn: interactionState.actorReturn,
+        phase: interactionState.phase,
+      });
+      if (clipName) playCatOneShot({ clipName, source: 'CAT_AMBIENT', priority: 20 });
+    }
+
+    // ========== BOOT GATE ==========
+    // Controls when the AR experience is revealed to the user.
+    // XR camera/engine runs in the background — this only gates visual experience.
+    function maybeRevealAR({ trigger } = {}) {
+      if (bootState.arRevealed) return;
+      if (!shouldRevealAR({
+        cameraReady: bootState.cameraReady,
+        primaryReady: bootState.primaryReady,
+      })) return;
+
+      bootState.arRevealed = true;
+      sendARDebug('BOOT_GATE_OPEN', {
+        trigger,
+        cameraReady: bootState.cameraReady,
+        primaryReady: bootState.primaryReady,
+        secondaryProgress: bootState.secondaryProgress,
+      });
+      hideOverlay();
+      setPhase('viewing');
+    }
+
+    // Update overlay text based on boot state
+    function updateOverlayForBoot(primaryProgress) {
+      if (bootState.arRevealed) return;
+      if (!bootState.primaryReady) {
+        const text = primaryProgress != null ? `Loading model... (${primaryProgress}%)` : 'Loading model...';
+        showOverlay(text, '');
+      } else {
+        showOverlay('Starting camera...', '');
+      }
+    }
+    function showError(msg) { errorText.textContent = msg; logToBuffer('error', 'Error shown to user', { message: msg }); }
+    function updateDebug(text) { debugStatus.textContent = text; }
+    function showCardLabel(name) {
+      cardLabel.textContent = name;
+      cardLabel.classList.add('visible');
+      setTimeout(() => cardLabel.classList.remove('visible'), 3000);
+    }
+
+    // ========== UTILITIES ==========
+    function parseVector(str, fallback) {
+      if (!str) return fallback;
+      const parts = str.split(' ').map(Number);
+      return [parts[0] ?? fallback[0], parts[1] ?? fallback[1], parts[2] ?? fallback[2]];
+    }
+    function parseScale(str) {
+      if (!str) return 1;
+      const n = parseFloat(str.trim());
+      return isNaN(n) ? 1 : n;
+    }
+
+    // ========== THREE.JS STUB ==========
+    function initThree() {
+      logToBuffer('info', 'Three.js stubs ready — scene/camera/renderer acquired from XR8');
+    }
+
+    // ========== MODEL LOADING ==========
+    let modelLoadState = 'pending';
+    let modelLoadProgressShown = false;
+    const modelPromiseCache = new Map();
+
+    function loadModel(url, targetName) {
+      const loadStartMs = performance.now();
+      sendARDebug('MODEL_LOAD_START', { url, targetName });
+      modelLoadState = 'loading';
+
+      return new Promise((resolve, reject) => {
+        const loader = new GLTFLoader();
+        loader.load(url,
+          (gltf) => {
+            const model = gltf.scene;
+            model.visible = false;
+            model.name = targetName;
+
+            // Claymorphic material
+            model.traverse((child) => {
+              if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
+            });
+
+            const box = new THREE.Box3().setFromObject(model);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+
+            // Get per-target config (defaults from URL params for primary)
+            const instance = targetInstances.get(targetName);
+            const cfg = instance?.config || {};
+            const preliminaryPresentation = resolveModelPresentation({
+              config: cfg,
+              bounds: { size: { x: 1, y: 1, z: 1 } },
+              physicalWidth: cfg.physical_width_m,
+            });
+            const hasPresentationProfile = preliminaryPresentation.mode === 'profile';
+            const pos = hasPresentationProfile
+              ? [0, 0, 0]
+              : parseVector(cfg.position, [0, 0, -0.5]);
+            const rot = hasPresentationProfile
+              ? [0, 0, 0]
+              : parseVector(cfg.rotation, [0, 0, 0]);
+            const sc = hasPresentationProfile
+              ? 1
+              : parseScale(cfg.scale || params.get('scale') || '1');
+
+            model.position.set(pos[0], pos[1], pos[2]);
+            model.rotation.set(rot[0], rot[1], rot[2]);
+            model.scale.setScalar(sc);
+
+            // Attach model to the instance AND (for primary) to singleton globals
+            if (instance) {
+              instance.model = model;
+              instance.modelState = 'loaded';
+            }
+            if (targetName === primaryModelTargetName) {
+              loadedModel = model;
+            }
+
+            modelLoadState = 'loaded';
+
+            // Animations
+            let instanceMixer = null;
+            if (gltf.animations?.length > 0) {
+              instanceMixer = new THREE.AnimationMixer(model);
+              const defaultClip = gltf.animations.find(a => a.name.toUpperCase().includes('IDLE')) || gltf.animations[0];
+              instanceMixer.clipAction(defaultClip).play();
+              if (instance) {
+                instance.mixer = instanceMixer;
+                instance.animations = gltf.animations;
+              }
+              logToBuffer('info', 'Animations available', { targetName, animations: gltf.animations.map(a => a.name) });
+            }
+
+            sendARDebug('MODEL_LOAD_COMPLETE', {
+              url, targetName,
+              animations: gltf.animations?.map(a => a.name) || [],
+              position: pos, rotation: rot, scale: sc,
+              presentationProfile: preliminaryPresentation.profile,
+              boundingBox: { min: [box.min.x, box.min.y, box.min.z], max: [box.max.x, box.max.y, box.max.z], size: [size.x, size.y, size.z] },
+              sceneChildren: scene?.children?.length || 0,
+              xrSceneReady: !!scene,
+              isPrimary: targetName === primaryModelTargetName,
+            });
+
+            if (isCatMascotInstance(instance)) preloadCatMeowAudio();
+            if (targetName === DOG_TARGET_NAME) preloadDogBarkAudio();
+
+            // ---- Boot gate: only the scanned entry model gates first reveal ----
+            if (targetName === primaryModelTargetName && !bootState.primaryReady) {
+              bootState.primaryReady = true;
+              bootState.primaryReadyAt = performance.now();
+              const durationMs = Math.round(performance.now() - loadStartMs);
+              sendARDebug('BOOT_PRIMARY_READY', { targetName: primaryModelTargetName, durationMs });
+              updateOverlayForBoot(null);
+              maybeRevealAR({ trigger: 'primaryReady' });
+            }
+
+            // Network timing
+            const totalMs = Math.round(performance.now() - loadStartMs);
+            try {
+              const entries = performance.getEntriesByName(url);
+              if (entries.length > 0) {
+                const last = entries[entries.length - 1];
+                sendARDebug('MODEL_NETWORK_TIMING', { url, targetName, totalMs, downloadMs: Math.round(last.duration), parseMs: totalMs - Math.round(last.duration), transferSize: last.transferSize });
+              }
+            } catch (_) {
+              sendARDebug('MODEL_NETWORK_TIMING', { url, targetName, totalMs });
+            }
+
+            sendARDebug('MODEL_READY_NOT_ATTACHED', {
+              targetName,
+              modelName: model.name || targetName,
+              tracked: trackedTargets.has(targetName),
+              boundingBoxSize: [size.x, size.y, size.z],
+            });
+            if (trackedTargets.has(targetName)) {
+              void attachTrackedTargetModel(targetName);
+            }
+
+            resolve(model);
+          },
+          (progress) => {
+            if (progress.total && !modelLoadProgressShown) {
+              const percent = Math.round(progress.loaded / progress.total * 100);
+              if (percent % 20 === 0) {
+                sendARDebug('MODEL_LOAD_PROGRESS', { targetName, url, percent, loaded: progress.loaded, total: progress.total });
+                modelLoadProgressShown = true;
+                setTimeout(() => { modelLoadProgressShown = false; }, 2000);
+              }
+              updateDebug(`Model ${percent}%`);
+
+              // Secondary progress is diagnostics only; it never blocks boot.
+              if (targetName !== primaryModelTargetName) {
+                bootState.secondaryProgress = percent;
+                // Throttle to meaningful steps
+                const steps = [20, 40, 60, 80, 100];
+                const nearestStep = steps.reduce((prev, curr) =>
+                  Math.abs(curr - percent) < Math.abs(prev - percent) ? curr : prev
+                );
+                if (nearestStep > bootState.lastProgressLogPercent && nearestStep <= percent) {
+                  bootState.lastProgressLogPercent = nearestStep;
+                  sendARDebug('BOOT_SECONDARY_PROGRESS', { targetName, percent: nearestStep });
+                }
+              }
+            }
+          },
+          (error) => {
+            modelLoadState = 'error';
+            if (instance) instance.modelState = 'error';
+            sendARDebug('MODEL_LOAD_ERROR', { url, targetName, name: error?.name || 'UnknownError', message: error?.message || String(error) });
+            logToBuffer('error', 'Model load failed', { targetName, error: String(error) });
+            reject(error);
+          }
+        );
+      });
+    }
+
+    function ensureTargetModelLoaded(targetName) {
+      const instance = targetInstances.get(targetName);
+      if (!instance) return Promise.resolve(null);
+      if (instance.model || instance.modelState === 'loaded') return Promise.resolve(instance.model);
+      if (instance.modelState === 'loading') return new Promise(resolve => {
+        const check = setInterval(() => {
+          if (instance.modelState === 'loaded') { clearInterval(check); resolve(instance.model); }
+          if (instance.modelState === 'error')  { clearInterval(check); resolve(null); }
+        }, 50);
+      });
+
+      const modelCfgUrl = instance.config?.model_3d_url;
+      if (!modelCfgUrl) return Promise.resolve(null);
+
+      instance.modelState = 'loading';
+      instance.modelLoadStart = performance.now();
+      sendARDebug('TARGET_MODEL_LOAD_START', { targetName, url: modelCfgUrl });
+
+      // A TargetInstance owns its own model and mixer even when two cards
+      // happen to reference the same asset URL.
+      if (!modelPromiseCache.has(targetName)) {
+        modelPromiseCache.set(targetName, loadModel(modelCfgUrl, targetName));
+      }
+      return modelPromiseCache.get(targetName);
+    }
+
+    // ========== SURFACE PRESENTATION (instance-aware) ==========
+    // XR world tracking remains disabled for this image-target-only viewer.
+    // AUTO may use only a recent, finite, stable DeviceMotion candidate;
+    // manual TABLETOP remains independent of sensor permission/data.
+    function getSurfaceWorldUp(now = performance.now()) {
+      surfaceWorldUpState.worldUp = null;
+      surfaceWorldUpState.source = 'gravity_unavailable';
+      if (!motionDiagnosticsState.active || !motionDiagnosticsState.hasGravitySample || !camera) {
+        return surfaceWorldUpState;
+      }
+
+      camera.getWorldQuaternion(diagnosticCameraQuaternion);
+      diagnosticCameraWorldUp
+        .copy(diagnosticScreenGravity)
+        .applyQuaternion(diagnosticCameraQuaternion)
+        .normalize();
+      const candidate = resolveGravityWorldUpCandidate({
+        worldUp: diagnosticCameraWorldUp,
+        previousWorldUp: diagnosticHasPreviousWorldUp ? diagnosticPreviousWorldUp : null,
+        sampleAgeMs: now - motionDiagnosticsState.lastGravitySampleAt,
+        maxAgeMs: SURFACE_PRESENTATION_CONFIG.gravityMaxAgeMs,
+        minStabilityDot: SURFACE_PRESENTATION_CONFIG.gravityStabilityDot,
+      });
+      diagnosticPreviousWorldUp.copy(diagnosticCameraWorldUp);
+      diagnosticHasPreviousWorldUp = true;
+      if (!candidate.available) {
+        surfaceWorldUpState.source = `device_motion_${candidate.reason}`;
+        return surfaceWorldUpState;
+      }
+
+      surfaceWorldUpState.worldUp = diagnosticCameraWorldUp;
+      surfaceWorldUpState.source = 'device_motion_gravity';
+      return surfaceWorldUpState;
+    }
+
+    function getPresentationParent(instance) {
+      return instance?.surfaceRoot || instance?.offsetGroup || instance?.anchor || null;
+    }
+
+    function getExistingInteractionRoot(instance) {
+      const presentationParent = getPresentationParent(instance);
+      if (!presentationParent) return null;
+      return presentationParent.children.find((child) => (
+        child.name === `interaction-root:${instance.config.qr_id}`
+      )) || null;
+    }
+
+    function updateSurfacePresentation(instance, now) {
+      if (!instance?.anchor || !instance.surfaceRoot || !instance.tracked) return;
+
+      instance.anchor.updateWorldMatrix(true, false);
+      const anchorWorldQuaternion = new THREE.Quaternion();
+      instance.anchor.getWorldQuaternion(anchorWorldQuaternion);
+      const targetNormalLocal = SURFACE_PRESENTATION_CONFIG.targetNormalLocal;
+      const targetNormalWorld = new THREE.Vector3(
+        targetNormalLocal.x,
+        targetNormalLocal.y,
+        targetNormalLocal.z,
+      ).applyQuaternion(anchorWorldQuaternion).normalize();
+      const worldUpState = getSurfaceWorldUp(now);
+      const flatScore = getSurfaceFlatScore({
+        targetNormal: targetNormalWorld,
+        worldUp: worldUpState.worldUp,
+      });
+      const instanceRequestedPresentationMode = getInstanceRequestedPresentationMode(instance);
+      const classification = classifySurfaceOrientation({
+        requestedMode: instanceRequestedPresentationMode,
+        flatScore,
+        currentMode: instance.presentationMode,
+        candidateMode: instance.presentationCandidateMode,
+        candidateSince: instance.presentationCandidateSince,
+        now,
+        tabletopEnterScore: SURFACE_PRESENTATION_CONFIG.tabletopEnterScore,
+        tabletopExitScore: SURFACE_PRESENTATION_CONFIG.tabletopExitScore,
+        orientationStableMs: SURFACE_PRESENTATION_CONFIG.orientationStableMs,
+        lastValidAt: instance.presentationLastValidAt,
+        orientationLossGraceMs: SURFACE_PRESENTATION_CONFIG.orientationLossGraceMs,
+      });
+
+      instance.presentationCandidateMode = classification.candidateMode;
+      instance.presentationCandidateSince = classification.candidateSince;
+      instance.presentationLastValidAt = classification.lastValidAt;
+      if (classification.changed) {
+        const previousMode = instance.presentationMode;
+        instance.presentationMode = classification.presentationMode;
+        const correction = getSurfaceAlignmentQuaternion({
+          presentationMode: instance.presentationMode,
+          targetNormal: targetNormalLocal,
+        });
+        instance.surfaceRoot.quaternion.set(
+          correction.x,
+          correction.y,
+          correction.z,
+          correction.w,
+        );
+        sendDebugOnly('SURFACE_MODE_CHANGED', {
+          targetName: instance.config.qr_id,
+          from: previousMode,
+          to: instance.presentationMode,
+          reason: classification.reason,
+        });
+      }
+
+      emitSurfaceGravityDiagnostics(instance, now);
+
+      if (now - instance.lastSurfaceTelemetryAt >= SURFACE_PRESENTATION_CONFIG.telemetryIntervalMs) {
+        instance.lastSurfaceTelemetryAt = now;
+        sendDebugOnly('SURFACE_ORIENTATION_SAMPLE', {
+          targetName: instance.config.qr_id,
+          presentationMode: instance.presentationMode,
+          requestedMode: instanceRequestedPresentationMode,
+          targetNormalLocal,
+          normal: {
+            x: targetNormalWorld.x,
+            y: targetNormalWorld.y,
+            z: targetNormalWorld.z,
+          },
+          worldUp: worldUpState.worldUp,
+          flatScore,
+          source: worldUpState.source,
+        });
+      }
+    }
+
+    function updateSurfacePresentations(now) {
+      for (const instance of targetInstances.values()) {
+        updateSurfacePresentation(instance, now);
+      }
+    }
+
+    function emitSurfaceGravityDiagnostics(instance, now) {
+      if (!isDebug || !motionDiagnosticsState.active || !instance?.anchor || !instance.tracked) return;
+      if (now - motionDiagnosticsState.lastSurfaceTelemetryAt < 500) return;
+      motionDiagnosticsState.lastSurfaceTelemetryAt = now;
+      emitDeviceGravitySample(now);
+      if (!motionDiagnosticsState.hasGravitySample || !camera) {
+        sendDebugOnly('SURFACE_GRAVITY_DIAGNOSTIC', {
+          targetName: instance.config.qr_id,
+          targetNormal: null,
+          derivedWorldUp: null,
+          dot: null,
+          absDot: null,
+          candidateFlatScore: null,
+          frameSource: 'device_motion_unavailable',
+          candidateOnly: true,
+        });
+        return;
+      }
+
+      instance.anchor.updateWorldMatrix(true, false);
+      instance.anchor.getWorldQuaternion(diagnosticAnchorQuaternion);
+      diagnosticTargetNormal.set(
+        SURFACE_PRESENTATION_CONFIG.targetNormalLocal.x,
+        SURFACE_PRESENTATION_CONFIG.targetNormalLocal.y,
+        SURFACE_PRESENTATION_CONFIG.targetNormalLocal.z,
+      ).applyQuaternion(diagnosticAnchorQuaternion).normalize();
+      camera.getWorldQuaternion(diagnosticCameraQuaternion);
+      diagnosticCameraWorldUp.copy(diagnosticScreenGravity).applyQuaternion(diagnosticCameraQuaternion).normalize();
+      const dot = diagnosticTargetNormal.dot(diagnosticCameraWorldUp);
+      const candidateFlatScore = getSurfaceFlatScore({
+        targetNormal: diagnosticTargetNormal,
+        worldUp: diagnosticCameraWorldUp,
+      });
+      sendDebugOnly('SURFACE_GRAVITY_DIAGNOSTIC', {
+        targetName: instance.config.qr_id,
+        targetNormal: {
+          x: diagnosticTargetNormal.x,
+          y: diagnosticTargetNormal.y,
+          z: diagnosticTargetNormal.z,
+        },
+        derivedWorldUp: {
+          x: diagnosticCameraWorldUp.x,
+          y: diagnosticCameraWorldUp.y,
+          z: diagnosticCameraWorldUp.z,
+        },
+        dot,
+        absDot: Math.abs(dot),
+        candidateFlatScore,
+        frameSource: 'device_motion_screen_axes_camera_world_quaternion',
+        candidateOnly: true,
+      });
+    }
+
+    initializeMotionSource();
+
+    if (isDebug) {
+      motionDiagnosticsToggle.hidden = false;
+      motionDiagnosticsStatus.hidden = false;
+      motionDiagnosticsToggle.addEventListener('click', enableMotionDiagnostics);
+      updateMotionDiagnosticsStatus(
+        motionDiagnosticsState.permissionState === 'permission_required'
+          ? 'Tap to enable motion diagnostics'
+          : motionDiagnosticsState.active
+            ? 'Motion source active; move phone'
+            : 'Motion diagnostics unavailable',
+      );
+      emitMotionDiagnosticCapability();
+    }
+
+    // ========== MODEL REPARENTING (instance-aware) ==========
+    function reparentModelToAnchor(instance) {
+      const model = instance?.model;
+      if (!model || !instance.anchor) return;
+
+      // Normalize pivot only once — re-running Box3 on an already-transformed model
+      // produces different values on each found/lost cycle
+      if (!instance.pivotNormalized) {
+        const cfg = instance.config || {};
+        const initialPresentation = resolveModelPresentation({
+          config: cfg,
+          bounds: { size: { x: 1, y: 1, z: 1 } },
+          physicalWidth: cfg.physical_width_m,
+        });
+
+        // A profile owns local asset orientation. Legacy transforms remain
+        // on model-offset below, preserving every record without a profile.
+        const usesPresentationProfile = initialPresentation.mode === 'profile';
+
+        // Measure the raw asset before any persisted transform is applied to
+        // model-offset. Otherwise legacy position/rotation/scale would affect
+        // the pivot correction and then be applied again by offsetGroup.
+        model.position.set(0, 0, 0);
+        model.rotation.set(0, 0, 0);
+        model.scale.setScalar(1);
+
+        let autoFitBounds = null;
+        if (usesPresentationProfile) {
+          const forwardAxis = initialPresentation.forwardAxis || resolveForwardAxis('+Z');
+          const assetBox = new THREE.Box3().setFromObject(model);
+          const assetSize = new THREE.Vector3();
+          assetBox.getSize(assetSize);
+          autoFitBounds = {
+            min: { x: assetBox.min.x, y: assetBox.min.y, z: assetBox.min.z },
+            max: { x: assetBox.max.x, y: assetBox.max.y, z: assetBox.max.z },
+            size: { x: assetSize.x, y: assetSize.y, z: assetSize.z },
+          };
+          model.quaternion.setFromUnitVectors(
+            new THREE.Vector3(forwardAxis.x, forwardAxis.y, forwardAxis.z),
+            new THREE.Vector3(0, 0, 1),
+          );
+          model.scale.setScalar(1);
+        }
+
+        const box = new THREE.Box3().setFromObject(model);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        const pivotCorrection = getGroundedCenterOffset({ min: box.min, max: box.max });
+        const safePivotCorrection = pivotCorrection || { x: 0, y: 0, z: 0 };
+        if (!pivotCorrection) {
+          sendARDebug('MODEL_PRESENTATION_FALLBACK', {
+            targetName: instance.config.qr_id,
+            reason: 'invalid_bounding_box',
+          });
+        }
+        model.position.set(
+          safePivotCorrection.x,
+          safePivotCorrection.y,
+          safePivotCorrection.z,
+        );
+        if (!usesPresentationProfile) {
+          model.rotation.set(0, 0, 0);
+        }
+        model.scale.setScalar(1);
+
+        const presentation = resolveModelPresentation({
+          config: cfg,
+          bounds: autoFitBounds || {
+            min: box.min,
+            max: box.max,
+            size: { x: size.x, y: size.y, z: size.z },
+          },
+          physicalWidth: cfg.physical_width_m,
+        });
+        instance.modelPresentation = presentation;
+        instance.presentationBounds = autoFitBounds || {
+          min: { x: box.min.x, y: box.min.y, z: box.min.z },
+          max: { x: box.max.x, y: box.max.y, z: box.max.z },
+          size: { x: size.x, y: size.y, z: size.z },
+        };
+        instance.pivotNormalized = true;
+        sendARDebug('MODEL_PIVOT_NORMALIZE', {
+          targetName: instance.config.qr_id,
+          bboxCenter: [
+            (box.min.x + box.max.x) / 2,
+            (box.min.y + box.max.y) / 2,
+            (box.min.z + box.max.z) / 2,
+          ],
+          pivotCorrection: safePivotCorrection,
+        });
+        if (presentation.mode === 'profile') {
+          sendARDebug('MODEL_PRESENTATION_PROFILE', {
+            targetName: instance.config.qr_id,
+            profile: presentation.profile,
+            bbox: instance.presentationBounds,
+            physicalWidth: cfg.physical_width_m,
+            scaleMultiplier: cfg.presentation_scale_multiplier ?? 1,
+            positionOffset: presentation.positionOffset,
+          });
+          sendARDebug('MODEL_AUTO_FIT', {
+            targetName: instance.config.qr_id,
+            profile: presentation.profile,
+            physicalWidth: cfg.physical_width_m,
+            autoScale: presentation.autoFit?.autoScale ?? null,
+            scaleMultiplier: cfg.presentation_scale_multiplier ?? 1,
+            finalScale: presentation.finalScale,
+            reason: presentation.autoFit?.reason,
+          });
+          sendARDebug('MODEL_AUTO_ORIENTATION', {
+            targetName: instance.config.qr_id,
+            profile: presentation.profile,
+            forwardAxis: presentation.forwardAxis?.name ?? null,
+          });
+        }
+      }
+
+      // Apply per-target config to offset group (safe to re-apply — offset is deterministic config)
+      const cfg = instance.config;
+      if (instance.offsetGroup) {
+        const presentation = instance.modelPresentation || resolveModelPresentation({
+          config: cfg,
+          bounds: instance.presentationBounds,
+          physicalWidth: cfg?.physical_width_m,
+        });
+        const [x, y, z] = presentation.position;
+        const [rx, ry, rz] = presentation.rotation;
+        instance.offsetGroup.position.set(x, y, z);
+        instance.offsetGroup.rotation.set(rx, ry, rz);
+        instance.offsetGroup.scale.setScalar(presentation.finalScale);
+      }
+
+      // Keep presentation and transient interaction transforms separate. If a
+      // turn root already exists, retain it rather than flattening the GLB back
+      // under model-offset on a later found/reacquire event.
+      const modelParent = getExistingInteractionRoot(instance) || getPresentationParent(instance);
+      if (model.parent !== modelParent && modelParent) {
+        model.parent?.remove(model);
+        modelParent.add(model);
+      }
+
+      cacheCatInteractionProxy(instance);
+
+      sendARDebug('MODEL_REPARENTED', {
+        targetName: instance.config.qr_id,
+        parentName: modelParent?.name || null,
+        glbLocalPosition: [model.position.x, model.position.y, model.position.z],
+      });
+    }
+
+    // ========== VISUAL POSE APPLICATION (instance-aware) ==========
+    // Raw target pose remains in trackedTargets for interaction geometry.
+    // This layer owns only the rendered target-anchor transform.
+    function resetVisualPose(instance) {
+      if (!instance) return;
+      instance.visualPosition = null;
+      instance.visualQuaternion = null;
+      instance.visualPoseInitialized = false;
+      instance.lastVisualPoseAt = null;
+    }
+
+    function applyVisualTargetPose(instance, rawPose, now = performance.now()) {
+      if (!instance?.anchor || !rawPose) return false;
+
+      const visualPose = instance.visualPoseInitialized
+        ? {
+          position: instance.visualPosition,
+          rotation: instance.visualQuaternion,
+          scale: rawPose.scale ?? 1,
+        }
+        : null;
+      const dtMs = instance.lastVisualPoseAt == null
+        ? 0
+        : Math.max(0, now - instance.lastVisualPoseAt);
+      const next = advanceVisualPose({
+        visualPose,
+        visualPoseInitialized: instance.visualPoseInitialized,
+        rawPose,
+        dtMs,
+        tauMs: VISUAL_POSE_CONFIG.tauMs,
+      });
+      if (!next.visualPose) return false;
+
+      instance.visualPosition = next.visualPose.position;
+      instance.visualQuaternion = next.visualPose.rotation;
+      instance.visualPoseInitialized = next.visualPoseInitialized;
+      instance.lastVisualPoseAt = now;
+
+      instance.anchor.position.set(
+        next.visualPose.position.x,
+        next.visualPose.position.y,
+        next.visualPose.position.z,
+      );
+      instance.anchor.quaternion.set(
+        next.visualPose.rotation.x,
+        next.visualPose.rotation.y,
+        next.visualPose.rotation.z,
+        next.visualPose.rotation.w,
+      );
+      // Target scale is direct by design; only noisy position/orientation are smoothed.
+      instance.anchor.scale.setScalar(next.visualPose.scale);
+
+      if (now - instance.lastVisualPoseTelemetryAt >= VISUAL_POSE_CONFIG.telemetryIntervalMs) {
+        instance.lastVisualPoseTelemetryAt = now;
+        sendDebugOnly('VISUAL_POSE_SAMPLE', {
+          targetName: instance.config.qr_id,
+          positionDelta: next.positionDelta,
+          rotationDeltaDeg: next.rotationDeltaDeg,
+          smoothingAlpha: next.smoothingAlpha,
+          dtMs,
+        });
+      }
+      return true;
+    }
+
+    function updateVisualTargetPoses(now) {
+      for (const [targetName, instance] of targetInstances) {
+        const rawPose = trackedTargets.get(targetName);
+        if (!rawPose || !instance.tracked || !instance.anchor) continue;
+        if (!shouldUpdateVisualPose({
+          transaction: interactionState.transaction,
+          targetName,
+          currentRunId: interactionState.comboRunId,
+        })) continue;
+        applyVisualTargetPose(instance, rawPose, now);
+      }
+    }
+
+    // ========== MODEL ATTACHMENT (target-instance owned) ==========
+    async function attachTrackedTargetModel(targetName) {
+      const instance = targetInstances.get(targetName);
+      if (!instance) return false;
+      if (instance.attachPromise) return instance.attachPromise;
+
+      const attachPromise = (async () => {
+        let attachment = resolveTargetModelAttachment({
+          targetName,
+          instance,
+          tracked: instance.tracked && trackedTargets.has(targetName),
+          sceneReady: !!scene,
+        });
+
+        if (attachment.action === 'load') {
+          await ensureTargetModelLoaded(targetName);
+          attachment = resolveTargetModelAttachment({
+            targetName,
+            instance,
+            tracked: instance.tracked && trackedTargets.has(targetName),
+            sceneReady: !!scene,
+          });
+        }
+
+        if (attachment.action !== 'attach') {
+          sendARDebug('TARGET_MODEL_ATTACH_DEFERRED', {
+            targetName,
+            action: attachment.action,
+            reason: attachment.reason,
+            tracked: instance.tracked,
+            modelState: instance.modelState,
+            hasScene: !!scene,
+          });
+          return false;
+        }
+
+        const pose = trackedTargets.get(targetName);
+        if (!pose || !instance.tracked || !instance.visibleByInteraction) return false;
+
+        const expectedParent = getExistingInteractionRoot(instance) || getPresentationParent(instance);
+        if (instance.model.parent !== expectedParent) reparentModelToAnchor(instance);
+        if (shouldUpdateVisualPose({
+          transaction: interactionState.transaction,
+          targetName,
+          currentRunId: interactionState.comboRunId,
+        })) applyVisualTargetPose(instance, pose);
+
+        instance.model.visible = true;
+        instance.modelAttached = true;
+        instance.interactionReady = true;
+
+        sendARDebug('TARGET_MODEL_ATTACH', {
+          targetName,
+          source: instance.modelState === 'loaded' ? 'loaded' : 'pending-load',
+          interactionReady: true,
+        });
+        sendARDebug('MODEL_ATTACHED', {
+          targetName,
+          visible: true,
+          anchorPosition: [instance.anchor.position.x, instance.anchor.position.y, instance.anchor.position.z],
+        });
+        sendARDebug('MODEL_VISIBLE', { reason: 'target_instance_attached', targetName });
+        return true;
+      })();
+
+      instance.attachPromise = attachPromise;
+      try {
+        return await attachPromise;
+      } finally {
+        if (instance.attachPromise === attachPromise) instance.attachPromise = null;
+      }
+    }
+
+    // ========== LOAD TARGET JSON FROM SUPABASE ==========
+    async function loadTargetData(targetConfig) {
+      const targetQrId = targetConfig.qr_id;
+      const configJsonUrl = targetConfig.xr_target_json_url || '';
+      const configImageUrl = targetConfig.xr_target_image_url || '';
+
+      sendARDebug('TARGET_LOAD_START', { qrId: targetQrId });
+
+      let jsonUrl = configJsonUrl;
+      if (!jsonUrl && configImageUrl) {
+        const match = configImageUrl.match(/^(.+)_[^/]+\.png$/);
+        if (match) jsonUrl = match[1] + '.json';
+      }
+      if (!jsonUrl) throw new Error(`No xr_target_json_url for ${targetQrId}`);
+
+      showOverlay('Loading target data...', jsonUrl.split('/').pop());
+
+      const res = await fetch(jsonUrl);
+      if (!res.ok) throw new Error(`Failed to fetch target JSON: ${res.status} for ${targetQrId}`);
+
+      const data = await res.json();
+      sendARDebug('TARGET_JSON_PARSED', { qrId: targetQrId, name: data.name, rawKeys: Object.keys(data) });
+
+      let resolvedImagePath = configImageUrl || (jsonUrl.substring(0, jsonUrl.lastIndexOf('/') + 1) + (data.imagePath || ''));
+      if (!resolvedImagePath.startsWith('http')) resolvedImagePath = jsonUrl.substring(0, jsonUrl.lastIndexOf('/') + 1) + (data.imagePath || '');
+
+      const physicalWidth = data.properties?.physicalWidth || 0.08;
+      sendARDebug('TARGET_LOAD_COMPLETE', { qrId: targetQrId, name: data.name, imageUrl: resolvedImagePath, physicalWidth });
+
+      return {
+        qrId: targetQrId,
+        name: data.name || targetQrId,
+        imagePath: resolvedImagePath,
+        type: data.type || 'PLANAR',
+        properties: data.properties || {},
+        metadata: data.metadata || {},
+        physicalWidth,
+      };
+    }
+
+    // ========== 8TH WALL ENGINE ==========
+    let xrController = null;
+    const trackedTargets = new Map();
+    const realityImageUpdated = { _lastLog: 0 };
+
+    function saveTargetPose(detail) {
+      if (!detail?.name) return;
+      trackedTargets.set(detail.name, {
+        name: detail.name,
+        position: { x: detail.position?.x ?? 0, y: detail.position?.y ?? 0, z: detail.position?.z ?? 0 },
+        rotation: { x: detail.rotation?.x ?? 0, y: detail.rotation?.y ?? 0, z: detail.rotation?.z ?? 0, w: detail.rotation?.w ?? 1 },
+        scale: detail.scale ?? 1,
+        lastSeenAt: Date.now(),
+      });
+      lastRawAnchorPositions.set(detail.name, trackedTargets.get(detail.name).position);
+    }
+
+    // ========== SPATIAL DUPLICATE SUPPRESSION ==========
+    // A new recognition sitting on an already-owned card is cross-target confusion of the same
+    // physical card: the existing owner (tracked or within loss grace) keeps it. Real separate
+    // cards (e.g. an interaction pair) sit well beyond this distance in raw anchor space.
+    const SPATIAL_DUPLICATE_DISTANCE = 0.20;
+    const lastRawAnchorPositions = new Map();
+    const spatialDuplicateTargets = new Set();
+
+    function findSpatialDuplicateOwner({ candidateTarget, candidatePosition, ownerPositions, threshold }) {
+      let owner = null;
+      for (const [existingTarget, position] of ownerPositions) {
+        if (existingTarget === candidateTarget) continue;
+        const distance = distanceBetweenPositions(candidatePosition, position);
+        if (distance != null && distance < threshold && (!owner || distance < owner.distance)) {
+          owner = { existingTarget, distance };
+        }
+      }
+      return owner;
+    }
+
+    function getSpatialOwnerPositions() {
+      const owners = new Map();
+      for (const name of getEffectivelyTrackedTargetNames(performance.now())) {
+        const position = lastRawAnchorPositions.get(name);
+        if (position) owners.set(name, position);
+      }
+      return owners;
+    }
+
+    function waitForXR8() {
+      return new Promise((resolve, reject) => {
+        if (window.XR8) { resolve(window.XR8); return; }
+        const timeout = setTimeout(() => reject(new Error('XR8 load timeout (>10s)')), 10000);
+        window.addEventListener('xrloaded', () => { clearTimeout(timeout); resolve(window.XR8); }, { once: true });
+      });
+    }
+
+    async function initXR(targetDataList) {
+      sendARDebug('XR_INIT_START', { targets: targetDataList.map(t => t.name) });
+      showOverlay('Starting XR session...', '');
+
+      let XR8;
+      try {
+        XR8 = await waitForXR8();
+        logToBuffer('info', 'XR_ENGINE_READY', {});
+        sendARDebug('XR_ENGINE_READY', { hasXrController: !!XR8.XrController });
+      } catch (err) {
+        sendARDebug('XR_ENGINE_LOAD_FAILED', { error: String(err) });
+        throw err;
+      }
+
+      sendDebugOnly('XR_SLAM_LOAD_START', { targetCount: targetDataList.length });
+      try {
+        await XR8.loadChunk('slam');
+        sendDebugOnly('XR_SLAM_LOAD_COMPLETE', { targetCount: targetDataList.length });
+        sendARDebug('XR_SLAM_LOADED', {});
+      }
+      catch (err) { sendARDebug('XR_SLAM_LOAD_FAILED', { error: String(err) }); throw err; }
+
+      sendDebugOnly('XR_PIPELINE_SETUP_START', { targetCount: targetDataList.length });
+
+      // Lifecycle
+      const lifecycleModule = {
+        name: 'app-lifecycle',
+        onCameraStatusChange: ({ status }) => {
+          const cameraStatusAt = performance.timeOrigin + performance.now();
+          xrCameraStatus = status;
+          sendARDebug('XR_CAMERA_STATUS', {
+            status,
+            ts: cameraStatusAt,
+            elapsedSinceViewerBootMs: cameraStatusAt - viewerBootStartedAt,
+          });
+          if (status === 'hasVideo') {
+            bootState.cameraReady = true;
+            sendARDebug('XR_CAMERA_HAS_VIDEO', {});
+            sendMessage('XR_CAMERA_HAS_VIDEO', {
+              status: 'hasVideo',
+            });
+            sendARDebug('BOOT_CAMERA_READY', {});
+            sendMessage('XR_STARTED', { engine: '8th-wall-self-hosted', qrId, word, hasModel: !!modelUrl, hasModelLoaded: !!loadedModel });
+            maybeRevealAR({ trigger: 'cameraReady' });
+          }
+          if (status === 'failed') sendARDebug('XR_CAMERA_FAILED', { status });
+        },
+        onAttach: ({ imageTargets }) => {
+          const targetInfo = imageTargets || [];
+          sendARDebug('XR_ONATTACH_TARGETS', { count: targetInfo.length, targets: targetInfo.map(t => ({ name: t.name, imagePath: t.image || t.imagePath || '' })) });
+        },
+      };
+
+      // Scene acquisition
+      let xrSceneAcquired = false;
+      const xrSceneAcquisitionModule = {
+        name: 'xr-scene-acquisition',
+        onStart: () => { tryAcquireXRAuthoring(); },
+        onUpdate: () => { if (!xrSceneAcquired) tryAcquireXRAuthoring(); },
+      };
+
+      function tryAcquireXRAuthoring() {
+        if (xrSceneAcquired || !window.XR8) return;
+        try {
+          const xr = window.XR8.Threejs?.xrScene?.();
+          if (!xr || !xr.scene || !xr.camera || !xr.renderer) return;
+          scene = xr.scene; camera = xr.camera; renderer = xr.renderer;
+
+          sendARDebug('XR_THREE_SCENE_ACQUIRED', { sceneChildren: scene.children.length, cameraType: camera.constructor.name });
+
+          // Create anchors for ALL target instances
+          for (const [name, inst] of targetInstances) {
+            inst.anchor = new THREE.Group();
+            inst.anchor.name = `target-anchor:${name}`;
+            inst.offsetGroup = new THREE.Group();
+            inst.offsetGroup.name = `model-offset:${name}`;
+            inst.anchor.add(inst.offsetGroup);
+            inst.surfaceRoot = new THREE.Group();
+            inst.surfaceRoot.name = `surface-root:${name}`;
+            inst.offsetGroup.add(inst.surfaceRoot);
+            scene.add(inst.anchor);
+            sendARDebug('TARGET_ANCHOR_CREATED', { targetName: name, anchorName: inst.anchor.name });
+            sendARDebug('SURFACE_ROOT_CREATED', {
+              targetName: name,
+              surfaceRootName: inst.surfaceRoot.name,
+              requestedMode: getInstanceRequestedPresentationMode(inst),
+              targetNormalLocal: SURFACE_PRESENTATION_CONFIG.targetNormalLocal,
+            });
+          }
+
+          // Lighting (once, shared scene)
+          const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
+          hemi.name = 'hemi-light';
+          scene.add(hemi);
+          const key = new THREE.DirectionalLight(0xffffff, 2.5);
+          key.name = 'key-light'; key.position.set(1, 2, 2); scene.add(key);
+          const fill = new THREE.DirectionalLight(0xffffff, 0.8);
+          fill.name = 'fill-light'; fill.position.set(-2, 0, -1); scene.add(fill);
+          sendARDebug('SCENE_LIGHTS_ADDED', { sceneChildren: scene.children.length, lightCount: scene.children.filter(c => c.isLight).length });
+
+          xrSceneAcquired = true;
+          for (const targetName of trackedTargets.keys()) {
+            void attachTrackedTargetModel(targetName);
+          }
+        } catch (e) {}
+      }
+
+      // Camera pipeline
+      let renderCheckFrame = 0;
+      let lastInteractionEvalMs = 0;
+      const cameraPipelineModule = {
+        name: 'camera-pipeline',
+        onStart: ({ canvas: c }) => { updateDebug('Camera active'); sendARDebug('CAMERA_START', { canvasWidth: c?.width, canvasHeight: c?.height }); },
+        onUpdate: () => {
+          renderCheckFrame++;
+          const now = performance.now();
+          updateVisualTargetPoses(now);
+          // Update all active mixers
+          for (const [name, inst] of targetInstances) {
+            if (inst.mixer) inst.mixer.update(0.016);
+          }
+          if (now - lastInteractionEvalMs >= 100) {
+            lastInteractionEvalMs = now;
+            processPendingTargetLosses(now);
+            processInteractionTransactionWatchdog(now);
+            updateSurfacePresentations(now);
+            evaluateInteraction(now);
+            updateCatAmbient(now);
+          }
+          if (renderCheckFrame % 60 === 0) {
+            const primaryInst = targetInstances.get(primaryModelTargetName);
+            sendARDebug('SCENE_RENDER_CHECK', {
+              frame: renderCheckFrame,
+              sceneChildren: scene?.children?.length || 0,
+              primaryModelVisible: loadedModel?.visible || false,
+              targetInstanceCount: targetInstances.size,
+              interactionPhase: interactionState.phase,
+            });
+          }
+        },
+      };
+
+      // Image target events
+      const imageTargetEvents = {
+        name: 'image-target-events',
+        listeners: [
+          { event: 'reality.imageloading', process: ({detail}) => { sendARDebug('IMAGE_LOADING', { name: detail?.name }); } },
+          { event: 'reality.imagescanning', process: ({detail}) => { sendARDebug('IMAGE_SCANNING', { name: detail?.name }); } },
+          { event: 'reality.imagefound', process: ({detail}) => {
+            sendARDebug('IMAGE_FOUND', { name: detail?.name, position: detail?.position });
+            if (!detail?.name) return;
+            if (!isRuntimeTargetAdmitted(detail.name)) {
+              sendDebugOnly('TARGET_FOUND_REJECTED_SESSION', {
+                targetName: detail.name,
+                entryTarget: primaryModelTargetName,
+                reason: 'not_session_relevant',
+              });
+              return;
+            }
+            const duplicateOwner = findSpatialDuplicateOwner({
+              candidateTarget: detail.name,
+              candidatePosition: detail.position,
+              ownerPositions: getSpatialOwnerPositions(),
+              threshold: SPATIAL_DUPLICATE_DISTANCE,
+            });
+            if (duplicateOwner) {
+              spatialDuplicateTargets.add(detail.name);
+              sendARDebug('TARGET_FOUND_REJECTED_SPATIAL_DUPLICATE', {
+                candidateTarget: detail.name,
+                existingTarget: duplicateOwner.existingTarget,
+                distance: Number(duplicateOwner.distance.toFixed(3)),
+                threshold: SPATIAL_DUPLICATE_DISTANCE,
+              });
+              return;
+            }
+            spatialDuplicateTargets.delete(detail.name);
+            onTargetFound(detail);
+          } },
+          { event: 'reality.imageupdated', process: ({detail}) => {
+            if (!detail?.name) return;
+
+            const now = Date.now();
+            if (!realityImageUpdated._lastLog || now - realityImageUpdated._lastLog > 2000) {
+              realityImageUpdated._lastLog = now;
+              sendARDebug('IMAGE_UPDATED', { name: detail?.name });
+            }
+            if (!isRuntimeTargetAdmitted(detail.name) || spatialDuplicateTargets.has(detail.name)) return;
+            saveTargetPose(detail);
+          }},
+          { event: 'reality.imagelost', process: ({detail}) => {
+            sendARDebug('IMAGE_LOST', { name: detail?.name });
+            // A suppressed duplicate was never found; its loss only re-arms a future IMAGE_FOUND.
+            if (detail?.name && spatialDuplicateTargets.delete(detail.name)) return;
+            if (detail?.name && isRuntimeTargetAdmitted(detail.name)) onTargetLost(detail.name);
+          } },
+        ],
+      };
+
+      // Register pipeline modules
+      XR8.addCameraPipelineModule(lifecycleModule);
+      XR8.addCameraPipelineModule(XR8.GlTextureRenderer.pipelineModule());
+      XR8.addCameraPipelineModule(XR8.Threejs.pipelineModule());
+      XR8.addCameraPipelineModule(xrSceneAcquisitionModule);
+      XR8.addCameraPipelineModule(imageTargetEvents);
+      XR8.addCameraPipelineModule(XR8.XrController.pipelineModule());
+      XR8.addCameraPipelineModule(cameraPipelineModule);
+
+      sendARDebug('XR_PIPELINE_READY', {});
+
+      // Configure ALL image targets — disableWorldTracking reduces processing for
+      // image-target-only experiences (no surface/plane SLAM needed)
+      const imageTargetData = targetDataList.map(t => ({ name: t.name, type: t.type || 'PLANAR', imagePath: t.imagePath, properties: t.properties || {}, metadata: t.metadata || {} }));
+      sendARDebug('XR_TARGETS_REGISTER', { count: imageTargetData.length, targets: imageTargetData.map(t => t.name) });
+      XR8.XrController.configure({ disableWorldTracking: true, imageTargetData });
+      sendARDebug('XR_TARGETS_CONFIGURED', { count: imageTargetData.length });
+
+      const canvasEl = document.getElementById('camerafeed');
+      if (!canvasEl) throw new Error('Canvas #camerafeed not found');
+      canvasEl.width = window.innerWidth; canvasEl.height = window.innerHeight;
+
+      RuntimeDiagnostics.xrRunCount++;
+      RuntimeDiagnostics.assert(RuntimeDiagnostics.xrRunCount === 1, `XR8.run() called ${RuntimeDiagnostics.xrRunCount} times`);
+      sendARDebug('XR_RUN_CALLED', {});
+      const cameraRequestAt = performance.timeOrigin + performance.now();
+      sendARDebug('XR_CAMERA_REQUEST_START', {
+        ts: cameraRequestAt,
+        elapsedSinceViewerBootMs: cameraRequestAt - viewerBootStartedAt,
+      });
+      try { XR8.run({ canvas: canvasEl }); }
+      catch (err) { sendARDebug('XR_RUN_ERROR', { message: String(err) }); throw err; }
+      sendARDebug('XR_SESSION_STARTED', {});
+    }
+
+    // ========== INTERACTION HELPERS ==========
+    function setInteractionPhase(nextPhase, extras = {}) {
+      if (interactionState.phase === nextPhase) return;
+      const previous = interactionState.phase;
+      interactionState.phase = nextPhase;
+      sendARDebug('INTERACTION_PHASE', { from: previous, to: nextPhase, ...extras });
+    }
+
+    function getAnchorWorldPosition(instance) {
+      // Use target anchor pose (not model transform) — pose is what represents
+      // the actual flashcard position in world space, free of pivot/scale/offset.
+      const pose = trackedTargets.get(instance.config.qr_id);
+      if (!pose) return null;
+      return { x: pose.position.x, y: pose.position.y, z: pose.position.z };
+    }
+
+    function computeTargetPairDistance(actorInst, partnerInst) {
+      return distanceBetweenPositions(
+        getAnchorWorldPosition(actorInst),
+        getAnchorWorldPosition(partnerInst),
+      );
+    }
+
+    function updateFilteredDistance(raw, proximityConfig) {
+      if (raw == null) {
+        interactionState.filteredDistance = null;
+        return null;
+      }
+      const a = proximityConfig?.smoothingAlpha ?? INTERACTION_CONFIG.distance.smoothingAlpha;
+      interactionState.filteredDistance =
+        interactionState.filteredDistance == null
+          ? raw
+          : interactionState.filteredDistance * (1 - a) + raw * a;
+      return interactionState.filteredDistance;
+    }
+
+    function getInteractionRuleById(ruleId) {
+      return normalizedInteractionRules.find((rule) => rule.id === ruleId) || null;
+    }
+
+    function getEffectivelyTrackedTargetNames(now) {
+      const names = [];
+      for (const [targetName, instance] of targetInstances) {
+        const withinGrace = instance.lostAt != null
+          && (now - instance.lostAt) < INTERACTION_CONFIG.lostGraceMs;
+        if (instance.tracked || withinGrace) names.push(targetName);
+      }
+      return names;
+    }
+
+    function isInteractionExecutionLocked() {
+      return isInteractionTransactionLocked({
+        transaction: interactionState.transaction,
+        currentRunId: interactionState.comboRunId,
+      });
+    }
+
+    function clearConsumeTimer() {
+      if (interactionState.consumeTimeoutId == null) return;
+      clearTimeout(interactionState.consumeTimeoutId);
+      interactionState.consumeTimeoutId = null;
+    }
+
+    function getInteractionTransactionWatchdogAt({ now, activeRule, actorInst }) {
+      const animation = resolveInteractionAnimation({ rule: activeRule, actorInstance: actorInst });
+      const animationDurationMs = animation.ok ? (animation.clip.duration || 0) * 1000 : 0;
+      return now
+        + COMBO_VISUAL_CONFIG.bodyTurnMs
+        + animationDurationMs
+        + COMBO_VISUAL_CONFIG.returnTurnMs
+        + INTERACTION_TRANSACTION_CONFIG.safetyBufferMs;
+    }
+
+    function getActiveTransactionLossDecision(targetName) {
+      return classifyInteractionTargetLoss({
+        transaction: interactionState.transaction,
+        targetName,
+        currentRunId: interactionState.comboRunId,
+      });
+    }
+
+    function restoreDefaultInteractionAnimation(instance, action, reason) {
+      if (!instance?.mixer || !instance?.model?.visible) return;
+      const idleClip = getDefaultAnimationClip(instance);
+      if (!idleClip) return;
+      if (action) {
+        action.fadeOut(0.12);
+        action.stop();
+        action.reset();
+      }
+      const idleAction = instance.mixer.clipAction(idleClip);
+      idleAction.reset();
+      idleAction.fadeIn(0.12);
+      idleAction.play();
+      sendARDebug('INTERACTION_IDLE_RESTORED', {
+        actorTarget: instance.config?.qr_id || null,
+        idleClip: idleClip.name,
+        reason,
+      });
+    }
+
+    // Removes only the action owned by a cancelled generic interaction run.
+    function abortOwnedInteractionAnimation(runId, reason) {
+      const execution = interactionState.activeAnimation;
+      if (!execution || execution.runId !== runId) return false;
+      execution.mixer.removeEventListener('finished', execution.onFinish);
+      const actorInst = targetInstances.get(execution.actorTarget);
+      restoreDefaultInteractionAnimation(actorInst, execution.action, reason);
+      for (const cleanupHook of interactionAnimationCleanupHooks) {
+        cleanupHook(execution.action);
+      }
+      interactionState.activeAnimation = null;
+      sendARDebug('INTERACTION_ANIMATION_ABORTED', {
+        runId,
+        actorTarget: execution.actorTarget,
+        reason,
+      });
+      return true;
+    }
+
+    function clearInteractionExecutionState() {
+      const ownedRunId = interactionState.comboRunId;
+      const latch = interactionState.comboLatch;
+      const actorInst = latch ? targetInstances.get(latch.actorTarget) : null;
+      const root = actorInst ? getInteractionRoot(actorInst) : null;
+      if (root && Number.isFinite(latch?.actorOriginalYaw)) root.rotation.y = latch.actorOriginalYaw;
+      abortOwnedInteractionAnimation(ownedRunId, 'interaction_execution_cleared');
+      interactionState.comboRunId++;
+      clearConsumeTimer();
+      interactionState.primaryLockedAt = null;
+      interactionState.proximityEnteredAt = null;
+      interactionState.filteredDistance = null;
+      interactionState.comboPlaying = false;
+      interactionState.comboConsumed = false;
+      interactionState.comboLatch = null;
+      interactionState.transaction = null;
+      interactionState.activeAnimation = null;
+      interactionState.actorTurn = null;
+      interactionState.actorReturn = null;
+      interactionState.lastSecondaryReadiness = null;
+    }
+
+    function changeSelectedInteractionRule(nextRule, reason) {
+      const previousRule = getInteractionRuleById(selectedInteractionRuleId);
+      if ((previousRule?.id || null) === (nextRule?.id || null)) return;
+      if (previousRule && interactionState.comboConsumed) {
+        setInteractionPartnerVisibility({ rule: previousRule, targetInstances, visible: true });
+      }
+      clearInteractionExecutionState();
+      if (previousRule) sendARDebug('INTERACTION_RULE_CLEARED', { ruleId: previousRule.id, reason });
+
+      selectedInteractionRuleId = nextRule?.id || null;
+      interactionState.actorTarget = nextRule?.actorTarget || null;
+      interactionState.partnerTargets = nextRule ? [...nextRule.partnerTargets] : [];
+      setInteractionPhase(InteractionPhase.SEARCH_PRIMARY, { reason });
+      if (nextRule) {
+        sendARDebug('INTERACTION_RULE_SELECTED', {
+          ruleId: nextRule.id,
+          actorTarget: nextRule.actorTarget,
+          partnerTargets: nextRule.partnerTargets,
+          priority: nextRule.priority,
+        });
+      }
+    }
+
+    function selectRuntimeInteractionRule(now) {
+      if (isInteractionExecutionLocked() && interactionState.comboLatch) {
+        return getInteractionRuleById(interactionState.comboLatch.ruleId);
+      }
+      const availableRules = normalizedInteractionRules.filter(
+        (rule) => !unavailableAnimationRuleIds.has(rule.id),
+      );
+      const nextRule = selectActiveInteractionRule(
+        availableRules,
+        getEffectivelyTrackedTargetNames(now),
+      );
+      changeSelectedInteractionRule(nextRule, nextRule ? 'rule_match_changed' : 'no_matching_rule');
+      return nextRule;
+    }
+
+    function scheduleInteractionPartnerConsume(runId, clipDurationMs, activeRule) {
+      clearConsumeTimer();
+      if (!activeRule.action.consumePartners) return;
+      const delayMs = Math.round(clipDurationMs * activeRule.action.consumeAtRatio);
+      sendARDebug('SECONDARY_CONSUME_SCHEDULED', {
+        runId,
+        ruleId: activeRule.id,
+        delayMs,
+        ratio: activeRule.action.consumeAtRatio,
+      });
+      interactionState.consumeTimeoutId = setTimeout(() => {
+        interactionState.consumeTimeoutId = null;
+        if (
+          !isInteractionRunOwner({
+            runId,
+            currentRunId: interactionState.comboRunId,
+            transaction: interactionState.transaction,
+          })
+          || interactionState.phase !== InteractionPhase.COMBO_PLAYING
+        ) {
+          sendARDebug('SECONDARY_CONSUME_IGNORED_STALE', { runId, currentRunId: interactionState.comboRunId });
+          return;
+        }
+        const latch = interactionState.comboLatch;
+        if (!latch || latch.ruleId !== activeRule.id) return;
+        const changedTargets = setInteractionPartnerVisibility({
+          rule: { partnerTargets: latch.partnerTargets },
+          targetInstances,
+          visible: false,
+        });
+        for (const targetName of changedTargets) {
+          sendARDebug('SECONDARY_CONSUMED', { runId, ruleId: latch.ruleId, targetName });
+        }
+      }, delayMs);
+    }
+
+    function resetInteractionSession(reason, { restorePartners = true } = {}) {
+      const prevPhase = interactionState.phase;
+      const prevRunId = interactionState.comboRunId;
+      const activeRule = getInteractionRuleById(
+        interactionState.comboLatch?.ruleId || selectedInteractionRuleId,
+      );
+      if (restorePartners && activeRule) {
+        setInteractionPartnerVisibility({ rule: activeRule, targetInstances, visible: true });
+      }
+      clearInteractionExecutionState();
+      if (selectedInteractionRuleId) {
+        sendARDebug('INTERACTION_RULE_CLEARED', { ruleId: selectedInteractionRuleId, reason });
+      }
+      selectedInteractionRuleId = null;
+      interactionState.actorTarget = null;
+      interactionState.partnerTargets = [];
+      sendARDebug('INTERACTION_SESSION_RESET', {
+        reason,
+        previousPhase: prevPhase,
+        previousRunId: prevRunId,
+        newRunId: interactionState.comboRunId,
+      });
+
+      setInteractionPhase(InteractionPhase.SEARCH_PRIMARY, { reason });
+    }
+
+    function releaseInteractionTransaction(runId, reason, { abort = false } = {}) {
+      const transaction = interactionState.transaction;
+      if (!isInteractionRunOwner({
+        runId,
+        currentRunId: interactionState.comboRunId,
+        transaction,
+      })) return false;
+
+      interactionState.transaction = null;
+      sendARDebug('INTERACTION_TRANSACTION_RELEASED', {
+        runId,
+        ruleId: transaction.ruleId,
+        actorTarget: transaction.actorTarget,
+        partnerTargets: transaction.partnerTargets,
+        reason,
+        abort,
+      });
+
+      if (abort) {
+        resetInteractionSession(reason);
+      }
+
+      const confirmedLosses = [];
+      for (const targetName of transaction.participantTargets) {
+        const instance = targetInstances.get(targetName);
+        const lossConfirmed = transaction.deferredLosses?.has(targetName)
+          || instance?.lossConfirmedAt != null;
+        const reconciliation = reconcileInteractionParticipantTracking({
+          transaction,
+          targetName,
+          tracked: !!instance?.tracked,
+          lossConfirmed,
+        });
+        sendARDebug('INTERACTION_TRACKING_RECONCILED', {
+          runId,
+          targetName,
+          tracked: !!instance?.tracked,
+          deferredLossConfirmed: reconciliation.deferredLossConfirmed,
+          result: reconciliation.result,
+        });
+        if (reconciliation.result === 'apply_confirmed_loss') {
+          confirmedLosses.push({
+            targetName,
+            lostForMs: transaction.deferredLosses?.get(targetName)?.lostForMs
+              ?? Math.max(0, performance.now() - (instance?.lostAt ?? performance.now())),
+          });
+        }
+      }
+
+      if (!abort && confirmedLosses.length > 0) {
+        resetInteractionSession('interaction_participant_lost_after_transaction');
+      }
+      for (const loss of confirmedLosses) {
+        hideConfirmedTargetLoss(loss.targetName, loss.lostForMs);
+      }
+      return true;
+    }
+
+    function processInteractionTransactionWatchdog(now) {
+      const transaction = interactionState.transaction;
+      if (!isInteractionTransactionLocked({
+        transaction,
+        currentRunId: interactionState.comboRunId,
+      })) return;
+      if (!isInteractionTransactionWatchdogExpired({ now, transaction })) return;
+      sendARDebug('INTERACTION_TRANSACTION_WATCHDOG', {
+        runId: transaction.runId,
+        ruleId: transaction.ruleId,
+        actorTarget: transaction.actorTarget,
+        partnerTargets: transaction.partnerTargets,
+        lockedForMs: Math.round(now - transaction.lockedAt),
+      });
+      releaseInteractionTransaction(transaction.runId, 'interaction_transaction_watchdog', { abort: true });
+    }
+
+    // Get or create the interaction-root group for the primary model.
+    // This sits between model-offset and the GLB, allowing procedural transforms
+    // (body rotation) that do not disturb anchor tracking or DB position/rotation/scale.
+    function getInteractionRoot(instance) {
+      if (!instance?.model) return null;
+      const model = instance.model;
+      // Find if interaction-root already exists (below surface-root and above GLB).
+      const surfaceRoot = getPresentationParent(instance);
+      if (!surfaceRoot) return null;
+      const existingRoot = getExistingInteractionRoot(instance);
+      if (existingRoot) return existingRoot;
+      // Create it
+      const root = new THREE.Group();
+      root.name = 'interaction-root:' + instance.config.qr_id;
+      // Reparent GLB under interaction-root
+      surfaceRoot.add(root);
+      root.add(model);
+      sendARDebug('INTERACTION_ROOT_CREATED', { targetName: instance.config.qr_id });
+      return root;
+    }
+
+    // Calculate yaw angle (radians) required to rotate from 'from' Vector3 to 'to' Vector3,
+    // in the XZ plane (horizontal), using +Z as forward.
+    function yawFromForward(fromPos, toPos) {
+      const dx = toPos.x - fromPos.x;
+      const dz = toPos.z - fromPos.z;
+      return Math.atan2(dx, dz);
+    }
+
+    function getDefaultAnimationClip(instance) {
+      const defaultName = instance?.config?.default_animation;
+      return defaultName
+        ? instance.animations?.find((clip) => clip.name === defaultName) || null
+        : null;
+    }
+
+    // Tween the selected actor body yaw each frame during COMBO_TURNING.
+    // Called inline from evaluateInteraction each frame.
+    function updateActorTurn(now) {
+      const turn = interactionState.actorTurn;
+      if (!turn) return;
+
+      // Check stale
+      if (!isInteractionRunOwner({
+        runId: turn.runId,
+        currentRunId: interactionState.comboRunId,
+        transaction: interactionState.transaction,
+      })) {
+        interactionState.actorTurn = null;
+        return;
+      }
+
+      const elapsed = now - turn.startedAt;
+      const t = smoothstep(Math.min(elapsed / turn.durationMs, 1));
+      const currentYaw = turn.fromYaw + (turn.toYaw - turn.fromYaw) * t;
+
+      const actorInst = targetInstances.get(turn.actorTarget);
+      const root = actorInst ? getInteractionRoot(actorInst) : null;
+      if (root) {
+        root.rotation.y = currentYaw;
+      }
+
+      if (elapsed >= turn.durationMs) {
+        // Turn complete — snap to final and clear
+        if (root) root.rotation.y = turn.toYaw;
+        interactionState.actorTurn = null;
+        sendARDebug('INTERACTION_ACTOR_TURN_COMPLETE', {
+          runId: turn.runId,
+          actorTarget: turn.actorTarget,
+          finalYawDeg: (turn.toYaw * 180 / Math.PI).toFixed(1),
+        });
+        if (isCatMascotInstance(actorInst)) {
+          sendARDebug('CAT_TURN_COMPLETE', {
+            runId: turn.runId,
+            finalYawDeg: (turn.toYaw * 180 / Math.PI).toFixed(1),
+          });
+        }
+        // Set COMBO_PLAYING before triggering the rule animation; otherwise the
+        // finish callback sees phase===COMBO_TURNING and treats the finish as stale.
+        setInteractionPhase(InteractionPhase.COMBO_PLAYING);
+        triggerInteractionAnimation(actorInst, getInteractionRuleById(turn.ruleId), turn.runId);
+      }
+    }
+
+    // Trigger the selected rule animation using the actor's existing mixer.
+    function triggerInteractionAnimation(actorInst, activeRule, runId) {
+      const resolution = resolveInteractionAnimation({ rule: activeRule, actorInstance: actorInst });
+      if (!actorInst?.mixer || !resolution.ok) {
+        sendARDebug('INTERACTION_ANIMATION_MISSING', {
+          ruleId: activeRule?.id || null,
+          actorTarget: activeRule?.actorTarget || null,
+          requested: resolution.requested,
+          available: resolution.available,
+          reason: actorInst?.mixer ? 'clip_missing' : 'mixer_missing',
+        });
+        if (activeRule?.id) unavailableAnimationRuleIds.add(activeRule.id);
+        resetInteractionSession('animation_missing', { restorePartners: false });
+        return false;
+      }
+      const clip = resolution.clip;
+      const mixer = actorInst.mixer;
+      const catActor = isCatMascotInstance(actorInst);
+      const idleClip = catActor ? getCatIdleClip(actorInst) : getDefaultAnimationClip(actorInst);
+      if (idleClip) {
+        mixer.clipAction(idleClip).fadeOut(0.15);
+      }
+      const action = mixer.clipAction(clip);
+      let animationGeneration = null;
+      if (catActor) {
+        catAnimationState.generation++;
+        animationGeneration = catAnimationState.generation;
+        catAnimationState.action = action;
+        catAnimationState.clipName = clip.name;
+        catAnimationState.source = activeRule.animation;
+        catAnimationState.priority = 100;
+      }
+      action.reset();
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+      action.fadeIn(0.15);
+      action.play();
+      sendARDebug('INTERACTION_ANIMATION_START', {
+        ruleId: activeRule.id,
+        actorTarget: activeRule.actorTarget,
+        clip: clip.name,
+        runId,
+      });
+      sendARDebug('COMBO_ANIMATION_START', {
+        targetName: activeRule.actorTarget,
+        clip: clip.name,
+        durationMs: Math.round((clip.duration || 0) * 1000),
+      });
+      const onFinish = (e) => {
+        if (e.action !== action) return;
+        mixer.removeEventListener('finished', onFinish);
+        const catOwnershipValid = !catActor || isCatOneShotCompletionOwner({
+          capturedGeneration: animationGeneration,
+          capturedAction: action,
+          current: catAnimationState,
+        });
+        if (
+          !isInteractionRunOwner({
+            runId,
+            currentRunId: interactionState.comboRunId,
+            transaction: interactionState.transaction,
+          }) ||
+          interactionState.phase !== InteractionPhase.COMBO_PLAYING ||
+          !catOwnershipValid
+        ) {
+          sendARDebug('COMBO_FINISH_IGNORED_STALE', {
+            runId,
+            currentRunId: interactionState.comboRunId,
+            phase: interactionState.phase,
+          });
+          return;
+        }
+        if (catActor) {
+          const idleAction = idleClip ? mixer.clipAction(idleClip) : null;
+          sendARDebug('CAT_ACTION_STATE_AFTER_EAT', {
+            eatRunning: action.isRunning(),
+            eatWeight: action.getEffectiveWeight(),
+            eatTime: action.time,
+            eatClampWhenFinished: action.clampWhenFinished,
+            idleRunning: idleAction ? idleAction.isRunning() : false,
+            idleWeight: idleAction ? idleAction.getEffectiveWeight() : 0,
+            idleTime: idleAction ? idleAction.time : null,
+          });
+        }
+        sendARDebug('COMBO_ANIMATION_FINISHED', { targetName: activeRule.actorTarget, runId });
+        if (
+          interactionState.activeAnimation?.runId === runId
+          && interactionState.activeAnimation.action === action
+        ) {
+          interactionState.activeAnimation = null;
+        }
+        if (catActor) {
+          restoreCatIdleAfterOneShot(actorInst, action, activeRule.animation, clip.name);
+          catAnimationState.action = null;
+          catAnimationState.clipName = null;
+          catAnimationState.source = null;
+          catAnimationState.priority = 0;
+          resetCatAmbientIdle('combo_complete');
+        } else if (idleClip) {
+          action.fadeOut(0.12);
+          const idleAction = mixer.clipAction(idleClip);
+          idleAction.reset();
+          idleAction.fadeIn(0.12);
+          idleAction.play();
+          sendARDebug('INTERACTION_IDLE_RESTORED', {
+            ruleId: activeRule.id,
+            actorTarget: activeRule.actorTarget,
+            idleClip: idleClip.name,
+          });
+        }
+        interactionState.comboPlaying = false;
+        interactionState.comboConsumed = true;
+        setInteractionPhase(InteractionPhase.COMBO_CONSUMED);
+
+        const root2 = getInteractionRoot(actorInst);
+        const fromYaw = root2 ? root2.rotation.y : 0;
+        const toYaw = interactionState.comboLatch?.actorOriginalYaw ?? 0;
+        interactionState.actorReturn = {
+          ruleId: activeRule.id,
+          actorTarget: activeRule.actorTarget,
+          runId,
+          fromYaw,
+          toYaw,
+          startedAt: performance.now(),
+          durationMs: COMBO_VISUAL_CONFIG.returnTurnMs,
+        };
+        if (catActor) sendARDebug('CAT_RETURN_START', { runId });
+        sendARDebug('INTERACTION_ANIMATION_FINISHED', {
+          ruleId: activeRule.id,
+          actorTarget: activeRule.actorTarget,
+          clip: clip.name,
+          runId,
+        });
+      };
+      interactionState.activeAnimation = {
+        runId,
+        actorTarget: activeRule.actorTarget,
+        action,
+        mixer,
+        onFinish,
+        idleClip,
+        catAnimationGeneration: animationGeneration,
+      };
+      mixer.addEventListener('finished', onFinish);
+      scheduleInteractionPartnerConsume(runId, (clip.duration || 0) * 1000, activeRule);
+      return true;
+    }
+
+    function isTargetInActiveInteraction(targetName) {
+      const latch = interactionState.comboLatch;
+      const selectedParticipants = {
+        actorTarget: interactionState.actorTarget,
+        partnerTargets: interactionState.partnerTargets,
+      };
+      const participants = latch
+        ? getInteractionParticipantTargets(latch)
+        : getInteractionParticipantTargets(selectedParticipants);
+      return participants.includes(targetName);
+    }
+
+    function hideConfirmedTargetLoss(targetName, lostForMs) {
+      const instance = targetInstances.get(targetName);
+      const wasTargetModelVisible = !!instance?.model?.visible;
+
+      if (instance?.model) instance.model.visible = false;
+      if (instance) {
+        instance.modelAttached = false;
+        // A confirmed loss ends this visual acquisition. The next true find
+        // snaps rather than interpolating from a stale world-space pose.
+        resetVisualPose(instance);
+      }
+
+      sendARDebug('MODEL_HIDDEN_TARGET_LOST', {
+        targetName,
+        lostForMs: Math.round(lostForMs),
+        wasVisible: wasTargetModelVisible,
+      });
+    }
+
+    function processPendingTargetLosses(now) {
+      for (const [targetName, graceStart] of interactionState.pendingGraceHides) {
+        const lossGrace = getTargetLossGraceState({
+          lostAt: graceStart,
+          now,
+          lostGraceMs: INTERACTION_CONFIG.lostGraceMs,
+        });
+        if (!lossGrace.confirmed) continue;
+
+        interactionState.pendingGraceHides.delete(targetName);
+        const instance = targetInstances.get(targetName);
+        if (instance) {
+          instance.lossConfirmedAt = now;
+          const acquisitionState = advanceTargetAcquisitionState({
+            foundAt: instance.foundAt,
+            stable: instance.stable,
+            event: 'confirmed_loss',
+            now,
+          });
+          instance.foundAt = acquisitionState.foundAt;
+          instance.stable = acquisitionState.stable;
+        }
+        sendARDebug('TARGET_LOST_CONFIRMED', {
+          targetName,
+          lostForMs: Math.round(lossGrace.lostForMs),
+        });
+        learnerTargetGate.onConfirmedLoss({
+          targetName,
+          lostAt: performance.timeOrigin + graceStart,
+        });
+
+        const lossDecision = getActiveTransactionLossDecision(targetName);
+        if (lossDecision.defer) {
+          const transaction = interactionState.transaction;
+          if (transaction) {
+            if (!transaction.deferredLosses) transaction.deferredLosses = new Map();
+            transaction.deferredLosses.set(targetName, {
+              role: lossDecision.role,
+              lostForMs: lossGrace.lostForMs,
+              confirmedAt: now,
+            });
+          }
+          sendARDebug('INTERACTION_TARGET_LOSS_DEFERRED', {
+            runId: lossDecision.runId,
+            ruleId: transaction?.ruleId || null,
+            targetName,
+            role: lossDecision.role,
+            phase: interactionState.phase,
+            lostForMs: Math.round(lossGrace.lostForMs),
+          });
+          continue;
+        }
+
+        if (isTargetInActiveInteraction(targetName)) {
+          resetInteractionSession('interaction_participant_lost');
+        }
+        hideConfirmedTargetLoss(targetName, lossGrace.lostForMs);
+      }
+    }
+
+    function evaluateInteraction(now) {
+      const activeRule = selectRuntimeInteractionRule(now);
+      if (!activeRule) return;
+      const actorInst = targetInstances.get(activeRule.actorTarget);
+      const partnerTarget = activeRule.partnerTargets[0];
+      const partnerInst = targetInstances.get(partnerTarget);
+      const proximityConfig = resolveRuleProximityConfig(activeRule, null);
+      if (!actorInst || !partnerInst || !proximityConfig) return;
+
+      const effectiveTargets = new Set(getEffectivelyTrackedTargetNames(now));
+      const actorEffectivelyTracked = effectiveTargets.has(activeRule.actorTarget);
+      const partnerEffectivelyTracked = effectiveTargets.has(partnerTarget);
+
+      // ---- Actor lock state ----
+      // Only stamp foundAt on the first tracking contact of a fresh cycle.
+      if (actorInst?.tracked && actorInst.foundAt == null) {
+        actorInst.foundAt = now;
+      }
+
+      // Confirmed actor loss (grace expired) → full reset
+      if (
+        !actorEffectivelyTracked
+        && interactionState.phase !== InteractionPhase.SEARCH_PRIMARY
+        && !isInteractionExecutionLocked()
+      ) {
+        sendARDebug('PRIMARY_UNLOCKED', {
+          reason: 'actor_lost_grace',
+          lostForMs: actorInst ? now - actorInst.lostAt : null,
+        });
+        resetInteractionSession('actor_lost_grace');
+        return;
+      }
+
+      // Lock the selected actor when continuously tracked for primaryLockMs
+      if (actorInst?.tracked && interactionState.phase === InteractionPhase.SEARCH_PRIMARY) {
+        if (actorInst.foundAt == null) actorInst.foundAt = now;
+        const stableMs = now - actorInst.foundAt;
+        if (stableMs >= INTERACTION_CONFIG.primaryLockMs) {
+          if (stableMs > 3000) {
+            sendARDebug('PRIMARY_STABLE_TIME_SUSPICIOUS', { stableMs, targetName: activeRule.actorTarget });
+          }
+          interactionState.primaryLockedAt = now;
+          sendARDebug('PRIMARY_LOCKED', { targetName: activeRule.actorTarget, stableMs });
+          sendARDebug('INTERACTION_ACTOR_LOCKED', {
+            ruleId: activeRule.id,
+            actorTarget: activeRule.actorTarget,
+            stableMs,
+          });
+          setInteractionPhase(InteractionPhase.PRIMARY_LOCKED, { stableMs });
+          setInteractionPhase(InteractionPhase.WAIT_SECONDARY);
+        }
+      }
+
+      // Clear foundAt if the actor was lost before ever locking
+      if (!actorInst?.tracked && actorInst?.foundAt != null && actorInst?.lostAt != null) {
+        if ((now - actorInst.foundAt) < INTERACTION_CONFIG.primaryLockMs) {
+          actorInst.foundAt = null;
+        }
+      }
+
+      const activeReturn = interactionState.actorReturn;
+      if (activeReturn) {
+        if (!isInteractionRunOwner({
+          runId: activeReturn.runId,
+          currentRunId: interactionState.comboRunId,
+          transaction: interactionState.transaction,
+        })) {
+          interactionState.actorReturn = null;
+          if (isCatMascotInstance(actorInst)) sendARDebug('CAT_RETURN_CANCELLED_STALE', {
+            runId: activeReturn.runId,
+            currentRunId: interactionState.comboRunId,
+          });
+        } else {
+          const returnTick = advanceCatReturnTween(now, activeReturn);
+          const returnActorInst = targetInstances.get(activeReturn.actorTarget);
+          const root = returnActorInst ? getInteractionRoot(returnActorInst) : null;
+          if (root) root.rotation.y = returnTick.yaw;
+
+          if (returnTick.complete) {
+            if (root) root.rotation.y = activeReturn.toYaw;
+            interactionState.actorReturn = null;
+            if (isCatMascotInstance(returnActorInst)) {
+              sendARDebug('CAT_RETURN_COMPLETE', {
+                runId: activeReturn.runId,
+                finalYawDeg: (activeReturn.toYaw * 180 / Math.PI).toFixed(1),
+              });
+            }
+            sendARDebug('INTERACTION_ACTOR_RETURN_COMPLETE', {
+              ruleId: activeReturn.ruleId,
+              actorTarget: activeReturn.actorTarget,
+              runId: activeReturn.runId,
+            });
+            releaseInteractionTransaction(activeReturn.runId, 'actor_return_complete');
+          }
+        }
+      }
+
+      const phase = interactionState.phase;
+
+      // ---- COMBO_TURNING: tween actor body yaw, then start the rule animation ----
+      if (phase === InteractionPhase.COMBO_TURNING) {
+        updateActorTurn(now);
+        const raw = computeTargetPairDistance(actorInst, partnerInst);
+        updateFilteredDistance(raw, proximityConfig);
+        return;
+      }
+
+      // ---- COMBO_PLAYING: selected rule animation running ----
+      if (phase === InteractionPhase.COMBO_PLAYING) {
+        const raw = computeTargetPairDistance(actorInst, partnerInst);
+        updateFilteredDistance(raw, proximityConfig);
+        return;
+      }
+
+      // ---- Proximity / combo phases ----
+      if (
+        phase === InteractionPhase.PRIMARY_LOCKED ||
+        phase === InteractionPhase.WAIT_SECONDARY ||
+        phase === InteractionPhase.WAIT_SECONDARY_MODEL ||
+        phase === InteractionPhase.PROXIMITY_PENDING ||
+        phase === InteractionPhase.COMBO_ARMED ||
+        phase === InteractionPhase.COMBO_TURNING ||
+        phase === InteractionPhase.COMBO_CONSUMED
+      ) {
+        // Secondary asset readiness: GLB loaded + model object exists.
+        // NOT dependent on model.visible (output state).
+        const secondaryAssetReady = !!(
+          partnerInst?.modelState === 'loaded' &&
+          partnerInst?.model
+        );
+        const secondaryTracked = partnerEffectivelyTracked;
+        const secondaryInteractionReady = !!(
+          secondaryAssetReady &&
+          secondaryTracked &&
+          !interactionState.comboConsumed
+        );
+
+        // Throttled diagnostic: only log when values actually change
+        if (partnerInst) {
+          const key = `${activeRule.id}|${partnerInst.modelState}|${!!partnerInst.model}|${!!partnerInst.tracked}|${!!partnerInst.visibleByInteraction}`;
+          if (key !== interactionState.lastSecondaryReadiness) {
+            interactionState.lastSecondaryReadiness = key;
+            sendARDebug('SECONDARY_READINESS', {
+              ruleId: activeRule.id,
+              targetName: partnerTarget,
+              modelState: partnerInst.modelState,
+              hasModel: !!partnerInst.model,
+              tracked: !!partnerInst.tracked,
+              modelVisible: !!partnerInst.model?.visible,
+              visibleByInteraction: partnerInst.visibleByInteraction,
+              assetReady: secondaryAssetReady,
+              interactionReady: secondaryInteractionReady,
+            });
+          }
+        }
+
+        // Partner found → decide if we can go straight to proximity
+        if (partnerEffectivelyTracked && phase === InteractionPhase.WAIT_SECONDARY) {
+          if (secondaryAssetReady) {
+            setInteractionPhase(InteractionPhase.PROXIMITY_PENDING);
+          } else {
+            setInteractionPhase(InteractionPhase.WAIT_SECONDARY_MODEL);
+            sendARDebug('COMBO_WAITING_FOR_SECONDARY_MODEL', {
+              ruleId: activeRule.id,
+              targetName: partnerTarget,
+              modelState: partnerInst?.modelState,
+              hasModel: !!partnerInst?.model,
+            });
+          }
+        }
+
+        // Partner leaves → drop back to WAIT_SECONDARY
+        if (!partnerEffectivelyTracked) {
+          if (
+            phase === InteractionPhase.PROXIMITY_PENDING ||
+            phase === InteractionPhase.WAIT_SECONDARY_MODEL
+          ) {
+            interactionState.proximityEnteredAt = null;
+            updateFilteredDistance(null, proximityConfig);
+            setInteractionPhase(InteractionPhase.WAIT_SECONDARY);
+          }
+        }
+
+        // Partner asset became ready mid-session → reset proximity timer
+        if (secondaryAssetReady && phase === InteractionPhase.WAIT_SECONDARY_MODEL) {
+          interactionState.proximityEnteredAt = null;
+          interactionState.filteredDistance = null;
+          sendARDebug('SECONDARY_INTERACTION_READY', {
+            ruleId: activeRule.id,
+            targetName: partnerTarget,
+            modelState: partnerInst.modelState,
+          });
+          setInteractionPhase(InteractionPhase.PROXIMITY_PENDING);
+        }
+
+        const raw = computeTargetPairDistance(actorInst, partnerInst);
+        const filtered = updateFilteredDistance(raw, proximityConfig);
+        // No live pose (target in loss grace): time without data must not count as stable proximity.
+        if (filtered == null) interactionState.proximityEnteredAt = null;
+
+        // Throttled proximity log
+        const sampleInterval = 1000 / INTERACTION_CONFIG.proximitySampleHz;
+        if (raw != null && (now - interactionState.lastProximityLog) >= sampleInterval) {
+          interactionState.lastProximityLog = now;
+          sendARDebug('PROXIMITY_SAMPLE', {
+            ruleId: activeRule.id,
+            actorTarget: activeRule.actorTarget,
+            partnerTarget,
+            rawDistance: Number(raw.toFixed(4)),
+            filteredDistance: filtered != null ? Number(filtered.toFixed(4)) : null,
+            enterDistance: proximityConfig.enterDistance,
+            exitDistance: proximityConfig.exitDistance,
+            actorTracked: actorEffectivelyTracked,
+            partnerTracked: partnerEffectivelyTracked,
+            secondaryInteractionReady,
+          });
+        }
+
+        // ---- Proximity enter / stable / combo arm ----
+        if (filtered != null && actorEffectivelyTracked && partnerEffectivelyTracked && !interactionState.comboPlaying) {
+          const gate = advanceComboProximityGate({
+            now,
+            distance: filtered,
+            enteredAt: interactionState.proximityEnteredAt,
+            comboConsumed: interactionState.comboConsumed,
+            config: {
+              enterDistance: proximityConfig.enterDistance,
+              exitDistance: proximityConfig.exitDistance,
+              proximityStableMs: proximityConfig.stableMs,
+            },
+          });
+          if (!interactionState.comboConsumed) {
+            if (gate.enteredAt != null && interactionState.proximityEnteredAt == null) {
+              interactionState.proximityEnteredAt = now;
+              sendARDebug('PROXIMITY_ENTER', {
+                ruleId: activeRule.id,
+                actorTarget: activeRule.actorTarget,
+                partnerTarget,
+                filteredDistance: Number(filtered.toFixed(4)),
+              });
+            }
+            if (gate.enteredAt == null && interactionState.proximityEnteredAt != null) {
+              sendARDebug('PROXIMITY_EXIT', { filteredDistance: Number(filtered.toFixed(4)) });
+            }
+            interactionState.proximityEnteredAt = gate.enteredAt;
+            const stableFor = gate.enteredAt == null ? 0 : now - gate.enteredAt;
+            if (
+              phase === InteractionPhase.PROXIMITY_PENDING &&
+              secondaryInteractionReady &&
+              gate.stable &&
+              !interactionState.comboConsumed
+            ) {
+              sendARDebug('PROXIMITY_STABLE', {
+                ruleId: activeRule.id,
+                stableMs: stableFor,
+                distance: Number(filtered.toFixed(4)),
+              });
+              sendARDebug('COMBO_ARMED', {
+                ruleId: activeRule.id,
+                actorTarget: activeRule.actorTarget,
+                partnerTargets: activeRule.partnerTargets,
+              });
+
+              // A CAT mascot one-shot must yield to a priority-100 interaction.
+              if (isCatMascotInstance(actorInst)) cancelActiveCatOneShotForCombo();
+
+              // Capture comboRunId
+              interactionState.comboRunId++;
+              const runId = interactionState.comboRunId;
+
+              const actorPose = trackedTargets.get(activeRule.actorTarget);
+              const partnerPose = trackedTargets.get(partnerTarget);
+              const root = getInteractionRoot(actorInst);
+              const actorOriginalYaw = root ? root.rotation.y : 0;
+
+              interactionState.comboLatch = {
+                runId,
+                ruleId: activeRule.id,
+                actorTarget: activeRule.actorTarget,
+                partnerTargets: [...activeRule.partnerTargets],
+                actorPose: actorPose ? { ...actorPose } : null,
+                partnerPose: partnerPose ? { ...partnerPose } : null,
+                actorOriginalYaw,
+              };
+
+              const transaction = createInteractionTransaction({
+                runId,
+                rule: activeRule,
+                lockedAt: now,
+                watchdogAt: getInteractionTransactionWatchdogAt({ now, activeRule, actorInst }),
+              });
+              transaction.deferredLosses = new Map();
+              interactionState.transaction = transaction;
+
+              setInteractionPhase(InteractionPhase.COMBO_ARMED);
+              sendARDebug('INTERACTION_TRANSACTION_LOCKED', {
+                runId,
+                ruleId: transaction.ruleId,
+                actorTarget: transaction.actorTarget,
+                partnerTargets: transaction.partnerTargets,
+                watchdogAt: Math.round(transaction.watchdogAt),
+              });
+              sendARDebug('COMBO_TRACKING_LATCHED', {
+                runId,
+                ruleId: activeRule.id,
+                actorTarget: activeRule.actorTarget,
+                partnerTargets: activeRule.partnerTargets,
+                actorPose: actorPose?.position,
+                partnerPose: partnerPose?.position,
+                actorOriginalYawDeg: (actorOriginalYaw * 180 / Math.PI).toFixed(1),
+              });
+
+              // ---- Begin turn: calculate direction from latched poses ----
+              let targetYaw = actorOriginalYaw;
+              const actorPoseForTurn = interactionState.comboLatch?.actorPose?.position;
+              const partnerPoseForTurn = interactionState.comboLatch?.partnerPose?.position;
+              if (activeRule.action.facePrimaryPartner && actorPoseForTurn && partnerPoseForTurn) {
+                targetYaw = yawFromForward(actorPoseForTurn, partnerPoseForTurn)
+                  + (COMBO_VISUAL_CONFIG.forwardYawOffsetDeg * Math.PI / 180);
+
+                // Clamp to max body yaw
+                const maxRad = COMBO_VISUAL_CONFIG.maxBodyYawDeg * Math.PI / 180;
+                if (targetYaw > maxRad) targetYaw = maxRad;
+                if (targetYaw < -maxRad) targetYaw = -maxRad;
+              }
+
+              setInteractionPhase(InteractionPhase.COMBO_TURNING);
+              sendARDebug('INTERACTION_ACTOR_TURN_START', {
+                runId,
+                ruleId: activeRule.id,
+                actorTarget: activeRule.actorTarget,
+                partnerTarget,
+                requestedYawDeg: ((targetYaw - actorOriginalYaw) * 180 / Math.PI).toFixed(1),
+                clampedYawDeg: ((targetYaw) * 180 / Math.PI).toFixed(1),
+              });
+              if (isCatMascotInstance(actorInst)) {
+                sendARDebug('CAT_TURN_START', {
+                  runId,
+                  secondaryTargetName: partnerTarget,
+                  requestedYawDeg: ((targetYaw - actorOriginalYaw) * 180 / Math.PI).toFixed(1),
+                  clampedYawDeg: ((targetYaw) * 180 / Math.PI).toFixed(1),
+                });
+              }
+              interactionState.actorTurn = {
+                runId,
+                ruleId: activeRule.id,
+                actorTarget: activeRule.actorTarget,
+                fromYaw: actorOriginalYaw,
+                toYaw: targetYaw,
+                startedAt: now,
+                durationMs: COMBO_VISUAL_CONFIG.bodyTurnMs,
+              };
+              interactionState.comboPlaying = true;
+            }
+          }
+
+          // Rearm when cards separate beyond EXIT
+          if (
+            gate.rearmEligible &&
+            phase === InteractionPhase.COMBO_CONSUMED
+          ) {
+            sendARDebug('COMBO_REARMED', { ruleId: activeRule.id, distance: Number(filtered.toFixed(4)) });
+            interactionState.comboConsumed = false;
+            interactionState.proximityEnteredAt = null;
+            setInteractionPartnerVisibility({ rule: activeRule, targetInstances, visible: true });
+            setInteractionPhase(InteractionPhase.WAIT_SECONDARY);
+          }
+        }
+      }
+    }
+
+    // ========== TARGET FOUND / LOST ==========
+    function onTargetFound(detail) {
+      saveTargetPose(detail);
+      const now = performance.now();
+      const instance = targetInstances.get(detail.name);
+      const graceStart = interactionState.pendingGraceHides.get(detail.name);
+      const lossGrace = graceStart == null
+        ? null
+        : getTargetLossGraceState({
+          lostAt: graceStart,
+          now,
+          lostGraceMs: INTERACTION_CONFIG.lostGraceMs,
+        });
+
+      if (lossGrace?.confirmed) processPendingTargetLosses(now);
+
+      if (instance) {
+        instance.tracked = true;
+        instance.lostAt = null;
+        instance.lossConfirmedAt = null;
+        const acquisitionState = advanceTargetAcquisitionState({
+          foundAt: instance.foundAt,
+          stable: instance.stable,
+          event: 'found',
+          now,
+        });
+        instance.foundAt = acquisitionState.foundAt;
+        instance.stable = acquisitionState.stable;
+      }
+
+      // Cancel only a brief loss. A late callback was confirmed above.
+      if (lossGrace?.withinGrace) {
+        interactionState.pendingGraceHides.delete(detail.name);
+        sendARDebug('TARGET_REACQUIRED_WITHIN_GRACE', {
+          targetName: detail.name,
+          lostForMs: Math.round(lossGrace.lostForMs),
+        });
+      }
+
+      const config = targetConfigByName.get(detail.name);
+      const targetWord = config?.word || detail.name;
+      learnerTargetGate.onFound({
+        targetName: detail.name,
+        word: targetWord,
+        acquiredAt: performance.timeOrigin + now,
+      });
+
+      sendARDebug('TARGET_FOUND', {
+        qrId: detail.name,
+        word: targetWord,
+        trackedCount: trackedTargets.size,
+        trackedTargets: Array.from(trackedTargets.keys()),
+      });
+      sendMessage('TARGET_FOUND', { qrId: detail.name, word: targetWord, trackedCount: trackedTargets.size });
+      showCardLabel(targetWord);
+
+      if (isCatMascotInstance(instance)) resetCatAmbientIdle('target_acquired');
+      void attachTrackedTargetModel(detail.name);
+
+      sendARDebug('MULTI_TARGET_STATE', { count: trackedTargets.size, targets: Array.from(trackedTargets.keys()) });
+    }
+
+    function onTargetLost(name) {
+      const instance = targetInstances.get(name);
+      const now = performance.now();
+      learnerTargetGate.onRawLost(name);
+
+      // Track loss immediately
+      trackedTargets.delete(name);
+      if (instance) {
+        instance.tracked = false;
+        instance.pose = null;
+        instance.lostAt = now;
+        instance.lossConfirmedAt = null;
+        // DO NOT hide model immediately — visual grace is handled independently.
+        // after lostGraceMs expires. This preserves participant visibility during
+        // brief occlusion and during COMBO_PLAYING.
+      }
+
+      // Register pending grace hide
+      if (!interactionState.pendingGraceHides.has(name)) {
+        interactionState.pendingGraceHides.set(name, now);
+        sendARDebug('TARGET_LOST_PENDING', {
+          qrId: name,
+          graceMs: INTERACTION_CONFIG.lostGraceMs,
+          isEntryTarget: name === primaryModelTargetName,
+        });
+      }
+      sendMessage('TARGET_LOST', { qrId: name });
+
+      // Each target keeps its own attachment and remains visible through grace.
+
+      sendARDebug('MULTI_TARGET_STATE', { count: trackedTargets.size, targets: Array.from(trackedTargets.keys()), lost: name });
+    }
+
+    // ========== COMBO DETECTION (background) ==========
+    // Resolves true only when backend rules were fetched and parsed; fallbacks still install either way.
+    async function loadComboRules() {
+      const deck = params.get('deck_id') || 'claymorphic-animals-001';
+      let rawRules = [];
+      let loaded = false;
+      try {
+        const url = `${apiBase}/api/v1/combos/rules?flashcard_set=${encodeURIComponent(deck)}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          rawRules = (await res.json()).rules || [];
+          loaded = true;
+          sendARDebug('COMBO_RULE_LOAD_COMPLETE', { count: rawRules.length, url });
+        }
+        else sendARDebug('COMBO_RULE_LOAD_ERROR', { status: res.status });
+      } catch (e) {
+        sendARDebug('COMBO_RULE_LOAD_ERROR', { error: String(e) });
+      } finally {
+        installInteractionRules(rawRules);
+      }
+      return loaded;
+    }
+
+    // ========== MESSAGE LISTENER ==========
+    window.addEventListener('message', (event) => {
+      const messageData = event.data;
+      if (messageData?.type === 'dispose') {
+        sendARDebug('XR_DISPOSE_RECEIVED', {
+          phase: currentPhase,
+          cameraStatus: xrCameraStatus,
+          source: event.source === window.parent ? 'parent' : 'unknown',
+        });
+      }
+      const { type, payload } = messageData || {};
+      if (!type) return;
+
+      if (type === 'REQUEST_IFRAME_LOGS') {
+        window.parent.postMessage({ type: 'IFRAME_LOGS', payload: { requestId: payload?.requestId || 'unknown', logs: window.XRDebug?.getLogs() || '', engine: '8th-wall', qrId, word }, timestamp: Date.now() }, '*');
+        return;
+      }
+      if (type === 'DEBUG_TOGGLE') { debugPanel.style.display = payload?.enabled ? 'block' : 'none'; return; }
+      if (type === 'TRIGGER_TELEGRAM_SYNC') {
+        const fullLogs = `=== STATE ===\nqrId: ${qrId}\nword: ${word}\nprimaryModelLoaded: ${!!loadedModel}\nprimaryModelVisible: ${loadedModel?.visible || false}\ntrackedTargets: ${Array.from(trackedTargets.keys()).join(', ') || 'none'}\nmodelLoadState: ${modelLoadState}\ncurrentPhase: ${currentPhase}`;
+        window.parent.postMessage({ type: 'TELEGRAM_SYNC_READY', payload: { logs: fullLogs, manualOffset: payload?.manualOffset, engine: '8th-wall', flashcardCount: trackedTargets.size || 1 }, timestamp: Date.now() }, '*');
+        return;
+      }
+      logToBuffer('debug', 'Message received', { type });
+    });
+
+    // ========== STAGED MODEL PRELOAD ==========
+    // Only the entry target is loaded at boot. The full image-target catalogue
+    // stays registered, while every other GLB starts lazily after IMAGE_FOUND.
+
+    // ========== MAIN ==========
+    async function main() {
+      sendARDebug('PAGE_LOAD');
+      try {
+        initThree();
+        updateDebug('Three.js ready');
+        loadComboRules();
+
+        const targetsPromise = Promise.all(xrTargetConfigs.map(cfg => loadTargetData(cfg)));
+
+        // Secondary models are lazy after IMAGE_FOUND. This is diagnostic only:
+        // there is no completion promise and no boot barrier for this list.
+        const secondaryTargets = xrTargetConfigs
+          .filter(cfg => cfg.qr_id !== primaryModelTargetName && cfg.model_3d_url)
+          .map(cfg => cfg.qr_id);
+        sendDebugOnly('SECONDARY_PRELOAD_PLAN', {
+          targets: secondaryTargets,
+          count: secondaryTargets.length,
+          strategy: 'lazy-after-image-found',
+        });
+        if (secondaryTargets.length === 0) {
+          sendDebugOnly('SECONDARY_PRELOAD_EMPTY', {
+            count: 0,
+            strategy: 'lazy-after-image-found',
+          });
+        }
+
+        // Phase 1: preload primary model immediately — no await.
+        sendARDebug('MODEL_PRIMARY_PRELOAD_START', { targetName: primaryModelTargetName });
+        const primaryModelPromise = ensureTargetModelLoaded(primaryModelTargetName);
+        primaryModelPromise.then(() => {
+          sendARDebug('PRIMARY_MODEL_READY', { targetName: primaryModelTargetName });
+        });
+
+        const targetDataList = await targetsPromise;
+        sendARDebug('MULTI_TARGET_DATA_READY', { count: targetDataList.length, targets: targetDataList.map(t => t.name) });
+
+        setPhase('loading');
+        sendARDebug('LOADING_ASSETS', { hasModel: !!modelUrl, targetCount: targetDataList.length });
+
+        // XR init must NOT wait for model downloads.
+        await initXR(targetDataList);
+
+        setPhase('viewing');
+        sendARDebug('INIT_COMPLETE', { modelLoaded: !!loadedModel, targetCount: targetDataList.length });
+
+        // Attach CAT gesture handlers — pointer events work for touch and mouse.
+        window.addEventListener('pointerdown', onPointerDown, { passive: true });
+        window.addEventListener('pointerup', onPointerUp, { passive: true });
+        window.addEventListener('pointercancel', onPointerCancel, { passive: true });
+        sendARDebug('CAT_GESTURE_HANDLERS_REGISTERED', {});
+        logToBuffer('info', 'Initialization complete');
+      } catch (error) {
+        setPhase('error');
+        sendARDebug('INIT_ERROR', { error: String(error), stack: error?.stack });
+        logToBuffer('error', 'Initialization failed', { error: String(error) });
+        showError(String(error));
+      }
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', main);
+    else main();
+  </script>
+</body>
+</html>

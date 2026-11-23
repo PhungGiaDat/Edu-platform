@@ -14,10 +14,27 @@
     "lessonsCount": "{count} bài học",
     "lessonsHeader": "Bài học",
     "expand": "Hiện bài học",
-    "collapse": "Ẩn bài học"
+    "collapse": "Ẩn bài học",
+    "startLearning": "Bắt đầu học",
+    "continueLearning": "Tiếp tục học",
+    "openingLesson": "Đang mở bài học…",
+    "startCourseFailed": "Không thể mở bài học này",
+    "filterByCategory": "Danh mục",
+    "filterByLevel": "Trình độ",
+    "allCategories": "Tất cả danh mục",
+    "allLevels": "Tất cả trình độ",
+    "levelBeginner": "Mới bắt đầu",
+    "levelIntermediate": "Trung cấp",
+    "levelAdvanced": "Nâng cao"
   },
   "pets": {
     "title": "Thú cưng của tôi",
+    "yourPets": "Thú cưng của bạn",
+    "allPets": "Tất cả thú cưng",
+    "activePetCta": "Xem thú cưng đang dùng",
+    "updatingActivePet": "Đang cập nhật…",
+    "careLoadFailed": "Không thể tải chỉ số chăm sóc thú cưng",
+    "activePetFailed": "Không thể cập nhật thú cưng đang dùng",
     "mood": {
       "idle": "Đang nghỉ",
       "anticipating": "Đang chờ",

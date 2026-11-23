@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AR Scanner</title>
+
+    <!-- Capture QR-camera startup before jsQR and the scanner runtime load. -->
+    <script>
+        (function installScannerDebugBridge() {
+            var params = new URLSearchParams(location.search);
+            if (params.get('debug') !== 'true' && location.hostname !== 'localhost') return;
+
+            function sendDebug(label, details) {
+                window.parent.postMessage({
+                    type: 'AR_DEBUG',
+                    payload: { label: label, details: details || {}, source: 'ar-scanner-console' },
+                    timestamp: Date.now(),
+                    origin: 'child'
+                }, '*');
+            }
+
+            function serialise(args) {
+                return Array.prototype.slice.call(args).map(function(value) {
+                    try {
+                        if (value instanceof Error) return value.stack || value.message;
+                        return typeof value === 'object' ? JSON.stringify(value) : String(value);
+                    } catch (_) {
+                        return String(value);
+                    }
+                }).join(' ').slice(0, 4000);
+            }
+
+            ['error', 'warn', 'log', 'info'].forEach(function(level) {
+                var original = console[level].bind(console);
+                console[level] = function() {
+                    try {
+                        sendDebug('SCANNER_CONSOLE_' + level.toUpperCase(), {
+                            level: level,
+                            text: serialise(arguments),
+                            engine: 'scanner'
+                        });
+                    } catch (_) { /* debug must never stop camera startup */ }
+                    return original.apply(console, arguments);
+                };
+            });
+
+            window.addEventListener('error', function(event) {
+                sendDebug('SCANNER_UNCAUGHT_ERROR', {
+                    level: 'error',
+                    text: String(event.message || event.error || 'Unknown scanner error'),
+                    engine: 'scanner'
+                });
+            }, true);
+            window.addEventListener('unhandledrejection', function(event) {
+                sendDebug('SCANNER_UNHANDLED_REJECTION', {
+                    level: 'error',
+                    text: event.reason instanceof Error
+                        ? (event.reason.stack || event.reason.message)
+                        : String(event.reason),
+                    engine: 'scanner'
+                });
+            });
+
+            console.info('[ar-scanner] Debug bridge installed before camera bootstrap');
+        })();
+    </script>
+
+    <!-- Eruda Debug Console - Mobile Web Debugging -->
+    <script>
+        var scannerDebugParams = new URLSearchParams(location.search);
+        // Enable eruda when debug=true OR eruda=true OR localhost
+        if (scannerDebugParams.get('eruda') === 'true' || scannerDebugParams.get('debug') === 'true' || location.hostname === 'localhost') {
+            (function() {
+                var s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/eruda@3';
+                s.onload = function() { eruda.init({
+                    defaults: { displaySize: 30, transparency: 0.8 },
+                    useShadowDom: true
+                }); };
+                document.head.appendChild(s);
+            })();
+        }
+    </script>
+
+    <!-- jsQR - Lightweight QR Scanner (~50KB), vendored locally -->
+    <script src="/static/vendor/jsQR-1.4.0.min.js"></script>
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="/static/ar-assets/css/ar-scanner.css">
+</head>
+
+<body>
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+
+    <!-- Status overlay: shown only when ?debug=true, removed once camera is ready -->
+    <div id="scanner-status" style="
+        display: none;
+        position: fixed;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.75);
+        color: #0f0;
+        font-family: monospace;
+        font-size: 12px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        z-index: 9999;
+        pointer-events: none;
+        white-space: nowrap;
+    ">⏳ Requesting camera...</div>
+
+    <script>
+        // Show status overlay only in debug mode
+        (function() {
+            var params = new URLSearchParams(window.location.search);
+            if (params.get('debug') === 'true') {
+                document.getElementById('scanner-status').style.display = 'block';
+            }
+        })();
+    </script>
+
+    <!-- External JS -->
+    <script src="/static/ar-assets/js/ar-scanner.js"></script>
+</body>
+
+</html>

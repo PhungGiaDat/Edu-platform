@@ -1,0 +1,235 @@
+{
+  "courses": [
+    {
+      "course_id": "momo-home-family-english-5-7",
+      "lessons": [
+        {
+          "lesson_id": "hello-family",
+          "content_version": 1,
+          "listen_choose_target": "mom",
+          "match_item_keys": ["mom", "dad", "baby"],
+          "pronunciation_keys": ["mom", "dad", "baby"],
+          "quiz_owner_by_question": {
+            "hello-family-q1": "mom",
+            "hello-family-q2": "dad",
+            "hello-family-q3": "baby"
+          }
+        },
+        {
+          "lesson_id": "my-room",
+          "content_version": 1,
+          "listen_choose_target": "bed",
+          "match_item_keys": ["bed", "chair", "toy"],
+          "pronunciation_keys": ["bed", "chair", "toy"],
+          "quiz_owner_by_question": {
+            "my-room-q1": "bed",
+            "my-room-q2": "chair",
+            "my-room-q3": "toy"
+          }
+        },
+        {
+          "lesson_id": "snack-time",
+          "content_version": 1,
+          "listen_choose_target": "apple",
+          "match_item_keys": ["apple", "milk", "cookie"],
+          "pronunciation_keys": ["apple", "milk", "cookie"],
+          "quiz_owner_by_question": {
+            "snack-time-q1": "apple",
+            "snack-time-q2": "milk",
+            "snack-time-q3": "cookie"
+          }
+        },
+        {
+          "lesson_id": "clean-hands",
+          "content_version": 1,
+          "listen_choose_target": "soap",
+          "match_item_keys": ["hand", "soap", "clean"],
+          "pronunciation_keys": ["hand", "soap", "clean"],
+          "quiz_owner_by_question": {
+            "clean-hands-q1": "soap",
+            "clean-hands-q2": "hand",
+            "clean-hands-q3": "clean"
+          }
+        },
+        {
+          "lesson_id": "happy-feelings",
+          "content_version": 1,
+          "listen_choose_target": "happy",
+          "match_item_keys": ["happy", "sad", "smile"],
+          "pronunciation_keys": ["happy", "sad", "smile"],
+          "quiz_owner_by_question": {
+            "happy-feelings-q1": "happy",
+            "happy-feelings-q2": "sad",
+            "happy-feelings-q3": "smile"
+          }
+        },
+        {
+          "lesson_id": "home-review",
+          "content_version": 1,
+          "listen_choose_target": "apple",
+          "match_item_keys": ["mom", "bed", "apple", "happy"],
+          "pronunciation_keys": ["mom", "bed", "apple"],
+          "quiz_owner_by_question": {
+            "home-review-q1": "mom",
+            "home-review-q2": "apple",
+            "home-review-q3": "happy"
+          }
+        }
+      ]
+    },
+    {
+      "course_id": "momo-nature-english-5-7",
+      "lessons": [
+        {
+          "lesson_id": "meet-the-elephant",
+          "content_version": 1,
+          "listen_choose_target": "elephant",
+          "match_item_keys": ["elephant", "big", "trunk"],
+          "pronunciation_keys": ["elephant", "big", "trunk"],
+          "quiz_owner_by_question": {
+            "meet-the-elephant-q1": "elephant",
+            "meet-the-elephant-q2": "trunk",
+            "meet-the-elephant-q3": "big"
+          }
+        },
+        {
+          "lesson_id": "the-green-tree",
+          "content_version": 1,
+          "listen_choose_target": "tree",
+          "match_item_keys": ["tree", "leaf", "green"],
+          "pronunciation_keys": ["tree", "leaf", "green"],
+          "quiz_owner_by_question": {
+            "the-green-tree-q1": "tree",
+            "the-green-tree-q2": "green",
+            "the-green-tree-q3": "leaf"
+          }
+        },
+        {
+          "lesson_id": "splashing-river",
+          "content_version": 1,
+          "listen_choose_target": "river",
+          "match_item_keys": ["river", "water", "blue"],
+          "pronunciation_keys": ["river", "water", "blue"],
+          "quiz_owner_by_question": {
+            "splashing-river-q1": "river",
+            "splashing-river-q2": "water",
+            "splashing-river-q3": "blue"
+          }
+        },
+        {
+          "lesson_id": "little-bird",
+          "content_version": 1,
+          "listen_choose_target": "bird",
+          "match_item_keys": ["bird", "fly", "small"],
+          "pronunciation_keys": ["bird", "fly", "small"],
+          "quiz_owner_by_question": {
+            "little-bird-q1": "bird",
+            "little-bird-q2": "fly",
+            "little-bird-q3": "small"
+          }
+        },
+        {
+          "lesson_id": "sunny-sky",
+          "content_version": 1,
+          "listen_choose_target": "sun",
+          "match_item_keys": ["sun", "sky", "yellow"],
+          "pronunciation_keys": ["sun", "sky", "yellow"],
+          "quiz_owner_by_question": {
+            "sunny-sky-q1": "sun",
+            "sunny-sky-q2": "sky",
+            "sunny-sky-q3": "yellow"
+          }
+        },
+        {
+          "lesson_id": "nature-review",
+          "content_version": 1,
+          "listen_choose_target": "tree",
+          "match_item_keys": ["elephant", "tree", "bird", "sun"],
+          "pronunciation_keys": ["elephant", "tree", "bird"],
+          "quiz_owner_by_question": {
+            "nature-review-q1": "elephant",
+            "nature-review-q2": "tree",
+            "nature-review-q3": "bird"
+          }
+        }
+      ]
+    },
+    {
+      "course_id": "momo-school-food-english-5-7",
+      "lessons": [
+        {
+          "lesson_id": "my-classroom",
+          "content_version": 1,
+          "listen_choose_target": "book",
+          "match_item_keys": ["book", "pencil", "bag"],
+          "pronunciation_keys": ["book", "pencil", "bag"],
+          "quiz_owner_by_question": {
+            "my-classroom-q1": "book",
+            "my-classroom-q2": "pencil",
+            "my-classroom-q3": "bag"
+          }
+        },
+        {
+          "lesson_id": "color-hunt",
+          "content_version": 1,
+          "listen_choose_target": "red",
+          "match_item_keys": ["red", "blue", "yellow"],
+          "pronunciation_keys": ["red", "blue", "yellow"],
+          "quiz_owner_by_question": {
+            "color-hunt-q1": "red",
+            "color-hunt-q2": "blue",
+            "color-hunt-q3": "yellow"
+          }
+        },
+        {
+          "lesson_id": "number-play",
+          "content_version": 1,
+          "listen_choose_target": "one",
+          "match_item_keys": ["one", "two", "three"],
+          "pronunciation_keys": ["one", "two", "three"],
+          "quiz_owner_by_question": {
+            "number-play-q1": "one",
+            "number-play-q2": "two",
+            "number-play-q3": "three"
+          }
+        },
+        {
+          "lesson_id": "lunch-box",
+          "content_version": 1,
+          "listen_choose_target": "rice",
+          "match_item_keys": ["rice", "egg", "juice"],
+          "pronunciation_keys": ["rice", "egg", "juice"],
+          "quiz_owner_by_question": {
+            "lunch-box-q1": "rice",
+            "lunch-box-q2": "egg",
+            "lunch-box-q3": "juice"
+          }
+        },
+        {
+          "lesson_id": "action-time",
+          "content_version": 1,
+          "listen_choose_target": "run",
+          "match_item_keys": ["run", "jump", "clap"],
+          "pronunciation_keys": ["run", "jump", "clap"],
+          "quiz_owner_by_question": {
+            "action-time-q1": "run",
+            "action-time-q2": "jump",
+            "action-time-q3": "clap"
+          }
+        },
+        {
+          "lesson_id": "school-review",
+          "content_version": 1,
+          "listen_choose_target": "book",
+          "match_item_keys": ["book", "red", "three", "run"],
+          "pronunciation_keys": ["book", "red", "three"],
+          "quiz_owner_by_question": {
+            "school-review-q1": "book",
+            "school-review-q2": "red",
+            "school-review-q3": "three"
+          }
+        }
+      ]
+    }
+  ]
+}

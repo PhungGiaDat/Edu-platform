@@ -242,7 +242,7 @@ class GameService:
             logger.info("[Game] Using local fallback for qr_id=%s", qr_id)
             return self._local_fallback_game(flashcard, game_type, difficulty)
 
-        logger.info("[Game] Using Mongo fallback for qr_id=%s", qr_id)
+        logger.info("[Game] Using PostgreSQL configured game for qr_id=%s", qr_id)
         
         # Return in GameSessionSchema format
         return {
@@ -257,5 +257,6 @@ def get_game_service() -> GameService:
     """Factory function for dependency injection"""
     game_repo = get_game_repository()
     flashcard_repo = get_flashcard_repository()
-    ai_service = get_ai_service()
+    from database.postgres_connection import postgres_core_enabled
+    ai_service = None if postgres_core_enabled() else get_ai_service()
     return GameService(game_repo, flashcard_repo, ai_service)

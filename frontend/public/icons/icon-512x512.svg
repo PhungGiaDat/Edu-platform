@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD93D"/>
+      <stop offset="100%" style="stop-color:#FF9F9F"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  <!-- Book icon -->
+  <path d="M256 120 L256 392 M160 160 C160 140 180 120 200 120 L312 120 C332 120 352 140 352 160 L352 352 C352 372 332 392 312 392 L200 392 C180 392 160 372 160 352 Z" fill="white" stroke="#1A2744" stroke-width="8"/>
+  <!-- Star -->
+  <path d="M256 200 L265 230 L298 230 L272 252 L280 285 L256 265 L232 285 L240 252 L214 230 L247 230 Z" fill="#FFD93D" stroke="#1A2744" stroke-width="4"/>
+</svg>

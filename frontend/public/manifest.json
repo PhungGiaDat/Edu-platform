@@ -1,0 +1,52 @@
+{
+  "name": "EduAR - Học Tiếng Anh AR",
+  "short_name": "EduAR",
+  "description": "Học từ vựng, tra từ AI, luyện phát âm với AR và spaced repetition",
+  "id": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF8EE",
+  "theme_color": "#FFD93D",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "games"],
+  "shortcuts": [
+    {
+      "name": "Sổ tay",
+      "short_name": "Sổ tay",
+      "description": "Xem từ vựng đã lưu",
+      "url": "/notebook",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Tra từ",
+      "short_name": "Tra từ",
+      "description": "Dịch câu với AI",
+      "url": "/dictionary",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Luyện tập",
+      "short_name": "Luyện tập",
+      "description": "Học từ vựng với flashcards",
+      "url": "/flashcards",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

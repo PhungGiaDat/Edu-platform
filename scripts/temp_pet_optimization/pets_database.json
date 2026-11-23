@@ -1,0 +1,170 @@
+[
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-a.glb",
+    "name": "Alpha",
+    "pet_id": "blocky_alpha",
+    "rarity": "common"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-b.glb",
+    "name": "Beta",
+    "pet_id": "blocky_beta",
+    "rarity": "common"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-c.glb",
+    "name": "Charlie",
+    "pet_id": "blocky_charlie",
+    "rarity": "rare"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-d.glb",
+    "name": "Delta",
+    "pet_id": "blocky_delta",
+    "rarity": "rare"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-e.glb",
+    "name": "Echo",
+    "pet_id": "blocky_echo",
+    "rarity": "epic"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-f.glb",
+    "name": "Foxtrot",
+    "pet_id": "blocky_foxtrot",
+    "rarity": "epic"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-g.glb",
+    "name": "Golf",
+    "pet_id": "blocky_golf",
+    "rarity": "epic"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-h.glb",
+    "name": "Hotel",
+    "pet_id": "blocky_hotel",
+    "rarity": "legendary"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-i.glb",
+    "name": "India",
+    "pet_id": "blocky_india",
+    "rarity": "legendary"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-j.glb",
+    "name": "Juliet",
+    "pet_id": "blocky_juliet",
+    "rarity": "legendary"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-a.glb",
+    "name": "Sparky",
+    "pet_id": "kenney_character_a",
+    "rarity": "common"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-b.glb",
+    "name": "Bubbles",
+    "pet_id": "kenney_character_b",
+    "rarity": "common"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-c.glb",
+    "name": "Sunny",
+    "pet_id": "kenney_character_c",
+    "rarity": "common"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-d.glb",
+    "name": "Clover",
+    "pet_id": "kenney_character_d",
+    "rarity": "common"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-e.glb",
+    "name": "Violet",
+    "pet_id": "kenney_character_e",
+    "rarity": "common"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-f.glb",
+    "name": "Blaze",
+    "pet_id": "kenney_character_f",
+    "rarity": "common"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-g.glb",
+    "name": "Aqua",
+    "pet_id": "kenney_character_g",
+    "rarity": "rare"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-h.glb",
+    "name": "Rose",
+    "pet_id": "kenney_character_h",
+    "rarity": "rare"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-i.glb",
+    "name": "Mint",
+    "pet_id": "kenney_character_i",
+    "rarity": "rare"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-j.glb",
+    "name": "Ruby",
+    "pet_id": "kenney_character_j",
+    "rarity": "rare"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-k.glb",
+    "name": "Amber",
+    "pet_id": "kenney_character_k",
+    "rarity": "rare"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-l.glb",
+    "name": "Indigo",
+    "pet_id": "kenney_character_l",
+    "rarity": "rare"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-m.glb",
+    "name": "Storm",
+    "pet_id": "kenney_character_m",
+    "rarity": "epic"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-n.glb",
+    "name": "Coral",
+    "pet_id": "kenney_character_n",
+    "rarity": "epic"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-o.glb",
+    "name": "Gold",
+    "pet_id": "kenney_character_o",
+    "rarity": "epic"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-p.glb",
+    "name": "Shadow",
+    "pet_id": "kenney_character_p",
+    "rarity": "epic"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-q.glb",
+    "name": "Crystal",
+    "pet_id": "kenney_character_q",
+    "rarity": "legendary"
+  },
+  {
+    "model_url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-r.glb",
+    "name": "Phoenix",
+    "pet_id": "kenney_character_r",
+    "rarity": "legendary"
+  }
+]

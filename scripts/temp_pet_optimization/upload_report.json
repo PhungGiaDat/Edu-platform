@@ -1,0 +1,180 @@
+{
+  "total_models": 25,
+  "models": [
+    {
+      "filename": "character-a.glb",
+      "pet_id": "kenney_character_a",
+      "pet_name": "Sparky",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-a.glb",
+      "size_kb": 110.93359375
+    },
+    {
+      "filename": "character-b.glb",
+      "pet_id": "kenney_character_b",
+      "pet_name": "Bubbles",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-b.glb",
+      "size_kb": 110.93359375
+    },
+    {
+      "filename": "character-c.glb",
+      "pet_id": "kenney_character_c",
+      "pet_name": "Sunny",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-c.glb",
+      "size_kb": 110.91796875
+    },
+    {
+      "filename": "character-d.glb",
+      "pet_id": "kenney_character_d",
+      "pet_name": "Clover",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-d.glb",
+      "size_kb": 110.93359375
+    },
+    {
+      "filename": "character-e.glb",
+      "pet_id": "kenney_character_e",
+      "pet_name": "Violet",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-e.glb",
+      "size_kb": 110.93359375
+    },
+    {
+      "filename": "character-f.glb",
+      "pet_id": "kenney_character_f",
+      "pet_name": "Blaze",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-f.glb",
+      "size_kb": 110.9296875
+    },
+    {
+      "filename": "character-g.glb",
+      "pet_id": "kenney_character_g",
+      "pet_name": "Aqua",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-g.glb",
+      "size_kb": 110.93359375
+    },
+    {
+      "filename": "character-h.glb",
+      "pet_id": "kenney_character_h",
+      "pet_name": "Rose",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-h.glb",
+      "size_kb": 110.93359375
+    },
+    {
+      "filename": "character-i.glb",
+      "pet_id": "kenney_character_i",
+      "pet_name": "Mint",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-i.glb",
+      "size_kb": 110.87109375
+    },
+    {
+      "filename": "character-j.glb",
+      "pet_id": "kenney_character_j",
+      "pet_name": "Ruby",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-j.glb",
+      "size_kb": 110.921875
+    },
+    {
+      "filename": "character-k.glb",
+      "pet_id": "kenney_character_k",
+      "pet_name": "Amber",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-k.glb",
+      "size_kb": 110.93359375
+    },
+    {
+      "filename": "character-l.glb",
+      "pet_id": "kenney_character_l",
+      "pet_name": "Indigo",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-l.glb",
+      "size_kb": 110.93359375
+    },
+    {
+      "filename": "character-m.glb",
+      "pet_id": "kenney_character_m",
+      "pet_name": "Storm",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-m.glb",
+      "size_kb": 110.93359375
+    },
+    {
+      "filename": "character-n.glb",
+      "pet_id": "kenney_character_n",
+      "pet_name": "Coral",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-n.glb",
+      "size_kb": 110.93359375
+    },
+    {
+      "filename": "character-o.glb",
+      "pet_id": "kenney_character_o",
+      "pet_name": "Gold",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-o.glb",
+      "size_kb": 110.93359375
+    },
+    {
+      "filename": "character-p.glb",
+      "pet_id": "kenney_character_p",
+      "pet_name": "Shadow",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-p.glb",
+      "size_kb": 110.921875
+    },
+    {
+      "filename": "character-q.glb",
+      "pet_id": "kenney_character_q",
+      "pet_name": "Crystal",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-q.glb",
+      "size_kb": 110.93359375
+    },
+    {
+      "filename": "character-r.glb",
+      "pet_id": "kenney_character_r",
+      "pet_name": "Phoenix",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-r.glb",
+      "size_kb": 110.93359375
+    },
+    {
+      "filename": "character-s.glb",
+      "pet_id": "unknown",
+      "pet_name": "Unknown",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-s.glb",
+      "size_kb": 0.875
+    },
+    {
+      "filename": "character-t.glb",
+      "pet_id": "unknown",
+      "pet_name": "Unknown",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-t.glb",
+      "size_kb": 0.875
+    },
+    {
+      "filename": "character-v.glb",
+      "pet_id": "unknown",
+      "pet_name": "Unknown",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-v.glb",
+      "size_kb": 0.875
+    },
+    {
+      "filename": "character-w.glb",
+      "pet_id": "unknown",
+      "pet_name": "Unknown",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-w.glb",
+      "size_kb": 0.875
+    },
+    {
+      "filename": "character-x.glb",
+      "pet_id": "unknown",
+      "pet_name": "Unknown",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-x.glb",
+      "size_kb": 0.875
+    },
+    {
+      "filename": "character-y.glb",
+      "pet_id": "unknown",
+      "pet_name": "Unknown",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-y.glb",
+      "size_kb": 0.875
+    },
+    {
+      "filename": "character-z.glb",
+      "pet_id": "unknown",
+      "pet_name": "Unknown",
+      "url": "https://rofprrtoeyirssfndxag.supabase.co/storage/v1/object/public/AR_models/pets/kenney-models/character-z.glb",
+      "size_kb": 0.875
+    }
+  ]
+}

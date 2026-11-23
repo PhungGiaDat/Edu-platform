@@ -1,0 +1,592 @@
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { I18nextProvider } from 'react-i18next';
+import adminI18n from '../i18n/adminI18n';
+
+export type Locale = 'en' | 'vi';
+
+type LocaleContextValue = {
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+};
+
+const STORAGE_KEY = 'edu-platform-locale';
+const AUTO_DETECTED_KEY = 'edu-platform-locale-auto-detected';
+
+const isLocale = (value: unknown): value is Locale => value === 'vi' || value === 'en';
+
+const detectBrowserLocale = (): Locale => {
+  if (typeof navigator === 'undefined') return 'en';
+  const candidates = [navigator.language, ...(Array.isArray(navigator.languages) ? navigator.languages : [])];
+  return candidates.some((candidate) => typeof candidate === 'string' && candidate.toLowerCase().startsWith('vi')) ? 'vi' : 'en';
+};
+
+const en = {
+    language: 'Language',
+    english: 'English',
+    vietnamese: 'Vietnamese',
+    switchLocale: 'VI',
+    navCourses: 'Courses',
+    navLogin: 'Log in',
+    navGetStarted: 'Get Started',
+    navLearn: 'Learn',
+    navLearningPath: 'Learning Path',
+    navPathShort: 'Path',
+    navGames: 'Games',
+    navGamesShort: 'Play',
+    navArPractice: 'AR Practice',
+    navArShort: 'AR',
+    navLeaderboard: 'Leaderboard',
+    navLeaderboardShort: 'Rank',
+    navFlashcards: 'Flashcards',
+    navFlashcardsShort: 'Cards',
+    navDictionary: 'Dictionary',
+    navDictionaryShort: 'Lookup',
+    navNotebook: 'Wordbook',
+    navNotebookShort: 'Words',
+    navReminderSettings: 'Reminders',
+    navReminderShort: 'Remind',
+    navDailyChallenge: 'Daily Challenge',
+    navChallengeShort: 'Challenge',
+    navProfile: 'Profile',
+    landingBadge: 'AR-Powered Language Learning',
+    landingHeroTitleLine1: 'Learn Words',
+    landingHeroTitleLine2: 'in 3D Magic',
+    landingHeroBody: 'Point your phone at any flashcard and watch animals, food, and vehicles leap into the real world. Kids ages 6-12 love it.',
+    landingFeatureScan: 'Scan flashcards to launch 3D models',
+    landingFeaturePronunciation: 'Tap models to hear correct pronunciation',
+    landingFeatureRewards: 'Earn XP, badges, and unlock pets',
+    landingFeatureProgress: 'Progress tracking for parents & teachers',
+    landingStartFree: 'Start Learning Free',
+    landingTryArDemo: 'Try AR Demo',
+    landingPreviewWord: 'Elephant',
+    landingPreviewHint: 'Tap to hear pronunciation',
+    landingHappyKids: 'Happy Kids',
+    landingArFlashcards: 'AR Flashcards',
+    landingAppRating: 'App Rating',
+    landingWordsLearned: 'Words Learned',
+    landingTeachKicker: 'What We Teach',
+    landingTeachTitle: 'Pick Your Adventure',
+    landingTeachBody: 'Every course uses real AR flashcards. No app download needed - just a phone camera.',
+    landingCourseAnimalsTitle: 'Animals World',
+    landingCourseAnimalsDescription: 'Meet elephants, tigers, and 30+ animals in 3D AR',
+    landingCourseAnimalsWords: '42 words',
+    landingCourseAnimalsLevel: 'Beginner',
+    landingCourseAnimalsBadge: 'Most Popular',
+    landingCourseFoodTitle: 'Yummy Food',
+    landingCourseFoodDescription: 'Learn fruits, vegetables, and meals that come alive',
+    landingCourseFoodWords: '38 words',
+    landingCourseFoodLevel: 'Beginner',
+    landingCourseFoodBadge: 'Kids Favorite',
+    landingCourseVehiclesTitle: 'Vehicles & Transport',
+    landingCourseVehiclesDescription: 'Cars, planes, and ships rolling right off the page',
+    landingCourseVehiclesWords: '30 words',
+    landingCourseVehiclesLevel: 'Intermediate',
+    landingCourseVehiclesBadge: 'New',
+    landingViewAllCourses: 'View All Courses',
+    landingProgressKicker: 'Progress Tracking',
+    landingProgressTitle: 'Watch Kids Level Up in Real Time',
+    landingProgressBody: 'Every flashcard scan earns XP. Every correct pronunciation earns a badge. Parents and teachers can track every milestone.',
+    landingCreateAccount: 'Create Free Account',
+    landingAlexProgress: "Alex's Progress",
+    landingLevel5: 'Level 5',
+    landingWordExplorer: 'Word Explorer',
+    landingExperiencePoints: 'Experience Points',
+    landingDayStreak: 'Day Streak',
+    landingBadges: 'Badges',
+    landingRecentBadges: 'RECENT BADGES',
+    landingBadgeAnimal: 'Animal Pro',
+    landingBadgeFruit: 'Fruit Master',
+    landingBadgeSpeller: 'Speller',
+    landingStoriesKicker: 'Student Stories',
+    landingStoriesTitle: 'Kids Are Obsessed',
+    landingTestimonialEmmaName: 'Emma, age 7',
+    landingTestimonialEmmaQuote: 'The elephant came out of my book! I learned 10 words today!',
+    landingTestimonialLiamName: 'Liam, age 9',
+    landingTestimonialLiamQuote: 'I got 3 stars on the animal quiz. My teacher was so surprised!',
+    landingTestimonialSofiaName: 'Sofia, age 8',
+    landingTestimonialSofiaQuote: 'I love touching the 3D cake and hearing the word. So cool!',
+    landingStudentRole: 'EduAR Student',
+    landingCtaTitleLine1: "Start Your Kid's",
+    landingCtaTitleLine2: 'AR Learning Journey',
+    landingCtaBody: 'Free to start. No credit card required. Hundreds of 3D AR flashcards ready to explore.',
+    landingTryWithoutAccount: 'Try Without Account',
+    landingTrustLine: 'Trusted by 50,000+ families worldwide. COPPA-compliant & child-safe.',
+    landingFooter: '© 2025 EduAR Platform. Built with love for kids everywhere.',
+    landingPrivacy: 'Privacy',
+    landingTerms: 'Terms',
+    landingContact: 'Contact',
+    heroKicker: 'Playful English learning',
+    heroTitle: 'Choose a bright learning adventure',
+    heroBody: 'Explore short video lessons, vocabulary games, AR flashcards, quizzes, rewards, and progress tracking in one kid-friendly course hub.',
+    courseCatalog: 'Course Catalog',
+    viewAll: 'View all',
+    continueLearning: 'Continue learning',
+    startLearning: 'Start learning',
+    enrollNow: 'Enroll now',
+    coursePreview: 'Course catalog preview',
+    progressDemo: 'Progress tracking demo',
+    testimonials: 'Student testimonials',
+    learningPaths: 'Learning paths',
+    allPaths: 'All paths',
+    backToAllPaths: 'Back to all paths',
+    courses: 'Courses',
+    lessonsDone: 'Lessons done',
+    xpEarned: 'XP earned',
+    inProgress: 'In progress',
+    completed: 'completed',
+    done: 'done',
+    age: 'Age',
+    lessons: 'lessons',
+    noCourses: 'No courses yet',
+    noCoursesBody: 'Generate or publish courses in MongoDB to start Phase 1.',
+    generateCourse: 'Generate sample course',
+    generating: 'Generating...',
+    noCoursesInCategory: 'No courses in this section yet',
+    noCoursesInCategoryBody: 'Publish another course or pick a different learning path.',
+    loadingCourses: 'Loading courses...',
+    loadCourseError: 'Courses could not be loaded. Please try again.',
+    generateCourseError: 'Could not generate a sample course. Check backend and MongoDB.',
+    sections: 'Sections',
+    rewardXp: 'Reward XP',
+    progress: 'Progress',
+    courseSections: 'Course sections',
+    review: 'Review',
+    startLesson: 'Start lesson',
+    studentVoices: 'Student voices',
+    courseNotFound: 'Course not found.',
+    loadingCourse: 'Loading course...',
+    back: 'Back',
+    minute: 'min',
+    words: 'words',
+    say: 'say',
+    game: 'game',
+    quiz: 'quiz',
+    openingLesson: 'Opening lesson...',
+    readyReward: 'Ready for your reward?',
+    finishPrompt: 'Answer the quiz, then finish this section.',
+    previous: 'Previous',
+    next: 'Next',
+    finish: 'Finish',
+    grading: 'Grading...',
+    lessonNotFound: 'Lesson not found.',
+    loadingLesson: 'Opening lesson...',
+    // Profile page
+    profileAdminArea: 'Teacher admin area',
+    profileAdminAreaHint: 'Create courses, flashcards and games for learners',
+    profileBadges: 'Badges',
+    profileProgress: 'Progress',
+    profileDayStreak: 'Day Streak',
+    profileTotalXp: 'Total XP',
+    profileLanguageTitle: 'Language',
+    profileLanguageHint: 'Applies to the whole app',
+    // Games hub
+    gamesHeroTitle: 'Play with Lexi!',
+    gamesHeroSubtitle: 'Pick a topic — every game earns 30 XP',
+    gamesChooseTopic: 'Choose a topic',
+    gamesSwitchTopic: 'Change topic',
+    gamesTodayCeiling: 'Today: {{done}}/{{ceiling}} rounds · {{games}} games × {{topics}} topics',
+    gamesTopicDone: '{{done}}/{{total}} games today',
+    gamesPlayed: 'Played',
+    gamesLoadingWords: 'Lexi is adding words for this topic — come back soon!',
+    gamesXpPending: 'Claiming reward…',
+    gamesXpDailyDone: 'This game already gave XP today — come back tomorrow!',
+    gamesPlayAgain: 'Play again',
+    // Sidebar + nav (EN parity fill)
+    navMyPet: 'My Pet',
+    navPetShort: 'Pet',
+    navStickers: 'Stickers',
+    navStickersShort: 'Stickers',
+    navMore: 'More',
+    navMoreAdventures: 'More adventures',
+    expandNavigation: 'Expand navigation',
+    collapseNavigation: 'Collapse navigation',
+    primaryNavigation: 'Main navigation',
+    learningSidebar: 'Learning sidebar',
+    dailyProgressAndLearningStreak: 'Daily progress and learning streak',
+    progressTracker: 'Progress tracker',
+    stickers: 'Stickers',
+    courseCompletion: 'Course completion',
+    noPublishedCourses: 'No published courses yet',
+    dailyGoal: "Today's goal",
+    minutes: 'min',
+    todaysGoal: "Today's goal",
+    keepGoing: 'Keep going',
+    learnALittleToday: 'Learn a little today',
+    startFreeTrial: 'Start free trial',
+    jumpIntoAr: 'Explore AR',
+    browseCourses: 'Browse courses',
+    closeMoreMenu: 'Close more menu',
+    sidebarTagline: 'Play. Explore. Learn English.',
+    dailyShort: 'Daily',
+    quickLinks: 'Quick links',
+    // Auth pages
+    loginTitle: 'Welcome back',
+    loginEmail: 'Email',
+    loginPassword: 'Password',
+    loginSubmit: 'LOG IN',
+    loginSubmitting: 'LOGGING IN...',
+    loginTryWithout: 'TRY WITHOUT AN ACCOUNT',
+    loginNewHere: 'New here?',
+    loginCreateAccount: 'Create account',
+    registerTitle: 'Start your journey',
+    registerSubtitle: 'Create a learning profile and unlock full progress tracking.',
+    registerName: 'Your name',
+    registerNamePlaceholder: 'Enter your name',
+    registerEmail: 'Email',
+    registerPassword: 'Password',
+    registerSubmit: 'CREATE ACCOUNT',
+    registerSubmitting: 'CREATING ACCOUNT...',
+    registerTryWithout: 'TRY WITHOUT AN ACCOUNT',
+    registerAlready: 'Already have an account?',
+    registerSignIn: 'Sign in',
+    // Session break reminder
+    sessionWarningTitle: 'Break time is coming up!',
+    sessionLimitTitle: 'Time for a break!',
+    sessionWarningTime: 'Only {time} left!',
+    sessionWarningGreatJob: "You're doing great!",
+    sessionWarningBodySuffix: "You've studied really hard today!",
+    sessionLimitBody: "You've been learning for a while. Give your eyes a rest!",
+    sessionKeepGoing: 'Keep learning!',
+    sessionTakeBreak: 'Take a break!',
+    sessionExitNow: 'Exit now',
+    sessionLimitFooter: 'Rest is important for learning too! See you again soon!',
+    sessionWarningFooter: 'You can always come back later!',
+    // Learning path 3D page
+    learningPathLoading: 'Loading your path...',
+    learningPathLoadError: 'Unable to load your learning path.',
+    learningPathRetry: 'Retry',
+    learningPathEmpty: "You haven't joined any courses yet.",
+    learningPathExplore: 'Explore Courses',
+} satisfies Record<string, string>;
+
+const vi = {
+    language: 'Ngôn ngữ',
+    english: 'Tiếng Anh',
+    vietnamese: 'Tiếng Việt',
+    switchLocale: 'EN',
+    navCourses: 'Khóa học',
+    navLogin: 'Đăng nhập',
+    navGetStarted: 'Bắt đầu',
+    navLearn: 'Học',
+    navLearningPath: 'Lộ trình học',
+    navPathShort: 'Lộ trình',
+    navGames: 'Trò chơi',
+    navGamesShort: 'Chơi',
+    navArPractice: 'Thực hành AR',
+    navArShort: 'AR',
+    navLeaderboard: 'Bảng xếp hạng',
+    navLeaderboardShort: 'Hạng',
+    navFlashcards: 'Flashcard',
+    navFlashcardsShort: 'Thẻ',
+    navDictionary: 'Tra từ',
+    navDictionaryShort: 'Tra từ',
+    navNotebook: 'Sổ tay',
+    navNotebookShort: 'Sổ tay',
+    navReminderSettings: 'Thời điểm vàng',
+    navReminderShort: 'Nhắc nhở',
+    navDailyChallenge: 'Thử thách hàng ngày',
+    navChallengeShort: 'Thử thách',
+    navProfile: 'Hồ sơ',
+    landingBadge: 'Học ngôn ngữ bằng AR',
+    landingHeroTitleLine1: 'Học từ vựng',
+    landingHeroTitleLine2: 'với 3D kỳ diệu',
+    landingHeroBody: 'Đưa điện thoại vào flashcard để xem động vật, món ăn và phương tiện bật lên trong thế giới thật. Trẻ 6-12 tuổi sẽ rất thích.',
+    landingFeatureScan: 'Quét flashcard để mở mô hình 3D',
+    landingFeaturePronunciation: 'Chạm mô hình để nghe phát âm chuẩn',
+    landingFeatureRewards: 'Nhận XP, huy hiệu và mở khóa thú cưng',
+    landingFeatureProgress: 'Theo dõi tiến độ cho phụ huynh và giáo viên',
+    landingStartFree: 'Học miễn phí',
+    landingTryArDemo: 'Thử AR Demo',
+    landingPreviewWord: 'Con voi',
+    landingPreviewHint: 'Chạm để nghe phát âm',
+    landingHappyKids: 'Bạn nhỏ vui học',
+    landingArFlashcards: 'Flashcard AR',
+    landingAppRating: 'Đánh giá ứng dụng',
+    landingWordsLearned: 'Từ đã học',
+    landingTeachKicker: 'Nội dung học',
+    landingTeachTitle: 'Chọn cuộc phiêu lưu',
+    landingTeachBody: 'Mỗi khóa học dùng flashcard AR thật. Không cần tải app - chỉ cần camera điện thoại.',
+    landingCourseAnimalsTitle: 'Thế giới động vật',
+    landingCourseAnimalsDescription: 'Gặp voi, hổ và hơn 30 loài vật trong AR 3D',
+    landingCourseAnimalsWords: '42 từ',
+    landingCourseAnimalsLevel: 'Bắt đầu',
+    landingCourseAnimalsBadge: 'Phổ biến nhất',
+    landingCourseFoodTitle: 'Món ăn ngon',
+    landingCourseFoodDescription: 'Học trái cây, rau củ và bữa ăn sống động',
+    landingCourseFoodWords: '38 từ',
+    landingCourseFoodLevel: 'Bắt đầu',
+    landingCourseFoodBadge: 'Trẻ yêu thích',
+    landingCourseVehiclesTitle: 'Phương tiện',
+    landingCourseVehiclesDescription: 'Xe hơi, máy bay và tàu thuyền lăn ra khỏi trang học',
+    landingCourseVehiclesWords: '30 từ',
+    landingCourseVehiclesLevel: 'Trung cấp',
+    landingCourseVehiclesBadge: 'Mới',
+    landingViewAllCourses: 'Xem tất cả khóa học',
+    landingProgressKicker: 'Theo dõi tiến độ',
+    landingProgressTitle: 'Xem trẻ lên cấp theo thời gian thực',
+    landingProgressBody: 'Mỗi lần quét flashcard đều nhận XP. Mỗi phát âm đúng đều nhận huy hiệu. Phụ huynh và giáo viên có thể theo dõi từng cột mốc.',
+    landingCreateAccount: 'Tạo tài khoản miễn phí',
+    landingAlexProgress: 'Tiến độ của Alex',
+    landingLevel5: 'Cấp 5',
+    landingWordExplorer: 'Nhà khám phá từ vựng',
+    landingExperiencePoints: 'Điểm kinh nghiệm',
+    landingDayStreak: 'Ngày liên tiếp',
+    landingBadges: 'Huy hiệu',
+    landingRecentBadges: 'HUY HIỆU GẦN ĐÂY',
+    landingBadgeAnimal: 'Siêu động vật',
+    landingBadgeFruit: 'Bậc thầy trái cây',
+    landingBadgeSpeller: 'Đánh vần giỏi',
+    landingStoriesKicker: 'Câu chuyện học viên',
+    landingStoriesTitle: 'Trẻ cực kỳ hào hứng',
+    landingTestimonialEmmaName: 'Emma, 7 tuổi',
+    landingTestimonialEmmaQuote: 'Con voi bước ra khỏi sách của con! Hôm nay con học được 10 từ!',
+    landingTestimonialLiamName: 'Liam, 9 tuổi',
+    landingTestimonialLiamQuote: 'Con được 3 sao trong quiz động vật. Cô giáo rất bất ngờ!',
+    landingTestimonialSofiaName: 'Sofia, 8 tuổi',
+    landingTestimonialSofiaQuote: 'Con thích chạm vào bánh 3D và nghe từ vựng. Rất hay!',
+    landingStudentRole: 'Học viên EduAR',
+    landingCtaTitleLine1: 'Bắt đầu hành trình',
+    landingCtaTitleLine2: 'học AR cho trẻ',
+    landingCtaBody: 'Miễn phí khi bắt đầu. Không cần thẻ tín dụng. Hàng trăm flashcard AR 3D đã sẵn sàng để khám phá.',
+    landingTryWithoutAccount: 'Thử không cần tài khoản',
+    landingTrustLine: 'Được hơn 50.000 gia đình tin dùng. Tuân thủ COPPA và an toàn cho trẻ.',
+    landingFooter: '© 2025 EduAR Platform. Được xây dựng bằng tình yêu dành cho trẻ em.',
+    landingPrivacy: 'Quyền riêng tư',
+    landingTerms: 'Điều khoản',
+    landingContact: 'Liên hệ',
+    heroKicker: 'Học tiếng Anh thật vui',
+    heroTitle: 'Chọn một hành trình học tập rực rỡ',
+    heroBody: 'Khám phá bài học video ngắn, trò chơi từ vựng, flashcard AR, quiz, phần thưởng và theo dõi tiến độ trong một khu học tập thân thiện.',
+    continueLearning: 'Học tiếp',
+    startLearning: 'Bắt đầu học',
+    enrollNow: 'Đăng ký học',
+    coursePreview: 'Xem trước khóa học',
+    progressDemo: 'Theo dõi tiến độ',
+    testimonials: 'Cảm nhận học viên',
+    learningPaths: 'Lộ trình học',
+    allPaths: 'Tất cả lộ trình',
+    backToAllPaths: 'Về tất cả lộ trình',
+    courses: 'Khóa học',
+    lessonsDone: 'Bài đã học',
+    xpEarned: 'XP đã nhận',
+    inProgress: 'Đang học',
+    completed: 'hoàn thành',
+    done: 'xong',
+    age: 'Tuổi',
+    lessons: 'bài học',
+    noCourses: 'Chưa có khóa học',
+    noCoursesBody: 'Bạn vẫn có thể xem bản demo bên dưới. Hãy tạo hoặc publish khóa học trong MongoDB để dùng dữ liệu thật.',
+    generateCourse: 'Tạo khóa học mẫu',
+    generating: 'Đang tạo...',
+    noCoursesInCategory: 'Chưa có khóa học trong mục này',
+    noCoursesInCategoryBody: 'Publish thêm khóa học hoặc chọn lộ trình khác.',
+    loadingCourses: 'Đang tải khóa học...',
+    loadCourseError: 'Chưa tải được khóa học. Hãy thử lại.',
+    generateCourseError: 'Chưa tạo được khóa học mẫu. Kiểm tra backend và MongoDB.',
+    sections: 'Phần học',
+    rewardXp: 'XP thưởng',
+    progress: 'Tiến độ',
+    courseSections: 'Các phần học',
+    review: 'Ôn lại',
+    startLesson: 'Học bài này',
+    studentVoices: 'Cảm nhận học viên',
+    courseNotFound: 'Không tìm thấy khóa học.',
+    loadingCourse: 'Đang tải khóa học...',
+    back: 'Quay lại',
+    minute: 'phút',
+    words: 'từ',
+    say: 'nói',
+    game: 'trò chơi',
+    quiz: 'quiz',
+    openingLesson: 'Đang mở bài học...',
+    readyReward: 'Sẵn sàng nhận thưởng chưa?',
+    finishPrompt: 'Trả lời quiz, rồi hoàn thành phần học này.',
+    previous: 'Trước',
+    next: 'Tiếp',
+    finish: 'Hoàn thành',
+    grading: 'Đang chấm điểm...',
+    lessonNotFound: 'Không có bài học.',
+    loadingLesson: 'Đang mở bài học...',
+    navMyPet: 'Thú cưng',
+    navPetShort: 'Pet',
+    navStickers: 'Sticker',
+    navStickersShort: 'Sticker',
+    navMore: 'Thêm',
+    navMoreAdventures: 'Khám phá thêm',
+    expandNavigation: 'Mở rộng thanh điều hướng',
+    collapseNavigation: 'Thu gọn thanh điều hướng',
+    primaryNavigation: 'Điều hướng chính',
+    learningSidebar: 'Thanh học tập',
+    dailyProgressAndLearningStreak: 'Tiến độ hằng ngày và chuỗi học tập',
+    progressTracker: 'Theo dõi tiến độ',
+    stickers: 'Sticker',
+    courseCompletion: 'Hoàn thành khóa học',
+    courseCatalog: 'Danh mục khóa học',
+    viewAll: 'Xem tất cả',
+    noPublishedCourses: 'Chưa có khóa học được xuất bản',
+    dailyGoal: 'Mục tiêu hôm nay',
+    minutes: 'phút',
+    todaysGoal: 'Mục tiêu hôm nay',
+    keepGoing: 'Tiếp tục cố gắng',
+    learnALittleToday: 'Học một chút mỗi ngày',
+    startFreeTrial: 'Bắt đầu miễn phí',
+    jumpIntoAr: 'Khám phá AR',
+    browseCourses: 'Xem khóa học',
+    closeMoreMenu: 'Đóng menu thêm',
+    sidebarTagline: 'Chơi. Khám phá. Học tiếng Anh.',
+    dailyShort: 'Hằng ngày',
+    quickLinks: 'Liên kết nhanh',
+    // Auth page
+    loginTitle: 'Chào mừng quay lại',
+    loginEmail: 'Email',
+    loginPassword: 'Mật khẩu',
+    loginSubmit: 'ĐĂNG NHẬP',
+    loginSubmitting: 'ĐANG ĐĂNG NHẬP...',
+    loginTryWithout: 'THỬ KHÔNG CẦN TÀI KHOẢN',
+    loginNewHere: 'Chưa có tài khoản?',
+    loginCreateAccount: 'Tạo tài khoản',
+    registerTitle: 'Bắt đầu hành trình',
+    registerSubtitle: 'Tạo hồ sơ học tập và mở khóa theo dõi tiến độ đầy đủ.',
+    registerName: 'Tên của bạn',
+    registerNamePlaceholder: 'Nhập tên của bạn',
+    registerEmail: 'Email',
+    registerPassword: 'Mật khẩu',
+    registerSubmit: 'TẠO TÀI KHOẢN',
+    registerSubmitting: 'ĐANG TẠO TÀI KHOẢN...',
+    registerTryWithout: 'THỬ KHÔNG CẦN TÀI KHOẢN',
+    registerAlready: 'Đã có tài khoản?',
+    registerSignIn: 'Đăng nhập',
+    sessionWarningTitle: 'Sắp đến giờ nghỉ rồi!',
+    sessionLimitTitle: 'Đến giờ nghỉ rồi!',
+    sessionWarningTime: 'Còn {time} nữa thôi!',
+    sessionWarningGreatJob: 'Bạn làm tốt lắm!',
+    sessionWarningBodySuffix: 'Bạn đã học rất chăm chỉ hôm nay!',
+    sessionLimitBody: 'Bạn đã học được một lúc rồi. Hãy cho mắt nghỉ ngơi nhé!',
+    sessionKeepGoing: 'Tiếp tục học!',
+    sessionTakeBreak: 'Nghỉ giải lao!',
+    sessionExitNow: 'Thoát lúc này',
+    sessionLimitFooter: 'Nghỉ ngơi cũng rất quan trọng để học tốt! Hẹn gặp lại bạn sớm nhé!',
+    sessionWarningFooter: 'Bạn luôn có thể quay lại sau!',
+    // Profile page
+    profileAdminArea: 'Khu vực quản trị',
+    profileAdminAreaHint: 'Tạo khóa học, thẻ ghi nhớ và trò chơi cho học viên',
+    profileBadges: 'Huy hiệu',
+    profileProgress: 'Tiến trình',
+    profileDayStreak: 'Chuỗi ngày',
+    profileTotalXp: 'Tổng XP',
+    profileLanguageTitle: 'Ngôn ngữ',
+    profileLanguageHint: 'Áp dụng cho toàn bộ ứng dụng',
+    // Games hub
+    gamesHeroTitle: 'Chơi cùng Lexi nhé!',
+    gamesHeroSubtitle: 'Chọn chủ đề cho bé — mỗi game nhận 30 XP',
+    gamesChooseTopic: 'Chọn chủ đề',
+    gamesSwitchTopic: 'Đổi chủ đề',
+    gamesTodayCeiling: 'Hôm nay: {{done}}/{{ceiling}} lượt chơi · {{games}} game × {{topics}} chủ đề',
+    gamesTopicDone: '{{done}}/{{total}} game hôm nay',
+    gamesPlayed: 'Đã chơi',
+    gamesLoadingWords: 'Lexi đang chuẩn bị thêm từ cho chủ đề này. Con quay lại sau nhé!',
+    gamesXpPending: 'Đang nhận phần thưởng…',
+    gamesXpDailyDone: 'Hôm nay đã nhận XP game này rồi — mai chơi tiếp nhé!',
+    gamesPlayAgain: 'Chơi lại',
+    // Learning path 3D page
+    learningPathLoading: 'Đang tải lộ trình học...',
+    learningPathLoadError: 'Không thể tải lộ trình học.',
+    learningPathRetry: 'Thử lại',
+    learningPathEmpty: 'Bé chưa tham gia khóa học nào.',
+    learningPathExplore: 'Khám phá khóa học',
+} satisfies Record<keyof typeof en, string>;
+
+const messages: Record<Locale, typeof en> = { en, vi };
+
+const LocaleContext = createContext<LocaleContextValue | null>(null);
+
+export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (isLocale(stored)) return stored;
+    } catch {
+      // Ignore storage failures.
+    }
+    try {
+      const wasAutoDetected = localStorage.getItem(AUTO_DETECTED_KEY) === '1';
+      const detected = detectBrowserLocale();
+      if (!wasAutoDetected) {
+        try {
+          localStorage.setItem(AUTO_DETECTED_KEY, '1');
+        } catch {
+          // Ignore storage failures.
+        }
+      }
+      return detected;
+    } catch {
+      return 'en';
+    }
+  });
+
+  const setLocale = (nextLocale: Locale) => {
+    setLocaleState(nextLocale);
+    try {
+      localStorage.setItem(STORAGE_KEY, nextLocale);
+      // Once the user picks manually we stop honoring automatic detection.
+      localStorage.setItem(AUTO_DETECTED_KEY, '1');
+    } catch {
+      // Ignore storage failures.
+    }
+  };
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    void adminI18n.changeLanguage(locale);
+  }, [locale]);
+
+  const value = useMemo<LocaleContextValue>(() => ({
+    locale,
+    setLocale,
+    t: (key: string, params?: Record<string, string | number>) => {
+      const interpolate = (template: string): string => {
+        if (!params) return template;
+        return template.replace(/\{\{(\w+)\}\}/g, (_match, name: string) =>
+          params[name] !== undefined ? String(params[name]) : `{{${name}}}`);
+      };
+      // 1) Inline dict (legacy + curated keys)
+      if (key in messages[locale]) return interpolate(messages[locale][key as keyof typeof en]);
+      if (key in messages.en) return interpolate(messages.en[key as keyof typeof en]);
+      // 2) Bridge (hybrid approach C): fall through to the global i18next
+      //    instance so NEW translations can live in JSON (learner.* keys)
+      //    without touching this dict. Language is kept in sync by the
+      //    effect above (adminI18n.changeLanguage).
+      return adminI18n.t(key, params as Record<string, unknown>);
+    },
+  }), [locale]);
+
+  // useTranslation() calls inside admin pages resolve against the GLOBAL
+  // react-i18next instance; without this provider they return raw keys
+  // (bug visible as "admin.nav.dashboard" in the sidebar).
+  return (
+    <I18nextProvider i18n={adminI18n}>
+      <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
+    </I18nextProvider>
+  );
+};
+
+/**
+ * Type-safe inline copy selector. Enforces identical key shapes across the
+ * `en`/`vi` dictionaries at compile time (missing/extra keys become TS errors),
+ * with zero runtime overhead. Replaces the raw `{ en, vi }[locale]` idiom.
+ */
+export function localeCopy<T extends Record<string, unknown>>(
+  map: Record<Locale, T>,
+  locale: Locale,
+): T {
+  return map[locale];
+}
+
+export const useLocale = () => {
+  const context = useContext(LocaleContext);
+  if (!context) {
+    throw new Error('useLocale must be used inside LocaleProvider');
+  }
+  return context;
+};

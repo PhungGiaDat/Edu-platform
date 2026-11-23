@@ -1,0 +1,2357 @@
+import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import * as lifecycleModule from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
+import {
+  advanceCatReturnTween,
+  advanceComboProximityGate,
+  canPlayCatMeow,
+  classifyCatGesture,
+  classifyCatTap,
+  getEligibleCatAmbient,
+  getTargetLossGraceState,
+  isInteractionRuleMatched,
+  isCatOneShotCompletionOwner,
+  normalizeInteractionRule,
+  resolveTargetModelAttachment,
+  selectActiveInteractionRule,
+  shouldReplaceCatAnimation,
+  shouldRevealAR,
+  smoothstep,
+} from '../../public/static/ar-assets/js/ar-interaction-lifecycle.js'
+
+const EXPECTED_LIFECYCLE_MODULE_URL =
+  './static/ar-assets/js/ar-interaction-lifecycle.js?v=target-admission-v2'
+
+function requireVisualPose(
+  result: ReturnType<typeof lifecycleModule.advanceVisualPose>,
+) {
+  if (!result.visualPose) {
+    throw new Error('Expected a valid visual pose for this fixture')
+  }
+  return result.visualPose
+}
+
+describe('AR interaction lifecycle contracts', () => {
+  it('plans target-local attachment for every eligible tracked instance without semantic target names', () => {
+    const trackedLoadedInstance = {
+      modelState: 'loaded',
+      model: {},
+      anchor: {},
+      offsetGroup: {},
+      surfaceRoot: {},
+    }
+
+    expect(resolveTargetModelAttachment({
+      targetName: 'actorA',
+      instance: trackedLoadedInstance,
+      tracked: true,
+      sceneReady: true,
+    })).toEqual({ action: 'attach', reason: 'ready' })
+    expect(resolveTargetModelAttachment({
+      targetName: 'partnerB',
+      instance: trackedLoadedInstance,
+      tracked: true,
+      sceneReady: true,
+    })).toEqual({ action: 'attach', reason: 'ready' })
+    expect(resolveTargetModelAttachment({
+      targetName: 'partnerB',
+      instance: { ...trackedLoadedInstance, modelState: 'loading', model: null },
+      tracked: true,
+      sceneReady: true,
+    })).toEqual({ action: 'load', reason: 'model_not_loaded' })
+    expect(resolveTargetModelAttachment({
+      targetName: 'unrelatedC',
+      instance: trackedLoadedInstance,
+      tracked: false,
+      sceneReady: true,
+    })).toEqual({ action: 'wait', reason: 'target_not_tracked' })
+    expect(resolveTargetModelAttachment({
+      targetName: 'actorA',
+      instance: trackedLoadedInstance,
+      tracked: true,
+      sceneReady: false,
+    })).toEqual({ action: 'wait', reason: 'xr_scene_not_ready' })
+  })
+
+  it('selects a loaded mascot capability owner independently of entry-target order', () => {
+    const selectCapabilityTargetInstance = Reflect.get(lifecycleModule, 'selectCapabilityTargetInstance')
+    const entryA = {
+      animations: [{ name: 'FISH_IDLE' }],
+      modelState: 'loaded',
+      model: { visible: true },
+      tracked: true,
+      interactionReady: true,
+    }
+    const mascotB = {
+      animations: [
+        { name: 'CAT_IDLE' },
+        { name: 'CAT_MEOW' },
+        { name: 'CAT_PET_REACT' },
+      ],
+      modelState: 'loaded',
+      model: { visible: true },
+      tracked: true,
+      interactionReady: true,
+    }
+    const supportsMascot = (instance: typeof entryA | typeof mascotB) => (
+      instance.animations.some(animation => animation.name === 'CAT_IDLE')
+      && instance.animations.some(animation => (
+        animation.name === 'CAT_MEOW' || animation.name === 'CAT_PET_REACT'
+      ))
+    )
+
+    expect(selectCapabilityTargetInstance).toBeTypeOf('function')
+
+    const fromFishEntry = selectCapabilityTargetInstance?.({
+      targetInstances: new Map([
+        ['entryA', entryA],
+        ['mascotB', mascotB],
+      ]),
+      supportsCapability: supportsMascot,
+      requireTracked: true,
+      requireVisible: true,
+      requireInteractionReady: true,
+    })
+    const fromMascotEntry = selectCapabilityTargetInstance?.({
+      targetInstances: new Map([
+        ['mascotB', mascotB],
+        ['entryA', entryA],
+      ]),
+      supportsCapability: supportsMascot,
+      requireTracked: true,
+      requireVisible: true,
+      requireInteractionReady: true,
+    })
+
+    expect(fromFishEntry).toMatchObject({ targetName: 'mascotB', instance: mascotB })
+    expect(fromMascotEntry).toMatchObject({ targetName: 'mascotB', instance: mascotB })
+  })
+
+  it('keeps optional mascot ownership capability-based in the viewer runtime', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const capabilityStart = source.indexOf('function getCatMascotInstance(')
+    const capabilityEnd = source.indexOf('\n    function canTriggerCatInteraction()', capabilityStart)
+    const capabilitySource = source.slice(capabilityStart, capabilityEnd)
+    const proxyStart = source.indexOf('function cacheCatInteractionProxy(instance)')
+    const proxyEnd = source.indexOf('\n    // Preload meow audio', proxyStart)
+    const proxySource = source.slice(proxyStart, proxyEnd)
+    const triggerStart = source.indexOf('function canTriggerCatInteraction()')
+    const triggerEnd = source.indexOf('\n    function resetCatAmbientIdle()', triggerStart)
+    const triggerSource = source.slice(triggerStart, triggerEnd)
+    const oneShotStart = source.indexOf('function playCatOneShot')
+    const oneShotEnd = source.indexOf('\n    function playCatMeow', oneShotStart)
+    const oneShotSource = source.slice(oneShotStart, oneShotEnd)
+    const pointerStart = source.indexOf('function onPointerDown(event)')
+    const pointerEnd = source.indexOf('\n    function onPointerUp(event)', pointerStart)
+    const pointerSource = source.slice(pointerStart, pointerEnd)
+    const ambientStart = source.indexOf('function updateCatAmbient(now)')
+    const ambientEnd = source.indexOf('\n    // ========== BOOT GATE', ambientStart)
+    const ambientSource = source.slice(ambientStart, ambientEnd)
+    const modelComplete = source.indexOf("sendARDebug('MODEL_LOAD_COMPLETE'")
+    const primaryGate = source.indexOf("if (targetName === primaryModelTargetName && !bootState.primaryReady)", modelComplete)
+    const modelReadySource = source.slice(modelComplete, primaryGate)
+
+    expect(capabilityStart).toBeGreaterThanOrEqual(0)
+    expect(capabilitySource).toContain('selectCapabilityTargetInstance')
+    expect(capabilitySource).not.toContain('primaryModelTargetName')
+    expect(proxySource).toContain('!isCatMascotInstance(instance)')
+    expect(proxySource).not.toContain('primaryModelTargetName')
+    expect(proxySource).toContain('targetName: instance.config?.qr_id')
+    expect(triggerSource).toContain('getCatMascotInstance')
+    expect(oneShotSource).toContain('getCatMascotInstance')
+    expect(pointerSource).toContain('getCatMascotInstance')
+    expect(ambientSource).toContain('getCatMascotInstance')
+    expect(modelReadySource).toContain('if (isCatMascotInstance(instance)) preloadCatMeowAudio()')
+  })
+
+  it('keeps acquisition continuous during grace and starts a fresh cycle after confirmed loss', () => {
+    const advanceTargetAcquisitionState = Reflect.get(lifecycleModule, 'advanceTargetAcquisitionState')
+
+    expect(advanceTargetAcquisitionState).toBeTypeOf('function')
+
+    const firstFound = advanceTargetAcquisitionState?.({
+      foundAt: null,
+      stable: false,
+      event: 'found',
+      now: 100,
+    })
+    const briefLoss = getTargetLossGraceState({
+      lostAt: 200,
+      now: 399,
+      lostGraceMs: 300,
+    })
+    const reacquiredWithinGrace = advanceTargetAcquisitionState?.({
+      ...firstFound,
+      event: 'found',
+      now: 399,
+    })
+    const confirmedLoss = getTargetLossGraceState({
+      lostAt: 200,
+      now: 501,
+      lostGraceMs: 300,
+    })
+    const endedCycle = advanceTargetAcquisitionState?.({
+      ...reacquiredWithinGrace,
+      event: 'confirmed_loss',
+      now: 501,
+    })
+    const nextFound = advanceTargetAcquisitionState?.({
+      ...endedCycle,
+      event: 'found',
+      now: 700,
+    })
+
+    expect(briefLoss.withinGrace).toBe(true)
+    expect(reacquiredWithinGrace).toEqual({ foundAt: 100, stable: false })
+    expect(confirmedLoss.confirmed).toBe(true)
+    expect(endedCycle).toEqual({ foundAt: null, stable: false })
+    expect(nextFound).toEqual({ foundAt: 700, stable: false })
+  })
+
+  it('resets acquisition state before deferring a confirmed locked participant loss', () => {
+    const advanceTargetAcquisitionState = Reflect.get(lifecycleModule, 'advanceTargetAcquisitionState')
+    const createInteractionTransaction = Reflect.get(lifecycleModule, 'createInteractionTransaction')
+    const classifyInteractionTargetLoss = Reflect.get(lifecycleModule, 'classifyInteractionTargetLoss')
+    const rule = normalizeInteractionRule({
+      tags: ['actorA', 'partnerB'],
+      target_order: ['actorA', 'partnerB'],
+      combo_id: 'actor-partner',
+    })
+    const transaction = createInteractionTransaction?.({
+      runId: 9,
+      rule,
+      lockedAt: 100,
+      watchdogAt: 1000,
+    })
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const processorStart = source.indexOf('function processPendingTargetLosses(now)')
+    const processorEnd = source.indexOf('function evaluateInteraction(now)', processorStart)
+    const processorSource = source.slice(processorStart, processorEnd)
+
+    expect(advanceTargetAcquisitionState).toBeTypeOf('function')
+    expect(classifyInteractionTargetLoss?.({
+      transaction,
+      targetName: 'actorA',
+      currentRunId: 9,
+    })).toMatchObject({ defer: true, role: 'actor' })
+    expect(advanceTargetAcquisitionState?.({
+      foundAt: 10,
+      stable: true,
+      event: 'confirmed_loss',
+      now: 500,
+    })).toEqual({ foundAt: null, stable: false })
+    expect(processorSource.indexOf("event: 'confirmed_loss'")).toBeGreaterThanOrEqual(0)
+    expect(processorSource.indexOf("event: 'confirmed_loss'")).toBeLessThan(
+      processorSource.indexOf('const lossDecision = getActiveTransactionLossDecision(targetName)'),
+    )
+  })
+
+  it('keeps rule actor ownership independent from the scanned entry target order', () => {
+    const rule = normalizeInteractionRule({
+      tags: ['actorA', 'partnerB'],
+      target_order: ['actorA', 'partnerB'],
+      combo_id: 'actor-a-with-partner-b',
+      priority: 20,
+    })
+
+    const entryTarget = 'partnerB'
+    const selected = selectActiveInteractionRule([rule], [entryTarget, 'actorA'])
+
+    expect(selected).toMatchObject({
+      actorTarget: 'actorA',
+      partnerTargets: ['partnerB'],
+    })
+    expect(selected?.actorTarget).not.toBe(entryTarget)
+  })
+
+  it('uses one generic attachment path for every image-found target instance', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const attachStart = source.indexOf('async function attachTrackedTargetModel(targetName)')
+    const attachEnd = source.indexOf('\n    // ========== LOAD TARGET JSON', attachStart)
+    const attachSource = source.slice(attachStart, attachEnd)
+    const foundStart = source.indexOf('function onTargetFound(detail)')
+    const foundEnd = source.indexOf('\n    function onTargetLost(name)', foundStart)
+    const foundSource = source.slice(foundStart, foundEnd)
+
+    expect(attachStart).toBeGreaterThanOrEqual(0)
+    expect(attachEnd).toBeGreaterThan(attachStart)
+    expect(attachSource).toContain('resolveTargetModelAttachment')
+    expect(attachSource).toContain('ensureTargetModelLoaded(targetName)')
+    expect(attachSource).toContain('reparentModelToAnchor(instance)')
+    expect(attachSource).toContain('applyVisualTargetPose(instance, pose)')
+    expect(attachSource).toContain('instance.interactionReady = true')
+    expect(attachSource).not.toMatch(/cat001|fish001|CAT_EAT/)
+    expect(foundSource).toContain('void attachTrackedTargetModel(detail.name)')
+    expect(foundSource).not.toContain('attemptModelAttach')
+    expect(foundSource).not.toContain('ensureTargetModelLoaded(detail.name).then')
+    expect(foundSource).not.toContain('detail.name === primaryModelTargetName')
+  })
+
+  it('keeps target registration and loss ownership scoped to each instance while models stay lazy', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const registryStart = source.indexOf('// Populate targetInstances Map for all tracked targets')
+    const registryEnd = source.indexOf('const targetConfigByName', registryStart)
+    const registrySource = source.slice(registryStart, registryEnd)
+    const mainStart = source.indexOf('async function main()')
+    const mainEnd = source.indexOf('\n    // ========== RUN ==========')
+    const mainSource = source.slice(mainStart, mainEnd)
+    const hideStart = source.indexOf('function hideConfirmedTargetLoss(targetName, lostForMs)')
+    const hideEnd = source.indexOf('\n    function processPendingTargetLosses', hideStart)
+    const hideSource = source.slice(hideStart, hideEnd)
+
+    expect(registrySource).toContain('for (const config of xrTargetConfigs)')
+    expect(registrySource).toContain('targetInstances.set(config.qr_id')
+    expect(registrySource).toContain('attachPromise: null')
+    expect(source).not.toContain('function preloadSecondaryTargets()')
+    expect(source).not.toContain('SECONDARY_PRELOAD_BATCH_START')
+    expect(mainSource).toContain('ensureTargetModelLoaded(primaryModelTargetName)')
+    expect(mainSource).not.toContain('xrTargetConfigs.filter')
+    expect(hideSource).toContain('const instance = targetInstances.get(targetName)')
+    expect(hideSource).toContain('if (instance?.model) instance.model.visible = false')
+    expect(hideSource).not.toContain('primaryModelTargetName')
+  })
+
+  it('calculates generic profile auto-fit scale from physical target width and asset multiplier', () => {
+    const calculateAutoFitScale = Reflect.get(lifecycleModule, 'calculateAutoFitScale')
+
+    expect(calculateAutoFitScale).toBeTypeOf('function')
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 2,
+      physicalWidth: 0.4,
+      fitRatio: 1.25,
+      scaleMultiplier: 1,
+      fallbackScale: 0.8,
+    })).toEqual({
+      ok: true,
+      reason: 'auto_fit',
+      desiredWidth: 0.5,
+      autoScale: 0.25,
+      finalScale: 0.25,
+    })
+
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 2,
+      physicalWidth: 0.8,
+      fitRatio: 1.25,
+      scaleMultiplier: 0.5,
+      fallbackScale: 0.8,
+    })).toMatchObject({
+      ok: true,
+      autoScale: 0.5,
+      finalScale: 0.25,
+    })
+  })
+
+  it('uses the legacy scale safely when profile auto-fit inputs are invalid or absent', () => {
+    const calculateAutoFitScale = Reflect.get(lifecycleModule, 'calculateAutoFitScale')
+
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 0,
+      physicalWidth: 0.1,
+      fitRatio: 1.25,
+      scaleMultiplier: 1,
+      fallbackScale: 0.8,
+    })).toMatchObject({ ok: false, finalScale: 0.8, reason: 'invalid_bounding_box_width' })
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 2,
+      physicalWidth: null,
+      fitRatio: 1.25,
+      scaleMultiplier: 1,
+      fallbackScale: 0.8,
+    })).toMatchObject({ ok: false, finalScale: 0.8, reason: 'invalid_physical_width' })
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: Number.NaN,
+      physicalWidth: 0.1,
+      fitRatio: 1.25,
+      scaleMultiplier: 1,
+      fallbackScale: 0.8,
+    })).toMatchObject({ ok: false, finalScale: 0.8, reason: 'invalid_bounding_box_width' })
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 2,
+      physicalWidth: Number.POSITIVE_INFINITY,
+      fitRatio: 1.25,
+      scaleMultiplier: 1,
+      fallbackScale: 0.8,
+    })).toMatchObject({ ok: false, finalScale: 0.8, reason: 'invalid_physical_width' })
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 2,
+      physicalWidth: 0.1,
+      fitRatio: 1.25,
+      scaleMultiplier: Number.NaN,
+      fallbackScale: 0.8,
+    })).toMatchObject({ ok: false, finalScale: 0.8, reason: 'invalid_scale_multiplier' })
+    expect(calculateAutoFitScale?.({
+      boundingBoxWidth: 0.01,
+      physicalWidth: 10,
+      fitRatio: 1.25,
+      scaleMultiplier: 1,
+      fallbackScale: 0.8,
+      maxScale: 5,
+    })).toMatchObject({ ok: false, finalScale: 0.8, reason: 'scale_out_of_bounds' })
+  })
+
+  it('derives grounded centering and lateral width without target-name assumptions', () => {
+    const getGroundedCenterOffset = Reflect.get(lifecycleModule, 'getGroundedCenterOffset')
+    const getPresentationBoundingWidth = Reflect.get(lifecycleModule, 'getPresentationBoundingWidth')
+
+    expect(getGroundedCenterOffset).toBeTypeOf('function')
+    expect(getGroundedCenterOffset?.({
+      min: { x: -1, y: -2, z: -3 },
+      max: { x: 3, y: 4, z: 5 },
+    })).toEqual({ x: -1, y: 2, z: -1 })
+
+    expect(getPresentationBoundingWidth).toBeTypeOf('function')
+    const size = { x: 2, y: 7, z: 3 }
+    expect(getPresentationBoundingWidth?.({ size, forwardAxis: '+Z' })).toBe(2)
+    expect(getPresentationBoundingWidth?.({ size, forwardAxis: '-Z' })).toBe(2)
+    expect(getPresentationBoundingWidth?.({ size, forwardAxis: '+X' })).toBe(3)
+    expect(getPresentationBoundingWidth?.({ size, forwardAxis: '-X' })).toBe(3)
+    expect(getPresentationBoundingWidth?.({ size, forwardAxis: '+Y' })).toBe(3)
+    expect(getPresentationBoundingWidth?.({ size, forwardAxis: '-Y' })).toBe(3)
+  })
+
+  it('resolves every declarative asset forward axis without semantic target branches', () => {
+    const resolveForwardAxis = Reflect.get(lifecycleModule, 'resolveForwardAxis')
+
+    expect(resolveForwardAxis).toBeTypeOf('function')
+    expect(resolveForwardAxis?.('+X')).toEqual({ x: 1, y: 0, z: 0, name: '+X' })
+    expect(resolveForwardAxis?.('-X')).toEqual({ x: -1, y: 0, z: 0, name: '-X' })
+    expect(resolveForwardAxis?.('+Y')).toEqual({ x: 0, y: 1, z: 0, name: '+Y' })
+    expect(resolveForwardAxis?.('-Y')).toEqual({ x: 0, y: -1, z: 0, name: '-Y' })
+    expect(resolveForwardAxis?.('+Z')).toEqual({ x: 0, y: 0, z: 1, name: '+Z' })
+    expect(resolveForwardAxis?.('-Z')).toEqual({ x: 0, y: 0, z: -1, name: '-Z' })
+    expect(resolveForwardAxis?.('diagonal')).toBeNull()
+  })
+
+  it('keeps old transforms for unprofiled assets while resolving neutral pet metadata generically', () => {
+    const resolveModelPresentation = Reflect.get(lifecycleModule, 'resolveModelPresentation')
+
+    expect(resolveModelPresentation).toBeTypeOf('function')
+    expect(resolveModelPresentation?.({
+      config: {
+        position: '1 2 3',
+        rotation: '4 5 6',
+        scale: '0.6 0.6 0.6',
+      },
+      bounds: { size: { x: 2, y: 4, z: 6 } },
+      physicalWidth: 0.1,
+    })).toEqual({
+      mode: 'legacy',
+      profile: null,
+      position: [1, 2, 3],
+      rotation: [4, 5, 6],
+      finalScale: 0.6,
+      positionOffset: [0, 0, 0],
+      forwardAxis: null,
+      autoFit: null,
+    })
+
+    expect(resolveModelPresentation?.({
+      config: {
+        presentation_profile: 'pet',
+        presentation_scale_multiplier: 0.5,
+        presentation_position_offset: '0.01 0 0',
+        presentation_forward_axis: '-Z',
+        position: '9 9 9',
+        rotation: '9 9 9',
+        scale: '0.8 0.8 0.8',
+      },
+      bounds: { size: { x: 2, y: 4, z: 6 } },
+      physicalWidth: 0.2,
+    })).toEqual({
+      mode: 'profile',
+      profile: 'pet',
+      position: [0.01, 0, 0],
+      rotation: [0, 0, 0],
+      finalScale: 0.0625,
+      positionOffset: [0.01, 0, 0],
+      forwardAxis: { x: 0, y: 0, z: -1, name: '-Z' },
+      autoFit: {
+        ok: true,
+        reason: 'auto_fit',
+        desiredWidth: 0.25,
+        autoScale: 0.125,
+        finalScale: 0.0625,
+      },
+    })
+  })
+
+  it('normalizes raw GLB bounds before applying any persisted presentation transform', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const reparentStart = source.indexOf('function reparentModelToAnchor(instance)')
+    const reparentEnd = source.indexOf('// ========== VISUAL POSE APPLICATION', reparentStart)
+    const reparentSource = source.slice(reparentStart, reparentEnd)
+    const profileBranch = reparentSource.indexOf('if (usesPresentationProfile)')
+    const firstBoundsMeasurement = reparentSource.indexOf('const box = new THREE.Box3().setFromObject(model)')
+    const offsetApplication = reparentSource.indexOf('instance.offsetGroup.position.set(x, y, z)')
+    const positionReset = reparentSource.indexOf('model.position.set(0, 0, 0);')
+    const rotationReset = reparentSource.indexOf('model.rotation.set(0, 0, 0);')
+    const scaleReset = reparentSource.indexOf('model.scale.setScalar(1);')
+
+    expect(reparentStart).toBeGreaterThanOrEqual(0)
+    expect(reparentEnd).toBeGreaterThan(reparentStart)
+    expect(profileBranch).toBeGreaterThanOrEqual(0)
+    expect(firstBoundsMeasurement).toBeGreaterThan(profileBranch)
+    expect(offsetApplication).toBeGreaterThan(firstBoundsMeasurement)
+    expect(positionReset).toBeGreaterThanOrEqual(0)
+    expect(rotationReset).toBeGreaterThanOrEqual(0)
+    expect(scaleReset).toBeGreaterThanOrEqual(0)
+    expect(positionReset).toBeLessThan(profileBranch)
+    expect(rotationReset).toBeLessThan(profileBranch)
+    expect(scaleReset).toBeLessThan(profileBranch)
+  })
+
+  it('normalizes a presentation pivot once while reapplying deterministic offsets after reacquisition', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const reparentStart = source.indexOf('function reparentModelToAnchor(instance)')
+    const normalizationEnd = source.indexOf('// Apply per-target config to offset group', reparentStart)
+    const reparentEnd = source.indexOf('// ========== VISUAL POSE APPLICATION', normalizationEnd)
+    const normalizationSource = source.slice(reparentStart, normalizationEnd)
+    const reacquireSource = source.slice(normalizationEnd, reparentEnd)
+
+    expect(reparentStart).toBeGreaterThanOrEqual(0)
+    expect(normalizationEnd).toBeGreaterThan(reparentStart)
+    expect(reparentEnd).toBeGreaterThan(normalizationEnd)
+    expect(normalizationSource).toContain('if (!instance.pivotNormalized)')
+    expect(normalizationSource).toContain('instance.pivotNormalized = true')
+    expect(reacquireSource).toContain('instance.offsetGroup.position.set(x, y, z)')
+    expect(reacquireSource).toContain('instance.offsetGroup.rotation.set(rx, ry, rz)')
+    expect(reacquireSource).toContain('instance.offsetGroup.scale.setScalar(presentation.finalScale)')
+  })
+
+  it('snaps the first valid visual pose without mutating its raw tracking pose', () => {
+    const { advanceVisualPose } = lifecycleModule
+    const rawPose = {
+      position: { x: 1, y: 2, z: 3 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: 1.25,
+    }
+    const rawPoseBefore = structuredClone(rawPose)
+
+    expect(advanceVisualPose).toBeTypeOf('function')
+    const result = advanceVisualPose({
+      visualPose: null,
+      visualPoseInitialized: false,
+      rawPose,
+      dtMs: 16,
+      tauMs: 80,
+    })
+
+    expect(result).toMatchObject({
+      visualPoseInitialized: true,
+      snapped: true,
+      smoothingAlpha: 1,
+      visualPose: rawPose,
+    })
+    expect(rawPose).toEqual(rawPoseBefore)
+  })
+
+  it('moves a visual position toward the raw pose without overshooting', () => {
+    const { advanceVisualPose } = lifecycleModule
+
+    expect(advanceVisualPose).toBeTypeOf('function')
+    const result = advanceVisualPose({
+      visualPose: {
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      visualPoseInitialized: true,
+      rawPose: {
+        position: { x: 10, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      dtMs: 80,
+      tauMs: 80,
+    })
+
+    const visualPose = requireVisualPose(result)
+    expect(result.snapped).toBe(false)
+    expect(result.smoothingAlpha).toBeCloseTo(0.63212056, 7)
+    expect(visualPose.position.x).toBeCloseTo(6.3212056, 6)
+    expect(visualPose.position.x).toBeGreaterThan(0)
+    expect(visualPose.position.x).toBeLessThan(10)
+  })
+
+  it('slerps visual quaternion rotation on the shortest normalized path', () => {
+    const { advanceVisualPose } = lifecycleModule
+
+    expect(advanceVisualPose).toBeTypeOf('function')
+    const result = advanceVisualPose({
+      visualPose: {
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      visualPoseInitialized: true,
+      rawPose: {
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: -1 },
+        scale: 1,
+      },
+      dtMs: 40,
+      tauMs: 80,
+    })
+    const rotation = requireVisualPose(result).rotation
+    const length = Math.hypot(rotation?.x ?? 0, rotation?.y ?? 0, rotation?.z ?? 0, rotation?.w ?? 0)
+
+    expect(length).toBeCloseTo(1, 10)
+    expect(rotation).toEqual({ x: 0, y: 0, z: 0, w: 1 })
+  })
+
+  it('produces equivalent visual position over equivalent elapsed time at different update rates', () => {
+    const { advanceVisualPose } = lifecycleModule
+    const rawPose = {
+      position: { x: 10, y: 0, z: 0 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: 1,
+    }
+
+    expect(advanceVisualPose).toBeTypeOf('function')
+    let manyFrames = {
+      position: { x: 0, y: 0, z: 0 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      scale: 1,
+    }
+    for (let frame = 0; frame < 4; frame += 1) {
+      manyFrames = requireVisualPose(advanceVisualPose({
+        visualPose: manyFrames,
+        visualPoseInitialized: true,
+        rawPose,
+        dtMs: 20,
+        tauMs: 80,
+      }))
+    }
+    const oneFrame = requireVisualPose(advanceVisualPose({
+      visualPose: {
+        position: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      visualPoseInitialized: true,
+      rawPose,
+      dtMs: 80,
+      tauMs: 80,
+    }))
+
+    expect(manyFrames.position.x).toBeCloseTo(oneFrame.position.x, 10)
+  })
+
+  it('resets a confirmed-loss visual pose so the next acquisition snaps', () => {
+    const { advanceVisualPose } = lifecycleModule
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const confirmedLossStart = source.indexOf('function hideConfirmedTargetLoss(targetName, lostForMs)')
+    const confirmedLossEnd = source.indexOf('function processPendingTargetLosses(now)', confirmedLossStart)
+    const confirmedLossSource = source.slice(confirmedLossStart, confirmedLossEnd)
+
+    expect(advanceVisualPose).toBeTypeOf('function')
+    expect(confirmedLossStart).toBeGreaterThanOrEqual(0)
+    expect(confirmedLossEnd).toBeGreaterThan(confirmedLossStart)
+    expect(confirmedLossSource).toContain('resetVisualPose(instance)')
+    const result = advanceVisualPose({
+      visualPose: null,
+      visualPoseInitialized: false,
+      rawPose: {
+        position: { x: 9, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      dtMs: 16,
+      tauMs: 80,
+    })
+
+    expect(result).toMatchObject({
+      snapped: true,
+      visualPose: expect.objectContaining({ position: { x: 9, y: 0, z: 0 } }),
+    })
+  })
+
+  it('keeps a visual pose continuous when tracking reacquires within grace', () => {
+    const { advanceVisualPose } = lifecycleModule
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const lostStart = source.indexOf('function onTargetLost(name)')
+    const lostEnd = source.indexOf('// ========== COMBO DETECTION', lostStart)
+    const graceLossSource = source.slice(lostStart, lostEnd)
+
+    expect(advanceVisualPose).toBeTypeOf('function')
+    expect(lostStart).toBeGreaterThanOrEqual(0)
+    expect(lostEnd).toBeGreaterThan(lostStart)
+    expect(graceLossSource).not.toContain('resetVisualPose(instance)')
+    const result = advanceVisualPose({
+      visualPose: {
+        position: { x: 2, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      visualPoseInitialized: true,
+      rawPose: {
+        position: { x: 10, y: 0, z: 0 },
+        rotation: { x: 0, y: 0, z: 0, w: 1 },
+        scale: 1,
+      },
+      dtMs: 40,
+      tauMs: 80,
+    })
+
+    const visualPose = requireVisualPose(result)
+    expect(result.snapped).toBe(false)
+    expect(visualPose.position.x).toBeGreaterThan(2)
+    expect(visualPose.position.x).toBeLessThan(10)
+  })
+
+  it('keeps proximity geometry on raw target poses rather than visual presentation state', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const start = source.indexOf('function getAnchorWorldPosition(instance)')
+    const end = source.indexOf('function computeTargetPairDistance(actorInst, partnerInst)', start)
+    const rawPoseSource = source.slice(start, end)
+
+    expect(start).toBeGreaterThanOrEqual(0)
+    expect(end).toBeGreaterThan(start)
+    expect(rawPoseSource).toContain('trackedTargets.get(instance.config.qr_id)')
+    expect(rawPoseSource).not.toContain('visualPosition')
+    expect(rawPoseSource).not.toContain('visualQuaternion')
+  })
+
+  it('does not update a transaction-owned visual participant', () => {
+    const shouldUpdateVisualPose = Reflect.get(lifecycleModule, 'shouldUpdateVisualPose')
+    const createInteractionTransaction = Reflect.get(lifecycleModule, 'createInteractionTransaction')
+    const rule = normalizeInteractionRule({
+      tags: ['actorA', 'partnerB'],
+      target_order: ['actorA', 'partnerB'],
+      combo_id: 'actor-partner',
+    })
+    const transaction = createInteractionTransaction?.({
+      runId: 14,
+      rule,
+      lockedAt: 100,
+      watchdogAt: 1000,
+    })
+
+    expect(shouldUpdateVisualPose).toBeTypeOf('function')
+    expect(shouldUpdateVisualPose?.({ transaction, targetName: 'actorA', currentRunId: 14 })).toBe(false)
+    expect(shouldUpdateVisualPose?.({ transaction, targetName: 'partnerB', currentRunId: 14 })).toBe(false)
+    expect(shouldUpdateVisualPose?.({ transaction, targetName: 'observerC', currentRunId: 14 })).toBe(true)
+    expect(shouldUpdateVisualPose?.({ transaction, targetName: 'actorA', currentRunId: 15 })).toBe(true)
+  })
+
+  it('keeps generic presentation helpers free of animal identities', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'public/static/ar-assets/js/ar-interaction-lifecycle.js'),
+      'utf8',
+    )
+    const start = source.indexOf('const MODEL_PRESENTATION_PROFILES')
+    const end = source.indexOf('export function classifySurfaceOrientation', start)
+    const presentationSource = source.slice(start, end)
+
+    expect(start).toBeGreaterThanOrEqual(0)
+    expect(end).toBeGreaterThan(start)
+    expect(presentationSource).not.toMatch(
+      /dog001|cat001|fish001|shiba|SHIBA|bone001/i,
+    )
+  })
+
+  it('normalizes diagnostic gravity, maps screen axes, and preserves invalid-input fallback', () => {
+    const normalizeDeviceGravity = Reflect.get(lifecycleModule, 'normalizeDeviceGravity')
+    const mapDeviceGravityToScreen = Reflect.get(lifecycleModule, 'mapDeviceGravityToScreen')
+    const resolveDeviceMotionPermissionMode = Reflect.get(lifecycleModule, 'resolveDeviceMotionPermissionMode')
+
+    expect(normalizeDeviceGravity).toBeTypeOf('function')
+    expect(mapDeviceGravityToScreen).toBeTypeOf('function')
+    expect(resolveDeviceMotionPermissionMode).toBeTypeOf('function')
+
+    expect(normalizeDeviceGravity?.({ x: 0, y: 0, z: 9.81 })).toEqual({ x: 0, y: 0, z: 1 })
+    expect(normalizeDeviceGravity?.({ x: 3, y: 4, z: 0 })).toEqual({ x: 0.6, y: 0.8, z: 0 })
+    expect(normalizeDeviceGravity?.(null)).toBeNull()
+    expect(normalizeDeviceGravity?.({ x: 0, y: 0, z: 0 })).toBeNull()
+    expect(normalizeDeviceGravity?.({ x: Number.NaN, y: 0, z: 1 })).toBeNull()
+
+    const vector = { x: 1, y: 2, z: 3 }
+    expect(mapDeviceGravityToScreen?.({ vector, screenAngle: 0 })).toEqual(vector)
+    expect(mapDeviceGravityToScreen?.({ vector, screenAngle: 90 })).toEqual({ x: -2, y: 1, z: 3 })
+    expect(mapDeviceGravityToScreen?.({ vector, screenAngle: 180 })).toEqual({ x: -1, y: -2, z: 3 })
+    expect(mapDeviceGravityToScreen?.({ vector, screenAngle: 270 })).toEqual({ x: 2, y: -1, z: 3 })
+    expect(mapDeviceGravityToScreen?.({ vector, screenAngle: -90 })).toEqual({ x: 2, y: -1, z: 3 })
+    expect(mapDeviceGravityToScreen?.({ vector, screenAngle: 45 })).toBeNull()
+    expect(mapDeviceGravityToScreen?.({ vector: null, screenAngle: 0 })).toBeNull()
+
+    expect(resolveDeviceMotionPermissionMode?.({
+      apiAvailable: true,
+      requestPermissionAvailable: true,
+      permissionResult: 'granted',
+    })).toBe('granted')
+    expect(resolveDeviceMotionPermissionMode?.({
+      apiAvailable: true,
+      requestPermissionAvailable: true,
+      permissionResult: 'denied',
+    })).toBe('denied')
+    expect(resolveDeviceMotionPermissionMode?.({
+      apiAvailable: true,
+      requestPermissionAvailable: false,
+      permissionResult: null,
+    })).toBe('implicit')
+    expect(resolveDeviceMotionPermissionMode?.({
+      apiAvailable: false,
+      requestPermissionAvailable: false,
+      permissionResult: null,
+    })).toBe('unsupported')
+  })
+
+  it('promotes only a recent stable gravity candidate into production surface world-up', () => {
+    const getSurfaceFlatScore = Reflect.get(lifecycleModule, 'getSurfaceFlatScore')
+    const resolveGravityWorldUpCandidate = Reflect.get(lifecycleModule, 'resolveGravityWorldUpCandidate')
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const worldUpStart = source.indexOf('function getSurfaceWorldUp(')
+    const worldUpEnd = source.indexOf('\n    function getPresentationParent', worldUpStart)
+    const diagnosticStart = source.indexOf('function emitSurfaceGravityDiagnostics(')
+    const diagnosticEnd = source.indexOf('\n    // ========== MODEL REPARENTING', diagnosticStart)
+    const worldUpSource = source.slice(worldUpStart, worldUpEnd)
+    const diagnosticSource = source.slice(diagnosticStart, diagnosticEnd)
+
+    expect(getSurfaceFlatScore).toBeTypeOf('function')
+    expect(resolveGravityWorldUpCandidate).toBeTypeOf('function')
+    expect(getSurfaceFlatScore?.({ targetNormal: { x: 0, y: 0, z: 5 }, worldUp: { x: 0, y: 0, z: -2 } })).toBe(1)
+    expect(getSurfaceFlatScore?.({ targetNormal: { x: 1, y: 0, z: 0 }, worldUp: { x: 0, y: 3, z: 0 } })).toBe(0)
+    expect(getSurfaceFlatScore?.({ targetNormal: null, worldUp: { x: 0, y: 1, z: 0 } })).toBeNull()
+    expect(resolveGravityWorldUpCandidate?.({
+      worldUp: { x: 0, y: 0, z: 1 },
+      previousWorldUp: { x: 0, y: 0, z: 1 },
+      sampleAgeMs: 100,
+    })).toMatchObject({ available: true, reason: 'gravity_world_up' })
+    expect(resolveGravityWorldUpCandidate?.({
+      worldUp: { x: 0, y: 0, z: 1 },
+      previousWorldUp: { x: 0, y: 0, z: 1 },
+      sampleAgeMs: 800,
+    })).toMatchObject({ available: false, reason: 'gravity_sample_stale' })
+    expect(resolveGravityWorldUpCandidate?.({
+      worldUp: null,
+      previousWorldUp: null,
+      sampleAgeMs: 0,
+    })).toMatchObject({ available: false, reason: 'gravity_world_up_invalid' })
+    expect(resolveGravityWorldUpCandidate?.({
+      worldUp: { x: 1, y: 0, z: 0 },
+      previousWorldUp: { x: 0, y: 0, z: 1 },
+      sampleAgeMs: 0,
+    })).toMatchObject({ available: false, reason: 'gravity_world_up_unstable' })
+    expect(worldUpSource).toContain('resolveGravityWorldUpCandidate')
+    expect(worldUpSource).toContain('motionDiagnosticsState.lastGravitySampleAt')
+    expect(worldUpSource).not.toContain("source: 'unavailable_disable_world_tracking'")
+    expect(diagnosticStart).toBeGreaterThanOrEqual(0)
+    expect(diagnosticSource).toContain('candidateFlatScore')
+    expect(diagnosticSource).not.toContain('classifySurfaceOrientation')
+    expect(diagnosticSource).not.toContain('getSurfaceAlignmentQuaternion')
+    expect(diagnosticSource).not.toContain('surfaceRoot.quaternion')
+  })
+
+  it('enters AUTO TABLETOP only after a finite gravity candidate and stable flat score', () => {
+    const resolveGravityWorldUpCandidate = Reflect.get(lifecycleModule, 'resolveGravityWorldUpCandidate')
+    const getSurfaceFlatScore = Reflect.get(lifecycleModule, 'getSurfaceFlatScore')
+    const classifySurfaceOrientation = Reflect.get(lifecycleModule, 'classifySurfaceOrientation')
+    const candidate = resolveGravityWorldUpCandidate?.({
+      worldUp: { x: 0, y: 0, z: 1 },
+      previousWorldUp: null,
+      sampleAgeMs: 0,
+    })
+    const flatScore = getSurfaceFlatScore?.({
+      targetNormal: { x: 0, y: 0, z: 1 },
+      worldUp: candidate?.worldUp,
+    })
+
+    expect(candidate?.available).toBe(true)
+    expect(flatScore).toBeGreaterThanOrEqual(0.82)
+    const pending = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore,
+      currentMode: 'SCREEN',
+      candidateMode: null,
+      candidateSince: null,
+      now: 1000,
+    })
+    const entered = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore,
+      currentMode: pending?.presentationMode,
+      candidateMode: pending?.candidateMode,
+      candidateSince: pending?.candidateSince,
+      now: 1400,
+    })
+
+    expect(pending?.presentationMode).toBe('SCREEN')
+    expect(entered).toMatchObject({
+      presentationMode: 'TABLETOP',
+      changed: true,
+      reason: 'auto_stable',
+    })
+  })
+
+  it('resolves generic screen, tabletop, and auto presentation requests', () => {
+    const resolvePresentationMode = Reflect.get(lifecycleModule, 'resolvePresentationMode')
+
+    expect(resolvePresentationMode).toBeTypeOf('function')
+    expect(resolvePresentationMode?.('screen')).toBe('SCREEN')
+    expect(resolvePresentationMode?.('TABLETOP')).toBe('TABLETOP')
+    expect(resolvePresentationMode?.('auto')).toBe('AUTO')
+    expect(resolvePresentationMode?.('unknown')).toBe('AUTO')
+  })
+
+  it('applies the session presentation mode to every card, not only the QR entry', () => {
+    const resolveInstancePresentationMode = Reflect.get(lifecycleModule, 'resolveInstancePresentationMode')
+
+    expect(resolveInstancePresentationMode).toBeTypeOf('function')
+    for (const qr_id of ['cat001', 'fish001', 'dog001', 'bone001']) {
+      expect(resolveInstancePresentationMode?.({
+        instance: { config: { qr_id } },
+        requestedPresentationMode: 'TABLETOP',
+      }), qr_id).toBe('TABLETOP')
+    }
+    expect(resolveInstancePresentationMode?.({
+      instance: { config: { qr_id: 'fish001' } },
+      requestedPresentationMode: 'SCREEN',
+    })).toBe('SCREEN')
+    expect(resolveInstancePresentationMode?.({
+      instance: { config: { qr_id: 'fish001', presentation_mode: 'TABLETOP' } },
+      requestedPresentationMode: 'SCREEN',
+    })).toBe('TABLETOP')
+    expect(resolveInstancePresentationMode?.({
+      instance: { config: { qr_id: 'dog001' } },
+      requestedPresentationMode: undefined,
+    })).toBe('AUTO')
+
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const presentationStart = source.indexOf('function updateSurfacePresentation(')
+    const presentationEnd = source.indexOf('\n    function updateSurfacePresentations', presentationStart)
+    const presentationSource = source.slice(presentationStart, presentationEnd)
+    expect(presentationSource).toContain('getInstanceRequestedPresentationMode(instance)')
+    expect(presentationSource).toContain('requestedMode: instanceRequestedPresentationMode')
+  })
+
+  it('keeps screen identity and aligns model up with the configured tabletop normal', () => {
+    const getSurfaceAlignmentQuaternion = Reflect.get(lifecycleModule, 'getSurfaceAlignmentQuaternion')
+    const rotateVector = (vector: { x: number; y: number; z: number }, quaternion: { x: number; y: number; z: number; w: number }) => {
+      const { x, y, z } = vector
+      const { x: qx, y: qy, z: qz, w: qw } = quaternion
+      const ix = qw * x + qy * z - qz * y
+      const iy = qw * y + qz * x - qx * z
+      const iz = qw * z + qx * y - qy * x
+      const iw = -qx * x - qy * y - qz * z
+      return {
+        x: ix * qw + iw * -qx + iy * -qz - iz * -qy,
+        y: iy * qw + iw * -qy + iz * -qx - ix * -qz,
+        z: iz * qw + iw * -qz + ix * -qy - iy * -qx,
+      }
+    }
+
+    const screen = getSurfaceAlignmentQuaternion?.({
+      presentationMode: 'SCREEN',
+      targetNormal: { x: 0, y: 0, z: 1 },
+    })
+    expect(screen).toEqual({ x: 0, y: 0, z: 0, w: 1 })
+
+    const tabletop = getSurfaceAlignmentQuaternion?.({
+      presentationMode: 'TABLETOP',
+      targetNormal: { x: 0, y: 0, z: 1 },
+    })
+    expect(tabletop).toBeDefined()
+    if (!tabletop) throw new Error('Expected tabletop alignment quaternion')
+    const alignedUp = rotateVector({ x: 0, y: 1, z: 0 }, tabletop)
+    expect(alignedUp.x).toBeCloseTo(0, 6)
+    expect(alignedUp.y).toBeCloseTo(0, 6)
+    expect(alignedUp.z).toBeCloseTo(1, 6)
+  })
+
+  it('uses stable auto-mode hysteresis and safely falls back when world-up is unavailable', () => {
+    const classifySurfaceOrientation = Reflect.get(lifecycleModule, 'classifySurfaceOrientation')
+    const initial = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: 0.90,
+      currentMode: 'SCREEN',
+      candidateMode: null,
+      candidateSince: null,
+      now: 1000,
+    })
+    expect(initial).toMatchObject({
+      presentationMode: 'SCREEN',
+      candidateMode: 'TABLETOP',
+      candidateSince: 1000,
+      changed: false,
+    })
+
+    const tabletop = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: 0.90,
+      currentMode: 'SCREEN',
+      candidateMode: 'TABLETOP',
+      candidateSince: 1000,
+      now: 1400,
+    })
+    expect(tabletop).toMatchObject({
+      presentationMode: 'TABLETOP',
+      candidateMode: null,
+      changed: true,
+    })
+
+    const screen = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: 0.50,
+      currentMode: 'TABLETOP',
+      candidateMode: 'SCREEN',
+      candidateSince: 2000,
+      now: 2400,
+    })
+    expect(screen).toMatchObject({
+      presentationMode: 'SCREEN',
+      candidateMode: null,
+      changed: true,
+    })
+
+    const deadBand = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: 0.72,
+      currentMode: 'TABLETOP',
+      candidateMode: null,
+      candidateSince: null,
+      now: 3000,
+    })
+    expect(deadBand).toMatchObject({
+      presentationMode: 'TABLETOP',
+      candidateMode: null,
+      changed: false,
+    })
+
+    const temporarilyUnavailable = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: null,
+      currentMode: 'TABLETOP',
+      candidateMode: null,
+      candidateSince: null,
+      lastValidAt: 3800,
+      now: 4000,
+    })
+    expect(temporarilyUnavailable).toMatchObject({
+      presentationMode: 'TABLETOP',
+      changed: false,
+      reason: 'world_up_grace',
+    })
+
+    const unavailable = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: null,
+      currentMode: 'TABLETOP',
+      candidateMode: null,
+      candidateSince: null,
+      lastValidAt: 3000,
+      now: 4000,
+    })
+    expect(unavailable).toMatchObject({
+      presentationMode: 'SCREEN',
+      changed: true,
+      reason: 'world_up_unavailable',
+    })
+
+    const screenFallback = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: null,
+      currentMode: 'SCREEN',
+      candidateMode: null,
+      candidateSince: null,
+      now: 4000,
+    })
+    expect(screenFallback).toMatchObject({
+      presentationMode: 'SCREEN',
+      changed: false,
+      reason: 'world_up_unavailable',
+    })
+  })
+
+  it('keeps temporary sensor loss and reacquisition from flickering presentation mode', () => {
+    const classifySurfaceOrientation = Reflect.get(lifecycleModule, 'classifySurfaceOrientation')
+    const held = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: null,
+      currentMode: 'TABLETOP',
+      candidateMode: null,
+      candidateSince: null,
+      lastValidAt: 1000,
+      now: 1400,
+    })
+    expect(held).toMatchObject({ presentationMode: 'TABLETOP', changed: false })
+
+    const reacquisitionPending = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: 0.90,
+      currentMode: 'SCREEN',
+      candidateMode: null,
+      candidateSince: null,
+      now: 2000,
+    })
+    const reacquired = classifySurfaceOrientation?.({
+      requestedMode: 'AUTO',
+      flatScore: 0.90,
+      currentMode: 'SCREEN',
+      candidateMode: reacquisitionPending?.candidateMode,
+      candidateSince: reacquisitionPending?.candidateSince,
+      now: 2400,
+    })
+
+    expect(reacquisitionPending).toMatchObject({
+      presentationMode: 'SCREEN',
+      candidateMode: 'TABLETOP',
+      changed: false,
+    })
+    expect(reacquired).toMatchObject({ presentationMode: 'TABLETOP', changed: true })
+  })
+
+  it('keeps raw tracking and interaction geometry outside the surface presentation branch', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const presentationStart = source.indexOf('function updateSurfacePresentation(')
+    const presentationEnd = source.indexOf('\n    function updateSurfacePresentations', presentationStart)
+    const presentationSource = source.slice(presentationStart, presentationEnd)
+    const rawPositionStart = source.indexOf('function getAnchorWorldPosition(')
+    const rawPositionEnd = source.indexOf('\n    function computeTargetPairDistance', rawPositionStart)
+    const rawPositionSource = source.slice(rawPositionStart, rawPositionEnd)
+    const pairDistanceStart = source.indexOf('function computeTargetPairDistance(')
+    const pairDistanceEnd = source.indexOf('\n    function updateFilteredDistance', pairDistanceStart)
+    const pairDistanceSource = source.slice(pairDistanceStart, pairDistanceEnd)
+
+    expect(presentationSource).toContain('instance.surfaceRoot.quaternion')
+    expect(presentationSource).toContain('instance.presentationMode')
+    expect(presentationSource).not.toContain('trackedTargets.set(')
+    expect(presentationSource).not.toContain('trackedTargets.delete(')
+    expect(rawPositionSource).toContain('trackedTargets.get(')
+    expect(pairDistanceSource).toContain('getAnchorWorldPosition')
+  })
+
+  it('keeps surface telemetry debug-only and throttled', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const configStart = source.indexOf('const SURFACE_PRESENTATION_CONFIG = {')
+    const configEnd = source.indexOf('\n    };', configStart)
+    const diagnosticStart = source.indexOf('function emitSurfaceGravityDiagnostics(')
+    const diagnosticEnd = source.indexOf('\n    if (isDebug)', diagnosticStart)
+    const diagnosticSource = source.slice(diagnosticStart, diagnosticEnd)
+
+    expect(source.slice(configStart, configEnd)).toContain('telemetryIntervalMs: 2000')
+    expect(diagnosticSource).toContain('if (!isDebug')
+    expect(diagnosticSource).toContain('lastSurfaceTelemetryAt < 500')
+    expect(diagnosticSource).toContain("sendDebugOnly('SURFACE_GRAVITY_DIAGNOSTIC'")
+  })
+
+  it('keeps persistent config, surface presentation, and interaction yaw in distinct transforms', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const acquisitionStart = source.indexOf('// Create anchors for ALL target instances')
+    const acquisitionEnd = source.indexOf('// Reference primary target', acquisitionStart)
+    const interactionStart = source.indexOf('function getInteractionRoot(instance)')
+    const interactionEnd = source.indexOf('// Calculate yaw angle', interactionStart)
+    const acquisition = source.slice(acquisitionStart, acquisitionEnd)
+    const interaction = source.slice(interactionStart, interactionEnd)
+
+    expect(acquisition).toContain('inst.anchor.add(inst.offsetGroup)')
+    expect(acquisition).toContain('inst.offsetGroup.add(inst.surfaceRoot)')
+    expect(acquisition).toContain('inst.surfaceRoot.name = `surface-root:${name}`')
+    expect(interaction).toContain('const surfaceRoot = getPresentationParent(instance)')
+    expect(interaction).toContain('surfaceRoot.add(root)')
+    expect(interaction).toContain('root.add(model)')
+  })
+
+  it('measures pair distance from positions and rejects incomplete poses', () => {
+    const distanceBetweenPositions = Reflect.get(lifecycleModule, 'distanceBetweenPositions')
+
+    expect(distanceBetweenPositions).toBeTypeOf('function')
+    expect(distanceBetweenPositions?.(
+      { x: 0, y: 0, z: 0 },
+      { x: 3, y: 4, z: 0 },
+    )).toBe(5)
+    expect(distanceBetweenPositions?.(null, { x: 0, y: 0, z: 0 })).toBeNull()
+    expect(distanceBetweenPositions?.(
+      { x: Number.NaN, y: 0, z: 0 },
+      { x: 0, y: 0, z: 0 },
+    )).toBeNull()
+  })
+
+  it('resolves proximity from the selected rule without target-name assumptions', () => {
+    const resolveRuleProximityConfig = Reflect.get(lifecycleModule, 'resolveRuleProximityConfig')
+    const rule = normalizeInteractionRule({
+      tags: ['robot-marker', 'cube-marker'],
+      target_order: ['robot-marker', 'cube-marker'],
+      combo_id: 'robot-cube',
+      proximity: {
+        enter_distance: 0.41,
+        exit_distance: 0.49,
+        proximity_stable_ms: 275,
+        smoothing_alpha: 0.2,
+      },
+    })
+
+    expect(resolveRuleProximityConfig).toBeTypeOf('function')
+    expect(resolveRuleProximityConfig?.(rule, null)).toEqual({
+      enterDistance: 0.41,
+      exitDistance: 0.49,
+      stableMs: 275,
+      smoothingAlpha: 0.2,
+    })
+  })
+
+  it('changes visibility only for the selected rule partners', () => {
+    const getInteractionParticipantTargets = Reflect.get(lifecycleModule, 'getInteractionParticipantTargets')
+    const getConsumablePartnerTargets = Reflect.get(lifecycleModule, 'getConsumablePartnerTargets')
+    const setInteractionPartnerVisibility = Reflect.get(lifecycleModule, 'setInteractionPartnerVisibility')
+    const rule = normalizeInteractionRule({
+      tags: ['robot-marker', 'cube-marker'],
+      target_order: ['robot-marker', 'cube-marker'],
+      combo_id: 'robot-cube',
+    })
+    const targetInstances = new Map([
+      ['robot-marker', { tracked: true, visibleByInteraction: true, model: { visible: true } }],
+      ['cube-marker', { tracked: true, visibleByInteraction: true, model: { visible: true } }],
+      ['tree-marker', { tracked: true, visibleByInteraction: true, model: { visible: true } }],
+    ])
+
+    expect(getInteractionParticipantTargets?.(rule)).toEqual(['robot-marker', 'cube-marker'])
+    expect(getConsumablePartnerTargets?.(rule)).toEqual(['cube-marker'])
+    expect(setInteractionPartnerVisibility?.({
+      rule,
+      targetInstances,
+      visible: false,
+    })).toEqual(['cube-marker'])
+    expect(targetInstances.get('robot-marker')).toMatchObject({
+      visibleByInteraction: true,
+      model: { visible: true },
+    })
+    expect(targetInstances.get('cube-marker')).toMatchObject({
+      visibleByInteraction: false,
+      model: { visible: false },
+    })
+    expect(targetInstances.get('tree-marker')).toMatchObject({
+      visibleByInteraction: true,
+      model: { visible: true },
+    })
+
+    targetInstances.get('cube-marker')!.tracked = false
+    expect(setInteractionPartnerVisibility?.({
+      rule,
+      targetInstances,
+      visible: true,
+    })).toEqual(['cube-marker'])
+    expect(targetInstances.get('cube-marker')?.visibleByInteraction).toBe(true)
+    expect(targetInstances.get('cube-marker')?.model.visible).toBe(false)
+    expect(targetInstances.get('tree-marker')?.model.visible).toBe(true)
+  })
+
+  it('reports a missing requested animation as a safe clear without mutating visibility', () => {
+    const resolveInteractionAnimation = Reflect.get(lifecycleModule, 'resolveInteractionAnimation')
+    const rule = normalizeInteractionRule({
+      tags: ['robot-marker', 'cube-marker'],
+      target_order: ['robot-marker', 'cube-marker'],
+      combo_id: 'robot-cube',
+      animation_trigger: 'ROBOT_WAVE',
+    })
+    const actorInstance = {
+      animations: [{ name: 'ROBOT_IDLE' }],
+      model: { visible: true },
+    }
+    const partnerInstance = { model: { visible: true }, visibleByInteraction: true }
+    const unrelatedInstance = { model: { visible: true }, visibleByInteraction: true }
+
+    expect(resolveInteractionAnimation).toBeTypeOf('function')
+    expect(() => resolveInteractionAnimation?.({ rule, actorInstance })).not.toThrow()
+    expect(resolveInteractionAnimation?.({ rule, actorInstance })).toEqual({
+      ok: false,
+      clip: null,
+      requested: 'ROBOT_WAVE',
+      available: ['ROBOT_IDLE'],
+      shouldClearInteraction: true,
+    })
+    expect(actorInstance.model.visible).toBe(true)
+    expect(partnerInstance).toMatchObject({ model: { visible: true }, visibleByInteraction: true })
+    expect(unrelatedInstance).toMatchObject({ model: { visible: true }, visibleByInteraction: true })
+  })
+
+  it('detects per-instance animation capabilities without requiring CAT clips globally', () => {
+    const hasAnimationCapability = Reflect.get(lifecycleModule, 'hasAnimationCapability')
+
+    expect(hasAnimationCapability).toBeTypeOf('function')
+    expect(hasAnimationCapability?.({ animations: [{ name: 'DOG_IDLE' }] }, 'CAT_MEOW')).toBe(false)
+    expect(hasAnimationCapability?.({ animations: [{ name: 'CAT_MEOW' }] }, 'CAT_MEOW')).toBe(true)
+    expect(hasAnimationCapability?.(null, 'CAT_MEOW')).toBe(false)
+  })
+  it('normalizes a configured pair using target order for actor and backend proximity', () => {
+    const rule = normalizeInteractionRule({
+      tags: ['dog001', 'bone001'],
+      target_order: ['dog001', 'bone001'],
+      combo_id: 'dog-eats-bone',
+      animation_trigger: 'DOG_EAT',
+      priority: 40,
+      proximity: {
+        enter_distance: 0.45,
+        exit_distance: 0.55,
+        proximity_stable_ms: 300,
+        smoothing_alpha: 0.25,
+      },
+    })
+
+    expect(rule).toEqual({
+      id: 'dog-eats-bone',
+      requiredTargets: ['dog001', 'bone001'],
+      actorTarget: 'dog001',
+      partnerTargets: ['bone001'],
+      animation: 'DOG_EAT',
+      priority: 40,
+      action: {
+        consumePartners: true,
+        facePrimaryPartner: true,
+        consumeAtRatio: 0.65,
+      },
+      proximity: {
+        enterDistance: 0.45,
+        exitDistance: 0.55,
+        stableMs: 300,
+        smoothingAlpha: 0.25,
+      },
+      actorSource: 'target_order',
+      source: 'backend',
+      executable: true,
+    })
+  })
+
+  it('filters unrelated target-order entries before selecting the actor', () => {
+    const rule = normalizeInteractionRule({
+      tags: ['dog001', 'bone001'],
+      target_order: ['unrelated001', 'bone001', 'dog001'],
+      combo_id: 'dog-eats-bone',
+    })
+
+    expect(rule).toMatchObject({
+      actorTarget: 'bone001',
+      partnerTargets: ['dog001'],
+      actorSource: 'target_order',
+      executable: true,
+    })
+  })
+
+  it('uses required-tags actor fallback and marks three-target rules unsupported', () => {
+    expect(normalizeInteractionRule({
+      tags: ['cat001', 'fish001'],
+      combo_id: 'cat-fish',
+      priority: 100,
+    })).toMatchObject({
+      actorTarget: 'cat001',
+      partnerTargets: ['fish001'],
+      actorSource: 'required_tags_fallback',
+      executable: true,
+    })
+
+    expect(normalizeInteractionRule({
+      tags: ['rain001', 'soil001', 'seed001'],
+      combo_id: 'grow-seed',
+    })).toMatchObject({
+      actorTarget: 'rain001',
+      partnerTargets: ['soil001', 'seed001'],
+      executable: false,
+    })
+  })
+
+  it('rejects unsupported high-priority rules even when every target is tracked', () => {
+    const unsupported = normalizeInteractionRule({
+      tags: ['rain001', 'soil001', 'seed001'],
+      target_order: ['rain001', 'soil001', 'seed001'],
+      combo_id: 'grow-seed',
+      priority: 1000,
+    })
+
+    expect(unsupported.executable).toBe(false)
+    expect(isInteractionRuleMatched(
+      unsupported,
+      ['rain001', 'soil001', 'seed001'],
+    )).toBe(false)
+    expect(selectActiveInteractionRule(
+      [unsupported],
+      ['rain001', 'soil001', 'seed001'],
+    )).toBeNull()
+  })
+
+  it('matches configured pairs independently of unrelated tracked targets', () => {
+    const catFish = normalizeInteractionRule({
+      tags: ['cat001', 'fish001'],
+      combo_id: 'cat-fish',
+      priority: 100,
+    })
+    const dogBone = normalizeInteractionRule({
+      tags: ['dog001', 'bone001'],
+      combo_id: 'dog-bone',
+      priority: 50,
+    })
+
+    expect(isInteractionRuleMatched(catFish, ['cat001', 'fish001'])).toBe(true)
+    expect(isInteractionRuleMatched(catFish, ['cat001', 'fish001', 'dog001'])).toBe(true)
+    expect(isInteractionRuleMatched(catFish, ['cat001'])).toBe(false)
+    expect(isInteractionRuleMatched(dogBone, new Set(['dog001', 'bone001']))).toBe(true)
+    expect(selectActiveInteractionRule([dogBone], ['unknown001'])).toBeNull()
+  })
+
+  it('selects matching rules by priority then lexical id regardless of input order', () => {
+    const catFish = normalizeInteractionRule({
+      tags: ['cat001', 'fish001'],
+      target_order: ['cat001', 'fish001'],
+      combo_id: 'cat-fish',
+      priority: 100,
+    })
+    const dogBone = normalizeInteractionRule({
+      tags: ['dog001', 'bone001'],
+      target_order: ['dog001', 'bone001'],
+      combo_id: 'dog-bone',
+      priority: 50,
+    })
+    const tracked = ['bone001', 'fish001', 'dog001', 'cat001']
+
+    for (const rules of [[dogBone, catFish], [catFish, dogBone]]) {
+      expect(selectActiveInteractionRule(rules, tracked)).toMatchObject({
+        id: 'cat-fish',
+        actorTarget: 'cat001',
+        partnerTargets: ['fish001'],
+      })
+    }
+
+    const aRule = normalizeInteractionRule({
+      tags: ['marker-a', 'marker-b'],
+      combo_id: 'a-rule',
+      priority: 20,
+    })
+    const bRule = normalizeInteractionRule({
+      tags: ['marker-c', 'marker-d'],
+      combo_id: 'b-rule',
+      priority: 20,
+    })
+
+    expect(selectActiveInteractionRule(
+      [bRule, aRule],
+      ['marker-d', 'marker-b', 'marker-c', 'marker-a'],
+    )?.id).toBe('a-rule')
+    expect(selectActiveInteractionRule(
+      [aRule, bRule],
+      ['marker-a', 'marker-c', 'marker-b', 'marker-d'],
+    )?.id).toBe('a-rule')
+  })
+
+  it('accepts a backend-shaped Shiba/Bone pair without a Shiba-specific runtime branch', () => {
+    const shibaBone = normalizeInteractionRule({
+      combo_id: 'shiba001-bone001',
+      tags: ['shiba001', 'bone001'],
+      target_order: ['shiba001', 'bone001'],
+      animation_trigger: 'SHIBA_EAT_BONE',
+      priority: 80,
+      proximity: {
+        enter_distance: 0.50,
+        exit_distance: 0.58,
+        proximity_stable_ms: 300,
+        smoothing_alpha: 0.25,
+      },
+    })
+    const resolution = Reflect.get(lifecycleModule, 'resolveInteractionAnimation')?.({
+      rule: shibaBone,
+      actorInstance: { animations: [{ name: 'SHIBA_IDLE' }] },
+    })
+    const runtimeSource = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const lifecycleSource = readFileSync(
+      resolve(process.cwd(), 'public/static/ar-assets/js/ar-interaction-lifecycle.js'),
+      'utf8',
+    )
+
+    expect(selectActiveInteractionRule([shibaBone], ['shiba001', 'bone001'])).toMatchObject({
+      actorTarget: 'shiba001',
+      partnerTargets: ['bone001'],
+      animation: 'SHIBA_EAT_BONE',
+    })
+    expect(resolution).toMatchObject({
+      ok: false,
+      requested: 'SHIBA_EAT_BONE',
+      shouldClearInteraction: true,
+    })
+    expect(runtimeSource).not.toContain('shiba001')
+    expect(runtimeSource).not.toContain('bone001')
+    expect(runtimeSource).not.toContain('SHIBA_EAT_BONE')
+    expect(lifecycleSource).not.toContain('shiba001')
+    expect(lifecycleSource).not.toContain('bone001')
+    expect(lifecycleSource).not.toContain('SHIBA_EAT_BONE')
+  })
+
+  it('wires normalized generic rules into the runtime without legacy pair selectors', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const coreStart = source.indexOf('// ========== INTERACTION HELPERS ==========')
+    const coreEnd = source.indexOf('// ========== TARGET FOUND / LOST ==========', coreStart)
+    const coreSource = source.slice(coreStart, coreEnd)
+
+    expect(source).toContain('let normalizedInteractionRules = [];')
+    expect(source).toContain('normalizeInteractionRule')
+    expect(source).toContain('selectActiveInteractionRule')
+    expect(source).toContain("sendARDebug('INTERACTION_RULES_LOADED'")
+    expect(coreStart).toBeGreaterThanOrEqual(0)
+    expect(coreEnd).toBeGreaterThan(coreStart)
+    expect(coreSource).toContain('function computeTargetPairDistance(actorInst, partnerInst)')
+    expect(coreSource).toContain('const actorInst = targetInstances.get(activeRule.actorTarget)')
+    expect(coreSource).toContain('const partnerInst = targetInstances.get(partnerTarget)')
+    expect(coreSource).not.toMatch(/\b(?:catInst|fishInst)\b/)
+    expect(coreSource).not.toMatch(/\b(?:resolveCatFishComboRule|selectComboSecondaryTargetName|requiresCatFishComboRule)\b/)
+    expect(coreSource).not.toMatch(/['"](?:cat001|fish001|CAT_EAT|CAT_MEOW)['"]/)
+  })
+
+  it('keeps target-loss visibility processing independent from interaction evaluation', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const processorStart = source.indexOf('function processPendingTargetLosses(now)')
+    const evaluatorStart = source.indexOf('function evaluateInteraction(now)')
+    const evaluatorEnd = source.indexOf('// ========== TARGET FOUND / LOST ==========', evaluatorStart)
+    const evaluatorSource = source.slice(evaluatorStart, evaluatorEnd)
+    const updateStart = source.indexOf('const cameraPipelineModule = {')
+    const updateEnd = source.indexOf('// Image target events', updateStart)
+    const updateSource = source.slice(updateStart, updateEnd)
+
+    expect(processorStart).toBeGreaterThanOrEqual(0)
+    expect(evaluatorStart).toBeGreaterThan(processorStart)
+    expect(evaluatorSource).not.toContain('pendingGraceHides')
+    expect(updateSource.indexOf('processPendingTargetLosses(now);')).toBeGreaterThanOrEqual(0)
+    expect(updateSource.indexOf('processPendingTargetLosses(now);')).toBeLessThan(
+      updateSource.indexOf('evaluateInteraction(now);'),
+    )
+    expect(updateSource.indexOf('evaluateInteraction(now);')).toBeLessThan(
+      updateSource.indexOf('updateCatAmbient(now);'),
+    )
+  })
+
+  it('resets a selected interaction when either selected participant has confirmed loss', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const activeParticipantStart = source.indexOf('function isTargetInActiveInteraction(targetName)')
+    const activeParticipantEnd = source.indexOf('function hideConfirmedTargetLoss', activeParticipantStart)
+    const activeParticipantSource = source.slice(activeParticipantStart, activeParticipantEnd)
+
+    expect(activeParticipantStart).toBeGreaterThanOrEqual(0)
+    expect(activeParticipantEnd).toBeGreaterThan(activeParticipantStart)
+    expect(activeParticipantSource).toContain('interactionState.actorTarget')
+    expect(activeParticipantSource).toContain('interactionState.partnerTargets')
+    expect(activeParticipantSource).toContain('getInteractionParticipantTargets')
+  })
+
+  it('classifies target loss at the 300ms boundary without hiding during grace', () => {
+    expect(getTargetLossGraceState({
+      lostAt: 1000,
+      now: 1200,
+      lostGraceMs: 300,
+    })).toMatchObject({
+      lostForMs: 200,
+      withinGrace: true,
+      confirmed: false,
+      hide: false,
+    })
+
+    expect(getTargetLossGraceState({
+      lostAt: 1000,
+      now: 1301,
+      lostGraceMs: 300,
+    })).toMatchObject({
+      lostForMs: 301,
+      withinGrace: false,
+      confirmed: true,
+      hide: true,
+    })
+  })
+
+  it('cancels a pending hide only for a target reacquired within grace', () => {
+    const pendingGraceHides = new Map([['cat001', 1000]])
+    const reacquired = getTargetLossGraceState({
+      lostAt: pendingGraceHides.get('cat001')!,
+      now: 1180,
+      lostGraceMs: 300,
+    })
+
+    if (reacquired.withinGrace) pendingGraceHides.delete('cat001')
+
+    expect(reacquired.withinGrace).toBe(true)
+    expect(reacquired.confirmed).toBe(false)
+    expect(pendingGraceHides.has('cat001')).toBe(false)
+  })
+
+  it('never calls a 1.2-second reacquisition within grace', () => {
+    const reacquired = getTargetLossGraceState({
+      lostAt: 1000,
+      now: 2200,
+      lostGraceMs: 300,
+    })
+
+    expect(reacquired.withinGrace).toBe(false)
+    expect(reacquired.confirmed).toBe(true)
+    expect(reacquired.hide).toBe(true)
+  })
+
+  it('keeps generic participants owned after arming while leaving pre-arm loss unlocked', () => {
+    const createInteractionTransaction = Reflect.get(lifecycleModule, 'createInteractionTransaction')
+    const classifyInteractionTargetLoss = Reflect.get(lifecycleModule, 'classifyInteractionTargetLoss')
+    const rule = normalizeInteractionRule({
+      tags: ['actor001', 'partner001'],
+      target_order: ['actor001', 'partner001'],
+      combo_id: 'actor-partner',
+    })
+
+    expect(createInteractionTransaction).toBeTypeOf('function')
+    expect(classifyInteractionTargetLoss).toBeTypeOf('function')
+
+    const transaction = createInteractionTransaction?.({
+      runId: 10,
+      rule,
+      lockedAt: 1000,
+      watchdogAt: 5000,
+    })
+
+    expect(transaction).toMatchObject({
+      runId: 10,
+      ruleId: 'actor-partner',
+      actorTarget: 'actor001',
+      partnerTargets: ['partner001'],
+      participantTargets: ['actor001', 'partner001'],
+    })
+
+    expect(classifyInteractionTargetLoss?.({
+      transaction: null,
+      targetName: 'actor001',
+      currentRunId: 10,
+    })).toMatchObject({
+      defer: false,
+      role: null,
+    })
+
+    expect(classifyInteractionTargetLoss?.({
+      transaction,
+      targetName: 'actor001',
+      currentRunId: 10,
+    })).toMatchObject({
+      defer: true,
+      role: 'actor',
+      runId: 10,
+    })
+
+    expect(classifyInteractionTargetLoss?.({
+      transaction,
+      targetName: 'partner001',
+      currentRunId: 10,
+    })).toMatchObject({
+      defer: true,
+      role: 'partner',
+      runId: 10,
+    })
+  })
+
+  it('reconciles acquired and confirmed-lost generic participants only after transaction release', () => {
+    const createInteractionTransaction = Reflect.get(lifecycleModule, 'createInteractionTransaction')
+    const reconcileInteractionParticipantTracking = Reflect.get(lifecycleModule, 'reconcileInteractionParticipantTracking')
+    const rule = normalizeInteractionRule({
+      tags: ['actor001', 'partner001'],
+      target_order: ['actor001', 'partner001'],
+      combo_id: 'actor-partner',
+    })
+    const transaction = createInteractionTransaction?.({
+      runId: 10,
+      rule,
+      lockedAt: 1000,
+      watchdogAt: 5000,
+    })
+
+    expect(reconcileInteractionParticipantTracking).toBeTypeOf('function')
+    expect(reconcileInteractionParticipantTracking?.({
+      transaction,
+      targetName: 'actor001',
+      tracked: true,
+      lossConfirmed: true,
+    })).toEqual({
+      targetName: 'actor001',
+      deferredLossConfirmed: true,
+      result: 'resume_live_tracking',
+    })
+    expect(reconcileInteractionParticipantTracking?.({
+      transaction,
+      targetName: 'partner001',
+      tracked: false,
+      lossConfirmed: true,
+    })).toEqual({
+      targetName: 'partner001',
+      deferredLossConfirmed: true,
+      result: 'apply_confirmed_loss',
+    })
+    expect(reconcileInteractionParticipantTracking?.({
+      transaction,
+      targetName: 'unrelated001',
+      tracked: false,
+      lossConfirmed: true,
+    })).toEqual({
+      targetName: 'unrelated001',
+      deferredLossConfirmed: false,
+      result: 'not_a_participant',
+    })
+  })
+
+  it('rejects stale generic transaction callbacks and expires a bounded transaction watchdog', () => {
+    const createInteractionTransaction = Reflect.get(lifecycleModule, 'createInteractionTransaction')
+    const isInteractionRunOwner = Reflect.get(lifecycleModule, 'isInteractionRunOwner')
+    const isInteractionTransactionWatchdogExpired = Reflect.get(lifecycleModule, 'isInteractionTransactionWatchdogExpired')
+    const rule = normalizeInteractionRule({
+      tags: ['actor001', 'partner001'],
+      target_order: ['actor001', 'partner001'],
+      combo_id: 'actor-partner',
+    })
+    const activeTransaction = createInteractionTransaction?.({
+      runId: 11,
+      rule,
+      lockedAt: 1000,
+      watchdogAt: 5000,
+    })
+
+    expect(isInteractionRunOwner).toBeTypeOf('function')
+    expect(isInteractionTransactionWatchdogExpired).toBeTypeOf('function')
+    expect(isInteractionRunOwner?.({
+      runId: 10,
+      currentRunId: 11,
+      transaction: activeTransaction,
+    })).toBe(false)
+    expect(isInteractionRunOwner?.({
+      runId: 11,
+      currentRunId: 11,
+      transaction: activeTransaction,
+    })).toBe(true)
+    expect(isInteractionTransactionWatchdogExpired?.({ now: 4999, transaction: activeTransaction })).toBe(false)
+    expect(isInteractionTransactionWatchdogExpired?.({ now: 5000, transaction: activeTransaction })).toBe(true)
+  })
+
+  it('defers only locked participant loss in the runtime and reconciles it after return', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const processorStart = source.indexOf('function processPendingTargetLosses(now)')
+    const processorEnd = source.indexOf('function evaluateInteraction(now)', processorStart)
+    const processorSource = source.slice(processorStart, processorEnd)
+    const lossDecisionStart = source.indexOf('function getActiveTransactionLossDecision(targetName)')
+    const lossDecisionEnd = source.indexOf('function restoreDefaultInteractionAnimation', lossDecisionStart)
+    const lossDecisionSource = source.slice(lossDecisionStart, lossDecisionEnd)
+    const releaseStart = source.indexOf('function releaseInteractionTransaction(')
+    const releaseEnd = source.indexOf('function evaluateInteraction(now)', releaseStart)
+    const releaseSource = source.slice(releaseStart, releaseEnd)
+
+    expect(processorStart).toBeGreaterThanOrEqual(0)
+    expect(processorSource).toContain('getActiveTransactionLossDecision')
+    expect(lossDecisionSource).toContain('classifyInteractionTargetLoss')
+    expect(processorSource).toContain("sendARDebug('INTERACTION_TARGET_LOSS_DEFERRED'")
+    expect(processorSource).toContain('continue;')
+    expect(releaseStart).toBeGreaterThanOrEqual(0)
+    expect(releaseSource).toContain('reconcileInteractionParticipantTracking')
+    expect(releaseSource).toContain("sendARDebug('INTERACTION_TRACKING_RECONCILED'")
+  })
+
+  it('keeps the active CAT return ticking ahead of combo phase exits', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const activeReturnMarker = 'const activeReturn = interactionState.actorReturn;'
+    const comboTurningEarlyReturn = 'if (phase === InteractionPhase.COMBO_TURNING) {'
+    const comboPlayingEarlyReturn = 'if (phase === InteractionPhase.COMBO_PLAYING) {'
+
+    expect(source.indexOf(activeReturnMarker)).toBeGreaterThanOrEqual(0)
+    expect(source.indexOf(activeReturnMarker)).toBeLessThan(source.indexOf(comboTurningEarlyReturn))
+    expect(source.indexOf(activeReturnMarker)).toBeLessThan(source.indexOf(comboPlayingEarlyReturn))
+    expect(source).not.toContain('function applyCatReturn(')
+    expect(source).not.toContain('function smoothstep(')
+    expect(source).toContain('comboLatch?.actorOriginalYaw ?? 0')
+    expect(source).toContain("sendARDebug('CAT_RETURN_CANCELLED_STALE'")
+    expect(source).toContain('interactionState.actorReturn = null;')
+    expect(source).toContain('CAT_RETURN_COMPLETE')
+  })
+
+  it('reveals AR only after both camera and entry-target readiness are true', () => {
+    expect(shouldRevealAR({ cameraReady: false, primaryReady: false })).toBe(false)
+    expect(shouldRevealAR({ cameraReady: true, primaryReady: false })).toBe(false)
+    expect(shouldRevealAR({ cameraReady: false, primaryReady: true })).toBe(false)
+    expect(shouldRevealAR({ cameraReady: true, primaryReady: true })).toBe(true)
+  })
+
+  it('allows CAT meow in COMBO_CONSUMED only after the CAT return completes', () => {
+    const catReadyAndTracked = {
+      phase: 'COMBO_CONSUMED',
+      catReady: true,
+      catTracked: true,
+      catMeowing: false,
+    }
+
+    expect(canPlayCatMeow({ ...catReadyAndTracked, catReturn: null })).toBe(true)
+    expect(canPlayCatMeow({ ...catReadyAndTracked, catReturn: { runId: 4 } })).toBe(false)
+  })
+
+  it('classifies direct mesh hits before proxy hits and rejects a miss', () => {
+    expect(classifyCatTap({ meshHit: true, proxyHit: true })).toBe('mesh')
+    expect(classifyCatTap({ meshHit: false, proxyHit: true })).toBe('proxy')
+    expect(classifyCatTap({ meshHit: false, proxyHit: false })).toBe('miss')
+  })
+
+  it('completes the real CAT return lifecycle during COMBO_CONSUMED', () => {
+    const returnLifecycle: {
+      phase: string
+      comboRunId: number
+      catReturn: {
+        fromYaw: number
+        toYaw: number
+        startedAt: number
+        durationMs: number
+        runId: number
+      } | null
+      yaw: number
+      events: string[]
+    } = {
+      phase: 'COMBO_CONSUMED',
+      comboRunId: 4,
+      catReturn: {
+        fromYaw: 55 * Math.PI / 180,
+        toYaw: 0.2,
+        startedAt: 1000,
+        durationMs: 400,
+        runId: 4,
+      },
+      yaw: 55 * Math.PI / 180,
+      events: [] as string[],
+    }
+
+    const tickReturn = (now: number) => {
+      const activeReturn = returnLifecycle.catReturn
+      if (!activeReturn || activeReturn.runId !== returnLifecycle.comboRunId) return
+
+      const tick = advanceCatReturnTween(now, activeReturn)
+      returnLifecycle.yaw = tick.yaw
+      if (tick.complete) {
+        returnLifecycle.catReturn = null
+        returnLifecycle.events.push('CAT_RETURN_COMPLETE')
+      }
+    }
+
+    expect(returnLifecycle.phase).toBe('COMBO_CONSUMED')
+    tickReturn(1200)
+    expect(returnLifecycle.yaw).toBeLessThan(55 * Math.PI / 180)
+    expect(returnLifecycle.yaw).toBeGreaterThan(0.2)
+    expect(returnLifecycle.catReturn).not.toBeNull()
+    expect(smoothstep(0)).toBe(0)
+    expect(smoothstep(1)).toBe(1)
+
+    tickReturn(1401)
+    expect(returnLifecycle.yaw).toBe(0.2)
+    expect(returnLifecycle.catReturn).toBeNull()
+    expect(returnLifecycle.events).toEqual(['CAT_RETURN_COMPLETE'])
+  })
+
+  it('restores CAT idle before consuming the combo and starts return afterward', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const triggerStart = source.indexOf('function triggerInteractionAnimation')
+    const triggerEnd = source.indexOf('\n    function evaluateInteraction', triggerStart)
+    const triggerSource = source.slice(triggerStart, triggerEnd)
+    const eatFinished = triggerSource.indexOf("sendARDebug('COMBO_ANIMATION_FINISHED'")
+    const idleRestore = triggerSource.indexOf('restoreCatIdleAfterOneShot(actorInst, action, activeRule.animation')
+    const comboConsumed = triggerSource.indexOf('setInteractionPhase(InteractionPhase.COMBO_CONSUMED)')
+    const returnCreated = triggerSource.indexOf('interactionState.actorReturn = {')
+    const returnStart = triggerSource.indexOf("sendARDebug('CAT_RETURN_START'")
+
+    expect(triggerSource).toContain("sendARDebug('CAT_ACTION_STATE_AFTER_EAT'")
+    expect(source).toContain("sendARDebug('CAT_IDLE_RESTORED'")
+    expect(eatFinished).toBeGreaterThanOrEqual(0)
+    expect(idleRestore).toBeGreaterThan(eatFinished)
+    expect(comboConsumed).toBeGreaterThan(idleRestore)
+    expect(returnCreated).toBeGreaterThan(comboConsumed)
+    expect(returnStart).toBeGreaterThan(returnCreated)
+    expect(triggerSource).not.toContain('Math.abs(fromYaw - toYaw) > 0.01')
+    expect(triggerSource.indexOf("sendARDebug('CAT_IDLE_RESTORED'", returnStart)).toBe(-1)
+  })
+
+  it('uses immediate one-shot cleanup instead of an unowned delayed stop', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const restoreStart = source.indexOf('function restoreCatIdleAfterOneShot')
+    const restoreEnd = source.indexOf('\n    function cacheCatInteractionProxy', restoreStart)
+    const restoreSource = source.slice(restoreStart, restoreEnd)
+    const cancelStart = source.indexOf('function cancelActiveCatOneShotForCombo')
+    const cancelEnd = source.indexOf('\n    function playCatOneShot', cancelStart)
+    const cancelSource = source.slice(cancelStart, cancelEnd)
+
+    expect(restoreSource).toContain('oneShotAction.fadeOut(0.12)')
+    expect(restoreSource).not.toContain('setTimeout(')
+    expect(cancelSource).toContain('catAnimationState.generation++')
+    expect(cancelSource).toContain('catAnimationState.action.fadeOut(0.12)')
+    expect(cancelSource).not.toContain('setTimeout(')
+  })
+
+  it('restores CAT idle after CAT_MEOW finishes without creating a CAT return', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const finishStart = source.indexOf('function emitCatOneShotFinished')
+    const finishEnd = source.indexOf('\n    function cancelActiveCatOneShotForCombo', finishStart)
+    const finishSource = source.slice(finishStart, finishEnd)
+    const oneShotStart = source.indexOf('function playCatOneShot')
+    const oneShotEnd = source.indexOf('\n    function playCatMeow', oneShotStart)
+    const oneShotSource = source.slice(oneShotStart, oneShotEnd)
+    const finishedDispatch = oneShotSource.indexOf('emitCatOneShotFinished(source, clip, generation, catInst)')
+    const idleRestore = oneShotSource.indexOf('restoreCatIdleAfterOneShot(catInst, action, source, clip.name)')
+
+    expect(finishSource).toContain("sendARDebug('CAT_MEOW_FINISHED'")
+    expect(finishedDispatch).toBeGreaterThanOrEqual(0)
+    expect(idleRestore).toBeGreaterThan(finishedDispatch)
+    expect(oneShotSource).not.toContain('CAT_RETURN_START')
+  })
+
+  it('uses a cached 1.30x CAT proxy only after a direct mesh miss', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const pointerStart = source.indexOf('function onPointerDown')
+    const pointerEnd = source.indexOf('\n    // ========== BOOT GATE', pointerStart)
+    const pointerSource = source.slice(pointerStart, pointerEnd)
+
+    expect(source).toContain('const CAT_HIT_PROXY_SCALE = 1.30;')
+    expect(source).toContain('function cacheCatInteractionProxy(instance)')
+    expect(source).toContain('instance.catInteractionProxy = proxy;')
+    expect(source).toContain('proxy.visible = false;')
+    expect(source).toContain("sendARDebug('CAT_INTERACTION_PROXY_READY'")
+    expect(source).toContain('canPlayCatMeow')
+    expect(source).toContain('classifyCatTap')
+    expect(pointerSource).toContain('raycaster.intersectObject(catInst.model, true)')
+    expect(pointerSource).toContain('filter(hit => !hit.object.userData.isCatInteractionProxy)')
+    expect(pointerSource).toContain('raycaster.intersectObject(catInst.catInteractionProxy, false)')
+    expect(pointerSource).toContain('classifyCatTap({')
+    expect(pointerSource).not.toContain('new THREE.Box3()')
+    expect(pointerSource).not.toContain('intersectObjects(scene.children')
+  })
+
+  it('opens boot only for camera plus entry-target readiness, never secondary warmup', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const bootStart = source.indexOf('function maybeRevealAR')
+    const bootEnd = source.indexOf('\n    // Update overlay text', bootStart)
+    const bootSource = source.slice(bootStart, bootEnd)
+    const overlayStart = source.indexOf('function updateOverlayForBoot')
+    const overlayEnd = source.indexOf('\n    function showError', overlayStart)
+    const overlaySource = source.slice(overlayStart, overlayEnd)
+    const cameraStart = source.indexOf("if (status === 'hasVideo')")
+    const cameraEnd = source.indexOf("if (status === 'failed')", cameraStart)
+    const cameraSource = source.slice(cameraStart, cameraEnd)
+
+    expect(source).toContain('cameraReady: false,')
+    expect(source).toContain('shouldRevealAR')
+    expect(bootSource).toContain('cameraReady: bootState.cameraReady')
+    expect(bootSource).toContain('primaryReady: bootState.primaryReady')
+    expect(bootSource).not.toContain('catReady')
+    expect(bootSource).not.toContain('secondaryWarmup')
+    expect(bootSource).not.toContain('secondaryProgress >=')
+    expect(bootSource).not.toContain('maxSecondaryWarmupMs')
+    expect(overlaySource).not.toContain('Interaction assets')
+    expect(cameraSource.indexOf('bootState.cameraReady = true;')).toBeGreaterThanOrEqual(0)
+    expect(cameraSource.indexOf('bootState.cameraReady = true;')).toBeLessThan(
+      cameraSource.indexOf("maybeRevealAR({ trigger: 'cameraReady' })"),
+    )
+  })
+
+  it('reports CAT audio request and browser-confirmed outcomes without claiming play at invocation', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const audioStart = source.indexOf('function requestCatMeowAudio')
+    const audioEnd = source.indexOf('\n    function emitCatOneShotStart', audioStart)
+    const audioSource = source.slice(audioStart, audioEnd)
+    const requested = audioSource.indexOf("sendARDebug('CAT_MEOW_AUDIO_REQUESTED'")
+    const playInvocation = audioSource.indexOf('catMeowAudio.play()')
+    const playing = audioSource.indexOf("sendARDebug('CAT_MEOW_AUDIO_PLAYING'")
+    const playError = audioSource.indexOf("sendARDebug('CAT_MEOW_AUDIO_PLAY_ERROR'")
+
+    expect(requested).toBeGreaterThanOrEqual(0)
+    expect(requested).toBeLessThan(playInvocation)
+    expect(playing).toBeGreaterThanOrEqual(0)
+    expect(playError).toBeGreaterThanOrEqual(0)
+    expect(audioSource).toContain("catMeowAudio.addEventListener('playing', reportPlaying")
+    expect(audioSource).not.toContain('CAT_MEOW_AUDIO_START')
+  })
+
+  it('keeps CSP, resource, and module-import probes outside the main AR module', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const xrScriptIndex = source.indexOf('id="xr8-engine-script"')
+    const probeStart = source.indexOf("debug('MODULE_PROBE_START')")
+    const mainModuleStart = source.indexOf("import * as THREE from 'three';")
+
+    expect(source).toContain('window.__arSendDebug = sendDebug')
+    expect(source).toContain("window.addEventListener('securitypolicyviolation'")
+    expect(source).toContain("sendDebug('CSP_VIOLATION'")
+    expect(source).toContain("sendDebug('VIEWER_ERROR'")
+    expect(source).toContain("debug('XR8_SCRIPT_LOAD'")
+    expect(source).toContain("debug('XR8_SCRIPT_ERROR'")
+    expect(source).toContain("debug('MODULE_PROBE_THREE_OK'")
+    expect(source).toContain("debug('MODULE_PROBE_GLTF_OK'")
+    expect(source).toContain("debug('MODULE_PROBE_LIFECYCLE_OK'")
+    expect(source).toContain('const expectedLifecycleExports = [')
+    expect(source).toContain('missingExports')
+    expect(xrScriptIndex).toBeGreaterThan(-1)
+    expect(probeStart).toBeGreaterThan(xrScriptIndex)
+    expect(probeStart).toBeLessThan(mainModuleStart)
+  })
+
+  it('keeps every main lifecycle named import present in the lifecycle helper exports', () => {
+    const viewerSource = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const lifecycleSource = readFileSync(
+      resolve(process.cwd(), 'public/static/ar-assets/js/ar-interaction-lifecycle.js'),
+      'utf8',
+    )
+    const lifecycleTypesSource = readFileSync(
+      resolve(process.cwd(), 'public/static/ar-assets/js/ar-interaction-lifecycle.d.ts'),
+      'utf8',
+    )
+    const namedImport = viewerSource.match(
+      /import \{\s*\n([\s\S]*?)\n\s*\} from '([^']*ar-interaction-lifecycle\.js(?:\?[^']+)?)';/,
+    )
+    const probeImport = viewerSource.match(
+      /await import\('([^']*ar-interaction-lifecycle\.js(?:\?[^']+)?)'\)/,
+    )
+    const importedNames = (namedImport?.[1] || '')
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean)
+    const probeExportList = viewerSource.match(
+      /const expectedLifecycleExports = \[\s*([\s\S]*?)\s*\];/,
+    )
+    const probedNames = Array.from(
+      (probeExportList?.[1] || '').matchAll(/'([A-Za-z0-9_]+)'/g),
+      (match) => match[1],
+    )
+    const exportedNames = Array.from(
+      lifecycleSource.matchAll(/export function\s+([A-Za-z0-9_]+)/g),
+      (match) => match[1],
+    )
+
+    expect(namedImport).not.toBeNull()
+    expect(probeImport).not.toBeNull()
+    expect(importedNames).not.toHaveLength(0)
+    expect(probedNames).toEqual(importedNames)
+    expect(importedNames.filter((name) => !exportedNames.includes(name))).toEqual([])
+    expect(lifecycleTypesSource).toContain('export function resolveTargetModelAttachment')
+    expect(lifecycleTypesSource).toContain('export function resolveModelPresentation')
+    expect(lifecycleTypesSource).toContain('export function calculateAutoFitScale')
+    expect(lifecycleTypesSource).toContain('export function getGroundedCenterOffset')
+    expect(lifecycleTypesSource).toContain('export function resolveForwardAxis')
+    expect(lifecycleTypesSource).toContain('export function resolveSessionTargetAdmission')
+    expect(lifecycleTypesSource).toContain('primaryReady: boolean')
+    expect(probeImport?.[1]).toBe(EXPECTED_LIFECYCLE_MODULE_URL)
+    expect(namedImport?.[2]).toBe(EXPECTED_LIFECYCLE_MODULE_URL)
+    expect(probeImport?.[1]).toBe(namedImport?.[2])
+    expect(probedNames).not.toContain('resolveCatFishComboRule')
+    expect(probedNames).not.toContain('selectComboSecondaryTargetName')
+    expect(importedNames).not.toContain('resolveCatFishComboRule')
+    expect(importedNames).not.toContain('selectComboSecondaryTargetName')
+    expect(lifecycleModule.normalizeInteractionRule).toBeTypeOf('function')
+    expect(lifecycleModule.selectActiveInteractionRule).toBeTypeOf('function')
+    expect(lifecycleModule.hasAnimationCapability).toBeTypeOf('function')
+    expect(lifecycleModule.distanceBetweenPositions).toBeTypeOf('function')
+    // Any named-export interface change requires bumping this immutable viewer URL.
+    expect(probedNames).toContain('mapDeviceGravityToScreen')
+    expect(probedNames).toContain('normalizeDeviceGravity')
+    expect(probedNames).toContain('resolveDeviceMotionPermissionMode')
+    expect(probedNames).toContain('resolveGravityWorldUpCandidate')
+    expect(probedNames).toContain('resolveSessionTargetAdmission')
+    expect(lifecycleModule.mapDeviceGravityToScreen).toBeTypeOf('function')
+    expect(lifecycleModule.normalizeDeviceGravity).toBeTypeOf('function')
+    expect(lifecycleModule.resolveDeviceMotionPermissionMode).toBeTypeOf('function')
+    expect(lifecycleModule.resolveGravityWorldUpCandidate).toBeTypeOf('function')
+    expect(lifecycleModule.resolveSessionTargetAdmission).toBeTypeOf('function')
+  })
+
+  it('always admits the primary target before interaction rules are loaded', () => {
+    const resolveSessionTargetAdmission = Reflect.get(lifecycleModule, 'resolveSessionTargetAdmission')
+
+    expect(resolveSessionTargetAdmission).toBeTypeOf('function')
+    expect(Array.from(resolveSessionTargetAdmission?.({ entryTarget: 'entryA', rules: [] }) || [])).toEqual(['entryA'])
+  })
+
+  it('expands admission from executable rules that contain the entry target', () => {
+    const resolveSessionTargetAdmission = Reflect.get(lifecycleModule, 'resolveSessionTargetAdmission')
+    const entryRule = normalizeInteractionRule({
+      tags: ['entryA', 'partnerB'],
+      target_order: ['entryA', 'partnerB'],
+      combo_id: 'entry-partner',
+    })
+
+    expect(resolveSessionTargetAdmission).toBeTypeOf('function')
+    expect(Array.from(resolveSessionTargetAdmission?.({ entryTarget: 'entryA', rules: [entryRule] }) || [])).toEqual([
+      'entryA',
+      'partnerB',
+    ])
+  })
+
+  it('ignores unrelated and non-executable rules when resolving session admission', () => {
+    const resolveSessionTargetAdmission = Reflect.get(lifecycleModule, 'resolveSessionTargetAdmission')
+    const relatedRule = normalizeInteractionRule({
+      tags: ['entryA', 'partnerB'],
+      target_order: ['entryA', 'partnerB'],
+      combo_id: 'entry-partner',
+    })
+    const unrelatedRule = normalizeInteractionRule({
+      tags: ['otherA', 'otherB'],
+      target_order: ['otherA', 'otherB'],
+      combo_id: 'other-pair',
+    })
+    const unsupportedRule = normalizeInteractionRule({
+      tags: ['entryA', 'unsupportedB', 'unsupportedC'],
+      target_order: ['entryA', 'unsupportedB', 'unsupportedC'],
+      combo_id: 'unsupported-triple',
+    })
+
+    expect(resolveSessionTargetAdmission).toBeTypeOf('function')
+    expect(Array.from(resolveSessionTargetAdmission?.({
+      entryTarget: 'entryA',
+      rules: [relatedRule, unrelatedRule, unsupportedRule],
+    }) || [])).toEqual(['entryA', 'partnerB'])
+  })
+
+  it('admits the whole session catalogue after rules install and gates all raw image event paths', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const lifecycleSource = readFileSync(
+      resolve(process.cwd(), 'public/static/ar-assets/js/ar-interaction-lifecycle.js'),
+      'utf8',
+    )
+    const installStart = source.indexOf('function installInteractionRules(rawRules)')
+    const installEnd = source.indexOf('\n    if (isDebug)', installStart)
+    const installSource = source.slice(installStart, installEnd)
+    const admissionStart = source.indexOf('function refreshSessionTargetAdmission()')
+    const admissionEnd = source.indexOf('\n    function isRuntimeTargetAdmitted', admissionStart)
+    const admissionSource = source.slice(admissionStart, admissionEnd)
+    const eventsStart = source.indexOf('const imageTargetEvents = {')
+    const eventsEnd = source.indexOf('// Register pipeline modules', eventsStart)
+    const eventsSource = source.slice(eventsStart, eventsEnd)
+    const foundStart = eventsSource.indexOf("event: 'reality.imagefound'")
+    const foundEnd = eventsSource.indexOf("event: 'reality.imageupdated'", foundStart)
+    const foundSource = eventsSource.slice(foundStart, foundEnd)
+    const updatedStart = eventsSource.indexOf("event: 'reality.imageupdated'")
+    const updatedEnd = eventsSource.indexOf("event: 'reality.imagelost'", updatedStart)
+    const updatedSource = eventsSource.slice(updatedStart, updatedEnd)
+    const lostStart = eventsSource.indexOf("event: 'reality.imagelost'")
+    const lostSource = eventsSource.slice(lostStart)
+    const helperStart = lifecycleSource.indexOf('export function resolveSessionTargetAdmission')
+    const helperEnd = lifecycleSource.indexOf('\nexport function', helperStart + 1)
+    const helperSource = lifecycleSource.slice(helperStart, helperEnd)
+
+    expect(source).toContain('let admittedTargetNames = new Set(targetInstances.keys())')
+    expect(installSource).toContain('refreshSessionTargetAdmission()')
+    expect(admissionSource).toContain('admittedTargetNames = new Set(targetInstances.keys())')
+    expect(admissionSource).not.toContain('resolveSessionTargetAdmission')
+    expect(source).toContain('return targetInstances.has(targetName) && admittedTargetNames.has(targetName)')
+    expect(admissionSource).toContain("sendDebugOnly('SESSION_TARGET_ADMISSION'")
+    expect(admissionSource).toContain("source: 'session-catalogue'")
+
+    expect(foundSource).toContain("sendARDebug('IMAGE_FOUND'")
+    expect(foundSource).toContain('isRuntimeTargetAdmitted(detail.name)')
+    expect(foundSource).toContain("sendDebugOnly('TARGET_FOUND_REJECTED_SESSION'")
+    expect(foundSource).toContain("reason: 'not_session_relevant'")
+    expect(foundSource.indexOf('isRuntimeTargetAdmitted(detail.name)')).toBeLessThan(
+      foundSource.indexOf('onTargetFound(detail)'),
+    )
+    expect(updatedSource).toContain('isRuntimeTargetAdmitted(detail.name)')
+    expect(updatedSource.indexOf('isRuntimeTargetAdmitted(detail.name)')).toBeLessThan(
+      updatedSource.indexOf('saveTargetPose(detail)'),
+    )
+    expect(lostSource).toContain('isRuntimeTargetAdmitted(detail.name)')
+    expect(lostSource.indexOf('isRuntimeTargetAdmitted(detail.name)')).toBeLessThan(
+      lostSource.indexOf('onTargetLost(detail.name)'),
+    )
+    expect(helperSource).not.toMatch(/cat001|fish001|dog001|bone001|rabbit001/)
+  })
+
+  it('preserves the locked CAT plus FISH proximity through the ordinary rule contract', () => {
+    const resolveRuleProximityConfig = Reflect.get(lifecycleModule, 'resolveRuleProximityConfig')
+    const backend = normalizeInteractionRule({
+      tags: ['fish001', 'cat001'],
+      target_order: ['cat001', 'fish001'],
+      combo_id: 'cat-fish-backend',
+      animation_trigger: 'CAT_EAT',
+      proximity: {
+        enter_distance: 0.62,
+        exit_distance: 0.70,
+        proximity_stable_ms: 300,
+        smoothing_alpha: 0.25,
+      },
+    })
+    const fallback = normalizeInteractionRule({
+      tags: ['cat001', 'fish001'],
+      target_order: ['cat001', 'fish001'],
+      combo_id: 'cat-fish-fallback',
+      animation_trigger: 'CAT_EAT',
+      source: 'fallback',
+      proximity: {
+        enter_distance: 0.62,
+        exit_distance: 0.70,
+        proximity_stable_ms: 300,
+        smoothing_alpha: 0.25,
+      },
+    })
+
+    expect(resolveRuleProximityConfig?.(backend, null)).toEqual({
+      enterDistance: 0.62,
+      exitDistance: 0.70,
+      stableMs: 300,
+      smoothingAlpha: 0.25,
+    })
+    expect(resolveRuleProximityConfig?.(fallback, null)).toEqual(
+      resolveRuleProximityConfig?.(backend, null),
+    )
+    expect(backend.source).toBe('backend')
+    expect(fallback.source).toBe('fallback')
+    expect(fallback.proximity).not.toEqual(
+      expect.objectContaining({ enterDistance: 0.72, exitDistance: 0.80 }),
+    )
+
+    const runtimeSource = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const fallbackStart = runtimeSource.indexOf('const DEMO_INTERACTION_FALLBACKS')
+    const fallbackEnd = runtimeSource.indexOf('function installInteractionRules(rawRules)', fallbackStart)
+    const fallbackSource = runtimeSource.slice(fallbackStart, fallbackEnd)
+
+    expect(fallbackStart).toBeGreaterThanOrEqual(0)
+    expect(fallbackEnd).toBeGreaterThan(fallbackStart)
+    expect(fallbackSource).toContain('enter_distance: 0.62')
+    expect(fallbackSource).toContain('exit_distance: 0.70')
+    expect(fallbackSource).toContain('proximity_stable_ms: 300')
+    expect(fallbackSource).toContain('smoothing_alpha: 0.25')
+  })
+
+  it('uses the selected rule partner for pair distance even with unrelated targets present', () => {
+    const rule = normalizeInteractionRule({
+      tags: ['cat001', 'fish001'],
+      target_order: ['cat001', 'fish001'],
+      combo_id: 'cat-fish',
+      priority: 100,
+    })
+
+    expect(selectActiveInteractionRule(
+      [rule],
+      ['cat001', 'bird001', 'fish001'],
+    )).toMatchObject({
+      actorTarget: 'cat001',
+      partnerTargets: ['fish001'],
+    })
+
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const distanceFunction = source.slice(
+      source.indexOf('function computeTargetPairDistance(actorInst, partnerInst)'),
+      source.indexOf('function updateFilteredDistance(raw, proximityConfig)'),
+    )
+    expect(distanceFunction).toContain('getAnchorWorldPosition(actorInst)')
+    expect(distanceFunction).toContain('getAnchorWorldPosition(partnerInst)')
+    expect(distanceFunction).toContain('return distanceBetweenPositions(')
+    expect(distanceFunction).not.toContain('primaryModelTargetName')
+  })
+
+  it('faces the latched actor and partner poses rather than live anchors after arming', () => {
+    const source = readFileSync(resolve(process.cwd(), 'public/ar-xr.html'), 'utf8')
+    const turnStart = source.indexOf('// ---- Begin turn: calculate direction from latched poses ----')
+    const turnEnd = source.indexOf('interactionState.actorTurn = {', turnStart)
+    const turnSource = source.slice(turnStart, turnEnd)
+
+    expect(turnStart).toBeGreaterThanOrEqual(0)
+    expect(turnEnd).toBeGreaterThan(turnStart)
+    expect(turnSource).toContain('interactionState.comboLatch?.actorPose?.position')
+    expect(turnSource).toContain('interactionState.comboLatch?.partnerPose?.position')
+    expect(turnSource).not.toContain('actorInst.anchor.getWorldPosition')
+    expect(turnSource).not.toContain('partnerInst.anchor.getWorldPosition')
+  })
+
+  it('applies the approved CAT plus FISH enter/stable/exit hysteresis', () => {
+    const resolveRuleProximityConfig = Reflect.get(lifecycleModule, 'resolveRuleProximityConfig')
+    const rule = normalizeInteractionRule({
+      tags: ['cat001', 'fish001'],
+      combo_id: 'cat-fish',
+      proximity: {
+        enter_distance: 0.62,
+        exit_distance: 0.70,
+        proximity_stable_ms: 300,
+        smoothing_alpha: 0.25,
+      },
+    })
+    const proximity = resolveRuleProximityConfig?.(rule, null)
+    expect(proximity).not.toBeNull()
+    if (!proximity) throw new Error('Expected normalized CAT plus FISH proximity')
+    const config = {
+      enterDistance: proximity.enterDistance,
+      exitDistance: proximity.exitDistance,
+      proximityStableMs: proximity.stableMs,
+    }
+
+    const outside = advanceComboProximityGate({
+      now: 0,
+      distance: 0.63,
+      enteredAt: null,
+      comboConsumed: false,
+      config,
+    })
+    expect(outside.enteredAt).toBeNull()
+    expect(outside.stable).toBe(false)
+
+    const entered = advanceComboProximityGate({
+      now: 100,
+      distance: 0.60,
+      enteredAt: null,
+      comboConsumed: false,
+      config,
+    })
+    const stable = advanceComboProximityGate({
+      now: 400,
+      distance: 0.60,
+      enteredAt: entered.enteredAt,
+      comboConsumed: false,
+      config,
+    })
+    expect(stable.stable).toBe(true)
+
+    const notRearmed = advanceComboProximityGate({
+      now: 500,
+      distance: 0.69,
+      enteredAt: null,
+      comboConsumed: true,
+      config,
+    })
+    const rearmed = advanceComboProximityGate({
+      now: 600,
+      distance: 0.70,
+      enteredAt: null,
+      comboConsumed: true,
+      config,
+    })
+    expect(notRearmed.rearmEligible).toBe(false)
+    expect(rearmed.rearmEligible).toBe(true)
+  })
+
+  it('classifies CAT tap, pet, swipe, and invalid gestures without overlap', () => {
+    expect(classifyCatGesture({ durationMs: 200, dx: 4, dy: 5 })).toBe('tap')
+    expect(classifyCatGesture({ durationMs: 500, dx: 4, dy: 3 })).toBe('pet')
+    expect(classifyCatGesture({ durationMs: 400, dx: 75, dy: 12 })).toBe('swipe')
+    expect(classifyCatGesture({ durationMs: 400, dx: 30, dy: 30 })).toBe('none')
+  })
+
+  it('rejects stale CAT one-shot cleanup and lets CAT_EAT take ownership', () => {
+    const firstAction = {}
+    const secondAction = {}
+    expect(isCatOneShotCompletionOwner({
+      capturedGeneration: 1,
+      capturedAction: firstAction,
+      current: { generation: 2, action: secondAction },
+    })).toBe(false)
+    expect(isCatOneShotCompletionOwner({
+      capturedGeneration: 2,
+      capturedAction: secondAction,
+      current: { generation: 2, action: secondAction },
+    })).toBe(true)
+    expect(shouldReplaceCatAnimation({ currentPriority: 60, nextPriority: 100 })).toBe(true)
+  })
+
+  it('schedules deterministic CAT ambient clips only when all suppressors are clear', () => {
+    const common = {
+      idleSince: 0,
+      activeOneShot: false,
+      pointerGestureActive: false,
+      catReturn: null,
+      phase: 'WAIT_SECONDARY',
+    }
+    expect(getEligibleCatAmbient({ now: 7999, nextClip: 'CAT_LOOK_UP', ...common })).toBeNull()
+    expect(getEligibleCatAmbient({ now: 8000, nextClip: 'CAT_LOOK_UP', ...common })).toBe('CAT_LOOK_UP')
+    expect(getEligibleCatAmbient({ now: 15999, nextClip: 'CAT_SIT', ...common })).toBeNull()
+    expect(getEligibleCatAmbient({ now: 16000, nextClip: 'CAT_SIT', ...common })).toBe('CAT_SIT')
+
+    for (const blocked of [
+      { activeOneShot: true },
+      { pointerGestureActive: true },
+      { catReturn: { runId: 1 } },
+      { phase: 'COMBO_ARMED' },
+      { phase: 'COMBO_TURNING' },
+      { phase: 'COMBO_PLAYING' },
+    ]) {
+      expect(getEligibleCatAmbient({ now: 16000, nextClip: 'CAT_SIT', ...common, ...blocked })).toBeNull()
+    }
+  })
+})

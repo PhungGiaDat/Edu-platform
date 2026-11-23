@@ -80,3 +80,62 @@ export interface AddXpResponse {
   xp_awarded?: number;
   error?: string;
 }
+
+/**
+ * Idempotent XP event request for C26 gamification.
+ * eventId must be stable per semantic occurrence.
+ */
+export interface AddXpEventRequest {
+  action: string;
+  eventId: string;
+  sourceType?: string;
+  sourceId?: string;
+  attemptId?: string;
+  sessionId?: string;
+  learningPathId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+/** FastAPI's stable wire contract for C26 (explicitly not camelCase). */
+export interface AddXpEventWireRequest {
+  action: string;
+  event_id: string;
+  source_type?: string;
+  source_id?: string;
+  attempt_id?: string;
+  session_id?: string;
+  learning_path_id?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export const toAddXpEventWireRequest = (
+  body: AddXpEventRequest
+): AddXpEventWireRequest => ({
+  action: body.action,
+  event_id: body.eventId,
+  source_type: body.sourceType,
+  source_id: body.sourceId,
+  attempt_id: body.attemptId,
+  session_id: body.sessionId,
+  learning_path_id: body.learningPathId,
+  metadata: body.metadata,
+});
+
+/**
+ * Response from idempotent XP event processing.
+ */
+export interface AddXpEventResponse {
+  success: boolean;
+  event_id: string;
+  action: string;
+  xp_awarded: number;
+  total_xp_after: number;
+  level_after: number;
+  xp_to_next_after: number;
+  level_up: boolean;
+  idempotent_replay: boolean;
+  status: 'processing' | 'applied' | 'rejected';
+  badges_earned: string[];
+  sticker_earned?: Record<string, unknown>;
+  streak: number;
+}

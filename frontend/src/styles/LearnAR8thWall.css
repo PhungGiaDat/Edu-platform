@@ -1,0 +1,1011 @@
+/**
+ * LearnAR8thWall.css
+ * Styles for the 8th Wall AR page
+ */
+
+.ar-xr-page {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  overflow: hidden;
+}
+
+/* Header */
+.ar-xr-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+  z-index: 200;
+}
+
+.header-balance {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.header-title {
+  text-align: center;
+  flex: 1;
+}
+
+.header-title h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.card-count {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.engine-switch {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.engine-switch:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* AR Viewport */
+.ar-viewport {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.ar-xr-page--transitioning .ar-xr-header,
+.ar-xr-page--transitioning .telegram-sync-btn,
+.ar-xr-page--transitioning .found-cards-overlay,
+.ar-xr-page--transitioning .debug-phase-indicator {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Presentation-only QR-to-XR camera handoff. */
+.ar-transition-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 120;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding:
+    max(24px, calc(env(safe-area-inset-top) + 16px))
+    24px
+    max(32px, calc(env(safe-area-inset-bottom) + 24px));
+  opacity: 0;
+  transform: scale(1);
+  pointer-events: none;
+  transition:
+    opacity 250ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.ar-transition-overlay.is-visible {
+  opacity: 1;
+}
+
+.ar-transition-overlay.is-leaving {
+  opacity: 0;
+  transform: scale(0.985);
+}
+
+.ar-transition-overlay--story {
+  background: #f5e6cc;
+}
+
+.ar-transition-backdrop,
+.ar-transition-ambient {
+  position: absolute;
+  pointer-events: none;
+}
+
+.ar-transition-backdrop {
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(80% 55% at 50% 0%, rgba(255, 255, 255, 0.78), transparent 70%),
+    radial-gradient(60% 42% at 100% 90%, rgba(168, 212, 212, 0.34), transparent 74%),
+    radial-gradient(50% 38% at 0% 75%, rgba(255, 190, 125, 0.3), transparent 72%);
+}
+
+.ar-transition-ambient {
+  right: -72px;
+  bottom: 15%;
+  width: 210px;
+  height: 210px;
+  z-index: 1;
+  border-radius: 50%;
+  background: rgba(255, 152, 71, 0.18);
+  filter: blur(44px);
+}
+
+.ar-transition-content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  width: min(82vw, 340px);
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  transform: translateX(-4px);
+}
+
+.ar-transition-visual {
+  position: relative;
+  display: grid;
+  width: 194px;
+  height: 202px;
+  place-items: center;
+}
+
+.ar-transition-lexi-halo {
+  position: absolute;
+  top: 10px;
+  width: 174px;
+  height: 174px;
+  border-radius: 50%;
+  background: rgba(255, 248, 240, 0.72);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.78),
+    0 18px 42px rgba(138, 99, 58, 0.11);
+}
+
+.ar-transition-lexi-stage {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 184px;
+  height: 186px;
+  place-items: center;
+}
+
+.ar-transition-lexi-ground {
+  position: absolute;
+  bottom: 10px;
+  width: 142px;
+  height: 25px;
+  border-radius: 50%;
+  background: rgba(90, 136, 136, 0.2);
+  filter: blur(5px);
+  transform: translateY(8px);
+}
+
+.ar-transition-lexi {
+  display: block;
+  position: relative;
+  z-index: 1;
+  width: 174px;
+  height: auto;
+  filter: drop-shadow(0 16px 15px rgba(44, 61, 87, 0.22));
+  animation: ar-transition-lexi-float 3.2s ease-in-out infinite;
+}
+
+.ar-transition-dots {
+  position: absolute;
+  bottom: 1px;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ar-transition-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e57a30;
+  box-shadow: 0 3px 8px rgba(167, 89, 35, 0.18);
+  animation: ar-transition-dot-bob 1.2s ease-in-out infinite;
+}
+
+.ar-transition-dots span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.ar-transition-dots span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+.ar-transition-status {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 17px 15px;
+  border: 1px solid rgba(225, 195, 148, 0.7);
+  border-radius: 22px;
+  background: rgba(255, 249, 239, 0.84);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 12px 28px rgba(115, 75, 35, 0.12);
+  color: #1a2744;
+  text-align: center;
+  text-shadow: none;
+  transform: translateX(4px);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.ar-transition-card-gloss {
+  position: absolute;
+  top: 0;
+  left: 16%;
+  width: 68%;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.38);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.ar-transition-status strong {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(20px, 5.4vw, 22px);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.ar-transition-status span {
+  position: relative;
+  z-index: 1;
+  max-width: 290px;
+  color: rgba(57, 77, 94, 0.86);
+  font-size: clamp(14px, 3.9vw, 16px);
+  line-height: 1.4;
+}
+
+@keyframes ar-transition-lexi-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-5px) scale(1.018);
+  }
+}
+
+@keyframes ar-transition-dot-bob {
+  0%, 60%, 100% {
+    opacity: 0.52;
+    transform: translateY(0) scale(0.9);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ar-transition-overlay {
+    transition: none;
+  }
+
+  .ar-transition-overlay.is-leaving {
+    transform: none;
+  }
+
+  .ar-transition-lexi,
+  .ar-transition-dots span {
+    animation: none;
+  }
+}
+
+/* Loading */
+.ar-xr-loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Same spinner used by .ar-loading and .ar-xr-loading */
+.ar-loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  z-index: 100;
+}
+
+.ar-loading p {
+  margin-top: 20px;
+  font-size: 18px;
+}
+
+/* Error — reusable */
+.ar-error {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  padding: 20px;
+  text-align: center;
+  z-index: 100;
+}
+
+.ar-error h2 {
+  margin: 0 0 10px;
+  font-size: 24px;
+}
+
+.ar-error p {
+  opacity: 0.7;
+  margin-bottom: 30px;
+  max-width: 300px;
+}
+
+/* Scan more button */
+.scan-more-btn {
+  font-size: 14px !important;
+  padding: 10px 20px !important;
+}
+
+/* Loading */
+.ar-xr-loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #4ecdc4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ar-xr-loading p {
+  margin-top: 20px;
+  font-size: 18px;
+}
+
+.loading-hint {
+  margin-top: 8px !important;
+  font-size: 14px !important;
+  opacity: 0.7;
+}
+
+/* Error */
+.ar-xr-error {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  padding: 20px;
+  text-align: center;
+}
+
+.error-icon {
+  margin-bottom: 20px;
+}
+
+.ar-xr-error h2 {
+  margin: 0 0 10px;
+  font-size: 24px;
+}
+
+.ar-xr-error p {
+  opacity: 0.7;
+  margin-bottom: 30px;
+  max-width: 300px;
+}
+
+.error-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #4ecdc4;
+  border: none;
+  border-radius: 25px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #45b7aa;
+  transform: scale(1.05);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Found Cards Overlay */
+.found-cards-overlay {
+  position: absolute;
+  bottom: 100px;
+  left: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 16px;
+  z-index: 150;
+}
+
+.found-cards-title {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.found-cards-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.found-card-badge {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  border-radius: 20px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  animation: popIn 0.3s ease-out;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Combo Celebration */
+.combo-celebration {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 300;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.combo-content {
+  text-align: center;
+  animation: scaleIn 0.4s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.combo-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+
+.combo-content h2 {
+  font-size: 36px;
+  color: #fff;
+  margin: 0 0 10px;
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.combo-content p {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+/* Instructions */
+.ar-instructions {
+  position: absolute;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 100;
+}
+
+.ar-instructions p {
+  display: inline-block;
+  padding: 10px 20px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+}
+
+.ar-viewing-hint {
+  bottom: max(22px, calc(env(safe-area-inset-bottom) + 12px));
+  z-index: 100;
+  pointer-events: none;
+}
+
+.ar-viewing-hint p {
+  max-width: calc(100% - 48px);
+  margin: 0;
+  padding: 11px 17px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  background: rgba(39, 48, 116, 0.66);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 9px 24px rgba(17, 21, 71, 0.28);
+  color: rgba(255, 255, 255, 0.97);
+  font-weight: 600;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* Diagnostics sync button (operator-only) */
+.telegram-sync-btn {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom) + 90px);
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: #1e293b;
+  color: #fff;
+  cursor: pointer;
+  z-index: 300;
+  transition: transform 0.2s, background 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.telegram-sync-btn:hover {
+  transform: scale(1.1);
+  background: #334155;
+}
+
+.telegram-sync-btn:active {
+  transform: scale(0.95);
+}
+
+.telegram-sync-btn.syncing {
+  background: #f59e0b;
+  animation: pulse 1s infinite;
+}
+
+.telegram-sync-btn.success {
+  background: #10b981;
+}
+
+.telegram-sync-btn.error {
+  background: #ef4444;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .ar-xr-header {
+    padding: 12px 16px;
+  }
+
+  .header-title h1 {
+    font-size: 16px;
+  }
+
+  .engine-switch {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .found-cards-overlay {
+    bottom: 80px;
+    left: 16px;
+    right: 16px;
+    padding: 12px;
+  }
+
+  .combo-icon {
+    font-size: 60px;
+  }
+
+  .combo-content h2 {
+    font-size: 28px;
+  }
+}
+
+/* Debug Phase Indicator */
+.debug-phase-indicator {
+  position: fixed;
+  top: 70px;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.85);
+  color: #0f0;
+  font-family: monospace;
+  font-size: 11px;
+  padding: 6px 12px;
+  text-align: center;
+  z-index: 999;
+  border-bottom: 1px solid #333;
+}
+
+.debug-phase-indicator strong {
+  color: #ff0;
+}
+
+/* Learner-facing AR HUD. The outer layer remains transparent to XR input. */
+.learner-ar-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 150;
+  pointer-events: none;
+  color: #483522;
+  font-family: inherit;
+}
+
+.learner-ar-overlay__panel,
+.learner-ar-overlay__reopen {
+  border: 1px solid rgba(151, 99, 55, 0.2);
+  background:
+    linear-gradient(145deg, rgba(255, 252, 245, 0.98), rgba(250, 234, 208, 0.96));
+  box-shadow:
+    0 12px 30px rgba(78, 48, 24, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.learner-ar-overlay__panel {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 22px;
+}
+
+.learner-ar-overlay__panel--compact {
+  right: 16px;
+  bottom: max(16px, calc(env(safe-area-inset-bottom) + 10px));
+  left: 16px;
+  width: auto;
+  max-width: 380px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.learner-ar-overlay__panel--expanded {
+  top: max(76px, calc(env(safe-area-inset-top) + 60px));
+  right: 16px;
+  bottom: max(16px, calc(env(safe-area-inset-bottom) + 10px));
+  left: 16px;
+  width: auto;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  overflow: auto;
+  pointer-events: auto;
+}
+
+.learner-ar-overlay__topline,
+.learner-ar-overlay__footer,
+.learner-ar-overlay__controls {
+  display: flex;
+  align-items: center;
+}
+
+.learner-ar-overlay__topline,
+.learner-ar-overlay__footer {
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.learner-ar-overlay__controls {
+  gap: 6px;
+}
+
+.learner-ar-overlay__count {
+  color: #6b4423;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.learner-ar-overlay__target-list {
+  display: grid;
+  gap: 8px;
+}
+
+.learner-ar-overlay__target {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid rgba(163, 102, 50, 0.15);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.learner-ar-overlay__target.is-featured {
+  border-color: rgba(211, 119, 48, 0.42);
+  background: linear-gradient(135deg, rgba(255, 239, 207, 0.95), rgba(255, 248, 235, 0.88));
+}
+
+.learner-ar-overlay__target-label {
+  overflow: hidden;
+  color: #4d3020;
+  font-size: clamp(19px, 5.2vw, 23px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.learner-ar-overlay__reopen,
+.learner-ar-overlay__control,
+.learner-ar-overlay__speaker {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  touch-action: manipulation;
+}
+
+.learner-ar-overlay__reopen {
+  position: absolute;
+  /* Top-right, just under the AR header row (z-index 200, full width) so the
+     header can't swallow taps; safe-area aware for notch / Dynamic Island. */
+  top: max(76px, calc(env(safe-area-inset-top) + 64px));
+  right: max(16px, calc(env(safe-area-inset-right) + 12px));
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  color: #5b3a22;
+}
+
+.learner-ar-overlay__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: #b96732;
+  color: #fffaf2;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 20px;
+  text-align: center;
+}
+
+.learner-ar-overlay__control {
+  min-height: 36px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: rgba(116, 77, 44, 0.12);
+  color: #5b3a22;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.learner-ar-overlay__speaker {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: #b96732;
+  box-shadow: 0 4px 10px rgba(142, 72, 32, 0.24);
+  color: #fffaf2;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.learner-ar-overlay__control:hover,
+.learner-ar-overlay__control:focus-visible {
+  background: rgba(116, 77, 44, 0.18);
+}
+
+.learner-ar-overlay__speaker:hover,
+.learner-ar-overlay__speaker:focus-visible {
+  background: #9e5227;
+}
+
+.learner-ar-overlay__reopen:focus-visible,
+.learner-ar-overlay__control:focus-visible,
+.learner-ar-overlay__speaker:focus-visible {
+  outline: 3px solid rgba(246, 178, 101, 0.86);
+  outline-offset: 2px;
+}
+
+.learner-ar-overlay__instruction,
+.learner-ar-overlay__empty,
+.learner-ar-overlay__feedback {
+  margin: 0;
+  line-height: 1.35;
+}
+
+.learner-ar-overlay__instruction,
+.learner-ar-overlay__empty {
+  color: #4f3b2c;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.learner-ar-overlay__feedback {
+  color: #8a3f14;
+  font-size: 14px;
+  font-weight: 800;
+  animation: learner-ar-feedback-pop 280ms ease-out both;
+}
+
+@keyframes learner-ar-feedback-pop {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 560px) {
+  .learner-ar-overlay__panel--compact,
+  .learner-ar-overlay__panel--expanded {
+    left: max(24px, calc((100% - 560px) / 2));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learner-ar-overlay__feedback {
+    animation: none;
+  }
+
+  .learner-ar-overlay__reopen,
+  .learner-ar-overlay__control,
+  .learner-ar-overlay__speaker {
+    transition: none;
+  }
+}

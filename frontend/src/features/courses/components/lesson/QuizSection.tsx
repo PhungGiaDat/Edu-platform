@@ -1,0 +1,286 @@
+import React, { useState } from 'react';
+import type { Lesson, QuizSubmitResult } from '@/types/course';
+import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
+import { AudioService } from '@/services/AudioService';
+import { HapticService } from '@/services/HapticService';
+import { FeedbackMascot } from './FeedbackMascot';
+import { getAssetCandidateUrls } from '@/lib/courseAssets';
+import { Msr } from '@/shared/components/Msr';
+
+interface QuizSectionProps {
+  lesson: Lesson;
+  answers: Record<string, string>;
+  onAnswerChange: (questionId: string, optionId: string) => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+  result: QuizSubmitResult | null;
+  locale: 'en' | 'vi';
+  onRetry?: () => void;
+}
+
+export const QuizSection: React.FC<QuizSectionProps> = ({
+  lesson,
+  answers,
+  onAnswerChange,
+  onSubmit,
+  isSubmitting,
+  result,
+  locale,
+  onRetry,
+}) => {
+  const quizQuestions = lesson.quiz || [];
+  const vocabulary = lesson.vocabulary || [];
+
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [audioErrorId, setAudioErrorId] = useState<string | null>(null);
+  const [feedbackState, setFeedbackState] = useState<{
+    optionId: string;
+    isCorrect: boolean;
+  } | null>(null);
+
+  const copy = {
+    en: {
+      title: 'Quiz Challenge',
+      question: 'Câu',
+      listenPrompt: 'Nghe câu hỏi',
+      submitQuiz: 'Nộp bài Quiz',
+      continue: 'Tiếp tục',
+      submitting: 'Đang chấm điểm...',
+      passed: 'Xuất sắc! Bé đã vượt qua bài kiểm tra!',
+      tryAgain: 'Cố gắng lên nhé! Bé hãy thử lại để nhận sao nha.',
+      correctFeedback: 'Chính xác! Giỏi quá!',
+      incorrectFeedback: 'Chưa đúng rồi. Cố lên nhé!',
+      score: 'Điểm kiểm tra',
+    },
+    vi: {
+      title: 'Thử thách Quiz bài học',
+      question: 'Câu',
+      listenPrompt: 'Nghe câu hỏi',
+      submitQuiz: 'Nộp bài Quiz',
+      continue: 'Tiếp tục',
+      submitting: 'Đang chấm điểm...',
+      passed: 'Xuất sắc! Bé đã vượt qua bài kiểm tra!',
+      tryAgain: 'Cố gắng lên nhé! Bé hãy thử lại để nhận sao nha.',
+      correctFeedback: 'Chính xác! Giỏi quá!',
+      incorrectFeedback: 'Chưa đúng rồi. Cố lên nhé!',
+      score: 'Điểm kiểm tra',
+    },
+  }[locale];
+
+  const currentQuestion = quizQuestions[activeQuestionIndex] || quizQuestions[0];
+  const selectedOptionId =
+    (currentQuestion ? answers[currentQuestion.question_id] : undefined) ||
+    feedbackState?.optionId;
+
+  const handlePlayAudio = async () => {
+    if (!currentQuestion || playingAudioId) return;
+    const englishText = currentQuestion.questionAudioText?.trim();
+    const text = englishText || currentQuestion.prompt_vi?.trim();
+    if (!text) return;
+    const matchingWord = englishText
+      ? vocabulary.find(item => item.word_en.trim().toLowerCase() === englishText.toLowerCase())
+      : undefined;
+    setAudioErrorId(null);
+    setPlayingAudioId(currentQuestion.question_id);
+    try {
+      await AudioService.playPronunciation(text, englishText ? 'en' : 'vi', getAssetCandidateUrls(matchingWord?.audio)[0]);
+    } catch {
+      setAudioErrorId(currentQuestion.question_id);
+    } finally {
+      setPlayingAudioId(null);
+    }
+  };
+
+  const handleSelectOption = async (optionId: string) => {
+    if (!currentQuestion) return;
+
+    onAnswerChange(currentQuestion.question_id, optionId);
+
+    const isCorrect = optionId === currentQuestion.correctOptionId;
+    setFeedbackState({ optionId, isCorrect });
+
+    if (isCorrect) {
+      await AudioService.playSoundEffect('correct');
+      HapticService.success();
+    } else {
+      await AudioService.playSoundEffect('wrong');
+      HapticService.tap();
+    }
+  };
+
+  const handleAdvance = () => {
+    setFeedbackState(null);
+    setAudioErrorId(null);
+    if (activeQuestionIndex < quizQuestions.length - 1) {
+      setActiveQuestionIndex((prev) => prev + 1);
+    } else {
+      onSubmit();
+    }
+  };
+
+  if (!quizQuestions.length || !currentQuestion) {
+    return (
+      <div className="rounded-3xl border-4 border-white bg-white/90 p-8 text-center text-slate-500 shadow-md">
+        Không có câu hỏi kiểm tra cho bài học này.
+      </div>
+    );
+  }
+
+  // Result screen only shown after actual quiz completion
+  if (result) {
+    return (
+      <div className="space-y-4 animate-fade-in w-full text-center max-w-md mx-auto">
+        <div
+          className={`rounded-[28px] border-4 border-white p-6 text-center animate-fade-in ${
+            result.passed
+              ? 'bg-[#7BE8B8] text-emerald-950 shadow-[0_10px_0_#22C481,0_16px_28px_rgba(16,185,129,0.25)]'
+              : 'bg-[#FCE59A] text-amber-950 shadow-[0_10px_0_#F0B72B,0_16px_28px_rgba(245,158,11,0.25)]'
+          }`}
+        >
+          <span className="block mb-2"><Msr icon={result.passed ? 'emoji_events' : 'exercise'} size={48} /></span>
+          <p className="text-xs font-black uppercase tracking-wider opacity-70 mb-1">
+            {copy.score}
+          </p>
+          <div className="text-4xl sm:text-5xl font-black mb-2">
+            {result.score}%
+          </div>
+          <p className="text-base font-bold max-w-md mx-auto mb-4">
+            {result.passed ? copy.passed : copy.tryAgain}
+          </p>
+
+          {!result.passed && onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="w-full min-h-[52px] rounded-2xl border-2 border-white bg-amber-500 hover:bg-amber-600 text-white font-black text-base shadow-[0_5px_0_#B45309] active:translate-y-1 active:shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Msr icon="replay" />
+              <span>Làm lại bài kiểm tra</span>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const promptText = currentQuestion.prompt_vi || currentQuestion.questionAudioText;
+  const isLastQuestion = activeQuestionIndex === quizQuestions.length - 1;
+
+  return (
+    <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
+      {/* Header: Câu N / 10 + Compact Progress Bar */}
+      <div className="flex items-center justify-between px-1">
+        <span className="text-xs font-black uppercase tracking-wider text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-200">
+          <Msr icon="quiz" size={16} /> {copy.question} {activeQuestionIndex + 1} / {quizQuestions.length}
+        </span>
+        <div className="flex gap-1.5">
+          {quizQuestions.map((q, idx) => (
+            <div
+              key={q.question_id || idx}
+              className={`h-2 rounded-full transition-all ${
+                idx === activeQuestionIndex
+                  ? 'w-6 bg-sky-500 shadow-xs'
+                  : answers[q.question_id]
+                    ? 'w-2 bg-emerald-400'
+                    : 'w-2 bg-slate-200'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Question as a floating speech-bubble cloud, not a giant card */}
+      <div className="relative mx-auto mt-2 max-w-[320px]">
+        {(currentQuestion.questionAudioText?.trim() || currentQuestion.prompt_vi?.trim()) && (
+          <button
+            type="button"
+            onClick={handlePlayAudio}
+            disabled={Boolean(playingAudioId)}
+            aria-busy={Boolean(playingAudioId)}
+            className="mb-2 flex items-center gap-1.5 mx-auto rounded-full border-2 border-sky-200 bg-white px-3.5 py-1 text-xs font-black text-sky-800 shadow-2xs hover:bg-sky-50 active:scale-95 transition-transform cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+          >
+            <Msr icon={playingAudioId === currentQuestion.question_id ? 'volume_up' : 'volume_down'} size={18} />
+            <span>{playingAudioId ? 'Đang phát câu hỏi' : copy.listenPrompt}</span>
+          </button>
+        )}
+        {audioErrorId === currentQuestion.question_id && (
+          <p role="alert" className="mb-2 text-sm font-bold text-rose-700">
+            Chưa phát được câu hỏi. Bé chạm loa để thử lại nhé.
+          </p>
+        )}
+        <div className="relative rounded-[28px] bg-white px-5 py-4 shadow-[0_6px_0_#BAE6FD,0_10px_20px_rgba(2,132,199,0.1)] border-2 border-sky-100">
+          <h3 className="text-xl font-black text-slate-900 tracking-tight leading-snug">
+            {promptText}
+          </h3>
+          {/* Speech bubble tail */}
+          <div className="absolute left-1/2 -bottom-2.5 h-5 w-5 -translate-x-1/2 rotate-45 bg-white border-r-2 border-b-2 border-sky-100" />
+        </div>
+      </div>
+
+      {/* Stacked tactile answer bars — a different rhythm than grid tiles elsewhere */}
+      <div className="flex flex-col gap-2.5 w-full mt-5">
+        {currentQuestion.options.map((opt) => {
+          const isSelected = selectedOptionId === opt.option_id;
+          const visual = resolveVocabularyVisual(opt.label, vocabulary, opt.image);
+          const hasVisualImage = Boolean(visual.imageUrl);
+
+          return (
+            <button
+              key={opt.option_id}
+              type="button"
+              onClick={() => handleSelectOption(opt.option_id)}
+              className={`group appearance-none flex items-center gap-3 rounded-full !border-3 pl-2 pr-5 py-2 text-left transition-all cursor-pointer ${
+                isSelected
+                  ? feedbackState?.isCorrect
+                    ? '!border-white !bg-[#5FDBA0] scale-[1.02] shadow-[0_6px_0_#1DA36E]'
+                    : '!border-white !bg-[#FF8A7E] animate-shake shadow-[0_5px_0_#DA3D2F]'
+                  : '!border-white !bg-[#D8F1FB] hover:brightness-105 shadow-[0_5px_0_#8BC9E4] active:translate-y-1 active:shadow-[0_2px_0_#8BC9E4]'
+              }`}
+            >
+              {hasVisualImage && (
+                <div className="h-12 w-12 shrink-0 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-white shadow-inner">
+                  <img
+                    src={visual.imageUrl!}
+                    alt={opt.label}
+                    className="h-full w-full object-contain p-1 group-hover:scale-105 transition-transform"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+              <span className="text-base font-black text-slate-900">{opt.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Mascot Feedback (Appears only during feedback moments, never covers content) */}
+      {feedbackState && (
+        <FeedbackMascot
+          mode="feedback"
+          state={feedbackState.isCorrect ? 'correct' : 'incorrect'}
+          message={
+            feedbackState.isCorrect
+              ? currentQuestion.feedbackCorrect || copy.correctFeedback
+              : currentQuestion.feedbackIncorrect || copy.incorrectFeedback
+          }
+        />
+      )}
+
+      {/* Submit / Check CTA */}
+      {selectedOptionId && (
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={handleAdvance}
+            disabled={isSubmitting}
+            className="w-full min-h-[56px] rounded-2xl border-2 border-white bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-base sm:text-lg shadow-[0_6px_0_#0D9488] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <span>{isSubmitting ? copy.submitting : isLastQuestion ? copy.submitQuiz : copy.continue}</span>
+            <Msr icon={isLastQuestion ? 'task_alt' : 'arrow_forward'} />
+          </button>
+        </div>
+      )}
+    </section>
+  );
+};

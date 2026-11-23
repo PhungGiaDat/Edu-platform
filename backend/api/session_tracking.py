@@ -30,7 +30,7 @@ from services.session_tracking_service import (
     SessionTrackingService,
     get_session_tracking_service,
 )
-from models.user_mongo import UserDocument
+from repositories.postgres_user_repository import PostgresUser
 from core.security import get_current_user
 from core.base_router import BaseAPIRouter
 
@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 @router.post("/heartbeat", response_model=HeartbeatResponse)
 async def send_heartbeat(
     payload: HeartbeatRequest,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     tracking_repo: SessionTrackingRepository = Depends(get_session_tracking_repository),
     tracking_service: SessionTrackingService = Depends(get_session_tracking_service),
 ):
@@ -51,7 +51,7 @@ async def send_heartbeat(
     Should be called every 30-60 seconds by the frontend.
     Updates current step, progress percentage, and resets idle timer.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
 
     session = await tracking_service.process_heartbeat(
         repo=tracking_repo,
@@ -83,7 +83,7 @@ async def send_heartbeat(
 
 @router.get("/status", response_model=SessionStatusResponse)
 async def get_session_status(
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     tracking_repo: SessionTrackingRepository = Depends(get_session_tracking_repository),
     tracking_service: SessionTrackingService = Depends(get_session_tracking_service),
 ):
@@ -92,7 +92,7 @@ async def get_session_status(
 
     Returns session details including idle time, progress, and lock status.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
 
     status = await tracking_service.get_session_status(
         repo=tracking_repo,
@@ -112,7 +112,7 @@ async def get_session_status(
 @router.post("/lock", response_model=AppLockResponse)
 async def lock_app(
     payload: AppLockRequest,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     tracking_repo: SessionTrackingRepository = Depends(get_session_tracking_repository),
     tracking_service: SessionTrackingService = Depends(get_session_tracking_service),
 ):
@@ -121,7 +121,7 @@ async def lock_app(
 
     Optional duration for temporary locks.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
 
     result = await tracking_service.lock_app(
         repo=tracking_repo,
@@ -151,7 +151,7 @@ async def lock_app(
 @router.delete("/lock")
 async def unlock_app(
     session_id: str,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     tracking_repo: SessionTrackingRepository = Depends(get_session_tracking_repository),
     tracking_service: SessionTrackingService = Depends(get_session_tracking_service),
 ):
@@ -160,7 +160,7 @@ async def unlock_app(
 
     Requires the session to be in locked state.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
 
     success = await tracking_service.unlock_app(
         repo=tracking_repo,
@@ -179,7 +179,7 @@ async def unlock_app(
 
 @router.get("/metrics", response_model=SessionMetrics)
 async def get_session_metrics(
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     tracking_repo: SessionTrackingRepository = Depends(get_session_tracking_repository),
     tracking_service: SessionTrackingService = Depends(get_session_tracking_service),
 ):
@@ -188,7 +188,7 @@ async def get_session_metrics(
 
     Returns total sessions, time, averages, and streak data.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
 
     metrics = await tracking_service.get_user_metrics(
         repo=tracking_repo,
@@ -206,7 +206,7 @@ class SessionStartRequest(BaseModel):
 @router.post("/start")
 async def start_tracking_session(
     payload: SessionStartRequest,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     tracking_repo: SessionTrackingRepository = Depends(get_session_tracking_repository),
 ):
     """
@@ -214,7 +214,7 @@ async def start_tracking_session(
 
     Creates a new session record or updates existing.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
 
     session_id = await tracking_repo.create_or_update_session(
         user_id=user_id,
@@ -231,7 +231,7 @@ async def start_tracking_session(
 @router.post("/end")
 async def end_tracking_session(
     session_id: str,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: PostgresUser = Depends(get_current_user),
     tracking_repo: SessionTrackingRepository = Depends(get_session_tracking_repository),
 ):
     """
@@ -239,7 +239,7 @@ async def end_tracking_session(
 
     Marks session as ended.
     """
-    user_id = str(current_user.id)
+    user_id = current_user.id
 
     success = await tracking_repo.end_session(
         session_id=session_id,

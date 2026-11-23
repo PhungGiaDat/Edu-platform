@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AR Viewer</title>
+    <!-- Install the parent bridge before any viewer/runtime script can fail. -->
+    <script>
+        (function installViewerDebugBridge() {
+            // Always install the bridge so iframe logs reach parent even in production.
+            // Performance throttling is controlled by the debug param.
+            var debugMode = location.search.includes('debug') || location.hostname === 'localhost';
+
+            function postToParent(type, payload) {
+                window.parent.postMessage({
+                    type: type,
+                    payload: payload || {},
+                    timestamp: Date.now(),
+                    origin: 'child'
+                }, '*');
+            }
+
+            window.__AR_VIEWER_POST_TO_PARENT__ = postToParent;
+
+            // Forward all iframe console.log to parent for MobileDebug buffering.
+            // Throttling only applies in debug mode for noisy PERF/FPS logs;
+            // in production we forward everything so debug sync has full data.
+            var lastPerfForwardAt = 0;
+            var suppressedPerfForwards = 0;
+            var PERF_FORWARD_INTERVAL_MS = 5000;
+
+            function serialiseConsoleArgs(args) {
+                return Array.prototype.slice.call(args).map(function(value) {
+                    try {
+                        if (value instanceof Error) return value.stack || value.message;
+                        if (typeof value === 'object') return JSON.stringify(value, null, 2);
+                        return String(value);
+                    } catch (_) {
+                        return String(value);
+                    }
+                }).join(' ').slice(0, 4000);
+            }
+
+            function isNoisyPerformanceLog(text) {
+                return /^\[PERF\]/.test(text) || /^\[AR-Viewer\].*FPS:/.test(text);
+            }
+
+            ['error', 'warn', 'log'].forEach(function(level) {
+                var original = console[level].bind(console);
+                console[level] = function() {
+                    try {
+                        var text = serialiseConsoleArgs(arguments);
+                        // Throttle PERF/FPS logs in debug mode only; forward everything in production
+                        if (level === 'log' && debugMode && isNoisyPerformanceLog(text)) {
+                            var now = Date.now();
+                            if (now - lastPerfForwardAt < PERF_FORWARD_INTERVAL_MS) {
+                                suppressedPerfForwards++;
+                                return original.apply(console, arguments);
+                            }
+                            if (suppressedPerfForwards > 0) {
+                                text += ' (' + suppressedPerfForwards + ' repetitive PERF/FPS logs suppressed in viewer)';
+                            }
+                            lastPerfForwardAt = now;
+                            suppressedPerfForwards = 0;
+                        }
+                        postToParent('AR_DEBUG', {
+                            label: 'VIEWER_CONSOLE_' + level.toUpperCase(),
+                            details: { level: level, text: text, engine: 'mindar' },
+                            source: 'ar-viewer-console'
+                        });
+                    } catch (_) { /* never break the viewer console */ }
+                    return original.apply(console, arguments);
+                };
+            });
+
+            window.addEventListener('error', function(event) {
+                // Capture-phase error events also include failed <script>,
+                // <img>, and model resources. Those are not JavaScript
+                // exceptions and do not have ErrorEvent.message/stack.
+                if (!event.message && event.target && event.target !== window) {
+                    var failedTarget = event.target;
+                    postToParent('AR_DEBUG', {
+                        label: 'VIEWER_RESOURCE_LOAD_ERROR',
+                        details: {
+                            message: 'Viewer resource failed to load',
+                            tagName: failedTarget.tagName || null,
+                            url: failedTarget.currentSrc || failedTarget.src || failedTarget.href || null,
+                            engine: 'mindar'
+                        },
+                        source: 'ar-viewer-console'
+                    });
+                    return;
+                }
+                postToParent('AR_DEBUG', {
+                    label: 'VIEWER_UNCAUGHT_ERROR',
+                    details: {
+                        message: event.message,
+                        filename: event.filename,
+                        lineno: event.lineno,
+                        colno: event.colno,
+                        stack: event.error && event.error.stack ? String(event.error.stack) : null
+                    },
+                    source: 'ar-viewer-console'
+                });
+            }, true);
+
+            window.addEventListener('unhandledrejection', function(event) {
+                postToParent('AR_DEBUG', {
+                    label: 'VIEWER_UNHANDLED_REJECTION',
+                    details: {
+                        reason: event.reason instanceof Error
+                            ? (event.reason.stack || event.reason.message)
+                            : String(event.reason)
+                    },
+                    source: 'ar-viewer-console'
+                });
+            });
+
+            postToParent('AR_DEBUG', {
+                label: 'VIEWER_DEBUG_BRIDGE_READY',
+                details: { href: location.href },
+                source: 'ar-viewer-console'
+            });
+        })();
+    </script>
+    <!-- Eruda Debug Console - Mobile Web Debugging -->
+    <script>
+        (function() {
+            var viewerDebugParams = new URLSearchParams(location.search);
+
+            if (viewerDebugParams.get('eruda') === 'true' || location.hostname === 'localhost') {
+                var s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/eruda@3';
+                s.onload = function() {
+                    eruda.init({
+                        defaults: { displaySize: 30, transparency: 0.8, theme: 'Dark' },
+                        useShadowDom: true,
+                        maxLogNum: 5000
+                    });
+                };
+                document.head.appendChild(s);
+            }
+        })();
+    </script>
+    <!-- 8th Wall Engine Binary - loaded async for fallback AR -->
+    <script src="/external/xr/xr.js" async data-preload-chunks="slam"></script>
+    <link rel="stylesheet" href="/static/ar-assets/css/ar-viewer.css">
+</head>
+<body>
+    <!-- Spec C: Loading overlay - shows during MindAR warmup, fades when ready -->
+    <div id="ar-loading-overlay">
+        <div class="ar-spinner"></div>
+        <p id="ar-load-text">Loading AR</p>
+        <div id="ar-progress-bar">
+            <span></span>
+        </div>
+    </div>
+
+    <!-- Spec C: Toast pill container for add-card hints -->
+    <div id="ar-toast-container"></div>
+
+    <template id="ar-scene-template">
+        <a-scene id="ar-scene"
+            color-space="sRGB"
+            renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true"
+            embedded
+            vr-mode-ui="enabled: false"
+            device-orientation-permission-ui="enabled: false">
+            <a-assets timeout="15000"></a-assets>
+
+            <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+            <!-- Anchors are created programmatically by ensureCatalogAnchors() before MindAR starts -->
+            <!-- See: /static/ar-assets/js/ar-target-registry.js → ensureCatalogAnchors() -->
+
+        </a-scene>
+    </template>
+
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var runtimeMindUrl = null;
+            // 25s — A-Frame + MindAR + .mind (5MB+) download can take 10-15s on
+            // mobile. 8s was triggering BOOTSTRAP_FAILED on iOS Safari before
+            // MindAR had a chance to fire arReady.
+            var BOOTSTRAP_DEADLINE_MS = 25000;
+            var bootstrapStartedAt = Date.now();
+            var bootstrapFailureReported = false;
+            var overlayHidden = false;
+
+            // Combo model parameters
+            var comboModelUrl = params.get('comboModel');
+            var comboAnimation = params.get('comboAnimation') || 'idle';
+            var comboImageUrl = params.get('comboImage');
+
+            function postToParent(type, payload) {
+                if (typeof window.__AR_VIEWER_POST_TO_PARENT__ === 'function') {
+                    window.__AR_VIEWER_POST_TO_PARENT__(type, payload);
+                    return;
+                }
+                window.parent.postMessage({
+                    type: type,
+                    payload: payload || {},
+                    timestamp: Date.now(),
+                    origin: 'child'
+                }, '*');
+            }
+
+            function elapsedBootstrapMs() {
+                return Date.now() - bootstrapStartedAt;
+            }
+
+            function updateLoadingText(text) {
+                var loadText = document.getElementById('ar-load-text');
+                if (loadText) loadText.textContent = text;
+            }
+
+            // Spec C: progress bar — show when bootstrap begins
+            function showProgressBar() {
+                var bar = document.getElementById('ar-progress-bar');
+                if (bar) bar.classList.add('active');
+            }
+
+            // Spec C: hide overlay on AR_READY (called from viewer + listen here)
+            function hideOverlay() {
+                if (overlayHidden) return;
+                overlayHidden = true;
+                var overlay = document.getElementById('ar-loading-overlay');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    setTimeout(function() {
+                        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+                    }, 450);
+                }
+            }
+
+
+
+            window.addEventListener('message', function onViewerMessage(event) {
+                var msg = event.data;
+                if (!msg || !msg.type) return;
+
+                // Spec C: Hide overlay when AR is ready
+                if (msg.type === 'AR_READY') {
+                    hideOverlay();
+                    return;
+                }
+
+                // Engine state change logging
+                if (msg.type === 'AR_DEBUG' && msg.payload && msg.payload.label) {
+                    var label = msg.payload.label;
+                    if (label.startsWith('ENGINE_')) {
+                        var details = msg.payload.details || {};
+                        console.log('[ENGINE] ' + label, details);
+                        postToParent('AR_DEBUG', {
+                            label: label,
+                            details: details,
+                            source: 'engine-monitor'
+                        });
+                    }
+                }
+
+                // Spec C: Show toast when add-card scan starts
+                if (msg.type === 'SHOW_TOAST') {
+                    showToast(msg.payload && msg.payload.text ? msg.payload.text : 'Point camera at the next card',
+                              msg.payload && msg.payload.durationMs ? msg.payload.durationMs : 5000);
+                    return;
+                }
+            });
+
+            // Spec C: Toast pill system for add-card hints
+            var activeToast = null;
+            var toastTimeout = null;
+
+            function showToast(text, durationMs) {
+                durationMs = durationMs || 3000;
+                // Clear existing toast
+                if (toastTimeout) {
+                    clearTimeout(toastTimeout);
+                    toastTimeout = null;
+                }
+                if (activeToast) {
+                    activeToast.classList.add('fade-out');
+                    setTimeout(function() {
+                        if (activeToast && activeToast.parentNode) {
+                            activeToast.parentNode.removeChild(activeToast);
+                        }
+                        activeToast = null;
+                    }, 400);
+                }
+                // Create new toast
+                var container = document.getElementById('ar-toast-container');
+                if (!container) return;
+                var toast = document.createElement('div');
+                toast.className = 'ar-toast-pill';
+                toast.textContent = text;
+                container.appendChild(toast);
+                activeToast = toast;
+                // Auto-hide
+                toastTimeout = setTimeout(function() {
+                    toast.classList.add('fade-out');
+                    setTimeout(function() {
+                        if (toast.parentNode) toast.parentNode.removeChild(toast);
+                        if (activeToast === toast) activeToast = null;
+                    }, 400);
+                }, durationMs);
+            }
+
+            // Spec C: Camera ready detection — overlay mờ khi video xuất hiện
+            function detectCameraReady() {
+                var overlay = document.getElementById('ar-loading-overlay');
+                if (!overlay || overlayHidden) return;
+                // Check if video element exists and has content
+                var video = document.querySelector('video');
+                if (video && video.readyState >= 2) {
+                    overlay.classList.add('video-ready');
+                }
+            }
+
+            // Poll for camera ready for first 5 seconds
+            var cameraPollCount = 0;
+            var cameraPollInterval = setInterval(function() {
+                detectCameraReady();
+                if (++cameraPollCount > 20) { // ~5 seconds
+                    clearInterval(cameraPollInterval);
+                }
+            }, 250);
+
+            function reportBootstrapFailure(error) {
+                if (bootstrapFailureReported) return;
+                bootstrapFailureReported = true;
+                updateLoadingText("AR couldn't start");
+                postToParent('AR_DEBUG', {
+                    label: 'VIEWER_BOOTSTRAP_FAILED',
+                    details: {
+                        code: error.code || 'AR_VIEWER_BOOTSTRAP_FAILED',
+                        stage: error.stage || 'bootstrap',
+                        url: error.url || null,
+                        elapsedMs: elapsedBootstrapMs(),
+                        message: error.message || String(error)
+                    },
+                    source: 'ar-viewer-bootstrap'
+                });
+                postToParent('SYSTEM_ERROR', {
+                    code: error.code || 'AR_VIEWER_BOOTSTRAP_FAILED',
+                    message: error.message || String(error),
+                    stage: error.stage || 'bootstrap',
+                    url: error.url || undefined,
+                    elapsedMs: elapsedBootstrapMs()
+                });
+            }
+
+            function createBootstrapError(code, message, stage, url) {
+                var error = new Error(message);
+                error.code = code;
+                error.stage = stage;
+                error.url = url;
+                return error;
+            }
+
+            function loadScript(src, stage, deadlineAt) {
+                return new Promise(function (resolve, reject) {
+                    var remainingMs = deadlineAt - Date.now();
+                    if (remainingMs <= 0) {
+                        reject(createBootstrapError(
+                            'AR_RUNTIME_SCRIPT_TIMEOUT',
+                            'AR runtime bootstrap timed out before ' + stage + ' could start',
+                            stage,
+                            src
+                        ));
+                        return;
+                    }
+
+                    postToParent('AR_DEBUG', {
+                        label: 'AR_RUNTIME_SCRIPT_START',
+                        details: { stage: stage, url: src, remainingMs: remainingMs },
+                        source: 'ar-viewer-bootstrap'
+                    });
+
+                    var script = document.createElement('script');
+                    var settled = false;
+                    var timeoutId = window.setTimeout(function () {
+                        finish(createBootstrapError(
+                            'AR_RUNTIME_SCRIPT_TIMEOUT',
+                            'Timed out loading AR runtime script: ' + stage,
+                            stage,
+                            src
+                        ));
+                    }, remainingMs);
+
+                    function finish(error) {
+                        if (settled) return;
+                        settled = true;
+                        window.clearTimeout(timeoutId);
+                        script.onload = null;
+                        script.onerror = null;
+
+                        if (error) {
+                            if (script.parentNode) script.parentNode.removeChild(script);
+                            postToParent('AR_DEBUG', {
+                                label: 'AR_RUNTIME_SCRIPT_FAILED',
+                                details: {
+                                    stage: stage,
+                                    url: src,
+                                    code: error.code || 'AR_RUNTIME_SCRIPT_LOAD_FAILED',
+                                    elapsedMs: elapsedBootstrapMs(),
+                                    message: error.message
+                                },
+                                source: 'ar-viewer-bootstrap'
+                            });
+                            reject(error);
+                            return;
+                        }
+
+                        postToParent('AR_DEBUG', {
+                            label: 'AR_RUNTIME_SCRIPT_READY',
+                            details: { stage: stage, url: src, elapsedMs: elapsedBootstrapMs() },
+                            source: 'ar-viewer-bootstrap'
+                        });
+                        resolve();
+                    }
+
+                    script.src = src;
+                    script.onload = function () { finish(null); };
+                    script.onerror = function () {
+                        finish(createBootstrapError(
+                            'AR_RUNTIME_SCRIPT_LOAD_FAILED',
+                            'Failed to load AR runtime script: ' + stage,
+                            stage,
+                            src
+                        ));
+                    };
+                    document.head.appendChild(script);
+                });
+            }
+
+            function installAFrameNonVrCompatibility() {
+                // This iframe is an image-tracking viewer, not a VR viewer.
+                // A-Frame 1.4.2 otherwise starts its legacy WebVR polyfill on
+                // iOS Safari. Its stale DPDB cannot identify newer iPhones and
+                // emits a misleading error before falling back to generic lens
+                // measurements. Exposing an empty native WebVR result keeps
+                // that unused polyfill dormant without changing MindAR camera,
+                // image tracking, WebGL, or the disabled look-controls path.
+                if (navigator.xr || typeof navigator.getVRDisplays === 'function') return;
+
+                var emptyVRDisplays = function () { return Promise.resolve([]); };
+                try {
+                    Object.defineProperty(navigator, 'getVRDisplays', {
+                        configurable: true,
+                        value: emptyVRDisplays
+                    });
+                } catch (_error) {
+                    try {
+                        navigator.getVRDisplays = emptyVRDisplays;
+                    } catch (_assignmentError) {
+                        postToParent('AR_DEBUG', {
+                            label: 'AFRAME_NON_VR_COMPAT_SKIPPED',
+                            details: { reason: 'navigator-is-not-extensible' },
+                            source: 'ar-viewer-bootstrap'
+                        });
+                        return;
+                    }
+                }
+
+                postToParent('AR_DEBUG', {
+                    label: 'AFRAME_NON_VR_COMPAT_READY',
+                    details: { reason: 'mindar-image-tracking-does-not-use-webvr' },
+                    source: 'ar-viewer-bootstrap'
+                });
+            }
+
+            async function loadESModule(src) {
+                return await import(src);
+            }
+
+            // Load combo model with animation
+            function loadComboModel(url, animationClip) {
+                var scene = document.querySelector('a-scene');
+                if (!scene || !url) return;
+
+                // Create combo entity
+                var comboEntity = document.createElement('a-entity');
+                comboEntity.setAttribute('id', 'combo-model');
+                comboEntity.setAttribute('gltf-model', url);
+                comboEntity.setAttribute('position', '0 0.5 0');
+                comboEntity.setAttribute('scale', '0.3 0.3 0.3');
+                comboEntity.setAttribute('visible', 'false');
+                comboEntity.addEventListener('model-loaded', function() {
+                    if (typeof window.__AR_APPLY_DYNAMIC_MODEL_SCALE__ === 'function') {
+                        window.__AR_APPLY_DYNAMIC_MODEL_SCALE__(comboEntity, {
+                            source: 'bootstrap-combo',
+                            targetSpan: 1
+                        });
+                    }
+                });
+
+                // Add animation-mixer for GLTF animations
+                comboEntity.setAttribute('animation-mixer', 'clip: ' + animationClip + '; loop: repeat');
+
+                // Hide initially
+                scene.addEventListener('loaded', function() {
+                    comboEntity.setAttribute('visible', 'true');
+                });
+
+                // Add to scene
+                scene.appendChild(comboEntity);
+
+                console.log('✅ Combo model loaded with animation:', animationClip);
+                postToParent('AR_DEBUG', {
+                    label: 'COMBO_MODEL_LOADED',
+                    details: { url: url, animation: animationClip },
+                    source: 'ar-viewer'
+                });
+            }
+
+            // Update combo position based on marker positions
+            function updateComboPosition(marker1Pos, marker2Pos) {
+                var comboEntity = document.getElementById('combo-model');
+                if (!comboEntity) return;
+
+                // Calculate center
+                var centerX = (marker1Pos.x + marker2Pos.x) / 2;
+                var centerY = Math.max(marker1Pos.y, marker2Pos.y) + 0.3;
+                var centerZ = (marker1Pos.z + marker2Pos.z) / 2;
+
+                // Update position with animation
+                comboEntity.setAttribute('animation', {
+                    property: 'position',
+                    to: centerX + ' ' + centerY + ' ' + centerZ,
+                    dur: 300,
+                    easing: 'easeOutQuad'
+                });
+            }
+
+            async function bootstrap() {
+                bootstrapStartedAt = Date.now();
+                var deadlineAt = bootstrapStartedAt + BOOTSTRAP_DEADLINE_MS;
+                // Spec C: show progress bar as soon as bootstrap begins
+                showProgressBar();
+                var requestedMind = params.get('mind') || '';
+                postToParent('AR_DEBUG', {
+                    label: 'VIEWER_BOOTSTRAP_START',
+                    details: { requestedMind: requestedMind, deadlineMs: BOOTSTRAP_DEADLINE_MS },
+                    source: 'ar-viewer-bootstrap'
+                });
+                var mindUrl = requestedMind;
+                if (!mindUrl) throw new Error('No Mind target source was provided');
+
+                installAFrameNonVrCompatibility();
+                await loadScript('/static/vendor/aframe-1.4.2.min.js', 'aframe', deadlineAt);
+                await loadScript('/static/vendor/mindar-image-aframe-1.2.5.prod.js', 'mindar', deadlineAt);
+                await loadScript('/static/vendor/jsQR-1.4.0.min.js', 'jsqr', deadlineAt);
+                await loadScript('/static/ar-assets/js/ar-target-registry.js', 'target-registry', deadlineAt);
+                await loadScript('/static/ar-assets/js/ar-add-card-scanner.js', 'add-card-scanner', deadlineAt);
+                await loadScript('/static/ar-assets/js/ar-model-scale.js', 'model-scale-policy', deadlineAt);
+                await loadScript('/static/ar-assets/js/ar-engine-monitor.js', 'engine-monitor', deadlineAt);
+
+                var maxTrack = Math.max(1, Math.min(Number(params.get('maxTrack')) || 1, 5));
+                // Fix D: read tuning params with same defaults as ar-viewer.js
+                var pFilterMinCF      = Math.max(0.001, Math.min(Number(params.get('filterMinCF')      || '0.1'),  1));
+                var pFilterBeta       = Math.max(0.001, Math.min(Number(params.get('filterBeta')       || '0.3'),  1));
+                var pWarmupTolerance  = Number(params.get('warmupTolerance') ?? -1);
+                var pLossTimeout      = Math.max(100, Math.min(Number(params.get('lossTimeout')         || '1200'), 10000));
+                var configParts = [
+                    'imageTargetSrc: ' + mindUrl,
+                    'maxTrack: ' + maxTrack,
+                    'uiLoading: no',
+                    'uiScanning: no',
+                    'uiError: no',
+                    'filterMinCF: ' + pFilterMinCF,
+                    'filterBeta: '  + pFilterBeta
+                ];
+                if (pWarmupTolerance >= 0) configParts.push('warmupTolerance: ' + pWarmupTolerance);
+                var config = configParts.join('; ');
+                window.__AR_VIEWER_INITIAL_MINDAR_CONFIG__ = config;
+                window.__AR_VIEWER_RESOLVED_MIND_URL__ = mindUrl;
+
+                var template = document.getElementById('ar-scene-template');
+                var scene = template.content.firstElementChild.cloneNode(true);
+                scene.setAttribute('mindar-image', config);
+                document.body.appendChild(scene);
+                await loadScript('/static/ar-assets/js/ar-viewer.js', 'viewer', deadlineAt);
+
+                // Load combo model if URL params provided
+                if (comboModelUrl) {
+                    // Wait for scene to load before adding combo model
+                    scene.addEventListener('loaded', function() {
+                        loadComboModel(comboModelUrl, comboAnimation);
+                    });
+                }
+
+                // Listen for combo activation from parent
+                document.addEventListener('COMBO_ACTIVATED', function(e) {
+                    var comboEntity = document.getElementById('combo-model');
+                    if (comboEntity) {
+                        comboEntity.setAttribute('visible', 'true');
+                        postToParent('AR_DEBUG', {
+                            label: 'COMBO_ENTITY_SHOWN',
+                            details: e.detail || {},
+                            source: 'ar-viewer'
+                        });
+                    }
+                });
+
+                // Listen for combo deactivation
+                document.addEventListener('COMBO_DEACTIVATED', function(e) {
+                    var comboEntity = document.getElementById('combo-model');
+                    if (comboEntity) {
+                        comboEntity.setAttribute('visible', 'false');
+                        postToParent('AR_DEBUG', {
+                            label: 'COMBO_ENTITY_HIDDEN',
+                            details: e.detail || {},
+                            source: 'ar-viewer'
+                        });
+                    }
+                });
+
+                // ── Freeze Pose + Semantic Manager Integration ──────────────────────
+                var enableFreezePose = params.get('freezePose') === 'true';
+                var enableSemantic = params.get('semanticManager') === 'true';
+
+                if (enableFreezePose || enableSemantic) {
+                    try {
+                        var integrationModule = await loadESModule('/static/ar-assets/js/integration/ar-viewer-integration.js');
+                        window.__arViewerIntegration = new integrationModule.ARViewerIntegration({
+                            enableFreezePose: enableFreezePose,
+                            enableSemantic: enableSemantic,
+                            apiBase: '/api/v1/ar',
+                            onStable: function(targetIndex, frozenPose) {
+                                console.log('[AR-Viewer] Pose stabilized!', targetIndex, frozenPose);
+                                document.dispatchEvent(new CustomEvent('ar:target-stable', {
+                                    detail: { targetIndex: targetIndex, pose: frozenPose }
+                                }));
+                            },
+                            onCombo: function(result) {
+                                console.log('[AR-Viewer] Combo detected via semantic manager!', result);
+                                document.dispatchEvent(new CustomEvent('ar:semantic-combo', {
+                                    detail: result
+                                }));
+                            }
+                        });
+                        await window.__arViewerIntegration.init();
+                        console.log('[AR-Viewer] ARViewerIntegration initialized', {
+                            freezePose: enableFreezePose,
+                            semantic: enableSemantic
+                        });
+                    } catch (err) {
+                        console.error('[AR-Viewer] Failed to load ARViewerIntegration:', err);
+                    }
+                }
+            }
+
+            window.addEventListener('beforeunload', function () {
+                if (!runtimeMindUrl) return;
+                URL.revokeObjectURL(runtimeMindUrl);
+                postToParent('AR_DEBUG', {
+                    label: 'MULTI_MIND_BLOB_REVOKED',
+                    details: { reason: 'viewer_unload' },
+                    source: 'ar-viewer-bootstrap'
+                });
+            });
+
+            bootstrap().catch(function (error) {
+                reportBootstrapFailure(error || createBootstrapError(
+                    'AR_VIEWER_BOOTSTRAP_FAILED',
+                    'AR viewer bootstrap failed',
+                    'bootstrap',
+                    null
+                ));
+            });
+        })();
+    </script>
+</body>
+</html>

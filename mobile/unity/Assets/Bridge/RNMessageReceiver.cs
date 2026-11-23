@@ -29,6 +29,16 @@ public class RNMessageReceiver : MonoBehaviour
             UnityEngine.Debug.Log($"[RNMessageReceiver] Method={method}");
 
             switch (method) {
+                case "PING":
+                    var pingPayload = JsonUtility.FromJson<PingPayload>(json);
+                    if (pingPayload == null || string.IsNullOrEmpty(pingPayload.requestId)) {
+                        throw new ArgumentException("PING requires requestId");
+                    }
+                    RNEventEmitter.Instance.SendEvent("PONG", new PongPayload {
+                        requestId = pingPayload.requestId,
+                        scene = "BridgeSmokeScene"
+                    });
+                    break;
                 case "initSession":
                     experienceHandler?.InitSession();
                     break;
@@ -37,6 +47,9 @@ public class RNMessageReceiver : MonoBehaviour
                     break;
                 case "startImageTracking":
                     experienceHandler?.StartImageTracking();
+                    break;
+                case "startImageTrackingMulti":
+                    experienceHandler?.StartImageTrackingMulti(json);
                     break;
                 case "triggerCombo":
                     var comboPayload = JsonUtility.FromJson<ComboPayload>(json);
@@ -52,6 +65,16 @@ public class RNMessageReceiver : MonoBehaviour
                     break;
                 case "resumeSession":
                     experienceHandler?.ResumeSession();
+                    break;
+                case "onCardResolved":
+                    var resolvedPayload = JsonUtility.FromJson<CardResolvedPayload>(json);
+                    if (resolvedPayload != null && !string.IsNullOrEmpty(resolvedPayload.qrId)) {
+                        // Forward to QRScanner so it can unblock or lock the qrId.
+                        var qrScanner = FindFirstObjectByType<QRScanner>();
+                        if (qrScanner != null) {
+                            qrScanner.OnCardResolved(resolvedPayload.qrId, resolvedPayload.registered);
+                        }
+                    }
                     break;
                 case "destroySession":
                     experienceHandler?.DestroySession();
@@ -85,5 +108,22 @@ public class RNMessageReceiver : MonoBehaviour
     private class ComboPayload {
         public string cardA;
         public string cardB;
+    }
+
+    [Serializable]
+    private class PingPayload {
+        public string requestId;
+    }
+
+    [Serializable]
+    private class PongPayload {
+        public string requestId;
+        public string scene;
+    }
+
+    [Serializable]
+    private class CardResolvedPayload {
+        public string qrId;
+        public bool registered;
     }
 }

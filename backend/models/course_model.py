@@ -2,7 +2,9 @@ from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+from models.lesson_activity import ActivityType, LessonLearningBlocks, normalize_learning_blocks
 
 try:
     from bson import ObjectId
@@ -199,9 +201,21 @@ class EnrollmentCTA(BaseModel):
     buttonLabel: str = "Bat dau hoc"
 
 
+class CourseTrailer(BaseModel):
+    """Optional, child-safe course introduction shown before the mission path."""
+
+    title: str
+    duration_seconds: int = Field(gt=0, le=90)
+    asset: AssetReference
+    poster: Optional[AssetReference] = None
+    captions_vi: str = ""
+    autoplay: bool = False
+
+
 class Lesson(BaseModel):
     # Legacy/simple course fields kept for existing MongoDB documents.
     lesson_id: str = Field(default_factory=lambda: str(ObjectId()))
+    course_id: Optional[str] = None
     title: str
     description: Optional[str] = None
     video: Optional[VideoSchema] = None
@@ -239,9 +253,28 @@ class Lesson(BaseModel):
     reward: Optional[Reward] = None
     arReference: Optional[ARReference] = None
     generatedMedia: List[GeneratedMedia] = Field(default_factory=list)
+    learning_blocks: LessonLearningBlocks = Field(
+        default_factory=lambda: LessonLearningBlocks(schema_version=1)
+    )
     
     # Media container (Duolingo-style)
     lesson_media: Optional[LessonMedia] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_activity_contract(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+        normalized = dict(value)
+        if "learning_blocks" not in normalized:
+            legacy = {
+                key: normalized[key]
+                for key in ("vocabulary", "game", "activity", "readAloudStory", "pronunciation", "quiz")
+                if key in normalized
+            }
+            if legacy:
+                normalized["learning_blocks"] = normalize_learning_blocks(legacy)
+        return normalized
 
 
 class LessonSchema(Lesson):
@@ -265,6 +298,7 @@ class CourseSchema(BaseModel):
     catalogPreview: List[CourseCatalogPreview] = Field(default_factory=list)
     studentTestimonials: List[StudentTestimonial] = Field(default_factory=list)
     enrollmentCta: Optional[EnrollmentCTA] = None
+    courseTrailer: Optional[CourseTrailer] = None
     lessons: List[Lesson] = Field(default_factory=list)
     is_published: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -303,7 +337,7 @@ class UserProgress(BaseModel):
     total_xp: int = 0
     rewards: List[Reward] = Field(default_factory=list)
     started_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
 
 
 LessonSessionStatus = Literal["started", "completed"]
@@ -313,12 +347,15 @@ LessonStepStatus = Literal["locked", "available", "in_progress", "completed", "n
 class LessonSessionStepState(BaseModel):
     step_id: str
     title: str = ""
+    activity_type: Optional[ActivityType] = None
+    activity_order: Optional[int] = Field(default=None, ge=1)
+    required: bool = True
     status: LessonStepStatus = "locked"
     attempts: int = 0
     best_score: int = 0
     passed: bool = False
     last_response: Dict[str, Any] = Field(default_factory=dict)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
 
@@ -327,6 +364,7 @@ class LessonSession(BaseModel):
     user_id: str
     course_id: str
     lesson_id: str
+    content_version: int = Field(default=1, ge=1)
     status: LessonSessionStatus = "started"
     current_step_id: str
     current_step_index: int = 0
@@ -338,7 +376,9 @@ class LessonSession(BaseModel):
 
 
 class LessonStepAttemptRequest(BaseModel):
-    user_id: str
+    # Authentication owns learner identity. Kept optional for wire compatibility
+    # with older clients that still send this now-ignored field.
+    user_id: Optional[str] = None
     step_id: str
     attempt_type: str = "practice"
     passed: bool = False

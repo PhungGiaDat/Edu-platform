@@ -1,0 +1,253 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { Msr } from '@/shared/components/Msr';
+import type { Lesson, VocabularyItem } from '@/types/course';
+import { resolveVocabularyVisual } from '@/features/courses/lib/visualResolver';
+import { AudioService } from '@/services/AudioService';
+import { getAssetCandidateUrls } from '@/lib/courseAssets';
+import { HapticService } from '@/services/HapticService';
+import { FeedbackMascot } from './FeedbackMascot';
+
+interface ListenChooseSectionProps {
+  lesson: Lesson;
+  onComplete: () => void;
+  locale: 'en' | 'vi';
+}
+
+export const ListenChooseSection: React.FC<ListenChooseSectionProps> = ({
+  lesson,
+  onComplete,
+  locale,
+}) => {
+  const vocabulary = lesson.vocabulary || [];
+  const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const advanceTimerRef = useRef<number | null>(null);
+
+  const currentItem: VocabularyItem | undefined = vocabulary[currentTargetIndex];
+
+  // Ensure currentItem is always included in the choices, even if vocabulary has > 4 items
+  const displayChoices = React.useMemo(() => {
+    if (!currentItem || vocabulary.length <= 4) return vocabulary;
+    const others = vocabulary.filter((v) => v.word_en.toLowerCase() !== currentItem.word_en.toLowerCase());
+    return [currentItem, ...others.slice(0, 3)].sort((a, b) => a.word_en.localeCompare(b.word_en));
+  }, [currentItem, vocabulary]);
+
+  const copy = {
+    en: {
+      title: 'Lắng nghe & Chọn hình đúng',
+      instruction: 'Listen carefully & tap the right picture!',
+      replay: 'Nghe lại',
+      tapToHear: 'Chạm loa để nghe',
+      correctPrefix: 'Chính xác! Giỏi lắm!',
+      tryAgain: 'Chưa đúng rồi. Nghe lại nhé!',
+      continue: 'Tiếp tục',
+      completedAll: 'Xuất sắc! Bé đã nghe và chọn đúng tất cả các hình!',
+    },
+    vi: {
+      title: 'Lắng nghe & Chọn hình đúng',
+      instruction: 'Nghe và chọn hình đúng',
+      replay: 'Nghe lại',
+      tapToHear: 'Chạm loa để nghe',
+      correctPrefix: 'Chính xác! Giỏi lắm!',
+      tryAgain: 'Chưa đúng rồi. Nghe lại nhé!',
+      continue: 'Tiếp tục',
+      completedAll: 'Xuất sắc! Bé đã nghe và chọn đúng tất cả các hình!',
+    },
+  }[locale];
+
+  // Play audio when target changes or on user click
+  const playTargetAudio = async () => {
+    if (!currentItem) return;
+    try {
+      await AudioService.playPronunciation(currentItem.word_en, 'en', getAssetCandidateUrls(currentItem.audio)[0]);
+    } catch (err) {
+      console.warn('[ListenChoose] audio play error:', err);
+    }
+  };
+
+  useEffect(() => {
+    setSelectedWord(null);
+    setIsCorrect(null);
+    if (currentItem) {
+      const timer = window.setTimeout(() => {
+        playTargetAudio();
+      }, 300);
+      return () => window.clearTimeout(timer);
+    }
+  }, [currentTargetIndex]);
+
+  useEffect(() => () => {
+    if (advanceTimerRef.current !== null) {
+      window.clearTimeout(advanceTimerRef.current);
+    }
+  }, []);
+
+  const handleChoice = async (item: VocabularyItem) => {
+    if (!currentItem || (isCorrect && selectedWord === currentItem.word_en)) return;
+    setSelectedWord(item.word_en);
+
+    const matches = item.word_en.toLowerCase() === currentItem.word_en.toLowerCase();
+    setIsCorrect(matches);
+
+    if (matches) {
+      // Auto advance to next question after 1.5s
+      advanceTimerRef.current = window.setTimeout(() => {
+        advanceTimerRef.current = null;
+        if (currentTargetIndex < vocabulary.length - 1) {
+          setCurrentTargetIndex((prev) => prev + 1);
+        } else {
+          onComplete();
+        }
+      }, 1500);
+
+      await AudioService.playSoundEffect('correct');
+      HapticService.success();
+    } else {
+      await AudioService.playSoundEffect('wrong');
+      HapticService.tap();
+    }
+  };
+
+  const handleManualNext = () => {
+    if (advanceTimerRef.current !== null) {
+      window.clearTimeout(advanceTimerRef.current);
+      advanceTimerRef.current = null;
+    }
+    if (currentTargetIndex < vocabulary.length - 1) {
+      setCurrentTargetIndex((prev) => prev + 1);
+    } else {
+      onComplete();
+    }
+  };
+
+  if (!vocabulary.length || !currentItem) {
+    return (
+      <div className="rounded-3xl border-4 border-white bg-white/90 p-8 text-center text-slate-500 shadow-md">
+        Không có dữ liệu bài tập nghe.
+      </div>
+    );
+  }
+
+  const isAllFinished = currentTargetIndex === vocabulary.length - 1 && isCorrect;
+
+  return (
+    <section className="space-y-3.5 animate-fade-in w-full text-center max-w-md mx-auto">
+      {/* Top Heading + Stepper */}
+      <div className="flex items-center justify-between px-1">
+        <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+          <Msr icon="hearing" size={24} />
+          <span>{copy.title}</span>
+        </h2>
+        <span className="text-xs font-black text-sky-600 bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-200">
+          {currentTargetIndex + 1} / {vocabulary.length}
+        </span>
+      </div>
+
+      {/* Audio bubble: pulsing rings, full circle, not a boxy rounded-rect */}
+      <div className="relative flex flex-col items-center justify-center py-3">
+        <span className="absolute h-24 w-24 rounded-full bg-sky-300/30 animate-ping" />
+        <span className="absolute h-20 w-20 rounded-full bg-sky-300/40" />
+        <button
+          type="button"
+          onClick={playTargetAudio}
+          aria-label={copy.replay}
+          className="relative flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-sky-400 to-blue-500 text-3xl text-white shadow-[0_8px_0_#0284C7] hover:brightness-105 active:translate-y-1 active:shadow-xs transition-all cursor-pointer"
+        >
+          <Msr icon="volume_up" size={36} />
+        </button>
+        <p className="mt-2 text-xs font-extrabold text-slate-500">{copy.tapToHear}</p>
+      </div>
+
+      {/* Game-tile choices: image protrudes above the tile as a floating badge */}
+      <div className="grid grid-cols-2 gap-x-3 gap-y-5 w-full pt-4">
+        {displayChoices.map((item, idx) => {
+          const visual = resolveVocabularyVisual(item.word_en, vocabulary, item.image);
+          const isSelected = selectedWord === item.word_en;
+          const isTarget = currentItem.word_en.toLowerCase() === item.word_en.toLowerCase();
+          const isOffset = idx % 2 === 1;
+
+          return (
+            <button
+              key={item.word_en}
+              type="button"
+              onClick={() => handleChoice(item)}
+              disabled={Boolean(isCorrect && isTarget)}
+              className={`group appearance-none relative pt-11 pb-3 px-2 flex flex-col items-center rounded-[22px] !border-4 text-center transition-all cursor-pointer ${isOffset ? 'translate-y-2' : ''} ${
+                isSelected && isCorrect
+                  ? '!border-white !bg-[#5FDBA0] scale-[1.02] shadow-[0_8px_0_#1DA36E]'
+                  : isSelected && !isCorrect
+                    ? '!border-white !bg-[#FF8A7E] animate-shake shadow-[0_6px_0_#DA3D2F]'
+                    : '!border-white !bg-[#7DD3EE] shadow-[0_8px_0_#2B9DC4] hover:brightness-105 active:translate-y-1 active:shadow-[0_2px_0_#2B9DC4]'
+              }`}
+            >
+              {/* Image floats as a circular badge protruding above the tile */}
+              <div
+                className={`absolute -top-7 h-14 w-14 rounded-full overflow-hidden flex items-center justify-center border-4 shadow-[0_4px_0_rgba(0,0,0,0.12)] ${
+                  isSelected && isCorrect
+                    ? 'bg-[#C6F5DE] border-white'
+                    : isSelected && !isCorrect
+                      ? 'bg-[#FFD3CD] border-white'
+                      : 'bg-white border-white'
+                }`}
+              >
+                {visual.imageUrl ? (
+                  <img
+                    src={visual.imageUrl}
+                    alt={item.word_en}
+                    className="h-full w-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="text-2xl">{visual.emoji || item.emoji || '❓'}</span>
+                )}
+              </div>
+
+              <span className="text-base font-black text-slate-900 capitalize">
+                {item.word_en}
+              </span>
+              <span className="text-xs font-bold text-sky-700/80">
+                {item.word_vi}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Mascot Feedback (Appears only for feedback moments, never covers content) */}
+      {isCorrect !== null && (
+        <FeedbackMascot
+          mode="feedback"
+          state={isCorrect ? 'correct' : 'incorrect'}
+          message={
+            isCorrect
+              ? `${copy.correctPrefix} "${currentItem.word_en}" là "${currentItem.word_vi}".`
+              : copy.tryAgain
+          }
+        />
+      )}
+
+      {/* Manual Continue Button when answered (intermediate questions only, preventing duplicate footer CTA) */}
+      {isCorrect && currentTargetIndex < vocabulary.length - 1 && (
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={handleManualNext}
+            className="w-full min-h-[52px] rounded-2xl border-2 border-white bg-emerald-500 text-white font-black text-base shadow-[0_5px_0_#059669] hover:bg-emerald-600 active:translate-y-1 transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            {copy.continue}
+            <Msr icon="arrow_forward" />
+          </button>
+        </div>
+      )}
+
+      {/* Completion Banner */}
+      {isAllFinished && (
+        <div className="rounded-3xl border-4 border-white bg-[#7BE8B8] p-3.5 text-center shadow-[0_6px_0_#22C481] animate-fade-in">
+          <span className="text-2xl block mb-0.5">🌟</span>
+          <h3 className="text-sm font-black text-emerald-900">{copy.completedAll}</h3>
+        </div>
+      )}
+    </section>
+  );
+};

@@ -1,78 +1,52 @@
+/**
+ * ClayProgressBar — soft, animated progress bar with clay shadow inset.
+ *
+ * Used by ClayProgressHero and standalone cards.
+ */
 import React, { useEffect } from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import {
+  View,
+  StyleSheet,
+  type ViewStyle,
+  type StyleProp,
+} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { COLORS, SHADOWS, RADIUS, ANIMATION } from '../design/tokens';
+import { RADIUS, SHADOWS, withOpacity } from '../design/tokens';
 
 export interface ClayProgressBarProps {
-  progress: number; // 0.0 – 1.0
-  fillColor?: string;
+  progress: number; // 0..1
+  fillColor: string;
   trackColor?: string;
   height?: number;
-  borderRadius?: number;
   showShimmer?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
-/**
- * Claymorphic progress bar with animated fill and shimmer effect.
- * Uses native boxShadow for clay styling and Reanimated for smooth animation.
- */
 export const ClayProgressBar: React.FC<ClayProgressBarProps> = ({
   progress,
-  fillColor = COLORS.primary,
-  trackColor = 'rgba(0,0,0,0.10)',
-  height = 12,
-  borderRadius,
-  showShimmer = true,
+  fillColor,
+  trackColor,
+  height = 10,
+  showShimmer = false,
   style,
 }) => {
-  const clampedProgress = Math.min(Math.max(progress, 0), 1);
-  const animatedProgress = useSharedValue(0);
-  const shimmerPosition = useSharedValue(0);
+  const progressWidth = useSharedValue(0);
 
   useEffect(() => {
-    animatedProgress.value = withTiming(clampedProgress, {
-      duration: 300,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+    progressWidth.value = withTiming(Math.min(Math.max(progress, 0), 1), {
+      duration: 1200,
+      easing: Easing.out(Easing.cubic),
     });
-  }, [clampedProgress, animatedProgress]);
+  }, [progress, progressWidth]);
 
-  useEffect(() => {
-    if (showShimmer && clampedProgress < 1) {
-      const animateShimmer = () => {
-        shimmerPosition.value = -1;
-        shimmerPosition.value = withTiming(1, {
-          duration: ANIMATION.shimmerDuration,
-          easing: Easing.linear,
-        });
-      };
-      animateShimmer();
-      const interval = setInterval(animateShimmer, ANIMATION.shimmerDuration);
-      return () => clearInterval(interval);
-    }
-  }, [showShimmer, clampedProgress, shimmerPosition]);
-
-  const fillStyle = useAnimatedStyle(() => ({
-    width: `${animatedProgress.value * 100}%`,
+  const fillAnimated = useAnimatedStyle(() => ({
+    width: `${progressWidth.value * 100}%`,
   }));
-
-  const shimmerStyle = useAnimatedStyle(() => {
-    if (!showShimmer || clampedProgress >= 1) {
-      return { opacity: 0 };
-    }
-    return {
-      opacity: 0.5,
-      left: `${shimmerPosition.value * 100}%`,
-    };
-  });
-
-  const radius = borderRadius ?? RADIUS.sm;
 
   return (
     <View
@@ -80,59 +54,82 @@ export const ClayProgressBar: React.FC<ClayProgressBarProps> = ({
         styles.track,
         {
           height,
-          borderRadius: radius,
-          shadowColor: SHADOWS.claySm.shadowColor,
-          shadowOffset: SHADOWS.claySm.shadowOffset,
-          shadowOpacity: SHADOWS.claySm.shadowOpacity,
-          shadowRadius: SHADOWS.claySm.shadowRadius,
-          elevation: SHADOWS.claySm.elevation,
+          borderRadius: height / 2,
+          backgroundColor: trackColor ?? withOpacity(fillColor, 0.18),
         },
         style,
       ]}
     >
-      <View style={[styles.fillContainer, { borderRadius: radius }]}>
-        <Animated.View
+      <Animated.View
+        style={[
+          styles.fill,
+          fillAnimated,
+          {
+            height,
+            borderRadius: height / 2,
+            backgroundColor: fillColor,
+          },
+        ]}
+      >
+        {/* Top highlight */}
+        <View
           style={[
-            styles.fill,
-            { backgroundColor: fillColor, borderRadius: radius },
-            fillStyle,
+            styles.highlight,
+            {
+              top: 1,
+              bottom: height - 3,
+              borderRadius: height / 2,
+            },
           ]}
         />
-        {showShimmer && (
-          <Animated.View style={[styles.shimmerContainer, shimmerStyle]}>
-            <LinearGradient
-              colors={['transparent', 'rgba(255,255,255,0.6)', 'transparent']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.shimmer, { borderRadius: radius }]}
-            />
-          </Animated.View>
-        )}
-      </View>
+      </Animated.View>
+
+      {showShimmer && progress < 1 ? (
+        <View
+          style={[
+            styles.shimmer,
+            {
+              top: 1,
+              bottom: 1,
+              borderRadius: height / 2,
+              width: `${progress * 100}%`,
+            },
+          ]}
+        />
+      ) : null}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   track: {
-    backgroundColor: 'rgba(0,0,0,0.10)',
+    width: '100%',
     overflow: 'hidden',
-  },
-  fillContainer: {
-    flex: 1,
-    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.04)',
   },
   fill: {
-    height: '100%',
-  },
-  shimmerContainer: {
     position: 'absolute',
+    left: 0,
     top: 0,
-    bottom: 0,
-    width: '30%',
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 1.5,
+    elevation: 1,
+  },
+  highlight: {
+    position: 'absolute',
+    left: 4,
+    right: 4,
+    backgroundColor: 'rgba(255,255,255,0.4)',
   },
   shimmer: {
-    flex: 1,
+    position: 'absolute',
+    left: 0,
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
 });
+
+export default ClayProgressBar;

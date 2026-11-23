@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "source_only": true,
+  "course_ids": [
+    "momo-home-family-english-5-7",
+    "momo-nature-english-5-7",
+    "momo-school-food-english-5-7"
+  ],
+  "entries": [
+    {
+      "course_id": "momo-home-family-english-5-7",
+      "slot": "trailer",
+      "provider": "supabase",
+      "provider_id": "courses/momo-home-family-english-5-7/videos/course-trailer.mp4",
+      "title": "Cùng Lexi khám phá ngôi nhà",
+      "age_range": "5-7",
+      "learning_objective": "Giới thiệu từ vựng về gia đình và ngôi nhà bằng tình huống gần gũi.",
+      "duration_seconds": 45,
+      "poster_object_path": "courses/momo-home-family-english-5-7/images/course-cover.png",
+      "captions_or_transcript": "Chào con! Cùng Lexi khám phá gia đình và ngôi nhà nhé.",
+      "approval_status": "approved",
+      "source_license_evidence": "Original Momo/Lexi production brief approved by product owner on 2026-09-02."
+    },
+    {
+      "course_id": "momo-nature-english-5-7",
+      "slot": "trailer",
+      "provider": "supabase",
+      "provider_id": "courses/momo-nature-english-5-7/videos/course-trailer.mp4",
+      "title": "Cùng Lexi khám phá thiên nhiên",
+      "age_range": "5-7",
+      "learning_objective": "Gợi hứng thú gọi tên con vật và cảnh vật thiên nhiên quen thuộc.",
+      "duration_seconds": 45,
+      "poster_object_path": "courses/momo-nature-english-5-7/images/course-cover.png",
+      "captions_or_transcript": "Chào con! Cùng Lexi khám phá thiên nhiên nhé.",
+      "approval_status": "approved",
+      "source_license_evidence": "Original Momo/Lexi production brief approved by product owner on 2026-09-02."
+    },
+    {
+      "course_id": "momo-school-food-english-5-7",
+      "slot": "trailer",
+      "provider": "supabase",
+      "provider_id": "courses/momo-school-food-english-5-7/videos/course-trailer.mp4",
+      "title": "Cùng Lexi đến trường",
+      "age_range": "5-7",
+      "learning_objective": "Gợi hứng thú học từ vựng lớp học và đồ ăn qua ngày vui ở trường.",
+      "duration_seconds": 45,
+      "poster_object_path": "courses/momo-school-food-english-5-7/images/course-cover.png",
+      "captions_or_transcript": "Chào con! Cùng Lexi đến trường nhé.",
+      "approval_status": "approved",
+      "source_license_evidence": "Original Momo/Lexi production brief approved by product owner on 2026-09-02."
+    }
+  ]
+}

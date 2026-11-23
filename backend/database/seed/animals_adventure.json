@@ -1,0 +1,3372 @@
+{
+  "course_id": "animals-adventure-en-5-7",
+  "title": "Animals Adventure",
+  "title_vi": "Hành trình động vật",
+  "description": "Learn about animals in English through fun vocabulary, games, and quizzes!",
+  "subtitle_vi": "Khám phá thế giới động vật",
+  "theme": "nature",
+  "category_key": "animals",
+  "category_label": "Animals",
+  "category_icon": "🐾",
+  "age_range": "5-8",
+  "level": "beginner",
+  "description_vi": "Học về động vật bằng tiếng Anh qua từ vựng, trò chơi và bài kiểm tra!",
+  "is_published": false,
+  "lessons": [
+    {
+      "lesson_id": "learn-the-cat",
+      "title": "Learn the Cat",
+      "title_vi": "Học về con mèo",
+      "description": "Meet the cat and learn animal vocabulary",
+      "order": 1,
+      "duration_minutes": 5,
+      "vocabulary": [
+        {
+          "word_en": "Cat",
+          "word_vi": "con mèo",
+          "emoji": "🐱",
+          "simple_sentence": "The cat is small.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/cat.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/cat.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Dog",
+          "word_vi": "con chó",
+          "emoji": "🐶",
+          "simple_sentence": "The dog is big.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/dog.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/dog.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Bird",
+          "word_vi": "con chim",
+          "emoji": "🐦",
+          "simple_sentence": "The bird can fly.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/bird.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/bird.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Fish",
+          "word_vi": "con cá",
+          "emoji": "🐟",
+          "simple_sentence": "The fish swims.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/fish.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/fish.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Rabbit",
+          "word_vi": "con thỏ",
+          "emoji": "🐰",
+          "simple_sentence": "The rabbit hops.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/rabbit.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/rabbit.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        }
+      ],
+      "game": {
+        "game_id": "listen-tap-cat-001",
+        "type": "listen_and_tap",
+        "instruction_vi": "Nghe và nhấn vào hình con mèo",
+        "prompt_audio_text": "Tap the cat",
+        "items": [
+          {
+            "word_en": "Cat",
+            "emoji": "🐱",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/cat.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/cat.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Dog",
+            "emoji": "🐶",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/dog.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/dog.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Bird",
+            "emoji": "🐦",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/bird.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/bird.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Fish",
+            "emoji": "🐟",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/fish.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/fish.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Rabbit",
+            "emoji": "🐰",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/rabbit.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/rabbit.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Tuyệt vời! Bé làm tốt lắm!"
+      },
+      "activity": {
+        "activity_id": "memory-match-cat-001",
+        "type": "match_picture",
+        "instruction_vi": "Ghép hình ảnh động vật với từ tiếng Anh",
+        "prompt_audio_text": "Match the animals",
+        "items": [
+          {
+            "word_en": "Cat",
+            "emoji": "🐱",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/cat.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Dog",
+            "emoji": "🐶",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/dog.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Bird",
+            "emoji": "🐦",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/bird.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Fish",
+            "emoji": "🐟",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/fish.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Rabbit",
+            "emoji": "🐰",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/rabbit.png",
+              "type": "image",
+              "status": "ready"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Giỏi lắm! Bé nhớ từ rồi!"
+      },
+      "quiz": [
+        {
+          "question_id": "q1_cat_image",
+          "type": "image_choice",
+          "prompt_vi": "Con mèo tiếng Anh là gì?",
+          "questionAudioText": "What is cat in English?",
+          "options": [
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_cat",
+          "feedbackCorrect": "Đúng rồi! Con mèo là Cat!",
+          "feedbackIncorrect": "Chưa đúng lắm. Con mèo là Cat nhé!"
+        },
+        {
+          "question_id": "q2_dog_image",
+          "type": "image_choice",
+          "prompt_vi": "Con chó tiếng Anh là gì?",
+          "questionAudioText": "What is dog in English?",
+          "options": [
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_dog",
+          "feedbackCorrect": "Xuất sắc! Con chó là Dog!",
+          "feedbackIncorrect": "Chưa đúng. Con chó là Dog nhé!"
+        },
+        {
+          "question_id": "q3_bird_image",
+          "type": "image_choice",
+          "prompt_vi": "Con chim tiếng Anh là gì?",
+          "questionAudioText": "What is bird in English?",
+          "options": [
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_bird",
+          "feedbackCorrect": "Giỏi lắm! Con chim là Bird!",
+          "feedbackIncorrect": "Chưa đúng. Con chim là Bird nhé!"
+        },
+        {
+          "question_id": "q4_fish_image",
+          "type": "image_choice",
+          "prompt_vi": "Con cá tiếng Anh là gì?",
+          "questionAudioText": "What is fish in English?",
+          "options": [
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_fish",
+          "feedbackCorrect": "Tuyệt vời! Con cá là Fish!",
+          "feedbackIncorrect": "Chưa đúng. Con cá là Fish nhé!"
+        },
+        {
+          "question_id": "q5_rabbit_image",
+          "type": "image_choice",
+          "prompt_vi": "Con thỏ tiếng Anh là gì?",
+          "questionAudioText": "What is rabbit in English?",
+          "options": [
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_rabbit",
+          "feedbackCorrect": "Xuất sắc! Con thỏ là Rabbit!",
+          "feedbackIncorrect": "Chưa đúng. Con thỏ là Rabbit nhé!"
+        },
+        {
+          "question_id": "q6_cat_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con mèo",
+          "questionAudioText": "Listen and tap the cat",
+          "options": [
+            {
+              "option_id": "opt_dog_snd",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_cat_snd",
+          "feedbackCorrect": "Đúng rồi! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con mèo!"
+        },
+        {
+          "question_id": "q7_dog_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con chó",
+          "questionAudioText": "Listen and tap the dog",
+          "options": [
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog_snd",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_dog_snd",
+          "feedbackCorrect": "Xuất sắc! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con chó!"
+        },
+        {
+          "question_id": "q8_bird_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con chim",
+          "questionAudioText": "Listen and tap the bird",
+          "options": [
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_bird_snd",
+          "feedbackCorrect": "Giỏi lắm! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con chim!"
+        },
+        {
+          "question_id": "q9_fish_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con cá",
+          "questionAudioText": "Listen and tap the fish",
+          "options": [
+            {
+              "option_id": "opt_dog_snd",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_fish_snd",
+          "feedbackCorrect": "Tuyệt vời! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con cá!"
+        },
+        {
+          "question_id": "q10_rabbit_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con thỏ",
+          "questionAudioText": "Listen and tap the rabbit",
+          "options": [
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_rabbit_snd",
+          "feedbackCorrect": "Xuất sắc! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con thỏ!"
+        }
+      ],
+      "reward": {
+        "xp": 50,
+        "sticker": {
+          "bucket": "learnar-assets",
+          "path": "courses/animals-adventure/stickers/cat-king.png",
+          "type": "sticker",
+          "status": "ready"
+        },
+        "badgeTitle": "Cat Champion",
+        "message_vi": "Bé đã hoàn thành bài Cat!"
+      }
+    },
+    {
+      "lesson_id": "learn-the-dog",
+      "title": "Learn the Dog",
+      "title_vi": "Học về con chó",
+      "description": "Meet the friendly dog and practice vocabulary",
+      "order": 2,
+      "duration_minutes": 5,
+      "vocabulary": [
+        {
+          "word_en": "Dog",
+          "word_vi": "con chó",
+          "emoji": "🐶",
+          "simple_sentence": "The dog says woof!",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/dog.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/dog.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Cat",
+          "word_vi": "con mèo",
+          "emoji": "🐱",
+          "simple_sentence": "The cat says meow!",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/cat.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/cat.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Bird",
+          "word_vi": "con chim",
+          "emoji": "🐦",
+          "simple_sentence": "The bird sings.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/bird.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/bird.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Fish",
+          "word_vi": "con cá",
+          "emoji": "🐟",
+          "simple_sentence": "The fish is in water.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/fish.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/fish.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Rabbit",
+          "word_vi": "con thỏ",
+          "emoji": "🐰",
+          "simple_sentence": "The rabbit has long ears.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/rabbit.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/rabbit.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        }
+      ],
+      "game": {
+        "game_id": "listen-tap-dog-001",
+        "type": "listen_and_tap",
+        "instruction_vi": "Nghe và nhấn vào hình con chó",
+        "prompt_audio_text": "Tap the dog",
+        "items": [
+          {
+            "word_en": "Dog",
+            "emoji": "🐶",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/dog.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/dog.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Cat",
+            "emoji": "🐱",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/cat.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/cat.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Bird",
+            "emoji": "🐦",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/bird.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/bird.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Fish",
+            "emoji": "🐟",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/fish.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/fish.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Rabbit",
+            "emoji": "🐰",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/rabbit.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/rabbit.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Bé làm tốt lắm! Tiếp tục nhé!"
+      },
+      "activity": {
+        "activity_id": "memory-match-dog-001",
+        "type": "match_picture",
+        "instruction_vi": "Ghép hình ảnh với từ tiếng Anh",
+        "prompt_audio_text": "Match the pictures",
+        "items": [
+          {
+            "word_en": "Dog",
+            "emoji": "🐶",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/dog.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Cat",
+            "emoji": "🐱",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/cat.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Bird",
+            "emoji": "🐦",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/bird.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Fish",
+            "emoji": "🐟",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/fish.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Rabbit",
+            "emoji": "🐰",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/rabbit.png",
+              "type": "image",
+              "status": "ready"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Tuyệt vời! Bé giỏi lắm!"
+      },
+      "quiz": [
+        {
+          "question_id": "q1_dog_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con chó tiếng Anh là gì?",
+          "questionAudioText": "What is dog in English?",
+          "options": [
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_dog",
+          "feedbackCorrect": "Đúng rồi! Con chó là Dog!",
+          "feedbackIncorrect": "Chưa đúng. Con chó là Dog nhé!"
+        },
+        {
+          "question_id": "q2_cat_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con mèo tiếng Anh là gì?",
+          "questionAudioText": "What is cat in English?",
+          "options": [
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_cat",
+          "feedbackCorrect": "Giỏi lắm! Con mèo là Cat!",
+          "feedbackIncorrect": "Chưa đúng. Con mèo là Cat nhé!"
+        },
+        {
+          "question_id": "q3_rabbit_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con thỏ tiếng Anh là gì?",
+          "questionAudioText": "What is rabbit in English?",
+          "options": [
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_rabbit",
+          "feedbackCorrect": "Xuất sắc! Con thỏ là Rabbit!",
+          "feedbackIncorrect": "Chưa đúng. Con thỏ là Rabbit nhé!"
+        },
+        {
+          "question_id": "q4_fish_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con cá tiếng Anh là gì?",
+          "questionAudioText": "What is fish in English?",
+          "options": [
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_fish",
+          "feedbackCorrect": "Tuyệt vời! Con cá là Fish!",
+          "feedbackIncorrect": "Chưa đúng. Con cá là Fish nhé!"
+        },
+        {
+          "question_id": "q5_bird_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con chim tiếng Anh là gì?",
+          "questionAudioText": "What is bird in English?",
+          "options": [
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_bird",
+          "feedbackCorrect": "Giỏi lắm! Con chim là Bird!",
+          "feedbackIncorrect": "Chưa đúng. Con chim là Bird nhé!"
+        },
+        {
+          "question_id": "q6_dog_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con chó",
+          "questionAudioText": "Listen and tap the dog",
+          "options": [
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog_snd",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_dog_snd",
+          "feedbackCorrect": "Đúng rồi! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con chó!"
+        },
+        {
+          "question_id": "q7_cat_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con mèo",
+          "questionAudioText": "Listen and tap the cat",
+          "options": [
+            {
+              "option_id": "opt_dog_snd",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_cat_snd",
+          "feedbackCorrect": "Xuất sắc! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con mèo!"
+        },
+        {
+          "question_id": "q8_rabbit_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con thỏ",
+          "questionAudioText": "Listen and tap the rabbit",
+          "options": [
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_rabbit_snd",
+          "feedbackCorrect": "Giỏi lắm! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con thỏ!"
+        },
+        {
+          "question_id": "q9_fish_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con cá",
+          "questionAudioText": "Listen and tap the fish",
+          "options": [
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog_snd",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_fish_snd",
+          "feedbackCorrect": "Tuyệt vời! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con cá!"
+        },
+        {
+          "question_id": "q10_bird_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con chim",
+          "questionAudioText": "Listen and tap the bird",
+          "options": [
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_bird_snd",
+          "feedbackCorrect": "Xuất sắc! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con chim!"
+        }
+      ],
+      "reward": {
+        "xp": 50,
+        "sticker": {
+          "bucket": "learnar-assets",
+          "path": "courses/animals-adventure/stickers/dog-hero.png",
+          "type": "sticker",
+          "status": "ready"
+        },
+        "badgeTitle": "Dog Hero",
+        "message_vi": "Bé đã hoàn thành bài Dog!"
+      }
+    },
+    {
+      "lesson_id": "learn-the-bird",
+      "title": "Learn the Bird",
+      "title_vi": "Học về con chim",
+      "description": "Discover birds and their wonderful world",
+      "order": 3,
+      "duration_minutes": 5,
+      "vocabulary": [
+        {
+          "word_en": "Bird",
+          "word_vi": "con chim",
+          "emoji": "🐦",
+          "simple_sentence": "The bird has wings.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/bird.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/bird.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Cat",
+          "word_vi": "con mèo",
+          "emoji": "🐱",
+          "simple_sentence": "The cat is furry.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/cat.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/cat.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Dog",
+          "word_vi": "con chó",
+          "emoji": "🐶",
+          "simple_sentence": "The dog is loyal.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/dog.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/dog.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Fish",
+          "word_vi": "con cá",
+          "emoji": "🐟",
+          "simple_sentence": "The fish has fins.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/fish.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/fish.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Rabbit",
+          "word_vi": "con thỏ",
+          "emoji": "🐰",
+          "simple_sentence": "The rabbit is soft.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/rabbit.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/rabbit.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        }
+      ],
+      "game": {
+        "game_id": "listen-tap-bird-001",
+        "type": "listen_and_tap",
+        "instruction_vi": "Nghe và nhấn vào hình con chim",
+        "prompt_audio_text": "Tap the bird",
+        "items": [
+          {
+            "word_en": "Bird",
+            "emoji": "🐦",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/bird.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/bird.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Cat",
+            "emoji": "🐱",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/cat.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/cat.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Dog",
+            "emoji": "🐶",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/dog.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/dog.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Fish",
+            "emoji": "🐟",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/fish.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/fish.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Rabbit",
+            "emoji": "🐰",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/rabbit.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/rabbit.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Tuyệt vời! Bé làm tốt lắm!"
+      },
+      "activity": {
+        "activity_id": "memory-match-bird-001",
+        "type": "match_picture",
+        "instruction_vi": "Ghép hình ảnh với từ tiếng Anh",
+        "prompt_audio_text": "Match the pictures",
+        "items": [
+          {
+            "word_en": "Bird",
+            "emoji": "🐦",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/bird.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Cat",
+            "emoji": "🐱",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/cat.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Dog",
+            "emoji": "🐶",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/dog.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Fish",
+            "emoji": "🐟",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/fish.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Rabbit",
+            "emoji": "🐰",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/rabbit.png",
+              "type": "image",
+              "status": "ready"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Giỏi lắm! Bé nhớ từ rồi!"
+      },
+      "quiz": [
+        {
+          "question_id": "q1_bird_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con chim tiếng Anh là gì?",
+          "questionAudioText": "What is bird in English?",
+          "options": [
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_bird",
+          "feedbackCorrect": "Đúng rồi! Con chim là Bird!",
+          "feedbackIncorrect": "Chưa đúng. Con chim là Bird nhé!"
+        },
+        {
+          "question_id": "q2_dog_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con chó tiếng Anh là gì?",
+          "questionAudioText": "What is dog in English?",
+          "options": [
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_dog",
+          "feedbackCorrect": "Xuất sắc! Con chó là Dog!",
+          "feedbackIncorrect": "Chưa đúng. Con chó là Dog nhé!"
+        },
+        {
+          "question_id": "q3_cat_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con mèo tiếng Anh là gì?",
+          "questionAudioText": "What is cat in English?",
+          "options": [
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_cat",
+          "feedbackCorrect": "Giỏi lắm! Con mèo là Cat!",
+          "feedbackIncorrect": "Chưa đúng. Con mèo là Cat nhé!"
+        },
+        {
+          "question_id": "q4_fish_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con cá tiếng Anh là gì?",
+          "questionAudioText": "What is fish in English?",
+          "options": [
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_fish",
+          "feedbackCorrect": "Tuyệt vời! Con cá là Fish!",
+          "feedbackIncorrect": "Chưa đúng. Con cá là Fish nhé!"
+        },
+        {
+          "question_id": "q5_rabbit_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con thỏ tiếng Anh là gì?",
+          "questionAudioText": "What is rabbit in English?",
+          "options": [
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_rabbit",
+          "feedbackCorrect": "Xuất sắc! Con thỏ là Rabbit!",
+          "feedbackIncorrect": "Chưa đúng. Con thỏ là Rabbit nhé!"
+        },
+        {
+          "question_id": "q6_bird_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con chim",
+          "questionAudioText": "Listen and tap the bird",
+          "options": [
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_bird_snd",
+          "feedbackCorrect": "Đúng rồi! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con chim!"
+        },
+        {
+          "question_id": "q7_dog_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con chó",
+          "questionAudioText": "Listen and tap the dog",
+          "options": [
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog_snd",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_dog_snd",
+          "feedbackCorrect": "Xuất sắc! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con chó!"
+        },
+        {
+          "question_id": "q8_cat_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con mèo",
+          "questionAudioText": "Listen and tap the cat",
+          "options": [
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog_snd",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_cat_snd",
+          "feedbackCorrect": "Giỏi lắm! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con mèo!"
+        },
+        {
+          "question_id": "q9_fish_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con cá",
+          "questionAudioText": "Listen and tap the fish",
+          "options": [
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_fish_snd",
+          "feedbackCorrect": "Tuyệt vời! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con cá!"
+        },
+        {
+          "question_id": "q10_rabbit_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con thỏ",
+          "questionAudioText": "Listen and tap the rabbit",
+          "options": [
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_rabbit_snd",
+          "feedbackCorrect": "Xuất sắc! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con thỏ!"
+        }
+      ],
+      "reward": {
+        "xp": 50,
+        "sticker": {
+          "bucket": "learnar-assets",
+          "path": "courses/animals-adventure/stickers/bird-sky.png",
+          "type": "sticker",
+          "status": "ready"
+        },
+        "badgeTitle": "Bird Sky",
+        "message_vi": "Bé đã hoàn thành bài Bird!"
+      }
+    },
+    {
+      "lesson_id": "learn-the-fish",
+      "title": "Learn the Fish",
+      "title_vi": "Học về con cá",
+      "description": "Explore the underwater world of fish",
+      "order": 4,
+      "duration_minutes": 5,
+      "vocabulary": [
+        {
+          "word_en": "Fish",
+          "word_vi": "con cá",
+          "emoji": "🐟",
+          "simple_sentence": "The fish swims in water.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/fish.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/fish.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Bird",
+          "word_vi": "con chim",
+          "emoji": "🐦",
+          "simple_sentence": "The bird flies high.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/bird.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/bird.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Dog",
+          "word_vi": "con chó",
+          "emoji": "🐶",
+          "simple_sentence": "The dog runs fast.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/dog.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/dog.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Cat",
+          "word_vi": "con mèo",
+          "emoji": "🐱",
+          "simple_sentence": "The cat sleeps a lot.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/cat.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/cat.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Rabbit",
+          "word_vi": "con thỏ",
+          "emoji": "🐰",
+          "simple_sentence": "The rabbit jumps high.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/rabbit.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/rabbit.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        }
+      ],
+      "game": {
+        "game_id": "listen-tap-fish-001",
+        "type": "listen_and_tap",
+        "instruction_vi": "Nghe và nhấn vào hình con cá",
+        "prompt_audio_text": "Tap the fish",
+        "items": [
+          {
+            "word_en": "Fish",
+            "emoji": "🐟",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/fish.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/fish.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Bird",
+            "emoji": "🐦",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/bird.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/bird.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Dog",
+            "emoji": "🐶",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/dog.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/dog.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Cat",
+            "emoji": "🐱",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/cat.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/cat.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Rabbit",
+            "emoji": "🐰",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/rabbit.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/rabbit.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Tuyệt vời! Bé làm tốt lắm!"
+      },
+      "activity": {
+        "activity_id": "memory-match-fish-001",
+        "type": "match_picture",
+        "instruction_vi": "Ghép hình ảnh với từ tiếng Anh",
+        "prompt_audio_text": "Match the pictures",
+        "items": [
+          {
+            "word_en": "Fish",
+            "emoji": "🐟",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/fish.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Bird",
+            "emoji": "🐦",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/bird.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Dog",
+            "emoji": "🐶",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/dog.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Cat",
+            "emoji": "🐱",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/cat.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Rabbit",
+            "emoji": "🐰",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/rabbit.png",
+              "type": "image",
+              "status": "ready"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Giỏi lắm! Bé nhớ từ rồi!"
+      },
+      "quiz": [
+        {
+          "question_id": "q1_fish_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con cá tiếng Anh là gì?",
+          "questionAudioText": "What is fish in English?",
+          "options": [
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_fish",
+          "feedbackCorrect": "Đúng rồi! Con cá là Fish!",
+          "feedbackIncorrect": "Chưa đúng. Con cá là Fish nhé!"
+        },
+        {
+          "question_id": "q2_rabbit_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con thỏ tiếng Anh là gì?",
+          "questionAudioText": "What is rabbit in English?",
+          "options": [
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_rabbit",
+          "feedbackCorrect": "Xuất sắc! Con thỏ là Rabbit!",
+          "feedbackIncorrect": "Chưa đúng. Con thỏ là Rabbit nhé!"
+        },
+        {
+          "question_id": "q3_bird_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con chim tiếng Anh là gì?",
+          "questionAudioText": "What is bird in English?",
+          "options": [
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_bird",
+          "feedbackCorrect": "Giỏi lắm! Con chim là Bird!",
+          "feedbackIncorrect": "Chưa đúng. Con chim là Bird nhé!"
+        },
+        {
+          "question_id": "q4_dog_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con chó tiếng Anh là gì?",
+          "questionAudioText": "What is dog in English?",
+          "options": [
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_dog",
+          "feedbackCorrect": "Tuyệt vời! Con chó là Dog!",
+          "feedbackIncorrect": "Chưa đúng. Con chó là Dog nhé!"
+        },
+        {
+          "question_id": "q5_cat_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con mèo tiếng Anh là gì?",
+          "questionAudioText": "What is cat in English?",
+          "options": [
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_cat",
+          "feedbackCorrect": "Xuất sắc! Con mèo là Cat!",
+          "feedbackIncorrect": "Chưa đúng. Con mèo là Cat nhé!"
+        },
+        {
+          "question_id": "q6_fish_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con cá",
+          "questionAudioText": "Listen and tap the fish",
+          "options": [
+            {
+              "option_id": "opt_dog_snd",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_fish_snd",
+          "feedbackCorrect": "Đúng rồi! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con cá!"
+        },
+        {
+          "question_id": "q7_rabbit_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con thỏ",
+          "questionAudioText": "Listen and tap the rabbit",
+          "options": [
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog_snd",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_rabbit_snd",
+          "feedbackCorrect": "Xuất sắc! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con thỏ!"
+        },
+        {
+          "question_id": "q8_bird_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con chim",
+          "questionAudioText": "Listen and tap the bird",
+          "options": [
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_bird_snd",
+          "feedbackCorrect": "Giỏi lắm! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con chim!"
+        },
+        {
+          "question_id": "q9_dog_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con chó",
+          "questionAudioText": "Listen and tap the dog",
+          "options": [
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog_snd",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_dog_snd",
+          "feedbackCorrect": "Tuyệt vời! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con chó!"
+        },
+        {
+          "question_id": "q10_cat_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con mèo",
+          "questionAudioText": "Listen and tap the cat",
+          "options": [
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_cat_snd",
+          "feedbackCorrect": "Xuất sắc! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con mèo!"
+        }
+      ],
+      "reward": {
+        "xp": 50,
+        "sticker": {
+          "bucket": "learnar-assets",
+          "path": "courses/animals-adventure/stickers/fish-friend.png",
+          "type": "sticker",
+          "status": "ready"
+        },
+        "badgeTitle": "Fish Friend",
+        "message_vi": "Bé đã hoàn thành bài Fish!"
+      }
+    },
+    {
+      "lesson_id": "learn-the-rabbit",
+      "title": "Learn the Rabbit",
+      "title_vi": "Học về con thỏ",
+      "description": "Meet the fluffy rabbit and hop along!",
+      "order": 5,
+      "duration_minutes": 5,
+      "vocabulary": [
+        {
+          "word_en": "Rabbit",
+          "word_vi": "con thỏ",
+          "emoji": "🐰",
+          "simple_sentence": "The rabbit has long ears.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/rabbit.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/rabbit.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Fish",
+          "word_vi": "con cá",
+          "emoji": "🐟",
+          "simple_sentence": "The fish is colorful.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/fish.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/fish.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Bird",
+          "word_vi": "con chim",
+          "emoji": "🐦",
+          "simple_sentence": "The bird sings songs.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/bird.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/bird.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Dog",
+          "word_vi": "con chó",
+          "emoji": "🐶",
+          "simple_sentence": "The dog is friendly.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/dog.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/dog.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        },
+        {
+          "word_en": "Cat",
+          "word_vi": "con mèo",
+          "emoji": "🐱",
+          "simple_sentence": "The cat is playful.",
+          "image": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/mascots/cat.png",
+            "type": "image",
+            "status": "ready"
+          },
+          "audio": {
+            "bucket": "learnar-assets",
+            "path": "courses/animals-adventure/audio/cat.mp3",
+            "type": "audio",
+            "status": "ready"
+          }
+        }
+      ],
+      "game": {
+        "game_id": "listen-tap-rabbit-001",
+        "type": "listen_and_tap",
+        "instruction_vi": "Nghe và nhấn vào hình con thỏ",
+        "prompt_audio_text": "Tap the rabbit",
+        "items": [
+          {
+            "word_en": "Rabbit",
+            "emoji": "🐰",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/rabbit.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/rabbit.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Fish",
+            "emoji": "🐟",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/fish.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/fish.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Bird",
+            "emoji": "🐦",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/bird.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/bird.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Dog",
+            "emoji": "🐶",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/dog.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/dog.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Cat",
+            "emoji": "🐱",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/cat.png",
+              "type": "image",
+              "status": "ready"
+            },
+            "audio": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/audio/cat.mp3",
+              "type": "audio",
+              "status": "ready"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Tuyệt vời! Bé làm tốt lắm!"
+      },
+      "activity": {
+        "activity_id": "memory-match-rabbit-001",
+        "type": "match_picture",
+        "instruction_vi": "Ghép hình ảnh với từ tiếng Anh",
+        "prompt_audio_text": "Match the pictures",
+        "items": [
+          {
+            "word_en": "Rabbit",
+            "emoji": "🐰",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/rabbit.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Fish",
+            "emoji": "🐟",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/fish.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Bird",
+            "emoji": "🐦",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/bird.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Dog",
+            "emoji": "🐶",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/dog.png",
+              "type": "image",
+              "status": "ready"
+            }
+          },
+          {
+            "word_en": "Cat",
+            "emoji": "🐱",
+            "image": {
+              "bucket": "learnar-assets",
+              "path": "courses/animals-adventure/mascots/cat.png",
+              "type": "image",
+              "status": "ready"
+            }
+          }
+        ],
+        "feedback_positive_vi": "Giỏi lắm! Bé nhớ từ rồi!"
+      },
+      "quiz": [
+        {
+          "question_id": "q1_rabbit_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con thỏ tiếng Anh là gì?",
+          "questionAudioText": "What is rabbit in English?",
+          "options": [
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_rabbit",
+          "feedbackCorrect": "Đúng rồi! Con thỏ là Rabbit!",
+          "feedbackIncorrect": "Chưa đúng. Con thỏ là Rabbit nhé!"
+        },
+        {
+          "question_id": "q2_fish_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con cá tiếng Anh là gì?",
+          "questionAudioText": "What is fish in English?",
+          "options": [
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_fish",
+          "feedbackCorrect": "Xuất sắc! Con cá là Fish!",
+          "feedbackIncorrect": "Chưa đúng. Con cá là Fish nhé!"
+        },
+        {
+          "question_id": "q3_cat_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con mèo tiếng Anh là gì?",
+          "questionAudioText": "What is cat in English?",
+          "options": [
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_cat",
+          "feedbackCorrect": "Giỏi lắm! Con mèo là Cat!",
+          "feedbackIncorrect": "Chưa đúng. Con mèo là Cat nhé!"
+        },
+        {
+          "question_id": "q4_bird_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con chim tiếng Anh là gì?",
+          "questionAudioText": "What is bird in English?",
+          "options": [
+            {
+              "option_id": "opt_fish",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_bird",
+          "feedbackCorrect": "Tuyệt vời! Con chim là Bird!",
+          "feedbackIncorrect": "Chưa đúng. Con chim là Bird nhé!"
+        },
+        {
+          "question_id": "q5_dog_vocab",
+          "type": "image_choice",
+          "prompt_vi": "Con chó tiếng Anh là gì?",
+          "questionAudioText": "What is dog in English?",
+          "options": [
+            {
+              "option_id": "opt_rabbit",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_dog",
+          "feedbackCorrect": "Xuất sắc! Con chó là Dog!",
+          "feedbackIncorrect": "Chưa đúng. Con chó là Dog nhé!"
+        },
+        {
+          "question_id": "q6_rabbit_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con thỏ",
+          "questionAudioText": "Listen and tap the rabbit",
+          "options": [
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_rabbit_snd",
+          "feedbackCorrect": "Đúng rồi! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con thỏ!"
+        },
+        {
+          "question_id": "q7_fish_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con cá",
+          "questionAudioText": "Listen and tap the fish",
+          "options": [
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_dog_snd",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_fish_snd",
+          "feedbackCorrect": "Xuất sắc! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con cá!"
+        },
+        {
+          "question_id": "q8_cat_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con mèo",
+          "questionAudioText": "Listen and tap the cat",
+          "options": [
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_cat_snd",
+          "feedbackCorrect": "Giỏi lắm! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con mèo!"
+        },
+        {
+          "question_id": "q9_bird_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con chim",
+          "questionAudioText": "Listen and tap the bird",
+          "options": [
+            {
+              "option_id": "opt_rabbit_snd",
+              "label": "Rabbit",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/rabbit.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_fish_snd",
+              "label": "Fish",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/fish.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_bird_snd",
+          "feedbackCorrect": "Tuyệt vời! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con chim!"
+        },
+        {
+          "question_id": "q10_dog_sound",
+          "type": "sound_choice",
+          "prompt_vi": "Nghe và chọn con chó",
+          "questionAudioText": "Listen and tap the dog",
+          "options": [
+            {
+              "option_id": "opt_dog_snd",
+              "label": "Dog",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/dog.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_cat_snd",
+              "label": "Cat",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/cat.png",
+                "type": "image",
+                "status": "ready"
+              }
+            },
+            {
+              "option_id": "opt_bird_snd",
+              "label": "Bird",
+              "image": {
+                "bucket": "learnar-assets",
+                "path": "courses/animals-adventure/mascots/bird.png",
+                "type": "image",
+                "status": "ready"
+              }
+            }
+          ],
+          "correctOptionId": "opt_dog_snd",
+          "feedbackCorrect": "Xuất sắc! Bé nghe giỏi lắm!",
+          "feedbackIncorrect": "Nghe lại nhé. Đó là con chó!"
+        }
+      ],
+      "reward": {
+        "xp": 50,
+        "sticker": {
+          "bucket": "learnar-assets",
+          "path": "courses/animals-adventure/stickers/rabbit-jump.png",
+          "type": "sticker",
+          "status": "ready"
+        },
+        "badgeTitle": "Rabbit Jump",
+        "message_vi": "Bé đã hoàn thành bài Rabbit!"
+      }
+    }
+  ]
+}
