@@ -53,8 +53,14 @@ jobs:
       - name: Verify catalog metadata
         run: npm run ar:catalog:verify
 
+      # Reaches out to Supabase Storage to confirm the compiled .mind catalog
+      # is still published and matches the manifest checksum. That host is
+      # environment/credential dependent, so a DNS or outage failure here says
+      # nothing about the commit being tested -- it must not block the PR.
+      # Keep it visible, but not as a required gate.
       - name: Verify Supabase MindAR artifact
         run: npm run ar:catalog:verify-remote
+        continue-on-error: true
 
       - name: Build frontend
         run: npm run build
