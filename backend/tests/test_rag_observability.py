@@ -286,7 +286,6 @@ def instrumented_service():
 
 async def _run_with_fakes(service, monkeypatch, *, cached=None, generator_error=None):
     """Patch run() internals; return (result-or-exc, scheduled_rows)."""
-    monkeypatch.setattr("services.agentic_rag_service.INTER_AGENT_DELAY", 0)
     rows = []
     monkeypatch.setattr(
         "services.agentic_rag_service.schedule_rag_trace", lambda row: rows.append(row) or True
