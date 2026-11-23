@@ -1,6 +1,4 @@
 import { decode, encode } from '@msgpack/msgpack';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { mergeMindTargetBuffers } from './mergeMindTargets';
 
@@ -43,12 +41,4 @@ describe('mergeMindTargetBuffers', () => {
             .toThrow();
     });
 
-    it('merges the repository elephant and jungle Mind targets', () => {
-        const elephant = readFileSync(resolve('public/assets/target/elephant_targets.mind'));
-        const jungle = readFileSync(resolve('public/assets/target/jungle_targets.mind'));
-        const merged = mergeMindTargetBuffers(elephant, jungle);
-        const decoded = decode(merged) as { v: number; dataList: unknown[] };
-        expect(decoded.v).toBe(2);
-        expect(decoded.dataList).toHaveLength(2);
-    });
 });

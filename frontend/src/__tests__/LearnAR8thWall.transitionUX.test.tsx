@@ -539,10 +539,10 @@ describe('LearnAR8thWall transition UX', () => {
     expect(document.querySelector('.ar-xr-header')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '8th Wall XR' })).toBeInTheDocument();
     expect(screen.getByText('MindAR')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /send scanning ar logs to telegram/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /send diagnostics/i })).toBeInTheDocument();
     expect(screen.getByText(/Phase:/)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /send scanning ar logs to telegram/i }));
+    fireEvent.click(screen.getByRole('button', { name: /send diagnostics/i }));
     expect(telegramState.syncTelegram).toHaveBeenCalledTimes(1);
 
     await act(async () => {

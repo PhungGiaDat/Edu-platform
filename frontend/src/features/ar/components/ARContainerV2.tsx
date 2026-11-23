@@ -308,7 +308,6 @@ export const ARContainerV2 = React.forwardRef<HTMLIFrameElement, ARContainerV2Pr
         // Priority 1: Persistent viewer (catalogId + mindUrl)
         // Model/word/combo assets sent via postMessage after AR_READY.
         // This path requires SET_ACTIVE_TARGETS to activate targets.
-        // ALSO include model/image/word as URL params as fallback for legacy bootstrap.
         if (catalogId && mindUrl) {
             const params = new URLSearchParams();
             params.set('mind', mindUrl);
@@ -318,30 +317,6 @@ export const ARContainerV2 = React.forwardRef<HTMLIFrameElement, ARContainerV2Pr
                 : 2;
             params.set('targetCount', String(targetCount));
             params.set('maxTrack', '2');
-
-            // Fallback: include model/image/word so legacy bootstrap can load
-            // Source 1: legacy props (may be undefined if card data not yet resolved)
-            // Source 2: activeTargets slotIndex 0 (always has latest resolved model URL)
-            const slot0 = activeTargets?.find(t => t.slotIndex === 0);
-            const slot1 = activeTargets?.find(t => t.slotIndex === 1);
-            const urlModel  = modelUrl  || slot0?.modelUrl;
-            const urlImage  = imageUrl;
-            const urlWord   = word      || slot0?.word || '';
-            const urlModel2 = modelUrl2 || slot1?.modelUrl;
-            const urlImage2 = imageUrl2;
-            const urlWord2  = word2     || slot1?.word || '';
-            if (urlModel) {
-                params.set('model', urlModel);
-                params.set('word', urlWord);
-            }
-            if (urlImage) params.set('image', urlImage);
-            if (textureUrl) params.set('textureUrl', textureUrl);
-            if (urlModel2) {
-                params.set('model2', urlModel2);
-                params.set('word2', urlWord2);
-            }
-            if (urlImage2) params.set('image2', urlImage2);
-            if (textureUrl2) params.set('textureUrl2', textureUrl2);
 
             applyTuningParams(params);
             applyDebugParams(params);

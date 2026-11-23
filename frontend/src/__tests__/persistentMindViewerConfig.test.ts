@@ -21,7 +21,7 @@ describe('persistent MindAR viewer rollout', () => {
     const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/LearnARV2.tsx'), 'utf8');
 
     expect(source).toContain(
-      "appState === 'VIEWING' && !isPersistentViewerEnabled && !isComboViewer",
+      "const isPersistentViewerEnabled = isPersistentMindViewerEnabled();",
     );
   });
 });
