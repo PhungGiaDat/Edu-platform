@@ -110,7 +110,7 @@ describe('mobile AR debug overlay contract', () => {
     );
     expect(learnAR8thWallPage).toContain('{showOperatorTools && (');
     expect(learnAR8thWallPage).toContain('disabled={syncStatus === \'syncing\'}');
-    expect(learnAR8thWallPage).toContain('Send ${phase.toLowerCase()} AR logs to Telegram');
+    expect(learnAR8thWallPage).toContain('aria-label="Send diagnostics"');
   });
 
   it('activates the XR viewer Eruda console only for explicit debug/eruda queries', () => {

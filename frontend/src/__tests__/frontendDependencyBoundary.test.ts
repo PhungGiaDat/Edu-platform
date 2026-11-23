@@ -35,7 +35,7 @@ describe('frontend deployment dependency boundary', () => {
 
   it('keeps the browser runtime and QR vendor step', () => {
     expect(pkg.scripts['ar:catalog:build']).toBeUndefined();
-    expect(pkg.scripts.postinstall).toBe('node scripts/vendor-jsqr.cjs');
+    expect(pkg.scripts.postinstall).toBe('node scripts/vendor-jsqr.cjs && node scripts/vendor-8thwall.cjs');
     expect(existsSync(resolve(root, 'public/static/vendor/mindar-image-aframe-1.2.5.prod.js'))).toBe(true);
   });
 });

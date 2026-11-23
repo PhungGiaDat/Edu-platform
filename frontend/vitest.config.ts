@@ -22,8 +22,19 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+    alias: [
+      {
+        find: /^konva\/lib\/(.*)$/,
+        replacement: path.resolve(__dirname, './node_modules/konva/lib/$1'),
+      },
+      {
+        find: 'konva',
+        replacement: path.resolve(__dirname, './node_modules/konva/lib/index.js'),
+      },
+      {
+        find: '@',
+        replacement: path.resolve(__dirname, './src'),
+      },
+    ],
   },
 });

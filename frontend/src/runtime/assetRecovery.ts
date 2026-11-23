@@ -71,6 +71,8 @@ export function registerAssetRecovery(
   window.ARControlTrace?.('ASSET_RECOVERY_INSTALLED', { cooldownMs, arRoute: isARRoute() });
 
   const handlePreloadError: EventListener = (event) => {
+    (event as Event).preventDefault();
+
     // Suppress hard reload on AR routes — let the component handle the error
     if (isARRoute()) {
       window.ARControlTrace?.('VITE_PRELOAD_ERROR_AR_SUPPRESSED', {
