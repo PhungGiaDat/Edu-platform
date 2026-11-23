@@ -38,3 +38,11 @@ dist-ssr
 *.mind
 public/assets/target/catalogs/*.mind
 
+# Legacy in-repo targets are still trackable: `src/utils/mindTargetMerge.test.ts`
+# reads them directly to verify the merge contract, and they are already
+# tracked on main (frontend-web/public/assets/target/*.mind). Only the
+# compiled per-catalog binaries under catalogs/ stay CDN-only.
+!public/assets/target/combo_targets.mind
+!public/assets/target/elephant_targets.mind
+!public/assets/target/jungle_targets.mind
+
