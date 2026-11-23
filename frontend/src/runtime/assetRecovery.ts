@@ -116,6 +116,12 @@ export function registerAssetRecovery(
       });
       reload();
     }
+
+    // Always claim the event. Vite's default action for `vite:preloadError`
+    // is its own hard reload; leaving it unprevented double-reloads whenever
+    // we already reloaded above, and reloads blindly (no cooldown, no
+    // AR-route suppression) whenever we deliberately decided not to.
+    (event as Event).preventDefault();
   };
 
   target.addEventListener('vite:preloadError', handlePreloadError);
