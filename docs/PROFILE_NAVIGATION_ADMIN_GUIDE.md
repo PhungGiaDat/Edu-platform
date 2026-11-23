@@ -39,4 +39,4 @@ python -m pytest tests/test_momo_course_unicode.py -q
 
 ## Admin account maintenance
 
-Use `backend/scripts/create_admin.py` with deployment environment variables. Existing accounts are repaired idempotently; passwords change only with the explicit reset flag. Never commit or log admin credentials.
+Use `backend/scripts/create_admin_pg.py` with deployment environment variables (`ADMIN_EMAIL`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`). It is idempotent: it promotes an existing Supabase Postgres account to `role='admin'` / `is_superuser` (resetting the password) or creates a new one. Never commit or log admin credentials.
